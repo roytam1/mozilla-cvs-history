@@ -154,17 +154,22 @@ $DB_TRIM_SECONDS = (60 * 60 * 24 * 8);
 
 
 
-# pick if your VC system can display via a web server then VCDisplay
-# module that you wish to use, otherwise pick 'None'.
+# pick one display system if your VC system can display via a web
+# server then VCDisplay module that you wish to use, otherwise pick
+# 'None'.
 
 $VCDisplayImpl = (
 		  'VCDisplay::None',
 		  #'VCDisplay::Bonsai',
 		 );
 
+
+# pick one method for storting data, Data::Dumper is slow but text
+# files allows great debugging capabilities and Storable (not yet
+# tested) which is much faster but binary format.
+
 $PersistenceImpl = (
                     'Persistence::Dumper',
-# storable has not been tested yet
                     # 'Persistence::Storable',
                    );
 
