@@ -528,7 +528,6 @@ SeaMonkeyCore -a \
 	mozilla/Makefile.in \
 	mozilla/makefile.win \
 	mozilla/aclocal.m4 \
-	mozilla/base \
 	mozilla/build \
 	!mozilla/build/mac/client.mac \
 	mozilla/caps \
@@ -564,7 +563,22 @@ SeaMonkeyCore -a \
 	mozilla/profile \
 	mozilla/rdf \
 	mozilla/sun-java \
-	mozilla/xpcom \
+	mozilla/xpcom/Makefile.in \
+	mozilla/xpcom/makefile.win \
+	mozilla/xpcom/base \
+	mozilla/xpcom/build \
+	mozilla/xpcom/components \
+	mozilla/xpcom/doc \
+	mozilla/xpcom/ds \
+	mozilla/xpcom/io \
+	mozilla/xpcom/macbuild \
+	mozilla/xpcom/proxy \
+	mozilla/xpcom/reflect \
+	mozilla/xpcom/sample \
+	mozilla/xpcom/threads \
+	mozilla/xpcom/tests \
+	mozilla/xpcom/tools \
+	mozilla/xpcom/typelib \
 	mozilla/xpinstall \
 	MozillaLicense
 
