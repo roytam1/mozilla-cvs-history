@@ -15,7 +15,6 @@ _jmc
 .depends
 .d
 manifest.mnw
-_jri
 _gen
 _stubs
 *_DBG.OBJ
