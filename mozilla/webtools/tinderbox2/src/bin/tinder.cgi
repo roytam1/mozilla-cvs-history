@@ -115,6 +115,9 @@ Daemon Mode Arguments
 		output is sent to standard out.  The effect of this
 	        run should be to update the webpages for every tree.
 
+Default Arguments
+
+		If no arguments are given then daemon-mode is assumed.
 
 Synopsis
 
@@ -178,6 +181,11 @@ sub parse_args {
   
   if(grep /noignore/, keys %form) {
     $NOIGNORE = 1;
+  }
+
+  # Default arguments
+  if ( !(scalar(keys %form)) ) {
+      $daemon_mode = 1;
   }
 
   # take care of the informational arguments
