@@ -197,8 +197,7 @@ sub save_note {
   main::mkdir_R(dirname($update_file));
   
   Persistence::save_structure( 
-                             [$record],
-                             ['record'],
+                             $record,
                              $tmp_file,
                             );
   

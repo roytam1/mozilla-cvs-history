@@ -175,32 +175,26 @@ sub loadtree_db {
           "to $filename: $!\n");
   }
   
-  {
-
-    # try something out here, this could eventually implement
-    # load_structure in Persistence::Dumper.pm
-
-    my $namespace = ref($self);
-    my $str = ( 
-               " ( \$$namespace"."::DATABASE{'$tree'}, ".
-               "   \$$namespace"."::METADATA{'$tree'}, ) ".
-               '= @{ $r } ;'
-              );
-    main::null();
-    main::null();
-    main::null();
-    main::null();
-
-  }
-
   # if we are running for the first time there may not be any data for
   # us to read.
   
   (-r $filename) || return ;
-  
-  require($filename) ||
-    die("Could not eval filename: '$filename': $!\n");
-  
+
+  my ($r) = Persistence::load_structure($filename);
+
+  # Put the data into the correct namespace.
+
+  # If you can find a way to do this without the eval please help.  The
+  # perl parser evaluates all my attempts to mean something else.
+
+  my $namespace = ref($self);
+  my $str = ( 
+             " ( \$$namespace"."::DATABASE{'$tree'}, ".
+             "   \$$namespace"."::METADATA{'$tree'}, ) ".
+             '= @{ $r } ;'
+            );
+  eval $str;
+
   # ignore unlink errors, cleaning up the directory is not important. 
   
   (scalar(@sorted_files)) &&
@@ -228,16 +222,12 @@ sub savetree_db {
   my ($name_db) = "${name_space}::DATABASE";
   my ($name_meta) = "${name_space}::METADATA";
   Persistence::save_structure( 
-				[ 
-				 $ { $name_db }{$tree}, 
-				 $ { $name_meta }{$tree}
-				],
-				[
-				 "\$${name_space}::DATABASE{$tree}", 
-				 "\$${name_space}::METADATA{$tree}"
-				],
-				$data_file
-			       );
+                              [ 
+                               $ { $name_db }{$tree}, 
+                               $ { $name_meta }{$tree} 
+                              ],
+                              $data_file
+                             );
 
   return ;
 }
