@@ -889,7 +889,7 @@ sub parse_mail_body {
     # Find and save the TinderboxPrint data
 
     if ($line =~ m/\s*TinderboxPrint\s*:\s*(.*)/) {
-        $TINDERBOX{'print'} .= $1;
+        $TINDERBOX{'print'} .= "&nbsp; ".$1;
         next;
     }
 
