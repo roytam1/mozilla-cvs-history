@@ -484,7 +484,7 @@ sub parse_args {
     
     if( !GetOptions (\%Prog_Args,
 		     "version", "help", 
-		     "min-archive-files", "max-archive-days",
+		     "min-archive-files=s", "max-archive-days=s",
 		     ) ) {
 	print("Illegal options in \@ARGV: '@ARGV'\n");
 	usage();
