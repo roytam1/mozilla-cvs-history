@@ -342,6 +342,10 @@ sub status_table_row {
   # apply_db_updates().  It is possible that there are no treestates at
   # all this should not prevent the VC column from being rendered.
 
+  if (!($LAST_TREESTATE)) {
+      $LAST_TREESTATE = $TinderHeader::HEADER2DEFAULT_HTML{'TreeState'};
+  }
+
   my ($cell_color) = TreeData::TreeState2color($LAST_TREESTATE);
   my ($char) = TreeData::TreeState2char($LAST_TREESTATE);
 
