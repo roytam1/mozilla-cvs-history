@@ -94,7 +94,7 @@ package BuildStatus;
                             # You may want this to be 'aqua' if you
                             # need to distinguish from 'building'
 
-                            'html_color'=>  'yellow',
+                            'html_color'=>  'white',
                             'hdml_char'=> '.',
                             'handler'=> \&main::null,
                             'description'=>  'Build in progress - status unavailible',
