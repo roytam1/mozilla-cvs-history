@@ -343,7 +343,7 @@ sub status2header_background_gif {
 
   for ($i=0; $i <= $#latest_status; $i++) {
     my ($status) = $latest_status[$i];
-    my ($out) = $STATUS{$status}{'header_background_gif'};
+    my ($out) = $STATUS{$status}{'header_background_gif'} || '';
     push @out, $out;
   }
 
