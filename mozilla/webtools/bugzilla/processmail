@@ -641,6 +641,10 @@ sub NewProcessOnePerson ($$$$$$$$$$$$) {
 
     detaint_natural($userid);
 
+    if (!$current) {
+        DeriveGroup($userid);
+    }
+
     # if this person doesn't have permission to see info on this bug, 
     # return.
     #
