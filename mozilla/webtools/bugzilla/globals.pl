@@ -1372,10 +1372,6 @@ sub UserInGroup {
         return 0;
     }
     ConnectToDatabase();
-    SendSQL("SELECT admin FROM profiles WHERE userid = $userid");
-    my $admin = FetchOneColumn();
-    return 1 if $admin;
-
     SendSQL("SELECT user_id FROM user_group_map, groups
             WHERE user_group_map.group_id = groups.group_id 
             AND groups.name = '$groupname'

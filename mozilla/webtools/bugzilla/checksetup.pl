@@ -1175,8 +1175,13 @@ $table{tokens} =
 # 2001-09-18, dkl@redhat.com
 # Group tables for tracking group memberships, admin memberships, 
 # product permissions, and bug permissions.
-
+#
 # This table determines the groups that a user belongs to
+# and the level that they can bless others to.
+# canbless:
+# 0 = Cannot bless others into the group
+# 1 = Can bless others into the group
+# 2 = Can give others permission to bless people into the group
 $table{user_group_map} = 
     'user_id mediumint not null,
      group_id mediumint not null,
@@ -1647,18 +1652,14 @@ _End_Of_SQL_
     my ($userid) = $sth->fetchrow_array();
 
     foreach my $group ( @groups ) {
-        my $query = "select 
-            user_id 
-        from 
-            user_group_map 
-        where 
-            group_id = $group
-            and user_id = $userid";
+        my $query = "SELECT user_id FROM user_group_map WHERE group_id = $group AND user_id = $userid"; 
         $sth = $dbh->prepare($query);
         $sth->execute();
 
         if ( !$sth->fetchrow_array() ) {
-            $sth = $dbh->do("insert into user_group_map values ($userid, $group)");
+            $dbh->do("INSERT INTO user_group_map VALUES ($userid, $group, 2)");
+        } else {
+            $dbh->do("UPDATE user_group_map SET canbless = 2 WHERE user_id = $userid AND group_id = $group");
         }
     }
 
@@ -1670,24 +1671,20 @@ _End_Of_SQL_
 _End_Of_SQL_
 
     # Put the admin in each group if not already    
-    my $query = "select userid from profiles where login_name = $login";
+    my $query = "SELECT userid FROM profiles WHERE login_name = $login";
     $sth = $dbh->prepare($query);
     $sth->execute();
     my ($userid) = $sth->fetchrow_array();
     
     foreach my $group ( @groups ) {
-        my $query = "select 
-            user_id 
-        from 
-            user_group_map 
-        where 
-            group_id = $group
-            and user_id = $userid";
+        my $query = "SELECT user_id FROM user_group_map WHERE group_id = $group AND user_id = $userid";
         $sth = $dbh->prepare($query);
         $sth->execute();
 
         if ( !$sth->fetchrow_array() ) {
-            $dbh->do("insert into user_group_map values ( $userid, $group)");
+            $dbh->do("INSERT INTO user_group_map VALUES ($userid, $group, 2)");
+        } else {
+            $dbh->do("UPDATE user_group_map SET canbless = 2 WHERE user_id = $userid AND group_id = $group");
         }
     }
   }
@@ -2294,7 +2291,6 @@ if (!GetFieldDef('bugs', 'everconfirmed')) {
 }
 AddField('products', 'maxvotesperbug', 'smallint not null default 10000');
 AddField('products', 'votestoconfirm', 'smallint not null');
-AddField('profiles', 'blessgroupset', 'bigint not null');
 
 # 2000-03-21 Adding a table for target milestones to 
 # database - matthew@zeroknowledge.com

@@ -298,8 +298,8 @@ if ($action eq 'new') {
             $isactive . ")" );
 
     print "OK, done.<p>\n";
-      SendSQL("SELECT group_id FROM groups where name = " . SqlQuote($name));
-      my $id = FetchOneColumn();
+    SendSQL("SELECT group_id FROM groups where name = " . SqlQuote($name));
+    my $id = FetchOneColumn();
     print "Your new group was assigned id # $id.<p>";
     
     # Add each user designated as an Admin to the new group
@@ -309,8 +309,18 @@ if ($action eq 'new') {
         push(@adminlist, $row[0]);
     }
     foreach my $userid (@adminlist) {
-        SendSQL("INSERT INTO user_group_map VALUES ($userid, $id)");
-        SendSQL("INSERT INTO bless_group_map VALUES ($userid, $id)");
+        SendSQL("INSERT INTO user_group_map (user_id, group_id) VALUES ($userid, $id)");
+    }
+
+    # Add people who match regular expression to this group.
+    my $count = 0;
+    SendSQL("SELECT userid FROM profiles WHERE admin != 1 ORDER BY userid");
+    while (my ($userid) = FetchSQLData()) {
+        if ($userid =~ /$regexp/) {
+            PushGlobalSQLState();
+            SendSQL("INSERT INTO user_group_map (user_id, group_id) VALUES ($userid, $id)");
+            PopGlobalSQLState();
+        }
     }
     PutTrailer("<a href=\"editgroups.cgi?action=add\">Add another group</a>",
                "<a href=\"editgroups.cgi\">Back to the group list</a>");
@@ -361,9 +371,7 @@ if ($action eq 'del') {
     my $cantdelete = 0;
     SendSQL("SELECT COUNT(user_id) FROM user_group_map WHERE group_id = $id");
     my $usergroupcount = FetchOneColumn();
-    SendSQL("SELECT COUNT(DISTINCT user_id) FROM bless_group_map WHERE group_id = $id");
-    my $blessgroupcount = FetchOneColumn();
-    if ($usergroupcount || $blessgroupcount) {
+    if ($usergroupcount) {
        $cantdelete = 1;
        print "
 <B>One or more users belong to this group. You cannot delete this group while
@@ -444,12 +452,6 @@ if ($action eq 'delete') {
         $cantdelete = 1;
       }
     }
-    SendSQL("SELECT COUNT(user_id) FROM bless_group_map WHERE group_id = $groupid");
-    if (FetchOneColumn()) {
-      if (!defined $::FORM{'removeusers'}) {
-        $cantdelete = 1;
-      }
-    }
     SendSQL("SELECT COUNT(bug_id) FROM bug_group_map WHERE group_id = $groupid");
     if (FetchOneColumn()) {
       if (!defined $::FORM{'removebugs'}) {
@@ -479,13 +481,6 @@ if ($action eq 'delete') {
     if (FetchOneColumn()) {
         SendSQL("DELETE FROM user_group_map WHERE group_id = $groupid");
         print "All users have been removed from group $groupid.<BR>";
-    }
-    SendSQL("SELECT COUNT(user_id) FROM bless_group_map " .
-            "WHERE group_id = $groupid");
-    if (FetchOneColumn()) {
-        SendSQL("DELETE FROM bless_group_map WHERE group_id = $groupid");
-        print "All users with authority to add users to group $groupid have " .
-              "had that authority removed.<BR>";
     }
     SendSQL("SELECT COUNT(bug_id) FROM bug_group_map WHERE group_id = $groupid");
     if (FetchOneColumn()) {

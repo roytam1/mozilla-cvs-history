@@ -501,7 +501,7 @@ sub SaveFooter {
 
 
 sub ShowPermissions {
-    print "<TR><TD>You have the following permission bits set on your account:\n";
+    print "<TR><TD>You have the following extra permission set on your account:\n";
     print "<P><UL>\n";
     my $found = 0;
     SendSQL("SELECT description FROM groups, user_group_map " .
@@ -514,13 +514,13 @@ sub ShowPermissions {
         $found = 1;
     }
     if ($found == 0) {
-        print "<LI>(No extra permission bits have been set).\n";
+        print "<LI>(No extra permission has been set).\n";
     }
     print "</UL>\n";
       SendSQL("SELECT COUNT(group_id) FROM user_group_map WHERE user_id = $userid AND canbless = 1");
       my $blessgroupset = FetchOneColumn();
       if ( $blessgroupset ) {
-             print "And you can turn on or off the following bits for\n";
+             print "And you can turn on or off the following permissions for\n";
           print qq{<A HREF="editusers.cgi">other users</A>:\n};
              print "<P><UL>\n";
           SendSQL("SELECT description FROM groups, user_group_map " .
