@@ -39,7 +39,7 @@ if (m:^CVSROOT/commitcheck\.pl$:) {return '3';}
 if (m:^CVSROOT/passwd$:) {return '3';}
 if (m:^jpeg/.*$:) {return '12';}
 if (m:^mozilla/[^/]*$:) {return '19';}
-if (m:^nsprpub/.*$:) {return '24';}
+if (m:^mozilla/nsprpub/.*$:) {return '24';}
 if (m:^mozilla/ef/.*$:) {return '46';}
 }
 return '';
