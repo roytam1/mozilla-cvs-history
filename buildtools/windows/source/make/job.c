@@ -1466,43 +1466,7 @@ exec_command (argv, envp)
 			     "rename", "set", "shift", "time", "type",
 			     "ver", "verify", "vol", ":", 0 };
 #elif defined(NETSCAPE)
-  #define SH_CMD_CD			0
-  #define SH_CMD_EVAL		1
-  #define SH_CMD_EXEC		2
-  #define SH_CMD_EXIT		3
-  #define SH_CMD_LOGIN		4
-  #define SH_CMD_LOGOUT		5
-  #define SH_CMD_SET		6
-  #define SH_CMD_UMASK		7
-  #define SH_CMD_WAIT		8
-  #define SH_CMD_WHILE		9
-  #define SH_CMD_FOR		10
-  #define SH_CMD_CASE		11
-  #define SH_CMD_IF			12
-  #define SH_CMD_COLON		13
-  #define SH_CMD_PERIOD		14
-  #define SH_CMD_BREAK		15
-  #define SH_CMD_CONTINUE	16
-  #define SH_CMD_EXPORT		17
-  #define SH_CMD_READ		18
-  #define SH_CMD_READONLY	19
-  #define SH_CMD_SHIFT		20
-  #define SH_CMD_TIMES		21
-  #define SH_CMD_TRAP		22
-  #define SH_CMD_SWITCH		23
-  #define SH_CMD_MKDIR		24
-  #define SH_CMD_ECHO		25
-  #define SH_CMD_CP			26
-  #define SH_CMD_RM			27
-  #define SH_CMD_TOUCH		28
-  #define SH_CMD_NSINSTALL 	29
-  #define SH_CMD_TEST	 	30
-  #define SH_CMD_MV		31
-  		
   static char sh_chars[] = "#;\"*?[]&|<>(){}$`^";
-//  static char sh_chars[] = "#;*?[]&|<>(){}$`^";
-//  static char sh_chars[] = "";
-  //static char *sh_cmds[] = { "cd", "mkdir", "echo", "cp", "uname", "touch",  0 };
   static char *sh_cmds[] = { "cd", "eval", "exec", "exit", "login",
 			     "logout", "set", "umask", "wait", "while", "for",
 			     "case", "if", ":", ".", "break", "continue",
