@@ -21,6 +21,7 @@
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Jake <jake@acutex.net>
 #                 Bradley Baetz <bbaetz@cs.mcgill.ca>
+#                 Christopher Aillon <christopher@aillon.com>
 
 # Contains some global variables and routines used throughout bugzilla.
 
@@ -72,8 +73,7 @@ use Date::Parse;               # For str2time().
 use RelationSet;
 
 # Some environment variables are not taint safe
-delete $ENV{PATH};
-delete $ENV{BASH_ENV};
+delete @::ENV{'PATH', 'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
 
 # Contains the version string for the current running Bugzilla.
 $::param{'version'} = '2.15';
@@ -647,32 +647,39 @@ sub InsertNewUser {
     my $password = GenerateRandomPassword();
     my $cryptpassword = Crypt($password);
 
+    PushGlobalSQLState();
+
+    # Insert the new user record into the database.            
+    $username = SqlQuote($username);
+    $realname = SqlQuote($realname);
+    $cryptpassword = SqlQuote($cryptpassword);
+    SendSQL("INSERT INTO profiles (login_name, realname, cryptpassword) 
+             VALUES ($username, $realname, $cryptpassword)");
+
+    # Find the user's new id for adding to groups
+    SendSQL("select LAST_INSERT_ID()");
+    my $userid = FetchOneColumn();
+
     # Determine what groups the user should be in by default
     # and add them to those groups.
-    PushGlobalSQLState();
-    SendSQL("select userregexp from groups where userregexp != ''");
-    my $groupset = "0";
+    SendSQL("select group_id, userregexp from groups where userregexp != ''");
+    my @groupset = ();
     while (MoreSQLData()) {
         my @row = FetchSQLData();
         # Modified -Joe Robins, 2/17/00
         # Making this case insensitive, since usernames are email addresses,
         # and could be any case.
         if ($username =~ m/$row[1]/i) {
-            $groupset .= "+ $row[0]"; # Silly hack to let MySQL do the math,
-                                      # not Perl, since we're dealing with 64
-                                      # bit ints here, and I don't *think* Perl
-                                      # does that.
+            push(@groupset, $row[0]);  
         }
     }
 
-    # Insert the new user record into the database.            
-    $username = SqlQuote($username);
-    $realname = SqlQuote($realname);
-    $cryptpassword = SqlQuote($cryptpassword);
-    SendSQL("INSERT INTO profiles (login_name, realname, cryptpassword, groupset) 
-             VALUES ($username, $realname, $cryptpassword, $groupset)");
-    PopGlobalSQLState();
+    foreach my $groupid (@groupset) {
+        SendSQL("INSERT INTO user_group_map VALUES ($userid, $groupid)");
+    }
 
+    PopGlobalSQLState();
+    
     # Return the password to the calling code so it can be included 
     # in an email sent to the user.
     return $password;
@@ -776,13 +783,14 @@ sub SelectVisible {
 #        $replace .= "WHERE ((selectVisible_bug_groups.group_id IS NULL) ";
 #    }
 
-    $query =~ /^SELECT (.*) FROM/i;
+    $query =~ /^SELECT\s+(.*)\s+FROM/i;
     my $selectedCols = $1;
 
-    $query =~ /FROM (.*) WHERE/i;
+    $query =~ /FROM\s+(.*)\s+WHERE/i;
     my $frompart = $1;
     $frompart =~ s/bugs,//;
-    $query =~ /WHERE (.*) GROUP .*/i;
+
+    $query =~ /WHERE\s+(.*)\s+(GROUP|ORDER)/i;
     my $wherecond = $1;
 
     $replace = "
@@ -840,54 +848,59 @@ sub SelectVisible {
 }
 
 sub CanSeeBug {
-    my ($id, $userid) = @_;
-    my $query = "";
-
-    # If this person is not logged in then let's check first to see if this
-    # bug is private
-    if (!$userid) {
-        PushGlobalSQLState();
-        $query = "SELECT COUNT(bug_id) FROM bug_group_map WHERE bug_id = $id";
-        SendSQL($query);
-        my $count = FetchOneColumn();
-        PopGlobalSQLState();
-        if ($count) {
-            return 0;
-        } else {
-            return 1;
-        }
+    my ($bugs, $userid) = @_;
+    my %cansee;
+    my @buglist;
+    my @usergroupset; 
+ 
+    if(ref($bugs)) {
+        @buglist = @{$bugs};
+    } else {
+        push(@buglist, $bugs);
     }
 
-    # We have a userid so let's check to see if this person can see the bug or not.
-    
+    if (@buglist < 1) {
+        return 0;
+    }
+
     PushGlobalSQLState();
-    # SendSQL(SelectVisible("SELECT bugs.bug_id FROM bugs WHERE bugs.bug_id = $id", $userid));
-    $query = "
+
+    SendSQL("SELECT group_id FROM user_group_map WHERE user_id = $userid");
+    while (my @row = FetchSQLData()) {
+        push(@usergroupset, $row[0]);
+    }
+
+    if (@usergroupset < 1) {
+        @usergroupset = (0);
+    }
+
+    my $query = "
     SELECT 
-        bugs.bug_id 
-    FROM 
-        bugs LEFT JOIN cc ON bugs.bug_id = cc.bug_id AND cc.who = $userid 
-        LEFT JOIN bug_group_map ON bugs.bug_id=bug_group_map.bug_id 
-        LEFT JOIN user_group_map ON bug_group_map.group_id = user_group_map.group_id 
-            AND user_group_map.user_id = $userid 
+        bugs.bug_id
+    FROM
+        bugs LEFT JOIN bug_group_map ON bugs.bug_id = bug_group_map.bug_id
+        LEFT JOIN cc ON bugs.bug_id = cc.bug_id 
     WHERE 
-        bugs.bug_id = $id 
-        AND user_group_map.group_id IS NULL 
-        AND (bugs.reporter_accessible = 0 OR bugs.reporter != $userid) 
-        AND (bugs.qacontact_accessible = 0 OR bugs.qa_contact != $userid) 
-        AND (bugs.assignee_accessible = 0 OR bugs.assigned_to != $userid)
-        AND (bugs.cclist_accessible = 0 OR cc.who IS NULL) LIMIT 1 ";
+        bugs.bug_id IN (" . join(',', @buglist) . ") 
+        AND ((bug_group_map.group_id IN (" . join(',', @usergroupset) . ") OR bug_group_map.group_id IS NULL) 
+        OR (bugs.reporter_accessible = 1 AND bugs.reporter = $userid) 
+        OR (bugs.assignee_accessible = 1 AND bugs.assigned_to = $userid) 
+        OR (bugs.qacontact_accessible = 1 AND bugs.qa_contact = $userid)
+        OR (bugs.cclist_accessible = 1 AND cc.who = $userid))";
+
     SendSQL($query);
-    my $ret = defined(FetchSQLData());
-    PopGlobalSQLState();
     
-    if ($ret) {
+    while (my ($id) = FetchSQLData()) {
+        $cansee{$id} = 1;
+    }
+    
+    PopGlobalSQLState();
+
+    if ((keys %cansee) < 1) {
         return 0;
     } else {
-        return 1;
+        return \%cansee;
     }
-
-    # return $ret;
 }
 
 sub ValidatePassword {
@@ -1150,42 +1163,61 @@ sub quoteUrls {
 
 sub GetBugLink {
     my ($bug_num, $link_text, $userid) = (@_);
-    my ($link_return) = "";
+    detaint_natural($bug_num) || die "GetBugLink() called with non-integer bug number";
 
-    # TODO - Add caching capabilites... possibly use a global variable in the form
-    # of $buglink{$bug_num} that contains the text returned by this sub.  If that
-    # variable is defined, simply return it's value rather than running the SQL
-    # query.  This would cut down on the number of SQL calls when the same bug is
-    # referenced multiple times.
+    # If we've run GetBugLink() for this bug number before, %::buglink
+    # will contain an anonymous array ref of relevent values, if not
+    # we need to get the information from the database.
+    if (! defined $::buglink{$bug_num}) {
+        # Make sure any unfetched data from a currently running query
+        # is saved off rather than overwritten
+        PushGlobalSQLState();
+
+        SendSQL("SELECT bugs.bug_status, resolution, short_desc " .
+               "FROM bugs WHERE bugs.bug_id = $bug_num");
     
-    # Make sure any unfetched data from a currently running query
-    # is saved off rather than overwritten
-    PushGlobalSQLState();
-    
-    # Get this bug's info from the SQL Database
-    SendSQL("select bugs.bug_status, resolution, short_desc, groupset
-             from bugs where bugs.bug_id = $bug_num");
-    my ($bug_stat, $bug_res, $bug_desc, $bug_grp) = (FetchSQLData());
-    
-    # Format the retrieved information into a link
-    if ($bug_stat eq "UNCONFIRMED") { $link_return .= "<i>" }
-    if ($bug_res ne "") { $link_return .= "<strike>" }
-    $bug_desc = value_quote($bug_desc);
-    $link_text = value_quote($link_text);
-    $link_return .= qq{<a href="show_bug.cgi?id=$bug_num" title="$bug_stat};
-    if ($bug_res ne "") {$link_return .= " $bug_res"}
-    if ($bug_grp == 0 || CanSeeBug($bug_num, $userid)) {
-        $link_return .= " - $bug_desc";
+        # If the bug exists, save its data off for use later in the sub
+        if (MoreSQLData()) {
+            my ($bug_state, $bug_res, $bug_desc, $bug_grp) = FetchSQLData();
+            # Initialize these variables to be "" so that we don't get warnings
+            # if we don't change them below (which is highly likely).
+            my ($pre, $title, $post) = ("", "", "");
+
+            $title = $bug_state;
+            if ($bug_state eq $::unconfirmedstate) {
+                $pre = "<i>";
+                $post = "</i>";
+            }
+            elsif (! IsOpenedState($bug_state)) {
+                $pre = "<strike>";
+                $title .= " $bug_res";
+                $post = "</strike>";
+            }
+            if (CanSeeBug($bug_num, $userid)) {
+                $title .= " - $bug_desc";
+            }
+            $::buglink{$bug_num} = [$pre, value_quote($title), $post];
+        }
+        else {
+            # Even if there's nothing in the database, we want to save a blank
+            # anonymous array in the %::buglink hash so the query doesn't get
+            # run again next time we're called for this bug number.
+            $::buglink{$bug_num} = [];
+        }
+        # All done with this sidetrip
+        PopGlobalSQLState();
     }
-    $link_return .= qq{">$link_text</a>};
-    if ($bug_res ne "") { $link_return .= "</strike>" }
-    if ($bug_stat eq "UNCONFIRMED") { $link_return .= "</i>"}
-    
-    # Put back any query in progress
-    PopGlobalSQLState();
 
-    return $link_return; 
-
+    # Now that we know we've got all the information we're gonna get, let's
+    # return the link (which is the whole reason we were called :)
+    my ($pre, $title, $post) = @{$::buglink{$bug_num}};
+    # $title will be undefined if the bug didn't exist in the database.
+    if (defined $title) {
+        return qq{$pre<a href="show_bug.cgi?id=$bug_num" title="$title">$link_text</a>$post};
+    }
+    else {
+        return qq{$link_text};
+    }
 }
 
 sub GetLongDescriptionAsText {
@@ -1333,14 +1365,16 @@ sub UserInGroup {
         return 0;
     }
     ConnectToDatabase();
+    SendSQL("SELECT admin FROM profiles WHERE userid = $userid");
+    my $admin = FetchOneColumn();
+    return 1 if $admin;
+
     SendSQL("SELECT user_id FROM user_group_map, groups
             WHERE user_group_map.group_id = groups.group_id 
             AND groups.name = '$groupname'
             AND user_id = $userid");
     my $result = FetchOneColumn();
-    if ($result) {
-        return 1;
-    }
+    return 1 if $result;
     return 0;
 }
 
@@ -1580,6 +1614,22 @@ sub PerformSubsts {
     return $str;
 }
 
+# Min and max routines.
+sub min {
+    my $min = shift(@_);
+    foreach my $val (@_) {
+        $min = $val if $val < $min;
+    }
+    return $min;
+}
+
+sub max {
+    my $max = shift(@_);
+    foreach my $val (@_) {
+        $max = $val if $val > $max;
+    }
+    return $max;
+}
 
 # Trim whitespace from front and back.
 

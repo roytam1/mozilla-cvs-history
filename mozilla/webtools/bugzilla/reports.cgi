@@ -41,11 +41,6 @@
 use diagnostics;
 use strict;
 
-sub globals_pl_sillyness {
-    my $zz;
-    $zz = %::COOKIE;
-}
-
 eval "use GD";
 my $use_gd = $@ ? 0 : 1;
 eval "use Chart::Lines";

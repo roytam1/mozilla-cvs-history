@@ -30,11 +30,6 @@ use AnyDBM_File;
 require "globals.pl";
 require "CGI.pl";
 
-sub globals_pl_sillyness {
-    my $zz;
-    $zz = %::COOKIE;
-}
-
 ConnectToDatabase(1);
 GetVersionTable();
 

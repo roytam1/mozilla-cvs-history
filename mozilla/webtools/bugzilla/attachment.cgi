@@ -45,7 +45,7 @@ use Template;
 my $template = Template->new(
   {
     # Colon-separated list of directories containing templates.
-    INCLUDE_PATH => "template/default" ,
+    INCLUDE_PATH => "template/custom:template/default" ,
     # Allow templates to be specified with relative paths.
     RELATIVE => 1 
   }
@@ -90,11 +90,13 @@ elsif ($action eq "viewall")
 }
 elsif ($action eq "enter") 
 { 
+  confirm_login();
   ValidateBugID($::FORM{'bugid'}, $userid);
   enter(); 
 }
 elsif ($action eq "insert")
 {
+  confirm_login();
   ValidateBugID($::FORM{'bugid'}, $userid);
   validateFilename();
   validateData();
@@ -471,19 +473,18 @@ sub insert
   my $filename = SqlQuote($::FILE{'data'}->{'filename'});
   my $description = SqlQuote($::FORM{'description'});
   my $contenttype = SqlQuote($::FORM{'contenttype'});
-  my $submitterid = DBNameToIdAndCheck($::COOKIE{'Bugzilla_login'});
   my $thedata = SqlQuote($::FORM{'data'});
 
   # Insert the attachment into the database.
   SendSQL("INSERT INTO attachments (bug_id, filename, description, mimetype, ispatch, submitter_id, thedata) 
-           VALUES ($::FORM{'bugid'}, $filename, $description, $contenttype, $::FORM{'ispatch'}, $submitterid, $thedata)");
+           VALUES ($::FORM{'bugid'}, $filename, $description, $contenttype, $::FORM{'ispatch'}, $::userid, $thedata)");
 
   # Retrieve the ID of the newly created attachment record.
   SendSQL("SELECT LAST_INSERT_ID()");
   my $attachid = FetchOneColumn();
 
   # Insert a comment about the new attachment into the database.
-  my $comment = "Created an attachment (id=$attachid): $::FORM{'description'}\n";
+  my $comment = "Created an attachment (id=$attachid)\n$::FORM{'description'}\n";
   $comment .= ("\n" . $::FORM{'comment'}) if $::FORM{'comment'};
 
   use Text::Wrap;
@@ -500,7 +501,7 @@ sub insert
   foreach my $attachid (@{$::MFORM{'obsolete'}}) {
     SendSQL("UPDATE attachments SET isobsolete = 1 WHERE attach_id = $attachid");
     SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
-             VALUES ($::FORM{'bugid'}, $attachid, $submitterid, NOW(), $fieldid, '0', '1')");
+             VALUES ($::FORM{'bugid'}, $attachid, $::userid, NOW(), $fieldid, '0', '1')");
   }
 
   # Send mail to let people know the attachment has been created.  Uses a 

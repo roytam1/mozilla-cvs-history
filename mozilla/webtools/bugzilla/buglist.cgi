@@ -55,7 +55,7 @@ my $serverpush = 0;
 ConnectToDatabase();
 
 #print "Content-type: text/plain\n\n";    # Handy for debugging.
-#$::FORM{'debug'} = 1;
+# $::FORM{'debug'} = 1;
 
 
 if (grep(/^cmd-/, keys(%::FORM))) {
@@ -817,7 +817,7 @@ sub GenerateSQL {
                   " WHERE " . join(' AND ', (@wherepart, @andlist)) .
                   " GROUP BY bugs.bug_id");
 
-    $query = SelectVisible($query, $userid);
+    # $query = SelectVisible($query, $userid);
 
     if ($debug) {
         print "<P><CODE>" . value_quote($query) . "</CODE><P>\n";
@@ -1003,7 +1003,9 @@ DefCol("votes", "bugs.votes", "Votes", "bugs.votes desc");
 DefCol("keywords", "bugs.keywords", "Keywords", "bugs.keywords", 5);
 
 my @collist;
-if (defined $::COOKIE{'COLUMNLIST'}) {
+if (defined $::FORM{'columnlist'}) {
+    @collist = split(/[ ,]+/, $::FORM{'columnlist'});
+} elsif (defined $::COOKIE{'COLUMNLIST'}) {
     @collist = split(/ /, $::COOKIE{'COLUMNLIST'});
 } else {
     @collist = @::default_column_list;
@@ -1130,9 +1132,9 @@ if (defined $::FORM{'order'} && $::FORM{'order'} ne "") {
 }
 
 
-if ($::FORM{'debug'} && $serverpush) {
-    print "<P><CODE>" . value_quote($query) . "</CODE><P>\n";
-}
+#if ($::FORM{'debug'} && $serverpush) {
+#    print "<P><CODE>" . value_quote($query) . "</CODE><P>\n";
+#}
 
 
 if (Param('expectbigqueries')) {
@@ -1215,6 +1217,7 @@ $tablestart .= "\n";
 my @row;
 my %seen;
 my @bugarray;
+my %valuehash;
 my %prodhash;
 my %statushash;
 my %ownerhash;
@@ -1237,17 +1240,134 @@ my @weekday= qw( Sun Mon Tue Wed Thu Fri Sat );
 # Truncate email to 30 chars per bug #103592
 my $maxemailsize = 30;
 
+#while (@row = FetchSQLData()) {
+#    my $bug_id = shift @row;
+#    my $g = shift @row;         # Bug's group set.
+#    if (!defined $seen{$bug_id}) {
+#        $seen{$bug_id} = 1;
+#        $count++;
+#        if ($count % 200 == 0) {
+#            # Too big tables take too much browser memory...
+#            pnl "</TABLE>$tablestart";
+#        }
+#        push @bugarray, $bug_id;
+#
+#        # retrieve this bug's priority and severity, if available,
+#        # by looping through all column names -- gross but functional
+#        my $priority = "unknown";
+#        my $severity;
+#        if ($pricol >= 0) {
+#            $priority = $row[$pricol];
+#        }
+#        if ($sevcol >= 0) {
+#            $severity = $row[$sevcol];
+#        }
+#        my $customstyle = "";
+#        if ($severity) {
+#            if ($severity eq "enh") {
+#                $customstyle = "style='font-style:italic ! important'";
+#            }
+#            if ($severity eq "blo") {
+#                $customstyle = "style='color:red ! important; font-weight:bold ! important'";
+#            }
+#            if ($severity eq "cri") {
+#                $customstyle = "style='color:red; ! important'";
+#            }
+#        }
+#        pnl "<TR VALIGN=TOP ALIGN=LEFT CLASS=$priority $customstyle><TD>";
+#        if ($dotweak) {
+#            pnl "<input type=checkbox name=id_$bug_id>";
+#        }
+#        pnl "<A HREF=\"show_bug.cgi?id=$bug_id\">";
+#        pnl "$bug_id</A>";
+#        if ($g != "0") { pnl "*"; }
+#        pnl " ";
+#        foreach my $c (@collist) {
+#            if (exists $::needquote{$c}) {
+#                my $value = shift @row;
+#                if (!defined $value) {
+#                    pnl "<TD>";
+#                    next;
+#                }
+#                if ($c eq "owner") {
+#                    $ownerhash{$value} = 1;
+#                }
+#                if ($c eq "qa_contact") {
+#                    $qahash{$value} = 1;
+#                }
+#                if ( ($c eq "owner" || $c eq "qa_contact" ) &&
+#                        length $value > $maxemailsize )  {
+#                    my $trunc = substr $value, 0, $maxemailsize;
+#                    $value = value_quote($value);
+#                    $value = qq|<SPAN TITLE="$value">$trunc...</SPAN>|;
+#                } elsif( $c eq 'changeddate' or $c eq 'opendate' ) {
+#                    my $age = time() - $value;
+#                    my ($s,$m,$h,$d,$mo,$y,$wd)= localtime $value;
+#                    if( $age < 18*60*60 ) {
+#                        $value = sprintf "%02d:%02d:%02d", $h,$m,$s;
+#                    } elsif ( $age < 6*24*60*60 ) {
+#                        $value = sprintf "%s %02d:%02d", $weekday[$wd],$h,$m;
+#                    } else {
+#                        $value = sprintf "%04d-%02d-%02d", 1900+$y,$mo+1,$d;
+#                    }
+#                }
+#                if ($::needquote{$c} || $::needquote{$c} == 5) {
+#                    $value = html_quote($value);
+#                } else {
+#                    $value = "<nobr>$value</nobr>";
+#                }
+#
+#                pnl "<td class=$c>$value";
+#            }
+#        }
+#        if ($dotweak) {
+#            my $value = shift @row;
+#            $prodhash{$value} = 1;
+#            $value = shift @row;
+#            $statushash{$value} = 1;
+#        }
+#        pnl "\n";
+#    }
+#}
+
 while (@row = FetchSQLData()) {
     my $bug_id = shift @row;
-    my $g = shift @row;         # Bug's group set.
+    push @bugarray, $bug_id;
+
+    $valuehash{$bug_id} = [];
+    push (@{$valuehash{$bug_id}}, shift @row);  # Bug's groupset
+
+    foreach my $col ( @collist ) {
+        if ( exists $::needquote{$col} ) {
+             my $value = shift @row;
+            push (@{$valuehash{$bug_id}}, $value);
+        }
+    }
+
+    if ($dotweak) {
+        my $value = shift @row;
+        $prodhash{$value} = 1;
+        $value = shift @row;
+        $statushash{$value} = 1;
+    }
+}
+
+my @newbugarray;
+my $canseeref = CanSeeBug(\@bugarray, $userid);
+
+foreach my $bug_id (@bugarray) {
+    # Do not show this bug if the user does not have permission to see it
+    next if !$canseeref->{$bug_id};
+    push (@newbugarray, $bug_id);
+
     if (!defined $seen{$bug_id}) {
         $seen{$bug_id} = 1;
+
         $count++;
         if ($count % 200 == 0) {
             # Too big tables take too much browser memory...
             pnl "</TABLE>$tablestart";
         }
-        push @bugarray, $bug_id;
 
         # retrieve this bug's priority and severity, if available,
         # by looping through all column names -- gross but functional
@@ -1272,16 +1392,17 @@ while (@row = FetchSQLData()) {
             }
         }
         pnl "<TR VALIGN=TOP ALIGN=LEFT CLASS=$priority $customstyle><TD>";
+
         if ($dotweak) {
             pnl "<input type=checkbox name=id_$bug_id>";
         }
         pnl "<A HREF=\"show_bug.cgi?id=$bug_id\">";
         pnl "$bug_id</A>";
-        if ($g != "0") { pnl "*"; }
+        # if ($g != "0") { pnl "*"; }
         pnl " ";
         foreach my $c (@collist) {
             if (exists $::needquote{$c}) {
-                my $value = shift @row;
+                my $value = shift @{$valuehash{$bug_id}};
                 if (!defined $value) {
                     pnl "<TD>";
                     next;
@@ -1318,16 +1439,16 @@ while (@row = FetchSQLData()) {
             }
         }
         if ($dotweak) {
-            my $value = shift @row;
+            my $value = shift @{$valuehash{$bug_id}};
             $prodhash{$value} = 1;
-            $value = shift @row;
+            $value = shift @{$valuehash{$bug_id}};
             $statushash{$value} = 1;
         }
         pnl "\n";
     }
 }
-my $buglist = join(":", @bugarray);
 
+my $buglist = join(":", @newbugarray);
 
 # This is stupid.  We really really need to move the quip list into the DB!
 my $quip;
@@ -1376,9 +1497,9 @@ if (Param('usebuggroups')) {
    print "<BR>* next to a bug number notes a bug not visible to everyone.<BR>";
 }
 
-if (defined $::FORM{'debug'}) {
-    print "<P><CODE>" . value_quote($query) . "</CODE><P>\n";
-}
+#if (defined $::FORM{'debug'}) {
+#    print "<P><CODE>" . value_quote($query) . "</CODE><P>\n";
+#}
 
 if ($toolong) {
     print "<h2>This list is too long for bugzilla's little mind; the\n";

@@ -29,9 +29,9 @@
 
 use diagnostics;
 use strict;
+use lib ".";
+
 # use Carp;                       # for confess
-# Shut up misguided -w warnings about "used only once".  For some reason,
-# "use vars" chokes on me when I try it here.
 
 # commented out the following snippet of code. this tosses errors into the
 # CGI if you are perl 5.6, and doesn't if you have perl 5.003. 
@@ -39,6 +39,8 @@ use strict;
 # eval "use Mozilla::LDAP::Conn";
 # my $have_ldap = $@ ? 0 : 1;
 
+# Shut up misguided -w warnings about "used only once".  For some reason,
+# "use vars" chokes on me when I try it here.
 
 sub CGI_pl_sillyness {
     my $zz;
@@ -1211,7 +1213,7 @@ sub DumpBugActivity {
     die "Invalid id: $id" unless $id=~/^\s*\d+\s*$/;
 
     if (defined $starttime) {
-        $datepart = "and bugs_activity.bug_when >= $starttime";
+        $datepart = "and bugs_activity.bug_when > " . SqlQuote($starttime);
     }
     my $query = "
         SELECT IFNULL(fielddefs.description, bugs_activity.fieldid),
@@ -1307,9 +1309,11 @@ Actions:
     }
     if ($loggedin) {
         #a little mandatory SQL, used later on
-        SendSQL("SELECT mybugslink, userid, blessgroupset FROM profiles " .
+        SendSQL("SELECT mybugslink, userid FROM profiles " .
                 "WHERE login_name = " . SqlQuote($::COOKIE{'Bugzilla_login'}));
-        my ($mybugslink, $userid, $blessgroupset) = (FetchSQLData());
+        my ($mybugslink, $userid) = (FetchSQLData());
+        SendSQL("SELECT COUNT(*) FROM bless_group_map WHERE user_id = $userid"); 
+        my $blessgroupset = FetchOneColumn();
         
         #Begin settings
         $html .= qq{
@@ -1325,7 +1329,7 @@ Edit <a href="userprefs.cgi">prefs</a>
             $html .= ", <a href=\"editusers.cgi\">users</a>\n";
         }
         if (UserInGroup($userid, "editcomponents")) {
-            $html .= ", <a href=\"editproducts.cgi\">components</a>\n";
+            $html .= ", <a href=\"editproducts.cgi\">products</a>\n";
             $html .= ", <a href=\"editattachstatuses.cgi\">
               attachment&nbsp;statuses</a>\n" if Param('useattachmenttracker');
         }

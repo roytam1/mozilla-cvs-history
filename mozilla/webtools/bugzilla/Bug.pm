@@ -143,14 +143,6 @@ sub initBug  {
     }
   }
 
-  if ($self->{'short_desc'}) {
-    $self->{'short_desc'} = QuoteXMLChars( $self->{'short_desc'} );
-  }
-
-  if (defined $self->{'status_whiteboard'}) {
-    $self->{'status_whiteboard'} = QuoteXMLChars($self->{'status_whiteboard'});
-  }
-
   $self->{'assigned_to'} = &::DBID_to_name($self->{'assigned_to'});
   $self->{'reporter'} = &::DBID_to_name($self->{'reporter'});
 
@@ -179,7 +171,7 @@ sub initBug  {
         push(@list, &::FetchOneColumn());
     }
     if (@list) {
-      $self->{'keywords'} = &::html_quote(join(', ', @list));
+      $self->{'keywords'} = join(', ', @list);
     }
   }
 
@@ -194,7 +186,7 @@ sub initBug  {
       my %attach;
       $attach{'attachid'} = $attachid;
       $attach{'date'} = $date;
-      $attach{'desc'} = &::html_quote($desc);
+      $attach{'desc'} = $desc;
       push @attachments, \%attach;
     }
   }
@@ -211,7 +203,7 @@ sub initBug  {
     my %longdesc;
     $longdesc{'who'} = $who;
     $longdesc{'bug_when'} = $bug_when;
-    $longdesc{'thetext'} = &::html_quote($thetext);
+    $longdesc{'thetext'} = $thetext;
     push @longdescs, \%longdesc;
   }
   if (@longdescs) {
@@ -315,11 +307,11 @@ sub EmitDependList {
 }
 
 sub QuoteXMLChars {
+  $_[0] =~ s/&/&amp;/g;
   $_[0] =~ s/</&lt;/g;
   $_[0] =~ s/>/&gt;/g;
   $_[0] =~ s/'/&apos;/g;
   $_[0] =~ s/"/&quot;/g;
-  $_[0] =~ s/&/&amp;/g;
 # $_[0] =~ s/([\x80-\xFF])/&XmlUtf8Encode(ord($1))/ge;
   return($_[0]);
 }
