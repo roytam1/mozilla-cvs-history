@@ -40,7 +40,8 @@
 package BuildStatus;
 
 
-
+# This package must not use any tinderbox specific libraries.  It is
+# intended to be a base class.
 
 
 # for each Build status we have:

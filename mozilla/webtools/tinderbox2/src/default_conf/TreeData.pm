@@ -62,6 +62,9 @@
 
 package TreeData;
 
+# This package must not use any tinderbox specific libraries.  It is
+# intended to be a base class.
+
 $VERSION = '#tinder_version#';
 
 
