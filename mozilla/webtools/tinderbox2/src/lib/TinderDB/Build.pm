@@ -774,7 +774,7 @@ sub apply_db_updates {
         die("Error in updatefile: $full_file, ".
             "timenow: $timenow, is not a valid time.");
 
-      ($starttime < $timenow) ||
+      ($starttime <= $timenow) ||
         die("Error in updatefile: $full_file, ".
             "starttime: $starttime, is less then timenow: $timenow.");
 
