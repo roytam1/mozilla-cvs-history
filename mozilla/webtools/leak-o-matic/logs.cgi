@@ -33,7 +33,8 @@ use CGI;
 use POSIX;
 
 $::query = new CGI();
-$::logdir = $::query->param('logdir' => 'data');
+$::logdir = $::query->param('logdir');
+$::logdir = 'data' unless $::logdir; # default is 'data' subdir
 
 print $::query->header;
 print $::query->start_html("Leak-o-Matic");
