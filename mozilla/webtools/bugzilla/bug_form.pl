@@ -36,6 +36,8 @@ sub show_bug {
         $zz = %::FORM;
         $zz = %::proddesc;
         $zz = %::prodmaxvotes;
+        $zz = %::Tmaptype;
+        $zz = %::Tgroup_type;
         $zz = @::enterable_products;                                            
         $zz = @::settable_resolution;
         $zz = $::unconfirmedstate;

@@ -53,6 +53,7 @@ sub globals_pl_sillyness {
     $zz = @main::legal_versions;
     $zz = @main::milestoneurl;
     $zz = %main::proddesc;
+    $zz = %main::Tgroup_type;
     $zz = @main::prodmaxvotes;
     $zz = $main::template;
     $zz = $main::userid;
@@ -981,7 +982,7 @@ sub get_component_id {
             " AND components.name = " . SqlQuote($comp));
     my ($comp_id) = FetchSQLData();
     PopGlobalSQLState();
-    detaint_natural($comp_id) || die "get_component_id() returned a non-integer";
+    detaint_natural($comp_id); 
     return $comp_id;
 }
 

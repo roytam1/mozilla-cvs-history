@@ -59,6 +59,8 @@ sub sillyness {
     $zz = $::unconfirmedstate;
     $zz = $::userid;
     $zz = @::versions;
+    $zz = %::Tmaptype;
+    $zz = %::Tgroup_type;
 };
 
 if (length($::buffer) == 0) {

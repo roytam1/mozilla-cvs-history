@@ -49,6 +49,8 @@ use vars qw(%versions
           %settable_resolution
           %target_milestone
           %legal_severity
+          %Tgroup_type
+          %Tmaptype
           $next_bug);
 
 ConnectToDatabase();
@@ -1120,9 +1122,9 @@ foreach my $id (@idlist) {
     foreach my $grouptoadd (@groupAdd) {
         if (!BugInGroupId($id, $grouptoadd)) {
             $groupAddNames .= GroupIdToName($grouptoadd) . ' ';
+            SendSQL("INSERT INTO bug_group_map (bug_id, group_id) 
+                     VALUES ($id, $grouptoadd)");
         }
-        SendSQL("INSERT IGNORE INTO bug_group_map (bug_id, group_id) 
-                 VALUES ($id, $grouptoadd)");
     }
     my $groupDelNames = '';
     foreach my $grouptodel (@groupDel) {
@@ -1276,7 +1278,9 @@ foreach my $id (@idlist) {
         ) { 
             # Add the bug to the group associated with its new product.
             my $groupid = GroupNameToId($::FORM{'product'});
-            SendSQL("INSERT IGNORE INTO bug_group_map (bug_id, group_id) VALUES ($id, $groupid)");
+            if (!BugInGroupId($id, $groupid)) {
+                SendSQL("INSERT INTO bug_group_map (bug_id, group_id) VALUES ($id, $groupid)");
+            }
         }
 
         if ( 

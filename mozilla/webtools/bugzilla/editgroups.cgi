@@ -29,6 +29,12 @@ use lib ".";
 
 require "CGI.pl";
 
+sub sillyness {
+    my $zz;
+    $zz = %::Tgroup_type;
+}
+
+
 ConnectToDatabase();
 confirm_login();
 

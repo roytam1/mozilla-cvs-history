@@ -34,6 +34,7 @@ use RelationSet;
 sub sillyness {
     my $zz;
     $zz = $::defaultqueryname;
+    $zz = %::Tmaptype;
 }
 
 # Use global template variables.

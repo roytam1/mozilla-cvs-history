@@ -44,6 +44,7 @@ sub sillyness {
     $zz = @::legal_product;
     $zz = @::legal_severity;
     $zz = %::target_milestone;
+    $zz = %::Tmaptype;
 }
 
 # Use global template variables.
@@ -287,9 +288,10 @@ my $id = FetchOneColumn();
 
 # Add the group restrictions
 foreach my $grouptoadd (@groupstoadd) {
-    SendSQL("INSERT IGNORE INTO bug_group_map (bug_id, group_id)
+    SendSQL("INSERT INTO bug_group_map (bug_id, group_id)
              VALUES ($id, $grouptoadd)");
 }
+
 # Add the comment
 SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) 
          VALUES ($id, $::userid, now(), " . SqlQuote($comment) . ")");

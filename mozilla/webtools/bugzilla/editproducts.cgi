@@ -40,6 +40,7 @@ require "globals.pl";
 sub sillyness {
     my $zz;
     $zz = $::unconfirmedstate;
+    $zz = %::Tgroup_type;
 }
 
 

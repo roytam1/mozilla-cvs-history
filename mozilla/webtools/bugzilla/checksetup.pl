@@ -103,7 +103,7 @@ use strict;
 # this way we can look in the symbol table to see if they've been declared
 # yet or not.
 
-use vars qw( $db_name );
+use vars qw( $db_name %Tgroup_type);
 
 ###########################################################################
 # Check required module
@@ -3264,16 +3264,23 @@ if (GetFieldDef("profiles", "groupset")) {
                    WHERE (groupset & $bit) != 0");
         $sth2->execute();
         while (my ($uid) = $sth2->fetchrow_array) {
-            $dbh->do("INSERT IGNORE INTO member_group_map
-                   (member_id, group_id, maptype, isderived)
-                   VALUES($uid, $gid, $::Tmaptype->{'u2gm'}, 0)");
+            my $query = "SELECT member_id FROM member_group_map 
+                WHERE group_id = $gid AND member_id = $uid 
+                AND maptype = $::Tmaptype->{'u2gm'}"; 
+            my $sth3 = $dbh->prepare($query);
+            $sth3->execute();
+            if ( !$sth3->fetchrow_array() ) {
+                $dbh->do("INSERT INTO member_group_map
+                       (member_id, group_id, maptype, isderived)
+                       VALUES($uid, $gid, $::Tmaptype->{'u2gm'}, 0)");
+            }
         }
         # create uBg memberships for old groupsets
         $sth2 = $dbh->prepare("SELECT userid FROM profiles
                    WHERE (blessgroupset & $bit) != 0");
         $sth2->execute();
         while (my ($uid) = $sth2->fetchrow_array) {
-            $dbh->do("INSERT IGNORE INTO member_group_map
+            $dbh->do("INSERT INTO member_group_map
                    (member_id, group_id, maptype, isderived)
                    VALUES($uid, $gid, $::Tmaptype->{'uBg'}, 0)");
         }
@@ -3282,7 +3289,7 @@ if (GetFieldDef("profiles", "groupset")) {
                    WHERE (groupset & $bit) != 0");
         $sth2->execute();
         while (my ($bid) = $sth2->fetchrow_array) {
-            $dbh->do("INSERT IGNORE INTO bug_group_map
+            $dbh->do("INSERT INTO bug_group_map
                    (bug_id, group_id)
                    VALUES($bid, $gid)");
         }

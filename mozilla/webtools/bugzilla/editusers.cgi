@@ -37,10 +37,10 @@ require "globals.pl";
 # Shut up misguided -w warnings about "used only once".  "use vars" just
 # doesn't work for me.
 
-sub sillyness {
-    my $zz;
-    $zz = $::userid;
-}
+#sub sillyness {
+#    my $zz;
+#    $zz = $::userid;
+#}
 
 my $editall;
 
@@ -727,17 +727,17 @@ if ($action eq 'update') {
         if ($::FORM{"oldgroup_$groupid"} != ($::FORM{"group_$groupid"} ? 1 : 0)) {
             # group membership changed
             PushGlobalSQLState();
+            SendSQL("DELETE FROM member_group_map 
+                     WHERE member_id = $thisuserid
+                     AND group_id = $groupid
+                     AND maptype = $::Tmaptype->{'u2gm'} 
+                     AND isderived = 0");
             if ($::FORM{"group_$groupid"}) {
-                SendSQL("INSERT IGNORE INTO member_group_map 
+                SendSQL("INSERT INTO member_group_map 
                          (member_id, group_id, maptype, isderived)
                          VALUES ($thisuserid, $groupid, $::Tmaptype->{'u2gm'}, 0)");
                 print "Added user to group $name<BR>\n";
             } else {
-                SendSQL("DELETE FROM member_group_map 
-                         WHERE member_id = $thisuserid
-                         AND group_id = $groupid
-                         AND maptype = $::Tmaptype->{'u2gm'} 
-                         AND isderived = 0");
                 print "Dropped user from group $name<BR>\n";
             }
             PopGlobalSQLState();
@@ -746,17 +746,17 @@ if ($action eq 'update') {
         if ($editall && ($::FORM{"oldbless_$groupid"} != ($::FORM{"bless_$groupid"} ? 1 : 0))) {
             # group membership changed
             PushGlobalSQLState();
+            SendSQL("DELETE FROM member_group_map 
+                     WHERE member_id = $thisuserid
+                     AND group_id = $groupid
+                     AND maptype = $::Tmaptype->{'uBg'}
+                     AND isderived = 0");
             if ($::FORM{"bless_$groupid"}) {
-                SendSQL("INSERT IGNORE INTO member_group_map 
+                SendSQL("INSERT INTO member_group_map 
                          (member_id, group_id, maptype, isderived)
                          VALUES ($thisuserid, $groupid, $::Tmaptype->{'uBg'}, 0)");
                 print "Granted user permission to bless group $name<BR>\n";
             } else {
-                SendSQL("DELETE FROM member_group_map 
-                         WHERE member_id = $thisuserid
-                         AND group_id = $groupid
-                         AND maptype = $::Tmaptype->{'uBg'}
-                         AND isderived = 0");
                 print "Revoked user's permission to bless group $name<BR>\n";
             }
             PopGlobalSQLState();

@@ -49,8 +49,10 @@ use vars qw(
   @legal_platform
   @legal_priority
   @legal_severity
+  $userid
   %MFORM
   %versions
+  %Tmaptype
 );
 
 # We have to connect to the database, even though we don't use it in this code,
