@@ -385,3 +385,11 @@ CalendarClient -a \
 	mozilla/widget \
 	mozilla/xpfc \
 	mozilla/view
+
+#######################################################################
+# Modules for the JavaScript Engine 
+# (fur@netscape.com)
+#
+
+JSRef -a \
+	mozilla/js/src
