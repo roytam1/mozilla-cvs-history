@@ -97,7 +97,7 @@ package BuildStatus;
                             'html_color'=>  'yellow',
                             'hdml_char'=> '.',
                             'handler'=> \&main::null,
-                            'description'=>  'Build is not running',
+                            'description'=>  'Build in progress - status unavailible',
                             'order'=>  0,
                            },
            
@@ -105,7 +105,7 @@ package BuildStatus;
                           'html_color'=>  'yellow',
                           'hdml_char'=> '.',
                           'handler'=> \&main::null,
-                          'description'=>  'Build in progress',
+                          'description'=>  'Build in progress - status availible',
                           'order'=>  1,
                          },
            
