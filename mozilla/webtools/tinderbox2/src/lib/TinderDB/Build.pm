@@ -849,13 +849,10 @@ sub apply_db_updates {
     
     if ($buildstatus ne 'not_running') {
 
-      if (
-          ($buildstatus ne 'success') &&
-          ($previous_rec->{'starttime'})
-         ) {
+      if ($previous_rec->{'starttime'}) {
 
-        # If the current build is broken, show what to see what has
-        # changed in VC during the last build.
+        # show what has new has made it into this build, it is also what
+        # has changed in VC during the last build.
 
         $record->{'previousbuildtime'} = $previous_rec->{'starttime'};
 
