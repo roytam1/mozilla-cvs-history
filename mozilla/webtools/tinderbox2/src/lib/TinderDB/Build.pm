@@ -466,6 +466,40 @@ sub trim_db_history {
 
 
 
+# return a list of all the times where an even occured.
+
+sub event_times_vec {
+  my ($self, $start_time, $end_time, $tree) = (@_);
+
+  my @times;
+
+  my @build_names = build_names($tree);
+  foreach $buildname (@build_names) {
+      my ($num_recs) = $#{ $DATABASE{$tree}{$buildname}{'recs'} };
+      foreach $i (0 .. $num_recs) {
+
+          my $rec = $DATABASE{$tree}{$buildname}{'recs'}[$i];
+          push @times, $rec->{'starttime'};
+          push @times, $rec->{'endtime'};
+
+      }
+  }
+
+  # sort numerically descending
+  @times = sort {$b <=> $a} @times;
+
+  my @out;
+  foreach $time (@times) {
+    ($time <= $start_time) || next;
+    ($time <= $end_time) && last;
+    push @out, $time;
+  }
+
+  return @out;
+}
+
+
+
 sub status_table_legend {
   my ($out)='';
 
