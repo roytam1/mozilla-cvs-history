@@ -1,0 +1,41 @@
+package Conf::Finish;
+use Conf;
+no warnings;
+
+output("Now generating configuration file\n");
+unlink(fileconvert('Conf/Supplies/Config.pm'));
+open(CONFIG,">Conf/Supplies/Config.pm");
+print CONFIG <<"EOF";
+package Conf::Supplies::Config;
+#THIS IS AN AUTOMATICALLY GENERATED FILE
+#DO NOT EDIT!
+#RE-RUN CONFIGURE.PL TO MAKE CHANGES
+EOF
+foreach $current (keys(%main::c)) {
+    print CONFIG "\$main::c{$current} = '$main::c{$current}'"; # ugh that's ugly
+}
+close(CONFIG);
+output("Configuration file generated\n");
+
+# and now for my next trick...
+output("Generating Makefile\n");
+unlink(fileconvert('Makefile')); # get rid of the old
+open(MAKE,">Makefile");
+open(MAKEIN,"Makefile.in");
+while(<MAKEIN>) {
+    $line = $_;
+    $line =~ s/@@(\s?.*?)@@/$main::c{$1}/;
+    print MAKE $line; # and output the line with changes made
+}
+close(MAKE);
+close(MAKEIN);
+output("Makefile generation complete\n");
+
+
+sub fileconvert() {
+    use File::Spec;
+    my @pathlist = split('/',$path);
+    return File::Spec->catfile(@pathlist);    
+}
+
+1;

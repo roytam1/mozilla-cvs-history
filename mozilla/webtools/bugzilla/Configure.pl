@@ -39,6 +39,7 @@ use Conf;
 # Insert lines in this space to run .cm files like:
 # runconf('Conf/Begin.cm'); 
 # runconf() will handle the path mapping for XP purposes
+runconf('Conf/Finish.cm');
 
 sub runconf {
     my ($path) = @_;
