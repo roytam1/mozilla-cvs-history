@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl5 -w
+#!/usr/bin/perl -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -74,7 +74,7 @@ my %pubcmds = (
                "moon" => \&bot_moon,
                "uuid" => \&bot_uuid,
                "up" => \&bot_up,
-               "(trees|tree)" => \&bot_tinderbox,
+               #"(trees|tree)" => \&bot_tinderbox,
                "debug" => \&bot_debug,
                "(stocks|stock)" => \&bot_pub_stocks,
                "(translate|xlate|x)" => \&bot_translate,
@@ -93,12 +93,14 @@ my %admincmds = (
                  );
 
 my %rdfcmds = (
-               "(slashdot|sd|\/\.)" => "http://www.slashdot.org/slashdot.rdf",
-               "(mozillaorg|mozilla|mo)" => "http://www.mozilla.org/news.rdf",
-               "(newsbot|nb)" => "http://www.mozilla.org/newsbot/newsbot.rdf",
-               "(xptoolkit|xpfe)" => "http://www.mozilla.org/xpfe/toolkit.rdf",
-               "(freshmeat|fm)" => "http://freshmeat.net/backend/fm.rdf",
-               "(mozillazine|zine|mz)" => "http://www.mozillazine.org/contents.rdf",
+               #"(slashdot|sd|\/\.)" => "http://www.slashdot.org/slashdot.rdf",
+               #"(mozillaorg|mozilla|mo)" => "http://www.mozilla.org/news.rdf",
+               #"(newsbot|nb)" => "http://www.mozilla.org/newsbot/newsbot.rdf",
+               #"(xptoolkit|xpfe)" => "http://www.mozilla.org/xpfe/toolkit.rdf",
+               #"(freshmeat|fm)" => "http://freshmeat.net/backend/fm.rdf",
+               #"(mozillazine|zine|mz)" => "http://www.mozillazine.org/contents.rdf",
+               "(cryptome|jya)" => "http://terpsichore/cgi-bin/cryptome.perl",
+               "(sci.crypt.research|scr)" => "http://terpsichore/cgi-bin/sci.crypt.research.perl",
                );
 
 my %rdf_title;
@@ -122,8 +124,8 @@ my %stockhist;
 
 $server = $server               || "irc.mozilla.org";
 $port = $port                   || "6667";
-$nick = $nick                   || "mozbot";
-$channel = $channel             || "#mozilla";
+$nick = $nick                   || "cypherbot";
+$channel = $channel             || "#mozcrypto";
 
 &debug ("mozbot $VERSION starting up");
 
@@ -132,7 +134,7 @@ LoadStockList();
 &create_pid_file;
 
 # read admin list 
-my %admins = ( "rko" => "netscape.com", "cyeh" => "netscape.com", "terry" => "netscape.com" );
+my %admins = ( "roeber" => "netscape.com", "Bezoar" => "netscape.com", "Bezoar" => "bigbaldguy.com" );
 my $adminf = ".$nick-admins";
 &fetch_admin_conf (\%admins);
 
@@ -171,7 +173,7 @@ my @greetings =
 	"g'day", "bonjour", "guten tag", "konnichiwa",
 	"hello", "hola", "hi", "buono giorno", "aloha",
 	"hey", "'sup", "lo", "howdy", "saluton", "hei",
-	"hallo", "word", "yo yo yo", "rheeet", "bom dia",
+	"hallo", "word", "yo yo yo", "Rheeeeeeeet!", "bom dia",
 	"ciao"
 	);
 
@@ -200,10 +202,10 @@ $bot->add_handler ('public', \&on_public);
 $bot->add_handler ('join',   \&on_join);
 
 &debug ("scheduling stuff");
-$bot->schedule (0, \&tinderbox);
+#$bot->schedule (0, \&tinderbox);
 $bot->schedule (0, \&checksourcechange);
-$bot->schedule (0, \&stocks);
-$bot->schedule (0, \&ftp_scan);
+#$bot->schedule (0, \&stocks);
+#$bot->schedule (0, \&ftp_scan);
 
 foreach my $i (keys %rdfcmds) {
     $bot->schedule(0, \&rdfchannel, $rdfcmds{$i});
@@ -601,6 +603,7 @@ sub bot_debug
 
 	do_headlines ($nick, "Boring Debug Information", \@list);
 	}
+
 
 #timeless didn't like http://server): it upset his irc client/browser link
 sub bot_rdfchannel {
@@ -1119,6 +1122,8 @@ sub stocks {
 
 sub LoadStockList {
     %stocklist = ("AOL"  => [$channel],
+                  "TWX" => [$channel],
+                  "SUNW" => [$channel],
                   "RHAT" => [$channel],
                   "^DJI" => [$channel],
                   "^IXIC" => [$channel]);
@@ -1197,9 +1202,9 @@ sub bot_stocks {
 }
 
 sub bot_pub_stocks {
-    my ($nick, $cmd, $rest) = (@_);
+    my ($chan, $cmd, $rest) = (@_);
     bot_stocks($::speaker, $cmd, $rest);
-    sendmsg($nick, "[ Stocks sent to $::speaker. In the future, use \"/msg mozbot stocks\" ]");
+    sendmsg($chan, "[ Stocks sent to $::speaker. In the future, use \"/msg " . $nick . " stocks\" ]");
 }
 
 sub translate_usage {
@@ -1222,8 +1227,8 @@ sub bot_translate {
 }
 
 sub bot_review {
-    my ($nick, $cmd, $rest) = (@_);
-    sendmsg($nick, "$::speaker, I've reviewed your code, and it looks great.  r=mozbot.");
+    my ($chan, $cmd, $rest) = (@_);
+    sendmsg($chan, "$::speaker, I've reviewed your code, and it looks great.  r=" . $nick . ".");
 }
 
 sub trim {
