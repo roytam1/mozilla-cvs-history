@@ -299,7 +299,7 @@ sub event_times_vec {
 # installed all the hooks they need and override this function.
 
 sub notice_association {
-    return ;
+    return '';
 }
 
 

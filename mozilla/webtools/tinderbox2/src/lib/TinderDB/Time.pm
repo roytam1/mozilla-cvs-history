@@ -100,7 +100,7 @@ sub apply_db_updates {
 # Really this is the names the columns produced by this DB
 
 sub notice_association {
-    return ;
+    return '';
 }
 
 sub status_table_header {
