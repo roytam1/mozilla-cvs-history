@@ -56,7 +56,7 @@ include"$page_header";
 <DIV class="faqtitle">Developer Control Panel - Coming Soon</DIV>
 
 <DIV style="width: 75%; margin: auto; margin-top: 20px; border: 1px dotted #0065CA; padding: 5px">
-By Firefox 1.0, Mozilla Update will have a new section for Extension/Theme authors to login to. This new section
+In the next version of Mozilla Update, Mozilla Update will have a new section for Extension/Theme authors to login to. This new section
 will give them the ability to manage their extensions and themes that're hosted on Mozilla Update themselves.<BR>
 <BR>
 Authors will have the ability to add a new extension or theme themselves, as well as adding new versions of that extension or theme,
