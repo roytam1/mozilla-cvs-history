@@ -1718,54 +1718,6 @@ sub AddGroup {
 }
 
 
-#
-# BugZilla uses --GROUPS-- to assign various rights to its users. 
-#
-
-#sub RenameField ($$$);
-sub GetFieldDef ($$);
-sub GetIndexDef ($$);
-sub AddField ($$$);
-AddField('groups', 'id', 'mediumint not null auto_increment primary key');
-$dbh->do("ALTER TABLE groups DROP INDEX bit") if GetIndexDef("groups","bit");
-
-AddGroup 'tweakparams',      'Can tweak operating parameters';
-AddGroup 'editusers',      'Can edit or disable users';
-AddGroup 'creategroups',     'Can create and destroy groups.';
-AddGroup 'editcomponents',   'Can create, destroy, and edit components.';
-AddGroup 'editkeywords',   'Can create, destroy, and edit keywords.';
-AddGroup 'admin',  'Administrators';
-
-
-if (!GroupDoesExist("editbugs")) {
-    my $id = AddGroup('editbugs',  'Can edit all aspects of any bug.', ".*");
-    my $sth = $dbh->prepare("SELECT userid FROM profiles ORDER BY userid");
-    $sth->execute();
-    while ( my ($userid) = $sth->fetchrow_array() ) {
-        $dbh->do("INSERT INTO user_group_map 
-            (user_id, group_id, isbless, isderived) 
-            VALUES ($userid, $id, 0, 0)");
-    }
-
-}
-
-if (!GroupDoesExist("canconfirm")) {
-    my $id = AddGroup('canconfirm',  'Can confirm a bug.', ".*");
-    my $sth = $dbh->prepare("SELECT userid FROM profiles ORDER BY userid");
-    $sth->execute();
-    while ( my ($userid) = $sth->fetchrow_array() ) {
-        $dbh->do("INSERT INTO user_group_map 
-            (user_id, group_id, isbless, isderived) 
-            VALUES ($userid, $id, 0, 0)");
-    }
-
-}
-
-
-
-
-
-
 ###########################################################################
 # Populate the list of fields.
 ###########################################################################
@@ -1950,262 +1902,10 @@ CheckEnumField('bugs', 'op_sys',       @my_opsys);
 CheckEnumField('bugs', 'rep_platform', @my_platforms);
 
 
-###########################################################################
-# Create Administrator  --ADMIN--
-###########################################################################
-
-
-sub bailout {   # this is just in case we get interrupted while getting passwd
-    system("stty","echo"); # re-enable input echoing
-    exit 1;
-}
-
-if (GetFieldDef('profiles', 'groupset')) {
-    # identify admin group
-    my $sth = $dbh->prepare("SELECT id FROM groups 
-                WHERE name = 'admin'");
-    $sth->execute();
-    my ($adminid) = $sth->fetchrow_array();
-    # find existing admins
-    # Don't lose admins from DBs where Bug 157704 applies
-    $sth = $dbh->prepare("SELECT userid, (groupset & 65536), login_name FROM profiles 
-                WHERE (groupset | 65536) = 9223372036854775807");
-    $sth->execute();
-    while ( my ($userid, $iscomplete, $login_name) = $sth->fetchrow_array() ) {
-        # existing administrators are made members of group "admin"
-        print "\nWARNING - $login_name IS AN ADMIN IN SPITE OF BUG 157704\n\n"
-            if (!$iscomplete);
-        $dbh->do("INSERT INTO user_group_map 
-            (user_id, group_id, isbless, isderived) 
-            VALUES ($userid, $adminid, 0, 0)");
-        # existing administrators are made blessers of group "admin"
-        # only explitly defined blessers can bless group admin
-        # other groups can be blessed by any admin or additional
-        # defined blessers
-        $dbh->do("INSERT INTO user_group_map 
-            (user_id, group_id, isbless, isderived) 
-            VALUES ($userid, $adminid, 1, 0)");
-    }
-    $sth = $dbh->prepare("SELECT id FROM groups");
-    $sth->execute();
-    while ( my ($id) = $sth->fetchrow_array() ) {
-        # admins can bless every group
-        $dbh->do("INSERT INTO group_group_map 
-            (child_id, parent_id, isbless) 
-            VALUES ($adminid, $id, 1)");
-        # admins are initially members of every group
-        $dbh->do("INSERT INTO group_group_map 
-            (child_id, parent_id, isbless) 
-            VALUES ($adminid, $id, 0)");
-    }
-                          
-}
-
-
-my @groups = ();
-$sth = $dbh->prepare("select id from groups");
-$sth->execute();
-while ( my @row = $sth->fetchrow_array() ) {
-    push (@groups, $row[0]);
-}
-
-#  Prompt the user for the email address and name of an administrator.  Create
-#  that login, if it doesn't exist already, and make it a member of all groups.
-
-$sth = $dbh->prepare(<<_End_Of_SQL_);
-  SELECT user_id
-  FROM groups, user_group_map
-  WHERE name = 'admin'
-  AND id = group_id
-_End_Of_SQL_
-$sth->execute;
-# when we have no admin users, prompt for admin email address and password ...
-if ($sth->rows == 0) {
-  my $login = "";
-  my $realname = "";
-  my $pass1 = "";
-  my $pass2 = "*";
-  my $admin_ok = 0;
-  my $admin_create = 1;
-  my $mailcheckexp = "";
-  my $mailcheck    = ""; 
-
-  # Here we look to see what the emailregexp is set to so we can 
-  # check the email addy they enter. Bug 96675. If they have no 
-  # params (likely but not always the case), we use the default.
-  if (-e "data/params") { 
-    require "data/params"; # if they have a params file, use that
-  }
-  if ($::param{emailregexp}) {
-    $mailcheckexp = $::param{emailregexp};
-    $mailcheck    = $::param{emailregexpdesc};
-  } else {
-    $mailcheckexp = '^[^@]+@[^@]+\\.[^@]+$';
-    $mailcheck    = 'A legal address must contain exactly one \'@\', 
-      and at least one \'.\' after the @.';
-  }
-
-  print "\nLooks like we don't have an administrator set up yet.  Either this is your\n";
-  print "first time using Bugzilla, or your administrator's privs might have accidently\n";
-  print "gotten deleted at some point.\n";
-  while(! $admin_ok ) {
-    while( $login eq "" ) {
-      print "Enter the e-mail address of the administrator: ";
-      $login = <STDIN>;
-      chomp $login;
-      if(! $login ) {
-        print "\nYou DO want an administrator, don't you?\n";
-      }
-      unless ($login =~ /$mailcheckexp/) {
-        print "\nThe login address is invalid:\n";
-        print "$mailcheck\n";
-        print "You can change this test on the params page once checksetup has successfully\n";
-        print "completed.\n\n";
-        # Go round, and ask them again
-        $login = "";
-      }
-    }
-    $login = $dbh->quote($login);
-    $sth = $dbh->prepare(<<_End_Of_SQL_);
-      SELECT login_name
-      FROM profiles
-      WHERE login_name=$login
-_End_Of_SQL_
-    $sth->execute;
-    if ($sth->rows > 0) {
-      print "$login already has an account.\n";
-      print "Make this user the administrator? [Y/n] ";
-      my $ok = <STDIN>;
-      chomp $ok;
-      if ($ok !~ /^n/i) {
-        $admin_ok = 1;
-        $admin_create = 0;
-      } else {
-        print "OK, well, someone has to be the administrator.  Try someone else.\n";
-        $login = "";
-      }
-    } else {
-      print "You entered $login.  Is this correct? [Y/n] ";
-      my $ok = <STDIN>;
-      chomp $ok;
-      if ($ok !~ /^n/i) {
-        $admin_ok = 1;
-      } else {
-        print "That's okay, typos happen.  Give it another shot.\n";
-        $login = "";
-      }
-    }
-  }
-
-  if ($admin_create) {
-
-    while( $realname eq "" ) {
-      print "Enter the real name of the administrator: ";
-      $realname = <STDIN>;
-      chomp $realname;
-      if(! $realname ) {
-        print "\nReally.  We need a full name.\n";
-      }
-    }
-
-    # trap a few interrupts so we can fix the echo if we get aborted.
-    $SIG{HUP}  = \&bailout;
-    $SIG{INT}  = \&bailout;
-    $SIG{QUIT} = \&bailout;
-    $SIG{TERM} = \&bailout;
-
-    system("stty","-echo");  # disable input echoing
-
-    while( $pass1 ne $pass2 ) {
-      while( $pass1 eq "" || $pass1 !~ /^[a-zA-Z0-9-_]{3,16}$/ ) {
-        print "Enter a password for the administrator account: ";
-        $pass1 = <STDIN>;
-        chomp $pass1;
-        if(! $pass1 ) {
-          print "\n\nIt's just plain stupid to not have a password.  Try again!\n";
-        } elsif ( $pass1 !~ /^.{3,16}$/ ) {
-          print "The password must be 3-16 characters in length.";
-        }
-      }
-      print "\nPlease retype the password to verify: ";
-      $pass2 = <STDIN>;
-      chomp $pass2;
-      if ($pass1 ne $pass2) {
-        print "\n\nPasswords don't match.  Try again!\n";
-        $pass1 = "";
-        $pass2 = "*";
-      }
-    }
-
-    # Crypt the administrator's password
-    my $cryptedpassword = Crypt($pass1);
-
-    system("stty","echo"); # re-enable input echoing
-    $SIG{HUP}  = 'DEFAULT'; # and remove our interrupt hooks
-    $SIG{INT}  = 'DEFAULT';
-    $SIG{QUIT} = 'DEFAULT';
-    $SIG{TERM} = 'DEFAULT';
-
-    $realname = $dbh->quote($realname);
-    $cryptedpassword = $dbh->quote($cryptedpassword);
-
-    $dbh->do(<<_End_Of_SQL_);
-      INSERT INTO profiles
-      (login_name, realname, cryptpassword)
-      VALUES ($login, $realname, $cryptedpassword)
-_End_Of_SQL_
-  }
-    # Put the admin in each group if not already    
-    my $query = "select userid from profiles where login_name = $login";    
-    $sth = $dbh->prepare($query); 
-    $sth->execute();
-    my ($userid) = $sth->fetchrow_array();
-   
-    foreach my $group ( @groups ) {
-        my $query = "SELECT user_id FROM user_group_map 
-            WHERE group_id = $group AND user_id = $userid 
-            AND isbless = 0";
-        $sth = $dbh->prepare($query);
-        $sth->execute();
-        if ( !$sth->fetchrow_array() ) {
-            $dbh->do("INSERT INTO user_group_map 
-                (user_id, group_id, isbless, isderived) 
-                VALUES ($userid, $group, 0, 0)");
-        }
-    }
-    # the admin also gets an explicit bless capability for the admin group
-    my $sth = $dbh->prepare("SELECT id FROM groups 
-                WHERE name = 'admin'");
-    $sth->execute();
-    my ($id) = $sth->fetchrow_array();
-    $dbh->do("INSERT INTO user_group_map 
-        (user_id, group_id, isbless, isderived) 
-        VALUES ($userid, $id, 1, 0)");
-    foreach my $group ( @groups ) {
-        $dbh->do("INSERT INTO group_group_map
-            (child_id, parent_id, isbless)
-            VALUES ($id, $group, 1)");
-    }
-
-  print "\n$login is now set up as the administrator account.\n";
-}
-
-
-
 
 ###########################################################################
 # Create initial test product if there are no products present.
 ###########################################################################
-
-$sth = $dbh->prepare(<<_End_Of_SQL_);
-  SELECT user_id
-  FROM groups, user_group_map
-  WHERE groups.name = 'admin'
-  AND groups.id = user_group_map.group_id
-_End_Of_SQL_
-$sth->execute;
-my ($adminuid) = $sth->fetchrow_array;
-if (!$adminuid) { die "No administator!" } # should never get here
 $sth = $dbh->prepare("SELECT description FROM products");
 $sth->execute;
 unless ($sth->rows) {
@@ -2220,15 +1920,16 @@ unless ($sth->rows) {
     $sth->execute;
     my ($product_id) = $sth->fetchrow_array;
     $dbh->do(qq{INSERT INTO versions (value, product_id) VALUES ("other", $product_id)});
+    # note: since amin user is not yet known, components gets a 0 for 
+    #   initialowner and this is fixed during final checks
     $dbh->do("INSERT INTO components (name, product_id, description, initialowner, initialqacontact)
              VALUES (" .
              "'TestComponent', $product_id, " .
              "'This is a test component in the test product database.  " .
              "This ought to be blown away and replaced with real stuff in " .
-             "a finished installation of bugzilla.', $adminuid, 0)");
+             "a finished installation of bugzilla.', 0, 0)");
     $dbh->do(qq{INSERT INTO milestones (product_id, value) VALUES ($product_id,"---")});
 }
-
 
 
 
@@ -3183,8 +2884,11 @@ sub ListBits {
     return @res;
 }
 
+my @admins = ();
 if (GetFieldDef("profiles", "groupset")) {
     AddField('groups', 'group_when', 'datetime not null');
+    $dbh->do("ALTER TABLE groups DROP INDEX bit") if GetIndexDef("groups","bit");
+    AddField('groups', 'id', 'mediumint not null auto_increment primary key');
     AddField('products', 'id', 
         'mediumint primary key auto_increment not null');
     AddField('profiles', 'refreshed_when', 'datetime not null');
@@ -3302,6 +3006,23 @@ if (GetFieldDef("profiles", "groupset")) {
                   $dbh->quote($uwhen) .
                   " AND who = $uwho AND fieldid = $gsid");
 
+    }
+
+    # identify admin group
+    my $sth = $dbh->prepare("SELECT id FROM groups 
+                WHERE name = 'admin'");
+    $sth->execute();
+    my ($adminid) = $sth->fetchrow_array();
+    # find existing admins
+    # Don't lose admins from DBs where Bug 157704 applies
+    $sth = $dbh->prepare("SELECT userid, (groupset & 65536), login_name FROM profiles 
+                WHERE (groupset | 65536) = 9223372036854775807");
+    $sth->execute();
+    while ( my ($userid, $iscomplete, $login_name) = $sth->fetchrow_array() ) {
+        # existing administrators are made members of group "admin"
+        print "\nWARNING - $login_name IS AN ADMIN IN SPITE OF BUG 157704\n\n"
+            if (!$iscomplete);
+        push @admins, $userid;
     }
     DropField('profiles','groupset');
     DropField('profiles','blessgroupset');
@@ -3472,8 +3193,301 @@ if (($fielddef = GetFieldDef("attachments", "creation_ts")) &&
 # AddField/DropField/ChangeFieldType/RenameField code above. This would then
 # be honored by everyone who updates his Bugzilla installation.
 #
+
+#
+# BugZilla uses --GROUPS-- to assign various rights to its users. 
+#
+
+#sub RenameField ($$$);
+#sub GetFieldDef ($$);
+#sub GetIndexDef ($$);
+#sub AddField ($$$);
+
+AddGroup 'tweakparams',      'Can tweak operating parameters';
+AddGroup 'editusers',      'Can edit or disable users';
+AddGroup 'creategroups',     'Can create and destroy groups.';
+AddGroup 'editcomponents',   'Can create, destroy, and edit components.';
+AddGroup 'editkeywords',   'Can create, destroy, and edit keywords.';
+AddGroup 'admin',  'Administrators';
+
+
+if (!GroupDoesExist("editbugs")) {
+    my $id = AddGroup('editbugs',  'Can edit all aspects of any bug.', ".*");
+    my $sth = $dbh->prepare("SELECT userid FROM profiles ORDER BY userid");
+    $sth->execute();
+    while ( my ($userid) = $sth->fetchrow_array() ) {
+        $dbh->do("INSERT INTO user_group_map 
+            (user_id, group_id, isbless, isderived) 
+            VALUES ($userid, $id, 0, 0)");
+    }
+
+}
+
+if (!GroupDoesExist("canconfirm")) {
+    my $id = AddGroup('canconfirm',  'Can confirm a bug.', ".*");
+    my $sth = $dbh->prepare("SELECT userid FROM profiles ORDER BY userid");
+    $sth->execute();
+    while ( my ($userid) = $sth->fetchrow_array() ) {
+        $dbh->do("INSERT INTO user_group_map 
+            (user_id, group_id, isbless, isderived) 
+            VALUES ($userid, $id, 0, 0)");
+    }
+
+}
+
+
+
+
+
+
+###########################################################################
+# Create Administrator  --ADMIN--
+###########################################################################
+
+
+sub bailout {   # this is just in case we get interrupted while getting passwd
+    system("stty","echo"); # re-enable input echoing
+    exit 1;
+}
+
+if (@admins) {
+    # identify admin group
+    my $sth = $dbh->prepare("SELECT id FROM groups 
+                WHERE name = 'admin'");
+    $sth->execute();
+    my ($adminid) = $sth->fetchrow_array();
+    foreach my $userid (@admins) {
+        $dbh->do("INSERT INTO user_group_map 
+            (user_id, group_id, isbless, isderived) 
+            VALUES ($userid, $adminid, 0, 0)");
+        # existing administrators are made blessers of group "admin"
+        # only explitly defined blessers can bless group admin
+        # other groups can be blessed by any admin or additional
+        # defined blessers
+        $dbh->do("INSERT INTO user_group_map 
+            (user_id, group_id, isbless, isderived) 
+            VALUES ($userid, $adminid, 1, 0)");
+    }
+    $sth = $dbh->prepare("SELECT id FROM groups");
+    $sth->execute();
+    while ( my ($id) = $sth->fetchrow_array() ) {
+        # admins can bless every group
+        $dbh->do("INSERT INTO group_group_map 
+            (child_id, parent_id, isbless) 
+            VALUES ($adminid, $id, 1)");
+        # admins are initially members of every group
+        $dbh->do("INSERT INTO group_group_map 
+            (child_id, parent_id, isbless) 
+            VALUES ($adminid, $id, 0)");
+    }
+                          
+}
+
+
+my @groups = ();
+$sth = $dbh->prepare("select id from groups");
+$sth->execute();
+while ( my @row = $sth->fetchrow_array() ) {
+    push (@groups, $row[0]);
+}
+
+#  Prompt the user for the email address and name of an administrator.  Create
+#  that login, if it doesn't exist already, and make it a member of all groups.
+
+$sth = $dbh->prepare(<<_End_Of_SQL_);
+  SELECT user_id
+  FROM groups, user_group_map
+  WHERE name = 'admin'
+  AND id = group_id
+_End_Of_SQL_
+$sth->execute;
+# when we have no admin users, prompt for admin email address and password ...
+if ($sth->rows == 0) {
+  my $login = "";
+  my $realname = "";
+  my $pass1 = "";
+  my $pass2 = "*";
+  my $admin_ok = 0;
+  my $admin_create = 1;
+  my $mailcheckexp = "";
+  my $mailcheck    = ""; 
+
+  # Here we look to see what the emailregexp is set to so we can 
+  # check the email addy they enter. Bug 96675. If they have no 
+  # params (likely but not always the case), we use the default.
+  if (-e "data/params") { 
+    require "data/params"; # if they have a params file, use that
+  }
+  if ($::param{emailregexp}) {
+    $mailcheckexp = $::param{emailregexp};
+    $mailcheck    = $::param{emailregexpdesc};
+  } else {
+    $mailcheckexp = '^[^@]+@[^@]+\\.[^@]+$';
+    $mailcheck    = 'A legal address must contain exactly one \'@\', 
+      and at least one \'.\' after the @.';
+  }
+
+  print "\nLooks like we don't have an administrator set up yet.  Either this is your\n";
+  print "first time using Bugzilla, or your administrator's privs might have accidently\n";
+  print "gotten deleted at some point.\n";
+  while(! $admin_ok ) {
+    while( $login eq "" ) {
+      print "Enter the e-mail address of the administrator: ";
+      $login = <STDIN>;
+      chomp $login;
+      if(! $login ) {
+        print "\nYou DO want an administrator, don't you?\n";
+      }
+      unless ($login =~ /$mailcheckexp/) {
+        print "\nThe login address is invalid:\n";
+        print "$mailcheck\n";
+        print "You can change this test on the params page once checksetup has successfully\n";
+        print "completed.\n\n";
+        # Go round, and ask them again
+        $login = "";
+      }
+    }
+    $login = $dbh->quote($login);
+    $sth = $dbh->prepare(<<_End_Of_SQL_);
+      SELECT login_name
+      FROM profiles
+      WHERE login_name=$login
+_End_Of_SQL_
+    $sth->execute;
+    if ($sth->rows > 0) {
+      print "$login already has an account.\n";
+      print "Make this user the administrator? [Y/n] ";
+      my $ok = <STDIN>;
+      chomp $ok;
+      if ($ok !~ /^n/i) {
+        $admin_ok = 1;
+        $admin_create = 0;
+      } else {
+        print "OK, well, someone has to be the administrator.  Try someone else.\n";
+        $login = "";
+      }
+    } else {
+      print "You entered $login.  Is this correct? [Y/n] ";
+      my $ok = <STDIN>;
+      chomp $ok;
+      if ($ok !~ /^n/i) {
+        $admin_ok = 1;
+      } else {
+        print "That's okay, typos happen.  Give it another shot.\n";
+        $login = "";
+      }
+    }
+  }
+
+  if ($admin_create) {
+
+    while( $realname eq "" ) {
+      print "Enter the real name of the administrator: ";
+      $realname = <STDIN>;
+      chomp $realname;
+      if(! $realname ) {
+        print "\nReally.  We need a full name.\n";
+      }
+    }
+
+    # trap a few interrupts so we can fix the echo if we get aborted.
+    $SIG{HUP}  = \&bailout;
+    $SIG{INT}  = \&bailout;
+    $SIG{QUIT} = \&bailout;
+    $SIG{TERM} = \&bailout;
+
+    system("stty","-echo");  # disable input echoing
+
+    while( $pass1 ne $pass2 ) {
+      while( $pass1 eq "" || $pass1 !~ /^[a-zA-Z0-9-_]{3,16}$/ ) {
+        print "Enter a password for the administrator account: ";
+        $pass1 = <STDIN>;
+        chomp $pass1;
+        if(! $pass1 ) {
+          print "\n\nIt's just plain stupid to not have a password.  Try again!\n";
+        } elsif ( $pass1 !~ /^.{3,16}$/ ) {
+          print "The password must be 3-16 characters in length.";
+        }
+      }
+      print "\nPlease retype the password to verify: ";
+      $pass2 = <STDIN>;
+      chomp $pass2;
+      if ($pass1 ne $pass2) {
+        print "\n\nPasswords don't match.  Try again!\n";
+        $pass1 = "";
+        $pass2 = "*";
+      }
+    }
+
+    # Crypt the administrator's password
+    my $cryptedpassword = Crypt($pass1);
+
+    system("stty","echo"); # re-enable input echoing
+    $SIG{HUP}  = 'DEFAULT'; # and remove our interrupt hooks
+    $SIG{INT}  = 'DEFAULT';
+    $SIG{QUIT} = 'DEFAULT';
+    $SIG{TERM} = 'DEFAULT';
+
+    $realname = $dbh->quote($realname);
+    $cryptedpassword = $dbh->quote($cryptedpassword);
+
+    $dbh->do(<<_End_Of_SQL_);
+      INSERT INTO profiles
+      (login_name, realname, cryptpassword)
+      VALUES ($login, $realname, $cryptedpassword)
+_End_Of_SQL_
+  }
+    # Put the admin in each group if not already    
+    my $query = "select userid from profiles where login_name = $login";    
+    $sth = $dbh->prepare($query); 
+    $sth->execute();
+    my ($userid) = $sth->fetchrow_array();
+   
+    foreach my $group ( @groups ) {
+        my $query = "SELECT user_id FROM user_group_map 
+            WHERE group_id = $group AND user_id = $userid 
+            AND isbless = 0";
+        $sth = $dbh->prepare($query);
+        $sth->execute();
+        if ( !$sth->fetchrow_array() ) {
+            $dbh->do("INSERT INTO user_group_map 
+                (user_id, group_id, isbless, isderived) 
+                VALUES ($userid, $group, 0, 0)");
+        }
+    }
+    # the admin also gets an explicit bless capability for the admin group
+    my $sth = $dbh->prepare("SELECT id FROM groups 
+                WHERE name = 'admin'");
+    $sth->execute();
+    my ($id) = $sth->fetchrow_array();
+    $dbh->do("INSERT INTO user_group_map 
+        (user_id, group_id, isbless, isderived) 
+        VALUES ($userid, $id, 1, 0)");
+    foreach my $group ( @groups ) {
+        $dbh->do("INSERT INTO group_group_map
+            (child_id, parent_id, isbless)
+            VALUES ($id, $group, 1)");
+    }
+
+  print "\n$login is now set up as the administrator account.\n";
+}
+
+
+
 #
 # Final checks...
+
+$sth = $dbh->prepare(<<_End_Of_SQL_);
+  SELECT user_id
+  FROM groups, user_group_map
+  WHERE groups.name = 'admin'
+  AND groups.id = user_group_map.group_id
+_End_Of_SQL_
+$sth->execute;
+my ($adminuid) = $sth->fetchrow_array;
+if (!$adminuid) { die "No administator!" } # should never get here
+# when test product was created, admin was unknown
+$dbh->do("UPDATE components SET initialowner = $adminuid WHERE initialowner = 0");
 
 unlink "data/versioncache";
 

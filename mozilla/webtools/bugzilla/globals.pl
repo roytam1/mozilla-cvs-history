@@ -708,15 +708,15 @@ sub CanSeeBug {
     # if no user is found for a group --> user is not permitted to access
     # Note: Since this needs to establish if a user is absent for ANY of
     #   the groups the bug requires, the result of the JOIN is sorted 
-    #   by the user_id.  Since MySQL places NULLs ahead of numbers in ALL sorts
+    #   by the user_id.  Since MySQL places NULLs ahead of numbers in sorts
     #   (specified in the MySQL documentation) and postgreSQL places NULLs
-    #   ahead of number in descending sorts only, sorting descending makes
+    #   ahead of number in descending sorts, this needs to change for Postgres 
     #   the first row contain the NULL value if there is going to be one.  
     my $query = "SELECT bugs.bug_id, reporter, assigned_to, qa_contact,
         reporter_accessible, cclist_accessible,
         ISNULL(cc.who) = 0, 
         ISNULL(bug_group_map.group_id) = 0, 
-        ISNULL(user_group_map.user_id) = 0 
+        ISNULL(user_group_map.user_id) = 0
         FROM bugs 
         LEFT JOIN cc ON bugs.bug_id = cc.bug_id 
         AND cc.who = $userid
@@ -725,7 +725,7 @@ sub CanSeeBug {
         user_group_map.group_id = bug_group_map.group_id  
         AND user_group_map.isbless = 0
         AND user_group_map.user_id = $userid  
-        WHERE bugs.bug_id = $id ORDER BY user_group_map.user_id DESC";
+        WHERE bugs.bug_id = $id ORDER BY user_group_map.user_id ";
     PushGlobalSQLState();
     SendSQL($query);
     my ($found_id, $reporter, $assigned_to, $qa_contact,
