@@ -216,7 +216,7 @@ sub show_bug {
              ON member_group_map.group_id = groups.group_id
              AND member_group_map.member_id = $::userid
              AND member_group_map.maptype = 0
-             WHERE isbuggroup != 0 ");
+             WHERE group_type = 1 ");
 
     $user{'inallgroups'} = 1;
 

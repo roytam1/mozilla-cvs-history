@@ -282,7 +282,7 @@ sub GetGroupsByUserId {
           FROM  groups, member_group_map
          WHERE  member_id = $userid AND maptype = 0 
            AND  member_group_map.group_id = groups.group_id
-           AND  isbuggroup != 0
+           AND  group_type = 1
       ORDER BY  description ");
 
     my @groups;

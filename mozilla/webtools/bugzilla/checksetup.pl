@@ -1421,12 +1421,16 @@ $table{dependencies} =
 # without enabling them to extend the life of the group by adding bugs to it.
 # http://bugzilla.mozilla.org/show_bug.cgi?id=75482
 
+# group type
+#    0 - system groups
+#    1 - bug groups
+#    2 - normal groups
 $table{groups} =
    'group_id mediumint not null auto_increment primary key,
     name varchar(255) not null,
     description text not null,
     group_when datetime not null,
-    isbuggroup tinyint not null,
+    group_type tinyint not null,
     userregexp tinytext not null,
     isactive tinyint not null default 1,
 
@@ -1686,7 +1690,7 @@ sub AddGroup {
     
     print "Adding group $name ...\n";
     my $sth = $dbh->prepare('INSERT INTO groups
-                          (name, description, userregexp, isbuggroup)
+                          (name, description, userregexp, group_type)
                           VALUES (?, ?, ?, ?)');
     $sth->execute($name, $desc, $userregexp, 0);
 
@@ -1701,6 +1705,7 @@ sub AddGroup {
 # BugZilla uses --GROUPS-- to assign various rights to its users. 
 #
 
+RenameField ('groups', 'isbuggroup', 'group_type');
 AddGroup 'tweakparams',      'Can tweak operating parameters';
 AddGroup 'editusers',      'Can edit or disable users';
 AddGroup 'creategroups',     'Can create and destroy groups.';

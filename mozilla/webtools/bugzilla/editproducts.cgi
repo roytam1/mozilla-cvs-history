@@ -364,7 +364,7 @@ if ($action eq 'new') {
         
         # Next we insert into the groups table
         SendSQL("INSERT INTO groups " .
-                "(bit, name, description, isbuggroup, userregexp) " .
+                "(bit, name, description, group_type, userregexp) " .
                 "VALUES (" .
                 $bit . ", " .
                 SqlQuote($product) . ", " .
@@ -911,7 +911,7 @@ if ($action eq 'update') {
                 $bit = $tmp_bit * 2;
             }
             SendSQL("INSERT INTO groups " .
-                    "(bit, name, description, isbuggroup, userregexp) " .
+                    "(bit, name, description, group_type, userregexp) " .
                     "values (" . $bit . ", " .
                     SqlQuote($productold) . ", " .
                     SqlQuote($productold . " Bugs Access") . ", " .

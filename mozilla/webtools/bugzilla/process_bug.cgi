@@ -478,7 +478,7 @@ SendSQL("SELECT groups.group_id, isactive FROM groups, member_group_map WHERE " 
         "groups.group_id = member_group_map.group_id AND " .
         "member_group_map.member_id = $::userid AND " .
         "member_group_map.maptype = 0 AND " .
-        "isbuggroup != 0");
+        "group_type = 1");
 while (my ($b, $isactive) = FetchSQLData()) {
     # The multiple change page may not show all groups a bug is in
     # (eg product groups when listing more than one product)
