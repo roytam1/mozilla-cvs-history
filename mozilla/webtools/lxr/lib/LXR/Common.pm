@@ -83,6 +83,10 @@ sub urlargs {
 
 sub fileref {
     my ($desc, $path, $line, @args) = @_;
+
+    # jwz: URL-quote any special characters.
+    $path =~ s|([^-a-zA-Z0-9.\@/_\r\n])|sprintf("%%%02X", ord($1))|ge;
+
     return("<a href=\"$Conf->{virtroot}/source$path".
 	   &urlargs(@args).
 	   ($line > 0 ? "#$line" : "").
