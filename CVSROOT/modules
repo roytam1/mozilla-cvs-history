@@ -639,3 +639,12 @@ SeaMonkeyEditor -a \
 
 SeaMonkeyAll -a \
 	SeaMonkeyEditor
+
+#############################################################
+#
+# Alexander Larsson's GTK+ widget for embedding mozilla into
+# gtk applications.
+#
+#############################################################
+GtkMozilla -a \
+	mozilla/webshell/embed/gtk
