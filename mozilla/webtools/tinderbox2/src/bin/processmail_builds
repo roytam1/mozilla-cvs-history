@@ -290,6 +290,15 @@ tinderbox: errorparser: unix
 tinderbox: END
 
 
+Time Format
+
+Most OS have an internal time format of "seconds since the epoch".
+This format is easiest to use if all your machines have the same OS or
+if you standarize on some epoch for the purposes of tinderbox
+mails. Times can also be given in the format "MM/DD/YY HH:MM:SS" if
+this is more convenient.
+
+
 EOF
 
     print $usage;
