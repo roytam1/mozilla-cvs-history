@@ -151,8 +151,8 @@ if (exists $::FORM{'rebuildvotecache'}) {
 }
 
 if (exists $::FORM{'rederivegroups'}) {
-    Status("OK, now setting all users to redrive groups on next access.");
-    SendSQL("UPDATE profiles SET refreshed_when = 0 ");
+    Status("OK, now setting a group_when so all users will redrive groups on next access.");
+    SendSQL("UPDATE groups SET group_when = NOW() LIMIT 1");
 }
 
 if (exists $::FORM{'rederivegroupsnow'}) {
