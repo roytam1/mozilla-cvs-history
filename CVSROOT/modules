@@ -40,7 +40,7 @@ MozillaSourceMac -a \
 
 MozillaSourceUnix -a \
 	MozillaSourceCommon \
-	mozilla/cmd/xfe \ 
+	mozilla/cmd/xfe \
 	MozillaSourceUnixOnly
 
 MozillaSourceMotif -a \
