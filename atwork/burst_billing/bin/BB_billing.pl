@@ -305,7 +305,7 @@ sub fetch_rrd_data
    my ($day_entry, $circuit_entry) = @_;
 
    my ($rrd_filename);
-   my ($start, $step, $names, $data);
+   my ($current_epoch, $start, $step, $names, $data);
    my ($total_data_count, $zero_data_in_count, $nan_data_in_count);
    my ($zero_data_out_count, $nan_data_out_count);
    my ($data_estimate_count);
@@ -324,9 +324,9 @@ sub fetch_rrd_data
       return(undef, undef);
    }
 
-   ($start,$step,$names,$data) = RRDs::fetch($rrd_filename, "MAX",
-                                             "--start", $day_entry->{$MTL_START_EPOCH},
-                                             "--end", $day_entry->{$MTL_END_EPOCH});
+   ($start, $step, $names, $data) = RRDs::fetch($rrd_filename, "MAX",
+                                                "--start", $day_entry->{$MTL_START_EPOCH},
+                                                "--end", $day_entry->{$MTL_END_EPOCH});
 
    if ( $step <= 0 )
    {
@@ -340,6 +340,8 @@ sub fetch_rrd_data
    $nan_data_in_count = 0;
    $nan_data_out_count = 0;
 
+   $current_epoch = $start;
+
    foreach my $data_line ( @{$data} )
    {
       #
@@ -347,18 +349,15 @@ sub fetch_rrd_data
       # range 1000 - 2000, the RRD may return values from 950 - 2050!
       # Therefore I need to manually exclude values outside the range I want
       #
-      if ( ($start >= $day_entry->{$MTL_START_EPOCH}) &&
-           ($start <= $day_entry->{$MTL_END_EPOCH}) )
+      if ( ($current_epoch >= $day_entry->{$MTL_START_EPOCH}) &&
+           ($current_epoch <= $day_entry->{$MTL_END_EPOCH}) )
       {
          $total_data_count++;
 
-         #
-         # TODO: record the epoch time with the data
-         #
          if ($data_line->[0] eq "NaN")
          { 
             $nan_data_in_count++;
-            push(@in_data, -1);
+            push(@in_data, [-1, $current_epoch]);
          }
          else
          {
@@ -366,13 +365,13 @@ sub fetch_rrd_data
             { 
                $zero_data_in_count++;
             }
-            push(@in_data, $data_line->[0]); 
+            push(@in_data, [$data_line->[0], $current_epoch]); 
          }
 
          if ($data_line->[1] eq "NaN")
          { 
             $nan_data_out_count++;
-            push(@out_data, -1);
+            push(@out_data, [-1, $current_epoch]);
          }
          else
          {
@@ -380,13 +379,13 @@ sub fetch_rrd_data
             { 
                $zero_data_out_count++;
             }
-            push(@out_data, $data_line->[1]); 
+            push(@out_data, [$data_line->[1], $current_epoch]); 
          }
       #
       # TODO: Pad for step size > 500
       }
 
-      $start += $step;
+      $current_epoch += $step;
    }
 
    &write_log_file($LOG_NOTE, "Circuit returned $total_data_count datapoints with a step size of $step.");
@@ -460,7 +459,8 @@ sub record_rrd_data
 
    foreach $data_point ( @{$in_data} )
    {
-      $retval = print $data_fh "$data_point\n";
+      $retval = print $data_fh $data_point->[0], "\t",
+                               $data_point->[1], "\n";
       if ( $retval != 1 )
       {
          &write_log_file($LOG_ERROR, "Error writing to $circuit_directory/$IN_DATA_FILE: $!.  Program aborting");
@@ -491,7 +491,8 @@ sub record_rrd_data
 
    foreach $data_point ( @{$out_data} )
    {
-      $retval = print $data_fh "$data_point\n";
+      $retval = print $data_fh $data_point->[0], "\t",
+                               $data_point->[1], "\n";
       if ( $retval != 1 )
       {
          &write_log_file($LOG_ERROR, "Error writing to $circuit_directory/$OUT_DATA_FILE: $!.  Program aborting");
