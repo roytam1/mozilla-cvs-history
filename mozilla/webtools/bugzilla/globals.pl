@@ -19,14 +19,13 @@
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
-#                 Jake <jake@acutex.net>
+#                 Jacob Steenhagen <jake@bugzilla.org>
 #                 Bradley Baetz <bbaetz@cs.mcgill.ca>
 #                 Christopher Aillon <christopher@aillon.com>
 #                 Joel Peshkin <bugreport@peshkin.net> 
 
 # Contains some global variables and routines used throughout bugzilla.
 
-use diagnostics;
 use strict;
 
 use Bugzilla::Util;

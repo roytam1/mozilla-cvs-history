@@ -13,10 +13,9 @@
 #
 # The Original Code is the Bugzilla Bug Tracking System.
 #
-# Contributor(s): Jacob Steenhagen <jake@acutex.net>
+# Contributor(s): Jacob Steenhagen <jake@bugzilla.org>
 
 use strict;
-use diagnostics;
 
 use lib ".";
 require "CGI.pl";

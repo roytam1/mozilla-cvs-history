@@ -19,9 +19,8 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
-#                 Jacob Steenhagen <jake@acutex.net>
+#                 Jacob Steenhagen <jake@bugzilla.org>
 
-use diagnostics;
 use strict;
 
 use lib qw(.);

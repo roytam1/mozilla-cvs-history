@@ -19,12 +19,11 @@
 # Rights Reserved.
 #
 # Contributor(s): Dave Miller <justdave@syndicomm.com>
-#                 Jake Steenhagen <jake@acutexx.net>
 #                 Joel Peshkin <bugreport@peshkin.net>
+#                 Jacob Steenhagen <jake@bugzilla.org>
 
 # Code derived from editowners.cgi and editusers.cgi
 
-use diagnostics;
 use strict;
 use lib ".";
 

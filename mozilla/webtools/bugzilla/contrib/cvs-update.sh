@@ -18,6 +18,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Dawn Endico <endico@mozilla.org>
+#                 Jacob Steenhagen <jake@bugzilla.org>
 
 
 # Keep a record of all cvs updates made from a given directory.
@@ -26,11 +27,16 @@
 # and run the cvs command with the date that you want to back
 # out to. (Probably the second to last entry).
 
+# Because this script lives in contrib, you may want to
+#   ln -s contrib/cvs-update.sh cvs-update
+# from your bugzilla install directory so you can run
+# the script easily from there (./cvs-update)
+
 #DATE=`date +%e/%m/%Y\ %k:%M:%S\ %Z`
 DATE=`date`
-COMMAND="cvs update -d -P -D" 
-echo $COMMAND \"$DATE\" >> cvs-update.log
-$COMMAND "$DATE"
+COMMAND="cvs -q update -dP" 
+echo $COMMAND -D \"$DATE\" >> cvs-update.log
+$COMMAND -A
 
 
 # sample log file

@@ -28,7 +28,6 @@
 #
 # Holger Schurig <holgerschurig@nikocity.de>
 
-use diagnostics;
 use strict;
 use lib ".";
 

@@ -21,7 +21,7 @@
 #                 Dawn Endico <endico@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Joe Robins <jmrobins@tgix.com>
-#                 Jake <jake@acutex.net>
+#                 Jacob Steenhagen <jake@bugzilla.org>
 #                 J. Paul Reed <preed@sigkill.com>
 #
 
@@ -33,7 +33,6 @@
 # Only adding new parameters is done here.  Once the parameter exists, you 
 # must use %baseurl%/editparams.cgi from the web to edit the settings.
 
-use diagnostics;
 use strict;
 
 # Shut up misguided -w warnings about "used only once".  For some reason,

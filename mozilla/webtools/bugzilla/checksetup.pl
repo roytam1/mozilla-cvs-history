@@ -23,7 +23,7 @@
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Dave Miller <justdave@syndicomm.com>
 #                 Zach Lipton  <zach@zachlipton.com>
-#                 Jacob Steenhagen <jake@acutex.net>
+#                 Jacob Steenhagen <jake@bugzilla.org>
 #                 Bradley Baetz <bbaetz@student.usyd.edu.au>
 #
 #
@@ -94,7 +94,6 @@
 # Global definitions
 ###########################################################################
 
-use diagnostics;
 use strict;
 
 # 12/17/00 justdave@syndicomm.com - removed declarations of the localconfig
@@ -2628,7 +2627,7 @@ AddField('attachments', 'isprivate', 'tinyint not null default 0');
 # record when email notifications were last sent about this bug.  Also,
 # added a user pref whether a user wants to use the brand new experimental
 # stuff.
-# 2001-04-29 jake@acutex.net - The newemailtech field is no longer needed
+# 2001-04-29 jake@bugzilla.org - The newemailtech field is no longer needed
 #   http://bugzilla.mozilla.org/show_bugs.cgi?id=71552
 
 if (!GetFieldDef('bugs', 'lastdiffed')) {
@@ -2951,7 +2950,7 @@ AddField('groups', 'isactive', 'tinyint not null default 1');
 #
 AddField('attachments', 'isobsolete', 'tinyint not null default 0');
 
-# 2001-04-29 jake@acutex.net - Remove oldemailtech
+# 2001-04-29 jake@bugzilla.org - Remove oldemailtech
 #   http://bugzilla.mozilla.org/show_bugs.cgi?id=71552
 if (-d 'shadow') {
     print "Removing shadow directory...\n";
@@ -3012,7 +3011,7 @@ if (!defined GetIndexDef('longdescs','who')) {
 # truncates re http://bugzilla.mozilla.org/show_bug.cgi?id=9352
 ChangeFieldType('bugs', 'version','varchar(64) not null');
 
-# 2001-07-20 jake@acutex.net - Change bugs_activity to only record changes
+# 2001-07-20 jake@bugzilla.org - Change bugs_activity to only record changes
 #  http://bugzilla.mozilla.org/show_bug.cgi?id=55161
 if (GetFieldDef('bugs_activity', 'oldvalue')) {
     AddField("bugs_activity", "removed", "tinytext");
@@ -3086,7 +3085,7 @@ if (GetFieldDef('bugs_activity', 'oldvalue')) {
     DropField("bugs_activity", "newvalue");
 } 
 
-# 2001-07-24 jake@acutex.net - disabledtext was being handled inconsitantly
+# 2001-07-24 jake@bugzilla.org - disabledtext was being handled inconsitantly
 # http://bugzilla.mozilla.org/show_bug.cgi?id=90933
 ChangeFieldType("profiles", "disabledtext", "mediumtext not null");
 
@@ -3335,7 +3334,7 @@ if (GetFieldDef("namedqueries", "watchfordiffs")) {
     DropField("namedqueries", "watchfordiffs");
 }
 
-# 2002-08-12 jake@acutex.net/bbaetz@student.usyd.edu.au - bug 43600
+# 2002-08-12 jake@bugzilla.org/bbaetz@student.usyd.edu.au - bug 43600
 # Use integer IDs for products and components.
 if (GetFieldDef("products", "product")) {
     print "Updating database to use product IDs.\n";
