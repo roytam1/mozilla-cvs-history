@@ -1080,30 +1080,31 @@ sub WriteComment {
 
 # stupid subroutine for checking if lists are equal.
 sub ListDiff {
-    my (@source, @dest, $type) = @_;
+    my ($source, $dest) = @_;
+    my @union = my @isect = my @diff = ();
+    my %union = my %isect = ();
+    my %count = ();
 
-    if (@source != @dest) {
+# lists are different sizes, must be different
+    if (@$source != @$dest) {
       return 1;
     }
 
-# must be a list of strings or numbers. have at you!
-    @source = sort(@source);
-    @dest   = sort(@dest);
+# copied nearly straight out of Perl Cookbook
+    foreach my $element (@$source, @$dest) { $count{$element}++ }
 
-    my $i;
-    for ($i = 0; $i < @source; $i++) {
-      if ($type eq 'str') {
-          if ($source[$i] ne $dest[$i]) {
-              return 1;
-          }
-      }
-      else {
-          if ($source[$i] != $dest[$i]) {
-              return 1;
-          }
-      }
+    foreach my $element (keys %count) {
+        push(@union, $element);
+        if ($count{$element} == 2) {
+            push @isect, $element;
+        } else {
+            push @diff, $element;
+        }
     }
-    return 0;
+    if (@diff > 0) {
+        return 1;
+
+    }
 }
 
 sub ChangedFields {
@@ -1128,17 +1129,10 @@ sub ChangedFields {
         # we currently don't allow for new attachments, and we use
         # the comment field for new comments.
         unless (($field eq 'longdescs') || ($field eq 'attachments')) { 
-            if (&::Param("usedependencies")) {
-                if (($field eq 'dependson') || ($field eq 'blocking')) {
-                    if (ListDiff($self->{$field}, $snapshot{$field})) {
-#                        push(@changed, $field);
-                         next;
-                    }
-                }
-            }
-            if ($field eq 'keywords') {
-                if (ListDiff($self->{$field}, $snapshot{$field}, 'str')) {
-                   push(@changed, $field);
+            my $ref = $self->{$field};
+            if ($ref =~ m/^ARRAY/) {
+                if (ListDiff($self->{$field}, $snapshot{$field})) {
+                    push(@changed, $field);
                 }
             }
             elsif ($self->{$field} ne $snapshot{$field}) {
