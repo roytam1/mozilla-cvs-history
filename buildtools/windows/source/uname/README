@@ -1,9 +1,0 @@
-This directory contains the source for uname.exe on Win32.
-This version of uname.exe returns the string "WINNT" when
-you say 'uname -s' on Windows NT.
-
-To build it, you need Microsoft Visual C++ and nmake.
-Issue the command:
-    nmake /f uname.mak
-The output is Release\uname.exe.  Copy it to a directory
-on your Path.
