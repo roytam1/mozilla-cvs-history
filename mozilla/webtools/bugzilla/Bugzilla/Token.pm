@@ -1,4 +1,3 @@
-#!/usr/bonsaitools/bin/perl -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -31,12 +30,81 @@ use strict;
 # Bundle the functions in this file together into the "Token" package.
 package Token;
 
+use Date::Format;
+
 # This module requires that its caller have said "require CGI.pl" to import
 # relevant functions from that script and its companion globals.pl.
 
 ################################################################################
+# Constants
+################################################################################
+
+# The maximum number of days a token will remain valid.
+my $maxtokenage = 3;
+
+################################################################################
 # Functions
 ################################################################################
+
+sub IssueEmailChangeToken {
+    my ($userid, $old_email, $new_email) = @_;
+
+    my $token_ts = time();
+    my $issuedate = time2str("%Y-%m-%d %H:%M", $token_ts);
+
+    # Generate a unique token and insert it into the tokens table.
+    # We have to lock the tokens table before generating the token, 
+    # since the database must be queried for token uniqueness.
+    &::SendSQL("LOCK TABLES tokens WRITE");
+    my $token = GenerateUniqueToken();
+    my $quotedtoken = &::SqlQuote($token);
+    my $quoted_emails = &::SqlQuote($old_email . ":" . $new_email);
+    &::SendSQL("INSERT INTO tokens ( userid , issuedate , token , 
+                                     tokentype , eventdata )
+                VALUES             ( $userid , '$issuedate' , $quotedtoken , 
+                                     'emailold' , $quoted_emails )");
+    my $newtoken = GenerateUniqueToken();
+    $quotedtoken = &::SqlQuote($newtoken);
+    &::SendSQL("INSERT INTO tokens ( userid , issuedate , token , 
+                                     tokentype , eventdata )
+                VALUES             ( $userid , '$issuedate' , $quotedtoken , 
+                                     'emailnew' , $quoted_emails )");
+    &::SendSQL("UNLOCK TABLES");
+
+    # Mail the user the token along with instructions for using it.
+
+    my $template = $::template;
+    my $vars = $::vars;
+
+    $vars->{'oldemailaddress'} = $old_email . &::Param('emailsuffix');
+    $vars->{'newemailaddress'} = $new_email . &::Param('emailsuffix');
+    
+    $vars->{'max_token_age'} = $maxtokenage;
+    $vars->{'token_ts'} = $token_ts;
+
+    $vars->{'token'} = $token;
+    $vars->{'emailaddress'} = $old_email . &::Param('emailsuffix');
+
+    my $message;
+    $template->process("account/email/change-old.txt.tmpl", $vars, \$message)
+      || &::ThrowTemplateError($template->error());
+
+    open SENDMAIL, "|/usr/lib/sendmail -t -i";
+    print SENDMAIL $message;
+    close SENDMAIL;
+
+    $vars->{'token'} = $newtoken;
+    $vars->{'emailaddress'} = $new_email . &::Param('emailsuffix');
+
+    $message = "";
+    $template->process("account/email/change-new.txt.tmpl", $vars, \$message)
+      || &::ThrowTemplateError($template->error());
+
+    open SENDMAIL, "|/usr/lib/sendmail -t -i";
+    print SENDMAIL $message;
+    close SENDMAIL;
+
+}
 
 sub IssuePasswordToken {
     # Generates a random token, adds it to the tokens table, and sends it
@@ -49,6 +117,9 @@ sub IssuePasswordToken {
     &::SendSQL("SELECT userid FROM profiles WHERE login_name = $quotedloginname");
     my ($userid) = &::FetchSQLData();
 
+    my $token_ts = time();
+    my $issuedate = time2str("%Y-%m-%d %H:%M", $token_ts);
+
     # Generate a unique token and insert it into the tokens table.
     # We have to lock the tokens table before generating the token, 
     # since the database must be queried for token uniqueness.
@@ -57,12 +128,37 @@ sub IssuePasswordToken {
     my $quotedtoken = &::SqlQuote($token);
     my $quotedipaddr = &::SqlQuote($::ENV{'REMOTE_ADDR'});
     &::SendSQL("INSERT INTO tokens ( userid , issuedate , token , tokentype , eventdata )
-                VALUES      ( $userid , NOW() , $quotedtoken , 'password' , $quotedipaddr )");
+                VALUES      ( $userid , '$issuedate' , $quotedtoken , 'password' , $quotedipaddr )");
     &::SendSQL("UNLOCK TABLES");
 
     # Mail the user the token along with instructions for using it.
-    MailPasswordToken($loginname, $token);
+    
+    my $template = $::template;
+    my $vars = $::vars;
 
+    $vars->{'token'} = $token;
+    $vars->{'emailaddress'} = $loginname . &::Param('emailsuffix');
+
+    $vars->{'max_token_age'} = $maxtokenage;
+    $vars->{'token_ts'} = $token_ts;
+
+    my $message = "";
+    $template->process("account/password/forgotten-password.txt.tmpl", 
+                                                               $vars, \$message)
+      || &::ThrowTemplateError($template->error());
+
+    open SENDMAIL, "|/usr/lib/sendmail -t -i";
+    print SENDMAIL $message;
+    close SENDMAIL;
+
+}
+
+
+sub CleanTokenTable {
+    &::SendSQL("LOCK TABLES tokens WRITE");
+    &::SendSQL("DELETE FROM tokens 
+                WHERE TO_DAYS(NOW()) - TO_DAYS(issuedate) >= " . $maxtokenage);
+    &::SendSQL("UNLOCK TABLES");
 }
 
 
@@ -92,34 +188,6 @@ sub GenerateUniqueToken {
 
 }
 
-sub MailPasswordToken {
-    # Emails a password token to a user along with instructions for its use.
-    # Called exclusively from &IssuePasswordToken.
-
-    my ($emailaddress, $token) = @_;
-
-    my $urlbase = &::Param("urlbase");
-    my $emailsuffix = &::Param('emailsuffix');
-    $token = &::url_quote($token);
-
-    open SENDMAIL, "|/usr/lib/sendmail -t";
-
-    print SENDMAIL qq|From: bugzilla-daemon
-To: $emailaddress$emailsuffix
-Subject: Bugzilla Change Password Request
-
-You or someone impersonating you has requested to change your Bugzilla
-password.  To change your password, visit the following link:
-
-${urlbase}token.cgi?a=cfmpw&t=$token
-
-If you are not the person who made this request, or you wish to cancel
-this request, visit the following link:
-
-${urlbase}token.cgi?a=cxlpw&t=$token
-|;
-    close SENDMAIL;
-}
 
 sub Cancel {
     # Cancels a previously issued token and notifies the system administrator.
@@ -144,25 +212,26 @@ sub Cancel {
     # Format the user's real name and email address into a single string.
     my $username = $realname ? $realname . " <" . $loginname . ">" : $loginname;
 
+    my $template = $::template;
+    my $vars = $::vars;
+
+    $vars->{'emailaddress'} = $username;
+    $vars->{'maintainer'} = $maintainer;
+    $vars->{'remoteaddress'} = $::ENV{'REMOTE_ADDR'};
+    $vars->{'token'} = $token;
+    $vars->{'tokentype'} = $tokentype;
+    $vars->{'issuedate'} = $issuedate;
+    $vars->{'eventdata'} = $eventdata;
+    $vars->{'cancelaction'} = $cancelaction;
+
     # Notify the user via email about the cancellation.
-    open SENDMAIL, "|/usr/lib/sendmail -t";
-    print SENDMAIL qq|From: bugzilla-daemon
-To: $username
-Subject: "$tokentype" token cancelled
 
-A token was cancelled from $::ENV{'REMOTE_ADDR'}.  This is either 
-an honest mistake or the result of a malicious hack attempt.  
-Take a look at the information below and forward this email 
-to $maintainer if you suspect foul play.
+    my $message;
+    $template->process("account/cancel-token.txt.tmpl", $vars, \$message)
+      || &::ThrowTemplateError($template->error());
 
-            Token: $token
-       Token Type: $tokentype
-             User: $username
-       Issue Date: $issuedate
-       Event Data: $eventdata
-
-Cancelled Because: $cancelaction
-|;
+    open SENDMAIL, "|/usr/lib/sendmail -t -i";
+    print SENDMAIL $message;
     close SENDMAIL;
 
     # Delete the token from the database.
@@ -172,14 +241,29 @@ Cancelled Because: $cancelaction
 }
 
 sub HasPasswordToken {
-    # Returns a password token if the user has one.  Otherwise returns 0 (false).
+    # Returns a password token if the user has one.
     
     my ($userid) = @_;
     
-    &::SendSQL("SELECT token FROM tokens WHERE userid = $userid LIMIT 1");
+    &::SendSQL("SELECT token FROM tokens 
+                WHERE userid = $userid AND tokentype = 'password' LIMIT 1");
     my ($token) = &::FetchSQLData();
     
     return $token;
 }
+
+sub HasEmailChangeToken {
+    # Returns an email change token if the user has one. 
+    
+    my ($userid) = @_;
+    
+    &::SendSQL("SELECT token FROM tokens WHERE userid = $userid " . 
+               "AND (tokentype = 'emailnew' OR tokentype = 'emailold') " . 
+               "LIMIT 1");
+    my ($token) = &::FetchSQLData();
+    
+    return $token;
+}
+
 
 1;
