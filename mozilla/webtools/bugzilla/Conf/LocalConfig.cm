@@ -1,4 +1,4 @@
-package Conf::LocalConfig;
+Wpackage Conf::LocalConfig;
 use Conf;
 no warnings;
 
@@ -58,7 +58,7 @@ my @my_opsys = @{*{$main::{'opsys'}}{ARRAY}};
 
 # If they are here they must have answered localconfig questions so we need to 
 # rerun this module.
-output <<'EOF';
+output <<"END";
 
 Because localconfig has been changed, I need to reload values from the file.
 To accomplish this, I will need to restart this portion of Configure. 
@@ -67,7 +67,7 @@ Please stand by...
 
 
 
-EOF
+END
 require(pathfix('Conf/LocalConfig.cm'));
 
 #=================================================#
