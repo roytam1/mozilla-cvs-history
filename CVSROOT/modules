@@ -720,6 +720,7 @@ Webtools -a \
 Webclient    -a \
 	mozilla/java/Makefile.in \
 	mozilla/java/Makefile.win \
+	mozilla/java/build.xml \
 	mozilla/java/README \
 	mozilla/java/README.commercial \
 	mozilla/java/build \
