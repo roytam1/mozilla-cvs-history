@@ -1,4 +1,0 @@
-en-US.jar:
-*       locale/en-US/necko/contents.rdf   (locale/en-US/contents.rdf)
-        locale/en-US/necko/necko.properties   (locale/en-US/necko.properties)
-        locale/en-US/communicator/security.properties  (locale/en-US/security.properties)
