@@ -395,7 +395,8 @@ RaptorMac -a \
 	mozilla/lib/mac/Misc \
 	mozilla/lib/mac/MoreFiles \
 	mozilla/lib/mac/NSRuntime \
-	mozilla/lib/mac/NSStdLib
+	mozilla/lib/mac/NSStdLib \
+	mozilla/lib/mac/PowerPlant
 
 #######################################################################
 # Modules for the Directory SDK.  There are two users of the libldap
