@@ -426,7 +426,7 @@ sub backward_compatibility {
 
   if ($TINDERBOX{'build'}) {
     $TINDERBOX{'buildname'} = $TINDERBOX{'build'};
-    $TINDERBOX{'buildname'} = undef;
+    $TINDERBOX{'build'} = undef;
   }
 
   return 1;
