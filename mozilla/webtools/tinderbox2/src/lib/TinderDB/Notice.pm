@@ -394,9 +394,7 @@ sub status_table_row {
                 "\t</td>\n");
   } else {
     @outrow = ("\t<!-- skipping: Notice: tree: $tree -->\n".
-               "\t\t<td>\n".
-               "\t\t\t$HTMLPopUp::EMPTY_TABLE_CELL\n".
-               "\t\t</td>\n");
+               "\t\t<td>$HTMLPopUp::EMPTY_TABLE_CELL</td>\n");
 
   }
 
