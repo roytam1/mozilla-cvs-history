@@ -229,6 +229,9 @@ $fullname{'117'} = 'XPIDL';
 $mode{'106'} = 'Open';
 $branch{'106'} = 'HEAD';
 $fullname{'106'} = 'XPToolkit';
+$mode{'140'} = 'Open';
+$branch{'140'} = 'HEAD';
+$fullname{'140'} = 'XSLT Processor';
 $mode{'135'} = 'Open';
 $branch{'135'} = 'HEAD';
 $fullname{'135'} = 'xul.css';
@@ -306,6 +309,7 @@ if (m:^mozilla/xpfe$:) {return '137';}
 if (m:^mozilla/js/tests$:) {return '114';}
 if (m:^js/src/perlconnect$:) {return '111';}
 if (m:^mozilla/silentdl/.*$:) {return '110';}
+if (m:^mozilla/extensions/transformiix/.*$:) {return '140';}
 if (m:^base/src/photon/.*$:) {return '113';}
 if (m:^gfx/src/photon/.*$:) {return '113';}
 if (m:^widget/src/photon/.*$:) {return '113';}
