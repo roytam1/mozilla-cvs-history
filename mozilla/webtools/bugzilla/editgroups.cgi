@@ -108,7 +108,7 @@ unless ($action) {
     print "<th>Description</th>";
     print "<th>User RegExp</th>";
     print "<th>Active</th>";
-    print "<th>Buggroup</th>";
+    print "<th>Type</th>";
     print "<th>Action</th>";
     print "</tr>\n";
 
@@ -170,12 +170,11 @@ If you deactivate a group it will no longer be possible for users to add bugs
 to that group, although bugs already in the group will remain in the group.
 Deactivating a group is a much less drastic way to stop a group from growing
 than deleting the group would be.<p>";
-    print "The <b>Buggroup</b> flag determines whether or not the group should
-           generate a checkbox on bug entry/edit pages for group restrictions.
-           If buggroup is set, the checkbox will be offerred.<p>";  
-    print "In addition, the following groups that determine user privileges
-exist.  You can only edit the User rexexp on these groups.  You should also take
-care not to duplicate the Names of any of them in your user groups.<p>";
+    print "The <b>Type</b> field identifies system groups and determines 
+          whether or not the group should generate a checkbox on bug 
+          entry/edit pages for group restrictions.  If type is 'buggroup,' 
+          the checkbox will be offerred. If type is 'user,' the group 
+          is not used for bugs but can be used to organize groups of users<p>";  
     print "</form>\n";
 
     PutFooter();
