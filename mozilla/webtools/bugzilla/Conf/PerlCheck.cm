@@ -58,7 +58,7 @@ sub searchpathforapp($) {
 	foreach $cur (@path) {
 		if (-e correctpath("$cur/$app")) {
 			output "FOUND: $cur/$app\n";
-			setconf($app,$cur."/".$app);
+			setConf($app,$cur."/".$app);
 			return "found";
 		}
 	}
