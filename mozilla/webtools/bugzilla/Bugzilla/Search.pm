@@ -757,7 +757,7 @@ sub init {
                         "If you think you're getting this in error, please copy the " .
                         "entire URL out of the address bar at the top of your browser " .
                         "window and email it to <109679\@bugzilla.org>";
-                    $::vars->{'fieldname'} = html_quote($f);
+                    $::vars->{'fieldname'} = $f;
                     die "Internal error: $errstr" if $chart < 0;
                     &::ThrowUserError("illegal_fieldname");
                 }

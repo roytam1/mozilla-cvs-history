@@ -151,15 +151,18 @@ if (exists $::FORM{'rebuildvotecache'}) {
 }
 
 if (exists $::FORM{'rederivegroups'}) {
-    Status("OK, now setting a group_when so all users will redrive groups on next access.");
+    Status("OK, All users' inherited permissions will be rechecked when " .
+           "they next access Bugzilla.");
     SendSQL("UPDATE groups SET group_when = NOW() LIMIT 1");
 }
 
+# rederivegroupsnow is REALLY only for testing.
 if (exists $::FORM{'rederivegroupsnow'}) {
     Status("OK, now rederiving groups.");
     SendSQL("SELECT userid FROM profiles");
     while ((my $id) = FetchSQLData()) {
         DeriveGroup($id);
+        Status("Group $id");
     }
 }
 
@@ -175,21 +178,27 @@ if (exists $::FORM{'cleangroupsnow'}) {
     SendSQL("SELECT MAX(group_when) FROM groups WHERE group_when < NOW() - INTERVAL 1 HOUR");
     (my $cutoff) = FetchSQLData();
     Status("Cutoff is $cutoff");
-    SendSQL("LOCK TABLES user_group_map WRITE, profiles READ");
     SendSQL("SELECT COUNT(*) FROM user_group_map");
     (my $before) = FetchSQLData();
-    SendSQL("SELECT userid FROM profiles WHERE " .
-            "refreshed_when < " . SqlQuote($cutoff));
+    SendSQL("LOCK TABLES user_group_map WRITE, profiles WRITE");
+    SendSQL("SELECT userid FROM profiles " .
+            "WHERE refreshed_when > 0 " .
+            "AND refreshed_when < " . SqlQuote($cutoff) .
+            " LIMIT 1000");
+    my $count = 0;
     while ((my $id) = FetchSQLData()) {
+        $count++;
         PushGlobalSQLState();
         SendSQL("DELETE FROM user_group_map WHERE " .
             "user_id = $id AND isderived = 1 AND isbless = 0");
+        SendSQL("UPDATE profiles SET refreshed_when = 0 WHERE userid = $id");
         PopGlobalSQLState();
     }
     SendSQL("UNLOCK TABLES");
     SendSQL("SELECT COUNT(*) FROM user_group_map");
     (my $after) = FetchSQLData();
-    Status("Cleaned table - reduced from $before records to $after records");
+    Status("Cleaned table for $count users " .
+           "- reduced from $before records to $after records");
 }
 
 print "OK, now running sanity checks.<p>\n";

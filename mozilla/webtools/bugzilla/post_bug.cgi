@@ -258,7 +258,7 @@ foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
                  AND isbless = 0");
         my ($member) = FetchSQLData();
         if ($member) {
-            push(@groupstoadd,$v)
+            push(@groupstoadd, $v)
         }
     }
 }

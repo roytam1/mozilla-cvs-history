@@ -642,7 +642,7 @@ sub CanSeeBug {
     my $query = "SELECT bugs.bug_id, reporter, assigned_to, qa_contact," .
         " reporter_accessible, cclist_accessible," .
         " cc.who IS NOT NULL," .
-        " COUNT(DISTINCT(bug_group_map.group_id)) as cntbugingroups," .
+        " COUNT(bug_group_map.group_id) as cntbugingroups," .
         " COUNT(DISTINCT(user_group_map.group_id)) as cntuseringroups" .
         " FROM bugs" .
         " LEFT JOIN cc ON bugs.bug_id = cc.bug_id" .
@@ -728,6 +728,10 @@ sub Crypt {
     return $cryptedpassword;
 }
 
+# ConfirmGroup(userid) is called prior to any activity that relies
+# on user_group_map to ensure that derived group permissions are up-to-date.
+# Permissions must be rederived if ANY groups have a group_when newer
+# than the profiles.refreshed_when value.
 sub ConfirmGroup {
     my ($user) = (@_);
     PushGlobalSQLState();
@@ -740,6 +744,8 @@ sub ConfirmGroup {
     }
 }
 
+# DeriveGroup removes and rederives all derived group permissions for
+# the specified user.
 sub DeriveGroup {
     my ($user) = (@_);
     PushGlobalSQLState();
@@ -1302,10 +1308,10 @@ sub BugInGroupId {
 sub GroupExists {
     my ($groupname) = (@_);
     PushGlobalSQLState();
-    SendSQL("SELECT COUNT(*) FROM groups WHERE name=" . SqlQuote($groupname));
-    my $count = FetchOneColumn();
+    SendSQL("SELECT id FROM groups WHERE name=" . SqlQuote($groupname));
+    my $id = FetchOneColumn();
     PopGlobalSQLState();
-    return $count;
+    return $id;
 }
 
 sub GroupNameToId {

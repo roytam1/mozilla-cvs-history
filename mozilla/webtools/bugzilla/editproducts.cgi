@@ -348,7 +348,7 @@ if ($action eq 'new') {
                 "(name, description, isbuggroup, group_when) " .
                 "VALUES (" .
                 SqlQuote($product) . ", " .
-                SqlQuote($product . " Bugs Access") . ", 1, NOW())");
+                SqlQuote("Access to bugs in the $product product") . ", 1, NOW())");
         SendSQL("SELECT last_insert_id()");
         my $gid = FetchOneColumn();
         my $admin = GroupNameToId('admin');
@@ -860,9 +860,10 @@ if ($action eq 'update') {
         # update it so it will match in the future.  If there is no group, this
         # update statement will do nothing, so no harm done.  -JMR, 3/8/00
         SendSQL("UPDATE groups " .
-                "SET name=$qp, " .
-                "description=".SqlQuote($product." Bugs Access")." ".
-                "WHERE name=$qpold");
+                "SET name = $qp, " .
+                "description = " .
+                SqlQuote("Access to bugs in the $product product") .
+                " WHERE name = $qpold");
         
         print "Updated product name.<BR>\n";
     }

@@ -270,7 +270,7 @@ sub show_bug {
         }
     }
 
-    # If the bug is restricted to a group, display checkboxes that allow
+    # If the bug is restricted to a group, get flags that allow
     # the user to set whether or not the reporter 
     # and cc list can see the bug even if they are not members of all 
     # groups to which the bug is restricted.

@@ -204,7 +204,7 @@ sub GetQuip {
 sub GetGroupsByUserId {
     my ($userid) = @_;
 
-    return if !$userid;
+    return unless $userid;
 
     SendSQL("
         SELECT  groups.id, name, description, isactive

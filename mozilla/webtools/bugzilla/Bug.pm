@@ -138,16 +138,14 @@ sub initBug  {
         }
         $count++;
     }
-  } else {
-    if (@row) {
+  } elsif (@row) {
       $self->{'bug_id'} = $bug_id;
       $self->{'error'} = "NotPermitted";
       return $self;
-    } else {
+  } else {
       $self->{'bug_id'} = $bug_id;
       $self->{'error'} = "NotFound";
       return $self;
-    }
   }
 
   $self->{'assigned_to'} = &::DBID_to_name($self->{'assigned_to'});
@@ -350,24 +348,6 @@ sub XML_Header {
 sub XML_Footer {
   return ("</bugzilla>\n");
 }
-
-sub UserInGroup {
-    my $self = shift();
-    my ($groupname) = (@_);
-    PushGlobalSQLState();
-    &::SendSQL("SELECT groups.id FROM groups, user_group_map" .
-        " WHERE groups.id = user_group_map.group_id " .
-        " AND user_group_map.user_id = " . $self->{'whoid'} .
-        " AND isbless = 0" .
-        " AND groups.name = " . SqlQuote($groupname));
-    my $result = FetchOneColumn();
-    PopGlobalSQLState();
-    if ($result) {
-        return 1;
-    }
-    return 0;
-}
-
 
 sub CanChangeField {
    my $self = shift();

@@ -330,11 +330,8 @@ $default{'bug_status'} = $status[0];
 # First we get the bit and description for the group.
 my $group_id = '0';
 
-if(Param("usebuggroups") && GroupExists($product)) {
-    SendSQL("SELECT id FROM groups ".
-            "WHERE name = " . SqlQuote($product) . 
-            " AND isbuggroup = 1");
-    ($group_id) = FetchSQLData();
+if(Param("usebuggroups")) {
+    ($group_id) = GroupExists($product);
 }
 
 SendSQL("SELECT DISTINCT groups.id, groups.name, groups.description " .

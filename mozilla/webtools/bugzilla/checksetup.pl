@@ -1612,15 +1612,15 @@ $table{tokens} =
 # 
 # This table determines the groups that a user belongs to
 # directly or due to regexp and which groups can be blessed
-# by a user 
-# maptype:
+# by a user. 
+#
 # isderived: 
 # if 0 - record was explicitly granted
 # if 1 - record was created by evaluating a regexp or group hierarchy
 $table{user_group_map} =
     'user_id mediumint not null,
      group_id mediumint not null,
-     isbless smallint not null default 0,
+     isbless tinyint not null default 0,
      isderived tinyint not null default 0,
 
      unique(user_id, group_id, isderived, isbless)';
@@ -1628,12 +1628,12 @@ $table{user_group_map} =
 $table{group_group_map} =
     'child_id mediumint not null,
      parent_id mediumint not null,
-     isbless smallint not null default 0,
+     isbless tinyint not null default 0,
 
      unique(child_id, parent_id, isbless)';
 
-# This table determines in which groups a user must be a member to have
-# permission to see a bug
+# This table determines which groups a user must be a member of
+# in order to see a bug.
 $table{bug_group_map} =
     'bug_id mediumint not null,
      group_id mediumint not null,
@@ -1944,14 +1944,14 @@ unless ($sth->rows) {
     $sth->execute;
     my ($product_id) = $sth->fetchrow_array;
     $dbh->do(qq{INSERT INTO versions (value, product_id) VALUES ("other", $product_id)});
-    # note: since amin user is not yet known, components gets a 0 for 
-    #   initialowner and this is fixed during final checks
+    # note: since admin user is not yet known, components gets a 0 for 
+    # initialowner and this is fixed during final checks.
     $dbh->do("INSERT INTO components (name, product_id, description, initialowner, initialqacontact)
              VALUES (" .
              "'TestComponent', $product_id, " .
              "'This is a test component in the test product database.  " .
              "This ought to be blown away and replaced with real stuff in " .
-             "a finished installation of bugzilla.', 0, 0)");
+             "a finished installation of Bugzilla.', 0, 0)");
     $dbh->do(qq{INSERT INTO milestones (product_id, value) VALUES ($product_id,"---")});
 }
 
@@ -3050,13 +3050,18 @@ if (($fielddef = GetFieldDef("attachments", "creation_ts")) &&
 # 4) convert activity logs to use group names instead of numbers
 # 5) identify the admin from the old all-ones groupset
 #
-# ListBits(arg) returns a list of group names or UNKNOWN<n> if the group
-# has been deleted for all bits set in arg
+# ListBits(arg) returns a list of UNKNOWN<n> if the group
+# has been deleted for all bits set in arg. When the activity
+# records are converted from groupset numbers to lists of
+# group names, ListBits is used to fill in a list of references
+# to groupset bits for groups that no longer exist.
+# 
 sub ListBits {
     my ($num) = @_;
     my @res = ();
     my $curr = 1;
     while (1) {
+        # Convert a big integer to a list of bits 
         my $sth = $dbh->prepare("SELECT ($num & ~$curr) > 0, 
                                         ($num & $curr), 
                                         ($num & ~$curr), 
@@ -3072,25 +3077,31 @@ sub ListBits {
 }
 
 my @admins = ();
+# The groups system needs to be converted if groupset exists
 if (GetFieldDef("profiles", "groupset")) {
     AddField('groups', 'group_when', 'datetime not null');
+    # Some mysql versions will promote any unique key to primary key
+    # so all unique keys are removed first and then added back in
     $dbh->do("ALTER TABLE groups DROP INDEX bit") if GetIndexDef("groups","bit");
     $dbh->do("ALTER TABLE groups DROP INDEX name") if GetIndexDef("groups","name");
     AddField('groups', 'id', 'mediumint not null auto_increment primary key');
     $dbh->do("ALTER TABLE groups ADD UNIQUE (name)");
-    AddField('products', 'id', 
-        'mediumint primary key auto_increment not null');
     AddField('profiles', 'refreshed_when', 'datetime not null');
 
+    # Convert all existing groupset records to map entries before removing
+    # groupset fields or removing "bit" from groups.
     $sth = $dbh->prepare("SELECT bit, id FROM groups
                 WHERE bit > 0");
     $sth->execute();
     while (my ($bit, $gid) = $sth->fetchrow_array) {
-        # create user_group_map membership grants for old groupsets
+        # Create user_group_map membership grants for old groupsets.
+        # Get each user with the old groupset bit set
         my $sth2 = $dbh->prepare("SELECT userid FROM profiles
                    WHERE (groupset & $bit) != 0");
         $sth2->execute();
         while (my ($uid) = $sth2->fetchrow_array) {
+            # Check to see if the user is already a member of the group
+            # and, if not, insert a new record.
             my $query = "SELECT user_id FROM user_group_map 
                 WHERE group_id = $gid AND user_id = $uid 
                 AND isbless = 0"; 
@@ -3102,7 +3113,8 @@ if (GetFieldDef("profiles", "groupset")) {
                        VALUES($uid, $gid, 0, 0)");
             }
         }
-        # create user can bless group grants for old groupsets
+        # Create user can bless group grants for old groupsets.
+        # Get each user with the old blessgroupset bit set
         $sth2 = $dbh->prepare("SELECT userid FROM profiles
                    WHERE (blessgroupset & $bit) != 0");
         $sth2->execute();
@@ -3111,42 +3123,50 @@ if (GetFieldDef("profiles", "groupset")) {
                    (user_id, group_id, isbless, isderived)
                    VALUES($uid, $gid, 1, 0)");
         }
-        # create bug_group_map records for old groupsets
+        # Create bug_group_map records for old groupsets.
+        # Get each bug with the old group bit set.
         $sth2 = $dbh->prepare("SELECT bug_id FROM bugs
                    WHERE (groupset & $bit) != 0");
         $sth2->execute();
         while (my ($bug_id) = $sth2->fetchrow_array) {
+            # Insert the bug, group pair into the bug_group_map.
             $dbh->do("INSERT INTO bug_group_map
                    (bug_id, group_id)
                    VALUES($bug_id, $gid)");
         }
     }
-    # replace old activity log groupset records with groups
+    # Replace old activity log groupset records with lists of names of groups.
+    # Start by defining the bug_group field and getting its id.
     AddFDef("bug_group", "Group", 0);
     $sth = $dbh->prepare("SELECT fieldid FROM fielddefs WHERE name = " . $dbh->quote('bug_group'));
     $sth->execute();
     my ($bgfid) = $sth->fetchrow_array;
+    # Get the field id for the old groupset field
     $sth = $dbh->prepare("SELECT fieldid FROM fielddefs WHERE name = " . $dbh->quote('groupset'));
     $sth->execute();
     my ($gsid) = $sth->fetchrow_array;
+    # Get all bugs_activity records from groupset changes
     $sth = $dbh->prepare("SELECT bug_id, bug_when, who, added, removed
                           FROM bugs_activity WHERE fieldid = $gsid");
     $sth->execute();
     while (my ($bug_id, $bug_when, $who, $added, $removed) = $sth->fetchrow_array) {
         $added ||= 0;
         $removed ||= 0;
+        # Get names of groups added.
         my $sth2 = $dbh->prepare("SELECT name FROM groups WHERE (bit & $added) != 0 AND (bit & $removed) = 0");
         $sth2->execute();
         my @logadd = ();
         while (my ($n) = $sth2->fetchrow_array) {
             push @logadd, $n;
         }
+        # Get names of groups removed.
         $sth2 = $dbh->prepare("SELECT name FROM groups WHERE (bit & $removed) != 0 AND (bit & $added) = 0");
         $sth2->execute();
         my @logrem = ();
         while (my ($n) = $sth2->fetchrow_array) {
             push @logrem, $n;
         }
+        # Get list of group bits added that correspond to missing groups.
         $sth2 = $dbh->prepare("SELECT ($added & ~BIT_OR(bit)) FROM groups");
         $sth2->execute();
         my ($miss) = $sth2->fetchrow_array;
@@ -3154,6 +3174,7 @@ if (GetFieldDef("profiles", "groupset")) {
             push @logadd, ListBits($miss);
             print "\nWARNING - GROUPSET ACTIVITY ON BUG $bug_id CONTAINS DELETED GROUPS\n";
         }
+        # Get list of group bits deleted that correspond to missing groups.
         $sth2 = $dbh->prepare("SELECT ($removed & ~BIT_OR(bit)) FROM groups");
         $sth2->execute();
         ($miss) = $sth2->fetchrow_array;
@@ -3165,6 +3186,7 @@ if (GetFieldDef("profiles", "groupset")) {
         my $loga = "";
         $logr = join(", ", @logrem) . '?' if @logrem;
         $loga = join(", ", @logadd) . '?' if @logadd;
+        # Replace to old activity record with the converted data.
         $dbh->do("UPDATE bugs_activity SET fieldid = $bgfid, added = " .
                   $dbh->quote($loga) . ", removed = " . 
                   $dbh->quote($logr) .
@@ -3172,18 +3194,22 @@ if (GetFieldDef("profiles", "groupset")) {
                   " AND who = $who AND fieldid = $gsid");
 
     }
+    # Replace groupset changes with group name changes in profiles_activity.
+    # Get profiles_activity records for groupset.
     $sth = $dbh->prepare("SELECT userid, profiles_when, who, newvalue, oldvalue
                           FROM profiles_activity WHERE fieldid = $gsid");
     $sth->execute();
     while (my ($uid, $uwhen, $uwho, $added, $removed) = $sth->fetchrow_array) {
         $added ||= 0;
         $removed ||= 0;
+        # Get names of groups added.
         my $sth2 = $dbh->prepare("SELECT name FROM groups WHERE (bit & $added) != 0 AND (bit & $removed) = 0");
         $sth2->execute();
         my @logadd = ();
         while (my ($n) = $sth2->fetchrow_array) {
             push @logadd, $n;
         }
+        # Get names of groups removed.
         $sth2 = $dbh->prepare("SELECT name FROM groups WHERE (bit & $removed) != 0 AND (bit & $added) = 0");
         $sth2->execute();
         my @logrem = ();
@@ -3194,6 +3220,7 @@ if (GetFieldDef("profiles", "groupset")) {
         my $lrem = "";
         $ladd = join(", ", @logadd) . '?' if @logadd;
         $lrem = join(", ", @logrem) . '?' if @logrem;
+        # Replace profiles_activity record for groupset change with group list.
         $dbh->do("UPDATE profiles_activity SET fieldid = $bgfid, newvalue = " .
                   $dbh->quote($ladd) . ", oldvalue = " . 
                   $dbh->quote($lrem) .
@@ -3203,7 +3230,7 @@ if (GetFieldDef("profiles", "groupset")) {
 
     }
 
-    # identify admin group
+    # Identify admin group.
     my $sth = $dbh->prepare("SELECT id FROM groups 
                 WHERE name = 'admin'");
     $sth->execute();
@@ -3240,41 +3267,36 @@ if (GetFieldDef("profiles", "groupset")) {
 # BugZilla uses --GROUPS-- to assign various rights to its users. 
 #
 
-AddGroup 'tweakparams',    'Can tweak operating parameters';
-AddGroup 'editusers',      'Can edit or disable users';
-AddGroup 'creategroups',   'Can create and destroy groups.';
-AddGroup 'editcomponents', 'Can create, destroy, and edit components.';
-AddGroup 'editkeywords',   'Can create, destroy, and edit keywords.';
-AddGroup 'admin',          'Administrators';
+AddGroup('tweakparams', 'Can tweak operating parameters');
+AddGroup('editusers', 'Can edit or disable users');
+AddGroup('creategroups', 'Can create and destroy groups.');
+AddGroup('editcomponents', 'Can create, destroy, and edit components.');
+AddGroup('editkeywords', 'Can create, destroy, and edit keywords.');
+AddGroup('admin', 'Administrators');
 
 
 if (!GroupDoesExist("editbugs")) {
-    my $id = AddGroup('editbugs',  'Can edit all aspects of any bug.', ".*");
-    my $sth = $dbh->prepare("SELECT userid FROM profiles ORDER BY userid");
+    my $id = AddGroup('editbugs', 'Can edit all aspects of any bug.', ".*");
+    my $sth = $dbh->prepare("SELECT userid FROM profiles");
     $sth->execute();
-    while ( my ($userid) = $sth->fetchrow_array() ) {
+    while (my ($userid) = $sth->fetchrow_array()) {
         $dbh->do("INSERT INTO user_group_map 
             (user_id, group_id, isbless, isderived) 
             VALUES ($userid, $id, 0, 0)");
     }
-
 }
 
 if (!GroupDoesExist("canconfirm")) {
     my $id = AddGroup('canconfirm',  'Can confirm a bug.', ".*");
-    my $sth = $dbh->prepare("SELECT userid FROM profiles ORDER BY userid");
+    my $sth = $dbh->prepare("SELECT userid FROM profiles");
     $sth->execute();
-    while ( my ($userid) = $sth->fetchrow_array() ) {
+    while (my ($userid) = $sth->fetchrow_array()) {
         $dbh->do("INSERT INTO user_group_map 
             (user_id, group_id, isbless, isderived) 
             VALUES ($userid, $id, 0, 0)");
     }
 
 }
-
-
-
-
 
 
 ###########################################################################
@@ -3288,7 +3310,7 @@ sub bailout {   # this is just in case we get interrupted while getting passwd
 }
 
 if (@admins) {
-    # identify admin group
+    # Identify admin group.
     my $sth = $dbh->prepare("SELECT id FROM groups 
                 WHERE name = 'admin'");
     $sth->execute();
@@ -3297,10 +3319,10 @@ if (@admins) {
         $dbh->do("INSERT INTO user_group_map 
             (user_id, group_id, isbless, isderived) 
             VALUES ($userid, $adminid, 0, 0)");
-        # existing administrators are made blessers of group "admin"
-        # only explitly defined blessers can bless group admin
-        # other groups can be blessed by any admin or additional
-        # defined blessers
+        # Existing administrators are made blessers of group "admin"
+        # but only explitly defined blessers can bless group admin.
+        # Other groups can be blessed by any admin (by default) or additional
+        # defined blessers.
         $dbh->do("INSERT INTO user_group_map 
             (user_id, group_id, isbless, isderived) 
             VALUES ($userid, $adminid, 1, 0)");
@@ -3308,17 +3330,16 @@ if (@admins) {
     $sth = $dbh->prepare("SELECT id FROM groups");
     $sth->execute();
     while ( my ($id) = $sth->fetchrow_array() ) {
-        # admins can bless every group
+        # Admins can bless every group.
         $dbh->do("INSERT INTO group_group_map 
             (child_id, parent_id, isbless) 
             VALUES ($adminid, $id, 1)");
-        # admins are initially members of every group
+        # Admins are initially members of every group.
         next if ($id == $adminid);
         $dbh->do("INSERT INTO group_group_map 
             (child_id, parent_id, isbless) 
             VALUES ($adminid, $id, 0)");
     }
-                          
 }
 
 
@@ -3362,8 +3383,8 @@ if ($sth->rows == 0) {
   }
 
   print "\nLooks like we don't have an administrator set up yet.  Either this is your\n";
-  print "first time using Bugzilla, or your administrator's privs might have accidently\n";
-  print "gotten deleted.\n";
+  print "first time using Bugzilla, or your administrator's privileges might have accidently\n";
+  print "been deleted.\n";
   while(! $admin_ok ) {
     while( $login eq "" ) {
       print "Enter the e-mail address of the administrator: ";

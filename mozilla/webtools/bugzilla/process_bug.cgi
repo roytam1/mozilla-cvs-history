@@ -142,7 +142,7 @@ if ( Param("usetargetmilestone") ) {
 #
 # This function checks if there is a comment required for a specific
 # function and tests, if the comment was given.
-# If comments are required for functions  is defined by params.
+# If comments are required for functions is defined by params.
 #
 sub CheckonComment( $ ) {
     my ($function) = (@_);
@@ -390,9 +390,9 @@ if (defined $::FORM{'id'}) {
     CheckFormFieldDefined(\%::FORM, 'longdesclength');
 }
 
-my $action  = '';
+my $action = '';
 if (defined $::FORM{action}) {
-  $action  = trim($::FORM{action});
+  $action = trim($::FORM{action});
 }
 if (Param("move-enabled") && $action eq Param("move-button-text")) {
   $::FORM{'buglist'} = join (":", @idlist);
@@ -1129,28 +1129,29 @@ foreach my $id (@idlist) {
     if ($::comma ne "") {
         SendSQL($query);
     }
-    my $groupAddNames = '';
+    my @groupAddNames = ();
     foreach my $grouptoadd (@groupAdd) {
         if (!BugInGroupId($id, $grouptoadd)) {
-            $groupAddNames .= GroupIdToName($grouptoadd) . ', ';
+            push(@groupAddNames, GroupIdToName($grouptoadd));
             SendSQL("INSERT INTO bug_group_map (bug_id, group_id) 
                      VALUES ($id, $grouptoadd)");
         }
     }
-    my $groupDelNames = '';
+    my @groupDelNames = ();
     foreach my $grouptodel (@groupDel) {
         if (BugInGroupId($id, $grouptodel)) {
-            $groupDelNames .= GroupIdToName($grouptodel) . ', ';
+            push(@groupDelNames, GroupIdToName($grouptodel));
         }
         SendSQL("DELETE FROM bug_group_map 
-                 WHERE bug_id = $id AND  group_id = $grouptodel");
+                 WHERE bug_id = $id AND group_id = $grouptodel");
     }
     SendSQL("select now()");
     $timestamp = FetchOneColumn();
 
-    $groupDelNames =~ s/, $//;
-    $groupAddNames =~ s/, $//;
-    LogActivityEntry($id,"bug_group",$groupDelNames,$groupAddNames); 
+    my $groupDelNames = join(',', @groupDelNames);
+    my $groupAddNames = join(',', @groupAddNames);
+
+    LogActivityEntry($id, "bug_group", $groupDelNames, $groupAddNames); 
     if (defined $::FORM{'comment'}) {
         AppendComment($id, $::COOKIE{'Bugzilla_login'}, $::FORM{'comment'},
             $::FORM{'commentprivacy'});
@@ -1295,7 +1296,7 @@ foreach my $id (@idlist) {
             }
         }
 
-        if ( 
+        if (
           # the old product is associated with a group;
           GroupExists($oldhash{'product'})
 

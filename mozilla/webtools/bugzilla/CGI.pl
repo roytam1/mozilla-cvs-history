@@ -448,8 +448,8 @@ sub quietly_check_login() {
                 " AND logincookies.ipaddr = " .
                 SqlQuote($ENV{"REMOTE_ADDR"}));
         my @row;
-        if (@row = FetchSQLData()) {
-            ($userid, my $loginname, my $disabledtext) = (@row);
+        if (MoreSQLData()) {
+            ($userid, my $loginname, my $disabledtext) = FetchSQLData();
             if ($userid > 0) {
                 if ($disabledtext eq '') {
                     $::COOKIE{"Bugzilla_login"} = $loginname; # Makes sure case
