@@ -272,7 +272,10 @@ sub get_all_perforce_data {
               my($affected_files_ref, $jobs_fixed_ref, 
                  $change_num, $workspace, $comment) = 
                      @{ $recs->{$author} };
-              my $rowspan = $#{$affected_files_ref} + 1;
+
+              my @files = map { @{$_}[0] } @{$affected_files_ref};
+              my @printable_files = main::group_files(@files);
+              my $rowspan = $#{printable_files} + 1;
               my $cell_options = "ALIGN=center ROWSPAN=$rowspan";
 
               $out .= "\t<TR>\n";
@@ -282,15 +285,14 @@ sub get_all_perforce_data {
               $out .= "\t\t<TD $cell_options>$author</TD>\n";
               $out .= "\t\t<TD $cell_options>$comment</TD>\n";
               my $num;
-              foreach $file_ref (@{$affected_files_ref}){
-                  my $file = @{$file_ref}[0];
+              foreach $file (@printable_files){
                   ($num) &&
                       ($out .= "\t<TR>\n");
                   $num ++;
                   $out .= "\t\t<TD>$file</TD>\n";
                   $out .= "\t</TR>\n";
               }
-         } # $author
+          } # $author
       }
 
   } # $time
