@@ -25,7 +25,7 @@ $fullname{'18'} = 'macfe';
 $mode{'19'} = 'Restricted';
 $branch{'19'} = 'HEAD';
 $fullname{'19'} = 'mozilla-toplevel';
-$blessed{'19'} = [];
+$blessed{'19'} = ['cls%seawood.org',];
 $super{'19'} = ['cyeh%netscape.com','brendan%netscape.com',];
 sub GetT {
 ($b,$_) = (@_);
