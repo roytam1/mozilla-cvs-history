@@ -38,6 +38,9 @@
 
 package Error_Parse;
 
+# This package must not use any tinderbox specific libraries.  It is
+# intended to be a base class.
+
 $VERSION = '#tinder_version#';
 
 # the rest of the code does not depend on knowing the different
@@ -96,8 +99,20 @@ sub line_type {
 
   $error = (
 
-            ($line =~ /\b[Ee]rror\b/)		||		# C make error
+            ($line =~ /\sORA-\d/)		||		# Oracle
+            ($line =~ /\bNo such file or directory\b/)	||
+            ($line =~ /\b[Uu]nable to\b/)	||		
+            ($line =~ /\bnot found\b/)		||		# shell path
+            ($line =~ /\b[Dd]oes not\b/)	||		# javac error
+            ($line =~ /\b[Cc]ould not\b/)	||		# javac error
+            ($line =~ /\b[Cc]an\'t\b/)		||		# javac error
+            ($line =~ /\b[Cc]an not\b/)		||		# javac error
+            ($line =~ /\b\[javac\]\b/)		||		# javac error
+            # Remember: some source files are called $prefix/error.suffix
+            ($line =~ /\b(?<!\/)[Ee]rror(?!\.)\b/)||		# C make error
             ($line =~ /\b[Ff]atal\b/)		||		# link error
+            ($line =~ /\b[Ee]xception\b/)	||		# javac error
+            ($line =~ /\b[Dd]eprecated\b/)	||		# java error
             ($line =~ /\b[Aa]ssertion\b/)	||		# test error
             ($line =~ /\b[Aa]borted\b/)		||		# cvs error
             ($line =~ /\b[Ff]ailed\b/)		||		# java nmake
