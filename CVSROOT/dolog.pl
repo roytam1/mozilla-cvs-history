@@ -1,5 +1,7 @@
 #! /tools/ns/bin/perl5
 
+use Socket;
+
 $username = getlogin || (getpwuid($<))[0] || "nobody";
 $envcvsroot = $ENV{'CVSROOT'};
 $cvsroot = $envcvsroot;
