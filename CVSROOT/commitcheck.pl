@@ -17,6 +17,9 @@ $fullname{'55'} = 'Build Config';
 $mode{'108'} = 'Open';
 $branch{'108'} = 'HEAD';
 $fullname{'108'} = 'CCK';
+$mode{'146'} = 'Open';
+$branch{'146'} = 'HEAD';
+$fullname{'146'} = 'Client NSPR';
 $mode{'96'} = 'Open';
 $branch{'96'} = 'HEAD';
 $fullname{'96'} = 'Clipping and Compositing';
@@ -131,6 +134,9 @@ $super{'112'} = ['leaf%mozilla.org','cyeh%netscape.com',];
 $mode{'19'} = 'Open';
 $branch{'19'} = 'HEAD';
 $fullname{'19'} = 'mozilla-toplevel';
+$mode{'147'} = 'Open';
+$branch{'147'} = 'HEAD';
+$fullname{'147'} = 'Mstone';
 $mode{'77'} = 'Open';
 $branch{'77'} = 'HEAD';
 $fullname{'77'} = 'NetLib';
@@ -337,6 +343,7 @@ if (m:^mozilla/java/fe/.*$:) {return '131';}
 if (m:^mozilla/java/util/.*$:) {return '133';}
 if (m:^mozilla/extensions/xmlterm/.*$:) {return '141';}
 if (m:^xpcom/remote$:) {return '143';}
+if (m:^mozilla/mstone/.*$:) {return '147';}
 }
 return '';
 }
