@@ -23,8 +23,8 @@ sub GetT {
 if ($b eq 'ColorSync_19980824_BRANCH') {
 }
 if ($b eq 'HEAD') {
-if (m:CVSROOT/commitcheck\.pl:) {return '12';}
-if (m:CVSROOT/passwd:) {return '12';}
+if (m:CVSROOT/commitcheck\.pl:) {return '3';}
+if (m:CVSROOT/passwd:) {return '3';}
 }
 return '';
 }
