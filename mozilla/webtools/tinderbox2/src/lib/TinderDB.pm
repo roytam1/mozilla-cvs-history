@@ -65,6 +65,7 @@ use File::Basename;
 use lib '#tinder_libdir#';
 
 use Utils;
+use TinderDB::Notice;
 
 
 # Use the DB implementations you wish to use.
@@ -106,6 +107,10 @@ sub strings2columns {
 main::require_modules(@IMPLS);
 @HTML_COLUMNS = strings2columns(@IMPLS);
 
+# now the notice column is special, it may not be a column but several
+# columns use it and it needs to have some column like behavior.
+
+$NOTICE= TinderDB::Notice->new();
 
 
 # It would be nice if we had some kind of display of the bug tracking
@@ -322,6 +327,11 @@ sub loadtree_db {
     $db->loadtree_db(@_);
   }
 
+  # Make sure the notice database is handled
+  # even if notice is not a column.
+
+  $NOTICE->loadtree_db(@_);
+
   return ;
 }
 
@@ -339,6 +349,11 @@ sub apply_db_updates {
   foreach $db (@{$DB}) {
     $out += $db->apply_db_updates(@_);
   }
+
+  # Make sure the notice database is handled
+  # even if notice is not a column.
+
+  $NOTICE->apply_db_updates(@_);
 
   return $out;
 }
@@ -360,8 +375,27 @@ sub trim_db_history {
     $db->trim_db_history(@_);
   }
 
+  # Make sure the notice database is handled
+  # even if notice is not a column.
+
+  $NOTICE->trim_db_history(@_);
+
   return ;
 
+}
+
+
+# where can people attach notices to?
+# Really this is the names the columns produced by this DB
+
+sub notice_association {
+  my (@outrow) = ();
+
+  foreach $db (@{$DB}) {
+    push @outrow, $db->status_table_header(@_);
+  }
+
+  return (@outrow);
 }
 
 
@@ -380,6 +414,11 @@ sub savetree_db {
   foreach $db (@{$DB}) {
      $db->savetree_db(@_);
   }
+
+  # Make sure the notice database is handled
+  # even if notice is not a column.
+
+  $NOTICE->savetree_db(@_);
 
   return ;
 }
