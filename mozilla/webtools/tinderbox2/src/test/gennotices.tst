@@ -1,4 +1,4 @@
-#!#perl# --
+#!/usr/local/bin/perl
 
 # generate random notices for testing purposes.  This program will
 # generate several hours worth of 'random notes' staring at the
