@@ -28,7 +28,7 @@
 MozillaSource -a \
 	MozillaSourceWin \
 	MozillaSourceMac \
-	MozillaSourceUnixAllFE
+	MozillaSourceUnix
 
 MozillaSourceWin -a \
 	MozillaSourceCommon \
@@ -40,8 +40,11 @@ MozillaSourceMac -a \
 
 MozillaSourceUnix -a \
 	MozillaSourceCommon \
-	mozilla/cmd/xfe \
-	MozillaSourceUnixOnly
+        MozillaSourceUnixOnly \
+        mozilla/cmd/xfe \
+        mozilla/cmd/gnomefe \
+        mozilla/cmd/qtfe \
+        mozilla/cmd/ybfe
 
 MozillaSourceMotif -a \
 	MozillaSourceCommon \
@@ -63,14 +66,6 @@ MozillaSourceYbfe -a \
 	mozilla/cmd/ybfe \
 	MozillaSourceUnixOnly
 
-MozillaSourceUnixAllFE -a \
-	MozillaSourceCommon \
-	mozilla/cmd/xfe \
-	mozilla/cmd/gnomefe \
-	mozilla/cmd/qtfe \
-	mozilla/cmd/ybfe \
-	MozillaSourceUnixOnly
-
 MozillaSourceCommon -a \
 	mozilla/LEGAL \
 	mozilla/LICENSE \
@@ -79,7 +74,7 @@ MozillaSourceCommon -a \
 	mozilla/include \
 	mozilla/caps \
 	mozilla/jpeg \
-	mozilla/js \
+	JSClient \
 	mozilla/lib/htmldlgs \
 	mozilla/lib/layout \
 	mozilla/lib/libcnv \
