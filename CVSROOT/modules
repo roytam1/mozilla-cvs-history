@@ -338,10 +338,12 @@ RaptorDist -a \
 	mozilla/configure.in \
 	mozilla/allmakefiles.sh \
 	mozilla/Makefile.in \
+	mozilla/makefile.win \
 	mozilla/build \
 	mozilla/caps \
 	mozilla/config \
 	mozilla/dbm \
+	mozilla/editor \
 	mozilla/include \
 	mozilla/intl \
 	mozilla/jpeg \
@@ -350,6 +352,7 @@ RaptorDist -a \
 	mozilla/lib/libpwcac \
 	mozilla/lib/xp \
 	mozilla/modules/libimg \
+	mozilla/libjar \
 	mozilla/modules/libpref \
 	mozilla/modules/libreg \
 	mozilla/modules/libutil \
