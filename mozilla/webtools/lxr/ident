@@ -136,11 +136,11 @@ sub ident {
 "View "
 ."<a href=\"" . $Conf->bonsaihome ."/cvslog.cgi?file=/mozilla/"
 .$fnam
-."&root=/cvsroot\">change log </a> or Blame"
+."&root=/cvsroot\">change log</a> or Blame"
 ."<a href=\"" . $Conf->bonsaihome . "/cvsblame.cgi?&file=/mozilla/"
 .$fnam
 ."&root=/cvsroot\">"
-." annotations</a>"
+."annotations</a>"
 ."\n"
 			    );
 
