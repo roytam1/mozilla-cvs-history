@@ -400,8 +400,6 @@ sub fixpaths {
 
 sub glimpse_init {
 
-    ($Conf, $HTTP, $Path) = &init_all;
-
     $HTTP->{'this_url'} = join('', 'http://',
 					  $ENV{'SERVER_NAME'},
 					  ':', $ENV{'SERVER_PORT'},
@@ -419,6 +417,7 @@ sub glimpse_init {
 	push(@a, $_);
         }
     $HTTP->{'param'} = {@a};
+    init_all();
 
     return($Conf, $HTTP, $Path);
     }
@@ -427,7 +426,6 @@ sub glimpse_init {
 sub init {
 
     my @a;
-    ($Conf, $HTTP, $Path) = &init_all;
     $HTTP->{'this_url'} = &http_wash(join('', 'http://',
 					  $ENV{'SERVER_NAME'},
 					  ':', $ENV{'SERVER_PORT'},
@@ -438,6 +436,7 @@ sub init {
 	push(@a, &http_wash($_));
         }
     $HTTP->{'param'} = {@a};
+    init_all();
     return($Conf, $HTTP, $Path);
     }
 
