@@ -59,6 +59,8 @@ sub page_header {
   my $self = shift @_;
   my (%args) = @_;
 
+  my $title = $args{'title'} || '';
+
   my ($html_time) = $main::LOCALTIME;
   $html_time =~ s/:[^:]+$//;
 
@@ -75,7 +77,7 @@ $header .=<<EOF;
         <!-- at $main::LOCALTIME -->
 <HEAD>
 	$refresh
-        <TITLE>$args{'title'}</TITLE>
+        <TITLE>$title</TITLE>
         </HEAD>
         <BODY TEXT="#000000" BGCOLOR="#ffffff">
 
@@ -84,7 +86,7 @@ $header .=<<EOF;
 <TR><TD>
    <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=2>
       <TR><TD VALIGN=TOP ALIGN=CENTER NOWRAP>
-           <FONT SIZE=\"+3\"><B><NOBR>$args{'title'}</NOBR></B></FONT>
+           <FONT SIZE=\"+3\"><B><NOBR>$title</NOBR></B></FONT>
       </TD></TR>
       <TR><TD VALIGN=TOP ALIGN=CENTER>
            <B>Created at: $html_time</B>
