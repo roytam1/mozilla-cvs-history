@@ -44,6 +44,7 @@ use FileStructure;
 use Persistence;
 use TinderHeader;
 use Utils;
+use HTMLPopUp;
 
 
 # Normally we filter user input for 'tainting' and to prevent this:
