@@ -358,9 +358,6 @@ sub status_table_row {
          HTMLPopUp::text_browser_color_string($cell_color, $char);
   }
 
-  my $query_links = '';
-  $query_links.=  "\t\t".$text_browser_color_string."\n";
-
   if ( scalar(%{$affected_files}) || scalar(%{$jobs_fixed}) ) {
     
     # find the times which bound the cell so that we can set up a

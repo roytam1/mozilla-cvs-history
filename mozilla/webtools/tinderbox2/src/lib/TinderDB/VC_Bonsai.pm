@@ -405,9 +405,6 @@ sub status_table_row {
          HTMLPopUp::text_browser_color_string($cell_color, $char);
   }
 
-  my $query_links = '';
-  $query_links.=  "\t\t".$text_browser_color_string."\n";
-
   if ( scalar(%authors) ) {
     
     # find the times which bound the cell so that we can set up a
