@@ -698,7 +698,15 @@ NSS -a \
 MozillaTinderboxAll -a \
 	SeaMonkeyAll \
         mozilla/security/psm \
-        mozilla/modules/libpr0n \
-	NSS \
-	NSPR
+        mozilla/modules/libpr0n
+# commenting out NSS because the client uses a static tag so watching
+# checkins as they happen is of no use to us
+#	NSS \
+# commenting out NSPR because tinderbox is broken in such a way that
+# checkins to the branch (which we care about) do not show up but 
+# checkins do the tip (which we don't care about) do. Getting rid of
+# this so its not 100% false positives.
+#	NSPR \
+# same with ldap
+#	mozilla/directory/c-sdk
 
