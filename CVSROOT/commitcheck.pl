@@ -22,11 +22,6 @@ $super{'146'} = ['wtc%netscape.com','larryh%netscape.com','cls%seawood.org','lea
 $mode{'96'} = 'Open';
 $branch{'96'} = 'HEAD';
 $fullname{'96'} = 'Clipping and Compositing';
-$mode{'15'} = 'Restricted';
-$branch{'15'} = 'ColorSync_19980824_BRANCH';
-$fullname{'15'} = 'ColorSync Branch';
-$blessed{'15'} = [];
-$super{'15'} = ['ebb3%apple.com','pinkerton%netscape.com','pnunn%netscape.com','saari%netscape.com',];
 $mode{'56'} = 'Open';
 $branch{'56'} = 'HEAD';
 $fullname{'56'} = 'Composer';
@@ -262,8 +257,6 @@ $branch{'93'} = 'HEAD';
 $fullname{'93'} = 'Zlib';
 sub GetT {
 ($b,$_) = (@_);
-if ($b eq 'ColorSync_19980824_BRANCH') {
-}
 if ($b eq 'HEAD') {
 if (m:^CVSROOT/commitcheck\.pl$:) {return '3';}
 if (m:^CVSROOT/passwd$:) {return '3';}
