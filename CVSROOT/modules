@@ -108,7 +108,6 @@ MozillaWinOnly -a \
 
 
 MozillaUnixOnly -a \
-    ns/client.mk  \
     ns/cmd/Makefile  \
     ns/cmd/stubfe  \
     ns/cmd/xfe  \
