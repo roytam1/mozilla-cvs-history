@@ -51,6 +51,14 @@ sub globals_pl_sillyness {
     $zz = @main::milestoneurl;
     $zz = @main::prodmaxvotes;
     $zz = $main::superusergroupset;
+    $zz = $main::successfulrestype;
+    $zz = $main::unsuccessfulrestype;
+    $zz = $main::queryable_resolution;
+    $zz = $main::settable_normal_resolution;
+    $zz = $main::settable_dupe_resolution;
+    $zz = $main::settable_moved_resolution;
+    $zz = $main::maxrestype;
+    $zz = $main::userid;
 }
 
 #
@@ -1134,22 +1142,25 @@ sub GetBugLink {
     PushGlobalSQLState();
     
     # Get this bug's info from the SQL Database
-    SendSQL("select bugs.bug_status, resolution_id, short_desc, groupset
-             from bugs where bugs.bug_id = $bug_num");
+    SendSQL("select bugs.bug_status, resolutions.name, short_desc, groupset
+             from bugs, resolutions where bugs.bug_id = $bug_num and
+             bugs.resolution_id = resolutions.id");
     my ($bug_stat, $bug_res, $bug_desc, $bug_grp) = (FetchSQLData());
     
     # Format the retrieved information into a link
     if ($bug_stat eq "UNCONFIRMED") { $link_return .= "<i>" }
-    if ($bug_res != 0) { $link_return .= "<strike>" }
+    if ($bug_res ne '') { $link_return .= "<strike>" }
+
     $bug_desc = value_quote($bug_desc);
     $link_text = value_quote($link_text);
     $link_return .= qq{<a href="show_bug.cgi?id=$bug_num" title="$bug_stat};
-    if ($bug_res != 0) {$link_return .= " $bug_res"}
+    if ($bug_res ne '') { $link_return .= " $bug_res" }
     if ($bug_grp == 0 || CanSeeBug($bug_num, $::userid, $::usergroupset)) {
         $link_return .= " - $bug_desc";
     }
     $link_return .= qq{">$link_text</a>};
-    if ($bug_res ne "") { $link_return .= "</strike>" }
+
+    if ($bug_res ne '') { $link_return .= "</strike>" }
     if ($bug_stat eq "UNCONFIRMED") { $link_return .= "</i>"}
     
     # Put back any query in progress
@@ -1471,7 +1482,6 @@ sub RemoveVotes {
     }
 }
 
-
 sub Param ($) {
     my ($value) = (@_);
 
@@ -1497,7 +1507,7 @@ sub Param ($) {
         $::param{'version'} = $v;
     }
     if (defined $::param{$value}) {
-        $::param{$value} = detaint_string($::param{$value});
+        trick_taint($::param{$value});
         return $::param{$value};
     }
     # Well, that didn't help.  Maybe it's a new param, and the user
@@ -1506,7 +1516,7 @@ sub Param ($) {
     require "defparams.pl";
     WriteParams();
     if (defined $::param{$value}) {
-        $::param{$value} = detaint_string($::param{$value});
+        trick_taint($::param{$value});
         return $::param{$value};
     }
     # We're pimped.

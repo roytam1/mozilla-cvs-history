@@ -182,9 +182,12 @@ sub ValidateID ($) {
 
     my ($fieldsref) = @_;
 
-    if ($::FORM{id} =~ /^\s*(\d+)\s*$/) {
-        $$fieldsref{id} = $1;
-    } else {
+    $::FORM{id} = trim($::FORM{id});
+
+    if (detaint_natural($::FORM{id})) {
+        $$fieldsref{id} = $::FORM{id};
+    }
+    else {
         ThatDoesntValidate("id");
         exit;
     }
@@ -401,10 +404,8 @@ sub InsertNew(%) {
 
     while (MoreSQLData()) {
         my $oldid = FetchOneColumn();
-        # XXX use detainting routines when they arrive
-        $oldid =~ /^(\d+)$/;
-        $oldid = $1;
 
+        detaint_natural($oldid);
         die "Failed to detaint ID from DB when determining next sequential number." if (!defined $oldid);
 
         if ($oldid > $newid) {

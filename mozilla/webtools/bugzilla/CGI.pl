@@ -661,10 +661,7 @@ sub quietly_check_login() {
         if (@row = FetchSQLData()) {
             my ($userid, $groupset, $loginname, $ok, $disabledtext) = (@row);
 
-            # Detaint - XXX use detaint routines when they arrive
-            $groupset =~ /^(\d+)$/;
-            $groupset = $1;
-
+            detaint_natural($groupset);
             die "Failed to detaint groupset from DB when quietly checking login." if (!defined $groupset);
 
             if ($ok) {
