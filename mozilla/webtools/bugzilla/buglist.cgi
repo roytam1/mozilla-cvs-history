@@ -1398,7 +1398,10 @@ foreach my $bug_id (@bugarray) {
         }
         pnl "<A HREF=\"show_bug.cgi?id=$bug_id\">";
         pnl "$bug_id</A>";
-        # if ($g != "0") { pnl "*"; }
+
+        # Place an asterisk next to the bug id if this bug is marked private
+        if ($canseeref->{$bug_id} > 1) { pnl "*"; }
+
         pnl " ";
         foreach my $c (@collist) {
             if (exists $::needquote{$c}) {

@@ -865,9 +865,11 @@ sub CanSeeBug {
 
     PushGlobalSQLState();
 
-    SendSQL("SELECT group_id FROM user_group_map WHERE user_id = $userid");
-    while (my @row = FetchSQLData()) {
-        push(@usergroupset, $row[0]);
+    if ($userid) {
+        SendSQL("SELECT group_id FROM user_group_map WHERE user_id = $userid");
+        while (my @row = FetchSQLData()) {
+            push(@usergroupset, $row[0]);
+        }
     }
 
     if (@usergroupset < 1) {
@@ -876,7 +878,8 @@ sub CanSeeBug {
 
     my $query = "
     SELECT 
-        bugs.bug_id
+        bugs.bug_id,
+        COUNT(bug_group_map.group_id)
     FROM
         bugs LEFT JOIN bug_group_map ON bugs.bug_id = bug_group_map.bug_id
         LEFT JOIN cc ON bugs.bug_id = cc.bug_id 
@@ -886,12 +889,14 @@ sub CanSeeBug {
         OR (bugs.reporter_accessible = 1 AND bugs.reporter = $userid) 
         OR (bugs.assignee_accessible = 1 AND bugs.assigned_to = $userid) 
         OR (bugs.qacontact_accessible = 1 AND bugs.qa_contact = $userid)
-        OR (bugs.cclist_accessible = 1 AND cc.who = $userid))";
+        OR (bugs.cclist_accessible = 1 AND cc.who = $userid))
+    GROUP BY 
+        bugs.bug_id";
 
     SendSQL($query);
     
-    while (my ($id) = FetchSQLData()) {
-        $cansee{$id} = 1;
+    while (my ($id, $count) = FetchSQLData()) {
+        $cansee{$id} = 1 + $count;
     }
     
     PopGlobalSQLState();
