@@ -254,5 +254,40 @@ JavaStubWin -a \
 	ns/sun-java/stubs/jri \
 	ns/sun-java/stubs/makefile.win
 
+######################################################################
 
+#
+# Modules for the raptor layout effort. Note that raptor dist is temporary
+# until raptor is integrated into the mainline build.
+#
 
+RaptorDist -a \
+	nsprpub \
+	include \
+	jpeg \
+	modules\libreg \
+	xpcom \
+	modules\zlib \
+	modules\libutil \
+	sun-java \
+	nav-java \
+	js \
+	modules\security\freenav \
+	modules\libpref \
+	modules\libimg \
+	lib\xp \
+	lib\libnet \
+	base
+
+Raptor -a \
+	htmlparser \
+	dom \
+	gfx \
+	view \
+	widget \
+	layout \
+	webshell
+
+RaptorAll -a \
+	RaptorDist  \
+	Raptor
