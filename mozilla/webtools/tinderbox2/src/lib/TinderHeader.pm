@@ -226,7 +226,7 @@ sub get_alltree_headers {
 # parsable HTML form so that other programs can get at these values.
 
 sub export_alltree_headers {
-  my ($header_ref) = @_;
+  my ($tree, $header_ref) = @_;
 
   my @out = ("<pre>\n");
   foreach $impl (keys %{ $header_ref }) {
@@ -234,7 +234,7 @@ sub export_alltree_headers {
   }
 
   $outfile = FileStructure::get_filename($tree, 'alltree_headers');
-  overwrite_file($outfile, @out);
+  main::overwrite_file($outfile, @out);
 
   return 1;
 }
