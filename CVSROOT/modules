@@ -62,6 +62,7 @@ MozillaSourceCommon -a \
     mozilla/lib/libpics  \
     mozilla/lib/libpwcac  \
     mozilla/lib/libstyle  \
+    mozilla/lib/mailto  \
     mozilla/lib/plugin  \
     mozilla/lib/xlate \
     mozilla/lib/xp  \
