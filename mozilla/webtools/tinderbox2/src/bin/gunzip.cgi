@@ -160,7 +160,7 @@ sub parse_args {
   if (-f $ZIPPED_FILE) {
     my (@cmd) = (@GUNZIP, $ZIPPED_FILE);
     system(@cmd);
-    ($?) && die("Could not run: '@cmd'\n");
+    ($?) && die("Could not run: '@cmd' : $! : waitstatus $? \n");
   } else {
     print "Could not find file: $ZIPPED_FILE\n";
   }
