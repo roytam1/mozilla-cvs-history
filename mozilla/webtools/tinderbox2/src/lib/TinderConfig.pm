@@ -98,6 +98,7 @@ $PopUpImpl = (
 	   'TinderDB::Time',
 	   'TinderDB::VC_CVS',
 	   'TinderDB::Notice',
+	   'TinderDB::BT_Generic',
 	   'TinderDB::Build',
 	  );
 
