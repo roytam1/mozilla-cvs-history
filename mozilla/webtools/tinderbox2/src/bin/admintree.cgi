@@ -107,7 +107,7 @@ sub setup_environment {
 
 
 sub encrypt_passwd {
-  my $passwd = @_;
+  my ($passwd) = @_;
 
   # The man page for Crypt says:
 
@@ -439,7 +439,7 @@ sub change_motd {
 # of strings explaining the problem
 
 sub security_problem {
-  my @out = ();
+  my (@out) = ();
 
   ($MAILADDR) ||
     (push @out, "Error, No Mail Address\n");
