@@ -1183,7 +1183,7 @@ END
     my $reporter = "";
 
     my $query = "insert into bugs (\n" . join(",\n", @used_fields ) . 
-	", bug_status, creation_ts) values ( ";
+	", bug_status, creation_ts, everconfirmed) values ( ";
     
     my $tmp_reply = "These values were stored by bugzilla:\n";
     my $val;
@@ -1216,7 +1216,18 @@ END
     SendSQL("SELECT now()");
     my $bug_when = FetchOneColumn();
 
-    $query .=  SqlQuote( "NEW" ) . ", \'$bug_when\')\n";
+    my $ever_confirmed = 0;
+    my $state = SqlQuote("UNCONFIRMED");
+
+    SendSQL("SELECT votestoconfirm FROM products WHERE product = " .
+            SqlQuote($Control{'product'}) . ";");
+    if (!FetchOneColumn()) {
+      $ever_confirmed = 1;
+      $state = SqlQuote("NEW");
+    }
+
+
+    $query .=  $state . ", \'$bug_when\', $ever_confirmed)\n";
 #    $query .=  SqlQuote( "NEW" ) . ", now(), " . SqlQuote($comment) . " )\n";
 
     SendSQL("SELECT userid FROM profiles WHERE login_name=\'$reporter\'");
