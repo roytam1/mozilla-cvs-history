@@ -30,9 +30,7 @@ Lock();
 LoadWhiteboard();
 
 my $oldvalue = FormData('origwhite');
-my $currentvalue = $::WhiteBoard;
-$oldvalue =~ s/[\n\r]//g; $currentvalue =~ s/[\n\r]//g;
-unless ($oldvalue eq $currentvalue) {
+unless ($oldvalue eq $::WhiteBoard) {
      Unlock();
 
      print "

@@ -58,8 +58,7 @@ sub BreakBig {
 
 
 if (exists($::FORM{'person'})) {
-     my $escaped_person = html_quote($::FORM{'person'});
-     $title = $head = "Checkins for $escaped_person";
+     $title = $head = "Checkins for $::FORM{'person'}";
 
      foreach $checkin (@::CheckInList) {
           $info = eval("\\\%$checkin");
@@ -88,19 +87,10 @@ if (exists($::FORM{'person'})) {
      @list = @::CheckInList;
 }
 
-my $treepart = '';
-$treepart = "&treeid=$::TreeID"    if ($::TreeID ne "default");
-my $branchpart = '';
-$branchpart = "&branch=$::TreeInfo{$::TreeID}{branch}"
-     if ($::TreeInfo{$::TreeID}{branch});
 
 $subhead .= "<br><font color=red>
-These checkins are <em>not</em> from <a 
-href='showcheckins.cgi?$treepart$branchpart'>the current 
-hook</a>!</font><br>"
+Be aware that you are looking at an old hook!</font>"
      if (Param('readonly'));
-$subhead .= "View a <a href=\"viewold.cgi?" . BatchIdPart('?') . "&target=showcheckins\">different 
-day's checkins</a>.<br>";
 
 PutsHeader($title, $head, $subhead);
 
@@ -210,6 +200,10 @@ print "
 
 my $count = 0;
 my $maxcount = 100;
+my $branchpart = '';
+
+$branchpart = "&branch=$::TreeInfo{$::TreeID}{branch}"
+     if ($::TreeInfo{$::TreeID}{branch});
 
 foreach $checkin (@list) {
      $info = eval("\\\%$checkin");

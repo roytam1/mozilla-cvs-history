@@ -64,7 +64,7 @@ unlink $mail_file;
 
 # Who data
 #
-system("./buildwho.pl", "$tinderbox{tree}");
+system "./buildwho.pl $tinderbox{tree}";
 
 
 # Warnings
@@ -74,21 +74,49 @@ require "$tinderbox{tree}/treedata.pl" if -r "$tinderbox{tree}/treedata.pl";
 if (defined $warning_buildnames_pat
     and $tinderbox{build} =~ /^$warning_buildnames_pat$/
     and $tinderbox{status} ne 'failed') {
-  system("./warnings.pl", "$tinderbox{tree}/$tinderbox{logfile}");
+  system "./warnings.pl $tinderbox{tree}/$tinderbox{logfile}";
+}
+
+# Bloat data
+#   Compare the name with $bloat_buildnames_pat which is defined in
+#   $tinderbox{tree}/treedata.pl if at all.
+if (defined $bloat_buildnames_pat
+    and $tinderbox{build} =~ /^$bloat_buildnames_pat$/
+    and $tinderbox{status} eq 'success') {
+  system "./bloat.pl $tinderbox{tree} $tinderbox{logfile}";
+}
+
+# Pageloader data
+#   Compare the name with $pageloader_buildnames_pat which is defined in
+#   $tinderbox{tree}/treedata.pl if at all.
+if (defined $pageloader_buildnames_pat
+    and $tinderbox{build} =~ /^$pageloader_buildnames_pat$/
+    and $tinderbox{status} eq 'success') {
+  system "./pageloader.pl $tinderbox{tree} $tinderbox{logfile}";
+}
+
+# Startup data
+#   Compare the name with $startup_buildnames_pat which is defined in
+#   $tinderbox{tree}/treedata.pl if at all.
+if (defined $startup_buildnames_pat
+    and $tinderbox{build} =~ /^$startup_buildnames_pat$/
+    and $tinderbox{status} eq 'success') {
+  system "./startup.pl $tinderbox{tree} $tinderbox{logfile}";
 }
 
 # Scrape data
-#   Look for build name in scrapedata.pl.
-require "$tinderbox{tree}/scrapebuilds.pl" if -r "$tinderbox{tree}/scrapebuilds.pl";
-if ($scrape_builds->{$tinderbox{build}}
+#   Compare the name with $scrape_buildnames_pat which is defined in
+#   $tinderbox{tree}/treedata.pl if at all.
+if (defined $scrape_buildnames_pat
+    and $tinderbox{build} =~ /^$scrape_buildnames_pat$/
     and $tinderbox{status} eq 'success') {
-  system("./scrape.pl", "$tinderbox{tree}", "$tinderbox{logfile}");
+  system "./scrape.pl $tinderbox{tree} $tinderbox{logfile}";
 }
 
 # Static pages
 #   For Sidebar flash and tinderbox panels.
 $ENV{QUERY_STRING}="tree=$tinderbox{tree}&static=1";
-system("./showbuilds.cgi");
+system './showbuilds.cgi';
 
 # end of main
 ######################################################################

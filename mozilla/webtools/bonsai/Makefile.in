@@ -38,7 +38,6 @@ CVS=@CVS@
 RLOG=@RLOG@
 CO=@CO@
 RCSDIFF=@RCSDIFF@
-CVSGRAPH=@CVSGRAPH@
 
 FILES = CGI.pl			\
 	SourceChecker.cgi	\
@@ -47,6 +46,8 @@ FILES = CGI.pl			\
 	admin.cgi		\
 	adminfuncs.pl		\
 	adminmail.pl		\
+	branchspam.cgi		\
+	branchspammer.cgi	\
 	closemessage		\
 	contacthelp.html	\
 	countcheckins.cgi	\
@@ -54,7 +55,6 @@ FILES = CGI.pl			\
 	cvsblame.cgi		\
 	cvsblame.pl		\
 	cvsguess.cgi		\
-	cvsgraph.cgi		\
 	cvsindex.pl		\
 	cvslog.cgi		\
 	cvsmenu.pl		\
@@ -113,7 +113,6 @@ params: params.in
 	    -e s#_RLOG_#$(RLOG)#g \
 	    -e s#_CO_#$(CO)#g \
 	    -e s#_RCSDIFF_#$(RCSDIFF)#g \
-	    -e s#_CVSGRAPH_#$(CVSGRAPH)#g \
 	    $< >$@
 
 install: all
@@ -143,18 +142,6 @@ install: all
 	echo ; \
 	echo "Not replacing existing params" ;  \
 	fi
-	@if test ! -r $(PREFIX)/data/cvsgraph.conf ; then \
-	echo "Installing cvsgraph.conf" && \
-	cp cvsgraph.conf $(PREFIX)/data ; \
-	else \
-	echo ; \
-	echo "Not replacing existing cvsgraph.conf" ; \
-	fi
-	@echo
-	@echo "If you are updating an existing install, be sure to check"
-	@echo "editparams.cgi to see if there are any new things you should"
-	@echo "configure as this script will not overwrite your existing"
-	@echo "params file"
 	@echo
 	@echo "If you are installing a new Bonsai (not upgrading), you should"
 	@echo "run maketables.sh to create database tables, then customize the"

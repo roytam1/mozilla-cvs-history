@@ -22,6 +22,7 @@
 #
 # Contributor(s): 
 
+
 #  Created: Steve Lamm <slamm@netscape.com>, 12-Sep-97.
 #  Modified: Marc Byrd <byrd@netscape.com> , 19971030.
 #
@@ -65,6 +66,8 @@ if ($ENV{REQUEST_METHOD} eq 'POST' and defined $::FORM{set_line}) {
     print "Set-Cookie: line_nums=$::FORM{set_line}; expires="
         . toGMTString(time + 86400 * 152) . "; path=/\n";
 }
+print "\n";
+
 
 # Some Globals
 #
@@ -72,6 +75,21 @@ my $Head = 'CVS Blame';
 my $SubHead = '';
 
 my @src_roots = getRepositoryList();
+
+# Layers are supported only by Netscape 4.
+# The DOM standards are supported by Mozilla and IE 5 or above.  It should
+# also be supported by any browser claiming "Mozilla/5" or above.
+my ($use_layers, $use_dom) = 0;
+if (defined $ENV{HTTP_USER_AGENT}) {
+  my $user_agent = $ENV{HTTP_USER_AGENT};
+  if ($user_agent =~ m@^Mozilla/4.@ && $user_agent !~ /MSIE/) {
+    $use_layers = 1;
+  } elsif ($user_agent =~ m@MSIE (\d+)@) {
+    $use_dom = 1 if $1 >= 5;
+  } elsif ($user_agent =~ m@^Mozilla/(\d+)@) {
+    $use_dom = 1 if $1 >= 5;
+  }
+}
 
 # Init sanitiazation source checker
 #
@@ -93,7 +111,6 @@ my $filename = '';
 $filename = $::FORM{file} if defined $::FORM{file};
 if ($filename eq '') 
 {
-    print "\n";
     &print_usage;
     exit;
 }
@@ -103,8 +120,6 @@ my ($file_head, $file_tail) = $filename =~ m@(.*/)?(.+)@;
 #
 $::opt_rev = '';
 $::opt_rev = $::FORM{rev} if defined $::FORM{rev} and $::FORM{rev} ne 'HEAD';
-my $revstr = '';
-$revstr = "&rev=$::opt_rev" unless $::opt_rev eq '';
 my $browse_revtag = 'HEAD';
 $browse_revtag = $::opt_rev if ($::opt_rev =~ /[A-Za-z]/);
 my $revision = '';
@@ -118,7 +133,6 @@ if (defined $root and $root ne '') {
     if (-d $root) {
         unshift(@src_roots, $root);
     } else {
-        print "\n";
         &print_top;
         print "Error:  Root, $root, is not a directory.<BR><BR>\n";
         print "</BODY></HTML>\n";
@@ -142,10 +156,8 @@ foreach (@src_roots) {
 }
 
 unless ($found_rcs_file) {
-  print "\n";
   &print_top;
-  my $escaped_filename = html_quote($filename);
-  print "Rcs file, $escaped_filename, does not exist.<pre>rcs_filename => '$rcs_filename'\nroot => '$root'</pre><BR><BR>\n";
+  print "Rcs file, $filename, doeHs not exist.<pre>rcs_filename => '$rcs_filename'\nroot => '$root'</pre><BR><BR>\n";
 print "</BODY></HTML>\n";
   &print_bottom;
   exit;
@@ -156,27 +168,18 @@ my $rcs_path;
 
 CheckHidden($rcs_filename);
 
+
 # Parse the rcs file ($::opt_rev is passed as a global)
 #
 $revision = &parse_cvs_file($rcs_filename);
 my $file_rev = $revision;
 
 my @text = &extract_revision($revision);
-if ($#text != $#::revision_map) {
-    print "\n";
-    die "$::progname: Internal consistency error"
-}
+die "$::progname: Internal consistency error" if $#text != $#::revision_map;
+
 
 # Raw data opt (so other scripts can parse and play with the data)
-if (defined $::FORM{data}) {
-    print "\n";
-    &print_raw_data;
-    exit;
-}
-
-print "Last-Modified: ".time2str("%a, %d %b %Y %T %Z", str2time($::revision_ctime{$::opt_rev}), "GMT")."\n";
-print "\n"; 
-#ENDHEADERS!!
+&print_raw_data, exit if defined $::FORM{data};
 
 # Handle the "line_nums" argument
 #
@@ -244,16 +247,9 @@ foreach my $path (split('/',$rcs_path)) {
 my $lxr_path = Fix_LxrLink("$link_path$file_tail");
 print "<A HREF='$lxr_path'>$file_tail</a> ";
 
-my $graph_cell = Param('cvsgraph') ? <<"--endquote--" : "";
-       </TR><TR>
-        <TD NOWRAP>
-         <A HREF="cvsgraph.cgi?file=$filename">Revision Graph</A>
-        </TD>
---endquote--
-
 print " (<A HREF='cvsblame.cgi?file=$filename&rev=$revision&root=$root'";
-print " onmouseover='return log(event,\"$::prev_revision{$revision}\",\"$revision\");'" if $::use_layers;
-print " onmouseover=\"showMessage('$revision','top')\" id=\"line_top\"" if $::use_dom;
+print " onmouseover='return log(event,\"$::prev_revision{$revision}\",\"$revision\");'" if $use_layers;
+print " onmouseover=\"showMessage('$revision','top')\" id=\"line_top\"" if $use_dom;
 print ">";
 print "$browse_revtag:" unless $browse_revtag eq 'HEAD';
 print $revision if $revision;
@@ -273,9 +269,8 @@ print qq(
         </TD>
        </TR><TR>
         <TD NOWRAP>
-         <A HREF="cvslog.cgi?file=$filename$revstr">Full Change Log</A>
+         <A HREF="cvslog.cgi?file=$filename">Full Change Log</A>
         </TD>
-$graph_cell
        </TR>
       </TABLE>
      </TD>
@@ -363,13 +358,15 @@ foreach $revision (@::revision_map)
 
         $revision_width = max($revision_width,length($revision));
 
-	if ($::prev_revision{$revision}) {
+#        $output .= "<A HREF=\"cvsblame.cgi?file=$filename&rev=$revision&root=$root\"";
+	if (defined $::prev_revision{$revision}) {
 	  $output .= "<A HREF=\"cvsview2.cgi?diff_mode=context&whitespace_mode=show&root=$root&subdir=$rcs_path&command=DIFF_FRAMESET&file=$file_tail&rev2=$revision&rev1=$::prev_revision{$revision}\"";
 	} else {
-	  $output .= "<A HREF=\"cvsblame.cgi?file=$filename&rev=$revision&root=$root\"";
+	  $output .= "<A HREF=\"cvsview2.cgi?root=$root&subdir=$rcs_path&command=DIRECTORY&files=$file_tail\"";
+          $::prev_revision{$revision} = '';
 	}
-	$output .= " onmouseover='return log(event,\"$::prev_revision{$revision}\",\"$revision\");'" if $::use_layers;
-        $output .= " onmouseover=\"showMessage('$revision','$line')\" id=\"line_$line\"" if $::use_dom;
+	$output .= " onmouseover='return log(event,\"$::prev_revision{$revision}\",\"$revision\");'" if $use_layers;
+        $output .= " onmouseover=\"showMessage('$revision','$line')\" id=\"line_$line\"" if $use_dom;
         $output .= ">";
 	my $author = $::revision_author{$revision};
 	$author =~ s/%.*$//;
@@ -398,10 +395,10 @@ foreach $revision (@::revision_map)
 }
 print "</TD></TR></TABLE>\n";
 
-if ($::use_layers || $::use_dom) {
+if ($use_layers || $use_dom) {
   # Write out cvs log messages as a JS variables
   # or hidden <div>'s
-  print qq|<SCRIPT $::script_type><!--\n| if $::use_layers;
+  print qq|<SCRIPT type="application/x-javascript"><!--\n| if $use_layers;
   while (my ($revision, $junk) = each %usedlog) {
     
     # Create a safe variable name for a revision log
@@ -409,25 +406,24 @@ if ($::use_layers || $::use_dom) {
     $revisionName =~ tr/./_/;
     
     my $log = $::revision_log{$revision};
-    $log =~ s/([^\n\r]{80})([^\n\r]*)/$1\n$2/g if $::use_layers;
-    $log = html_quote($log);
+    $log =~ s/([^\n\r]{80})([^\n\r]*)/$1\n$2/g;
     $log = MarkUpText($log);
     $log =~ s/\n|\r|\r\n/<BR>/g;
-    $log =~ s/"/\\"/g if $::use_layers;
+    $log =~ s/"/\\"/g if $use_layers;
     
     # Write JavaScript variable for log entry (e.g. log1_1 = "New File")
     my $author = $::revision_author{$revision};
     $author =~ tr/%/@/;
     my $author_email = EmailFromUsername($author);
-    print "<div id=\"rev_$revision\" class=\"log_msg\" style=\"display:none\">" if $::use_dom;
-    print "log$revisionName = \"" if $::use_layers;
+    print "<div id=\"rev_$revision\" class=\"log_msg\" style=\"display:none\">" if $use_dom;
+    print "log$revisionName = \"" if $use_layers;
     print "<b>$revision</b> &lt;<a href='mailto:$author_email'>$author</a>&gt;"
 	." <b>$::revision_ctime{$revision}</b><BR>"
 	  ."<SPACER TYPE=VERTICAL SIZE=5>$log";
-    print "\";\n" if $::use_layers;
-    print "</div>\n" if $::use_dom;
+    print "\";\n" if $use_layers;
+    print "</div>\n" if $use_dom;
   }
-  print "//--></SCRIPT>" if $::use_layers;
+  print "//--></SCRIPT>";
 }
 
 &print_bottom;
@@ -455,8 +451,8 @@ sub print_top {
 
     print "<HTML><HEAD><TITLE>CVS Blame $title_text</TITLE>";
 
-    print <<__TOP__ if $::use_layers;
-<SCRIPT $::script_type><!--
+    print <<__TOP__ if $use_layers;
+<SCRIPT type="application/x-javascript"><!--
 var event = 0;	// Nav3.0 compatibility
 document.loaded = false;
 
@@ -527,8 +523,8 @@ initialLayer = "<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=3><TR><TD BGCOLOR=#F0A
 <LAYER SRC="javascript:initialLayer" NAME='popup' onMouseOut="this.visibility='hide';" LEFT=0 TOP=0 BGCOLOR='#FFFFFF' VISIBILITY='hide'></LAYER>
 <LAYER SRC="javascript:initialLayer" NAME='popup_guide' onMouseOut="this.visibility='hide';" LEFT=0 TOP=0 VISIBILITY='hide'></LAYER>
 __TOP__
-    print <<__TOP__ if $::use_dom;
-<script $::script_type><!--
+    print <<__TOP__ if $use_dom;
+<script type="application/x-javascript"><!--
 var r
 function showMessage(rev,line) {
     if (r) {
@@ -582,7 +578,7 @@ a:active {
 </style>
 <body onclick="hideMessage()">
 __TOP__
-  print '<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000EE" VLINK="#551A8B" ALINK="#F0A000">' if not ($::use_layers || $::use_dom);
+  print '<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000EE" VLINK="#551A8B" ALINK="#F0A000">' if not ($use_layers || $use_dom);
 } # print_top
 
 sub print_usage {

@@ -47,6 +47,11 @@ chmod 770 $RPM_BUILD_ROOT/%{_prefix}/data
 
 rm -rf $RPM_BUILD_ROOT/%{_prefix}/data/*
 
+
+# the makefile makes two empty files by mistake
+
+rm -rf $RPM_BUILD_ROOT/%{_prefix}/branchspam*
+
 %clean
 #rm -rf $RPM_BUILD_ROOT
 
