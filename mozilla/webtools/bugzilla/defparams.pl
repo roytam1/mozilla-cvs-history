@@ -54,8 +54,6 @@ sub WriteParams {
             }
 	}
     }
-    mkdir("data", 0777);
-    chmod 0777, "data";
     my $tmpname = "data/params.$$";
     open(FID, ">$tmpname") || die "Can't create $tmpname";
     my $v = $::param{'version'};
@@ -66,7 +64,7 @@ sub WriteParams {
     print FID "1;\n";
     close FID;
     rename $tmpname, "data/params" || die "Can't rename $tmpname to data/params";
-    chmod 0666, "data/params";
+    ChmodDataFile('data/params', 0666);
 }
     
 
