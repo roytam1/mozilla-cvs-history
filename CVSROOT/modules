@@ -534,8 +534,7 @@ SeaMonkeyLayout -a \
 	mozilla/layout \
 	mozilla/view \
 	mozilla/webshell \
-	mozilla/widget \
-	mozilla/xpfe
+	mozilla/widget
 
 SeaMonkeyXPToolKit -a \
 	SeaMonkeyLayout \
