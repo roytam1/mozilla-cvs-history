@@ -308,6 +308,7 @@ if (m:^mozilla/expat/.*$:) {return '88';}
 if (m:^mozilla/xpcom/.*$:) {return '89';}
 if (m:^xpcom/io$:) {return '90';}
 if (m:^mozilla/modules/zlib/.*$:) {return '93';}
+if (m:^mozilla/gfx/public/.*$:) {return '95';}
 if (m:^mozilla/view/.*$:) {return '96';}
 if (m:^mozilla/layout/.*$:) {return '98';}
 if (m:^mozilla/webshell/.*$:) {return '101';}
