@@ -762,6 +762,15 @@ status_table_row().
 =back
 
 
+=over 4
+
+=item B<event_times_vec>
+
+return a list of all the times where an even occured.
+
+
+
+=back
 
 =head1 AUTHOR
 
