@@ -1,4 +1,4 @@
-#! /tools/ns/bin/perl5.004
+#!/usr/bin/perl
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
 # Arguments:

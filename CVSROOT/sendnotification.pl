@@ -1,4 +1,4 @@
-#! /tools/ns/bin/perl5
+#!/usr/bin/perl
 
 use Socket;
 
