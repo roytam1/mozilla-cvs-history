@@ -64,7 +64,7 @@ $sql = "INSERT INTO `t_feedback` (`ID`, `CommentName`, `CommentVote`, `CommentTi
 
 
 //Get Rating Data and Create $ratingarray
-$sql = "SELECT ID, CommentVote FROM  `t_feedback` WHERE `ID` = '$_POST[id]' AND `CommentVote` IS NOT NULL ORDER  BY `CommentDate` ASC";
+$sql = "SELECT ID, CommentVote FROM  `t_feedback` WHERE `ID` = '$_POST[id]' AND `CommentVote` IS NOT NULL AND `CommentNote` IS NOT NULL ORDER  BY `CommentDate` ASC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
      $ratingarray[$row[ID]][] = $row["CommentVote"];
