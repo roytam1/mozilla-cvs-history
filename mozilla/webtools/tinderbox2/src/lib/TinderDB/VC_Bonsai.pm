@@ -316,7 +316,7 @@ sub status_table_legend {
 
 
 sub status_table_header {
-  return ("\t<th>$VC_NAME checkins</th>\n");
+  return ("\t<th>$VC_NAME</th>\n");
 }
 
 

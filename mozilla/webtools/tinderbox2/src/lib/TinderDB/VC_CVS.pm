@@ -148,8 +148,11 @@ $VERSION = ( qw $Revision$ )[1];
 $CURRENT_YEAR = 1900 + (gmtime(time()))[5];
 
 # name of the version control system
-$VC_NAME = $TinderDB::VC_NAME || "CVS";
+$VC_NAME = $TinderConfig::VC_NAME || "CVS";
 
+# how we recoginise bug number in the checkin comments.
+$VC_BUGNUM_REGEXP = $TinderConfig::VC_BUGNUM_REGEXP ||
+    "(\d\d\d+)";
 
 
 
@@ -505,7 +508,7 @@ sub status_table_legend {
 
 
 sub status_table_header {
-  return ("\t<th>$VC_NAME checkins</th>\n");
+  return ("\t<th>$VC_NAME</th>\n");
 }
 
 
