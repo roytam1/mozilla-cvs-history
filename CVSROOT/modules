@@ -338,6 +338,7 @@ RaptorDist -a \
 	mozilla/build \
 	mozilla/config \
 	mozilla/dbm \
+	mozilla/editor \
 	mozilla/include \
 	mozilla/jpeg \
 	mozilla/js \
