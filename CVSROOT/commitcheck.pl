@@ -295,26 +295,6 @@ $fullname{'93'} = 'Zlib';
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'HEAD') {
-if (m:^mozilla/java/xpcom/.*$:) {return '128';}
-if (m:^mozilla/java/plugins/.*$:) {return '129';}
-if (m:^mozilla/java/webclient/.*$:) {return '127';}
-if (m:^mozilla/java/dom/.*$:) {return '130';}
-if (m:^mozilla/java/util/.*$:) {return '133';}
-if (m:^CVSROOT/commitcheck\.pl$:) {return '3';}
-if (m:^CVSROOT/passwd$:) {return '3';}
-if (m:^mozilla/extensions/xmlterm/.*$:) {return '141';}
-if (m:^mozilla/security/coreconf/.*$:) {return '145';}
-if (m:^mozilla/security/jss/.*$:) {return '145';}
-if (m:^mozilla/security/nss/.*$:) {return '145';}
-if (m:^xpcom/remote$:) {return '143';}
-if (m:^composer$:) {return '173';}
-if (m:^embedding/browser/gtk$:) {return '144';}
-if (m:^mozilla/[^/]*$:) {return '19';}
-if (m:^mozilla/mstone/.*$:) {return '147';}
-if (m:^mozilla/gfx/src/xlib/.*$:) {return '121';}
-if (m:^mozilla/widget/src/xlib/.*$:) {return '121';}
-if (m:^mozilla/widget/src/xlibxtbin/.*$:) {return '121';}
-if (m:^mozilla/xpinstall/.*$:) {return '150';}
 if (m:^mozilla/ef/.*$:) {return '46';}
 if (m:^mozilla/security/manager/.*$:) {return '151';}
 if (m:^mozilla/gfx/src/gtk/.*$:) {return '49';}
@@ -430,6 +410,26 @@ if (m:^xpcom/reflect/xptinfo$:) {return '118';}
 if (m:^mozilla/mailnews/news/.*$:) {return '122';}
 if (m:^mozilla/mailnews/[^/]*$:) {return '123';}
 if (m:^mozilla/mailnews/mime/[^/]*$:) {return '124';}
+if (m:^mozilla/java/xpcom/.*$:) {return '128';}
+if (m:^mozilla/java/plugins/.*$:) {return '129';}
+if (m:^mozilla/java/webclient/.*$:) {return '127';}
+if (m:^mozilla/java/dom/.*$:) {return '130';}
+if (m:^mozilla/java/util/.*$:) {return '133';}
+if (m:^CVSROOT/commitcheck\.pl$:) {return '3';}
+if (m:^CVSROOT/passwd$:) {return '3';}
+if (m:^mozilla/extensions/xmlterm/.*$:) {return '141';}
+if (m:^mozilla/security/coreconf/.*$:) {return '145';}
+if (m:^mozilla/security/jss/.*$:) {return '145';}
+if (m:^mozilla/security/nss/.*$:) {return '145';}
+if (m:^xpcom/remote$:) {return '143';}
+if (m:^composer$:) {return '173';}
+if (m:^embedding/browser/gtk$:) {return '144';}
+if (m:^mozilla/[^/]*$:) {return '19';}
+if (m:^mozilla/mstone/.*$:) {return '147';}
+if (m:^mozilla/gfx/src/xlib/.*$:) {return '121';}
+if (m:^mozilla/widget/src/xlib/.*$:) {return '121';}
+if (m:^mozilla/widget/src/xlibxtbin/.*$:) {return '121';}
+if (m:^mozilla/xpinstall/.*$:) {return '150';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
