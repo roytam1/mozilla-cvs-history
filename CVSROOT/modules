@@ -176,7 +176,6 @@ MozillaSourceUnixOnly -a \
     mozilla/config/SunOS4.mk  \
     mozilla/config/SunOS5.mk  \
     mozilla/config/UNIXWARE.mk  \
-    mozilla/config/xmversion.sh  \
     mozilla/lib/Makefile  \
     mozilla/Makefile  \
     mozilla/modules/edtplug/Makefile  \
