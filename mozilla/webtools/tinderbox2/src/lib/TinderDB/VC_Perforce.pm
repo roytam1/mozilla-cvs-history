@@ -241,7 +241,11 @@ sub status_table_legend {
   foreach $state (TreeData::get_all_sorted_tree_states()) {
     my ($cell_color) = TreeData::TreeState2color($state);
     my ($char) = TreeData::TreeState2char($state);
-    my $description = "Tree State: $state";
+    my $description = (
+                       $state.
+                       ": ". 
+                       TreeData::TreeStates2descriptions($state)
+                       );
     my $text_browser_color_string = 
       HTMLPopUp::text_browser_color_string($cell_color, $char);
 
