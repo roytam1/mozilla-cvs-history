@@ -148,7 +148,8 @@ sub status_table_row {
     $hour_color = "bgcolor=#e7e7e7";
   }
 
-  my(@outrow) = ("\t<td align=right $hour_color>".
+  my(@outrow) = ("\t<!-- Time: $pretty_time -->\n".
+                 "\t\t<td align=right $hour_color>".
                  "$query_link</td>\n");
 
   $self->last_hour($hour);
