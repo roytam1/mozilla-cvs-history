@@ -65,8 +65,8 @@ my $product_id;
 if ($product) {
     $product_id = get_product_id($product);
     if (!$product_id) {
-        ThrowUserError("The product <tt>" . html_quote($product) . 
-                       "</tt> does not exist");
+        $vars->{'product'} = $product;
+        ThrowUserError("invalid_product_name");
     }
 }
 
@@ -201,12 +201,13 @@ $vars->{'product'} = $product;
 $vars->{'products'} = \@::legal_product;
 
 
-my $format = ValidateOutputFormat($::FORM{'format'}, "duplicates", "reports");
+my $format = 
+  GetFormat("reports/duplicates", $::FORM{'format'}, $::FORM{'ctype'});
  
-print "Content-Type: $format->{'contenttype'}\n\n";
+print "Content-Type: $format->{'ctype'}\n\n";
 
 # Generate and return the UI (HTML page) from the appropriate template.
-$template->process("reports/$format->{'template'}", $vars)
+$template->process($format->{'template'}, $vars)
   || ThrowTemplateError($template->error());
 
 

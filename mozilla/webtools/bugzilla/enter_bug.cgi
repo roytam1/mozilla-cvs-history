@@ -381,9 +381,10 @@ $vars->{'group'} = \@groups;
 
 $vars->{'default'} = \%default;
 
-my $format = ValidateOutputFormat($::FORM{'format'}, "create", "bug/create");
+my $format = 
+  GetFormat("bug/create/create", $::FORM{'format'}, $::FORM{'ctype'});
 
-print "Content-type: $format->{'contenttype'}\n\n";
-$template->process("bug/create/$format->{'template'}", $vars)
+print "Content-type: $format->{'ctype'}\n\n";
+$template->process($format->{'template'}, $vars)
   || ThrowTemplateError($template->error());          
 

@@ -86,10 +86,16 @@ else {
     quietly_check_login();
 }
 
+# Hack to support legacy applications that think the RDF ctype is at format=rdf.
+if ($::FORM{'format'} eq "rdf" && !$::FORM{'ctype'}) { 
+    $::FORM{'ctype'} = "rdf";
+    delete($::FORM{'format'});
+}
+
 # Determine the format in which the user would like to receive the output.
 # Uses the default format if the user did not specify an output format;
 # otherwise validates the user's choice against the list of available formats.
-my $format = ValidateOutputFormat($::FORM{'format'}, "list");
+my $format = GetFormat("list/list", $::FORM{'format'}, $::FORM{'ctype'});
 
 # Use server push to display a "Please wait..." message for the user while
 # executing their query if their browser supports it and they are viewing
@@ -759,7 +765,7 @@ if ($format->{'extension'} eq "html") {
     }
 }
 else {
-    print "Content-Type: $format->{'contenttype'}\n";
+    print "Content-Type: $format->{'ctype'}\n";
 }
 
 print "\n"; # end HTTP headers
@@ -770,7 +776,7 @@ print "\n"; # end HTTP headers
 ################################################################################
 
 # Generate and return the UI (HTML page) from the appropriate template.
-$template->process("list/$format->{'template'}", $vars)
+$template->process($format->{'template'}, $vars)
   || ThrowTemplateError($template->error());
 
 
