@@ -213,6 +213,9 @@ $fullname{'87'} = 'SmartUpdate';
 $mode{'154'} = 'Open';
 $branch{'154'} = 'HEAD';
 $fullname{'154'} = 'tools';
+$mode{'156'} = 'Open';
+$branch{'156'} = 'HEAD';
+$fullname{'156'} = 'ViXEn';
 $mode{'134'} = 'Open';
 $branch{'134'} = 'HEAD';
 $fullname{'134'} = 'Widgets';
@@ -351,6 +354,7 @@ if (m:^embedding/browser/gtk$:) {return '144';}
 if (m:^mozilla/mstone/.*$:) {return '147';}
 if (m:^mozilla/xpinstall/.*$:) {return '150';}
 if (m:^mozilla/extensions/psm-glue/.*$:) {return '151';}
+if (m:^mozilla/extensions/vixen$:) {return '156';}
 }
 if ($b eq 'NSPRPUB_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
