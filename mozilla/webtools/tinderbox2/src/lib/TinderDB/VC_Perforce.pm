@@ -527,7 +527,9 @@ sub render_authors {
             my $mailto_author=$author;
             $mailto_author = TreeData::VCName2MailAddress($author);
             
-            my @bug_numbers = keys %{ $authors{'bugs'}{$author} };
+            # sort numerically descending
+            my @bug_numbers = sort {$b <=> $a}
+            keys %{ $authors{'bugs'}{$author} };
 
             # sort numerically descending
             my @change_nums = sort {$b <=> $a}
