@@ -320,7 +320,7 @@ sub gettree_header {
 
   # find our best guess as to when the tree was last good.
   
-  my (@build_names) = build_names($tree);
+  (@build_names) = build_names($tree);
   foreach $buildname (@build_names) {
     
     my $recent_success = undef;
@@ -529,9 +529,12 @@ sub event_times_vec {
       my ($num_recs) = $#{ $DATABASE{$tree}{$buildname}{'recs'} };
       foreach $i (0 .. $num_recs) {
 
+          # By convention we only show the start times since people
+          # are only interested in what made it into builds.  Do not
+          # also push the $rec->{'endtime'};
+
           my $rec = $DATABASE{$tree}{$buildname}{'recs'}[$i];
           push @times, $rec->{'starttime'};
-          push @times, $rec->{'endtime'};
 
       }
   }
