@@ -283,7 +283,7 @@ sub regenerate_HTML_pages {
     $ENV{"REQUEST_METHOD"} = '';
 
     system(
-           $FileStructure::CGIBIN_DIR.'tinder.cgi', 
+           $FileStructure::CGIBIN_DIR.'/tinder.cgi', 
            '--daemon-mode',
            );
 
