@@ -44,7 +44,7 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
  $row = mysql_fetch_array($sql_result);
 $uri=$row["URI"]; 
 
-header("Location: $uri")
+header("Location: $uri");
 exit;
 
 //XXX This codepath sucks performance wise and has been disabled. See Bug 267822.
