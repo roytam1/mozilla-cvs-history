@@ -298,8 +298,17 @@ sub max {
   return $sorted[0];
 }
 
+# send all the rounding functions through here.
 
+sub round {
+ my ($number) = @_;
 
+ my $out = sprintf ("%.2f",         # round
+                    $number);
+ return $out;
+}
+ 
+ 
 # make a directory (and all of its parents if need be).
 
 # You can optionally specify the permssions for all the directories
