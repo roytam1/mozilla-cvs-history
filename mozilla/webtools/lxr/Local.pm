@@ -2,7 +2,7 @@
 # $Id$
 # Local.pm -- Subroutines that need to be customized for each installation
 #
-#	Dawn Endico <dawn@cannibal.mi.org>
+#	Dawn Endico <endico@mozilla.org>
 #
 ######################################################################
 # This package is for placing subroutines that are likely to need
