@@ -90,8 +90,9 @@ sub savetree_header {
 
   my ($filename) = $self->db_file($tree);
   my ($name_space) = ref($self);
+  my ($value_ref) = \$value;
 
-  Persistence::save_structure($value, $filename);
+  Persistence::save_structure($value_ref, $filename);
 
   return ;
 }
@@ -107,9 +108,10 @@ sub gettree_header {
   (-r $filename) || 
     return ;
   
-  my ($value) = Persistence::load_structure($filename);
+  my ($value_ref) = Persistence::load_structure($filename);
+  my ($value) = ${ $value_ref };
 
-  return $value
+  return $value;
 }
 
 1;
