@@ -168,11 +168,6 @@ sub status_table_legend {
 
 
 
-sub notice_association {
-    return BTData::get_all_columns();
-}
-
-
 sub status_table_header {
   my $out = '';
 
@@ -189,6 +184,7 @@ sub status_table_header {
 # Really this is the names the columns produced by this DB
 
 sub notice_association {
+    my ($self, $tree, ) = @_;
     my (@columns) = BTData::get_all_columns();
     return @columns;
 }

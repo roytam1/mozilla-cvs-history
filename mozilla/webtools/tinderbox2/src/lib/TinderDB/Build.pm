@@ -269,7 +269,8 @@ sub latest_status {
 # Really this is the names the columns produced by this DB
 
 sub notice_association {
-    return build_names();
+    my ($self, $tree) = (@_);
+    return build_names($tree);
 }
 
 #  Prepare information for popupwindows on row headers and also the

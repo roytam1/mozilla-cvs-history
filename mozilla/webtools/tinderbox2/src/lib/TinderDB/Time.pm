@@ -95,6 +95,14 @@ sub apply_db_updates {
 }
 
 
+
+# where can people attach notices to?
+# Really this is the names the columns produced by this DB
+
+sub notice_association {
+    return ;
+}
+
 sub status_table_header {
   return ("\t<th><b>Build Time</b></th>\n");
 }
