@@ -298,6 +298,11 @@ $fullname{'93'} = 'Zlib';
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'HEAD') {
+if (m:^mozilla/modules/libpr0n/.*$:) {return '63';}
+if (m:^mozilla/gfx/src/qt/.*$:) {return '161';}
+if (m:^mozilla/widget/src/qt/.*$:) {return '161';}
+if (m:^jpeg$:) {return '64';}
+if (m:^mozilla/extensions/p3p/.*$:) {return '162';}
 if (m:^mozilla/modules/libimg/png/.*$:) {return '65';}
 if (m:^mozilla/layout/mathml/.*$:) {return '165';}
 if (m:^mozilla/intl/.*$:) {return '67';}
@@ -429,11 +434,6 @@ if (m:^mozilla/directory/ldapsdk\.mk$:) {return '59';}
 if (m:^mozilla/directory/Makefile$:) {return '59';}
 if (m:^gfx/src/ps/.*$:) {return '62';}
 if (m:^mozilla/string/.*$:) {return '160';}
-if (m:^mozilla/modules/libpr0n/.*$:) {return '63';}
-if (m:^mozilla/gfx/src/qt/.*$:) {return '161';}
-if (m:^mozilla/widget/src/qt/.*$:) {return '161';}
-if (m:^jpeg$:) {return '64';}
-if (m:^mozilla/extensions/p3p/.*$:) {return '162';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
