@@ -175,6 +175,7 @@ MozillaSourceWinOnly -a \
 	JavaStubWin
 
 MozillaSourceUnixOnly -a \
+	mozilla/.cvsignore \
 	mozilla/Makefile \
 	mozilla/Makefile.in \
 	mozilla/configure.in \
