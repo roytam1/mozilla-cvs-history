@@ -419,8 +419,8 @@ sub backward_compatibility {
     $TINDERBOX{'status'} = 'build_failed';
   }
 
-  if ($TINDERBOX{'status'} eq ' testfailed') {
-    $TINDERBOX{'status'} = ' test_failed';
+  if ($TINDERBOX{'status'} eq 'testfailed') {
+    $TINDERBOX{'status'} = 'test_failed';
   }
 
   if ($TINDERBOX{'builddate'}) {
