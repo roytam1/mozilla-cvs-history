@@ -25,5 +25,6 @@ _stubs
 *_DBG.OBJD
 so_locations
 *.flc
+*.map
 depend.mk
 _xpidlgen
