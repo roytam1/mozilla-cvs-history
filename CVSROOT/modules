@@ -600,6 +600,7 @@ SeaMonkeyCore -a \
 
 SeaMonkeyLayout -a \
 	SeaMonkeyCore \
+	mozilla/content \
 	mozilla/dom \
 	mozilla/gfx \
 	mozilla/htmlparser \
