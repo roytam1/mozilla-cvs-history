@@ -19,7 +19,7 @@ if ($copyout =~ /\`Configure.pl\' -> \`a.pl\'/) {
 	output "found\n";
 } else {
 	output "not found\n";
-	die "Your cp command does not appear to function correctly";
+	die "Your cp command does not appear to function correctly. Do you have one?";
 }
 
 output <<EOF;
@@ -90,7 +90,7 @@ while ($count-1 ne $#{$installtypes[$layoutchoice-1]}) {
 	$count++;
 	if ($line =~ /^\$(\w+)\|(.+)\|(.+)/) {
 		output "You will need to choose a location for the following variable:\n";
-		output "A directory will be created if it does not already exist\n";
+		output "A directory will be created if it does not already exist\n\n";
 		output "$1: $2\n";
 		ask("locvar_$1","Please specify a full path (begining with a /):",$3);
 		next;
