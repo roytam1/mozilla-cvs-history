@@ -532,7 +532,6 @@ SeaMonkeyCore -a \
 	!mozilla/build/mac/client.mac \
 	mozilla/caps \
 	mozilla/config \
-	mozilla/cmd/xfe/icons/icondata.h \
 	mozilla/dbm \
 	mozilla/include \
 	mozilla/intl \
