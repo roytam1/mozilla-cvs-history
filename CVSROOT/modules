@@ -791,4 +791,5 @@ MozillaBranchTinderboxAll -a \
 PhoenixTinderbox -a \
 	MozillaTinderboxAll \
 	mozilla/browser \
+	mozilla/chrome \
 	mozilla/toolkit
