@@ -423,7 +423,7 @@ sub status_table_row {
            ($cell_color !~ m/white/) &&
            (!($text_browser_color_string)) &&
            (!($empty_cell_contents)) &&
-           ) {
+           1) {
                $empty_cell_contents = "&nbsp;";
            }
   }
@@ -561,6 +561,7 @@ sub status_table_row {
                              );
       }
 
+      @bug_numbers = main::uniq(@bug_numbers);
       foreach $bug_number (@bug_numbers) {
           my $href = BTData::bug_id2bug_url($bug_number);
           $query_link .= 
