@@ -59,7 +59,6 @@ sub sillyness {
     $zz = $::unconfirmedstate;
     $zz = $::userid;
     $zz = @::versions;
-    $zz = %::Tgroup_type;
 };
 
 if (length($::buffer) == 0) {
@@ -293,7 +292,7 @@ sub GetGroupsByUserId {
           FROM  groups, user_group_map
          WHERE  user_id = $userid AND isbless = 0 
            AND  user_group_map.group_id = groups.group_id
-           AND  group_type = $::Tgroup_type->{'buggroup'}
+           AND  isbuggroup = 1
       ORDER BY  description ");
 
     my @groups;

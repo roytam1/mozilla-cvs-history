@@ -31,7 +31,6 @@ require "CGI.pl";
 
 sub sillyness {
     my $zz;
-    $zz = %::Tgroup_type;
 }
 
 
@@ -117,14 +116,14 @@ unless ($action) {
     print "<th>Action</th>";
     print "</tr>\n";
 
-    SendSQL("SELECT group_id,name,description,userregexp,isactive,group_type " .
+    SendSQL("SELECT group_id,name,description,userregexp,isactive,isbuggroup " .
             "FROM groups " .
-            "ORDER BY group_type != 0, name");
+            "ORDER BY isbuggroup, name");
 
     while (MoreSQLData()) {
-        my ($groupid, $name, $desc, $regexp, $isactive, $group_type) = FetchSQLData();
+        my ($groupid, $name, $desc, $regexp, $isactive, $isbuggroup) = FetchSQLData();
         print "<tr>\n";
-        if ($group_type == $::Tgroup_type->{'system'} ) {
+        if ($isbuggroup == 0 ) {
         print "<td>$name</td>\n";
         print "<td>$desc</td>\n";
         print "<td><input size=30 name=\"regexp-$groupid\" value=\"$regexp\">\n";
@@ -141,19 +140,11 @@ unless ($action) {
         print "<input type=hidden name=\"oldregexp-$groupid\" value=\"$regexp\"></td>\n";
         print "<td><input type=\"checkbox\" name=\"isactive-$groupid\" value=\"1\"" . ($isactive ? " checked" : "") . ">\n";
         print "<input type=hidden name=\"oldisactive-$groupid\" value=\"$isactive\"></td>\n";
-        print "<td>";
-            print "<select name=\"group_type-$groupid\" value=\"$group_type\" >\n";
-            print "<option value=$::Tgroup_type->{'buggroup'}";
-            print " selected" if ($group_type == $::Tgroup_type->{'buggroup'});
-            print ">buggroup</option><option value=$::Tgroup_type->{'user'}";
-            print " selected" if ($group_type == $::Tgroup_type->{'user'});
-            print ">user</option></select>\n";
-        }
-        print "</td>\n";
-        print "<input type=hidden name=\"oldgroup_type-$groupid\" value=\"$group_type\"></td>\n";
+        print "<td>user</td>\n";
+    }
         print "<td align=center valign=middle>
                <a href=\"editgroups.cgi?action=changeform&group=$groupid\">Edit</a>";
-        print " | <a href=\"editgroups.cgi?action=del&group=$groupid\">Delete</a>" if ($group_type != $::Tgroup_type->{'system'} );
+        print " | <a href=\"editgroups.cgi?action=del&group=$groupid\">Delete</a>" if ($isbuggroup != 0);
         print "</td></tr>\n";
     }
 
@@ -283,16 +274,11 @@ if ($action eq 'add') {
     print "<th>New Description</th>";
     print "<th>New User RegExp</th>";
     print "<th>Active</th>";
-    print "<th>Type</th>";
     print "</tr><tr>";
     print "<td><input size=20 name=\"name\"></td>\n";
     print "<td><input size=40 name=\"desc\"></td>\n";
     print "<td><input size=30 name=\"regexp\"></td>\n";
     print "<td><input type=\"checkbox\" name=\"isactive\" value=\"1\" checked></td>\n";
-    print "<td><select name=\"group_type\" value=\"$::Tgroup_type->{'buggroup'}\" >\n";
-    print "<option value=$::Tgroup_type->{'buggroup'}>buggroup</option>\n";
-    print "<option value=$::Tgroup_type->{'user'}>user</option>\n";
-    print "</select></td>\n";
     print "</TR></TABLE>\n<HR>\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Add\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"new\">\n";
@@ -337,7 +323,6 @@ if ($action eq 'new') {
     # (this occurs when the inactive checkbox is not checked
     # and the browser does not send the field to the server)
     my $isactive = $::FORM{isactive} || 0;
-    my $group_type = $::FORM{group_type} || $::Tgroup_type->{'buggroup'};
 
     unless ($name) {
         ShowError("You must enter a name for the new group.<BR>" .
@@ -375,12 +360,12 @@ if ($action eq 'new') {
 
     # Add the new group
     SendSQL("INSERT INTO groups ( " .
-            "name, description, group_type, userregexp, isactive, group_when " .
+            "name, description, isbuggroup, userregexp, isactive, group_when " .
             " ) VALUES ( " .
-            SqlQuote($name) . "," .
-            SqlQuote($desc) . "," .
-            "$group_type," .
-            SqlQuote($regexp) . "," . 
+            SqlQuote($name) . ", " .
+            SqlQuote($desc) . ", " .
+            "1," .
+            SqlQuote($regexp) . ", " . 
             $isactive . ", NOW())" );
     SendSQL("SELECT last_insert_id()");
     my $gid = FetchOneColumn();
@@ -640,7 +625,7 @@ if ($action eq 'update') {
                 if (!FetchOneColumn()) {
                     SendSQL("SELECT name FROM groups WHERE name=" .
                              SqlQuote($::FORM{"oldname-$v"}) .
-                             " && group_type = $::Tgroup_type->{'system'}");
+                             " && isbuggroup = 0");
                     if (FetchOneColumn()) {
                         ShowError("You cannot update the name of a " .
                                   "system group. Skipping $v");
@@ -701,24 +686,6 @@ if ($action eq 'update') {
                               "' is not a valid value for the active flag.<BR>" .
                               "There may be a problem with Bugzilla or a bug in your browser.<br>" . 
                               "Update of active flag for group $v skipped.");
-                }
-            }
-            # convert an undefined value in the group_type field to zero
-            # (this occurs when the inactive checkbox is not checked 
-            # and the browser does not send the field to the server)
-            my $group_type = $::FORM{"group_type-$v"} || 0;
-            if ($::FORM{"oldgroup_type-$v"} != $group_type) {
-                $chgs = 1;
-                if (GetTypeNameByVal('group_type', $group_type)) {
-                    SendSQL("UPDATE groups SET group_type=$group_type, " .
-                            " group_when = NOW() " .
-                            " WHERE group_id=" . SqlQuote($v));
-                    print "Group $v group_type updated.<br>\n";
-                } else {
-                    ShowError("The value '" . $group_type .
-                              "' is not a valid value for the group_type.<BR>" .
-                              "There may be a problem with Bugzilla or a bug in your browser.<br>" . 
-                              "Update of group_type for group $v skipped.");
                 }
             }
         SendSQL("UPDATE groups SET group_when = NOW()

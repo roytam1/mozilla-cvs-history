@@ -103,7 +103,7 @@ use strict;
 # this way we can look in the symbol table to see if they've been declared
 # yet or not.
 
-use vars qw( $db_name %Tgroup_type);
+use vars qw( $db_name);
 
 ###########################################################################
 # Check required module
@@ -1445,8 +1445,8 @@ $table{groups} =
    'group_id mediumint not null auto_increment primary key,
     name varchar(255) not null,
     description text not null,
+    isbuggroup tinyint not null,
     group_when datetime not null,
-    group_type tinyint not null,
     userregexp tinytext not null,
     isactive tinyint not null default 1,
 
@@ -1707,9 +1707,9 @@ sub AddGroup {
     
     print "Adding group $name ...\n";
     my $sth = $dbh->prepare('INSERT INTO groups
-                          (name, description, userregexp, group_type)
+                          (name, description, userregexp, isbuggroup)
                           VALUES (?, ?, ?, ?)');
-    $sth->execute($name, $desc, $userregexp, $::Tgroup_type->{'system'});
+    $sth->execute($name, $desc, $userregexp, 0);
 
     $sth = $dbh->prepare("select last_insert_id()");
     $sth->execute();
@@ -1726,7 +1726,6 @@ sub RenameField ($$$);
 sub GetFieldDef ($$);
 sub AddField ($$$);
 
-RenameField ('groups', 'isbuggroup', 'group_type');
 AddGroup 'tweakparams',      'Can tweak operating parameters';
 AddGroup 'editusers',      'Can edit or disable users';
 AddGroup 'creategroups',     'Can create and destroy groups.';

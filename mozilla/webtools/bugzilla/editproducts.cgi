@@ -40,7 +40,6 @@ require "globals.pl";
 sub sillyness {
     my $zz;
     $zz = $::unconfirmedstate;
-    $zz = %::Tgroup_type;
 }
 
 
@@ -347,11 +346,10 @@ if ($action eq 'new') {
     if(Param("usebuggroups")) {
         # Next we insert into the groups table
         SendSQL("INSERT INTO groups " .
-                "(name, description, group_type, group_when) " .
+                "(name, description, isbuggroup, group_when) " .
                 "VALUES (" .
                 SqlQuote($product) . ", " .
-                SqlQuote($product . " Bugs Access") . ", " .
-                "$::Tgroup_type->{'buggroup'}, NOW())");
+                SqlQuote($product . " Bugs Access") . ", 1, NOW())");
         
     }
 

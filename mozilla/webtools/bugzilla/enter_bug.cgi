@@ -333,8 +333,8 @@ my $group_id = '0';
 
 if(Param("usebuggroups") && GroupExists($product)) {
     SendSQL("SELECT group_id FROM groups ".
-            "WHERE name = " . SqlQuote($product) . " " .
-            "AND group_type = $::Tgroup_type->{'buggroup'}");
+            "WHERE name = " . SqlQuote($product) . 
+            " AND isbuggroup = 1");
     ($group_id) = FetchSQLData();
 }
 
@@ -343,7 +343,7 @@ SendSQL("SELECT DISTINCT groups.group_id, groups.name, groups.description " .
         "WHERE user_group_map.group_id = groups.group_id " .
         "AND user_group_map.user_id = $::userid " .
         "AND isbless = 0 " .
-        "AND group_type = $::Tgroup_type->{'buggroup'} AND isactive = 1 ORDER BY description");
+        "AND isbuggroup = 1 AND isactive = 1 ORDER BY description");
 
 my @groups;
 

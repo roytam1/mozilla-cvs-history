@@ -53,7 +53,6 @@ sub globals_pl_sillyness {
     $zz = @main::legal_versions;
     $zz = @main::milestoneurl;
     $zz = %main::proddesc;
-    $zz = %main::Tgroup_type;
     $zz = @main::prodmaxvotes;
     $zz = $main::template;
     $zz = $main::userid;
@@ -1933,12 +1932,8 @@ $::vars =
     # User Agent - useful for detecting in templates
     'user_agent' => $ENV{'HTTP_USER_AGENT'} ,
 
-    'T' => {
-        'group_type' => {'system' => 0, 'buggroup' => 1, 'user' => 2},
-    }
 
   };
 
-  $::Tgroup_type = $::vars->{'T'}{'group_type'};
 
 1;

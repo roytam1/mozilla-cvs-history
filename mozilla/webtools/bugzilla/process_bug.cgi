@@ -49,7 +49,6 @@ use vars qw(%versions
           %settable_resolution
           %target_milestone
           %legal_severity
-          %Tgroup_type
           $next_bug);
 
 ConnectToDatabase();
@@ -478,8 +477,7 @@ my @groupDel = ();
 SendSQL("SELECT groups.group_id, isactive FROM groups, user_group_map WHERE " .
         "groups.group_id = user_group_map.group_id AND " .
         "user_group_map.user_id = $::userid AND " .
-        "isbless = 0 AND " .
-        "group_type = $::Tgroup_type->{'buggroup'}");
+        "isbless = 0 AND isbuggroup = 1");
 while (my ($b, $isactive) = FetchSQLData()) {
     # The multiple change page may not show all groups a bug is in
     # (eg product groups when listing more than one product)

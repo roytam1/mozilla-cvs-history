@@ -36,7 +36,6 @@ sub show_bug {
         $zz = %::FORM;
         $zz = %::proddesc;
         $zz = %::prodmaxvotes;
-        $zz = %::Tgroup_type;
         $zz = @::enterable_products;                                            
         $zz = @::settable_resolution;
         $zz = $::unconfirmedstate;
@@ -225,7 +224,7 @@ sub show_bug {
              ON user_group_map.group_id = groups.group_id
              AND user_id = $::userid
              AND isbless = 0
-             WHERE group_type = $::Tgroup_type->{'buggroup'}");
+             WHERE isbuggroup = 1");
 
     $user{'inallgroups'} = 1;
 
