@@ -338,6 +338,8 @@ if (m:^mozilla/view/.*$:) {return '96';}
 if (m:^mozilla/layout/.*$:) {return '98';}
 if (m:^modules/libimg/mng/.*$:) {return '155';}
 if (m:^modules/libimg/mngcom/.*$:) {return '155';}
+if (m:^mozilla/content/html/style/.*$:) {return '100';}
+if (m:^mozilla/content/shared/.*$:) {return '100';}
 if (m:^mozilla/embedding/.*$:) {return '101';}
 if (m:^mozilla/webshell/.*$:) {return '101';}
 if (m:^mozilla/htmlparser/.*$:) {return '102';}
