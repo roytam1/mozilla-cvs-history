@@ -535,6 +535,7 @@ SeaMonkeyCore -a \
 	mozilla/network \
 	mozilla/nglayout.mak \
 	mozilla/nglayout.mk \
+	mozilla/nsprpub \
 	mozilla/rdf \
 	mozilla/sun-java \
 	mozilla/xpcom \
