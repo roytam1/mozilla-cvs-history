@@ -286,6 +286,8 @@ sub HTML_status_page {
 
   my ($times_vec, $tree, ) = @_;
 
+  my ($status_page_url) = (FileStructure::get_filename($tree, 'tree_URL').
+                           "/status.html");
 
   my ($out) = '';
 
@@ -367,6 +369,11 @@ sub HTML_status_page {
                              "tree=$tree\&".
                              "start-time=$next_date\&".
                              "display-hours=$display_8hours"),
+                   ).
+   "<br>\n".
+    HTMLPopUp::Link(
+                    "linktxt"=>"Show current status", 
+                    "href"=>$status_page_url,
                    ).
    "<br><p>\n\n".
     HTMLPopUp::Link(
