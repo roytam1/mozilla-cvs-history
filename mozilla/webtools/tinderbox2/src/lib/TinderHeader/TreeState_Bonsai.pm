@@ -80,12 +80,11 @@ sub gettree_header {
 }
 
 sub savetree_header {
+  my ($self, $tree, $value) = @_;
 
-  # NULL implementation.
+  BonsaiData::save_tree_state($tree, $value);
 
-  #  The tree state must be changed via the bonsai tool. Yhere is no
-  #  programatic way to change the state.
-
+  return ;
 }
 
 1;
