@@ -41,11 +41,20 @@
 
 package VCDisplay;
 
+use Utils;
 
 
 # pick the VCDisplay module that you wish to use. 
 
-#use VCDisplay::None;
-use VCDisplay::Bonsai;
+$IMPLS = ( ($TinderConfig::VCDisplayImpl) ||
+           (
+            #'VCDisplay::None',
+            'VCDisplay::Bonsai',
+           )
+         );
+
+main::require_modules($IMPLS);
+
+$DEBUG = 1;
 
 1;

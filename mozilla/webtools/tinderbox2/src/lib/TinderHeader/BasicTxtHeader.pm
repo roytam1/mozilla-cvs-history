@@ -65,7 +65,7 @@ sub new {
 
 sub db_file {
   my ($self, $tree,) = @_;
-  my ($file) = (FileStructure::get_filename($tree, 'TinderDB_headerDir').
+  my ($file) = (FileStructure::get_filename($tree, 'TinderHeader_Dir').
                 "/".ref($self).".DBdat");
   $file =~ s![^/:]+::!!;
   return $file;

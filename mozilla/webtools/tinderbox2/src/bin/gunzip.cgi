@@ -36,6 +36,7 @@
 # Tinderbox libraries
 use lib '#tinder_libdir#';
 
+use TinderConfig;
 use TreeData;
 use FileStructure;
 use HTMLPopUp;

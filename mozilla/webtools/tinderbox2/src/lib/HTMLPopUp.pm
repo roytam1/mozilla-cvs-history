@@ -43,12 +43,21 @@
 
 package HTMLPopUp;
 
+use Utils;
+
 # Pick how you wish to the Tinderbox popup windows to be implemented:
 # Uncomment only one HTMLPopUp implementation.
 
-#use HTMLPopUp::MozillaLayers;
-use HTMLPopUp::MajorCoolWindow;
-#use HTMLPopUp::None;
+$IMPLS = ( ($TinderConfig::PopUpImpl) ||
+           (
+            #          'HTMLPopUp::MozillaLayers',
+			'HTMLPopUp::MajorCoolWindow',
+            #          'HTMLPopUp::None',
+           )
+         );
+
+main::require_modules($IMPLS);
+
 
 
 $VERSION = '#tinder_version#';

@@ -52,9 +52,8 @@ package VCDisplay;
 # Tinderbox libraries
 
 use TreeData;
-#use HTMLPopUp;
+use HTMLPopUp;
 
-$DEBUG = 1;
 
 
 # create a Link to a VC file and its line number

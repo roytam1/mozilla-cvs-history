@@ -52,10 +52,8 @@ use HTMLPopUp;
 # sufficent, we hardcode the test data here at the top of the file to
 # make it easy to change.
 
-$TINDERBOX_DIR="/tmp/tinderbox";
-
-$TINDERBOX_DIR="/web/htdocs/gci/iname-raven/build-group/tinderbox";
-
+$TINDERBOX_DIR = ( $TinderConfig::TINDERBOX_DIR ||
+		   "/usr/apache/cgibin/webtools/tinderbox");
 
 
 @TREES = ('Project_A', 'Project_B', 'Project_C');

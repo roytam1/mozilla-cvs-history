@@ -61,7 +61,8 @@ $VERSION = '#tinder_version#';
 sub page_header {
   my (%args) = @_;
 
-  my ($html_time) = timeHTML($main::TIME);
+  my ($html_time) = $main::LOCALTIME;
+  $html_time =~ s/:[^:]+$//;
 
   my ($header) = '';
   my ($refresh) = '';

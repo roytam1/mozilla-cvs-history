@@ -79,8 +79,9 @@ $VERSION = '#tinder_version#';
 sub page_header {
   my (%args) = @_;
 
-  my ($html_time) = timeHTML($main::TIME);
-  
+  my ($html_time) = $main::LOCALTIME;
+  $html_time =~ s/:[^:]+$//;
+
   my ($header) = '';
 
   my ($refresh) = '';
@@ -370,7 +371,7 @@ sub Link {
     # set the defaults
 
     $args{'windowtitle'} = $args{'windowtitle'} || 
-      $HTML::DEFAULT_POPUP_TITLE;
+      $DEFAULT_POPUP_TITLE;
 
 
     # These characters inside the popupwindow will confuse my popup
@@ -390,11 +391,11 @@ sub Link {
     # number_of_lines2hight conversion factors, but it is hard to
     # determine what a HTML row is.
 
-    $args{'windowheight'} = $args{'windowheight'} || 
-      $HTML::DEFAULT_POPUP_HEIGHT;
+    $args{'windowheight'} = ($args{'windowheight'} || 
+                             $DEFAULT_POPUP_HEIGHT);
 
-    $args{'windowwidth'} = $args{'windowwidth'} ||
-      $HTML::DEFAULT_POPUP_WIDTH;
+    $args{'windowwidth'} = ($args{'windowwidth'} ||
+                            $DEFAULT_POPUP_WIDTH);
 
     #
 

@@ -63,13 +63,17 @@ $VERSION = '#tinder_version#';
 
 
 
-$DEBUG = 1;
-
 # this is how we create a URL to the various CGI programs.
 
-$CVSQUERY = "../bonsai/cvsquery.cgi";
-$CVSBLAME = "../bonsai/cvsblame.cgi";
-$CVSGUESS = "../bonsai/cvsguess.cgi";
+# If you your using VCDisplay:Bonsai we need to know how to make HMTL
+# to point o the bonsai CGI programs.
+
+$BONSAI_URL = ( $TinderConfig::BONSAI_URL || 
+                "../bonsai");
+
+$CVSQUERY = $BONSAI_URL."/cvsquery.cgi";
+$CVSBLAME = $BONSAI_URL."/cvsblame.cgi";
+$CVSGUESS = $BONSAI_URL."/cvsguess.cgi";
   
 
 # create a Link to a VC file and its line number
