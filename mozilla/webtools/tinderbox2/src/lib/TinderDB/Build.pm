@@ -157,6 +157,13 @@ $VERSION = '#tinder_version#';
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
+# as part of the configuration for mozilla.org, they want most cells
+# which are empty to not have borders but the builds cells are
+# different. yeck!
+
+$EMPTY_TABLE_CELL = $HTMLPopUp::EMPTY_TABLE_CELL ||
+    "&nbsp;";
+
 
 # Find the name of each build and the proper order to display them.
 # No part of the code should peek at keys %{ $DATABASE{$tree} } directly.
@@ -1065,7 +1072,7 @@ sub status_table_row {
                      "-->\n".
 
                      "\t\t<td align=center $cell_options>".
-                     "$HTMLPopUp::EMPTY_TABLE_CELL</td>\n");
+                     "$EMPTY_TABLE_CELL</td>\n");
       $NEXT_ROW{$tree}{$buildname} =  $row_index + $rowspan;
       next;
     }
