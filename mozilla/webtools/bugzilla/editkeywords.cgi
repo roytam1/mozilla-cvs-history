@@ -22,6 +22,7 @@
 
 use diagnostics;
 use strict;
+use lib ".";
 
 require "CGI.pl";
 
@@ -107,6 +108,7 @@ sub Validate ($$) {
 # Preliminary checks:
 #
 
+ConnectToDatabase();
 confirm_login();
 
 print "Content-type: text/html\n\n";
@@ -139,22 +141,14 @@ if ($action eq "") {
     my $max_table_size = 50;
 
     SendSQL("SELECT keyworddefs.id, keyworddefs.name, keyworddefs.description,
-                    COUNT(keywords.bug_id), keywords.bug_id
+                    COUNT(keywords.bug_id)
              FROM keyworddefs LEFT JOIN keywords ON keyworddefs.id = keywords.keywordid
              GROUP BY keyworddefs.id
              ORDER BY keyworddefs.name");
     while (MoreSQLData()) {
-        my ($id, $name, $description, $bugs, $onebug) = FetchSQLData();
+        my ($id, $name, $description, $bugs) = FetchSQLData();
         $description ||= "<FONT COLOR=\"red\">missing</FONT>";
         $bugs ||= 'none';
-        if (!$onebug) {
-            # This is silly hackery for old versions of MySQL that seem to
-            # return a count() of 1 even if there are no matching.  So, we 
-            # ask for an actual bug number.  If it can't find any bugs that
-            # match the keyword, then we set the count to be zero, ignoring
-            # what it had responded.
-            $bugs = 'none';
-        }
         if ($line_count == $max_table_size) {
             print "</table>\n$tableheader";
             $line_count = 0;
@@ -404,7 +398,7 @@ sub RebuildCacheWarning {
 
     print "<BR><BR><B>You have deleted or modified a keyword. You must rebuild the keyword cache!<BR></B>";
     print "You can rebuild the cache using sanitycheck.cgi. On very large installations of Bugzilla,<BR>";
-    print "This can take several minutes.<BR><BR><B><A HREF=sanitycheck.cgi?rebuildkeywordcache=1>Rebuild cache</HREF><BR></B>";
+    print "This can take several minutes.<BR><BR><B><A HREF=\"sanitycheck.cgi?rebuildkeywordcache=1\">Rebuild cache</A><BR></B>";
 
 }
 

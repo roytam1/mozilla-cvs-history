@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -24,28 +24,14 @@
 use diagnostics;
 use strict;
 
+use lib qw(.);
+
 require "CGI.pl";
 
-ConnectToDatabase();
-
-quietly_check_login();
-
-if ($::FORM{attach_id} !~ /^[1-9][0-9]*$/) {
-    DisplayError("Attachment ID should be numeric.");
-    exit;
-}
-
-SendSQL("select bug_id, mimetype, thedata from attachments where attach_id = $::FORM{'attach_id'}");
-my ($bug_id, $mimetype, $thedata) = FetchSQLData();
-
-if (!$bug_id) {
-    DisplayError("Attachment $::FORM{attach_id} does not exist.");
-    exit;
-}
-
-# Make sure the user can see the bug to which this file is attached
-ValidateBugID($bug_id);
-
-print qq{Content-type: $mimetype\n\n$thedata};
-
-    
+# Redirect to the new interface for displaying attachments.
+detaint_natural($::FORM{'attach_id'}) if defined($::FORM{'attach_id'});
+my $id = $::FORM{'attach_id'} || "";
+print "Status: 301 Permanent Redirect\n";
+print "Location: attachment.cgi?id=$id&action=view\n\n";
+exit;
+ 

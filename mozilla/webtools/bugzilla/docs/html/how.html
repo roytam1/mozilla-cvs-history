@@ -4,7 +4,7 @@
 >How do I use Bugzilla?</TITLE
 ><META
 NAME="GENERATOR"
-CONTENT="Modular DocBook HTML Stylesheet Version 1.61
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
 "><LINK
 REL="HOME"
 TITLE="The Bugzilla Guide"
@@ -13,13 +13,13 @@ REL="UP"
 TITLE="Using Bugzilla"
 HREF="using.html"><LINK
 REL="PREVIOUS"
-TITLE="Why Should We Use Bugzilla?"
-HREF="why.html"><LINK
+TITLE="Using Bugzilla"
+HREF="using.html"><LINK
 REL="NEXT"
-TITLE="Where can I find my user preferences?"
-HREF="init4me.html"></HEAD
+TITLE="Hints and Tips"
+HREF="hintsandtips.html"></HEAD
 ><BODY
-CLASS="SECTION"
+CLASS="section"
 BGCOLOR="#FFFFFF"
 TEXT="#000000"
 LINK="#0000FF"
@@ -28,6 +28,7 @@ ALINK="#0000FF"
 ><DIV
 CLASS="NAVHEADER"
 ><TABLE
+SUMMARY="Header navigation table"
 WIDTH="100%"
 BORDER="0"
 CELLPADDING="0"
@@ -44,20 +45,22 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="why.html"
+HREF="using.html"
+ACCESSKEY="P"
 >Prev</A
 ></TD
 ><TD
 WIDTH="80%"
 ALIGN="center"
 VALIGN="bottom"
->Chapter 2. Using Bugzilla</TD
+>Chapter 3. Using Bugzilla</TD
 ><TD
 WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
 ><A
-HREF="init4me.html"
+HREF="hintsandtips.html"
+ACCESSKEY="N"
 >Next</A
 ></TD
 ></TR
@@ -66,116 +69,39 @@ HREF="init4me.html"
 ALIGN="LEFT"
 WIDTH="100%"></DIV
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H1
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="HOW"
->2.3. How do I use Bugzilla?</A
-></H1
-><TABLE
-BORDER="0"
-WIDTH="100%"
-CELLSPACING="0"
-CELLPADDING="0"
-CLASS="EPIGRAPH"
-><TR
-><TD
-WIDTH="45%"
->&nbsp;</TD
-><TD
-WIDTH="45%"
-ALIGN="LEFT"
-VALIGN="TOP"
-><I
+NAME="how">3.1. How do I use Bugzilla?</H1
 ><P
-><I
->Hey!  I'm Woody!  Howdy, Howdy, Howdy!</I
-></P
-></I
-></TD
-></TR
-></TABLE
-><P
->      Bugzilla is a large, complex system.  Describing how to use it
-      requires some time.  If you are only interested in installing or
-      administering a Bugzilla installation, please consult the
-      Installing and Administering Bugzilla portions of this Guide.
-      This section is principally aimed towards developing end-user
-      mastery of Bugzilla, so you may fully enjoy the benefits
-      afforded by using this reliable open-source bug-tracking
-      software.
-    </P
-><P
->      Throughout this portion of the Guide, we will refer to user
-      account options available at the Bugzilla test installation,
-      <A
-HREF="http://landfill.tequilarista.org/"
+>This section contains information for end-users of Bugzilla. 
+    There is a Bugzilla test installation, called 
+    <A
+HREF="http://landfill.bugzilla.org/"
 TARGET="_top"
->	landfill.tequilarista.org</A
->.
-      <DIV
-CLASS="NOTE"
-><P
-></P
-><TABLE
-CLASS="NOTE"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/note.gif"
-HSPACE="5"
-ALT="Note"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->	  Some people have run into difficulties completing this
-	  tutorial.  If you run into problems, please check the
-	  updated online documentation available at <A
-HREF="http://www.trilobyte.net/barnsons/"
-TARGET="_top"
->http://www.trilobyte.net/barnsons</A
->. If you're still stumped, please subscribe to the newsgroup and provide details of exactly what's stumping you!  If enough people complain, I'll have to fix it in the next version of this Guide.  You can subscribe to the newsgroup at <A
-HREF="news://news.mozilla.org/netscape.public.mozilla.webtools"
-TARGET="_top"
-> news://news.mozilla.org/netscape.public.mozilla.webtools</A
->
-	</P
-></TD
-></TR
-></TABLE
-></DIV
-> Although Landfill serves as a great introduction to
-      Bugzilla, it does not offer all the options you would have as a
-      user on your own installation of Bugzilla, nor can it do more
-      than serve as a general introduction to Bugzilla.  Additionally,
-      Landfill often runs cutting-edge versions of Bugzilla for
-      testing, so some things may work slightly differently than
-      mentioned here.
-    </P
+>Landfill</A
+>, 
+    which you are welcome to play with (if it's up.) 
+    However, it does not necessarily
+    have all Bugzilla features enabled, and often runs cutting-edge versions
+    of Bugzilla for testing, so some things may work slightly differently
+    than mentioned here.</P
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H2
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="MYACCOUNT"
->2.3.1. Create a Bugzilla Account</A
-></H2
+NAME="myaccount">3.1.1. Create a Bugzilla Account</H2
 ><P
->	First things first!  If you want to use Bugzilla, first you
-	need to create an account.  Consult with the administrator
-	responsible for your installation of Bugzilla for the URL you
-	should use to access it. If you're test-driving the end-user
-	Bugzilla experience, use this URL: <A
-HREF="http://landfill.tequilarista.org/bugzilla-tip/"
+>If you want to use Bugzilla, first you need to create an account.
+      Consult with the administrator responsible for your installation of
+      Bugzilla for the URL you should use to access it. If you're
+      test-driving Bugzilla, use this URL: 
+      <A
+HREF="http://landfill.bugzilla.org/bugzilla-tip/"
 TARGET="_top"
-> http://landfill.tequilarista.org/bugzilla-tip/</A
+>&#13;      http://landfill.bugzilla.org/bugzilla-tip/</A
 >
       </P
 ><P
@@ -184,631 +110,413 @@ TARGET="_top"
 TYPE="1"
 ><LI
 ><P
->	    Click the "Open a new Bugzilla account" link.
-	  </P
+>Click the 
+          <SPAN
+CLASS="QUOTE"
+>"Open a new Bugzilla account"</SPAN
+>
+
+          link, enter your email address and, optionally, your name in the
+          spaces provided, then click 
+          <SPAN
+CLASS="QUOTE"
+>"Create Account"</SPAN
+>
+
+          .</P
 ></LI
 ><LI
 ><P
->	    Enter your "E-mail address" and "Real Name" (or whatever
-	    name you want to call yourself) in the spaces provided,
-	    then select the "Create Account" button.
-	  </P
+>Within moments, you should receive an email to the address
+          you provided above, which contains your login name (generally the
+          same as the email address), and a password you can use to access
+          your account. This password is randomly generated, and can be
+          changed to something more memorable.</P
 ></LI
 ><LI
 ><P
->	    Within moments, you should receive an email to the address
-	    you provided above, which contains your login name
-	    (generally the same as the email address), and a password
-	    you can use to access your account.  This password is
-	    randomly generated, and should be changed at your nearest
-	    opportunity (we'll go into how to do it later).
-	  </P
-></LI
-><LI
-><P
->	    Click the <SPAN
+>Click the 
+          <SPAN
 CLASS="QUOTE"
 >"Log In"</SPAN
-> link in the yellow area at
-	    the bottom of the page in your browser, then enter your
-	    <SPAN
-CLASS="QUOTE"
->"E-mail address"</SPAN
-> and <SPAN
-CLASS="QUOTE"
->"Password"</SPAN
 >
-	    you just received into the spaces provided, and select
-	    <SPAN
+          link in the yellow area at the bottom of the page in your browser,
+          enter your email address and password into the spaces provided, and
+          click 
+          <SPAN
 CLASS="QUOTE"
 >"Login"</SPAN
 >.
-	    <DIV
-CLASS="NOTE"
-><P
-></P
-><TABLE
-CLASS="NOTE"
-WIDTH="90%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/note.gif"
-HSPACE="5"
-ALT="Note"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->		If you ever forget your password, you can come back to
-		this page, enter your <SPAN
-CLASS="QUOTE"
->"E-mail address"</SPAN
->,
-		then select the <SPAN
-CLASS="QUOTE"
->"E-mail me a password"</SPAN
->
-		button to have your password mailed to you again so
-		that you can login.
-	      </P
-></TD
-></TR
-></TABLE
-></DIV
->
-	    <DIV
-CLASS="CAUTION"
-><P
-></P
-><TABLE
-CLASS="CAUTION"
-WIDTH="90%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/caution.gif"
-HSPACE="5"
-ALT="Caution"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->		Many modern browsers include an
-		<SPAN
-CLASS="QUOTE"
->"Auto-Complete"</SPAN
-> or <SPAN
-CLASS="QUOTE"
->"Form
-		  Fill"</SPAN
-> feature to remember the user names and
-		passwords you type in at many sites.  Unfortunately,
-		sometimes they attempt to guess what you will put in
-		as your password, and guess wrong.  If you notice a
-		text box is already filled out, please overwrite the
-		contents of the text box so you can be sure to input
-		the correct information.
-	      </P
-></TD
-></TR
-></TABLE
-></DIV
->
-	  </P
+          </P
 ></LI
 ></OL
 ><P
->	Congratulations!  If you followed these directions, you now
-	are the proud owner of a user account on
-	landfill.tequilarista.org (Landfill) or your local Bugzilla
-	install.  You should now see in your browser a page called the
-	<SPAN
-CLASS="QUOTE"
->"Bugzilla Query Page"</SPAN
->.  It may look daunting, but with this
-	Guide to walk you through it, you will master it in no time.
-      </P
+>You are now logged in. Bugzilla uses cookies for authentication
+      so, unless your IP address changes, you should not have to log in
+      again.</P
 ></DIV
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H2
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="QUERY"
->2.3.2. The Bugzilla Query Page</A
-></H2
+NAME="bug_page">3.1.2. Anatomy of a Bug</H2
 ><P
->	The Bugzilla Query Page is the heart and soul of the Bugzilla
-	user experience.  It is the master interface where you can
-	find any bug report, comment, or patch currently in the
-	Bugzilla system.  We'll go into how to create your own bug
-	report later on.
-      </P
-><P
->	There are efforts underway to simplify query usage.  If you
-	have a local installation of Bugzilla 2.12 or higher, you
-	should have <TT
-CLASS="FILENAME"
->quicksearch.html</TT
-> available to
-	use and simplify your searches.  There is also a helper for
-	the query interface, called
-	<TT
-CLASS="FILENAME"
->queryhelp.cgi</TT
->.  Landfill tends to run the
-	latest code, so these two utilities should be available there
-	for your perusal.
-      </P
-><P
->	At this point, please visit the main Bugzilla site,
-	<A
-HREF="http://bugzilla.mozilla.org/query.cgi"
+>The core of Bugzilla is the screen which displays a particular
+      bug. It's a good place to explain some Bugzilla concepts. 
+      <A
+HREF="http://landfill.bugzilla.org/bugzilla-tip/show_bug.cgi?id=1"
 TARGET="_top"
->	bugzilla.mozilla.org</A
->, to see a more fleshed-out query page.
-      </P
-><P
->	The first thing you need to notice about the Bugzilla Query
-	Page is that nearly every box you see on your screen has a
-	hyperlink nearby, explaining what it is or what it does.  Near
-	the upper-left-hand corner of your browser window you should
-	see the word <SPAN
-CLASS="QUOTE"
->"Status"</SPAN
-> underlined.  Select it.
-      </P
-><P
->	Notice the page that popped up?  Every underlined word you see
-	on your screen is a hyperlink that will take you to
-	context-sensitive help. Click around for a while, and learn
-	what everything here does.  To return to the query interface
-	after pulling up a help page, use the <SPAN
-CLASS="QUOTE"
->"Back"</SPAN
+>&#13;      Bug 1 on Landfill</A
 >
-	button in your browser.
-      </P
-><P
->	I'm sure that after checking out the online help, you are now
-	an expert on the Bugzilla Query Page.  If, however, you feel
-	you haven't mastered it yet, let me walk you through making a
-	few successful queries to find out what there are in the
-	Bugzilla bug-tracking system itself.
-      </P
+
+      is a good example. Note that the labels for most fields are hyperlinks;
+      clicking them will take you to context-sensitive help on that
+      particular field. Fields marked * may not be present on every
+      installation of Bugzilla.</P
 ><P
 ></P
 ><OL
 TYPE="1"
 ><LI
 ><P
->	    Ensure you are back on the <SPAN
-CLASS="QUOTE"
->"Bugzilla Query
-	      Page"</SPAN
->. Do nothing in the boxes marked "Status",
-	    "Resolution", "Platform", "OpSys", "Priority", or
-	    "Severity".  The default query for "Status" is to find all
-	    bugs that are NEW, ASSIGNED, or REOPENED, which is what we
-	    want.  If you don't select anything in the other 5
-	    scrollboxes there, then you are saying that "any of these
-	    are OK"; we're not locking ourselves into only finding
-	    bugs on the "DEC" Platform, or "Windows 95" OpSys
-	    (Operating System).  You're smart, I think you have it
-	    figured out.
-	  </P
-><P
->	    Basically, selecting <EM
->anything</EM
-> on the
-	    query page narrows your search down.  Leaving stuff
-	    unselected, or text boxes unfilled, broadens your search.
-	  </P
-></LI
-><LI
-><P
->	    You see the box immediately below the top six boxes that
-	    contains an "Email" text box,  with the words "matching
-	    as", a drop-down selection box, then some checkboxes with
-	    "Assigned To" checked by default?  This allows you to
-	    filter your search down based upon email address.  Let's
-	    put my email address in there, and see what happens.
-	  </P
-><P
->	    Type "barnboy@trilobyte.net" in the top Email text box.
-	  </P
-></LI
-><LI
-><P
->	    Let's narrow the search some more.  Scroll down until you
-	    find the box with the word "Program" over the top of it.
-	    This is where we can narrow our search down to only
-	    specific products (software programs or product lines) in
-	    our Bugzilla database. Please notice the box is a
-	    <EM
->scrollbox</EM
->.  Using the down arrow on
-	    the scrollbox, scroll down until you can see an entry
-	    called "Bugzilla".  Select this entry.
-	  </P
-></LI
-><LI
-><P
->	    Did you notice that some of the boxes to the right changed
-	    when you selected "Bugzilla"? Every Program (or Product)
-	    has different Versions, Components, and Target Milestones
-	    associated with it.  A "Version" is the number of a
-	    software program.
-	    <DIV
-CLASS="EXAMPLE"
-><A
-NAME="AEN307"
-></A
-><P
-><B
->Example 2-1. Some Famous Software Versions</B
-></P
-><DIV
-CLASS="INFORMALEXAMPLE"
-><A
-NAME="AEN309"
-></A
-><P
-></P
-><P
->		  Do you remember the hype in 1995 when Microsoft
-		  Windows 95(r) was released? It may have been several
-		  years ago, but Microsoft(tm) spent over $300 Million
-		  advertising this new Version of their software.
-		  Three years later, they released Microsoft Windows
-		  98(r), another new version, to great fanfare, and
-		  then in 2000 quietly  released Microsoft Windows
-		  ME(Millenium Edition)(r). 
-		</P
-><P
->		  Software "Versions" help a manufacturer
-		  differentiate their current product from their
-		  previous products.  Most do not identify their
-		  products by the year they were released. Instead,
-		  the "original" version of their software will often
-		  be numbered "1.0", with small bug-fix releases on
-		  subsequent tenths of a digit.  In most cases, it's
-		  not a decimal number; for instance, often 1.9 is an
-		  <EM
->older</EM
-> version of the software
-		  than 1.11, but is a <EM
->newer</EM
->
-		  version than 1.1.1.
-		</P
-><P
->		  In general, a "Version" in Bugzilla should refer to
-		  <EM
->released</EM
-> products, not products
-		  that have not yet been released  to the public.
-		  Forthcoming products are what the Target Milestone
-		  field is for.
-		</P
-><P
-></P
-></DIV
-></DIV
->
-	  </P
-><P
->	    A "Component" is a piece of a Product.
-	    It may be a standalone program, or some other logical
-	    division of a Product or Program. 
-	    Normally, a Component has a single Owner, who is responsible
-	    for overseeing efforts to improve that Component.
-	    <DIV
-CLASS="EXAMPLE"
-><A
-NAME="AEN317"
-></A
-><P
-><B
->Example 2-2. Mozilla's Bugzilla Components</B
-></P
-><DIV
-CLASS="INFORMALEXAMPLE"
-><A
-NAME="AEN319"
-></A
-><P
-></P
-><P
->		  Mozilla's "Bugzilla" Product is composed of several pieces (Components):
-		  <P
+>&#13;          <EM
+>Product and Component</EM
+>: 
+          Bugs are divided up by Product and Component, with a Product
+          having one or more Components in it. For example,
+          bugzilla.mozilla.org's "Bugzilla" Product is composed of several
+          Components: 
+          <P
 ></P
 ><TABLE
 BORDER="0"
 ><TBODY
 ><TR
 ><TD
-><EM
->Administration</EM
->,
-                      Administration of a bugzilla installation, including 
-                      <TT
-CLASS="FILENAME"
->editcomponents.cgi</TT
->,
-                      <TT
-CLASS="FILENAME"
->editgroups.cgi</TT
->, 
-                      <TT
-CLASS="FILENAME"
->editkeywords.cgi</TT
->, 
-                      <TT
-CLASS="FILENAME"
->editparams.cgi</TT
->,
-                      <TT
-CLASS="FILENAME"
->editproducts.cgi</TT
->,
-                      <TT
-CLASS="FILENAME"
->editusers.cgi</TT
->,
-                      <TT
-CLASS="FILENAME"
->editversions.cgi,</TT
-> and
-                      <TT
-CLASS="FILENAME"
->sanitycheck.cgi</TT
->.
-                    </TD
-></TR
-><TR
-><TD
-><EM
->Bugzilla-General</EM
->,
-                      Anything that doesn't fit in the other components, or spans
-                      multiple components.
-                    </TD
-></TR
-><TR
-><TD
-><EM
->Creating/Changing Bugs</EM
->,
-                      Creating, changing, and viewing bugs.
-                      <TT
-CLASS="FILENAME"
->enter_bug.cgi</TT
->,
-                      <TT
-CLASS="FILENAME"
->post_bug.cgi</TT
->,
-                      <TT
-CLASS="FILENAME"
->show_bug.cgi</TT
-> and
-                      <TT
-CLASS="FILENAME"
->process_bug.cgi</TT
->.
-                    </TD
-></TR
-><TR
-><TD
-><EM
->Documentation</EM
->,
-                      The bugzilla documentation, including anything in the
-                      <TT
-CLASS="FILENAME"
->docs/</TT
-> directory and The Bugzilla Guide
-                      (This document :)
-                    </TD
-></TR
-><TR
-><TD
-><EM
->Email</EM
->,
-                      Anything to do with email sent by Bugzilla.
-                      <TT
-CLASS="FILENAME"
->processmail</TT
+>&#13;          <EM
+>Administration:</EM
 >
-                    </TD
+          Administration of a Bugzilla installation.</TD
 ></TR
 ><TR
 ><TD
-><EM
->Installation</EM
->,
-                      The installation process of Bugzilla. This includes
-                      <TT
-CLASS="FILENAME"
->checksetup.pl</TT
-> and whatever else it evolves into.
-                    </TD
-></TR
-><TR
-><TD
-><EM
->Query/Buglist</EM
->,
-                      Anything to do with searching for bugs and viewing the buglists.
-                      <TT
-CLASS="FILENAME"
->query.cgi</TT
-> and
-                      <TT
-CLASS="FILENAME"
->buglist.cgi</TT
+>&#13;          <EM
+>Bugzilla-General:</EM
 >
-                    </TD
+          Anything that doesn't fit in the other components, or spans
+          multiple components.</TD
 ></TR
 ><TR
 ><TD
-><EM
->Reporting/Charting</EM
->,
-                      Getting reports from Bugzilla.
-                      <TT
-CLASS="FILENAME"
->reports.cgi</TT
-> and
-                      <TT
-CLASS="FILENAME"
->duplicates.cgi</TT
+>&#13;          <EM
+>Creating/Changing Bugs:</EM
 >
-                    </TD
+          Creating, changing, and viewing bugs.</TD
 ></TR
 ><TR
 ><TD
-><EM
->User Accounts</EM
->,
-                      Anything about managing a user account from the user's perspective.
-                      <TT
-CLASS="FILENAME"
->userprefs.cgi</TT
->, saved queries, creating accounts,
-                      changing passwords, logging in, etc. 
-                    </TD
+>&#13;          <EM
+>Documentation:</EM
+>
+          The Bugzilla documentation, including The Bugzilla Guide.</TD
 ></TR
 ><TR
 ><TD
-><EM
->User Interface</EM
->,
-                      General issues having to do with the user interface cosmetics (not
-                      functionality) including cosmetic issues, HTML templates, etc.
-                    </TD
+>&#13;          <EM
+>Email:</EM
+>
+          Anything to do with email sent by Bugzilla.</TD
+></TR
+><TR
+><TD
+>&#13;          <EM
+>Installation:</EM
+>
+          The installation process of Bugzilla.</TD
+></TR
+><TR
+><TD
+>&#13;          <EM
+>Query/Buglist:</EM
+>
+          Anything to do with searching for bugs and viewing the
+          buglists.</TD
+></TR
+><TR
+><TD
+>&#13;          <EM
+>Reporting/Charting:</EM
+>
+          Getting reports from Bugzilla.</TD
+></TR
+><TR
+><TD
+>&#13;          <EM
+>User Accounts:</EM
+>
+          Anything about managing a user account from the user's perspective.
+          Saved queries, creating accounts, changing passwords, logging in,
+          etc.</TD
+></TR
+><TR
+><TD
+>&#13;          <EM
+>User Interface:</EM
+>
+          General issues having to do with the user interface cosmetics (not
+          functionality) including cosmetic issues, HTML templates,
+          etc.</TD
 ></TR
 ></TBODY
 ></TABLE
 ><P
 ></P
 >
-		</P
+          </P
+></LI
+><LI
 ><P
-></P
-></DIV
-></DIV
+>&#13;          <EM
+>Status and Resolution:</EM
 >
-	  </P
-><P
->	    A "Milestone", or "Target Milestone" is a often a planned
-	    future "Version" of a product.  In many cases, though,
-	    Milestones simply represent significant dates for a
-	    developer.  Having certain features in your Product is
-	    frequently tied to revenue (money) the developer will
-	    receive if the features work by the time she  reaches the
-	    Target Milestone. Target Milestones are a great tool to
-	    organize your time. If someone will pay you $100,000 for
-	    incorporating certain features by a certain date, those
-	    features by that Milestone date become a very high
-	    priority.  Milestones tend to be highly malleable
-	    creatures, though, that appear to be in reach but are out
-	    of reach by the time the important day arrives.
-	  </P
-><P
->	    The Bugzilla Project has set up Milestones for future
-	    Bugzilla versions 2.14, 2.16, 2.18, 3.0, etc.  However, a
-	    Target Milestone can just as easily be a specific date,
-	    code name, or weird alphanumeric combination, like "M19".
-	  </P
+
+          These define exactly what state the bug is in - from not even
+          being confirmed as a bug, through to being fixed and the fix
+          confirmed by Quality Assurance. The different possible values for
+          Status and Resolution on your installation should be documented in the
+          context-sensitive help for those items.</P
 ></LI
 ><LI
 ><P
->	    OK, now let's select the "Bugzilla" component from its scrollbox.
-	  </P
+>&#13;          <EM
+>Assigned To:</EM
+>
+          The person responsible for fixing the bug.</P
 ></LI
 ><LI
 ><P
->	    Skip down the page a bit -- do you see the "submit query" button?
-	    Select it, and let's run
-	    this query!
-	  </P
+>&#13;          <EM
+>*URL:</EM
+>
+          A URL associated with the bug, if any.</P
 ></LI
 ><LI
 ><P
->	    Congratulations!  You've completed your first Query, and
-	    have before you the Bug List of the author of this Guide,
-	    Matthew P. Barnson (barnboy@trilobyte.net).  If I'm doing
-	    well, you'll have a cryptic "Zarro Boogs Found" message on
-	    your screen.  It is just a happy hacker's way of saying
-	    "Zero Bugs Found".  However, I am fairly certain I will
-	    always have some bugs assigned to me that aren't done yet,
-	    so you won't often see that message!
-	  </P
+>&#13;          <EM
+>Summary:</EM
+>
+          A one-sentence summary of the problem.</P
+></LI
+><LI
+><P
+>&#13;          <EM
+>*Status Whiteboard:</EM
+>
+          (a.k.a. Whiteboard) A free-form text area for adding short notes
+          and tags to a bug.</P
+></LI
+><LI
+><P
+>&#13;          <EM
+>*Keywords:</EM
+>
+          The administrator can define keywords which you can use to tag and
+          categorise bugs - e.g. The Mozilla Project has keywords like crash
+          and regression.</P
+></LI
+><LI
+><P
+>&#13;          <EM
+>Platform and OS:</EM
+>
+          These indicate the computing environment where the bug was
+          found.</P
+></LI
+><LI
+><P
+>&#13;          <EM
+>Version:</EM
+>
+          The "Version" field is usually used for versions of a product which
+          have been released, and is set to indicate which versions of a
+          Component have the particular problem the bug report is
+          about.</P
+></LI
+><LI
+><P
+>&#13;          <EM
+>Priority:</EM
+>
+          The bug assignee uses this field to prioritise his or her bugs.
+          It's a good idea not to change this on other people's bugs.</P
+></LI
+><LI
+><P
+>&#13;          <EM
+>Severity:</EM
+>
+          This indicates how severe the problem is - from blocker
+          ("application unusable") to trivial ("minor cosmetic issue"). You
+          can also use this field to indicate whether a bug is an enhancement
+          request.</P
+></LI
+><LI
+><P
+>&#13;          <EM
+>*Target:</EM
+>
+          (a.k.a. Target Milestone) A future version by which the bug is to
+          be fixed. e.g. The Bugzilla Project's milestones for future
+          Bugzilla versions are 2.18, 2.20, 3.0, etc. Milestones are not
+          restricted to numbers, thought - you can use any text strings, such
+          as dates.</P
+></LI
+><LI
+><P
+>&#13;          <EM
+>Reporter:</EM
+>
+          The person who filed the bug.</P
+></LI
+><LI
+><P
+>&#13;          <EM
+>CC list:</EM
+>
+          A list of people who get mail when the bug changes.</P
+></LI
+><LI
+><P
+>&#13;          <EM
+>Attachments:</EM
+>
+          You can attach files (e.g. testcases or patches) to bugs. If there
+          are any attachments, they are listed in this section.</P
+></LI
+><LI
+><P
+>&#13;          <EM
+>*Dependencies:</EM
+>
+          If this bug cannot be fixed unless other bugs are fixed (depends
+          on), or this bug stops other bugs being fixed (blocks), their
+          numbers are recorded here.</P
+></LI
+><LI
+><P
+>&#13;          <EM
+>*Votes:</EM
+>
+          Whether this bug has any votes.</P
+></LI
+><LI
+><P
+>&#13;          <EM
+>Additional Comments:</EM
+>
+          You can add your two cents to the bug discussion here, if you have
+          something worthwhile to say.</P
 ></LI
 ></OL
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="query">3.1.3. Searching for Bugs</H2
 ><P
->	I encourage you to click the bug numbers in the left-hand
-	column and examine my bugs.  Also notice that if you click the
-	underlined  links near the top of this page, they do not take
-	you to context-sensitive help here, but instead sort the
-	columns of bugs on the screen! When you need to sort your bugs
-	by priority, severity, or the people they are assigned to,
-	this is a tremendous timesaver.
-      </P
+>The Bugzilla Search page is is the interface where you can find
+      any bug report, comment, or patch currently in the Bugzilla system. You
+      can play with it here: 
+      <A
+HREF="http://landfill.bugzilla.org/bugzilla-tip/query.cgi"
+TARGET="_top"
+>&#13;      landfill.bugzilla.org/bugzilla-tip/query.cgi</A
+>
+
+      .</P
 ><P
->	A couple more interesting things about the Bug List page:
-	<P
+>The Search page has controls for selecting different possible
+      values for all of the fields in a bug, as described above. Once you've
+      defined a search, you can either run it, or save it as a Remembered
+      Query, which can optionally appear in the footer of your pages.</P
+><P
+>Highly advanced querying is done using Boolean Charts, which have
+      their own 
+      <A
+HREF="http://landfill.bugzilla.org/bugzilla-tip/booleanchart.html"
+TARGET="_top"
+>&#13;      context-sensitive help</A
+>
+
+      .</P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="list">3.1.4. Bug Lists</H2
+><P
+>If you run a search, a list of matching bugs will be returned.
+      The default search is to return all open bugs on the system - don't try
+      running this search on a Bugzilla installation with a lot of
+      bugs!</P
+><P
+>The format of the list is configurable. For example, it can be
+      sorted by clicking the column headings. Other useful features can be
+      accessed using the links at the bottom of the list: 
+      <P
 ></P
 ><TABLE
 BORDER="0"
 ><TBODY
 ><TR
 ><TD
-><EM
->Change Columns</EM
->: by selecting
-	    this link, you can show all kinds of information in the
-	    Bug List</TD
+>&#13;        <EM
+>Long Format:</EM
+>
+
+        this gives you a large page with a non-editable summary of the fields
+        of each bug.</TD
 ></TR
 ><TR
 ><TD
-><EM
->Change several bugs at once</EM
->: If
-	    you have sufficient rights to change all the bugs shown in
-	    the Bug List, you can mass-modify them. This is a big
-	    time-saver.</TD
+>&#13;        <EM
+>Change Columns:</EM
+>
+
+        change the bug attributes which appear in the list.</TD
 ></TR
 ><TR
 ><TD
-><EM
->Send mail to bug owners</EM
->: If you
-	    have many related bugs, you can request an update from
-	    every person who owns the bugs in the Bug List asking them
-	    the status.</TD
+>&#13;        <EM
+>Change several bugs at once:</EM
+>
+
+        If your account is sufficiently empowered, you can make the same
+        change to all the bugs in the list - for example, changing their
+        owner.</TD
 ></TR
 ><TR
 ><TD
-><EM
->Edit this query</EM
->: If you didn't
-	    get exactly the results you were looking for, you can
-	    return to the Query page through this link and make small
-	    revisions to the query you just made so you get more
-	    accurate results.</TD
+>&#13;        <EM
+>Send mail to bug owners:</EM
+>
+
+        Sends mail to the owners of all bugs on the list.</TD
+></TR
+><TR
+><TD
+>&#13;        <EM
+>Edit this query:</EM
+>
+
+        If you didn't get exactly the results you were looking for, you can
+        return to the Query page through this link and make small revisions
+        to the query you just made so you get more accurate results.</TD
 ></TR
 ></TBODY
 ></TABLE
@@ -816,267 +524,64 @@ BORDER="0"
 ></P
 >
       </P
-><DIV
-CLASS="NOTE"
-><P
-></P
-><TABLE
-CLASS="NOTE"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/note.gif"
-HSPACE="5"
-ALT="Note"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->	  There are many more options to the Bugzilla Query Page  and
-	  the Bug List than I have shown you. But this should be
-	  enough for you to learn to get around. I encourage you to
-	  check out the <A
-HREF="http://www.mozilla.org/bugs/"
-TARGET="_top"
->Bugzilla Home Page</A
-> to learn about the Anatomy and Life Cycle of a Bug before continuing.
-	</P
-></TD
-></TR
-></TABLE
-></DIV
 ></DIV
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H2
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="BUGREPORTS"
->2.3.3. Creating and Managing Bug Reports</A
-></H2
-><TABLE
-BORDER="0"
-WIDTH="100%"
-CELLSPACING="0"
-CELLPADDING="0"
-CLASS="EPIGRAPH"
-><TR
-><TD
-WIDTH="45%"
->&nbsp;</TD
-><TD
-WIDTH="45%"
-ALIGN="LEFT"
-VALIGN="TOP"
-><I
+NAME="bugreports">3.1.5. Filing Bugs</H2
 ><P
-><I
->And all this time, I thought we were taking bugs <EM
->out</EM
->...</I
+>Years of bug writing experience has been distilled for your
+      reading pleasure into the 
+      <A
+HREF="http://landfill.bugzilla.org/bugzilla-tip/bugwritinghelp.html"
+TARGET="_top"
+>&#13;      Bug Writing Guidelines</A
+>. 
+      While some of the advice is Mozilla-specific, the basic principles of
+      reporting Reproducible, Specific bugs, isolating the Product you are
+      using, the Version of the Product, the Component which failed, the
+      Hardware Platform, and Operating System you were using at the time of
+      the failure go a long way toward ensuring accurate, responsible fixes
+      for the bug that bit you.</P
+><P
+>The procedure for filing a test bug is as follows:</P
+><P
 ></P
-></I
-></TD
-></TR
-></TABLE
-><DIV
-CLASS="SECTION"
-><H3
-CLASS="SECTION"
-><A
-NAME="BUG_WRITING"
->2.3.3.1. Writing a Great Bug Report</A
-></H3
+><OL
+TYPE="1"
+><LI
 ><P
->	  Before we plunge into writing your first bug report, I
-	  encourage you to read some bug-writing guidelines.  If you
-	  are reading this document as part of a Bugzilla CVS checkout
-	  or un-tarred Bugzilla distribution, you should be able to
-	  read them by clicking <A
-HREF="../../bugwritinghelp.html"
+>Go to 
+          <A
+HREF="http://landfill.bugzilla.org/bugzilla-tip/"
 TARGET="_top"
->here</A
->.  If you are reading this online, check out the Mozilla.org bug-writing guidelines at <A
-HREF="http://www.mozilla.org/quality/bug-writing-guidelines.html"
+>&#13;          Landfill</A
+>
+          in your browser and click 
+          <A
+HREF="http://landfill.bugzilla.org/bugzilla-tip/enter_bug.cgi"
 TARGET="_top"
->http://www.mozilla.org/quality/bug-writing-guidelines.html</A
->.  While some of the advice is Mozilla-specific, the basic principles of reporting Reproducible, Specific bugs, isolating the Product you are using, the Version of the Product, the Component which failed, the Hardware Platform, and Operating System you were using at the time of the failure go a long way toward ensuring accurate, responsible fixes for the bug that bit you.
-	</P
-><P
->	  While you are at it, why not learn how to find previously
-	  reported bugs?  Mozilla.org has published a great tutorial
-	  on finding duplicate bugs, available at <A
-HREF="http://www.mozilla.org/quality/help/beginning-duplicate-finding.html"
-TARGET="_top"
-> http://www.mozilla.org/quality/help/beginning-duplicate-finding.html</A
+>&#13;          Enter a new bug report</A
 >.
-	</P
-><P
->	  I realize this was a lot to read.  However, understanding
-	  the mentality of writing great bug reports will help us on
-	  the next part!
-	</P
-><P
-></P
-><OL
-TYPE="1"
-><LI
-><P
->	      Go back to <A
-HREF="http://landfill.tequilarista.org/bugzilla-tip/"
-TARGET="_top"
-> http://landfill.tequilarista.org/bugzilla-tip/</A
-> in your browser.
-	    </P
+          </P
 ></LI
 ><LI
 ><P
->	      Select the  <A
-HREF="http://landfill.tequilarista.org/bugzilla-tip/enter_bug.cgi"
-TARGET="_top"
-> Enter a new bug report</A
-> link.
-	    </P
+>Select a product - any one will do.</P
 ></LI
 ><LI
 ><P
->	      Select a product.
-	    </P
+>Fill in the fields. Bugzilla should have made reasonable
+          guesses, based upon your browser, for the "Platform" and "OS"
+          drop-down boxes. If they are wrong, change them.</P
 ></LI
 ><LI
 ><P
->	      Now you should be at the "Enter Bug" form. The
-	      "reporter" should have been automatically filled out for
-	      you (or else Bugzilla prompted you to Log In again --
-	      you did keep the email with your username and password,
-	      didn't you?).
-	    </P
-></LI
-><LI
-><P
->	      Select a Component in the scrollbox.
-	    </P
-></LI
-><LI
-><P
->	      Bugzilla should have made reasonable guesses, based upon
-	      your browser, for the "Platform" and "OS" drop-down
-	      boxes.  If those are wrong, change them -- if you're on
-	      an SGI box running IRIX, we want to know!
-	    </P
-></LI
-><LI
-><P
->	      Fill in the "Assigned To" box with the email address you
-	      provided earlier.  This way you don't end up sending
-	      copies of your bug to lots of other people, since it's
-	      just a test bug.
-	    </P
-></LI
-><LI
-><P
->	      Leave the "CC" text box blank.  Fill in the "URL" box
-	      with "http://www.mozilla.org".
-	    </P
-></LI
-><LI
-><P
->	      Enter "The Bugzilla Guide" in the Summary text box, and
-	      place any comments you have on this tutorial, or the
-	      Guide in general, into the Description box.
-	    </P
+>Select "Commit" and send in your bug report.</P
 ></LI
 ></OL
-><P
->	  Voila!  Select "Commit" and send in your bug report! Next
-	  we'll look at resolving bugs.
-	</P
-></DIV
-><DIV
-CLASS="SECTION"
-><H3
-CLASS="SECTION"
-><A
-NAME="BUG_MANAGE"
->2.3.3.2. Managing your Bug Reports</A
-></H3
-><P
->	  OK, you should have a link to the bug you just created near
-	  the top of your page. It should say "Bug XXXX posted", with
-	  a link to the right saying "Back to BUG# XXXX". Select this
-	  link.
-	</P
-><P
-></P
-><OL
-TYPE="1"
-><LI
-><P
->	      Scroll down a bit on the subsequent page, until you see
-	      the "Resolve bug, changing resolution to (dropdown box).
-	      Normally, you would "Accept bug (change status to
-	      ASSIGNED)", fix it, and then resolve. But in this case,
-	      we're going to short-circuit the process because this
-	      wasn't a real bug. Change the dropdown next to "Resolve
-	      Bug" to "INVALID", make sure the radio button is marked
-	      next to "Resolve Bug", then click "Commit".
-	    </P
-></LI
-><LI
-><P
->	      Hey!  It said it couldn't take the change in a big red
-	      box! That's right, you must specify a Comment in order
-	      to make this change.  Select the "Back" button in your
-	      browser, add a Comment, then try Resolving the bug with
-	      INVALID status again. This time it should work.
-	    </P
-></LI
-></OL
-><P
->	  You have now learned the basics of Bugzilla navigation,
-	  entering a bug, and bug maintenance. I encourage you to
-	  explore these features, and see what you can do with them!
-	  We'll spend no more time on individual Bugs or Queries from
-	  this point on, so you are on your own there.
-	</P
-><P
->	  But I'll give a few last hints!
-	</P
-><P
->	  There is a <A
-HREF="http://bugzilla.mozilla.org/help.html"
-TARGET="_top"
->CLUE</A
-> on the Query page that will teach you more how to use the form.
-	</P
-><P
->	  If you click the hyperlink on the <A
-HREF="http://bugzilla.mozilla.org/describecomponents.cgi"
-TARGET="_top"
->Component</A
-> box of the Query page, you will be presented a form that will describe what all the components are.
-	</P
-><P
->	  Possibly the most powerful feature of the Query page is the
-	  <A
-HREF="http://bugzilla.mozilla.org/booleanchart.html"
-TARGET="_top"
->Boolean Chart</A
-> section. It's a bit confusing to use the first time, but can provide unparalleled flexibility in your queries, allowing you to build extremely powerful requests.
-	</P
-><P
->	  Finally, you can build some nifty  <A
-HREF="http://bugzilla.mozilla.org/reports.cgi"
-TARGET="_top"
->Reports</A
-> using the "Bug Reports" link near the bottom of the query page, and also available via the "Reports" link at the footer of each page.
-	</P
-></DIV
 ></DIV
 ></DIV
 ><DIV
@@ -1084,6 +589,7 @@ CLASS="NAVFOOTER"
 ><HR
 ALIGN="LEFT"
 WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
 WIDTH="100%"
 BORDER="0"
 CELLPADDING="0"
@@ -1094,7 +600,8 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="why.html"
+HREF="using.html"
+ACCESSKEY="P"
 >Prev</A
 ></TD
 ><TD
@@ -1103,6 +610,7 @@ ALIGN="center"
 VALIGN="top"
 ><A
 HREF="index.html"
+ACCESSKEY="H"
 >Home</A
 ></TD
 ><TD
@@ -1110,7 +618,8 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="init4me.html"
+HREF="hintsandtips.html"
+ACCESSKEY="N"
 >Next</A
 ></TD
 ></TR
@@ -1119,20 +628,21 @@ HREF="init4me.html"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->Why Should We Use Bugzilla?</TD
+>Using Bugzilla</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
 HREF="using.html"
+ACCESSKEY="U"
 >Up</A
 ></TD
 ><TD
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->Where can I find my user preferences?</TD
+>Hints and Tips</TD
 ></TR
 ></TABLE
 ></DIV
