@@ -294,6 +294,11 @@ NormandyBeachUnix -a \
 	mozilla/lib/libaddr \
 	mozilla/lib/libmsg
 
+NormandyBeachMac -a \
+	MozillaSourceMac \
+	mozilla/lib/libaddr \
+	mozilla/lib/libmsg
+
 #######################################################################
 # Modules for the Directory SDK.  There are two users of the libldap
 # Mozilla and the DirectorySDK
