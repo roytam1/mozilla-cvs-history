@@ -132,7 +132,7 @@ if (!param()) {
 	print "months";
 	print p();
 
-	print "mozilla.org counts as ";
+	print "mozilla.org is considered part of Netscape? ";
 	print radio_group(-name=>"mozillaOrgAsNscp",
 			  "-values"=>["yes","no"],
 			  -default=>"no");
