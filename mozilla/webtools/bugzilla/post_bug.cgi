@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -21,15 +21,17 @@
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Joe Robins <jmrobins@tgix.com>
+#                 Gervase Markham <gerv@gerv.net>
 
 use diagnostics;
 use strict;
+use lib qw(.);
 
 require "CGI.pl";
+require "bug_form.pl";
 
-# Shut up misguided -w warnings about "used only once".  For some reason,
+# Shut up misguided -w warnings about "used only once". For some reason,
 # "use vars" chokes on me when I try it here.
-
 sub sillyness {
     my $zz;
     $zz = $::buffer;
@@ -37,7 +39,6 @@ sub sillyness {
     $zz = %::COOKIE;
     $zz = %::components;
     $zz = %::versions;
-    $zz = @::legal_bug_status;
     $zz = @::legal_opsys;
     $zz = @::legal_platform;
     $zz = @::legal_priority;
@@ -46,224 +47,272 @@ sub sillyness {
     $zz = %::target_milestone;
 }
 
+# Use global template variables.
+use vars qw($vars $template);
+
+ConnectToDatabase();
 confirm_login();
 
-my $cookiepath = Param("cookiepath");
-print "Set-Cookie: PLATFORM=$::FORM{'product'} ; path=$cookiepath ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n" if ( exists $::FORM{'product'} );
-print "Set-Cookie: VERSION-$::FORM{'product'}=$::FORM{'version'} ; path=$cookiepath ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n" if ( exists $::FORM{'product'} && exists $::FORM{'version'} );
 
-print "Content-type: text/html\n\n";
+# The format of the initial comment can be structured by adding fields to the
+# enter_bug template and then referencing them in the comment template.
+my $comment;
 
-if (defined $::FORM{'maketemplate'}) {
-    print "<TITLE>Bookmarks are your friend.</TITLE>\n";
-    print "<H1>Template constructed.</H1>\n";
-    
-    my $url = "enter_bug.cgi?$::buffer";
+$vars->{'form'} = \%::FORM;
 
-    print "If you put a bookmark <a href=\"$url\">to this link</a>, it will\n";
-    print "bring up the submit-a-new-bug page with the fields initialized\n";
-    print "as you've requested.\n";
-    PutFooter();
-    exit;
-}
+# We can't use ValidateOutputFormat here because it defaults to HTML.
+my $template_name = "bug/create/comment";
+$template_name .= ($::FORM{'format'} ? "-$::FORM{'format'}" : "");
 
-PutHeader("Posting Bug -- Please wait", "Posting Bug", "One moment please...");
+$template->process("$template_name.txt.tmpl", $vars, \$comment)
+  || ThrowTemplateError($template->error());
 
-umask 0;
-ConnectToDatabase();
+ValidateComment($comment);
 
 my $product = $::FORM{'product'};
 
-if(Param("usebuggroupsentry") && GroupExists($product)) {
-  if(!UserInGroup($product)) {
-    print "<H1>Permission denied.</H1>\n";
-    print "Sorry; you do not have the permissions necessary to enter\n";
-    print "a bug against this product.\n";
-    print "<P>\n";
-    PutFooter();
-    exit;
-  }
+# Set cookies
+my $cookiepath = Param("cookiepath");
+if (exists $::FORM{'product'}) {
+    if (exists $::FORM{'version'}) {           
+        print "Set-Cookie: VERSION-$product=$::FORM{'version'} ; " .
+              "path=$cookiepath ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n"; 
+    }
 }
 
-if (!defined $::FORM{'component'} || $::FORM{'component'} eq "") {
-    PuntTryAgain("You must choose a component that corresponds to this bug. " .
-                 "If necessary, just guess.");
+if (defined $::FORM{'maketemplate'}) {
+    $vars->{'url'} = $::buffer;
+    
+    print "Content-type: text/html\n\n";
+    $template->process("bug/create/make-template.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
+    exit;
+}
+
+umask 0;
+
+# Some sanity checking
+if(Param("usebuggroupsentry") && GroupExists($product)) {
+    if(!UserInGroup($product)) {
+        DisplayError("Sorry; you do not have the permissions necessary to enter
+                      a bug against this product.", "Permission Denied");
+        exit;
+    }
+}
+
+if (!$::FORM{'component'}) {
+    DisplayError("You must choose a component that corresponds to this bug.
+                  If necessary, just guess.");
+    exit;                  
 }
 
 if (!defined $::FORM{'short_desc'} || trim($::FORM{'short_desc'}) eq "") {
-    PuntTryAgain("You must enter a summary for this bug.");
+    DisplayError("You must enter a summary for this bug.");
+    exit;
 }
 
+# If bug_file_loc is "http://", the default, strip it out and use an empty
+# value. 
+$::FORM{'bug_file_loc'} = "" if $::FORM{'bug_file_loc'} eq 'http://';
+    
+my $sql_product = SqlQuote($::FORM{'product'});
+my $sql_component = SqlQuote($::FORM{'component'});
+
+# Default assignee is the component owner.
 if ($::FORM{'assigned_to'} eq "") {
-    SendSQL("select initialowner from components where program=" .
-            SqlQuote($::FORM{'product'}) .
-            " and value=" . SqlQuote($::FORM{'component'}));
+    SendSQL("SELECT initialowner FROM components " .
+            "WHERE program=$sql_product AND value=$sql_component");
     $::FORM{'assigned_to'} = FetchOneColumn();
 } else {
-    $::FORM{'assigned_to'} = DBNameToIdAndCheck($::FORM{'assigned_to'});
+    $::FORM{'assigned_to'} = DBNameToIdAndCheck(trim($::FORM{'assigned_to'}));
 }
 
-$::FORM{'reporter'} = DBNameToIdAndCheck($::FORM{'reporter'});
-
-
-my @bug_fields = ("reporter", "product", "version", "rep_platform",
+my @bug_fields = ("product", "version", "rep_platform",
                   "bug_severity", "priority", "op_sys", "assigned_to",
                   "bug_status", "bug_file_loc", "short_desc", "component",
                   "target_milestone");
 
 if (Param("useqacontact")) {
-    SendSQL("select initialqacontact from components where program=" .
-            SqlQuote($::FORM{'product'}) .
-            " and value=" . SqlQuote($::FORM{'component'}));
-    my $qacontact = FetchOneColumn();
-    if (defined $qacontact && $qacontact != 0) {
-        $::FORM{'qa_contact'} = $qacontact;
+    SendSQL("SELECT initialqacontact FROM components " .
+            "WHERE program=$sql_product AND value=$sql_component");
+    my $qa_contact = FetchOneColumn();
+    if (defined $qa_contact && $qa_contact != 0) {
+        $::FORM{'qa_contact'} = $qa_contact;
         push(@bug_fields, "qa_contact");
     }
 }
 
 if (exists $::FORM{'bug_status'}) {
-    if (!UserInGroup("canedit") && !UserInGroup("canconfirm")) {
+    # Ignore the given status, so that we can set it to UNCONFIRMED
+    # or NEW, depending on votestoconfirm if either the given state was
+    # unconfirmed (so that a user can't override the below check), or if
+    # the user doesn't have permission to change the default status anyway
+    if ($::FORM{'bug_status'} eq $::unconfirmedstate
+        || (!UserInGroup("canedit") && !UserInGroup("canconfirm"))) {
         delete $::FORM{'bug_status'};
     }
 }
 
 if (!exists $::FORM{'bug_status'}) {
     $::FORM{'bug_status'} = $::unconfirmedstate;
-    SendSQL("SELECT votestoconfirm FROM products WHERE product = " .
-            SqlQuote($::FORM{'product'}));
+    SendSQL("SELECT votestoconfirm FROM products WHERE product=$sql_product");
     if (!FetchOneColumn()) {
         $::FORM{'bug_status'} = "NEW";
     }
 }
 
 if (!exists $::FORM{'target_milestone'}) {
-    SendSQL("SELECT defaultmilestone FROM products " .
-            "WHERE product = " . SqlQuote($::FORM{'product'}));
+    SendSQL("SELECT defaultmilestone FROM products WHERE product=$sql_product");
     $::FORM{'target_milestone'} = FetchOneColumn();
 }
 
-if ( Param("strictvaluechecks") ) {
-    GetVersionTable();  
-    CheckFormField(\%::FORM, 'reporter');
-    CheckFormField(\%::FORM, 'product', \@::legal_product);
-    CheckFormField(\%::FORM, 'version', \@{$::versions{$::FORM{'product'}}});
-    CheckFormField(\%::FORM, 'target_milestone',
-                   \@{$::target_milestone{$::FORM{'product'}}});
-    CheckFormField(\%::FORM, 'rep_platform', \@::legal_platform);
-    CheckFormField(\%::FORM, 'bug_severity', \@::legal_severity);
-    CheckFormField(\%::FORM, 'priority', \@::legal_priority);
-    CheckFormField(\%::FORM, 'op_sys', \@::legal_opsys);
-    CheckFormFieldDefined(\%::FORM, 'assigned_to');
-    CheckFormField(\%::FORM, 'bug_status', \@::legal_bug_status);
-    CheckFormFieldDefined(\%::FORM, 'bug_file_loc');
-    CheckFormField(\%::FORM, 'component', 
-                   \@{$::components{$::FORM{'product'}}});
-    CheckFormFieldDefined(\%::FORM, 'comment');
+if (!Param('letsubmitterchoosepriority')) {
+    $::FORM{'priority'} = Param('defaultpriority');
 }
 
+GetVersionTable();
+
+# Some more sanity checking
+CheckFormField(\%::FORM, 'product',      \@::legal_product);
+CheckFormField(\%::FORM, 'rep_platform', \@::legal_platform);
+CheckFormField(\%::FORM, 'bug_severity', \@::legal_severity);
+CheckFormField(\%::FORM, 'priority',     \@::legal_priority);
+CheckFormField(\%::FORM, 'op_sys',       \@::legal_opsys);
+CheckFormField(\%::FORM, 'bug_status',   [$::unconfirmedstate, 'NEW']);
+CheckFormField(\%::FORM, 'version',          $::versions{$product});
+CheckFormField(\%::FORM, 'component',        $::components{$product});
+CheckFormField(\%::FORM, 'target_milestone', $::target_milestone{$product});
+CheckFormFieldDefined(\%::FORM, 'assigned_to');
+CheckFormFieldDefined(\%::FORM, 'bug_file_loc');
+CheckFormFieldDefined(\%::FORM, 'comment');
+
 my @used_fields;
-foreach my $f (@bug_fields) {
-    if (exists $::FORM{$f}) {
-        push (@used_fields, $f);
+foreach my $field (@bug_fields) {
+    if (exists $::FORM{$field}) {
+        push (@used_fields, $field);
     }
 }
-if (exists $::FORM{'bug_status'} && $::FORM{'bug_status'} ne $::unconfirmedstate) {
+
+if (exists $::FORM{'bug_status'} 
+    && $::FORM{'bug_status'} ne $::unconfirmedstate) 
+{
     push(@used_fields, "everconfirmed");
     $::FORM{'everconfirmed'} = 1;
 }
 
-my $query = "INSERT INTO bugs (\n" . join(",\n", @used_fields) . ",
-creation_ts, groupset)
-VALUES (
-";
+my %ccids;
+my @cc;
 
-foreach my $field (@used_fields) {
-# fix for 42609. if there is a http:// only in bug_file_loc, strip
-# it out and send an empty value. 
-    if ($field eq 'bug_file_loc') {
-       if ($::FORM{$field} eq 'http://') {
-           $::FORM{$field} = "";
-           $query .= SqlQuote($::FORM{$field}) . ",\n";
-           next;
-       } 
-       else {
-          $query .= SqlQuote($::FORM{$field}) . ",\n";
-       }
-    }
-    else {
-       $query .= SqlQuote($::FORM{$field}) . ",\n";
+# Create the ccid hash for inserting into the db
+# and the list for passing to processmail
+# use a hash rather than a list to avoid adding users twice
+if (defined $::FORM{'cc'}) {
+    foreach my $person (split(/[ ,]/, $::FORM{'cc'})) {
+        if ($person ne "") {
+            my $ccid = DBNameToIdAndCheck($person);
+            if ($ccid && !$ccids{$ccid}) {
+                $ccids{$ccid} = 1;
+                push(@cc, $person);
+            }
+        }
     }
 }
 
-my $comment = $::FORM{'comment'};
-$comment =~ s/\r\n/\n/g;     # Get rid of windows-style line endings.
-$comment =~ s/\r/\n/g;       # Get rid of mac-style line endings.
+# Build up SQL string to add bug.
+my $sql = "INSERT INTO bugs " . 
+  "(" . join(",", @used_fields) . ", reporter, creation_ts, groupset) " . 
+  "VALUES (";
+
+foreach my $field (@used_fields) {
+    $sql .= SqlQuote($::FORM{$field}) . ",";
+}
+
+$comment =~ s/\r\n?/\n/g;     # Get rid of \r.
 $comment = trim($comment);
-# If comment is all whitespace, it'll be null at this point.  That's
+# If comment is all whitespace, it'll be null at this point. That's
 # OK except for the fact that it causes e-mail to be suppressed.
 $comment = $comment ? $comment : " ";
 
-$query .= "now(), (0";
+$sql .= "$::userid, now(), (0";
 
+# Groups
 foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
     if ($::FORM{$b}) {
         my $v = substr($b, 4);
         $v =~ /^(\d+)$/
-          || PuntTryAgain("One of the group bits submitted was invalid.");
+          || ThrowCodeError("One of the group bits submitted was invalid.",
+                                                                undef, "abort");
         if (!GroupIsActive($v)) {
             # Prevent the user from adding the bug to an inactive group.
             # Should only happen if there is a bug in Bugzilla or the user
             # hacked the "enter bug" form since otherwise the UI 
             # for adding the bug to the group won't appear on that form.
-            PuntTryAgain("You can't add this bug to the inactive group " . 
-                         "identified by the bit '$v'. This shouldn't happen, " . 
-                         "so it may indicate a bug in Bugzilla.");
+            ThrowCodeError("Attempted to add bug to an inactive group, " . 
+                           "identified by the bit '$v'.", undef, "abort");
         }
-        $query .= " + $v";    # Carefully written so that the math is
-                                # done by MySQL, which can handle 64-bit math,
-                                # and not by Perl, which I *think* can not.
+        $sql .= " + $v";    # Carefully written so that the math is
+                            # done by MySQL, which can handle 64-bit math,
+                            # and not by Perl, which I *think* can not.
     }
 }
 
+$sql .= ") & $::usergroupset)\n";
 
+# Lock tables before inserting records for the new bug into the database
+# if we are using a shadow database to prevent shadow database corruption
+# when two bugs get created at the same time.
+SendSQL("LOCK TABLES bugs WRITE, longdescs WRITE, cc WRITE, profiles READ") if Param("shadowdb");
 
-$query .= ") & $::usergroupset)\n";
+# Add the bug report to the DB.
+SendSQL($sql);
 
-
-my %ccids;
-
-
-if (defined $::FORM{'cc'}) {
-    foreach my $person (split(/[ ,]/, $::FORM{'cc'})) {
-        if ($person ne "") {
-            $ccids{DBNameToIdAndCheck($person)} = 1;
-        }
-    }
-}
-
-
-# print "<PRE>$query</PRE>\n";
-
-SendSQL($query);
-
+# Get the bug ID back.
 SendSQL("select LAST_INSERT_ID()");
 my $id = FetchOneColumn();
 
-SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) VALUES " .
-        "($id, $::FORM{'reporter'}, now(), " . SqlQuote($comment) . ")");
+# Add the comment
+SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) 
+         VALUES ($id, $::userid, now(), " . SqlQuote($comment) . ")");
 
-foreach my $person (keys %ccids) {
-    SendSQL("insert into cc (bug_id, who) values ($id, $person)");
+# Insert the cclist into the database
+foreach my $ccid (keys(%ccids)) {
+    SendSQL("INSERT INTO cc (bug_id, who) VALUES ($id, $ccid)");
 }
 
-print "<TABLE BORDER=1><TD><H2>Bug $id posted</H2>\n";
-system("./processmail", $id, $::COOKIE{'Bugzilla_login'});
-print "<TD><A HREF=\"show_bug.cgi?id=$id\">Back To BUG# $id</A></TABLE>\n";
+SendSQL("UNLOCK TABLES") if Param("shadowdb");
 
-print "<BR><A HREF=\"createattachment.cgi?id=$id\">Attach a file to this bug</a>\n";
+# Assemble the -force* strings so this counts as "Added to this capacity"
+my @ARGLIST = ();
+if (@cc) {
+    push (@ARGLIST, "-forcecc", join(",", @cc));
+}
 
-navigation_header();
+push (@ARGLIST, "-forceowner", DBID_to_name($::FORM{assigned_to}));
 
-PutFooter();
-exit;
+if (defined $::FORM{'qa_contact'}) {
+    push (@ARGLIST, "-forceqacontact", DBID_to_name($::FORM{'qa_contact'}));
+}
+
+push (@ARGLIST, "-forcereporter", DBID_to_name($::userid));
+
+push (@ARGLIST, $id, $::COOKIE{'Bugzilla_login'});
+
+# Send mail to let people know the bug has been created.
+# See attachment.cgi for explanation of why it's done this way.
+my $mailresults = '';
+open(PMAIL, "-|") or exec('./processmail', @ARGLIST);
+$mailresults .= $_ while <PMAIL>;
+close(PMAIL);
+
+# Tell the user all about it
+$vars->{'id'} = $id;
+$vars->{'mail'} = $mailresults;
+$vars->{'type'} = "created";
+
+print "Content-type: text/html\n\n";
+$template->process("bug/create/created.html.tmpl", $vars)
+  || ThrowTemplateError($template->error());
+
+$::FORM{'id'} = $id;
+
+show_bug("header is already done");
