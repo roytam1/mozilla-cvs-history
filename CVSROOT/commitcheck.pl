@@ -40,6 +40,9 @@ if ($b eq 'ColorSync_19980824_BRANCH') {
 if ($b eq 'HEAD') {
 if (m:^CVSROOT/commitcheck\.pl$:) {return '3';}
 if (m:^CVSROOT/passwd$:) {return '3';}
+if (m:^jpeg/.*$:) {return '12';}
+if (m:^mozilla/[^/]*$:) {return '19';}
+if (m:^mozilla/cmd/gnomefe/.*$:) {return '21';}
 if (m:^nsprpub/.*$:) {return '24';}
 }
 return '';
