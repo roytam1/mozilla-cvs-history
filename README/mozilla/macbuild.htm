@@ -1,0 +1,916 @@
+<HTML>
+<!--This file created 4/2/98 12:32 PM by Claris Home Page version 3.0 30 Day Trial-->
+<HEAD>
+   <TITLE>MacFE Issues</TITLE>
+   <META NAME=GENERATOR CONTENT="Claris Home Page 3.0 30 Day Trial">
+   <X-CLARIS-WINDOW TOP=43 BOTTOM=741 LEFT=5 RIGHT=661>
+   <X-CLARIS-REMOTESAVE SERVER=pinkerton USER=root DIR="/NextLibrary/WebServer/Documents/" FILE="">
+   <X-CLARIS-TAGVIEW MODE=minimal>
+<META http-equiv="Content-Type" content="text/html; charset=MacRoman"><!--This file created 3/17/98 9:38 PM by Claris Home Page version 3.0 30 Day Trial-->
+</HEAD>
+<BODY BGCOLOR="#FFFFFF">
+<H1>MacFE Issues</H1>
+
+<P>A general document on how to build, what works, what doesn't, and
+things to watch out for when working on the Mac client. <B>Please
+read the entire document before you start tinkering</B>...heck, you
+may just learn something!</P>
+
+<P>Abbreviations you will probably see in this document:</P>
+
+<UL>
+   <LI><B>MacFE</B> - the Macintosh front end, including all the
+   things you see and some you don't.</LI>
+   
+   <LI><B>XP</B> - cross platform back end code, mostly written in C.
+   You will see this used like, "This is an XP problem" which means
+   it's broken everywhere.</LI>
+   
+   <LI><B>MW</B> - Metrowerks Corporation. They make our build tools
+   (CodeWarrior) and PowerPlant</LI>
+   
+   <LI><B>PP</B> - PowerPlant, the GUI framework on which our app is
+   built</LI>
+   
+   <LI><B>CWProX</B> - CodeWarrior Pro version X. You'll probably see
+   CWPro1, CWPro2, and CWPro3. We may also just refer to this as
+   <B>CW</B>.</LI>
+   
+   <LI><B>IDE</B> - Integrated Development Environment. CodeWarrior
+   is an IDE.</LI>
+   
+   <LI><B>NC</B> - the working name for our Aurora technology, the
+   Navigation Center.</LI>
+   
+   <LI><B>HT</B> - HyperTree, a layer of XP APIs over RDF on which
+   the NavCenter is built.</LI>
+</UL>
+
+<H3><A HREF="#Building">Building</A></H3>
+
+<H3><A HREF="#NewFeatures">New 5.0 Features</A></H3>
+
+<H3><A HREF="#Unfinished">Unfinished Features</A></H3>
+
+<H3><A HREF="#Pitfalls">Pitfalls</A></H3>
+
+<H3><A HREF="#HistFuture">History and Future</A></H3>
+
+<P>Help for parts of this document, especially build instructions,
+was received from Dan Kogai.</P>
+
+<H2>
+
+<HR>
+
+<A NAME=Building></A>Building</H2>
+
+<H4>What are the minimum machine requirements?</H4>
+
+<P>To build Navigator, you need a fast PPC Mac. The faster the
+better. You can't build with a 68K machine because we have too many
+resources, and the build process will crash when trying to generate
+resources out of our cross-platform strings. See the discussion below
+for a way around this.</P>
+
+<P>You will need about 96 MB of physical RAM to "fast link" the app.
+You can still fast link if you give your machine 96 MB of virtual
+memory, but then the VM hit is large enough to counteract any
+improvement. One of our beta testers had a machine with only 64MB of
+physical RAM (VM was off) and it ran out of memory trying to link.
+Turning VM on got it to link, but build time increased greatly.</P>
+
+<P>Reports from the net indicate that the optimized version
+(MozillaPPC) take much less RAM to build than the 96MB we suggest. If
+you are running out of memory, try building that instead of the debug
+version (the debug symbols require a lot of RAM come link time).</P>
+
+<P>The moral of the story: get lots of physical RAM and don't use
+VM.</P>
+
+<H4>How big of a partition do I need for the source?</H4>
+
+<P>You should be ok with a 400MB disk partition, even when fully
+built. This does not include tools like the IDE, just source.</P>
+
+<P>On an HFS+ volume, a full build takes about 110MB. HFS+ is good,
+but utilities are sparse.</P>
+
+<H4>Why do I need CWPro2 or better?</H4>
+
+<P>We use CodeWarrior as our development environment at Netscape for
+the MacFE. All of the projects and tools are geared towards the
+CodeWarrior IDE. In addition, we make heavy use of PowerPlant and MSL
+which you can only get from Metrowerks.</P>
+
+<P>While we say you need at least CWPro2, you may be able to get by
+with Pro1, but probably not for very long. We haven't tested it, so
+we don't recommend it. Get the upgrade. CodeWarrior kicks serious
+butt!</P>
+
+<H4>How do I setup my development environment?</H4>
+
+<P>This part is very important--and somewhat difficult (especially
+when compared to other platforms). I repeat: Read very carefully!
+Once this part is done right, the build process itself should be as
+easy as drag and drop. </P>
+
+<P>Here's a list of 3rd party <B>software</B> that we compile into
+the application and where to get it:</P>
+
+<UL>
+   <LI>PowerPlant 1.8 - obtainable from the CodeWarrior CD.</LI>
+   
+   <LI>MSL - the Metrowerks Standard Library, obtainable from the
+   CodeWarrior CD</LI>
+   
+   <LI><A HREF="ftp://ftp.boingo.com//dan/WASTE/waste-13.hqx">WASTE
+   1.3</A></LI>
+   
+   <LI><A HREF="http://www.bact.wisc.edu/CWASTEEdit/CWASTEEdit.sit.hqx">CWASTE
+   1.6.2</A></LI>
+   
+   <LI><A HREF="ftp://ftp.scripting.com/userland/menuSharingToolkit4.1.sit.hqx">Menu
+   Sharing Toolkit</A> (from UserLand)</LI>
+   
+   <LI><A HREF="ftp://ftp.digitalalchemy.com/pub/digitalalchemy/mercutio-SDK.sit.bin">Mercutio
+   1.5 SDK</A> (only download the SDK, not the entire package, else
+   the access paths will be wrong)</LI>
+   
+   <LI><A HREF="ftp://ftp.share.com/pub/internet-configuration/ICProgKit1.4.sit">Internet
+   Config 1.4 SDK</A></LI>
+   
+   <LI><A HREF="http://www.mooseyard.com/Jens/Software/">AEGizmos
+   1.4.2</A></LI>
+</UL>
+
+<P>Here's a list of other build <B>tools</B> that you need to install
+in order to build and where to get them:</P>
+
+<UL>
+   <LI><A HREF="ftp://sunsite.cnlab-switch.ch/software/platform/macos/perl/Mac_Perl_520r4_tool.bin">MacPerl
+   5 MPW Tool</A></LI>
+   
+   <LI><A HREF="ftp://sunsite.cnlab-switch.ch/software/platform/macos/perl/Mac_Perl_520r4_appl.bin">MacPerl 5 Application</A></LI>
+   <LI>MakeStub - MPW (installed with CodeWarrior Heaven option). If
+   you choose not to install MPW, it is located on the MacOS Tools CD
+   in "CW Pro 2 Tools:CodeWarrior MPW:MPW:Tools"</LI>
+   
+   <LI>RunTSScript - in Mozilla source distribution
+   (mozilla:build:mac:RunTSScript), needs to be installed by hand</LI>
+   
+   <LI><A HREF="ftp://dev.apple.com/devworld/Tool_Chest/Core_Mac_OS_Tools/MPW_etc./MPW-GM/MPW/ToolServer.sit.hqx">ToolServer</A>
+   - or in the CW distribution (CW Pro 2 Tools:Apple Development
+   Tools:ToolServer 3.4.1.sit). <B>We recommend pulling it off the
+   CD</B> because it comes with configuration files for CodeWarrior
+   which you would have to create manually were you to pull it off
+   the net.</LI>
+
+   <LI><A HREF="http://people.netscape.com/sfraser/software/NewAlias_tool.sit.hqx">New Alias MPW Tool</A>
+   An MPW tool that creates Finder aliases for files.
+   </LI>
+
+   <LI>StreamEdit MPW Tool - MPW (installed with CodeWarrior Heaven option). If
+   you choose not to install MPW, it is located on the MacOS Tools CD
+   in "CW Pro 2 Tools:CodeWarrior MPW:MPW:Tools"</LI>
+   </LI>
+   
+   <LI><A HREF="ftp://dev.apple.com/devworld/Periodicals/develop/develop25/develop_Issue_25_code/ToolFrontEnd.sit.hqx">ToolFrontEnd</A></LI>
+   
+   <LI><A HREF="http://sunsite.cnlab-switch.ch/ftp/software/platform/macos/src/HTML/MPW_C.html">patch
+   2.1</A></LI>
+</UL>
+
+<P>Once you have all the pieces, here are the steps required to put
+everything together:</P>
+
+<OL>
+   <LI>Install CodeWarrior from the CD. While it is large, installing
+   the "CodeWarrior Heaven" option will guarantee that you have
+   everything you need. This will give you PowerPlant, MSL, and MPW.
+   If you choose to install less, proceed at your own risk.</LI>
+   
+   <LI>In the Finder, increase the memory partition of the IDE to
+   15MB (you can get by with 12, if need be).</LI>
+   
+   <LI>Download ToolFrontEnd. After expanding it, in "ToolFrontEnd
+   Folder:Drop-Ins" there are three items:
+   
+   <UL>
+      <LI><I>#include</I></LI>
+      
+      <LI><I>ToolFrontEnd</I></LI>
+      
+      <LI><I>ToolFrontEnd Panel</I></LI>
+   </UL>
+   
+   <P>Create a folder named "Include Scanners". Place the file
+   "#include" into the Include Scanners folder. Move the Include
+   Scanners folder to the CodeWarrior Plugins folder. Create a folder
+   named "ToolFrontEnd". Place the files "ToolFrontEnd" and
+   "ToolFrontEnd Panel" into the ToolFrontEnd folder. Place this
+   folder in the CodeWarrior Plugins folder.</P></LI>
+   
+   <LI>Open "ToolFrontEnd Panel" with ResEdit. Change the file type
+   from <B>'Panl'</B> to <B>'PanL'</B>. Save.</LI>
+   
+   <LI>Uncompress the StuffIt Archive for ToolServer. The goal is to
+   let ToolServer and MPW share the same Tools directory so you don't
+   need to have multiple versions of tools. Do the following:
+   
+   <OL>
+      <LI>Open ToolServer's Tools folder. There is one file called
+      "RMetrowerks". </LI>
+      
+      <LI>Move RMetrowerks to Tools folder of MPW. MPW folder must be
+      at "Metrowerks:Codewarrior MPW:MPW" if you installed
+      Codewarrior Heaven. </LI>
+      
+      <LI>Remove ToolServer's Tools folder.</LI>
+      
+      <LI>Now create an alias of Tools folder in "CodeWarrior MPW"
+      and move it to your ToolServer folder. Rename the alias
+      (probably called "Tools alias") to "Tools"</LI>
+      
+      <LI><FONT COLOR="#FF0000"><B>IMPORTANT</B></FONT>: Make sure
+      you only have one instance of ToolServer on your machine. If
+      the build script finds the wrong one, the correct tools will
+      not be found and strange things will happen.</LI>
+   </OL>
+   </LI>
+   
+   <LI>After installing the MacPerl MPW Tool distribution (run the
+   InstallerVISE application), in the "MacPerl &#131;" folder, there
+   will be an MPW tool named "perl". Install this in MPW's tools
+   folder.</LI>
+   
+   <LI>Install the MacPerl Application (run the
+   InstallerVISE application).  You can install this anywhere, but it is
+   recommended that you install it inside of your CodeWarrior folder for
+   easy reference. After installation, you will need to set a preference
+   to enable double-click launch of the perl scripts. This preference is set
+   by going under the Edit Menu to Preferences.  Click on the "Script" button
+   and hit the radio button "Run Scripts opened from Finder"</LI>
+   
+   <LI>Install the "patch", "MakeStub", "NewAlias" and "StreamEdit" Tools in the tools
+   folder. Note that "MakeStub" and "StreamEdit" are automatically installed by the
+   "CodeWarrior Heaven" install option.</LI>
+   
+   <LI>Install RunTSScript (found in the Mozilla source distribution)
+   in the compilers folder in your build environment
+   ("Metrowerks:Metrowerks Codewarrior:Codewarrior
+   Plugins:Compilers")</LI>
+   
+   <LI>Next, after downloading all the 3rd party software components,
+   drag WASTE, CWASTE, Menu Sharing, Mercutio, Internet Config, and
+   the AEGizmo folders (just as they are) into the "MacOS Support"
+   folder in your build environment.</LI>
+   
+   <LI>Start ToolServer from within CodeWarrior (or use MPW if you
+   are brave enough). We're about to patch some files. Make sure the
+   ToolServer menu is in the CodeWarrior menu bar by turning on the
+   <A HREF="IDEPrefs.gif">preference</A> under the "Extras" panel in
+   the IDE Preferences (not the project preferences!). The menu bar
+   should look like this:
+   
+   <P><IMG SRC="IDEMenuBar.gif" WIDTH=359 HEIGHT=20 X-CLARIS-USEIMAGEWIDTH X-CLARIS-USEIMAGEHEIGHT ALIGN=bottom></P>
+   
+   <P>Choose "Start ToolServer" from the ToolServer menu (this is the
+   icon menu between "Window" and "Help" in the menubar above). You
+   will now see a window with no close box. This is your ToolServer
+   Worksheet where you will type (or cut &amp; paste) the commands
+   for the following steps.</P>
+   
+   <P>In case you have never used MPW/ToolServer before, the
+   following is <B>very important</B>. Pressing "return" does not
+   execute commands like you might think. It just inserts a newline
+   into the worksheet like a normal text editor. <B>To actually get
+   ToolServer to execute the command, you must press "Enter" (lower
+   right of numeric keypad).</B> This executes the line that the
+   cursor is on, and only that line. If you want to execute multiple
+   lines at once, select them all and hit Enter.</P></LI>
+   
+   <LI>Set the shell variables {IDE} and {Source} to the correct
+   paths for your build environment. {IDE} is where your CodeWarrior
+   IDE is located. {Source} is the folder containing the toplevel
+   "ns" folder of the Mozilla source. Mine look like this (don't
+   forget to keep the quotes if your path includes spaces), yours
+   will almost certainly be different (<FONT COLOR="#FF0000">to
+   punctuate this, the things you need to change are in red</FONT>).
+   
+   <PRE>Set IDE "<FONT COLOR="#FF0000">Develop:Source331 Build Environment:CW Pro 2:Metrowerks CodeWarrior:</FONT>"
+Set Source "<FONT COLOR="#FF0000">Source:FreeSource:</FONT>"</PRE></LI>
+   
+   <LI>If you are using CWPro2, execute the following lines to patch
+   LDropFlag to draw correcly over non-white backgrounds. <B>You do
+   not have to do this if you are using Pro3</B> because it has been
+   fixed.
+   
+   <PRE>directory "{IDE}MacOS Support:PowerPlant:_In Progress:_Table Classes:"
+patch LDropFlag.cp "{Source}mozilla:lib:mac:patches:LDropFlag.patch"
+duplicate -y "{Source}mozilla:lib:mac:patches:DropFlag Icons.rsrc" "{IDE}MacOS Support:PowerPlant:PowerPlant Resources:"</PRE></LI>
+   
+   <LI>Execute the following lines to patch menusharing.c to allow it
+   to compile with the new Universal Headers. It references an
+   obsolete header file (GestaltEqu.h).
+   
+   <PRE>directory "{IDE}MacOS Support:Menu Sharing Toolkit 4.1:"
+patch menusharing.c "{Source}mozilla:lib:mac:patches:menusharing.patch"</PRE></LI>
+   
+   <LI>If you are using CWPro2 straight off the CD, you need to patch
+   AppleEvents.r to fix a problem with the Universal Headers (the
+   definition of the 'aedt' resource was omitted). <B>You do not have
+   to do this if you have applied the netborne patch to Pro2 or are
+   using Pro3</B> because it has been fixed.
+   
+   <PRE>directory "{IDE}MacOS Support:Headers:Rez Headers:"
+patch AppleEvents.r "{Source}mozilla:lib:mac:patches:AppleEvents.r.patch"</PRE></LI>
+   
+   <LI>You need to patch stat.mac.h to fix a problem in MSL where
+   lines were omitted (both CWPro2 and Pro3 share this problem)
+   
+   <PRE>directory "{IDE}Metrowerks Standard Library:MSL C:MSL Mac:Public Includes"
+patch stat.mac.h "{Source}mozilla:lib:mac:patches:stat.mac.h.patch"</PRE></LI>
+   
+   <LI>If you are using CWPro3, you have to unstuff and copy the old
+   Grayscale Appearance classes into the PowerPlant hierarchy. As of
+   Pro3, they are now obsolete and are located with the rest of the
+   obsolete PowerPlant files. We'll fix this shortly.</LI>
+   
+   <LI>Congratulations! Now you are ready to build. Once these steps
+   are done, you don't have to repeat these setups the next
+   time!</LI>
+</OL>
+
+<H4>Ok, so how do I build?</H4>
+<P>In the folder mozilla:build:mac:, there are several Perl scripts with
+names of the form BuildMozillaXXX.pl, where XXX is "Optimized",
+"Debug", "Tinderbox", et al.  Each script builds the corresponding
+version of Mozilla.  If you configured the MacPerl application to
+execute scripts that are opened from the finder, all you have to do is
+double click on the appropriate one; otherwise, launch MacPerl, and
+run the appropriate script from the "Run Script..." menu item.</P>
+
+<P>These `configured build' scripts are simple, and you might want to
+make your own to force your build to StopForErrors(), or alternatively
+DontStopForErrors(), et al.  You can set up certain build-script
+variables and (soon) compile-time flags.  Compare the supplied scripts
+to figure out what you might want.  Note that CodeWarriorLib, Moz.pm,
+and BuildList.pm, are AppleScript libraries and Perl modules meant to
+be used by a `configured build'.  Use your favorite POD viewer (Shuck
+comes with MacPerl) to view the documentation in the Perl scripts.</P>
+
+<P>If there were any errors in any of the projects along the way, the
+script will stop at that point and the IDE will tell you the errors.
+You can fix them and make sure they current project builds, but to
+continue the automation, you have to start from the beginning by
+double-clicking the script again. This isn't quite as bad as it
+sounds because the previous projects are already built (unless you
+changed some major header file). Please note that stopping the script
+once it has started is difficult. We are working to address
+this issue.</P>
+
+<P>After the build is complete, you can find aliases to the built libraries
+and the final Mozilla application. Debug builds are built to
+Mozilla:dist:client_debug, while optimized builds are built to Mozilla:dist:client.
+</P>
+
+<P>Don't worry too much about the numerous warnings generated during
+the build. We try our best to get the XP teams to use real compilers,
+but alas, they continue to write warning-laden code. There is also
+some generated code (Java is one example) that has a lot of warnings
+that we can't help either. If you write any new code, please help us
+in our quest to get zero warnings.</P>
+
+<H4>How long does it take to build?</H4>
+
+<P>On a G3 with the source and IDE on a RAM disk, it takes about 25
+minutes. On a PowerTowerPro 225 and everything on the hard drive, it
+takes about 45mins to an hour. On a 9500/132 it takes over 2 1/2
+hours.</P>
+
+<P>The moral of the story: Don't try this on your 6100/66.</P>
+
+<P>From Dan Kogai:</P>
+
+<BLOCKQUOTE>It took me 70 minutes to build Mozilla Debug with
+   configurations below;
+   
+   <P>PowerMac 7600/120<BR>
+   192MB RAM (No VM)<BR>
+   1 + 4 GB HD (No RAM Disk)<BR>
+   MacOS 8.1<BR>
+   CWPro2<BR>
+   HFS+ </P></BLOCKQUOTE>
+
+<H4>What's special about running the debug build?</H4>
+
+<P>Running the optimized (non-debug) version is easy, just
+double-click it and it will work. This is because all the shared
+libraries are compiled directly into the application. We don't do
+this with the debug version to facilitate changing bits in projects
+other than the main one. This way, you don't have to relink the
+entire app (which can take a while) to see the changes, just the
+project that was modified.</P>
+
+<P>As a result, you have to find a way to get all the shared
+libraries from where they are built (scattered throughout the tree)
+into the same folder as the app so CFM can find them. Luckily, the
+BuildList script will create all these aliases for you and put them
+in the right places!</P>
+
+<P>Another nicety about the debug build is that there is a special
+"trace" function which can be used to display messages about the
+state of the application as it runs through certain blocks of code.
+To see these messages (since the Mac doesn't have stdout or stderr)
+you need to run an application called TraceMonitor. TraceMonitor is
+available through Apple Computer with the ASLM package.
+</P>
+
+<H4>How do I build a 68K version?</H4>
+
+<P>For now, you can't. The projects have not been kept up to date and
+aren't even in the tree anymore. If you would like to create them and
+get all the exports right with CFM-68K, go right ahead. We will be so
+happy!</P>
+
+<H4>Why use IDE_Options.h when all that is in the project file?</H4>
+
+<P>It was originally intended to make sure that all 300 of us at
+Netscape are using the same environment and compilation flags. If
+something gets turned on/off by accident in the project prefs, it can
+introduce a subtle bug that can take days to track down for naught.
+Having a file that specifies exactly what flags should be used
+guarantees that this can't happen.</P>
+
+<P>Now that we move to net development, I'm sure you will agree that
+this is even more important.</P>
+
+<H2>
+
+<HR>
+
+<A NAME=NewFeatures></A>New 5.0 Features</H2>
+
+<H3>Navigator Center (Aurora)</H3>
+
+<P>The Navigation Center (referred to as "Aurora" in press releases)
+is an attempt to make it easier to access and organize information on
+the web. The NC unifies Bookmarks, History, Search, and local files
+into a sequence of workspaces which are accessible from a single
+location in the browser window. One of the ways the NavCenter
+diverges from a similar concept seen from our competition is the
+ability for users to create their own workspaces to organize and
+store information from both the web and their desktop.</P>
+
+<UL>
+   <LI>Main access point is a bar along the left side of the
+   browser.</LI>
+   
+   <LI>Each icon represents a workspace. <B>Click any workspace icon
+   once to slide out a hierarchical tree</B> (like the list view in
+   the Finder) that displays the information appropriate to that
+   workspace. You can manipulate the URLs and folders in the tree
+   while you are surfing the web in the adjacent pane.</LI>
+   
+   <LI>Clicking on another workspace while the shelf is open switches
+   to showing the contents of that workspace.</LI>
+   
+   <LI><B>To hide the shelf, click the close box above the column
+   headers</B></LI>
+   
+   <LI>To create new bookmarks, <B>drag bookmarks from the location
+   bar of the browser into the NC</B> and file them where you want.
+   Of course, the old methods still work.
+   
+   <UL>
+      <LI>If the NC shelf is not open, drag to the workspace where
+      you want to file the bookmark and after a small delay, the
+      <B>shelf will spring open</B>. You can now drop your new
+      bookmark exactly where you want.</LI>
+      
+      <LI>If the workspace you want is not displayed, drag over that
+      workspace and after a small delay, the contents of that
+      workspace will become visible.</LI>
+   </UL>
+   </LI>
+   
+   <LI>You can also <B>open a stand-alone NC window</B> from the
+   Communicator menu. The standard "cmd-b" and "cmd-h" for bookmarks
+   and history are wired to open a new NC window with the appropriate
+   workspace visible.</LI>
+   
+   <LI>You can <B>hide the list of workspaces</B> at the left of the
+   browser window by choosing "View:Hide NavCenter Selector". You can
+   show it again by doing the same thing. Even when hidden in the
+   browser, the stand-alone versions are always available.</LI>
+   
+   <LI>Drag bookmarks to the trash to delete them. You can also hit
+   the "delete" key (backspace) to remove bookmarks.</LI>
+   
+   <LI>The NavCenter is fully <B>context-menu savvy</B>. There are
+   many commands that are in context menus that are not in the main
+   menubar (right now).</LI>
+   
+   <LI><B>ToolTip savvy</B>. Both the title and URL can be seen in
+   their entirety by hovering over the appropriate column.</LI>
+   
+   <LI>3-state <B>sorting: alphabetical, reverse-alphabetical,
+   none</B>. Like in the Finder, setting a sort does not change the
+   hierarchy or make any permanent modifications to your
+   organizational structure.</LI>
+</UL>
+
+<H3>Personal Toolbar</H3>
+
+<UL>
+   <LI>A toolbar to store bookmarks, first seen on Win/UNIX in 4.0.
+   Single click to load URL in current browser window</LI>
+   
+   <LI><B>Drag and drop bookmarks to the toolbar to add them.</B>
+   Drag existing bookmarks on the toolbar to rearrange the order.
+   Drag bookmarks to the trash can to remove them from the
+   toolbar.</LI>
+   
+   <LI><B>Dynamically allocates horizontal space</B> to buttons on
+   toolbar. Adding new buttons shrinks existing ones, removing
+   buttons distributes the vacated space to existing buttons.
+   Changing the window width reallocates space accordingly.</LI>
+   
+   <LI>You can further manipulate, rename, rearrange, add to and
+   remove the URLs in the folder that represents the personal toolbar
+   in the Navigation Center.</LI>
+   
+   <LI>ToolTips show the full title.</LI>
+</UL>
+
+<H3>Navigator</H3>
+
+<UL>
+   <LI>new "Mariner" technology makes table layout much faster and
+   does not reload the page when the window is resized.</LI>
+   
+   <LI>buttons/popup menus in the chrome now look more like MacOS
+   controls.</LI>
+</UL>
+
+<H3>Composer Features</H3>
+
+<UL>
+   <LI>Drag and Drop</LI>
+   
+   <LI>Direct manipulation editing of tables</LI>
+</UL>
+
+<H2>
+
+<HR>
+
+<A NAME=Unfinished></A>Unfinished "Features"</H2>
+
+<P>This source release is not of beta quality, hence it will have
+lots of bugs that a normal beta (or even an alpha) would not have.
+There are many features which we are not even close to being finished
+with, let alone knowing what the final UI will be. Here are some
+things that we know about but didn't have time to get to before the
+code left the building. Feel inclined to help us out?
+Grrrrrrreat!</P>
+
+<H3>Aurora</H3>
+
+<P>Aurora is definitely a work in progress. Here are the bugs that we
+just don't have time to fix</P>
+
+<UL>
+   <LI>Real icons for files on disk</LI>
+   
+   <LI>changing view from XP code (e.g., JavaScript) has not been
+   tested, but should work</LI>
+   
+   <LI>move vs. copy notification (cursor doesn't change, etc. No XP
+   support for this yet)</LI>
+   
+   <LI>double-click on the text of an item should launch the url, not
+   trigger an in-place edit</LI>
+   
+   <LI>separator needs UI consensus and its own icon</LI>
+   
+   <LI>drag &amp; drop
+   
+   <UL>
+      <LI>can't disallow drags to trash when pane is read only. Trash
+      will still highlight even though nothing will happen.</LI>
+      
+      <LI>occasional -49 error when dragging repeatedly to browser
+      window. I think the DragManager is corrupt because -49 is not a
+      drag manager error and d&amp;d doesn't work anywhere else after
+      that.</LI>
+      
+      <LI>drag feedback doesn't work correctly when view is sorted or
+      when some items are local vs. remote.</LI>
+      
+      <LI>Composer needs to correctly handle HT_Node flavor</LI>
+      
+      <LI>Sometimes things will move, other times they will copy. Its
+      an XP thing.</LI>
+   </UL>
+   </LI>
+   
+   <LI>Chrome properties not correctly respected (relies on personal
+   toolbar being hidden to hide NavCenter)</LI>
+   
+   <LI>sort state of columns not saved (nor is anything else with
+   columns)</LI>
+   
+   <LI>we shouldn't be using HT_SetNodeName(). Use HT_SetNodeData()
+   instead</LI>
+   
+   <LI>Open/Close context menu does not redraw disclosure triangle
+   after executing</LI>
+   
+   <LI>There are currently no user configurable prefs for Aurora.
+   This will change.</LI>
+   
+   <LI>You can't edit the URL field because RDF uses this as the key
+   in its database. As a result, having two bookmarks in the same
+   workspace can lead to odd behavior</LI>
+   
+   <LI>Undo/redo does not work yet (XP problem)</LI>
+   
+   <LI>Cut deletes nodes, it does not put them on a clipboard.
+   Copy/paste do nothing. This is an XP problem.</LI>
+</UL>
+
+<P>Still major work to do:</P>
+
+<UL>
+   <LI>create new workspaces with d&amp;d</LI>
+   
+   <LI>rollover feedback on selector</LI>
+   
+   <LI>sitemap notification</LI>
+   
+   <LI>scroll selector bar</LI>
+   
+   <LI>HTML pane/search pane</LI>
+   
+   <LI>spring-loaded folders on d&amp;d</LI>
+</UL>
+
+<H3>General FE Problems</H3>
+
+<UL>
+   <LI><B>DNS lookups may hang up the machine for up to a minute.
+   Don't worry, your mac did not freeze!</B></LI>
+   
+   <LI>FTP doesn't work quite right. URLs typed into the location bar
+   will not load and the MIME mappings (save to disk, etc) are broken
+   so everything is loaded into the browser window instead of saving
+   to disk.</LI>
+   
+   <LI>frame around current tab group broken</LI>
+   
+   <LI>tabbing around to text entry areas and back to the Location
+   field is broken</LI>
+   
+   <LI>can't drag from Navigator when app is in background</LI>
+   
+   <LI>Folders on personal toolbar. Sigh, unless we can rewrite the
+   bookmarks menu code, we just don't have enough hierarchical menu
+   id's to put menus on personal toolbar folders. They still act as
+   drop sites, so you can drop urls into them but clicking on them
+   will just beep.</LI>
+   
+   <LI>Printing is....sub-optimal.</LI>
+   
+   <LI>"Mariner" layout improvements are nice, but on very
+   complicated pages the machine will hang for a few seconds while it
+   is relaying out the page. This can last 4-6 seconds sometimes.
+   This really looks bad when the NavCenter shelf is sliding out
+   during a drag and drop. If you are patient enough, you will be
+   rewarded, but it is slow.</LI>
+</UL>
+
+<H2>
+
+<HR>
+
+<A NAME=Pitfalls></A>Pitfalls</H2>
+
+<P>There are a couple of pitfalls that we have to keep straight when
+it comes to editing resources.</P>
+
+<H4>Why do I keep getting messages about unknown custom types in
+Constructor?</H4>
+
+<P>For starters, make sure you have an alias to the following two
+files in your Constructor folder:</P>
+
+<UL>
+   <LI>mozilla:cmd:macfe:rsrc:CrossProduct:Mozilla_Custom_CPPbs</LI>
+   
+   <LI>mozilla:cmd:macfe:rsrc:Communicator:MailNewsCppbs.cnst</LI>
+</UL>
+
+<P>You may have to explicitly open these files up while running
+Constructor to be able to see the new types, especially for the ones
+in MailNewsCppbs.cnst. Not sure why yet.</P>
+
+<P>For editing other kinds of resources, we have a TMPL file for
+ResEdit/Resourcerer. Place these in the appropriate location for your
+resource editor</P>
+
+<UL>
+   <LI>mozilla:cmd:macfe:rsrc:CrossProduct:Mozilla_Custom_TMPLs</LI>
+   
+   <LI>mozilla:cmd:macfe:rsrc:CrossProduct:Other_Comm_TMPLS.rsrc</LI>
+</UL>
+
+<H4>Why don't my toolbar buttons work anymore in the browser
+window?</H4>
+
+<P>Because of the way we have the toolbars as CIncludeViews (which
+work in a similar way to #include in C/C++), the RidL will be messed
+up if you edit the main browser window PPob. Constructor regenerates
+this list based on all the controls that are in the view when you
+save, but because we use CIncludeView, the toolbar buttons aren't
+actually in the view so the RidL is empty. They will still show up
+when you build, but they won't do anything because they are not
+registered with the browser window. Until we fix this, just use
+Resourcer to replace the incorrectly generated one with an old
+version. The old version is about 58 bytes long and the new one is
+about 10 so you should be able to easily tell which is which.</P>
+
+<H4>Why are there so many damn resources?</H4>
+
+<P>As you may have noticed, we've got too many damn resources. Most
+of them are 'STR ' resources which are generated at build time and
+contain all of our cross-platfrom strings. We would like to generate
+these resources more intelligently (into 1/10 the number of 'STR#'
+resources maybe) but ran out of time before the source had to go out.
+Before you rush out and change it for us, <B>stop</B>! There are some
+constraints on the final solution, mostly to do with i18n and l10n
+being able to leverage existing work on older product to do new
+products. If you want to help us out with this, please send us some
+email and we can have out i18n team talk with you to make sure it
+gets done correctly!</P>
+
+<H4>Why doesn't it work better with Internet Config?</H4>
+
+<P>For starters, the main reason why we never drank the IC kool-aid
+was that there was no support for multiple profiles. Being one of the
+main features which our competition did not have, we thought this was
+pretty important. There are rumblings in the IC world that IC 2.0
+will support multiple profiles. Great! That still leaves us with the
+second reason: there are many, many, many preferences that we use
+that are not reflected in IC. As a result, we already have to
+maintain prefs for those that are not covered by IC so we can't be
+totally IC dependent.</P>
+
+<P>Of course, now that the source is free, maybe we can drive the
+direction of IC to include all of our wacky networking prefs.</P>
+
+<H4>Where are all my old 4.0X bookmarks and prefs?</H4>
+
+<P>In the process of getting the source ready for distribution, we
+removed all mentions of "Netscape" from the product. As you may know,
+the 4.0X preferences are stored in a folder called "Netscape Users."
+Well, that folder is now called "Navigator Users" and the preference
+file is now called "Navigator Preferences" instead of "Netscape
+Preferences."</P>
+
+<P>It's probably best not to use any of your old prefs at this point
+since some of them rely on security calls that are no longer in the
+free source product. After you create a new profile (and you will
+have to when you start the free source), copy your bookmarks.html
+file from your old profile into the new user profile folder and
+replace the empty one that's already there (if there is one).</P>
+
+<P><B>For your old bookmarks to be seen, you must throw away the
+"NavCntr" folder</B> created in your new profile folder. After you do
+that bookmarks will be imported into Aurora automagically. Note that
+changes that you make to your bookmarks in 5.0 will not (as of today)
+be written back to the Bookmarks.html file, but instead are stored in
+a database within the "NavCntr" folder. If anything gets corrupted in
+the NavCenter, you can always throw this folder into the trash and
+your original bookmarks will be reimported.</P>
+
+<P>Also note that these new bookmarks and preferences are totally
+separate from your 4.0X prefs.</P>
+
+<H2>
+
+<HR>
+
+<A NAME=HistFuture></A>History and Future</H2>
+
+<H3>History</H3>
+
+<P>Excuse me while I ramble...</P>
+
+<UL>
+   <LI>Built using Metrowerks PowerPlant, the client has been PPC
+   native from day one. 68K support was dropped in 5.0 due to the
+   high cost of maintenance. Any takers?</LI>
+   
+   <LI>Mail/News was added in 2.0 and Composer was added in 3.0
+   (called Navigator Gold). Both were dramatically improved with
+   4.0.</LI>
+   
+   <LI>Java came to the Mac in 3.0, even though Windoze and unix had
+   it in 2.0.</LI>
+   
+   <LI>Multi-byte language support for inline edit fields added in
+   4.0</LI>
+   
+   <LI>The preferences used to be STR# resources. Now they are done
+   in javascript.</LI>
+   
+   <LI>Because of the sheer number of resources (and the "theoretical
+   limit" on the number of resources in a file imposed by the
+   Resource manager -- which we still exceed on a daily basis), a
+   number of strings and icons were moved out of the main application
+   and into a file called "Netscape Resources" in 4.0</LI>
+   
+   <LI>For plain-text email/form composition, we used VText up
+   through 4.0. For 5.0, we switched to WASTE because of its minimal
+   impact on the PowerPlant hierarchy. VText caused us fits every
+   time we wanted to upgrade to a newer version of PowerPlant because
+   it wrapped its tentacles around every limb of PowerPlant.</LI>
+   
+   <LI>4.0 included a new memory management scheme which drastically
+   reduced the amount of memory used by the client. This is why the
+   memory partition of 4.0 is about half of 3.0.</LI>
+   
+   <LI>A version of Navigator sans Mail/News/Composer debuted with
+   4.03, and again two days later with 4.03.1.</LI>
+</UL>
+
+<H3>Future</H3>
+
+<P>There is certainly a lot to do. In order to not duplicate too much
+work (since we are still working on this full time here at Netscape),
+I've put together a list of what we plan on doing and what we want to
+do but probably won't get around to because of time constraints.</P>
+
+<P>Things that we are going to focus on:</P>
+
+<UL>
+   <LI>More NavCenter work</LI>
+   
+   <LI>Solve the issues with too many 'STR ' resources (see note on
+   <A HREF="#Pitfalls">issues page</A>)</LI>
+   
+   <LI>Modularization (HTML display isolated from networking,
+   etc)</LI>
+   
+   <LI>use new Appearance Manager classes in PowerPlant</LI>
+   
+   <LI>Navigation Services (new open/save dialogs in Allegro)
+   support. We have an ancient SDK and have integrated it in a few
+   places, but the current implemenation that we have doesn't work
+   very well. It's cool, though.</LI>
+   
+   <LI>More drag and drop in composer.</LI>
+   
+   <LI>More support for Internet Config (see note on <A HREF="#Pitfalls">issues
+   page</A>).</LI>
+   
+   <LI>external Java VM support (MRJ, etc)</LI>
+</UL>
+
+<P>Things we would like some help on:</P>
+
+<UL>
+   <LI>printing support</LI>
+   
+   <LI>68K version</LI>
+   
+   <LI>Context Menu Manager support</LI>
+   
+   <LI>bug fixes of any kind</LI>
+   
+   <LI>performance tuning of any kind</LI>
+   
+   <LI>getting around the limitation of 255 hierarchical menus
+   imposed by the OS. This would let us do a "real" personal toolbar
+   with folders that have popup menus.</LI>
+   
+   <LI>Fixing the build system so it uses makefiles without having to
+   give up the CW IDE for source browsing/editing.</LI>
+   
+   <LI>better publishing in Composer</LI>
+   
+   <LI>add NavCenter to Composer window</LI>
+   
+   <LI>better table editing in Composer</LI>
+</UL>
+
+<ADDRESS>
+
+<HR>
+
+Mike Pinkerton (<A HREF="mailto:pinkerton@netscape.com">pinkerton@netscape.com</A>)</ADDRESS>
+</BODY>
+</HTML>
+
