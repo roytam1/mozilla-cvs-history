@@ -156,18 +156,20 @@ if ($::driver ne 'mysql') {
 	}
 }
 
+
+
+my $assignedtoid = $bug{'assigned_to'};
+my $reporterid = $bug{'reporter'};
+my $qacontactid =  $bug{'qa_contact'};
+
 # If changeable is true then changes to bug's attributes are allowed
 if ($::driver ne 'mysql') {
-	if (CanIChange($id, $userid, $bug{'reporter'}, $bug{'assigned_to'})) {
+	if (CanIChange($id, $userid, $reporterid, $assignedtoid)) {
     	$changeable = 1;
 	} else {
     	$changeable = 0;
 	}
 }
-
-my $assignedtoid = $bug{'assigned_to'};
-my $reporterid = $bug{'reporter'};
-my $qacontactid =  $bug{'qa_contact'};
 
 $bug{'assigned_to'} = DBID_to_name($bug{'assigned_to'});
 $bug{'reporter'} = DBID_to_name($bug{'reporter'});
@@ -511,6 +513,7 @@ if ($changeable) {
             "Assign bug to owner of selected component &nbsp;$initial_owner<br>\n";
         $knum++;
     } else {
+		$bug_form{'resolution_change'} .= "<INPUT TYPE=hidden NAME=assigned_to VALUE=\"$bug{'assigned_to'}\">\n";
         $bug_form{'resolution_change'} .= "<INPUT TYPE=radio NAME=knob VALUE=reopen> Reopen bug<br>\n";
         $knum++;
         if ($status eq "RESOLVED") {

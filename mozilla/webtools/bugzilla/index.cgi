@@ -26,8 +26,9 @@ use Text::Template;
 
 require 'CGI.pl';
 
-print "Content-type:text/html\n\n";
+ConnectToDatabase();
 
+print "Content-type:text/html\n\n";
 PutHeader("Main Page");
 
 print qq{

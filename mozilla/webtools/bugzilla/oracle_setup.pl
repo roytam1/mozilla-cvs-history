@@ -482,7 +482,7 @@ my $drh = DBI->install_driver($db_base)
     or die "Can't connect to the $db_base. Is the database installed and up and running?\n";
 
 my $db_name = "rheng";
-my $db_user = "lacd/lacd";
+my $db_user = "bugzilla/bugzilla";
 my $db_pass = "";
 my $db_home = "/opt/apps/oracle/product/8.0.5/";
 
@@ -1539,10 +1539,11 @@ if (GetFieldDef('bugs', 'long_desc')) {
 # 2000-01-18 Added a new table fielddefs that records information about the
 # different fields we keep an activity log on.  The bugs_activity table
 # now has a pointer into that table instead of recording the name directly.
+FIELDCONV:
 
-if (GetFieldDef('bugs_activity', 'field')) {
-    AddField('bugs_activity', 'fieldid',
-             'INTEGER CONSTRAINT ACTIVITY_NN_ID not null');
+#if (GetFieldDef('bugs_activity', 'field')) {
+#    AddField('bugs_activity', 'fieldid',
+#             'INTEGER CONSTRAINT ACTIVITY_NN_ID not null');
     print "Populating new fieldid field ...\n";
 
 #    $dbh->do("LOCK TABLES bugs_activity WRITE, fielddefs WRITE");
@@ -1561,9 +1562,13 @@ if (GetFieldDef('bugs_activity', 'field')) {
         my ($id) = ($s2->fetchrow_array());
         if (!$id) {
 			print "Adding fielddef $q...\n";
-            $dbh->do("INSERT INTO fielddefs (fieldid, name, description) VALUES " .
-                     "(fielddefs_seq.nextval, $q, $q)");
-            $s2 = $dbh->prepare("SELECT fielddefs.currval from dual");
+			my $s3 = $dbh->prepare("select max(sortkey) from fielddefs");
+			$s3->execute();
+			my ($sortkey) = ($s3->fetchrow_array());
+			$sortkey++;
+            $dbh->do("INSERT INTO fielddefs (fieldid, name, description, sortkey) VALUES " .
+                     "(fielddefs_seq.nextval, $q, $q, $sortkey)");
+            $s2 = $dbh->prepare("SELECT fielddefs_seq.currval from dual");
             $s2->execute();
             ($id) = ($s2->fetchrow_array());
         }
@@ -1572,9 +1577,9 @@ if (GetFieldDef('bugs_activity', 'field')) {
 #    $dbh->do("UNLOCK TABLES");
 
 #    DropField('bugs_activity', 'field');
-}
+#}
         
-
+exit;
 # 2000-01-18 New email-notification scheme uses a new field in the bug to 
 # record when email notifications were last sent about this bug.  Also,
 # added a user pref whether a user wants to use the brand new experimental

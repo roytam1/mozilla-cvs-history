@@ -13,16 +13,7 @@ create table errata (
 	mail			INTEGER		DEFAULT('0'),
 	files			INTEGER		DEFAULT('0'),
 	valid			INTEGER
-	)
-	Storage(initial 4096k next 2048k pctincrease 0
-		minextents 1
-		maxextents 256)
-	tablespace eng_data01;
-
-alter index ERRATA_PK_ID rebuild tablespace eng_index02
-	Storage(initial 2048k next 1024k pctincrease 0
-                minextents 1
-                maxextents 256);
+);
 
 drop sequence errata_seq;
 

@@ -97,6 +97,7 @@ $::defaultqueryname = "(Default query)";
 $::unconfirmedstate = "UNCONFIRMED";
 $::dbwritesallowed = 1;
 
+
 # subroutine:	ConnectToDatabase
 # description:	Make initial connection to bugs database
 # params:		None
@@ -110,10 +111,44 @@ sub ConnectToDatabase {
             $name = Param("shadowdb");
             $::dbwritesallowed = 0;
         }
-    	$::db = DBI->connect("dbi:$::driver:$dbname", $dbuser, $dbpass, { RaiseError => 1 })
-        	or die "Can't connect to database server: " .  $DBI::errstr;
-    	$::db->{LongReadLen} = 1000000;
+        eval {
+            $::db = DBI->connect("dbi:$::driver:$dbname", $dbuser, $dbpass, { RaiseError => 1 })
+            	or die "Can't connect to database server: " .  $DBI::errstr;
+            $::db->{LongReadLen} = 1000000;
+        };
+        if ($@) {
+             print "Content-type: text/html\n\n";
+             print "<CENTER><H2>Bugzilla database down for maintenance. " .
+                   "Please check back again later.</H2></CENTER>\n";
+             exit;
+        }
 	}
+}
+
+
+# subroutine:   PingDatabase
+# description:  Checks to see if database is alive and returns pass/fail status
+# params:		none
+# returns:		$status = 0 if database is unreachable or 1 is successful (scalar)
+
+sub PingDatabase {
+	my $status = 1;
+	if (!$::db) {
+		eval {
+			ConnectToDatabase();
+		};
+		if ($@) {
+			$status = 0;
+		} 
+	} else {
+		eval {
+			$status = $::db->ping();
+		};
+		if ($@) {
+			$status = 0;
+		} 
+	} 
+	return $status;
 }
 
 
@@ -334,7 +369,7 @@ sub CanISee {
 #				One idea is if you are in the group for which it is private then you are allowed to
 #				to change the bug. Also need a caneditall type group designation.
 # params:		$id = current id number of bug report (scalar)
-#				$login = login name of current bugzilla user (scalar)
+#				$login = userid of current bugzilla user (scalar)
 #				$reporter = reporter of current bug report (scalar)
 #				$assigned = member bug report is currently assigned to (scalar)
 # returns:		1 = current member can make modifications to bug (scalar)
@@ -367,13 +402,17 @@ sub CanIChange {
 # returns: 		@new_product_list = array holding permitted products (array)
 
 sub GenProductList {
-	my ($userid, @old_product_list) = (@_);
+	my ($userid) = (@_);
+	# Won't do anything for us if Mysql
+	if ($::driver eq 'mysql') {
+		return;
+	}
 	my @new_product_list;
-	foreach my $product (@old_product_list) {
+	foreach my $product (@::legal_product) {
 		my $query = "select product_group.productid " .
 					"from product_group, products " . 
-					"where products.id = product_group.productid and " .
-					"products.product = " . SqlQuote($product);
+					"where products.id = product_group.productid " .
+					"and products.product = '$product'";
 		SendSQL($query);
 		my $result = FetchOneColumn();
 		if (!$result) {
@@ -381,16 +420,16 @@ sub GenProductList {
 			next;
 		}
 		$query = "select product_group.productid from product_group, user_group " .
-             	 "where user_group.userid = $userid " .
-             	 "and product_group.productid = $result " .
-             	 "and user_group.groupid = product_group.groupid ";
+				 "where user_group.groupid = product_group.groupid " .
+             	 "and user_group.userid = $userid " .
+             	 "and product_group.productid = $result ";
     	SendSQL($query);
     	$result = FetchOneColumn();
     	if ($result) {
         	push (@new_product_list, $product);
     	} 
 	}
-	return @new_product_list;	
+	@::legal_product = @new_product_list;	
 }
 
 
@@ -412,7 +451,7 @@ sub GenVersionList {
 		}
 	}
 	# sort numerically
-	return (sort { $a <=> $b } @new_version_list);
+	@::legal_versions = (sort { $a <=> $b } @new_version_list);
 }
 
 
@@ -763,7 +802,7 @@ sub GenerateVersionTable {
 
 	# create a list of possible resolutions without a 'duplicate'
     @::legal_resolution_no_dup = @::legal_resolution;
-	my $w = lsearch(\@::legal_resolution_no_dup, "DUPLICATE");
+	$w = lsearch(\@::legal_resolution_no_dup, "DUPLICATE");
     if ($w >= 0) {
         splice(@::legal_resolution_no_dup, $w, 1);
     }
@@ -951,7 +990,7 @@ sub DBID_to_name {
 
 sub DBname_to_id {
     my ($name) = (@_);
-    SendSQL("select userid from profiles where login_name = @{[SqlQuote($name)]}");
+    SendSQL("select userid from profiles where login_name = " . SqlQuote($name));
     my $r = FetchOneColumn();
     if (!defined $r || $r eq "") {
         return 0;
@@ -1299,17 +1338,17 @@ sub SplitTableValues {
 
 sub SqlQuote {
     my ($str) = (@_);
-    if (!defined $str) {
+    if (!defined($str)) {
          confess("Undefined passed to SqlQuote");
     }
+	$str =~ s/\0/\\0/g;
 	if ($::driver eq 'mysql') {
     	$str =~ s/([\\\'])/\\$1/g;
+		return "'$str'";
 	} else {
 		$str =~ s/([\\\'])/\'$1/g;
+		return $::db->quote($str);
 	}
-    $str =~ s/\0/\\0/g;	
-#	return $::db->quote($str);
-    return "'$str'";
 }
 
 
@@ -1385,9 +1424,9 @@ sub GroupsBelong {
 #				0 = member does not belong to one or more contract groups (scalar)
 
 sub UserInContract {
-	my $userid = shift;
+	my ($userid) = (@_);
 	
-	my $query = "select user_group.userid from groups, user_group " . 
+	my $query = "select count(user_group.userid) from groups, user_group " . 
 				"where groups.groupid = user_group.groupid " .
 				"and groups.contract = 1 " . 
 				"and user_group.userid = $userid";

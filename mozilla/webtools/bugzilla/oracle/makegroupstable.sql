@@ -11,16 +11,7 @@ create table groups (
     isbuggroup 	INTEGER		CONSTRAINT GROUPS_NN_BUGGRP 	NOT NULL,
     userregexp 	VARCHAR2(255)   DEFAULT(''),
     contract 	INTEGER         DEFAULT(0) 
-	)
-	Storage(initial 4096k next 2048k pctincrease 0
-		minextents 1
-		maxextents 256)
-	tablespace eng_data02;
-
-alter index GROUPS_PK_GROUPID rebuild tablespace eng_index01
-	Storage(initial 2048k next 1024k pctincrease 0
-                minextents 1
-                maxextents 256);
+);
 
 drop sequence groups_seq;
 create sequence groups_seq start with 1 increment by 1;

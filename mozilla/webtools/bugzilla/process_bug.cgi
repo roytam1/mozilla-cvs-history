@@ -43,6 +43,7 @@ use vars %::versions,
 	     %::legal_severity;
 
 my $whoid = confirm_login();
+my $userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
 
 print "Content-type: text/html\n\n";
 PutHeader ("Bug Processed", "Bug Processed", $::FORM{'id'});
@@ -132,6 +133,7 @@ my $lastbugid = 0;
 my $ownerid;
 my $reporterid;
 my $qacontactid;
+
 
 sub CheckCanChangeField {
     my ($f, $bugid, $oldvalue, $newvalue) = (@_);
@@ -349,13 +351,13 @@ foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
 
 
 # If certains groups were set insert values in bug_group
-if ($::FORM{'id'}) {
-	my $id = $::FORM{'id'};
-	SendSQL("delete from bug_group where bugid = $id");
+# if this person is anonymous then dont let anything happen
+if (defined($::FORM{'id'}) && $::FORM{'id'} ne "" && $userid) {
+	SendSQL("delete from bug_group where bugid = $::FORM{'id'}");
 	foreach my $b (grep(/^group-.*$/, keys %::FORM)) {
 		if ($::FORM{$b}) {
     		$b =~ s/^group-//;
-			SendSQL("insert into bug_group values ($id, $b)");
+			SendSQL("insert into bug_group values ($::FORM{'id'}, $b)");
 		}
 	}
 }
@@ -392,15 +394,14 @@ foreach my $field ("rep_platform", "priority", "bug_severity",
 if (defined $::FORM{'qa_contact'}) {
     my $name = trim($::FORM{'qa_contact'});
     if ($name ne $::dontchange) {
-        my $id = 0;
+        my $nameid = 0;
         if ($name ne "") {
-            $id = DBNameToIdAndCheck($name);
+            $nameid = DBNameToIdAndCheck($name);
         }
         DoComma();
-        $::query .= "qa_contact = $id";
+        $::query .= "qa_contact = $nameid";
     }
 }
-
 
 ConnectToDatabase();
 
@@ -641,13 +642,13 @@ my $delta_ts;
 
 
 sub SnapShotBug {
-    my ($id) = (@_);
+    my ($bug_id) = (@_);
 	if ($::driver eq "mysql") {
 		SendSQL("select delta_ts, " . join(',', @::log_columns) .
-                " from bugs where bug_id = $id");
+                " from bugs where bug_id = $bug_id");
 	} else {
     	SendSQL("select TO_CHAR(delta_ts, 'YYYYMMDDHH24MISS'), " . join(',', @::log_columns) .
-        	    " from bugs where bug_id = $id");
+        	    " from bugs where bug_id = $bug_id");
 	}
     my @row = FetchSQLData();
     $delta_ts = shift @row;
@@ -674,7 +675,7 @@ sub LogDependencyActivity {
     my $newstr = SnapShotDeps($i, $target, $me);
     if ($oldstr ne $newstr) {
 		my $fieldid = GetFieldID($target);
-		if ($::driver eq "mysq") {
+		if ($::driver eq "mysql") {
         	SendSQL("insert into bugs_activity " . 
 					"(bug_id, who, bug_when, fieldid, oldvalue, newvalue) " .
 					"values ($i, $whoid, $timestamp, '$fieldid', '$oldstr', '$newstr')");
@@ -694,18 +695,20 @@ delete $::FORM{'resolution'};   # Make sure we don't test the resolution
                                 # that kind of testing, and this form field
                                 # is actually usually not used.
 
-my $userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
 
 # this loop iterates once for each bug to be processed (eg when this script
 # is called with multiple bugs selected from buglist.cgi instead of
 # show_bug.cgi).
 #
 foreach my $id (@idlist) {
-	
-	if (defined($id) && !CanIChange($id, $userid, DBname_to_id($::FORM{'reporter'}), 
-		DBname_to_id($::FORM{'assigned_to'}))) {
-		print "<H1>Permission denied.</H1><P>\n";
-		print "<B>You do not have permission to modify bug # $id.</B> \n";	
+
+	# This will go away when I get more in sync with current Bugzilla code
+    SendSQL("SELECT reporter, assigned_to FROM bugs " .
+                "WHERE bug_id = $id");
+    my ($reporterid, $ownerid) = (FetchSQLData());
+	if (defined($id) && !CanIChange($id, $userid, $reporterid, $ownerid)) {
+		print "<CENTER><H1>Permission denied.</H1><P>\n";
+		print "<B>You do not have permission to modify bug # $id.</B></CENTER>\n";	
 		next;
 	}
 
@@ -979,8 +982,10 @@ The changes made were:
     my @newvalues = SnapShotBug($id);
 
     foreach my $c (@::log_columns) {
-        my $col = $c;           # We modify it, don't want to modify array
+        my $col = lc($c);       # We modify it, don't want to modify array
                                 # values in place.
+								# Added the lc() because Oracle returns column names as upper case.
+								# Shouldn't hurt anyone else.
         my $old = shift @oldvalues;
         my $new = shift @newvalues;
         if (!defined $old) {
@@ -993,12 +998,12 @@ The changes made were:
             if ($col eq 'assigned_to' || $col eq 'qa_contact') {
                 $old = DBID_to_name($old) if $old != 0;
                 $new = DBID_to_name($new) if $new != 0;
-                $origcclist .= ",$old"; # make sure to send mail to people
+              	$origcclist .= ",$old"; # make sure to send mail to people
                                         # if they are going to no longer get
                                         # updates about this bug.
             }
             if ($col eq 'product') {
-                RemoveVotes($id, "This bug has been moved to a different product");
+                RemoveVotes($id, $whoid, "This bug has been moved to a different product");
             }
 			$col = GetFieldID($col);
             $old = SqlQuote($old);

@@ -130,7 +130,7 @@ sub pickplatform {
     }
     if ( Param('usebrowserinfo') ) {
         for ($ENV{'HTTP_USER_AGENT'}) {
-            /Mozilla.*\(Windows/ && do {return "PC";};
+            /Mozilla.*\(Windows/ && do { return "PC";};
             /Mozilla.*\(Macintosh/ && do {return "Macintosh";};
             /Mozilla.*\(Win/ && do {return "PC";};
 	        /Mozilla.*Windows NT/ && do {return "PC";};
@@ -143,7 +143,7 @@ sub pickplatform {
         }
     }
     # default
-    return "Other";
+    return "i386";
 }
 
 
@@ -206,7 +206,6 @@ sub pickos {
     }
     # default
     return "Linux";
-#	return "other";
 }
 
 GetVersionTable();

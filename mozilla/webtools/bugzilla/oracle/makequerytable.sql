@@ -9,16 +9,8 @@ create table namedqueries (
      watchfordiffs  INTEGER         DEFAULT(0) not null,
      linkinfooter   INTEGER         DEFAULT(0) not null,
      query          LONG            CONSTRAINT NAMED_NN_QUERY not null
-	)
-	Storage(initial 4096k next 2048k pctincrease 0
-		minextents 1
-		maxextents 256)
-	tablespace eng_data01;
+);
 
-create index queries_index on namedqueries (name)
-	Storage(initial 2048k next 1024k pctincrease 0
-                minextents 1
-                maxextents 256)
-	tablespace eng_index02;
+create index queries_index on namedqueries (name);
 
 exit;

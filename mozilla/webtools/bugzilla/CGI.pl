@@ -712,11 +712,11 @@ sub quietly_check_login() {
         if (@row = FetchSQLData()) {
             my ($userid, $loginname, $groupset, $disabledtext) = (@row);
             if ($loginname) {
-                if ($disabledtext eq '') {
+                if ($disabledtext eq "") {
                     $loginok = 1;
 					$::userid = $userid;
                     $::usergroupset = $groupset;
-                    $::COOKIE{"Bugzilla_login"} = $loginname; # Makes sure case
+                    $::COOKIE{'Bugzilla_login'} = $loginname; # Makes sure case
                                                               # is in
                                                               # canonical form.
                 } else {
@@ -1136,7 +1136,7 @@ sub DumpBugActivity {
 
 	} else {
        $query = 
-        	"select fielddefs.name, " . 
+        	"select nvl(fielddefs.name, bugs_activity.fieldid), " . 
 			"TO_CHAR(bugs_activity.bug_when, 'YYYY-MM-DD HH24:MI:SS'), " .
         	"bugs_activity.oldvalue, bugs_activity.newvalue, " .
         	"profiles.login_name " . 

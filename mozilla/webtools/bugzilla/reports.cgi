@@ -28,6 +28,8 @@
 
 use diagnostics;
 use strict;
+use Time::Local;
+
 eval "use Chart::Lines";
 
 require "CGI.pl";
@@ -189,24 +191,46 @@ FIN
 
 # Build up $query string
 	my $query;
-	$query = <<FIN;
+	if ($::driver eq 'mysql') {
+		$query = <<FIN;
 select 
 	bugs.bug_id, bugs.assigned_to, bugs.bug_severity,
 	bugs.bug_status, bugs.product, 
 	assign.login_name,
 	report.login_name,
 	unix_timestamp(date_format(bugs.creation_ts, '%Y-%m-%d %h:%m:%s'))
-
-from   bugs,
-       profiles assign,
-       profiles report,
-       versions projector
-where  bugs.assigned_to = assign.userid
-and    bugs.reporter = report.userid
+from   
+	bugs,
+	profiles assign,
+	profiles report,
+	versions projector
+where  
+	bugs.assigned_to = assign.userid
+and bugs.reporter = report.userid
 FIN
 
+	} else {
+        $query = <<FIN;
+select 
+	bugs.bug_id, bugs.assigned_to, bugs.bug_severity,
+	bugs.bug_status, bugs.product, 
+	assign.login_name,
+	report.login_name,
+	TO_CHAR(bugs.creation_ts, 'SS-MI-HH24-DD-MM-YYYY')
+from   
+	bugs,
+	profiles assign,
+	profiles report,
+	versions projector
+where  
+	bugs.assigned_to = assign.userid
+and bugs.reporter = report.userid
+FIN
+
+	}
+
 	if( $::FORM{'product'} ne "-All-" ) {
-		$query .= "and    bugs.product=".SqlQuote($::FORM{'product'});
+		$query .= "and    bugs.product = ".SqlQuote($::FORM{'product'});
 	}
 
 	$query .= <<FIN;
@@ -246,6 +270,10 @@ FIN
 		
 		$bugs_lookup{$bid} ++;
 		$bugs_owners{$who} ++;
+		if ($::driver ne 'mysql') {
+			my ($sec, $min, $hours, $mday, $mon, $year) = (split('-', $ts));
+			my $ts = timelocal($sec, $min, $hours, $mday, $mon - 1, $year); 
+		}
 		$bugs_new_this_week ++ if (time - $ts <= $week);
 		$bugs_status{$st} ++;
 		$bugs_count ++;
@@ -278,29 +306,29 @@ FIN
         $bugs_status{'REOPENED'} ||= '0';
 	print <<FIN;
 <h1>$quip</h1>
-<table border=1 cellpadding=5>
+<table border=1 cellpadding=3 CELLSPACING=0 ALIGN=center BGCOLOR="#ECECEC">
 <tr>
-<td align=right><b>New Bugs This Week</b></td>
+<td align=left><b>New Bugs This Week</b></td>
 <td align=center>$bugs_new_this_week</td>
 </tr>
 
 <tr>
-<td align=right><b>Bugs Marked New</b></td>
+<td align=left><b>Bugs Marked New</b></td>
 <td align=center>$bugs_status{'NEW'}</td>
 </tr>
 
 <tr>
-<td align=right><b>Bugs Marked Assigned</b></td>
+<td align=left><b>Bugs Marked Assigned</b></td>
 <td align=center>$bugs_status{'ASSIGNED'}</td>
 </tr>
 
 <tr>
-<td align=right><b>Bugs Marked Reopened</b></td>
+<td align=left><b>Bugs Marked Reopened</b></td>
 <td align=center>$bugs_status{'REOPENED'}</td>
 </tr>
 
 <tr>
-<td align=right><b>Total Bugs</b></td>
+<td align=left><b>Total Bugs</b></td>
 <td align=center>$bugs_count</td>
 </tr>
 
@@ -308,22 +336,21 @@ FIN
 <p>
 FIN
 
-	if ($bugs_count == 0)
-		{
+	if ($bugs_count == 0) {
 		print "No bugs found!\n";
                 PutFooter() if $::FORM{banner};
 		exit;
-		}
+	}
 	
 	print <<FIN;
 <h1>Bug Count by Engineer</h1>
-<table border=3 cellpadding=5>
-<tr>
-<td align=center bgcolor="#DDDDDD"><b>Owner</b></td>
-<td align=center bgcolor="#DDDDDD"><b>New</b></td>
-<td align=center bgcolor="#DDDDDD"><b>Assigned</b></td>
-<td align=center bgcolor="#DDDDDD"><b>Reopened</b></td>
-<td align=center bgcolor="#DDDDDD"><b>Total</b></td>
+<table border=1 cellpadding=3 CELLSPACING=0 ALIGN=center BGCOLOR="#ECECEC">
+<tr BGCOLOR="#BFBFBF">
+<td align=left><b>Owner</b></td>
+<td align=left><b>New</b></td>
+<td align=left><b>Assigned</b></td>
+<td align=left><b>Reopened</b></td>
+<td align=left><b>Total</b></td>
 </tr>
 FIN
 
@@ -361,12 +388,12 @@ FIN
 
 	print <<FIN;
 <h1>Individual Bugs by Engineer</h1>
-<table border=1 cellpadding=5>
-<tr>
-<td align=center bgcolor="#DDDDDD"><b>Owner</b></td>
-<td align=center bgcolor="#DDDDDD"><b>New</b></td>
-<td align=center bgcolor="#DDDDDD"><b>Assigned</b></td>
-<td align=center bgcolor="#DDDDDD"><b>Reopened</b></td>
+<table border=1 cellpadding=3 CELLSPACING=0 ALIGN=center BGCOLOR="#ECECEC">
+<tr BGCOLOR="#BFBFBF">
+<td align=left><b>Owner</b></td>
+<td align=left><b>New</b></td>
+<td align=left><b>Assigned</b></td>
+<td align=left><b>Reopened</b></td>
 </tr>
 FIN
 

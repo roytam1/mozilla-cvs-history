@@ -10,10 +10,7 @@ create table components (
 	devowner	        VARCHAR2(64),
 	initialqacontact 	VARCHAR2(64), 
 	description 		VARCHAR2(2000)
-)	Storage(initial 4096k next 2048k pctincrease 0
-		minextents 1
-		maxextents 256)
-	tablespace eng_data02;
+);
 
 rem insert into components (value, program, initialowner, description) 
 rem 	values ('TestComponent', 'TestProduct', 'dkl@redhat.com', 

@@ -34,43 +34,14 @@ create table bugs (
 	votes			INTEGER		DEFAULT(''),
 	keywords		VARCHAR(255)	DEFAULT(''),
 	lastdiffed		DATE		
-	)
-	Storage( initial 4096 next 2048 minextents 1 maxextents 256)
-		PARTITION BY range (bug_id)
-			(partition PD1 values less than (4000)
-				tablespace eng_data03
-					storage(initial 4096K next 2048K pctincrease 0),
-			partition PD2 values less than (8000)
-				tablespace eng_data04
-					storage(initial 4096K next 2048K pctincrease 0),
-			partition PD3 values less than (12000)
-				tablespace eng_data05
-					storage(initial 4096K next 2048K pctincrease 0),
-			partition PD4 values less than (MAXVALUE)
-				tablespace eng_data06
-					storage(initial 4096K next 2048K pctincrease 0));
-
-Create index bugs_pk_id
-        on bugs(bug_id)
-        local
-                ( partition PI1
-                        tablespace eng_index06
-                                storage(initial 4096K next 2048K pctincrease 0),
-                         partition PI2
-                                tablespace eng_index05
-                                        storage(initial 4096K next 2048K pctincrease 0),
-                        partition PI3
-                                tablespace eng_index04
-                                        storage(initial 4096K next 2048K pctincrease 0),
-                        partition PI4
-                                tablespace eng_index03
-                                        storage(initial 4096K next 2048K pctincrease 0));
+);
 
 alter table bugs add constraint BUGS_PK_BUGID primary key (bug_id);
 
 create sequence bugs_seq NOCACHE START WITH 1 INCREMENT BY 1;
 
-create index bugs_index on bugs (assigned_to, 
+create index bugs_index on bugs (bug_id,
+				 assigned_to, 
 				 creation_ts,
 				 delta_ts,
 				 bug_severity,
@@ -83,19 +54,6 @@ create index bugs_index on bugs (assigned_to,
 				 component,
 				 resolution,
 				 target_milestone,
-				 qa_contact)
-        local
-                ( partition PI1
-                        tablespace eng_index06
-                                storage(initial 4096K next 2048K pctincrease 0),
-                         partition PI2
-	                        tablespace eng_index05
-                                        storage(initial 4096K next 2048K pctincrease 0),
-                        partition PI3
-                                tablespace eng_index04
-                                        storage(initial 4096K next 2048K pctincrease 0),
-                        partition PI4
-                                tablespace eng_index03
-                                        storage(initial 4096K next 2048K pctincrease 0));
+				 qa_contact);
 
 exit;

@@ -13,23 +13,9 @@ create table attachments (
 	filename 	VARCHAR2(255) 	CONSTRAINT ATTACH_NN_FILE		NOT NULL,
 	thedata 	BLOB		CONSTRAINT ATTACH_NN_DATA		NOT NULL,
 	submitter_id 	INTEGER 	CONSTRAINT ATTACH_NN_SUBMIT		NOT NULL
-	)
-	Storage(initial 4096k next 2048k pctincrease 0
-		minextents 1
-		maxextents 256)
-	tablespace eng_data02;
+);
 
-alter index ATTACH_PK_ATTACHID rebuild tablespace eng_index01
-	Storage(initial 2048k next 1024k pctincrease 0
-                minextents 1
-                maxextents 256);
-
-
-create index attach_index on attachments (bug_id, creation_ts)
-	Storage(initial 2048k next 1024k pctincrease 0
-                minextents 1
-                maxextents 256)
-	tablespace eng_index01;
+create index attach_index on attachments (bug_id, creation_ts);
 
 drop sequence attachments_seq;
 

@@ -44,6 +44,7 @@ use vars
   @::legal_opsys,
   @::legal_platform,
   @::legal_priority,
+  @::legal_priority_contract,
   @::legal_product,
   @::legal_severity,
   @::legal_target_milestone,
@@ -67,7 +68,8 @@ if (defined $::FORM{"GoAheadAndLogIn"}) {
     quietly_check_login();
 }
 
-my $userid = 0;
+# my $userid = 0;
+my $userid = 0; 
 if (defined $::COOKIE{"Bugzilla_login"} && $::COOKIE{'Bugzilla_login'} ne "") {
     $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
 }
@@ -94,16 +96,11 @@ if ($userid) {
                 my $qname = SqlQuote($name);
                 SendSQL("SELECT query FROM namedqueries " .
                         "WHERE userid = $userid AND name = $qname");
-#				SendSQL("SELECT query FROM queries " .
-#                        "WHERE userid = $userid AND query_name = $qname");
                 my $query = FetchOneColumn();
                 if (!$query) {
                     SendSQL("INSERT INTO namedqueries " .
                             "(userid, name, query) VALUES " .
                             "($userid, $qname, " . SqlQuote($value) . ")");
-#                    SendSQL("INSERT INTO queries " .
-#                            "(userid, query_name, query) VALUES " .
-#                            "($userid, $qname, " . SqlQuote($value) . ")");
                 }
             }
             print "Set-Cookie: $cookiename= ; path=$cookiepath ; expires=Sun, 30-Jun-1980 00:00:00 GMT\n";
@@ -116,8 +113,6 @@ if ($::FORM{'nukedefaultquery'}) {
     if ($userid) {
         SendSQL("DELETE FROM namedqueries " .
                 "WHERE userid = $userid AND name = '$::defaultqueryname'");
-#		SendSQL("DELETE FROM queries " .
-#                "WHERE userid = $userid AND query_name = '$::defaultqueryname'");
     }
     $::buffer = "";
 }
@@ -127,8 +122,6 @@ my $userdefaultquery;
 if ($userid) {
     SendSQL("SELECT query FROM namedqueries " .
             "WHERE userid = $userid AND name = '$::defaultqueryname'");
-#    SendSQL("SELECT query FROM queries " .
-#            "WHERE userid = $userid AND query_name = '$::defaultqueryname'");
     $userdefaultquery = FetchOneColumn();
 }
 
@@ -192,18 +185,20 @@ if (!ProcessFormStuff($::buffer)) {
     }
 }
 
-
-
 if ($default{'chfieldto'} eq "") {
     $default{'chfieldto'} = "Now";
 }
 
-
-
+# Clear the users BUGLIST cookie to make way for a new one
 print "Set-Cookie: BUGLIST=
 Content-type: text/html\n\n";
 
 GetVersionTable();
+
+# Manipulate the list of products/versions that people can see in the popups
+# dependent upon which groups they are a member of.
+GenProductList($userid);
+GenVersionList();
 
 sub GenerateEmailInput {
     my ($id) = (@_);
@@ -242,44 +237,59 @@ sub GenerateEmailInput {
 
     $default{"emailtype$id"} ||= "substring";
 
-    return qq{
-<table border=1 cellspacing=0 cellpadding=0>
-<tr><td>
-<table cellspacing=0 cellpadding=0>
-<tr>
-<td rowspan=2 valign=top><a href="helpemailquery.html">Email:</a>
-<input name="email$id" size="30" value="$defstr">&nbsp;matching as
-} . BuildPulldown("emailtype$id",
-                  [["regexp", "regexp"],
-                   ["notregexp", "not regexp"],
-                   ["substring", "substring"],
-                   ["exact", "exact"]],
-                  $default{"emailtype$id"}) . qq{
-</td>
-<td>
-<input type="checkbox" name="emailassigned_to$id" value=1 $assignedto>Assigned To
-</td>
-</tr>
-<tr>
-<td>
-<input type="checkbox" name="emailreporter$id" value=1 $reporter>Reporter
-</td>
-</tr>$qapart
-<tr>
-<td align=right>(Will match any of the selected fields)</td>
-<td>
-<input type="checkbox" name="emailcc$id" value=1 $cc>CC
-</td>
-</tr>
-<tr>
-<td></td>
-<td>
-<input type="checkbox" name="emaillongdesc$id" value=1 $longdesc>Added comment
-</td>
-</tr>
-</table>
-</table>
+    my $email = qq{
+<TABLE BORDER=1 CELLSPACING=0 CELLPADDING=3 WIDTH=100%>
+<TR>
+	<TD>
+	<TABLE CELLSPACING=0 CELLPADDING=0 WIDTH=100%>
+	<TR>
+		<TD ROWSPAN=2 VALIGN=top><A HREF="helpemailquery.html">Email:</A>
+		<INPUT NAME="email$id" SIZE="30" VALUE="$defstr">&nbsp;
 };
+
+	# Unfortunately Oracle only does one of these so might as well have no choices popup
+	if ($::driver eq 'mysql') {
+		$email .= "matching as " .  BuildPulldown("emailtype$id",
+        	          			[["regexp", "regexp"],
+            	       			["notregexp", "not regexp"],
+                	   			["substring", "substring"],
+                   				["exact", "exact"]],
+                  				$default{"emailtype$id"});
+	}
+
+	$email .= qq{
+		</TD>
+		<TD>
+		<INPUT TYPE="checkbox" NAME="emailassigned_to$id" VALUE=1 $assignedto>Assigned To
+		</TD>
+	</TR><TR>
+		<TD>
+		<INPUT TYPE="checkbox" NAME="emailreporter$id" VALUE=1 $reporter>Reporter
+		</TD>
+	</TR>$qapart
+	<TR>
+		<TD ALIGN=right>(Will match any of the selected fields)</TD>
+		<TD>
+		<INPUT TYPE="checkbox" NAME="emailcc$id" VALUE=1 $cc>CC
+		</TD>
+	</TR>
+};
+
+# To be added back later when buglist.cgi will support this
+# Oracle is having issues with doing searches based on the longdescs table :(
+#	<TR>
+#		<TD ALIGN=right>(Will match any of the selected fields)</TD>
+#		<TD>
+#		<INPUT TYPE="checkbox" NAME="emaillongdesc$id" VALUE=1 $longdesc>Added comment
+#		</TD>
+#	</TR>
+
+	$email .= qq{
+	</TABLE>
+</TR>
+</TABLE>
+};
+	return $email;
 }
 
 
@@ -441,7 +451,7 @@ PutHeader("Bugzilla Query Page", "Query Page", "",
           q{onLoad="selectProduct(document.forms[0]);"});
 
 if (Param('contract')) {
-    if (defined ($userid)) {
+    if ($userid) {
         PutNotify($userid);
     }
 }
@@ -477,16 +487,12 @@ if (Param('contract')) {
 							          $default{'priority'}, $type{'priority'}, 1);
 }
 
-$query_form{'priority_popup'} = make_selection_widget("priority", \@::legal_priority, 
-								$default{'priority'}, $type{'priority'}, 1);
-
 $query_form{'severity_popup'} = make_selection_widget("bug_severity", \@::legal_severity, 
 								$default{'bug_severity'}, $type{'bug_severity'}, 1);
 
 
 my $inclselected = "SELECTED";
 my $exclselected = "";
-
     
 if ($default{'bugidtype'} eq "exclude") {
     $inclselected = "";
@@ -537,10 +543,12 @@ $query_form{'component_popup'} = "<SELECT NAME=\"component\" MULTIPLE SIZE=5>\n"
 								 make_options(\@::legal_components, $default{'component'}, $type{'component'}) .
 								 "</SELECT>\n";
 
-$query_form{'milestone_popup'} = "<SELECT NAME=\"target_milestone\" MULTIPLE SIZE=5>\n" .
-								 make_options(\@::legal_target_milestone, $default{'target_milestone'},
-								 $type{'target_milestone'}) .
-								 "</SELECT>\n";
+if (Param('usetargetmilestone')) {
+	$query_form{'milestone_popup'} = "<SELECT NAME=\"target_milestone\" MULTIPLE SIZE=5>\n" .
+									 make_options(\@::legal_target_milestone, $default{'target_milestone'},
+									 $type{'target_milestone'}) .
+									 "</SELECT>\n";
+}
 
 
 sub StringSearch {
@@ -550,7 +558,7 @@ sub StringSearch {
     my $def = value_quote($default{$name});
     $search = qq{<TR>
 <TD ALIGN=right>$desc:</TD>
-<TD><INPUT NAME=$name SIZE=45 VALUE="$def"></TD>
+<TD><INPUT NAME=$name SIZE=40 VALUE="$def"></TD>
 };
 
 	if ($::driver eq 'mysql') {
@@ -597,7 +605,7 @@ if (@::legal_keywords) {
     $query_form{'keywords_popup'} = qq{
 <TR>
 <TD ALIGN="right"><A HREF="describekeywords.cgi">Keywords</A>:</TD>
-<TD><INPUT NAME="keywords" SIZE=45 VALUE="$def"></TD>
+<TD><INPUT NAME="keywords" SIZE=40 VALUE="$def"></TD>
 <TD>
 };
     my $type = $default{"keywords_type"};
@@ -774,10 +782,7 @@ $query_form{'sort_popup'} = qq{<SELECT NAME=order>\n};
 
 foreach my $order ("Bug Number Ascending", "Bug Number Descending",
                    "Importance", "Assignee") {
-    my $selected = "";
-    if (defined($::FORM{'order'}) && $::FORM{'order'} eq $order) {
-        $selected = "SELECTED";
-    }
+	my $selected = $::FORM{'order'} eq $order ? "SELECTED" : "";
     $query_form{'sort_popup'} .= "<OPTION $selected>$order\n";
 }
 $query_form{'sort_popup'} .= qq{</SELECT>\n};

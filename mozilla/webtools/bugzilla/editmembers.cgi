@@ -295,7 +295,7 @@ Please click BACK and correct the error.</B>
 					", cryptpassword = " . SqlQuote($encrypted) . 
 					" where login_name = " . SqlQuote($::FORM{'login_name'}));
 			MailPassword($::FORM{'login_name'}, $password, 1);	
-			print "Password changed and member notified.<BR>\n";
+			print "<CENTER><B>Password changed and member notified.</B></CENTER><BR>\n";
 		}
 
 		SendSQL("update profiles set login_name = " . SqlQuote($::FORM{'login_name'}) .

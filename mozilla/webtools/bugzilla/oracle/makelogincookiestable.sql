@@ -9,23 +9,9 @@ create table logincookies (
     cryptpassword 	VARCHAR2(64),
     hostname 	  	VARCHAR2(128),
     lastused 	  	DATE
-	)
-	Storage(initial 4096k next 2048k pctincrease 0
-		minextents 1
-		maxextents 256)
-	tablespace eng_data02;
+);
 
-alter index LOGIN_PK_COOKIE rebuild tablespace eng_index01
-	Storage(initial 2048k next 1024k pctincrease 0
-                minextents 1
-                maxextents 256);
-
-create index logincookies_index on logincookies (lastused)
-	Storage(initial 2048k next 1024k pctincrease 0
-                minextents 1
-                maxextents 256)
-	tablespace eng_index01;
-
+create index logincookies_index on logincookies (lastused);
 
 drop sequence logincookies_seq;
 

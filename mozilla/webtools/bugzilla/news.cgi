@@ -41,11 +41,14 @@ sub PutStory {
 
 my $query = "";
 
-if (defined ($::FORM{'id'}) && $::FORM{'id'} ne '') {
+if (defined($::FORM{'id'}) && $::FORM{'id'} ne '') {
 	# Show an individual news article
 	$query = "select " . SqlDate('add_date') . ", headline, story from news where id = " . $::FORM{'id'};
 	SendSQL($query);
 	my ($add_date, $headline, $story) = FetchSQLData();
+	if ($headline eq "") {
+		PutError("News item not found.");
+	}
 	PutStory($add_date, $headline, \$story);
 
 } else {

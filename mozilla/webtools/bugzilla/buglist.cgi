@@ -100,9 +100,9 @@ sub SqlifyDate {
         PuntTryAgain("The string '<tt>$str</tt>' is not a legal date.");
     }
     if ($::driver eq 'mysql') {
-        return time2str("%Y/%m/%d %H:%M:%S", $date);
+        return "date_format('" . time2str("%Y/%m/%d %H:%M:%S", $date) . "', '')";
     } else {
-        return time2str("%Y-%m-%d %H:%M:%S", $date);
+        return "TO_DATE('" . time2str("%Y-%m-%d %H:%M:%S", $date) . "', 'YYYY-MM-DD HH24:MI:SS')";
     }
 }
 
@@ -171,16 +171,23 @@ Loading your query named <B>$::FORM{'namedcmd'}</B>...
     };
     /^asdefault$/ && do {
         confirm_login();
-#        my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
+        my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
         print "Content-type: text/html\n\n";
         if ($::driver eq 'mysql') {
             SendSQL("REPLACE INTO namedqueries (userid, name, query) VALUES " .
                     "($userid, '$::defaultqueryname'," .
                     SqlQuote($::buffer) . ")");
         } else {
-            SendSQL("INSERT INTO namedqueries (userid, name, query) VALUES " .
-                    "($userid, '$::defaultqueryname'," .
-                    SqlQuote($::buffer) . ")");
+			SendSQL("SELECT name from namedqueries where userid = $userid " . 
+					"and name = '$::defaultqueryname'");
+			my $found = FetchOneColumn();
+			if (defined($found) && $found ne "") {
+				SendSQL("UPDATE namedqueries set query = " . SqlQuote($::buffer) .
+						" where userid = $userid and name = '$::defaultqueryname'");
+			} else {	
+	            SendSQL("INSERT INTO namedqueries (userid, name, query) VALUES " .
+   	                	"($userid, '$::defaultqueryname'," . SqlQuote($::buffer) . ")");
+       	    }
         }
         PutHeader("OK, default is set");
         print qq{
@@ -395,6 +402,7 @@ and    bugs.version = projector.value
     $query .= "
 from 
        bugs,
+	   profiles qacont,
 	   profiles assign,
 	   profiles reporter,	
 	   versions projector
@@ -403,6 +411,7 @@ where
 and    bugs.reporter = reporter.userid
 and    bugs.product = projector.program
 and    bugs.version = projector.value
+and    bugs.qa_contact = qacont.userid (+)
 ";
 
 }
@@ -413,7 +422,13 @@ if ((defined $::FORM{'emailcc1'} && $::FORM{'emailcc1'}) ||
     # We need to poke into the CC table.  Do weird SQL left join stuff so that
     # we can look in the CC table, but won't reject any bugs that don't have
     # any CC fields.
-    $query =~ s/bugs,/bugs left join cc on bugs.bug_id = cc.bug_id left join profiles ccname on cc.who = ccname.userid,/;
+	if ($::driver eq 'mysql') {
+	    $query =~ s/bugs,/bugs left join cc on bugs.bug_id = cc.bug_id left join profiles ccname on cc.who = ccname.userid,/;
+	} else {
+		$query =~ s/bugs,/bugs, cc, profiles ccname,/;
+		$query .= "and bugs.bug_id = cc.bug_id\n"; 
+		$query .= "and cc.who = ccname.userid\n";
+	}
 }
 
 if (defined $::FORM{'sql'}) {
@@ -550,19 +565,19 @@ if (defined $minvotes) {
 my $ref = $::MFORM{'chfield'};
 
 
-sub SqlifyDate {
-    my ($str) = (@_);
-    if (!defined $str) {
-        $str = "";
-    }
-    my $date = str2time($str);
-    if (!defined $date) {
-        print "\n\n<P>The string '<tt>$str</tt>' is not a legal date.\n";
-        print "<P>Please click the <B>Back</B> button and try again.\n";
-        exit;
-    }
-    return time2str("'%Y/%m/%d %H:%M:%S'", $date);
-}
+#sub SqlifyDate {
+#   my ($str) = (@_);
+#    if (!defined $str) {
+#        $str = "";
+#    }
+#    my $date = str2time($str);
+#    if (!defined $date) {
+#        print "\n\n<P>The string '<tt>$str</tt>' is not a legal date.\n";
+#        print "<P>Please click the <B>Back</B> button and try again.\n";
+#        exit;
+#    }
+#    return time2str("'%Y/%m/%d %H:%M:%S'", $date);
+#}
 
 
 if (defined $ref) {
@@ -591,7 +606,8 @@ if (defined $ref && 0 < @$ref) {
     
     my @list;
     foreach my $f (@$ref) {
-        push(@list, "\nbugs_activity.field = " . SqlQuote($f));
+#        push(@list, "\nbugs_activity.field = " . SqlQuote($f));
+		push(@list, "\nbugs_activity.fieldid = " . GetFieldID($f));
     }
     $query .= "and bugs_activity.bug_id = bugs.bug_id and (" .
         join(' or ', @list) . ") ";
@@ -614,7 +630,7 @@ if (defined $ref && 0 < @$ref) {
     }
 }
 
-foreach my $f ("short_desc", "long_desc", "bug_file_loc",
+foreach my $f ("short_desc", "bug_file_loc",
                "status_whiteboard") {
     if (defined $::FORM{$f}) {
         my $s = trim($::FORM{$f});
@@ -625,14 +641,18 @@ foreach my $f ("short_desc", "long_desc", "bug_file_loc",
             } elsif ($::FORM{$f . "_type"} eq "notregexp") {
                 $query .= "and $f not regexp $s\n";
             } elsif ($::FORM{$f . "_type"} eq "casesubstring") {
-                $query .= "and instr($f, $s)\n";
+                $query .= "and instr($f, $s) != 0\n";
             } else {
-                $query .= "and instr(lower($f), lower($s))\n";
+                $query .= "and instr(lower($f), lower($s)) != 0\n";
             }
         }
     }
 }
 
+# FIXME High priority
+# if (defined($::FORM{'long_desc'}) && $::FORM{'long_desc'} ne "") {
+# 	$query .= " and longdescs.thetext like '%" . $::FORM{'long_desc'} . "%'\n";
+# }
 
 # Removed because Oracle does not support grouping on a column that 
 # does not have a grouping function associated with it like Mysql does.
@@ -917,7 +937,7 @@ document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCh
     <TD><SELECT NAME=version>$version_popup</SELECT></TD>
 <TR>
     <TD ALIGN=RIGHT><B><A HREF="bug_status.cgi#rep_platform">Platform:</A></B></TD>
-    <TD><SELECT NAME=rep_platform>$platform_popup/SELECT></TD>
+    <TD><SELECT NAME=rep_platform>$platform_popup</SELECT></TD>
     <TD ALIGN=RIGHT><B><A HREF="bug_status.cgi#priority">Priority:</A></B></TD>
     <TD><SELECT NAME=priority>$priority_popup</SELECT></TD>
 </TR>

@@ -122,7 +122,7 @@ sub check_shadowdb {
 DefParam("contract",
      "Contract support (Red Hat)",
      "b",
-     0);
+     1);
 
 DefParam("templatepath",
 	 "The path to your html template files",
@@ -137,7 +137,7 @@ DefParam("maintainer",
 DefParam("urlbase",
 	 "The URL that is the common initial leading part of all Bugzilla URLs.",
 	 "t",
-	 "http://bugzilla.redhat.com/bugzilla2/",
+	 "http://bugzilla.redhat.com/bugzilla/",
 	 \&check_urlbase);
 
 sub check_urlbase {
@@ -282,8 +282,9 @@ this text, %mailaddress% gets replaced by the person's email address,
 %password% gets replaced by their password.  %<i>anythingelse</i>% gets
 replaced by the definition of that parameter (as defined on this page).},
          "l",
-         q{From: bugzilla-daemon
+         q{From: bugzilla@redhat.com
 To: %mailaddress%
+X-loop: bugzilla@redhat.com
 Subject: Your Bugzilla password.
 
 To use the wonders of Bugzilla, you can use the following:
@@ -310,8 +311,9 @@ to an existing one.  %summary% gets replaced by the summary of this
 bug.  %<i>anythingelse</i>% gets replaced by the definition of that
 parameter (as defined on this page).},
          "l",
-"From: bugzilla-daemon
+"From: bugzilla\@redhat.com
 To: %to%
+X-loop: bugzilla\@redhat.com
 Cc: %cc%
 Subject: [Bug %bugid%] %neworchanged% - %summary%
 
@@ -331,7 +333,7 @@ has to then turn on the "New email tech" preference.},
 DefParam("newchangedmail",
 q{The same as 'changedmail', but used for the newemailtech stuff.},
          "l",
-"From: bugzilla-daemon
+"From: bugzilla\@redhat.com
 To: %to%
 Cc: %cc%
 Subject: [Bug %bugid%] %neworchanged% - %summary%
@@ -460,7 +462,7 @@ DefParam("usebrowserinfo",
 	 "Do you want bug reports to be assigned an OS & Platform based on the browser
 	  the user makes the report from?",
 	 "b",
-	 1);
+	 0);
 
 
 DefParam("usedependencies",
@@ -508,8 +510,9 @@ DefParam("emailsuffix",
 DefParam("voteremovedmail",
 q{This is a mail message to send to anyone who gets a vote removed from a bug for any reason.  %to% gets replaced by a comma-separated list of people who used to be voting for this bug.  %bugid% gets replaced by the bug number.  %reason% gets replaced by a short reason describing why the vote was removed. %count% is how many votes got removed. %<i>anythingelse</i>% gets replaced by the definition of thatparameter (as defined on this page).},
          "l",
-"From: bugzilla-daemon
+"From: bugzilla\@redhat.com
 To: %to%
+X-loop: bugzilla\@redhat.com
 Subject: [Bug %bugid%] Your vote has been removed from this bug
 
 You used to have a vote on bug %bugid%, but it has been removed.

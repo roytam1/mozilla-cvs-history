@@ -33,6 +33,11 @@ print "Content-type: text/html\n\n";
 ConnectToDatabase();
 quietly_check_login();
 
+my $userid = 0;
+if (defined($::COOKIE{'Bugzilla_login'})) {
+	$userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
+}
+
 my $generic_query  = "
 select
   bugs.bug_id,
@@ -56,7 +61,7 @@ from bugs,profiles assign,profiles report
 where assign.userid = bugs.assigned_to and report.userid = bugs.reporter and ";
 
 foreach my $bug (split(/:/, $::FORM{'buglist'})) {
- 	if (!CanISee($bug, DBname_to_id($::COOKIE{'Bugzilla_login'}))) {
+ 	if (!CanISee($bug, $userid)) {
 		next;
 	} 
 
