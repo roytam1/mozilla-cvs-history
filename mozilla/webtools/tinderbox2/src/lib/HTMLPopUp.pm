@@ -190,6 +190,8 @@ sub split_cgi_args {
 # I added the URL to the end of the functions named: escapeURL,
 # unescapeURL for clarity.
 
+# I modified escapeHTML() to escape the "'" as well so that my popup
+# windows code do not see a "'" in their input as this confuses them.
 
 
 # Escape HTML 
@@ -201,6 +203,7 @@ sub escapeHTML {
 
     $toencode=~s/&/&amp;/g;
     $toencode=~s/\"/&quot;/g;
+    $toencode=~s/\'/&\#039;/g;
     $toencode=~s/>/&gt;/g;
     $toencode=~s/</&lt;/g;
     return $toencode;
