@@ -326,7 +326,7 @@ sub write_update_file {
 
   $update_file =~ s/([^0-9a-zA-Z\.\-\_\/\:]+)/\./g;
 
-  $update_file = main::extract_filename_chars($update_file);
+  $update_file = main::extract_safe_filename($update_file);
 
   # We are done, tell the tinderserver about this build.  
 

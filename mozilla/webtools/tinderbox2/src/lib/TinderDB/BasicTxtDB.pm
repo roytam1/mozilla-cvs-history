@@ -105,13 +105,12 @@ sub db_file {
 
 
 sub unlink_files {
-  my ($self, $dir, @files) = @_;
+  my ($self, @files) = @_;
 
   foreach $file (@files) {
-    $full_file = "$dir/$file";
 
     # This may be the output of a glob, make it taint safe.
-    $full_file = main::extract_filename_chars($full_file);
+    $full_file = main::extract_safe_filename($file);
 
     unlink ("$full_file") ||
       die("Could not remove filename: '$full_file': $!\n");
@@ -152,7 +151,7 @@ sub readdir_file_prefix {
 
   # make it taint safe.
 
-  my (@untainted_files) = map { main::extract_filename_chars($_) } 
+  my (@untainted_files) = map { main::extract_safe_filename("$dir/$_") } 
   @sorted_files;
 
   return @untainted_files;
@@ -204,8 +203,9 @@ sub loadtree_db {
 
   # ignore unlink errors, cleaning up the directory is not important. 
   
-  foreach $file (@sorted_files) {
-    $file = main::extract_filename_chars($file);
+  my @extra_files = grep {!/^${filename}$/} @sorted_files;
+  foreach $file (@extra_files) {
+    $file = main::extract_safe_filename($file);
     unlink($file);
   }
 
