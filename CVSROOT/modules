@@ -295,3 +295,20 @@ Raptor -a \
 RaptorAll -a \
 	RaptorDist  \
 	Raptor
+
+#######################################################################
+# Modules for the Directory SDK.  There are two users of the libldap
+# Mozilla and the DirectorySDK
+ 
+DirectorySDKSource -a \
+       DirectorySDKSourceCommon \
+       DirectorySDKSourceBuild
+ 
+DirectorySDKSourceCommon -a \
+       mozilla/directory/ldapsdk.mak \
+       mozilla/directory/ldapsdk.mk \
+       mozilla/directory/Makefile \
+       mozilla/directory/c-sdk
+ 
+DirectorySDKSourceBuild -a \
+       mozilla/config
