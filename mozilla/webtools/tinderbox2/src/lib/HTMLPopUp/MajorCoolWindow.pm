@@ -367,7 +367,7 @@ sub Link {
       $args{'windowtxt'} =~ s/[\n\t]+/ /g;
       $args{'windowtxt'} =~ s/\s+/ /g;
 
-#    push @POPUPTXT, $args{'windowtxt'};
+      push @POPUPTXT, $args{'windowtxt'};
 
     }
 
@@ -384,35 +384,20 @@ sub Link {
 
     #
 
-    $popup .= "onMouseOver=\" ";
+    $popup .= "onClick=\" ";
     ($args{'statuslinetxt'}) &&
       ($popup .= "msg(\'$args{'statuslinetxt'}\'); ");
     ($args{'windowtxt'}) &&
       ($popup .= "tip(".(
                        "\'TOP\',".
                        "\'$args{'windowtitle'}\',".
-                       "\'$args{'windowtxt'}\',".
+                       "popuptxt[$#POPUPTXT],".
                        "$args{'windowheight'},".
                        "$args{'windowwidth'},".
                        "1".
                       "").
        "); ");
-    $popup .= "return true\" ";
-
-    $popup .= "onMouseOut=\" ";
-    ($args{'statuslinetxt'}) &&
-      ($popup .= "msg(''); ");
-    ($args{'windowtxt'}) &&
-      ($popup .= "tip('TOP','','',0,0,0); ");
-    $popup .= "return true\" ";
-
-    $popup .= "onClick=\" ";
-    ($args{'statuslinetxt'}) &&
-      ($popup .= "msg(''); ");
-    ($args{'windowtxt'}) &&
-      ($popup .= "tip('TOP','','',0,0,0); ");
-    $popup .= "return true\"";
-
+    $popup .= "return true;\" ";
   }
 
   my $name = '';
@@ -455,7 +440,20 @@ sub test_define_structures {
 }
 
 sub define_structures {
-  return '';
+  my $self = shift @_;
+  my (@out) =();
+
+  push @out, "<script language=\"JavaScript\">\n";
+  push @out, "// Separate out the popup window string table\n";
+  push @out, "// in order to make the structure of the HTML easier to read.\n";
+  push @out, "popuptxt = new Array();\n";
+  foreach $i (0 .. $#POPUPTXT) {
+      push @out, "popuptxt[$i] = \"$POPUPTXT[$i]\"\;\n";
+  }
+  push @out, "\n";
+  push @out, "</script>\n";
+
+  return @out;
 }
 
 1;
