@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!@PERL5@ -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public License
@@ -27,7 +27,6 @@ require "CGI.pl";
 # Shut up misguided -w warnings about "used only once":
 use vars %::COOKIE;
 
-
 confirm_login();
 
 print "Content-type: text/html\n\n";
@@ -38,27 +37,43 @@ if (Param("maintainer") ne $::COOKIE{'Bugzilla_login'}) {
     exit;
 }
 
-
 PutHeader("Saving new owners");
 
-SendSQL("select program, value, initialowner from components order by program, value");
-
+my %users;
 my @line;
 
-foreach my $key (keys(%::FORM)) {
-    $::FORM{url_decode($key)} = $::FORM{$key};
+SendSQL("select userid, login_name from profiles");
+
+while (@line = FetchSQLData()) {
+    $users{$line[1]} = $line[0];
 }
+
+SendSQL("
+select a.name,
+       b.name,
+       c.login_name,
+       b.component_id
+from   products   a,
+       components b,
+       profiles   c
+where  b.product_id = a.product_id and
+       c.userid     = b.owner_id
+order by a.name, b.name
+");
 
 my @updates;
 my $curIndex = 0;
 
 while (@line = FetchSQLData()) {
-    my $curItem = "$line[0]_$line[1]";
-    if (exists $::FORM{$curItem}) {
-        $::FORM{$curItem} =~ s/\r\n/\n/;
-        if ($::FORM{$curItem} ne $line[2]) {
-            print "$line[0] : $line[1] is now owned by $::FORM{$curItem}.<BR>\n";
-            $updates[$curIndex++] = "update components set initialowner = '$::FORM{$curItem}' where program = '$line[0]' and value = '$line[1]'";
+    if (exists $::FORM{$line[3]}) {
+        $::FORM{$line[3]} =~ s/\r\n/\n/;
+        if ($::FORM{$line[3]} ne $line[2]) {
+            if ($users{$::FORM{$line[3]}} eq "") {
+                print "<b>$line[0] : $line[1] unchanged, $::FORM{$line[3]} not listed in profiles table</b><BR>\n";
+                next;
+            }
+            print "$line[0] : $line[1] is now owned by $::FORM{$line[3]}.<BR>\n";
+            $updates[$curIndex++] = "update components set owner_id = $users{$::FORM{$line[3]}} where component_id = $line[3]";
         }
     }
 }

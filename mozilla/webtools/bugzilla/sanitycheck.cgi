@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!@PERL5@ -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public License
@@ -52,7 +52,7 @@ print "OK, now running sanity checks.<P>\n";
 
 Status("Checking profile ids...");
 
-SendSQL("select userid,login_name from profiles");
+SendSQL("select userid, login_name from profiles");
 
 my @row;
 
@@ -72,7 +72,7 @@ undef $profid{0};
 
 
 Status("Checking reporter/assigned_to ids");
-SendSQL("select bug_id,reporter,assigned_to from bugs");
+SendSQL("select bug_id, reporter_id, assigned_to from bugs");
 
 my %bugid;
 
@@ -83,13 +83,13 @@ while (@row = FetchSQLData()) {
         Alert("Bad reporter $reporter in " . BugLink($id));
     }
     if (!defined $profid{$assigned_to}) {
-        Alert("Bad assigned_to $assigned_to in" . BugLink($id));
+        Alert("Bad assigned_to $assigned_to in " . BugLink($id));
     }
 }
 
 Status("Checking CC table");
 
-SendSQL("select bug_id,who from cc");
+SendSQL("select bug_id, profile_id from cc");
 while (@row = FetchSQLData()) {
     my ($id, $cc) = (@row);
     if (!defined $profid{$cc}) {
@@ -100,7 +100,7 @@ while (@row = FetchSQLData()) {
 
 Status("Checking activity table");
 
-SendSQL("select bug_id,who from bugs_activity");
+SendSQL("select bug_id, profile_id from bugs_activity");
 
 while (@row = FetchSQLData()) {
     my ($id, $who) = (@row);

@@ -241,7 +241,7 @@ You will get this message once a day until you've dealt with these bugs!
 DefParam("defaultquery",
  	 "This is the default query that initially comes up when you submit a bug.  It's in URL parameter format, which makes it hard to read.  Sorry!",
 	 "t",
-	 "bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&product=Mozilla&order=%22Importance%22");
+	 "bug_status=1&bug_status=2&bug_status=3&product=5&order=%22Importance%22");
 
 DefParam("usetargetmilestone",
 	 "Do you wish to use the Target Milestone field?",

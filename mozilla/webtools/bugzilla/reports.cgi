@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!@PERL5@ -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public License
@@ -166,26 +166,28 @@ $when<p>
 FIN
 
 	my $query = <<FIN;
-select 
-	bugs.bug_id, bugs.assigned_to, bugs.bug_severity,
-	bugs.bug_status, bugs.product, 
-	assign.login_name,
-	report.login_name,
-	unix_timestamp(date_format(bugs.creation_ts, '%Y-%m-%d %h:%m:%s'))
 
-from   bugs,
-       profiles assign,
-       profiles report,
-       versions projector
-where  bugs.assigned_to = assign.userid
-and    bugs.reporter = report.userid
-and    bugs.product='$::FORM{'product'}'
-and 	 
-	( 
-	bugs.bug_status = 'NEW' or 
-	bugs.bug_status = 'ASSIGNED' or 
-	bugs.bug_status = 'REOPENED'
-	)
+select a.bug_id,
+       a.assigned_to,
+       b.name,
+       c.name,
+       d.name,
+       e.login_name,
+       f.login_name,
+       unix_timestamp(date_format(a.creation_ts, '%Y-%m-%d %h:%m:%s'))
+from   bugs         a,
+       bug_severity b,
+       bug_status   c,
+       products     d,
+       profiles     e,
+       profiles     f
+where  a.bug_severity_id = b.bug_severity_id and
+       a.bug_status_id   = c.bug_status_id and
+       (c.name = 'NEW' or c.name = 'ASSIGNED' or c.name = 'REOPENED') and
+       a.product_id      = d.product_id and
+       d.name            = '$::FORM{'product'}' and
+       a.assigned_to     = e.userid and
+       a.reporter_id     = f.userid
 FIN
 
 	print "<font color=purple><tt>$query</tt></font><p>\n" 

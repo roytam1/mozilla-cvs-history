@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!@PERL5@ -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public License
@@ -57,9 +57,13 @@ sub collect_stats
 	my $when = localtime (time);
 
 	my $query = <<FIN;
-select count(bug_status) from bugs where 
-(bug_status='NEW' or  bug_status='ASSIGNED' or bug_status='REOPENED')
-and product='$product' group by bug_status
+select b.name, count(*)
+from bugs a, bug_status b, products c
+where a.bug_status_id = b.bug_status_id and
+      a.product_id = c.product_id and
+      c.name = '$product' and
+      (b.name = 'NEW' or b.name = 'ASSIGNED' or b.name = 'REOPENED') 
+group by a.bug_status_id;
 FIN
         $product =~ s/\//-/gs;
 	my $file = join '/', $dir, $product;
@@ -74,7 +78,7 @@ FIN
 		
 		while (my @n = FetchSQLData())
 			{
-			push @row, @n;
+			push @row, @n[1];
 			}
 		
 		if (! $exists)

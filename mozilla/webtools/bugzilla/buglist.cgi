@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!@PERL5@ -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public License
@@ -183,7 +183,7 @@ if ($dotweak) {
 
 print "Content-type: text/html\n\n";
 
-my $query = "select bugs.bug_id";
+my $query = "select bugs.id";
 
 
 foreach my $c (@collist) {

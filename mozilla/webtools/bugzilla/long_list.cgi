@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!@PERL5@ -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public License
@@ -32,32 +32,57 @@ print "Content-type: text/html\n\n";
 print "<TITLE>Full Text Bug Listing</TITLE>\n";
 
 my $generic_query  = "
+
 select
-  bugs.bug_id,
-  bugs.product,
-  bugs.version,
-  bugs.rep_platform,
-  bugs.op_sys,
-  bugs.bug_status,
-  bugs.bug_severity,
-  bugs.priority,
-  bugs.resolution,
-  assign.login_name,
-  report.login_name,
-  bugs.component,
-  bugs.bug_file_loc,
-  bugs.short_desc,
-  bugs.target_milestone,
-  bugs.qa_contact,
-  bugs.status_whiteboard
-from bugs,profiles assign,profiles report
-where assign.userid = bugs.assigned_to and report.userid = bugs.reporter and
+        a.id,
+        b.name,
+        c.name,
+        d.name,
+        e.name,
+        f.name,
+        h.name,
+        m.name,
+        g.name,
+        k.login_name,
+        l.login_name,
+        i.name,
+        a.bug_file_loc,
+        a.short_desc,
+        j.name,
+        a.qa_id,
+        a.status_whiteboard,
+        date_format(a.creation_ts,'Y-m-d')
+from bugs         a,
+     products     b,
+     versions     c,
+     rep_platform d,
+     op_sys       e,
+     bug_status   f,
+     resolution   g,
+     bug_severity h,
+     components   i,
+     milestones   j,
+     profiles     k,
+     profiles     l,
+     priority     m
+where a.product_id = b.id and
+      a.version_id = c.id and
+      a.rep_platform_id = d.id and
+      a.op_sys_id = e.id and
+      a.bug_status_id = f.id and
+      a.resolution_id = g.id and
+      a.bug_severity_id = h.id and
+      a.component_id = i.id and
+      a.milestone_id = j.id and
+      a.assigned_id = k.userid and
+      a.reporter_id = l.userid and
+      a.priority_id = m.id and
 ";
 
 ConnectToDatabase();
 
 foreach my $bug (split(/:/, $::FORM{'buglist'})) {
-    SendSQL("$generic_query bugs.bug_id = $bug");
+    SendSQL("$generic_query a.id = $bug");
 
     my @row;
     if (@row = FetchSQLData()) {

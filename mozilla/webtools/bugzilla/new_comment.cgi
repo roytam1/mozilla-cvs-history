@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl
+#!@PERL5@ -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public License

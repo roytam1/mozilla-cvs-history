@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!@PERL5@ -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public License
@@ -32,9 +32,17 @@ require "globals.pl";
 
 ConnectToDatabase();
 
-SendSQL("select bug_id,login_name from bugs,profiles where " .
-        "bug_status = 'NEW' and to_days(now()) - to_days(delta_ts) > " .
-        Param('whinedays') . " and userid=assigned_to order by bug_id");
+SendSQL("
+select a.bug_id, b.login_name
+from bugs a,
+     profiles b,
+     bug_status c
+where a.bug_status_id = c.bug_status_id and
+      c.name = 'NEW' and
+      a.assigned_to = b.userid and
+      to_days(now()) - to_days(a.delta_ts) >  " . Param('whinedays') . "
+order by a.bug_id;
+");
 
 my %bugs;
 my @row;

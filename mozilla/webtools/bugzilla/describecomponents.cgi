@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!@PERL5@ -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public License
@@ -74,7 +74,7 @@ my $colbut1 = $cols - 1;
 
 print "</tr>";
 
-SendSQL("select value, initialowner, initialqacontact, description from components where program = " . SqlQuote($product));
+SendSQL("select value, initialowner, initialqacontact, description from bugs.components where program = " . SqlQuote($product));
 
 while (MoreSQLData()) {
     my @row = FetchSQLData();

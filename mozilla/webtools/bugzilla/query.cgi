@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!@PERL5@ -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public License
@@ -26,17 +26,17 @@ require "CGI.pl";
 
 # Shut up misguided -w warnings about "used only once":
 
-use vars @::legal_resolution,
-  @::legal_product,
-  @::legal_bug_status,
-  @::legal_priority,
-  @::legal_resolution,
-  @::legal_opsys,
-  @::legal_platform,
-  @::legal_components,
-  @::legal_versions,
-  @::legal_severity,
-  @::legal_target_milestone,
+use vars 
+  %::cache_versions,
+  %::cache_severity,
+  %::cache_priority,
+  %::cache_milestone,
+  %::cache_platform,
+  %::cache_resolution,
+  %::cache_opsys,
+  %::cache_product,
+  %::cache_bug_status,
+  %::cache_components,
   %::FORM;
 
 
@@ -195,8 +195,9 @@ my $emailinput2 = GenerateEmailInput(2);
 
 PutHeader("Bugzilla Query Page", "Query Page");
 
-push @::legal_resolution, "---"; # Oy, what a hack.
-push @::legal_target_milestone, "---"; # Oy, what a hack.
+## FIX ME
+##push @::legal_resolution, "---"; # Oy, what a hack.
+##push @::legal_target_milestone, "---"; # Oy, what a hack.
 
 print "
 <FORM NAME=queryForm METHOD=GET ACTION=\"buglist.cgi\">
@@ -213,32 +214,32 @@ print "
 <tr>
 <td align=left valign=top>
 <SELECT NAME=\"bug_status\" MULTIPLE SIZE=7>
-@{[make_options(\@::legal_bug_status, $default{'bug_status'}, $type{'bug_status'})]}
+@{[make_options(\%::cache_bug_status, $default{'bug_status'}, $type{'bug_status'})]}
 </SELECT>
 </td>
 <td align=left valign=top>
 <SELECT NAME=\"resolution\" MULTIPLE SIZE=7>
-@{[make_options(\@::legal_resolution, $default{'resolution'}, $type{'resolution'})]}
+@{[make_options(\%::cache_resolution, $default{'resolution'}, $type{'resolution'})]}
 </SELECT>
 </td>
 <td align=left valign=top>
 <SELECT NAME=\"rep_platform\" MULTIPLE SIZE=7>
-@{[make_options(\@::legal_platform, $default{'rep_platform'}, $type{'rep_platform'})]}
+@{[make_options(\%::cache_platform, $default{'rep_platform'}, $type{'rep_platform'})]}
 </SELECT>
 </td>
 <td align=left valign=top>
 <SELECT NAME=\"op_sys\" MULTIPLE SIZE=7>
-@{[make_options(\@::legal_opsys, $default{'op_sys'}, $type{'op_sys'})]}
+@{[make_options(\%::cache_opsys, $default{'op_sys'}, $type{'op_sys'})]}
 </SELECT>
 </td>
 <td align=left valign=top>
 <SELECT NAME=\"priority\" MULTIPLE SIZE=7>
-@{[make_options(\@::legal_priority, $default{'priority'}, $type{'priority'})]}
+@{[make_options(\%::cache_priority, $default{'priority'}, $type{'priority'})]}
 </SELECT>
 </td>
 <td align=left valign=top>
 <SELECT NAME=\"bug_severity\" MULTIPLE SIZE=7>
-@{[make_options(\@::legal_severity, $default{'bug_severity'}, $type{'bug_severity'})]}
+@{[make_options(\%::cache_severity, $default{'bug_severity'}, $type{'bug_severity'})]}
 </SELECT>
 </tr>
 </table>
@@ -272,19 +273,19 @@ print "
 
 <td align=left valign=top>
 <SELECT NAME=\"product\" MULTIPLE SIZE=5>
-@{[make_options(\@::legal_product, $default{'product'}, $type{'product'})]}
+@{[make_options(\%::cache_product, $default{'product'}, $type{'product'})]}
 </SELECT>
 </td>
 
 <td align=left valign=top>
 <SELECT NAME=\"version\" MULTIPLE SIZE=5>
-@{[make_options(\@::legal_versions, $default{'version'}, $type{'version'})]}
+@{[make_options(\%::cache_versions, $default{'version'}, $type{'version'})]}
 </SELECT>
 </td>
 
 <td align=left valign=top>
 <SELECT NAME=\"component\" MULTIPLE SIZE=5>
-@{[make_options(\@::legal_components, $default{'component'}, $type{'component'})]}
+@{[make_options(\%::cache_components, $default{'component'}, $type{'component'})]}
 </SELECT>
 </td>";
 
@@ -292,7 +293,7 @@ if (Param("usetargetmilestone")) {
     print "
 <td align=left valign=top>
 <SELECT NAME=\"target_milestone\" MULTIPLE SIZE=5>
-@{[make_options(\@::legal_target_milestone, $default{'component'}, $type{'component'})]}
+@{[make_options(\%::cache_milestone, $default{'component'}, $type{'component'})]}
 </SELECT>
 </td>";
 }

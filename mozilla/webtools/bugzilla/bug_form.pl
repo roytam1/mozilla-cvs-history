@@ -23,26 +23,27 @@ use strict;
 
 my $query = "
 select
-        bug_id,
-        product,
-        version,
-        rep_platform,
-        op_sys,
-        bug_status,
-        resolution,
-        priority,
-        bug_severity,
-        component,
-        assigned_to,
-        reporter,
-        bug_file_loc,
-        short_desc,
-	target_milestone,
-	qa_contact,
-	status_whiteboard,
-        date_format(creation_ts,'Y-m-d')
-from bugs
-where bug_id = $::FORM{'id'}";
+        a.id,
+        a.product_id,
+        a.version_id,
+        a.rep_platform_id,
+        a.op_sys_id,
+        a.bug_status_id,
+        a.resolution_id,
+        a.priority_id,
+        a.bug_severity_id,
+        a.component_id,
+        a.assigned_id,
+        a.reporter_id,
+        a.bug_file_loc,
+        a.short_desc,
+	a.milestone_id,
+	a.qa_id,
+	a.status_whiteboard,
+        date_format(a.creation_ts,'Y-m-d')
+from bugs         a
+where a.id = $::FORM{'id'}
+";
 
 SendSQL($query);
 my %bug;
@@ -81,15 +82,11 @@ GetVersionTable();
 # These should be read from the database ...
 #
 
-my $resolution_popup = make_options(\@::legal_resolution_no_dup,
-				    $bug{'resolution'});
-my $platform_popup = make_options(\@::legal_platform, $bug{'rep_platform'});
-my $priority_popup = make_options(\@::legal_priority, $bug{'priority'});
-my $sev_popup = make_options(\@::legal_severity, $bug{'bug_severity'});
-
-
-my $component_popup = make_options($::components{$bug{'product'}},
-				   $bug{'component'});
+my $resolution_popup = make_options(\%::cache_resolution_no_dup, $bug{'resolution'});
+my $platform_popup = make_options(\%::cache_platform, $bug{'rep_platform'});
+my $priority_popup = make_options(\%::cache_priority, $bug{'priority'});
+my $sev_popup = make_options(\%::cache_severity, $bug{'bug_severity'});
+my $component_popup = make_options_lookup($::cache_prod_components{$bug{'product'}}, \%::cache_components, $bug{'component'});
 
 my $cc_element = '<INPUT NAME=cc SIZE=30 VALUE="' .
     ShowCcList($::FORM{'id'}) . '">';
@@ -115,27 +112,27 @@ print "
     <TD><SELECT NAME=rep_platform>$platform_popup</SELECT></TD>
     <TD ALIGN=RIGHT><B>Version:</B></TD>
     <TD><SELECT NAME=version>" .
-    make_options($::versions{$bug{'product'}}, $bug{'version'}) .
+    make_options_lookup($::cache_prod_versions{$bug{'product'}}, \%::cache_versions, $bug{'version'}) .
     "</SELECT></TD>
   </TR><TR>
     <TD ALIGN=RIGHT><B>Product:</B></TD>
     <TD><SELECT NAME=product>" .
-    make_options(\@::legal_product, $bug{'product'}) .
+    make_options(\%::cache_product, $bug{'product'}) .
     "</SELECT></TD>
     <TD ALIGN=RIGHT><B>OS:</B></TD>
     <TD><SELECT NAME=op_sys>" .
-    make_options(\@::legal_opsys, $bug{'op_sys'}) .
+    make_options(\%::cache_opsys, $bug{'op_sys'}) .
     "</SELECT><TD ALIGN=RIGHT><B>Reporter:</B></TD><TD>$bug{'reporter'}</TD>
   </TR><TR>
     <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html\">Status:</A></B></TD>
-      <TD>$bug{'bug_status'}</TD>
+      <TD>$::cache_bug_status{$bug{'bug_status'}}</TD>
     <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#priority\">Priority:</A></B></TD>
       <TD><SELECT NAME=priority>$priority_popup</SELECT></TD>
     <TD ALIGN=RIGHT><B>Cc:</B></TD>
       <TD> $cc_element </TD>
   </TR><TR>
     <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html\">Resolution:</A></B></TD>
-      <TD>$bug{'resolution'}</TD>
+      <TD>$::cache_resolution{$bug{'resolution'}}</TD>
     <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#severity\">Severity:</A></B></TD>
       <TD><SELECT NAME=bug_severity>$sev_popup</SELECT></TD>
     <TD ALIGN=RIGHT><B><A HREF=\"describecomponents.cgi?product=" .
@@ -157,12 +154,11 @@ if (Param("usetargetmilestone")) {
     if ($bug{'target_milestone'} eq "") {
         $bug{'target_milestone'} = " ";
     }
-    push(@::legal_target_milestone, " ");
+    push(@::cache_milestone, " ");
     print "
 <TD ALIGN=RIGHT><A href=\"$url\"><B>Target Milestone:</B></A></TD>
 <TD><SELECT NAME=target_milestone>" .
-    make_options(\@::legal_target_milestone,
-                 $bug{'target_milestone'}) .
+    make_options(\%::cache_milestone, $bug{'target_milestone'}) .
                      "</SELECT></TD>";
 }
 
@@ -215,13 +211,13 @@ print "
 <TEXTAREA WRAP=HARD NAME=comment ROWS=5 COLS=80></TEXTAREA><BR>
 <br>
 <INPUT TYPE=radio NAME=knob VALUE=none CHECKED>
-        Leave as <b>$bug{'bug_status'} $bug{'resolution'}</b><br>";
+        Leave as <b>$::cache_bug_status{$bug{'bug_status'}} $::cache_resolution{$bug{'resolution'}}</b><br>";
 
 # knum is which knob number we're generating, in javascript terms.
 
 my $knum = 1;
 
-my $status = $bug{'bug_status'};
+my $status = $::cache_bug_status{$bug{'bug_status'}};
 
 if ($status eq "NEW" || $status eq "ASSIGNED" || $status eq "REOPENED") {
     if ($status ne "ASSIGNED") {

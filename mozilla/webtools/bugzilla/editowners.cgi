@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!@PERL5@ -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public License
@@ -48,7 +48,18 @@ print "<form method=post action=doeditowners.cgi><table>\n";
 
 my $rowbreak = "<tr><td colspan=2><hr></td></tr>";
 
-SendSQL("select program, value, initialowner from components order by program, value");
+SendSQL("
+select a.name,
+       b.name,
+       c.login_name,
+       b.component_id
+from   products   a,
+       components b,
+       profiles   c
+where  b.product_id = a.product_id and
+       c.userid     = b.owner_id
+order by a.name, b.name
+");
 
 my @line;
 my $curProgram = "";
@@ -59,8 +70,9 @@ while (@line = FetchSQLData()) {
         print "<tr><th align=right valign=top>$line[0]:</th><td></td></tr>\n";
         $curProgram = $line[0];
     }
-    print "<tr><td valign = top>$line[1]</td><td><input size=80 ";
-    print "name=\"$line[0]_$line[1]\" value=\"$line[2]\"></td></tr>\n";
+    print "<tr><td valign = top>$line[1]</td><td>\n";
+    print "<input size=80 name=\"$line[3]\" value=\"$line[2]\">\n";
+    print "</td></tr>\n";
 }
 
 print "</table>\n";

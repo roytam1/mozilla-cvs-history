@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!@PERL5@ -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public License
@@ -30,12 +30,10 @@ PutHeader("Changes made to bug $::FORM{'id'}", "Activity log",
           "Bug $::FORM{'id'}");
 
 my $query = "
-        select bugs_activity.field, bugs_activity.when,
-                bugs_activity.oldvalue, bugs_activity.newvalue,
-                profiles.login_name
-        from bugs_activity,profiles
+        select bugs_activity.field, bugs_activity.when, bugs_activity.oldvalue, bugs_activity.newvalue, profiles.login_name
+        from bugs_activity, profiles
         where bugs_activity.bug_id = $::FORM{'id'}
-        and profiles.userid = bugs_activity.who
+        and profiles.userid = bugs_activity.profile_id
         order by bugs_activity.when";
 
 ConnectToDatabase();

@@ -180,22 +180,53 @@ sub make_options {
     my $last = "";
     my $popup = "";
     my $found = 0;
-    foreach my $item (@$src) {
+
+    foreach my $id (sort { %$src->{$a} cmp %$src->{$b} } keys %$src) {
+        my $item;
+        $item = %$src->{$id};
         if ($item eq "-blank-" || $item ne $last) {
             if ($item eq "-blank-") {
 		$item = "";
 	    }
             $last = $item;
-            if ($isregexp ? $item =~ $default : $default eq $item) {
-                $popup .= "<OPTION SELECTED VALUE=\"$item\">$item";
+            if ($default ne "" && ($isregexp ? $id =~ $default : %$src->{$default} eq $item)) {
+                $popup .= "<OPTION SELECTED VALUE=\"$id\">$item";
                 $found = 1;
             } else {
-		$popup .= "<OPTION VALUE=\"$item\">$item";
+		$popup .= "<OPTION VALUE=\"$id\">$item";
             }
         }
     }
     if (!$found && $default ne "") {
-	$popup .= "<OPTION SELECTED>$default";
+	$popup .= "<OPTION SELECTED VALUE=\"-1\">" . %$src->{$default};
+    }
+    return $popup;
+}
+
+
+sub make_options_lookup {
+    my ($src,$lookup,$default) = (@_);
+    my $last = "";
+    my $popup = "";
+    my $found = 0;
+    foreach my $id (sort { %$lookup->{$a} cmp %$lookup->{$b} } @$src) {
+        my $item;
+        $item = %$lookup->{$id};
+        if ($item eq "-blank-" || $item ne $last) {
+            if ($item eq "-blank-") {
+		$item = "";
+	    }
+            $last = $item;
+            if ($default ne "" && %$lookup->{$default} eq $item) {
+                $popup .= "<OPTION SELECTED VALUE=\"$id\">$item";
+                $found = 1;
+            } else {
+		$popup .= "<OPTION VALUE=\"$id\">$item";
+            }
+        }
+    }
+    if (!$found && $default ne "") {
+	$popup .= "<OPTION SELECTED VALUE=\"-1\">" . %$lookup->{$default};
     }
     return $popup;
 }

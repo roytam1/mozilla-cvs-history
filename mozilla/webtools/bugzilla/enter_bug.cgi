@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!@PERL5@ -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public License
@@ -157,16 +157,11 @@ my $assign_element = GeneratePersonInput('assigned_to', 1,
 my $cc_element = GeneratePeopleInput('cc', formvalue('cc'));
 
 
-my $priority_popup = make_popup('priority', \@::legal_priority,
-                                formvalue('priority', 'P2'), 0);
-my $sev_popup = make_popup('bug_severity', \@::legal_severity,
-                           formvalue('bug_severity', 'normal'), 0);
-my $platform_popup = make_popup('rep_platform', \@::legal_platform,
-                                pickplatform(), 0);
-my $opsys_popup = make_popup('op_sys', \@::legal_opsys, pickos(), 0);
-
-my $component_popup = make_popup('component', $::components{$product},
-                                 formvalue('component'), 1);
+my $priority_popup  = make_popup('priority',     \%::legal_priority, formvalue('priority', 'P2'), 0);
+my $sev_popup       = make_popup('bug_severity', \%::legal_severity, formvalue('bug_severity', 'normal'), 0);
+my $platform_popup  = make_popup('rep_platform', \%::legal_platform, pickplatform(), 0);
+my $opsys_popup     = make_popup('op_sys',       \%::legal_opsys,    pickos(), 0); 
+my $component_popup = make_popup('component',    $::components{$product}, formvalue('component'), 1);
 
 PutHeader ("Enter Bug");
 

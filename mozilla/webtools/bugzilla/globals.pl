@@ -34,8 +34,12 @@ $::dontchange = "--do_not_change--";
 $::chooseone = "--Choose_one:--";
 
 sub ConnectToDatabase {
+    my $host = "@DB_HOST@";
+    my $db   = "@DB_DATABASE@";
+    my $uid  = "@DB_USERID@";
+    my $pw   = "@DB_PASSWORD@";
     if (!defined $::db) {
-	$::db = Mysql->Connect("localhost", "bugs", "bugs", "")
+	$::db = Mysql->Connect($host, $db, $uid, $pw)
             || die "Can't connect to database server.";
     }
 }
@@ -82,14 +86,14 @@ sub AppendComment {
     if ($comment =~ /^\s*$/) {  # Nothin' but whitespace.
         return;
     }
-    SendSQL("select long_desc from bugs where bug_id = $bugid");
+    SendSQL("select long_desc from bugs where id = $bugid");
     
     my $desc = FetchOneColumn();
     my $now = time2str("%D %H:%M", time());
     $desc .= "\n\n------- Additional Comments From $who  $now -------\n";
     $desc .= $comment;
     SendSQL("update bugs set long_desc=" . SqlQuote($desc) .
-            " where bug_id=$bugid");
+            " where id=$bugid");
 }
 
 sub lsearch {
@@ -205,103 +209,120 @@ sub GenerateArrayCode {
     return join(',', @list);
 }
 
+sub BuildLookupHash {
+    my %hash;
+    my @line;
 
+    SendSQL("$_[0]");
+    while (@line = FetchSQLData()) {
+        $hash{$line[0]} = $line[1] ? $line[1] : " ";
+    }
+    return %hash;
+}
 
 sub GenerateVersionTable {
     ConnectToDatabase();
-    SendSQL("select value, program from versions order by value");
+
     my @line;
-    my %varray;
-    my %carray;
-    while (@line = FetchSQLData()) {
-        my ($v,$p1) = (@line);
-        if (!defined $::versions{$p1}) {
-            $::versions{$p1} = [];
-        }
-        push @{$::versions{$p1}}, $v;
-        $varray{$v} = 1;
-    }
-    SendSQL("select value, program from components");
-    while (@line = FetchSQLData()) {
-        my ($c,$p) = (@line);
-        if (!defined $::components{$p}) {
-            $::components{$p} = [];
-        }
-        my $ref = $::components{$p};
-        push @$ref, $c;
-        $carray{$c} = 1;
-    }
+    my %tarray;
 
     my $dotargetmilestone = Param("usetargetmilestone");
-
     my $mpart = $dotargetmilestone ? ", milestoneurl" : "";
-    SendSQL("select product, description$mpart from products");
+
+    SendSQL("select id, name, description$mpart from products");
+    %tarray = ();
     while (@line = FetchSQLData()) {
-        my ($p, $d, $u) = (@line);
-        $::proddesc{$p} = $d;
+        $::cache_product{$line[0]} = $line[1];
+        $::cache_product_desc{$line[0]} = $line[2];
         if ($dotargetmilestone) {
-            $::milestoneurl{$p} = $u;
+            $::cache_product_milestoneurl{$line[0]} = $line[3];
         }
     }
-            
+    @::cache_legal_products = sort {uc($a) cmp uc($b)} keys(%tarray);
 
-    my $cols = LearnAboutColumns("bugs");
-    
-    @::log_columns = @{$cols->{"-list-"}};
-    foreach my $i ("bug_id", "creation_ts", "delta_ts", "long_desc") {
-        my $w = lsearch(\@::log_columns, $i);
-        if ($w >= 0) {
-            splice(@::log_columns, $w, 1);
-        }
+    SendSQL("select id, product_id, name from versions");
+    foreach my $i (keys %::cache_product) {
+        $::cache_prod_versions{$i} = [];
     }
-
-    @::legal_priority = SplitEnumType($cols->{"priority,type"});
-    @::legal_severity = SplitEnumType($cols->{"bug_severity,type"});
-    @::legal_platform = SplitEnumType($cols->{"rep_platform,type"});
-    @::legal_opsys = SplitEnumType($cols->{"op_sys,type"});
-    @::legal_bug_status = SplitEnumType($cols->{"bug_status,type"});
-    @::legal_resolution = SplitEnumType($cols->{"resolution,type"});
-    @::legal_resolution_no_dup = @::legal_resolution;
-    my $w = lsearch(\@::legal_resolution_no_dup, "DUPLICATE");
-    if ($w >= 0) {
-        splice(@::legal_resolution_no_dup, $w, 1);
+    %tarray = ();
+    while (@line = FetchSQLData()) {
+        my ($v,$p,$n) = (@line);
+        my $ref = $::cache_prod_versions{$p};
+        push @$ref, $v;
+        $tarray{$n} = 1;
+        $::cache_versions{$v} = $n;
     }
+    @::cache_legal_versions = sort {uc($a) cmp uc($b)} keys(%tarray);
 
-    my @list = sort { uc($a) cmp uc($b)} keys(%::versions);
-    @::legal_product = @list;
+    foreach my $i (keys %::cache_product) {
+        $::cache_prod_components{$i} = [];
+    }
+    SendSQL("select id, product_id, name from components");
+    %tarray = ();
+    while (@line = FetchSQLData()) {
+        my ($c,$p,$n) = (@line);
+        my $ref = $::cache_prod_components{$p};
+        push @$ref, $c;
+        $tarray{$n} = 1;
+        $::cache_components{$c} = $n;
+    }
+    @::cache_legal_components = sort {uc($a) cmp uc($b)} keys(%tarray);
+
+    %::cache_priority   = BuildLookupHash("select id, name from priority");
+    %::cache_severity   = BuildLookupHash("select id, name from bug_severity");
+    %::cache_platform   = BuildLookupHash("select id, name from rep_platform");
+    %::cache_opsys      = BuildLookupHash("select id, name from op_sys");
+    %::cache_bug_status = BuildLookupHash("select id, name from bug_status");
+    %::cache_milestone  = BuildLookupHash("select id, name from milestones");
+    %::cache_resolution = BuildLookupHash("select id, name from resolution");
+    %::cache_resolution_no_dup = BuildLookupHash("select id, name from resolution where name <> 'DUPLICATE'");
+
+# FIX ME
+#    my $cols = LearnAboutColumns("bugs");
+#    
+#    @::log_columns = @{$cols->{"-list-"}};
+#    foreach my $i ("bug_id", "creation_ts", "delta_ts", "long_desc") {
+#        my $w = lsearch(\@::log_columns, $i);
+#        if ($w >= 0) {
+#            splice(@::log_columns, $w, 1);
+#        }
+#    }
+
     mkdir("data", 0777);
     chmod 0777, "data";
     my $tmpname = "data/versioncache.$$";
     open(FID, ">$tmpname") || die "Can't create $tmpname";
 
-    print FID GenerateCode('@::log_columns');
-    print FID GenerateCode('%::versions');
-
-    foreach my $i (@list) {
-        if (!defined $::components{$i}) {
-            $::components{$i} = "";
-        }
-    }
-    @::legal_versions = sort {uc($a) cmp uc($b)} keys(%varray);
-    print FID GenerateCode('@::legal_versions');
-    print FID GenerateCode('%::components');
-    @::legal_components = sort {uc($a) cmp uc($b)} keys(%carray);
-    print FID GenerateCode('@::legal_components');
-    foreach my $i('product', 'priority', 'severity', 'platform', 'opsys',
-                  'bug_status', 'resolution', 'resolution_no_dup') {
-        print FID GenerateCode('@::legal_' . $i);
-    }
-    print FID GenerateCode('%::proddesc');
-
+    print FID GenerateCode('%::cache_product');
+    print FID GenerateCode('%::cache_product_desc');
     if ($dotargetmilestone) {
-        my $last = Param("nummilestones");
-        my $i;
-        for ($i=1 ; $i<=$last ; $i++) {
-            push(@::legal_target_milestone, "M$i");
-        }
-        print FID GenerateCode('@::legal_target_milestone');
-        print FID GenerateCode('%::milestoneurl');
+        print FID GenerateCode('%::cache_product_milestoneurl');
     }
+    print FID GenerateCode('@::cache_legal_products');
+    print FID "\n";
+
+    print FID GenerateCode('%::cache_versions');
+    print FID GenerateCode('%::cache_prod_versions');
+    print FID GenerateCode('@::cache_legal_versions');
+    print FID "\n";
+
+    print FID GenerateCode('%::cache_components');
+    print FID GenerateCode('%::cache_prod_components');
+    print FID GenerateCode('@::cache_legal_components');
+    print FID "\n";
+
+    foreach my $i('priority', 'severity', 'platform', 'opsys',
+                  'bug_status', 'resolution', 'resolution_no_dup') {
+        print FID GenerateCode('%::cache_' . $i);
+        print FID "\n";
+    }
+    if ($dotargetmilestone) {
+        print FID GenerateCode('%::cache_milestone');
+        print FID "\n";
+    }
+#
+#    print FID GenerateCode('@::log_columns');
+#
     print FID "1;\n";
     close FID;
     rename $tmpname, "data/versioncache" || die "Can't rename $tmpname to versioncache";
@@ -333,11 +354,11 @@ sub GetVersionTable {
         GenerateVersionTable();
     }
     require 'data/versioncache';
-    if (!defined %::versions) {
+    if (!defined %::cache_versions) {
         GenerateVersionTable();
         do 'data/versioncache';
 
-        if (!defined %::versions) {
+        if (!defined %::cache_versions) {
             die "Can't generate version info; tell terry.";
         }
     }
@@ -402,7 +423,7 @@ sub DBNameToIdAndCheck {
 
 sub GetLongDescription {
     my ($id) = (@_);
-    SendSQL("select long_desc from bugs where bug_id = $id");
+    SendSQL("select long_desc from bugs where id = $id");
     return FetchOneColumn();
 }
 
@@ -411,7 +432,7 @@ sub ShowCcList {
     my ($num) = (@_);
     my @ccids;
     my @row;
-    SendSQL("select who from cc where bug_id = $num");
+    SendSQL("select profile_id from cc where bug_id = $num");
     while (@row = FetchSQLData()) {
         push(@ccids, $row[0]);
     }
