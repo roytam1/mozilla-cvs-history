@@ -335,7 +335,9 @@ sub HTML_status_page {
   "<br><p>\n\n".
   HTMLPopUp::Link(
                   "linktxt"=>"Regnerate HTML Pages",
-                  "href"=>"$FileStructure::URLS{'regenerate'}",
+                  "href"=>("$FileStructure::URLS{'regenerate'}".
+                           "\?".
+                           "tree=$tree"),
                   ).
   "<br>\n".
   HTMLPopUp::Link(
