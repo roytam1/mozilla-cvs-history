@@ -1,4 +1,4 @@
-Wpackage Conf::LocalConfig;
+package Conf::LocalConfig;
 use Conf;
 no warnings;
 
@@ -29,7 +29,7 @@ if ($newstuff == "") {
 After further checking, it has been realized that you do not require any localconfig 
 configuration.
 	
-	EOF
+EOF
 }
 
 if ($newstuff ne "") {
