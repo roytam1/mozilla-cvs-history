@@ -409,8 +409,7 @@ RaptorMac -a \
 	mozilla/lib/mac/MoreFiles \
 	mozilla/lib/mac/NSRuntime \
 	mozilla/lib/mac/NSStdLib \
-	mozilla/lib/mac/PowerPlant \
-	mozilla/silentdl 
+	mozilla/lib/mac/PowerPlant
 
 #####################
 # An all inclusive modules for tinderbox to use
