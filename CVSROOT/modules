@@ -25,6 +25,31 @@
 # can be useful for creating a module that consists of many directories
 # spread out over the entire source repository.
 
+######################################################################
+#
+# Modules for Browser50, which includes nglayout engine. PLACEHOLDER
+#
+
+Browser50All -a \
+	Raptor
+
+######################################################################
+#
+# Modules for MailClient50, which includes nglayout engine. PLACEHOLDER
+#
+
+MailClient50All -a \
+	Raptor
+
+######################################################################
+#
+# Modules for the MozillaClassic Browser, based on the original 
+# layout engine. If you wish to develop on the Mozilla Classic
+# codebase, pull using these modules and using the branch tag
+# MozillaSourceClassic_19981026_BRANCH.
+# These modules should be considered obsolete.
+#
+
 MozillaSource -a \
 	MozillaSourceWin \
 	MozillaSourceMac \
