@@ -38,7 +38,6 @@ $::CheckOptionValues = 0;       # It's OK if we have some bogus things in the
 
 use vars
   @::CheckOptionValues,
-  @::legal_resolution,
   @::legal_bug_status,
   @::legal_components,
   @::legal_keywords,
@@ -633,7 +632,7 @@ PutHeader("Bugzilla Query Page", "Query",
           "This page lets you search the database for recorded bugs.",
           q{onLoad="selectProduct(document.forms['queryform']);"}, $jscript);
 
-push @::legal_resolution, "---"; # Oy, what a hack.
+push @::queryable_resolution, "---"; # Oy, what a hack.
 
 my @logfields = ("[Bug creation]", @::log_columns);
 
@@ -661,7 +660,7 @@ print "
 
 </td>
 <td align=left valign=top>
-@{[make_selection_widget(\"resolution\",\@::legal_resolution,$default{'resolution'}, $type{'resolution'}, 1)]}
+@{[make_selection_widget(\"resolution\",\@::queryable_resolution,$default{'resolution'}, $type{'resolution'}, 1)]}
 
 </td>
 <td align=left valign=top>

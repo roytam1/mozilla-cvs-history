@@ -536,11 +536,9 @@ sub ChangeStatus {
 }
 
 sub ChangeResolution {
-    my ($str) = (@_);
-    if ($str ne $::dontchange) {
-        DoComma();
-        $::query .= "resolution = '$str'";
-    }
+    my ($id) = (@_);
+    DoComma();
+    $::query .= "resolution_id = $id";
 }
 
 #
@@ -734,12 +732,18 @@ SWITCH: for ($::FORM{'knob'}) {
         last SWITCH;
     };
     /^clearresolution$/ && CheckonComment( "clearresolution" ) && do {
-        ChangeResolution('');
+        ChangeResolution(0);
         last SWITCH;
     };
     /^resolve$/ && CheckonComment( "resolve" ) && do {
-        ChangeStatus('RESOLVED');
-        ChangeResolution($::FORM{'resolution'});
+        my $resolution_id = ResolutionNameToID($::FORM{'resolution'});
+        if ($resolution_id == 0) {
+            PuntTryAgain("Whoops!  Something went wrong - I can't find
+                          the resolution \"$::FORM{'resolution'}\".");
+        } else {
+            ChangeStatus('RESOLVED');
+            ChangeResolution($resolution_id);
+        }
         last SWITCH;
     };
     /^reassign$/ && CheckonComment( "reassign" ) && do {
@@ -794,12 +798,12 @@ SWITCH: for ($::FORM{'knob'}) {
         last SWITCH;
     };   
     /^reopen$/  && CheckonComment( "reopen" ) && do {
-                SendSQL("SELECT resolution FROM bugs WHERE bug_id = $::FORM{'id'}");
+        SendSQL("SELECT resolution FROM bugs WHERE bug_id = $::FORM{'id'}");
         ChangeStatus('REOPENED');
-        ChangeResolution('');
-                if (FetchOneColumn() eq 'DUPLICATE') {
-                        SendSQL("DELETE FROM duplicates WHERE dupe = $::FORM{'id'}");
-                }
+        ChangeResolution(0);
+        if (FetchOneColumn() eq 'DUPLICATE') {
+            SendSQL("DELETE FROM duplicates WHERE dupe = $::FORM{'id'}");
+        }
         last SWITCH;
     };
     /^verify$/ && CheckonComment( "verify" ) && do {
@@ -812,7 +816,7 @@ SWITCH: for ($::FORM{'knob'}) {
     };
     /^duplicate$/ && CheckonComment( "duplicate" ) && do {
         ChangeStatus('RESOLVED');
-        ChangeResolution('DUPLICATE');
+        ChangeResolution($::duperesolutionid);
         if ( Param('strictvaluechecks') ) {
             CheckFormFieldDefined(\%::FORM,'dup_id');
         }
@@ -987,11 +991,15 @@ foreach my $id (@idlist) {
     SendSQL("LOCK TABLES bugs $write, bugs_activity $write, cc $write, " .
             "profiles $write, dependencies $write, votes $write, " .
             "keywords $write, longdescs $write, fielddefs $write, " .
-            "keyworddefs READ, groups READ, attachments READ, products READ");
+            "keyworddefs READ, groups READ, attachments READ, " .
+            "products READ, resolutions READ");
     my @oldvalues = SnapShotBug($id);
     my %oldhash;
     my $i = 0;
-    foreach my $col (@::log_columns) {
+    foreach my $c (@::log_columns) {
+        my $col = $c;           # We modify it, don't want to modify array
+                                # values in place.
+        $col = 'resolution' if ($col eq 'resolution_id');
         $oldhash{$col} = $oldvalues[$i];
         if (exists $::FORM{$col}) {
             CheckCanChangeField($col, $id, $oldvalues[$i], $::FORM{$col});
@@ -1332,6 +1340,10 @@ The changes made were:
         print qq|</p>|;
     }
   
+    ###########################################################################
+    # Record bug activity for this bug
+    ###########################################################################
+
     # get a snapshot of the newly set values out of the database, 
     # and then generate any necessary bug activity entries by seeing 
     # what has changed since before we wrote out the new values.
@@ -1374,6 +1386,12 @@ The changes made were:
                 $origQaContact = $old;
             }
 
+            # Get the name of the resolution from the id
+            if ($col eq 'resolution_id') {
+                $old = ResolutionIDToName($old);
+                $new = ResolutionIDToName($new);
+            }
+
             # If this is the keyword field, only record the changes, not everything.
             if ($col eq 'keywords') {
                 ($old, $new) = DiffStrings($old, $new);
@@ -1390,6 +1408,10 @@ The changes made were:
     print "<TABLE BORDER=1><TD><H2>Changes to bug $id submitted</H2>\n";
     SendSQL("unlock tables");
 
+    ###########################################################################
+    # Call processmail for main bug
+    ###########################################################################
+
     my @ARGLIST = ();
     if ( $removedCcString ne "" ) {
         push @ARGLIST, ("-forcecc", $removedCcString);
@@ -1404,6 +1426,10 @@ The changes made were:
     system ("./processmail",@ARGLIST);
 
     print "<TD><A HREF=\"show_bug.cgi?id=$id\">Back To BUG# $id</A></TABLE>\n";
+
+    ###########################################################################
+    # Special stuff for resolving as duplicate
+    ###########################################################################
 
     if ($duplicate) {
         # Check to see if Reporter of this bug is reporter of Dupe 
@@ -1428,6 +1454,10 @@ The changes made were:
         system("./processmail", $duplicate, $::FORM{'who'});
         print "<TD><A HREF=\"show_bug.cgi?id=$duplicate\">Go To BUG# $duplicate</A></TABLE>\n";
     }
+
+    ###########################################################################
+    # Check for dependency changes
+    ###########################################################################
 
     foreach my $k (keys(%dependencychanged)) {
         print "<TABLE BORDER=1><TD><H2>Checking for dependency changes on bug $k</H2>\n";

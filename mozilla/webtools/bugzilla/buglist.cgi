@@ -159,11 +159,13 @@ sub GenerateSQL {
     unshift(@supptables,
             ("profiles map_assigned_to",
              "profiles map_reporter",
-             "LEFT JOIN profiles map_qa_contact ON bugs.qa_contact = map_qa_contact.userid"));
+             "LEFT JOIN profiles map_qa_contact ON bugs.qa_contact = map_qa_contact.userid",
+             "resolutions map_resolution"));
     unshift(@wherepart,
             ("bugs.assigned_to = map_assigned_to.userid",
              "bugs.reporter = map_reporter.userid",
-             "bugs.groupset & $::usergroupset = bugs.groupset"));
+             "bugs.groupset & $::usergroupset = bugs.groupset",
+             "bugs.resolution_id = map_resolution.id"));
 
 
     my $minvotes;
@@ -194,7 +196,7 @@ sub GenerateSQL {
     }
 
     my @legal_fields = ("product", "version", "rep_platform", "op_sys",
-                        "bug_status", "resolution", "priority", "bug_severity",
+                        "bug_status", "priority", "bug_severity",
                         "assigned_to", "reporter", "component",
                         "target_milestone", "groupset");
 
@@ -205,6 +207,29 @@ sub GenerateSQL {
         }
     }
 
+    if ($M{'resolution'}) {
+        my @resolution_ids;
+
+        foreach my $resolution (@{$M{resolution}}) {
+            warn $resolution;
+            my $resolution_id = ResolutionNameToID($resolution);
+            warn $resolution_id;
+
+            if ($resolution_id != 0) {
+                push(@resolution_ids,$resolution_id);
+            }
+        }
+
+        if (@resolution_ids == 0) {
+            push(@wherepart, "0");
+        } else {
+            push(@specialchart, ["resolution_id", "anyexact",
+                                 join(',', @resolution_ids)]);
+        }
+
+    }
+
+    # Should use the above resolutions code? Wouldn't use keyword cache ...
     if ($F{'keywords'}) {
         my $t = $F{'keywords_type'};
         if (!$t || $t eq "or") {
@@ -981,7 +1006,7 @@ DefCol("reporter", "map_reporter.login_name", "Reporter",
        "map_reporter.login_name");
 DefCol("qa_contact", "map_qa_contact.login_name", "QAContact", "map_qa_contact.login_name");
 DefCol("status", "substring(bugs.bug_status,1,4)", "State", "bugs.bug_status");
-DefCol("resolution", "substring(bugs.resolution,1,4)", "Result",
+DefCol("resolution", "substring(map_resolution.name,1,4)", "Result",
        "bugs.resolution");
 DefCol("summary", "substring(bugs.short_desc, 1, 60)", "Summary", "bugs.short_desc", 1);
 DefCol("summaryfull", "bugs.short_desc", "Summary", "bugs.short_desc", 1);
@@ -1084,6 +1109,7 @@ if (defined $::FORM{'order'} && $::FORM{'order'} ne "") {
                                                # hack.
     $::FORM{'order'} =~ s/assign\.login_name/map_assigned_to.login_name/g;
                                 # Another backwards compatability hack.
+    $::FORM{'order'} =~ s/bugs.resolution,/bugs.resolution_id,/; # YABCH
 
     ORDER: for ($::FORM{'order'}) {
         /\./ && do {

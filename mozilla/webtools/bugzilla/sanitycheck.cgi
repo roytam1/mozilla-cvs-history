@@ -439,9 +439,10 @@ if (exists $::FORM{'rebuildkeywordcache'}) {
 Status("Checking duplicates table");
 
 SendSQL("SELECT bugs.bug_id " .
-        "FROM bugs, duplicates " .
-        "WHERE bugs.resolution != 'DUPLICATE' " .
+        "FROM bugs, duplicates, resolutions " .
+        "WHERE bugs.restype != $::duperestype " .
         "  AND bugs.bug_id = duplicates.dupe " .
+        "  AND bugs.resolution_id = resolutions.id " .
         "ORDER BY bugs.bug_id");
 
 @badbugs = ();
@@ -457,8 +458,10 @@ if (@badbugs) {
 }
 
 SendSQL("SELECT bugs.bug_id " .
-        "FROM bugs LEFT JOIN duplicates ON bugs.bug_id = duplicates.dupe " .
-        "WHERE bugs.resolution = 'DUPLICATE' AND duplicates.dupe IS NULL " .
+        "FROM bugs LEFT JOIN duplicates ON bugs.bug_id = duplicates.dupe, resolutions " .
+        "WHERE bugs.resolution_id = resolutions.id " .
+        "  AND resolutions.restype = $::duperestype " .
+        "  AND duplicates.dupe IS NULL " .
         "ORDER BY bugs.bug_id");
 
 @badbugs = ();

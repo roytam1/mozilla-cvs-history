@@ -28,6 +28,7 @@
 # Make it harder for us to do dangerous things in Perl.
 use diagnostics;
 use strict;
+use lib ".";
 
 # Include the Bugzilla CGI and general utility library.
 require "CGI.pl";
@@ -39,6 +40,8 @@ ConnectToDatabase();
 # the user interface (HTML pages and mail messages) using templates in the
 # "template/" subdirectory.
 use Template;
+
+
 
 # Create the global template object that processes templates and specify
 # configuration parameters that apply to all templates processed in this script.

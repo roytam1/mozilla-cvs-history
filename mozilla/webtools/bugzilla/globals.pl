@@ -53,6 +53,17 @@ sub globals_pl_sillyness {
 }
 
 #
+# Various constants
+#
+
+$::successfulrestype = 0;
+$::unsuccessfulrestype = 1;
+$::duperestype = 2;
+$::movedrestype = 3;
+
+$::maxrestype = 3;
+
+#
 # Here are the --LOCAL-- variables defined in 'localconfig' that we'll use
 # here
 # 
@@ -504,21 +515,23 @@ sub GenerateVersionTable {
     @::legal_platform = SplitEnumType($cols->{"rep_platform,type"});
     @::legal_opsys = SplitEnumType($cols->{"op_sys,type"});
     @::legal_bug_status = SplitEnumType($cols->{"bug_status,type"});
-    @::legal_resolution = SplitEnumType($cols->{"resolution,type"});
 
-    # 'settable_resolution' is the list of resolutions that may be set 
-    # directly by hand in the bug form. Start with the list of legal 
-    # resolutions and remove 'MOVED' and 'DUPLICATE' because setting 
-    # bugs to those resolutions requires a special process.
-    #
-    @::settable_resolution = @::legal_resolution;
-    my $w = lsearch(\@::settable_resolution, "DUPLICATE");
-    if ($w >= 0) {
-        splice(@::settable_resolution, $w, 1);
-    }
-    my $z = lsearch(\@::settable_resolution, "MOVED");
-    if ($z >= 0) {
-        splice(@::settable_resolution, $z, 1);
+    SendSQL("SELECT name, isactive, bug_id IS NOT NULL, restype " .
+            "FROM resolutions LEFT JOIN bugs ON resolutions.id = bugs.resolution_id ".
+            "ORDER BY name");
+
+    while (MoreSQLData()) {
+        my ($name, $isactive, $isused, $restype) = FetchSQLData();
+        push(@::queryable_resolution, $name) if ($isactive | $isused);
+        if ($isactive) {
+            if ($restype == $::duperestype) {
+                push(@::settable_dupe_resolution, $name);
+            } elsif ($restype == $::movedrestype) {
+                push(@::settable_moved_resolution, $name);
+            } else {
+                push(@::settable_normal_resolution, $name);
+            }
+        }
     }
 
     my @list = sort { uc($a) cmp uc($b)} keys(%::versions);
@@ -545,7 +558,10 @@ sub GenerateVersionTable {
                   'bug_status', 'resolution') {
         print FID GenerateCode('@::legal_' . $i);
     }
-    print FID GenerateCode('@::settable_resolution');
+    print FID GenerateCode('@::settable_normal_resolution');
+    print FID GenerateCode('@::settable_dupe_resolution');
+    print FID GenerateCode('@::settable_moved_resolution');
+    print FID GenerateCode('@::queryable_resolution');
     print FID GenerateCode('%::proddesc');
     print FID GenerateCode('%::prodmaxvotes');
     print FID GenerateCode('$::anyvotesallowed');
@@ -828,6 +844,52 @@ sub DBNameToIdAndCheck {
     exit(0);
 }
 
+
+sub ResolutionIDToName ($) {
+    my ($id) = (@_);
+
+    if ($id == 0) {
+        return "";
+    } else {
+        my $name;
+
+        PushGlobalSQLState();
+
+        SendSQL("SELECT name FROM resolutions WHERE id = $id");
+
+        if (MoreSQLData()) {
+            ($name) = FetchSQLData();
+        } else {
+            $name = "__UNKNOWN__";
+        }
+        
+        PopGlobalSQLState();
+        
+        return $name;
+    }
+}
+
+sub ResolutionNameToID ($) {
+    my ($name) = (@_);
+    my $id;
+
+    PushGlobalSQLState();
+
+    SendSQL("SELECT id FROM resolutions WHERE name = '$name'");
+
+    if (MoreSQLData()) {
+       ($id) = FetchSQLData();
+    } else {
+       $id = 0;
+    }
+
+    PopGlobalSQLState();
+
+    return $id;
+
+}
+
+
 # Use detaint_string() when you know that there is no way that the data
 # in a scalar can be tainted, but taint mode still bails on it.
 # WARNING!! Using this routine on data that really could be tainted
@@ -949,17 +1011,17 @@ sub GetBugLink {
     PushGlobalSQLState();
     
     # Get this bug's info from the SQL Database
-    SendSQL("select bugs.bug_status, resolution, short_desc, groupset
+    SendSQL("select bugs.bug_status, resolution_id, short_desc, groupset
              from bugs where bugs.bug_id = $bug_num");
     my ($bug_stat, $bug_res, $bug_desc, $bug_grp) = (FetchSQLData());
     
     # Format the retrieved information into a link
     if ($bug_stat eq "UNCONFIRMED") { $link_return .= "<i>" }
-    if ($bug_res ne "") { $link_return .= "<strike>" }
+    if ($bug_res != 0) { $link_return .= "<strike>" }
     $bug_desc = value_quote($bug_desc);
     $link_text = value_quote($link_text);
     $link_return .= qq{<a href="show_bug.cgi?id=$bug_num" title="$bug_stat};
-    if ($bug_res ne "") {$link_return .= " $bug_res"}
+    if ($bug_res != 0) {$link_return .= " $bug_res"}
     if ($bug_grp == 0) { $link_return .= " - $bug_desc" }
     $link_return .= qq{">$link_text</a>};
     if ($bug_res ne "") { $link_return .= "</strike>" }
@@ -1289,6 +1351,7 @@ sub RemoveVotes {
 
 sub Param ($) {
     my ($value) = (@_);
+
     if (defined $::param{$value}) {
         return $::param{$value};
     }
@@ -1311,6 +1374,7 @@ sub Param ($) {
         $::param{'version'} = $v;
     }
     if (defined $::param{$value}) {
+        $::param{$value} = detaint_string($::param{$value});
         return $::param{$value};
     }
     # Well, that didn't help.  Maybe it's a new param, and the user
@@ -1319,6 +1383,7 @@ sub Param ($) {
     require "defparams.pl";
     WriteParams();
     if (defined $::param{$value}) {
+        $::param{$value} = detaint_string($::param{$value});
         return $::param{$value};
     }
     # We're pimped.
@@ -1369,5 +1434,50 @@ sub trim {
     s/\s+$//g;
     return $_;
 }
+
+# Easy ways to see how many records there are
+
+sub GetCount ($$) {
+    my ($table, $where) = @_;
+    $where = '1' if !defined $where;
+
+    SendSQL("SELECT COUNT(*) FROM $table WHERE $where");
+
+    return FetchOneColumn();
+}
+
+sub RecordExists ($$) {
+    my ($table, $where) = @_;
+
+    return 0 < GetCount($table, $where);
+}
+
+# Generate the SET part of a SQL UPDATE statement from a hash
+# eg { 'name' => 1, 'desc' => "'1'" } becomes
+# "name = 1, desc = '1'"
+sub GenerateUpdateSQL (%) {
+    my (%fields) = @_;
+
+    my @assignments;
+
+    foreach my $fieldname (keys %fields) {
+        push(@assignments, "$fieldname = $fields{$fieldname}");
+    }
+
+    return join( ', ', @assignments);
+}
+
+# Separates a hash into two arrays - keys and values.
+sub SeparateHash ($$$) {
+
+    my ($fieldsref, $namesref, $valuesref) = @_;
+
+    foreach my $fieldname (keys %$fieldsref) {
+        push(@$namesref, $fieldname);
+        push(@$valuesref, $$fieldsref{$fieldname});
+    }
+
+}
+
 
 1;

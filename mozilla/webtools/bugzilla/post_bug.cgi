@@ -173,8 +173,10 @@ if (exists $::FORM{'bug_status'} && $::FORM{'bug_status'} ne $::unconfirmedstate
     $::FORM{'everconfirmed'} = 1;
 }
 
+
+
 my $query = "INSERT INTO bugs (\n" . join(",\n", @used_fields) . ",
-creation_ts, groupset)
+creation_ts, resolution_id, groupset)
 VALUES (
 ";
 
@@ -204,7 +206,7 @@ $comment = trim($comment);
 # OK except for the fact that it causes e-mail to be suppressed.
 $comment = $comment ? $comment : " ";
 
-$query .= "now(), (0";
+$query .= "now(), 0, (0";
 
 foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
     if ($::FORM{$b}) {

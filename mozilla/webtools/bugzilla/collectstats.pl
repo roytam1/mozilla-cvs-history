@@ -88,11 +88,16 @@ sub collect_stats {
             push @row, FetchOneColumn();
         }
 
-        foreach my $resolution ('FIXED', 'INVALID', 'WONTFIX', 'LATER', 'REMIND', 'DUPLICATE', 'WORKSFORME', 'MOVED') {
+        foreach my $resolution (@::queryable_resolution) {
             if( $product eq "-All-" ) {
-                SendSQL("select count(resolution) from bugs where resolution='$resolution'");
+                SendSQL("select count(resolution_id) from bugs, resolutions " .
+                        "where bugs.resolution_id = resolutions.id " .
+                        "and resolutions.name='$resolution'");
             } else {
-                SendSQL("select count(resolution) from bugs where resolution='$resolution' and product='$product'");
+                SendSQL("select count(resolution_id) from bugs, resolutions " .
+                        "where bugs.resolution_id = resolutions.id " .
+                        "and resolutions.name='$resolution' " .
+                        "and product='$product'");
             }
 
             push @row, FetchOneColumn();
@@ -104,7 +109,9 @@ sub collect_stats {
 #
 # Do not edit me! This file is generated.
 #
-# fields: DATE|NEW|ASSIGNED|REOPENED|UNCONFIRMED|RESOLVED|VERIFIED|CLOSED|FIXED|INVALID|WONTFIX|LATER|REMIND|DUPLICATE|WORKSFORME|MOVED
+FIN
+            print DATA "# fields: DATE|NEW|ASSIGNED|REOPENED|UNCONFIRMED|RESOLVED|VERIFIED|CLOSED|" . join('|', @::queryable_resolution);
+            print DATA <<FIN;
 # Product: $product
 # Created: $when
 FIN

@@ -119,7 +119,13 @@ print qq{
 </td>
 <td align="left" valign="top">
 <SELECT NAME="resolution" MULTIPLE SIZE="7">
-<OPTION VALUE="FIXED">FIXED<OPTION VALUE="INVALID">INVALID<OPTION VALUE="WONTFIX">WONTFIX<OPTION VALUE="LATER">LATER<OPTION VALUE="REMIND">REMIND<OPTION VALUE="DUPLICATE">DUPLICATE<OPTION VALUE="WORKSFORME">WORKSFORME<OPTION VALUE="MOVED">MOVED<OPTION VALUE="---">---</SELECT>
+};
+
+foreach my $resolution (@::queryable_resolution) {
+    print qq{<option value="$resolution">$resolution};
+}
+
+print qq{<option value="---">---</select>
 
 </td>
 <td align="left" valign="top">
@@ -205,20 +211,19 @@ have the resolution set to blank. All other bugs
 will be marked with one of the following resolutions.
 
 <ul>
-<li><b>FIXED</b> - A fix for this bug is checked into the tree and tested.
-<li><b>INVALID</b> - The problem described is not a bug 
-<li><b>WONTFIX</b> - The problem described is a bug which will never be fixed.
-<li><b>LATER</b> - The problem described is a bug which will not be fixed in this
-version of the product.
-<li><b>REMIND</b> - The problem described is a bug which will probably not be fixed in this
-version of the product, but might still be.
-<li><b>DUPLICATE</b> - The problem is a duplicate of an existing bug. Marking a bug
-duplicate requires the bug number of the duplicate and that number will be placed in the 
-bug description.
-<li><b>WORKSFORME</b> - All attempts at reproducing this bug were futile, reading the
-code produces no clues as to why this behavior would occur. If
-more information appears later, please re-assign the bug, for
-now, file it.
+};
+
+SendSQL("SELECT name, description FROM resolutions ORDER BY name");
+
+while (MoreSQLData()) {
+    my ($name, $description) = FetchSQLData();
+
+    if (lsearch(\@::queryable_resolution, $name) != -1) {
+        print "<li><b>$name</b> - $description\n";
+    }
+}
+
+print qq{
 </ul>
 
 <a name="platform"></a>

@@ -27,6 +27,9 @@ use Bug;
 require "CGI.pl";
 $::lockcount = 0;
 
+# Silliness
+$::movedresolutionid = $::movedresolutionid;
+
 unless ( Param("move-enabled") ) {
   print "\n<P>Sorry. Bug moving is not enabled here. ";
   print "If you need to move a bug, contact " . Param("maintainer");
@@ -116,7 +119,7 @@ foreach my $id (split(/:/, $::FORM{'buglist'})) {
             "($id,$exporterid,now(),$fieldid,'$cur_res','MOVED')");
 
     SendSQL("UPDATE bugs SET bug_status =\"RESOLVED\" where bug_id=\"$id\"");
-    SendSQL("UPDATE bugs SET resolution =\"MOVED\" where bug_id=\"$id\"");
+    SendSQL("UPDATE bugs SET resolution_id = $::movedresolutionid where bug_id=\"$id\"");
 
     my $comment = "Bug moved to " . Param("move-to-url") . ".\n\n";
     $comment .= "If the move succeeded, $exporter will receive a mail\n";

@@ -45,6 +45,7 @@ sub CGI_pl_sillyness {
     $zz = %::FILENAME;
     $zz = %::MFORM;
     $zz = %::dontchange;
+    $zz = @::settable_dupe_resolution;
 }
 
 use CGI::Carp qw(fatalsToBrowser);
@@ -379,7 +380,7 @@ sub value_quote {
     $var =~ s/>/\&gt;/g;
     $var =~ s/"/\&quot;/g;
     # See bug http://bugzilla.mozilla.org/show_bug.cgi?id=4928 for 
-    # explanaion of why bugzilla does this linebreak substitution. 
+    # explanation of why bugzilla does this linebreak substitution. 
     # This caused form submission problems in mozilla (bug 22983, 32000).
     $var =~ s/\r\n/\&#013;/g;
     $var =~ s/\n\r/\&#013;/g;
@@ -620,7 +621,7 @@ sub make_options {
     if (!$found && $default ne "") {
       if ( Param("strictvaluechecks") && $::CheckOptionValues &&
            ($default ne $::dontchange) && ($default ne "-All-") &&
-           ($default ne "DUPLICATE") ) {
+           (lsearch(\@::settable_dupe_resolution, $default) == -1) ) {
         print "Possible bug database corruption has been detected.  " .
               "Please send mail to " . Param("maintainer") . " with " .
               "details of what you were doing when this message " . 
@@ -720,6 +721,13 @@ sub quietly_check_login() {
         my @row;
         if (@row = FetchSQLData()) {
             my ($userid, $groupset, $loginname, $ok, $disabledtext) = (@row);
+
+            # Detaint - XXX use detaint routines when they arrive
+            $groupset =~ /^(\d+)$/;
+            $groupset = $1;
+
+            die "Failed to detaint groupset from DB when quietly checking login." if (!defined $groupset);
+
             if ($ok) {
                 if ($disabledtext eq '') {
                     $loginok = 1;
@@ -1211,6 +1219,12 @@ sub DisplayError {
   return 1;
 }
 
+sub DisplayEscapedError ($$) {
+    my ($message, $title) = @_;
+
+    DisplayError(html_quote($message), html_quote($title));
+}
+
 sub PuntTryAgain ($) {
     my ($str) = (@_);
     print PerformSubsts(Param("errorhtml"),
@@ -1353,6 +1367,11 @@ Actions:
                 "WHERE login_name = " . SqlQuote($::COOKIE{'Bugzilla_login'}));
         my ($mybugslink, $userid, $blessgroupset) = (FetchSQLData());
         
+        # Detaint - XXX use detaint routines when they arrive
+        $userid =~ /^(\d+)$/;
+        $userid = $1;
+        die "Failed to detaint userid from DB when getting command menu." if (!defined $userid);
+ 
         #Begin settings
         $html .= qq{
 </TD><TD>
@@ -1362,6 +1381,7 @@ Edit <a href="userprefs.cgi">prefs</a>
 };
         if (UserInGroup("tweakparams")) {
             $html .= ", <a href=\"editparams.cgi\">parameters</a>\n";
+            $html .= ", <a href=editresolutions.cgi>resolutions</a>";
         }
         if (UserInGroup("editusers") || $blessgroupset) {
             $html .= ", <a href=\"editusers.cgi\">users</a>\n";
@@ -1422,6 +1442,33 @@ Edit <a href="userprefs.cgi">prefs</a>
     $html .= "</FORM>\n";
     return $html;
 }
+
+sub ThatDoesntValidate($) {
+
+    my ($badparam) = @_;
+
+    print "Content-type: text/html\n\n";
+
+    PutHeader("Error");
+    print "<BR>\n";
+    print "I don't understand the information I was sent.<BR><BR>\n";
+    print "If you've been entering URLs with GET parameters, you're a very naughty boy!<BR>\n";
+    print "If you haven't, or don't know what that means, you've probably found a Bugzilla bug.<BR>\n";
+    print "<BR>\n";
+    print "Here's some stuff called \"parameters\" that might help a technical person:<BR>\n";
+    print "<BR>\n";
+    
+    foreach my $param (sort keys %::FORM) {
+        print "$param: $::FORM{$param}<BR>\n";
+    }
+
+    print "Bad parameter: $badparam.<BR>\n";
+
+    PutFooter();
+    exit;
+
+}
+
 
 ############# Live code below here (that is, not subroutine defs) #############
 

@@ -1,0 +1,23 @@
+[% valuetype = valuetype FILTER html %]
+[% valuetypeicap = valuetypeicap FILTER html %]
+[% name = name FILTER html %]
+
+[% INCLUDE global/header 
+  title = "Confirm $valuetypeicap $name Deletion"
+  h1 = "Confirm $valuetypeicap $name Deletion"
+%]
+
+There are [% bugcount %] bug(s) which have the [% valuetype %] [% name %].
+If you delete the [% valuetype %], it will be removed from all bugs.  Are you
+<em>sure</em> you want to delete the [% name %] [% valuetype %]?
+
+<form method=post action=[% thiscgi %]>
+<input type=hidden name="id" value="[% id %]">
+<input type=hidden name="action" value="delete">
+<input type=hidden name="reallydelete" value="1">
+<input type=submit value="Yes, really delete the [% valuetype %]">
+</form>
+
+<br>
+
+[% INCLUDE global/footer %]

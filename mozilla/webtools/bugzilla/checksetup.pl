@@ -22,6 +22,7 @@
 #                 Terry Weissman <terry@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Dave Miller <justdave@syndicomm.com>
+#                 Matthew Tuck <matty@chariot.net.au>
 #
 #
 # Direct any questions on this source code to
@@ -79,6 +80,7 @@
 #     add more MySQL-related checks                    --MYSQL--
 #     change table definitions                         --TABLE--
 #     add more groups                                  --GROUPS--
+#     add more resolutions                             --RESOLUTIONS--
 #     create initial administrator account            --ADMIN--
 #
 # Note: sometimes those special comments occur more then once. For
@@ -109,7 +111,20 @@ sub trim {
     return $_;
 }
 
+sub SplitEnumType {
+    my ($str) = (@_);
+    my @result = ();
+    if ($str =~ /^enum\((.*)\)$/) {
+        my $guts = $1 . ",";
+        while ($guts =~ /^\'([^\']*)\',(.*)$/) {
+            push @result, $1;
+            $guts = $2;
+        }
+    }
+    return @result;
+}
 
+$::duperestype = 2;
 
 ###########################################################################
 # Check required module
@@ -479,7 +494,7 @@ my @my_opsys = @{*{$main::{'opsys'}}{ARRAY}};
 
 
 ###########################################################################
-# Check data directory
+# Check data and graphs directory
 ###########################################################################
 
 #
@@ -841,7 +856,7 @@ END { $dbh->disconnect if $dbh }
 # safer than the make*.sh shell scripts used to be, because they won't
 # delete existing tables.
 #
-# If you want intentionally do this, yon can always drop a table and re-run
+# If you want intentionally do this, you can always drop a table and re-run
 # checksetup, e.g. like this:
 #
 #    $ mysql bugs
@@ -929,12 +944,14 @@ $table{bugs} =
     reporter mediumint not null,
     version varchar(64) not null,
     component varchar(50) not null,
-    resolution enum("", "FIXED", "INVALID", "WONTFIX", "LATER", "REMIND", "DUPLICATE", "WORKSFORME", "MOVED") not null,
+    resolution_id mediumint not null,
     target_milestone varchar(20) not null default "---",
     qa_contact mediumint not null,
     status_whiteboard mediumtext not null,
-    votes mediumint not null,
-    keywords mediumtext not null, ' # Note: keywords field is only a cache;
+    votes mediumint not null,'    # Note: votes field is only a cached sum;
+                                  # the real data comes from the votes table.
+    . '
+    keywords mediumtext not null,'# Note: keywords field is only a cached list;
                                 # the real data comes from the keywords table.
     . '
     lastdiffed datetime not null,
@@ -955,7 +972,7 @@ $table{bugs} =
     index (reporter),
     index (version),
     index (component),
-    index (resolution),
+    index (resolution_id),
     index (target_milestone),
     index (qa_contact),
     index (votes)';
@@ -1171,6 +1188,18 @@ $table{tokens} =
 
      index(userid)';
 
+# 2001-08-03, matty@chariot.net.au
+# This tables stores the customised resolutions as defined by the
+# administrator.
+$table{resolutions} =
+    'id           smallint not null primary key,
+     name         varchar(64) not null,
+     description  mediumtext not null,
+     isactive     tinyint not null default 1,
+
+     restype      tinyint not null,
+
+     unique(name)';
 
 
 ###########################################################################
@@ -1206,7 +1235,21 @@ while (my ($tabname, $fielddef) = each %table) {
 }
 
 
+###########################################################################
+# A generic routine
+###########################################################################
 
+sub RecordExists {
+    my ($table, $where) = @_;
+    $where = '1' if !defined $where;
+
+    my $sth = $dbh->prepare("SELECT COUNT(*) FROM $table WHERE $where");
+    $sth->execute;
+
+    my ($count) = $sth->fetchrow_array();
+    
+    return $count > 0;
+}
 
 
 ###########################################################################
@@ -1216,12 +1259,7 @@ while (my ($tabname, $fielddef) = each %table) {
 sub GroupExists ($)
 {
     my ($name) = @_;
-    my $sth = $dbh->prepare("SELECT name FROM groups WHERE name='$name'");
-    $sth->execute;
-    if ($sth->rows) {
-        return 1;
-    }
-    return 0;
+    return RecordExists("groups", "name='$name'");
 }
 
 
@@ -1324,7 +1362,7 @@ AddFDef("op_sys", "OS/Version", 1);
 AddFDef("bug_status", "Status", 1);
 AddFDef("status_whiteboard", "Status Whiteboard", 0);
 AddFDef("keywords", "Keywords", 0);
-AddFDef("resolution", "Resolution", 0);
+AddFDef("resolution_id", "Resolution", 0);
 AddFDef("bug_severity", "Severity", 1);
 AddFDef("priority", "Priority", 1);
 AddFDef("component", "Component", 1);
@@ -1363,7 +1401,7 @@ sub GetFieldDef ($$)
     while (my $ref = $sth->fetchrow_arrayref) {
         next if $$ref[0] ne $field;
         return $ref;
-   }
+    }
 }
 
 sub GetIndexDef ($$)
@@ -1668,7 +1706,96 @@ unless ($sth->rows) {
 
 
 
+###########################################################################
+# Populate resolutions table
+###########################################################################
 
+sub ResolutionExists ($) {
+    my ($id) = @_;
+    return RecordExists("resolutions", "id='$id'");
+}
+
+# This routine is largely copied from Mysql.pm.
+# Kill this off once we can use the globals.pl version.
+sub SqlQuote {
+    my ($str) = (@_);
+#     if (!defined $str) {
+#         confess("Undefined passed to SqlQuote");
+#     }
+    $str =~ s/([\\\'])/\\$1/g;
+    $str =~ s/\0/\\0/g;
+    return "'$str'";
+}
+
+sub AddResolution ($) {
+    my ($name) = @_;
+
+    # Determine next id number
+    my $sth = $dbh->prepare("SELECT MAX(id) FROM resolutions");
+    $sth->execute;
+
+    my ($id) = $sth->fetchrow_array();
+
+    $id++;
+
+    my ($restype, $description);
+
+    if ($name eq 'FIXED') {
+        $restype = 0;
+    } elsif ($name eq 'DUPLICATE') {
+        $restype = 2;
+    } elsif ($name eq 'MOVED') {
+        $restype = 3;
+    } else {
+        $restype = 1;
+    }
+
+    my %descriptions = {
+        'FIXED'          => 'A fix for this bug is checked into the tree and tested.',
+        'DUPLICATE'      => 'The problem is a duplicate of an existing bug. Marking a bug duplicate requires the bug number of the duplicate.',
+        'MOVED'          => 'The bug has been moved to another Bugzilla installation.',
+        'INVALID'        => 'The problem described is not a bug.',
+        'FEATURENOTBUG'  => 'This is not a bug, it\'s a feature.',
+        'WONTFIX'        => 'This is not a bug, it\'s a feature.',
+        'CAREFACTORZERO' => 'When the person responsible really just does not care.',
+        'REMIND'         => 'The problem described is a bug which will probably not be fixed in this version of the product, but might still be.',
+        'LATER'          => 'The problem described is a bug which will not be fixed in this version of the product.',
+        'WORKSFORME'     => 'All attempts at reproducing this bug were futile, reading the code produces no clues as to why this behavior would occur. ' .
+            'If more information appears later, please reopen the bug.',
+        'NOTWORTHIT'     => 'The problem should be fixed in a perfect world, but this isn\'t a perfect world, so it won\'t be.',
+        'MISSING'        => 'When a bug report can\'t be dealt with because an external resource (eg a page at a URL) is missing.'
+    };
+
+    $description = $descriptions{$name};
+
+    print "Adding resolution $name ...\n";
+    $dbh->do("INSERT INTO resolutions(id, name, description, restype) " .
+             "VALUES ($id, " . SqlQuote($name) . ", " .
+             SqlQuote($description) . ", $restype)");
+
+    return $id;
+}
+
+#
+# BugZilla uses --RESOLUTIONS-- to mark why a bug was resolved.
+#
+
+unless ($sth->rows) {
+
+    if (!RecordExists("bugs")) {
+        # These are the default resolutions for new installations.
+        AddResolution("MOVED");
+        AddResolution("DUPLICATE");
+        AddResolution("FIXED");
+        AddResolution("WORKSFORME");
+        AddResolution("INVALID");
+        AddResolution("NOTWORTHIT");
+        AddResolution("FEATURENOTBUG");
+        AddResolution("CAREFACTORZERO");
+        AddResolution("MISSING");
+    }
+
+}
 
 ###########################################################################
 # Update the tables to the current definition
@@ -2127,10 +2254,6 @@ AddField('namedqueries', 'linkinfooter', 'tinyint not null');
 # Added a user field which controls which groups a user can put other users 
 # into.
 
-my @resolutions = ("", "FIXED", "INVALID", "WONTFIX", "LATER", "REMIND",
-                  "DUPLICATE", "WORKSFORME", "MOVED");
-CheckEnumField('bugs', 'resolution', @resolutions);
-
 if (($_ = GetFieldDef('components', 'initialowner')) and ($_->[1] eq 'tinytext')) {
     $sth = $dbh->prepare("SELECT program, value, initialowner, initialqacontact FROM components");
     $sth->execute();
@@ -2306,29 +2429,51 @@ if ( CountIndexes('keywords') != 3 ) {
 $sth = $dbh->prepare("SELECT count(*) from duplicates");
 $sth->execute();
 if (!($sth->fetchrow_arrayref()->[0])) {
-        # populate table
-        print("Populating duplicates table...\n");
+    # populate table
+    print("Populating duplicates table...\n");
 
-        $sth = $dbh->prepare("SELECT longdescs.bug_id, thetext FROM longdescs left JOIN bugs using(bug_id) WHERE (thetext " . 
-                "regexp '[.*.]{3,3} This bug has been marked as a duplicate of [[:digit:]]{1,5} [.*.]{3,3}') AND (resolution = 'DUPLICATE') ORDER" .
-                        " BY longdescs.bug_when");
+    my $dupecondition;
+    if (GetFieldDef('bugs', 'resolution_id')) {
+        $sth = $dbh->prepare("SELECT id " .
+                             "FROM resolutions " .
+                             "WHERE restype = $::duperestype");
         $sth->execute();
-
-        my %dupes;
-        my $key;
-
-        # Because of the way hashes work, this loop removes all but the last dupe
-        # resolution found for a given bug.
-        while (my ($dupe, $dupe_of) = $sth->fetchrow_array()) {
-                $dupes{$dupe} = $dupe_of;
+        
+        my @resolution_ids = $sth->fetchrow_array();
+        
+        if (@resolution_ids) {
+            my $duperesolutions = join(', ', @resolution_ids);
+            $dupecondition = "resolution_id IN ($duperesolutions)";
+        } else {
+            $dupecondition = '0';
         }
+    } else {
+        $dupecondition = "resolution = 'DUPLICATE'";
+    }
+    
+    my $sqlregexp = '\'[.*.]{3,3} This bug has been marked as a duplicate of [[:digit:]]{1,5} [.*.]{3,3}\'';
+    $sth = $dbh->prepare("SELECT longdescs.bug_id, thetext " .
+                         "FROM longdescs left JOIN bugs using(bug_id) " .
+                         "WHERE (thetext regexp $sqlregexp) " .
+                         "AND $dupecondition " .
+                         "ORDER BY longdescs.bug_when");
+    $sth->execute();
 
-        foreach $key (keys(%dupes))
-        {
-                $dupes{$key} =~ s/.*\*\*\* This bug has been marked as a duplicate of (\d{1,5}) \*\*\*.*?/$1/sm;
-                $dbh->do("INSERT INTO duplicates VALUES('$dupes{$key}', '$key')");
-                #                                        BugItsADupeOf   Dupe
-        }
+    my %dupes;
+    my $key;
+    
+    # Because of the way hashes work, this loop removes all but the last dupe
+    # resolution found for a given bug.
+    while (my ($dupe, $dupe_of) = $sth->fetchrow_array()) {
+        $dupes{$dupe} = $dupe_of;
+    }
+    
+    foreach $key (keys(%dupes))
+    {
+        $dupes{$key} =~ s/.*\*\*\* This bug has been marked as a duplicate of (\d{1,5}) \*\*\*.*?/$1/sm;
+        $dbh->do("INSERT INTO duplicates VALUES('$dupes{$key}', '$key')");
+        #                                        BugItsADupeOf   Dupe
+    }
 }
 
 # 2000-12-18.  Added an 'emailflags' field for storing preferences about
@@ -2528,6 +2673,31 @@ AddField("bugs", "cclist_accessible", "tinyint not null default 1");
 # using the attachment manager can record changes to attachments.
 AddField("bugs_activity", "attach_id", "mediumint null");
 
+# 2001-10-06 matty@chariot.net.au - convert resolutions over to using the
+# resolutions table - maybe put this before the duplicates table stuff ...
+
+my $resolutionfieldref = GetFieldDef('bugs', 'resolution');
+
+if ($resolutionfieldref) {
+    AddField('bugs', 'resolution_id', 'mediumint not null');
+
+    if (RecordExists("bugs")) {
+        my @resolutions = SplitEnumType($$resolutionfieldref[1]);
+
+        foreach my $resolution (@resolutions) {
+            next if $resolution eq '';
+
+            my $id = AddResolution($resolution);
+
+            $dbh->do("UPDATE bugs SET resolution_id = $id " .
+                     "WHERE resolution = " . SqlQuote($resolution));
+        }
+
+    }
+    
+    DropField('bugs', 'resolution');
+}
+
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
 #
@@ -2542,3 +2712,24 @@ AddField("bugs_activity", "attach_id", "mediumint null");
 
 unlink "data/versioncache";
 print "Reminder: Bugzilla now requires version 8.7 or later of sendmail.\n";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,10 @@
+    <tr>
+      <th align="right">Name:</th>
+      <td><input size=64 maxlength=[% maxnamesize %] name="name" value="[% name %]"></td>
+    </tr>
+
+    <tr>
+      <th align="right">Description:</th>
+      <td><textarea rows=4 cols=64 wrap=virtual name="description">[% description %]</textarea></td>
+    </tr>
+

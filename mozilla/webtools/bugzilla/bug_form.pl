@@ -40,7 +40,9 @@ sub bug_form_pl_sillyness {
     $zz = @::legal_platform;
     $zz = @::legal_product;
     $zz = @::legal_priority;
-    $zz = @::settable_resolution;
+    $zz = @::settable_normal_resolution;
+    $zz = @::settable_dupe_resolution;
+    $zz = @::settable_moved_resolution;
     $zz = @::legal_severity;
     $zz = %::target_milestone;
 }
@@ -57,7 +59,7 @@ select
         rep_platform,
         op_sys,
         bug_status,
-        resolution,
+        resolution_id,
         priority,
         bug_severity,
         component,
@@ -82,7 +84,7 @@ my @row;
 @row = FetchSQLData();
 my $count = 0;
 foreach my $field ("bug_id", "product", "version", "rep_platform",
-                   "op_sys", "bug_status", "resolution", "priority",
+                   "op_sys", "bug_status", "resolution_id", "priority",
                    "bug_severity", "component", "assigned_to", "reporter",
                    "bug_file_loc", "short_desc", "target_milestone",
                    "qa_contact", "status_whiteboard", "creation_ts",
@@ -93,6 +95,8 @@ foreach my $field ("bug_id", "product", "version", "rep_platform",
     }
     $count++;
 }
+
+$bug{'resolution'} = ResolutionIDToName($bug{'resolution_id'});
 
 my $assignedtoid = $bug{'assigned_to'};
 my $reporterid = $bug{'reporter'};
@@ -486,7 +490,7 @@ if ($canedit || $::userid == $assignedtoid ||
             print "<b>$bug{'resolution'}</b>)<br>\n";
             $knum++;
         }
-        my $resolution_popup = make_options(\@::settable_resolution,
+        my $resolution_popup = make_options(\@::settable_normal_resolution,
                                             $bug{'resolution'});
         print "<INPUT TYPE=radio NAME=knob VALUE=resolve>
         Resolve bug, changing <A HREF=\"bug_status.html\">resolution</A> to
@@ -494,12 +498,24 @@ if ($canedit || $::userid == $assignedtoid ||
           ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\">
           $resolution_popup</SELECT><br>\n";
         $knum++;
+
         print "<INPUT TYPE=radio NAME=knob VALUE=duplicate>
-        Resolve bug, mark it as duplicate of bug # 
+        Resolve bug, mark it as ";
+
+        if (@::settable_dupe_resolution == 1) {
+            print $::settable_dupe_resolution[0] . " ";
+        } else {
+            my $resolution_popup = make_options(\@::settable_dupe_resolution,
+                                                $bug{'resolution'});
+            print "<SELECT NAME=resolution ONCHANGE=\"if (this.value != '') {document.changeform.knob\[$knum\].checked=true}\"><br>\n\">
+                   $resolution_popup</SELECT>";
+        }
+
+        print "of bug #
         <INPUT NAME=dup_id SIZE=6 ONCHANGE=\"if (this.value != '') {document.changeform.knob\[$knum\].checked=true}\"><br>\n";
         $knum++;
-        my $assign_element = "<INPUT NAME=\"assigned_to\" SIZE=32 ONCHANGE=\"if ((this.value != ".SqlQuote($bug{'assigned_to_email'}) .") && (this.value != '')) { document.changeform.knob\[$knum\].checked=true; }\" VALUE=\"$bug{'assigned_to_email'}\">";
 
+        my $assign_element = "<INPUT NAME=\"assigned_to\" SIZE=32 ONCHANGE=\"if ((this.value != ".SqlQuote($bug{'assigned_to_email'}) .") && (this.value != '')) { document.changeform.knob\[$knum\].checked=true; }\" VALUE=\"$bug{'assigned_to_email'}\">";
         print "<INPUT TYPE=radio NAME=knob VALUE=reassign> 
           <A HREF=\"bug_status.html#assigned_to\">Reassign</A> bug to
           $assign_element
@@ -516,8 +532,8 @@ if ($canedit || $::userid == $assignedtoid ||
             print "&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE=checkbox NAME=compconfirm> and confirm bug (change status to <b>NEW</b>)<BR>";
         }
         $knum++;
-    } elsif ( Param("move-enabled") && ($bug{'resolution'} eq "MOVED") ) {
-        if ( (defined $::COOKIE{"Bugzilla_login"}) 
+    } elsif ( Param("move-enabled") && lsearch(\@::settable_moved_resolution, $bug{'resolution'}) != -1) {
+        if ( (defined $::COOKIE{"Bugzilla_login"})
              && ($::COOKIE{"Bugzilla_login"} =~ /($movers)/) ){
           print "<INPUT TYPE=radio NAME=knob VALUE=reopen> Reopen bug<br>\n";
           $knum++;

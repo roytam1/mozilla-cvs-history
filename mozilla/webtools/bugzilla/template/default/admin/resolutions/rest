@@ -1,0 +1,15 @@
+<tr>
+  <th align="right">Resolution Type:</th>
+  <td>&nbsp</td>
+</tr>
+
+[% FOREACH currrestype = restypes %]
+  <tr>
+    <th align="right">
+      <input type="radio" name="restype" value="[% currrestype.id %]"[% restype == currrestype.id ? ' checked' : '' %]>[% currrestype.name FILTER html %]
+    </td>
+    <td>
+      [% currrestype.description FILTER html %]
+    </td>
+  </tr>
+[% END %]
