@@ -1,0 +1,81 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=x-mac-roman">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.04 (Macintosh; I; PPC) [Netscape]">
+   <TITLE>Unix Build Instructions</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF">
+
+<H2>
+<FONT FACE="Arial,Helvetica">Unix Build Instructions</FONT></H2>
+This document explains how to build Mozilla for the Unix platform.
+<BR>
+<HR WIDTH="100%">
+<PRE>Requirements:
+
+&nbsp; Memory:
+&nbsp;&nbsp;&nbsp; 32MB of RAM, 128MB of swap, recommended 64MB of RAM.
+
+&nbsp; Tools:
+&nbsp;&nbsp;&nbsp; GNU C/C++ compiler 2.7.2 or better
+&nbsp;&nbsp;&nbsp; GNU make 3.74 or better
+&nbsp;&nbsp;&nbsp; Motif 1.2 (Lestif has been used with limited success)
+
+&nbsp; Tools that will be helpful later:
+&nbsp;&nbsp;&nbsp; Perl 5.0
+&nbsp;&nbsp;&nbsp; CVS 1.8.1
+&nbsp;&nbsp;&nbsp; RCS
+&nbsp;&nbsp;&nbsp; gdb 4.16
+
+&nbsp; NOTE:
+&nbsp;&nbsp;&nbsp; * gcc version 2.8 has been used successfully.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Your mileage may vary.
+
+Build:
+
+&nbsp; Untar the tar.gz file with the following (or your favorite variant thereof):
+
+&nbsp;&nbsp;&nbsp; gzip -dc tarball.tar.gz | tar -xvf -
+
+&nbsp; Set the following environment variables:
+&nbsp;&nbsp;&nbsp; csh/tcsh:&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; setenv NO_SECURITY 1
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; setenv MOZ_MEDIUM 1
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; setenv MOZILLA_CLIENT 1
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; setenv NO_MDUPDATE 1
+
+&nbsp;&nbsp;&nbsp; sh/bash/ksh:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; NO_SECURITY=1
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MOZ_MEDIUM=1
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MOZILLA_CLIENT=1
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; NO_MDUPDATE=1
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; export NO_SECURITY MOZ_MEDIUM MOZILLA_CLIENT NO_MDUPDATE
+
+&nbsp; Debug build is default; optimized build:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; setenv BUILD_OPT 1
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (BUILD_OPT=1; export BUILD_OPT)
+
+&nbsp; Build it.&nbsp; Default target is "export libs install":
+&nbsp;&nbsp;&nbsp; cd ns
+&nbsp;&nbsp;&nbsp; gmake -k
+
+NOTE:
+
+If you haven't got perl:
+
+setenv PERL /bin/echo
+
+gmake -ek
+
+Run the app:
+&nbsp; Executable lives in ns/cmd/xfe/{ARCHITECTURE}.{DBG|OPT}.OBJ
+&nbsp;&nbsp;&nbsp; (e.g. ns/cmd/xfe/Linux2.0.31_x86_DBG.OBJ/mozilla-export)
+&nbsp; Statically-linked app is "mozilla-export"
+&nbsp; dynamically-linked app is "moz-export"</PRE>
+
+<HR WIDTH="100%">
+<CENTER><FONT SIZE=-1>Copyright &copy; 1998 <A HREF="http://home.netscape.com/misc/contact_info.html">Netscape
+Communications Corporation</A></FONT></CENTER>
+
+</BODY>
+</HTML>
