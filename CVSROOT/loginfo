@@ -33,6 +33,7 @@ mozilla/netwerk/security	$CVSROOT/CVSROOT/cvsmailfilter.pl -u http://bonsai.mozi
 mozilla/netwerk/protocol/http/src	$CVSROOT/CVSROOT/cvsmailfilter.pl -u http://bonsai.mozilla.org -r /cvsroot -s %s mozilla-crypto-checkins@mozilla.org
 mozilla/netwerk/socket/ssl	$CVSROOT/CVSROOT/cvsmailfilter.pl -u http://bonsai.mozilla.org -r /cvsroot -s %s mozilla-crypto-checkins@mozilla.org
 mozilla/netwerk/socket/tests	$CVSROOT/CVSROOT/cvsmailfilter.pl -u http://bonsai.mozilla.org -r /cvsroot -s %s mozilla-crypto-checkins@mozilla.org
+mozilla/dbm	$CVSROOT/CVSROOT/cvsmailfilter.pl -u http://bonsai.mozilla.org -r /cvsroot -s %s mozilla-crypto-checkins@mozilla.org
 
 # misc modules 
 mozilla/webtools/bugzilla   $CVSROOT/CVSROOT/cvsmailfilter.pl -u http://bonsai.mozilla.org -r /cvsroot -s %s cvs-checkins@bugzilla.org webtools-changed@warp.mcom.com
