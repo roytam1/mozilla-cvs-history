@@ -47,13 +47,11 @@ MozillaSourceCommon -a \
     mozilla/jpeg  \
     mozilla/js  \
     mozilla/lib/htmldlgs  \
-    mozilla/lib/libaddr  \
     mozilla/lib/layout  \
     mozilla/lib/libcnv  \
     mozilla/lib/libdom  \
     mozilla/lib/libi18n  \
     mozilla/lib/liblayer  \
-    mozilla/lib/libmsg  \
     mozilla/lib/libmisc  \
     mozilla/lib/libmime  \
     mozilla/lib/libmocha \
