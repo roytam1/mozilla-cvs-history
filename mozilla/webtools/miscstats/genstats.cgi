@@ -267,7 +267,7 @@ print "These statistics were generated using the assumption that " .
 
 print p();
 print "Perhaps you are looking for " . 
-      qq|<a href="http://mothra.mozilla.org/miscstats/">the Bugzilla statistics?</a> |;
+      qq|<a href="http://mothra.mozilla.org/webtools/miscstats/">the Bugzilla statistics?</a> |;
 
 
 # generate the row of headers listing the months
