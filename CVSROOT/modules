@@ -433,6 +433,9 @@ JSRef -a \
 	mozilla/js/src
 
 JSClient -a \
+        mozilla/js/Makefile \
+        mozilla/js/Makefile.in \
+        mozilla/js/makefile.win \
         mozilla/js/src \
         mozilla/js/jsd \
         mozilla/js/jsd/java \
