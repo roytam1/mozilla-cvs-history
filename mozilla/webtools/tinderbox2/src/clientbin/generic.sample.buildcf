@@ -15,10 +15,10 @@
 
 # Run:
 
-	./build_shellscript	--buildcf ./generic.sample.buildcf	\
-				--build construct --test 		\
-					-- 				\
-				--tree seamonkey
+#	./build_shellscript	--buildcf ./generic.sample.buildcf	\
+#				--build construct --test 		\
+#					-- 				\
+#				--tree seamonkey
 
 # to see the completed build script which has all the perl
 # variables substituted.
