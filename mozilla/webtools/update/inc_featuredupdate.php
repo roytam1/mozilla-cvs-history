@@ -37,7 +37,22 @@
 // ***** END LICENSE BLOCK *****
 ?>
 
+<DIV class="contentbox" style="margin-left: 2px; border-color: #00E;">
+<DIV class="boxheader">Thunderbird 1.0 Released!</DIV>
+<SPAN class="itemdescription">
+<P><IMG SRC="images/product-front-thunderbird.png" width="96" height="105" alt="" align=left border=0>Thunderbird 1.0 is now available for download! New features include Saved Search Folders (aka Virtual Folders)
+which allow you to display messages based on previously set search criteria across multiple folders. Message Grouping
+allows you to organize e-mail in a folder by grouping them based on various attributes like Date, Sender, Label, etc.
+Thunderbird 1.0 also includes numerous bug fixes and other improvements.</P>
 
+<SPAN style="font-size: 16pt; text-align: center;">
+<a href="http://www.mozilla.org/products/thunderbird/">Get Thunderbird 1.0!</a></SPAN><BR>
+
+<a href="http://www.mozilla.org/products/thunderbird/releases/">Thunderbird Release Notes</a> | <a href="http://www.mozilla.org/press/mozilla-2004-12-7.html">Press Release</a><BR>
+
+
+</SPAN>
+</DIV>
 
 <DIV class="contentbox" style="margin-left: 2px; border-color: #E00;">
 <DIV class="boxheader">Firefox 1.0 Released!</DIV>
@@ -55,24 +70,6 @@ Extension and Theme Support, and more.
 <a href="http://www.mozilla.org/products/firefox/">Get Firefox 1.0!</a></SPAN><BR>
 
 <a href="http://www.mozilla.org/products/firefox/releases/1.0.html">Firefox Release Notes</a> | <a href="http://www.mozilla.org/press/mozilla-2004-11-09.html">Press Release</a><BR>
-
-
-</SPAN>
-</DIV>
-
-
-<DIV class="contentbox" style="margin-left: 2px; border-color: #00E;">
-<DIV class="boxheader">Thunderbird 0.9 Released!</DIV>
-<SPAN class="itemdescription">
-<P><IMG SRC="images/product-front-thunderbird.png" width="96" height="105" alt="" align=left border=0>Thunderbird 0.9 is now available for download! New features include Saved Search Folders (aka Virtual Folders)
-which allow you to display messages based on previously set search criteria across multiple folders. Message Grouping
-allows you to organize e-mail in a folder by grouping them based on various attributes like Date, Sender, Label, etc.
-Thunderbird 0.9 also includes numerous bug fixes and other improvements.</P>
-
-<SPAN style="font-size: 16pt; text-align: center;">
-<a href="http://www.mozilla.org/products/thunderbird/">Get Thunderbird 0.9!</a></SPAN><BR>
-
-<!--<a href="http://www.mozilla.org/products/firefox/releases/0.10.html">Firefox Release Notes</a> | --><a href="http://www.mozilla.org/products/thunderbird/releases/">Thunderbird Release Notes</a> | <!--<a href="http://www.mozilla.org/press/mozilla-2004-09-14-02.html">--><span style="color: #999;">Press Release</span><!--</a>--><BR>
 
 
 </SPAN>
