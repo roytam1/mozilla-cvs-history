@@ -77,6 +77,7 @@ MozillaSourceCommon -a \
     mozilla/modules/libreg  \
     mozilla/modules/libutil  \
     mozilla/modules/oji \
+    mozilla/modules/plugin \
     mozilla/modules/progress/src  \
     mozilla/modules/rdf  \
     mozilla/modules/schedulr  \
