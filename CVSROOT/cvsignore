@@ -28,3 +28,4 @@ so_locations
 *.map
 depend.mk
 _xpidlgen
+ti_files
