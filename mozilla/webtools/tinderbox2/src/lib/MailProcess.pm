@@ -94,6 +94,8 @@ sub fatal_mailprocessing_error {
 # log errors to the log file on the server end and send them to stderr
 # so that sendmail can put the error message in the bounced mail.
 
+  *LOG = *main::LOG;
+  
   my  @error = @_;
   foreach $_ (@error) {
     print LOG "[$main::LOCALTIME] $_";

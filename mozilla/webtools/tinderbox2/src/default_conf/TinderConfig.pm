@@ -58,6 +58,13 @@ package TinderConfig;
 
 @UUDECODE = ("/usr/local/bin/uudecode", "-o",);
 
+# The user/group ids which tinderbox will run as. Hopefully these
+# integers are out of the restricted range (bigger is safer, bigger
+# then 100 is ideal but bigger thhen 25 is recommended.).
+
+$TINDERBOX_UID=111;
+$TINDERBOX_GID=111;
+
 
 # The url to the tinderbox server binary directory
 
