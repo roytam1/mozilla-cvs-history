@@ -20,6 +20,8 @@
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Jake <jake@acutex.net>
+#                 Bradley Baetz <bbaetz@cs.mcgill.ca>
+#                 Christopher Aillon <christopher@aillon.com>
 
 # Contains some global variables and routines used throughout bugzilla.
 
@@ -33,9 +35,11 @@ sub globals_pl_sillyness {
     my $zz;
     $zz = @main::SqlStateStack;
     $zz = @main::chooseone;
+    $zz = $main::contenttypes;
     $zz = @main::default_column_list;
     $zz = $main::defaultqueryname;
     $zz = @main::dontchange;
+    $zz = @main::enterable_products;
     $zz = %main::keywordsbyname;
     $zz = @main::legal_bug_status;
     $zz = @main::legal_components;
@@ -48,8 +52,12 @@ sub globals_pl_sillyness {
     $zz = @main::legal_target_milestone;
     $zz = @main::legal_versions;
     $zz = @main::milestoneurl;
+    $zz = %main::proddesc;
     $zz = @main::prodmaxvotes;
     $zz = $main::superusergroupset;
+    $zz = $main::template;
+    $zz = $main::userid;
+    $zz = $main::vars;
 }
 
 #
@@ -58,6 +66,7 @@ sub globals_pl_sillyness {
 # 
 
 $::db_host = "localhost";
+$::db_port = 3306;
 $::db_name = "bugs";
 $::db_user = "bugs";
 $::db_pass = "";
@@ -71,11 +80,25 @@ use Date::Parse;               # For str2time().
 #use Carp;                       # for confess
 use RelationSet;
 
-# $ENV{PATH} is not taint safe
-delete $ENV{PATH};
+# Use standard Perl libraries for cross-platform file/directory manipulation.
+use File::Spec;
+    
+# Some environment variables are not taint safe
+delete @::ENV{'PATH', 'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
+
+# Cwd.pm in perl 5.6.1 gives a warning if $::ENV{'PATH'} isn't defined
+# Set this to '' so that we don't get warnings cluttering the logs on every
+# system call
+$::ENV{'PATH'} = '';
+
+# Ignore SIGTERM and SIGPIPE - this prevents DB corruption. If the user closes
+# their browser window while a script is running, the webserver sends these
+# signals, and we don't want to die half way through a write.
+$::SIG{TERM} = 'IGNORE';
+$::SIG{PIPE} = 'IGNORE';
 
 # Contains the version string for the current running Bugzilla.
-$::param{'version'} = '2.15';
+$::param{'version'} = '2.17';
 
 $::dontchange = "--do_not_change--";
 $::chooseone = "--Choose_one:--";
@@ -94,6 +117,18 @@ $::superusergroupset = "9223372036854775807";
 #}
 #$::SIG{__DIE__} = \&die_with_dignity;
 
+# Some files in the data directory must be world readable iff we don't have
+# a webserver group. Call this function to do this.
+sub ChmodDataFile($$) {
+    my ($file, $mask) = @_;
+    my $perm = 0770;
+    if ((stat('data'))[2] & 0002) {
+        $perm = 0777;
+    }
+    $perm = $perm & $mask;
+    chmod $perm,$file;
+}
+
 sub ConnectToDatabase {
     my ($useshadow) = (@_);
     if (!defined $::db) {
@@ -102,7 +137,7 @@ sub ConnectToDatabase {
             $name = Param("shadowdb");
             $::dbwritesallowed = 0;
         }
-        $::db = DBI->connect("DBI:mysql:host=$::db_host;database=$name", $::db_user, $::db_pass)
+        $::db = DBI->connect("DBI:mysql:host=$::db_host;database=$name;port=$::db_port", $::db_user, $::db_pass)
             || die "Bugzilla is currently broken. Please try again later. " . 
       "If the problem persists, please contact " . Param("maintainer") .
       ". The error you should quote is: " . $DBI::errstr;
@@ -127,6 +162,9 @@ sub SyncAnyPendingShadowChanges {
                 return;
             } elsif (defined $pid) {
                 # child process code runs here
+                my $redir = ($^O =~ /MSWin32/i) ? "NUL" : "/dev/null";
+                open STDOUT,">$redir";
+                open STDERR,">$redir";
                 exec("./syncshadowdb","--") or die "Unable to exec syncshadowdb: $!";
                 # the idea was that passing the second parameter tricks it into
                 # using execvp instead of running a shell. Not really necessary since
@@ -191,8 +229,27 @@ sub SqlLog {
     }
 }
 
+# This is from the perlsec page, slightly modifed to remove a warning
+# From that page:
+#      This function makes use of the fact that the presence of
+#      tainted data anywhere within an expression renders the
+#      entire expression tainted.
+# Don't ask me how it works...
+sub is_tainted {
+    return not eval { my $foo = join('',@_), kill 0; 1; };
+}
+
 sub SendSQL {
     my ($str, $dontshadow) = (@_);
+
+    # Don't use DBI's taint stuff yet, because:
+    # a) We don't want out vars to be tainted (yet)
+    # b) We want to know who called SendSQL...
+    # Is there a better way to do b?
+    if (is_tainted($str)) {
+        die "Attempted to send tainted string '$str' to the database";
+    }
+
     my $iswrite =  ($str =~ /^(INSERT|REPLACE|UPDATE|DELETE)/i);
     if ($iswrite && !$::dbwritesallowed) {
         die "Evil code attempted to write stuff to the shadow database.";
@@ -316,61 +373,6 @@ sub lsearch {
     return -1;
 }
 
-sub Product_element {
-    my ($prod,$onchange) = (@_);
-    return make_popup("product", keys %::versions, $prod, 1, $onchange);
-}
-
-sub Component_element {
-    my ($comp,$prod,$onchange) = (@_);
-    my $componentlist;
-    if (! defined $::components{$prod}) {
-        $componentlist = [];
-    } else {
-        $componentlist = $::components{$prod};
-    }
-    my $defcomponent;
-    if ($comp ne "" && lsearch($componentlist, $comp) >= 0) {
-        $defcomponent = $comp;
-    } else {
-        $defcomponent = $componentlist->[0];
-    }
-    return make_popup("component", $componentlist, $defcomponent, 1, "");
-}
-
-sub Version_element {
-    my ($vers, $prod, $onchange) = (@_);
-    my $versionlist;
-    if (!defined $::versions{$prod}) {
-        $versionlist = [];
-    } else {
-        $versionlist = $::versions{$prod};
-    }
-    my $defversion = $versionlist->[0];
-    if (lsearch($versionlist,$vers) >= 0) {
-        $defversion = $vers;
-    }
-    return make_popup("version", $versionlist, $defversion, 1, $onchange);
-}
-        
-sub Milestone_element {
-    my ($tm, $prod, $onchange) = (@_);
-    my $tmlist;
-    if (!defined $::target_milestone{$prod}) {
-        $tmlist = [];
-    } else {
-        $tmlist = $::target_milestone{$prod};
-    }
-
-    my $deftm = $tmlist->[0];
-
-    if (lsearch($tmlist, $tm) >= 0) {
-        $deftm = $tm;
-    }
-
-    return make_popup("target_milestone", $tmlist, $deftm, 1, $onchange);
-}
-
 # Generate a string which, when later interpreted by the Perl compiler, will
 # be the same as the given string.
 
@@ -436,7 +438,6 @@ sub GenerateArrayCode {
 
 
 sub GenerateVersionTable {
-    ConnectToDatabase();
     SendSQL("select value, program from versions order by value");
     my @line;
     my %varray;
@@ -467,27 +468,19 @@ sub GenerateVersionTable {
                                 # about them anyway.
 
     my $mpart = $dotargetmilestone ? ", milestoneurl" : "";
-    SendSQL("select product, description, votesperuser, disallownew$mpart from products");
-    $::anyvotesallowed = 0;
+    SendSQL("select product, description, votesperuser, disallownew$mpart from products ORDER BY product");
     while (@line = FetchSQLData()) {
         my ($p, $d, $votesperuser, $dis, $u) = (@line);
         $::proddesc{$p} = $d;
-        if ($dis) {
-            # Special hack.  Stomp on the description and make it "0" if we're
-            # not supposed to allow new bugs against this product.  This is
-            # checked for in enter_bug.cgi.
-            $::proddesc{$p} = "0";
+        if (!$dis) {
+            push @::enterable_products, $p;
         }
         if ($dotargetmilestone) {
             $::milestoneurl{$p} = $u;
         }
         $::prodmaxvotes{$p} = $votesperuser;
-        if ($votesperuser > 0) {
-            $::anyvotesallowed = 1;
-        }
     }
             
-
     my $cols = LearnAboutColumns("bugs");
     
     @::log_columns = @{$cols->{"-list-"}};
@@ -523,8 +516,6 @@ sub GenerateVersionTable {
 
     my @list = sort { uc($a) cmp uc($b)} keys(%::versions);
     @::legal_product = @list;
-    mkdir("data", 0777);
-    chmod 0777, "data";
     my $tmpname = "data/versioncache.$$";
     open(FID, ">$tmpname") || die "Can't create $tmpname";
 
@@ -554,8 +545,8 @@ sub GenerateVersionTable {
     }
     print FID GenerateCode('@::settable_resolution');
     print FID GenerateCode('%::proddesc');
+    print FID GenerateCode('@::enterable_products');
     print FID GenerateCode('%::prodmaxvotes');
-    print FID GenerateCode('$::anyvotesallowed');
 
     if ($dotargetmilestone) {
         # reading target milestones in from the database - matthew@zeroknowledge.com
@@ -593,7 +584,7 @@ sub GenerateVersionTable {
     print FID "1;\n";
     close FID;
     rename $tmpname, "data/versioncache" || die "Can't rename $tmpname to versioncache";
-    chmod 0666, "data/versioncache";
+    ChmodDataFile('data/versioncache', 0666);
 }
 
 
@@ -628,6 +619,8 @@ sub GetVersionTable {
         $mtime = 0;
     }
     if (time() - $mtime > 3600) {
+        use Token;
+        Token::CleanTokenTable();
         GenerateVersionTable();
     }
     require 'data/versioncache';
@@ -642,6 +635,31 @@ sub GetVersionTable {
     $::VersionTableLoaded = 1;
 }
 
+
+# Validates a given username as a new username
+# returns 1 if valid, 0 if invalid
+sub ValidateNewUser {
+    my ($username, $old_username) = @_;
+
+    if(DBname_to_id($username) != 0) {
+        return 0;
+    }
+
+    # Reject if the new login is part of an email change which is 
+    # still in progress
+    SendSQL("SELECT eventdata FROM tokens WHERE tokentype = 'emailold' 
+                AND eventdata like '%:$username' 
+                 OR eventdata like '$username:%'");
+    if (my ($eventdata) = FetchSQLData()) {
+        # Allow thru owner of token
+        if($old_username && ($eventdata eq "$old_username:$username")) {
+            return 1;
+        }
+        return 0;
+    }
+
+    return 1;
+}
 
 sub InsertNewUser {
     my ($username, $realname) = (@_);
@@ -681,6 +699,19 @@ sub InsertNewUser {
     return $password;
 }
 
+# Removes all entries from logincookies for $userid, except for the
+# optional $keep, which refers the logincookies.cookie primary key.
+# (This is useful so that a user changing their password stays logged in)
+sub InvalidateLogins {
+    my ($userid, $keep) = @_;
+
+    my $remove = "DELETE FROM logincookies WHERE userid = $userid";
+    if (defined $keep) {
+        $remove .= " AND cookie != " . SqlQuote($keep);
+    }
+    SendSQL($remove);
+}
+
 sub GenerateRandomPassword {
     my ($size) = @_;
 
@@ -704,6 +735,99 @@ sub GenerateRandomPassword {
     return $password;
 }
 
+sub SelectVisible {
+    my ($query, $userid, $usergroupset) = @_;
+
+    # Run the SQL $query with the additional restriction that
+    # the bugs can be seen by $userid. $usergroupset is provided
+    # as an optimisation when this is already known, eg from CGI.pl
+    # If not present, it will be obtained from the db.
+    # Assumes that 'bugs' is mentioned as a table name. You should
+    # also make sure that bug_id is qualified bugs.bug_id!
+    # Your query must have a WHERE clause. This is unlikely to be a problem.
+
+    # Also, note that mySQL requires aliases for tables to be locked, as well
+    # This means that if you change the name from selectVisible_cc (or add
+    # additional tables), you will need to update anywhere which does a
+    # LOCK TABLE, and then calls routines which call this
+
+    $usergroupset = 0 unless $userid;
+
+    unless (defined($usergroupset)) {
+        PushGlobalSQLState();
+        SendSQL("SELECT groupset FROM profiles WHERE userid = $userid");
+        $usergroupset = FetchOneColumn();
+        PopGlobalSQLState();
+    }
+
+    # Users are authorized to access bugs if they are a member of all 
+    # groups to which the bug is restricted.  User group membership and 
+    # bug restrictions are stored as bits within bitsets, so authorization
+    # can be determined by comparing the intersection of the user's
+    # bitset with the bug's bitset.  If the result matches the bug's bitset
+    # the user is a member of all groups to which the bug is restricted
+    # and is authorized to access the bug.
+
+    # A user is also authorized to access a bug if she is the reporter, 
+    # or member of the cc: list of the bug and the bug allows users in those
+    # roles to see the bug.  The boolean fields reporter_accessible and 
+    # cclist_accessible identify whether or not those roles can see the bug.
+
+    # Bit arithmetic is performed by MySQL instead of Perl because bitset
+    # fields in the database are 64 bits wide (BIGINT), and Perl installations
+    # may or may not support integers larger than 32 bits.  Using bitsets
+    # and doing bitset arithmetic is probably not cross-database compatible,
+    # however, so these mechanisms are likely to change in the future.
+
+    my $replace = " ";
+
+    if ($userid) {
+        $replace .= "LEFT JOIN cc selectVisible_cc ON 
+                     bugs.bug_id = selectVisible_cc.bug_id AND 
+                     selectVisible_cc.who = $userid "
+    }
+
+    $replace .= "WHERE ((bugs.groupset & $usergroupset) = bugs.groupset ";
+
+    if ($userid) {
+        # There is a mysql bug affecting v3.22 and 3.23 (at least), where this will
+        # cause all rows to be returned! We work arround this by adding an not isnull
+        # test to the JOINed cc table. See http://lists.mysql.com/cgi-ez/ezmlm-cgi?9:mss:11417
+        # Its needed, even though it shouldn't be
+        $replace .= "OR (bugs.reporter_accessible = 1 AND bugs.reporter = $userid)" .
+          " OR (bugs.cclist_accessible = 1 AND selectVisible_cc.who = $userid AND not isnull(selectVisible_cc.who))" .
+          " OR (bugs.assigned_to = $userid)";
+        if (Param("useqacontact")) {
+            $replace .= " OR (bugs.qa_contact = $userid)";
+        }
+    }
+
+    $replace .= ") AND ";
+
+    $query =~ s/\sWHERE\s/$replace/i;
+
+    return $query;
+}
+
+sub CanSeeBug {
+    # Note that we pass in the usergroupset, since this is known
+    # in most cases (ie viewing bugs). Maybe make this an optional
+    # parameter?
+
+    my ($id, $userid, $usergroupset) = @_;
+
+    # Query the database for the bug, retrieving a boolean value that
+    # represents whether or not the user is authorized to access the bug.
+
+    PushGlobalSQLState();
+    SendSQL(SelectVisible("SELECT bugs.bug_id FROM bugs WHERE bugs.bug_id = $id",
+                          $userid, $usergroupset));
+
+    my $ret = defined(FetchSQLData());
+    PopGlobalSQLState();
+
+    return $ret;
+}
 
 sub ValidatePassword {
     # Determines whether or not a password is valid (i.e. meets Bugzilla's
@@ -811,188 +935,197 @@ sub DBname_to_id {
 
 
 sub DBNameToIdAndCheck {
-    my ($name, $forceok) = (@_);
-    $name = html_quote($name);
+    my ($name) = (@_);
     my $result = DBname_to_id($name);
     if ($result > 0) {
         return $result;
     }
-    if ($forceok) {
-        InsertNewUser($name, "");
-        $result = DBname_to_id($name);
-        if ($result > 0) {
-            return $result;
-        }
-        print "Yikes; couldn't create user $name.  Please report problem to " .
-            Param("maintainer") ."\n";
-    } else {
-        print "\n";  # http://bugzilla.mozilla.org/show_bug.cgi?id=80045
-        print "The name <TT>$name</TT> is not a valid username.  Either you\n";
-        print "misspelled it, or the person has not registered for a\n";
-        print "Bugzilla account.\n";
-        print "<P>Please hit the <B>Back</B> button and try again.\n";
-    }
-    exit(0);
+
+    $name = html_quote($name);
+    ThrowUserError("The name <tt>$name</tt> is not a valid username.  
+                    Either you misspelled it, or the person has not
+                    registered for a Bugzilla account.");
 }
 
-# Use detaint_string() when you know that there is no way that the data
+# Use trick_taint() when you know that there is no way that the data
 # in a scalar can be tainted, but taint mode still bails on it.
 # WARNING!! Using this routine on data that really could be tainted
 #           defeats the purpose of taint mode.  It should only be
 #           used on variables that cannot be touched by users.
 
-sub detaint_string {
-    my ($str) = @_;
-    $str =~ m/^(.*)$/s;
-    $str = $1;
+sub trick_taint {
+    $_[0] =~ /^(.*)$/s;
+    $_[0] = $1;
+    return (defined($_[0]));
+}
+
+sub detaint_natural {
+    $_[0] =~ /^(\d+)$/;
+    $_[0] = $1;
+    return (defined($_[0]));
 }
 
 # This routine quoteUrls contains inspirations from the HTML::FromText CPAN
 # module by Gareth Rees <garethr@cre.canon.co.uk>.  It has been heavily hacked,
 # all that is really recognizable from the original is bits of the regular
 # expressions.
+# This has been rewritten to be faster, mainly by substituting 'as we go'.
+# If you want to modify this routine, read the comments carefully
 
 sub quoteUrls {
-    my ($knownattachments, $text) = (@_);
+    my ($text) = (@_);
     return $text unless $text;
-    
-    my $base = Param('urlbase');
 
-    my $protocol = join '|',
-    qw(afs cid ftp gopher http https mid news nntp prospero telnet wais);
+    # We use /g for speed, but uris can have other things inside them
+    # (http://foo/bug#3 for example). Filtering that out filters valid
+    # bug refs out, so we have to do replacements.
+    # mailto can't contain space or #, so we don't have to bother for that
+    # Do this by escaping \0 to \1\0, and replacing matches with \0\0$count\0\0
+    # \0 is used because its unliklely to occur in the text, so the cost of
+    # doing this should be very small
+    # Also, \0 won't appear in the value_quote'd bug title, so we don't have
+    # to worry about bogus substitutions from there
 
-    my %options = ( metachars => 1, @_ );
+    # escape the 2nd escape char we're using
+    my $chr1 = chr(1);
+    $text =~ s/\0/$chr1\0/g;
 
-    my $count = 0;
+    # However, note that adding the title (for buglinks) can affect things
+    # In particular, attachment matches go before bug titles, so that titles
+    # with 'attachment 1' don't double match.
+    # Dupe checks go afterwards, because that uses ^ and \Z, which won't occur
+    # if it was subsituted as a bug title (since that always involve leading
+    # and trailing text)
 
-    # Now, quote any "#" characters so they won't confuse stuff later
-    $text =~ s/#/%#/g;
-
-    # Next, find anything that looks like a URL or an email address and
-    # pull them out the the text, replacing them with a "##<digits>##
-    # marker, and writing them into an array.  All this confusion is
-    # necessary so that we don't match on something we've already replaced,
-    # which can happen if you do multiple s///g operations.
+    # Because of entities, its easier (and quicker) to do this before escaping
 
     my @things;
-    while ($text =~ s%((mailto:)?([\w\.\-\+\=]+\@[\w\-]+(?:\.[\w\-]+)+)\b|
-                    (\b((?:$protocol):[^ \t\n<>"]+[\w/])))%"##$count##"%exo) {
-        my $item = $&;
+    my $count = 0;
+    my $tmp;
 
-        $item = value_quote($item);
+    # non-mailto protocols
+    my $protocol_re = qr/(afs|cid|ftp|gopher|http|https|mid|news|nntp|prospero|telnet|wais)/i;
 
-        if ($item !~ m/^$protocol:/o && $item !~ /^mailto:/) {
-            # We must have grabbed this one because it looks like an email
-            # address.
-            $item = qq{<A HREF="mailto:$item">$item</A>};
-        } else {
-            $item = qq{<A HREF="$item">$item</A>};
-        }
+    $text =~ s~\b(${protocol_re}:  # The protocol:
+                  [^\s<>\"]+       # Any non-whitespace
+                  [\w\/])          # so that we end in \w or /
+              ~($tmp = html_quote($1)) &&
+               ($things[$count++] = "<a href=\"$tmp\">$tmp</a>") &&
+               ("\0\0" . ($count-1) . "\0\0")
+              ~egox;
 
-        $things[$count++] = $item;
-    }
-    # Either a comment string or no comma and a compulsory #.
-    while ($text =~ s/\bbug(\s|%\#)*(\d+),?\s*comment\s*(\s|%\#)(\d+)/"##$count##"/ei) {
-        my $item = $&;
-        my $bugnum = $2;
-        my $comnum = $4;
-        $item = GetBugLink($bugnum, $item);
-        $item =~ s/(id=\d+)/$1#c$comnum/;
-        $things[$count++] = $item;
-    }
-    while ($text =~ s/\bcomment(\s|%\#)*(\d+)/"##$count##"/ei) {
-        my $item = $&;
-        my $num = $2;
-        $item = value_quote($item);
-        $item = qq{<A HREF="#c$num">$item</A>};
-        $things[$count++] = $item;
-    }
-    while ($text =~ s/\bbug(\s|%\#)*(\d+)/"##$count##"/ei) {
-        my $item = $&;
-        my $num = $2;
-        $item = GetBugLink($num, $item);
-        $things[$count++] = $item;
-    }
-    while ($text =~ s/\battachment(\s|%\#)*(\d+)/"##$count##"/ei) {
-        my $item = $&;
-        my $num = $2;
-        $item = value_quote($item); # Not really necessary, since we know
-                                    # there's no special chars in it.
-        $item = qq{<A HREF="showattachment.cgi?attach_id=$num">$item</A>};
-        $things[$count++] = $item;
-    }
-    while ($text =~ s/\*\*\* This bug has been marked as a duplicate of (\d+) \*\*\*/"##$count##"/ei) {
-        my $item = $&;
-        my $num = $1;
-        my $bug_link;
-        $bug_link = GetBugLink($num, $num);
-        $item =~ s@\d+@$bug_link@;
-        $things[$count++] = $item;
-    }
-    while ($text =~ s/Created an attachment \(id=(\d+)\)/"##$count##"/e) {
-        my $item = $&;
-        my $num = $1;
-        if ($knownattachments->{$num}) {
-            $item = qq{<A HREF="showattachment.cgi?attach_id=$num">$item</A>};
-        }
-        $things[$count++] = $item;
-    }
+    # We have to quote now, otherwise our html is itsself escaped
+    # THIS MEANS THAT A LITERAL ", <, >, ' MUST BE ESCAPED FOR A MATCH
 
-    $text = value_quote($text);
-    $text =~ s/\&#013;/\n/g;
+    $text = html_quote($text);
 
-    # Stuff everything back from the array.
-    for (my $i=0 ; $i<$count ; $i++) {
-        $text =~ s/##$i##/$things[$i]/e;
-    }
+    # mailto:
+    # Use |<nothing> so that $1 is defined regardless
+    $text =~ s~\b(mailto:|)?([\w\.\-\+\=]+\@[\w\-]+(?:\.[\w\-]+)+)\b
+              ~<a href=\"mailto:$2\">$1$2</a>~igx;
 
-    # And undo the quoting of "#" characters.
-    $text =~ s/%#/#/g;
+    # attachment links - handle both cases separatly for simplicity
+    $text =~ s~((?:^Created\ an\ |\b)attachment\s*\(id=(\d+)\))
+              ~<a href=\"attachment.cgi?id=$2&amp;action=view\">$1</a>~igx;
+
+    $text =~ s~\b(attachment\s*\#?\s*(\d+))
+              ~<a href=\"attachment.cgi?id=$2&amp;action=view\">$1</a>~igx;
+
+    # This handles bug a, comment b type stuff. Because we're using /g
+    # we have to do this in one pattern, and so this is semi-messy.
+    # Also, we can't use $bug_re?$comment_re? because that will match the
+    # empty string
+    my $bug_re = qr/bug\s*\#?\s*(\d+)/i;
+    my $comment_re = qr/comment\s*\#?\s*(\d+)/i;
+    $text =~ s~\b($bug_re(?:\s*,?\s*$comment_re)?|$comment_re)
+              ~ # We have several choices. $1 here is the link, and $2-4 are set
+                # depending on which part matched
+               (defined($2) ? GetBugLink($2,$1,$3) :
+                              "<a href=\"#c$4\">$1</a>")
+              ~egox;
+
+    # Duplicate markers
+    $text =~ s~(?<=^\*\*\*\ This\ bug\ has\ been\ marked\ as\ a\ duplicate\ of\ )
+               (\d+)
+               (?=\ \*\*\*\Z)
+              ~GetBugLink($1, $1)
+              ~egmx;
+
+    # Now remove the encoding hacks
+    $text =~ s/\0\0(\d+)\0\0/$things[$1]/eg;
+    $text =~ s/$chr1\0/\0/g;
 
     return $text;
 }
 
-# This is a new subroutine written 12/20/00 for the purpose of processing a
-# link to a bug.  It can be called using "GetBugLink (<BugNumber>, <LinkText>);"
-# Where <BugNumber> is the number of the bug and <LinkText> is what apprears
-# between '<a>' and '</a>'.
+# GetBugLink creates a link to a bug, including its title.
+# It takes either two or three paramaters:
+#  - The bug number
+#  - The link text, to place between the <a>..</a>
+#  - An optional comment number, for linking to a particular
+#    comment in the bug
 
 sub GetBugLink {
-    my ($bug_num, $link_text) = (@_);
-    my ($link_return) = "";
+    my ($bug_num, $link_text, $comment_num) = @_;
+    detaint_natural($bug_num) || die "GetBugLink() called with non-integer bug number";
 
-    # TODO - Add caching capabilites... possibly use a global variable in the form
-    # of $buglink{$bug_num} that contains the text returned by this sub.  If that
-    # variable is defined, simply return it's value rather than running the SQL
-    # query.  This would cut down on the number of SQL calls when the same bug is
-    # referenced multiple times.
-    
-    # Make sure any unfetched data from a currently running query
-    # is saved off rather than overwritten
-    PushGlobalSQLState();
-    
-    # Get this bug's info from the SQL Database
-    SendSQL("select bugs.bug_status, resolution, short_desc, groupset
-             from bugs where bugs.bug_id = $bug_num");
-    my ($bug_stat, $bug_res, $bug_desc, $bug_grp) = (FetchSQLData());
-    
-    # Format the retrieved information into a link
-    if ($bug_stat eq "UNCONFIRMED") { $link_return .= "<i>" }
-    if ($bug_res ne "") { $link_return .= "<strike>" }
-    $bug_desc = value_quote($bug_desc);
-    $link_text = value_quote($link_text);
-    $link_return .= qq{<a href="show_bug.cgi?id=$bug_num" title="$bug_stat};
-    if ($bug_res ne "") {$link_return .= " $bug_res"}
-    if ($bug_grp == 0) { $link_return .= " - $bug_desc" }
-    $link_return .= qq{">$link_text</a>};
-    if ($bug_res ne "") { $link_return .= "</strike>" }
-    if ($bug_stat eq "UNCONFIRMED") { $link_return .= "</i>"}
-    
-    # Put back any query in progress
-    PopGlobalSQLState();
+    # If we've run GetBugLink() for this bug number before, %::buglink
+    # will contain an anonymous array ref of relevent values, if not
+    # we need to get the information from the database.
+    if (! defined $::buglink{$bug_num}) {
+        # Make sure any unfetched data from a currently running query
+        # is saved off rather than overwritten
+        PushGlobalSQLState();
 
-    return $link_return; 
+        SendSQL("SELECT bugs.bug_status, resolution, short_desc, groupset " .
+                "FROM bugs WHERE bugs.bug_id = $bug_num");
 
+        # If the bug exists, save its data off for use later in the sub
+        if (MoreSQLData()) {
+            my ($bug_state, $bug_res, $bug_desc, $bug_grp) = FetchSQLData();
+            # Initialize these variables to be "" so that we don't get warnings
+            # if we don't change them below (which is highly likely).
+            my ($pre, $title, $post) = ("", "", "");
+
+            $title = $bug_state;
+            if ($bug_state eq $::unconfirmedstate) {
+                $pre = "<i>";
+                $post = "</i>";
+            }
+            elsif (! IsOpenedState($bug_state)) {
+                $pre = "<strike>";
+                $title .= " $bug_res";
+                $post = "</strike>";
+            }
+            if ($bug_grp == 0 || CanSeeBug($bug_num, $::userid, $::usergroupset)) {
+                $title .= " - $bug_desc";
+            }
+            $::buglink{$bug_num} = [$pre, value_quote($title), $post];
+        }
+        else {
+            # Even if there's nothing in the database, we want to save a blank
+            # anonymous array in the %::buglink hash so the query doesn't get
+            # run again next time we're called for this bug number.
+            $::buglink{$bug_num} = [];
+        }
+        # All done with this sidetrip
+        PopGlobalSQLState();
+    }
+
+    # Now that we know we've got all the information we're gonna get, let's
+    # return the link (which is the whole reason we were called :)
+    my ($pre, $title, $post) = @{$::buglink{$bug_num}};
+    # $title will be undefined if the bug didn't exist in the database.
+    if (defined $title) {
+        my $linkval = "show_bug.cgi?id=$bug_num";
+        if (defined $comment_num) {
+            $linkval .= "#c$comment_num";
+        }
+        return qq{$pre<a href="$linkval" title="$title">$link_text</a>$post};
+    }
+    else {
+        return qq{$link_text};
+    }
 }
 
 sub GetLongDescriptionAsText {
@@ -1001,9 +1134,9 @@ sub GetLongDescriptionAsText {
     my $count = 0;
     my ($query) = ("SELECT profiles.login_name, longdescs.bug_when, " .
                    "       longdescs.thetext " .
-                   "FROM longdescs, profiles " .
-                   "WHERE profiles.userid = longdescs.who " .
-                   "      AND longdescs.bug_id = $id ");
+                   "FROM   longdescs, profiles " .
+                   "WHERE  profiles.userid = longdescs.who " .
+                   "AND    longdescs.bug_id = $id ");
 
     if ($start && $start =~ /[1-9]/) {
         # If the start is all zeros, then don't do this (because we want to
@@ -1030,54 +1163,31 @@ sub GetLongDescriptionAsText {
     return $result;
 }
 
-
-sub GetLongDescriptionAsHTML {
-    my ($id, $start, $end) = (@_);
-    my $result = "";
-    my $count = 0;
-    my %knownattachments;
-    SendSQL("SELECT attach_id FROM attachments WHERE bug_id = $id");
+sub GetComments {
+    my ($id) = (@_);
+    my @comments;
+    
+    SendSQL("SELECT  profiles.realname, profiles.login_name, 
+                     date_format(longdescs.bug_when,'%Y-%m-%d %H:%i'), 
+                     longdescs.thetext
+            FROM     longdescs, profiles
+            WHERE    profiles.userid = longdescs.who 
+              AND    longdescs.bug_id = $id 
+            ORDER BY longdescs.bug_when");
+             
     while (MoreSQLData()) {
-        $knownattachments{FetchOneColumn()} = 1;
+        my %comment;
+        ($comment{'name'}, $comment{'email'}, $comment{'time'}, $comment{'body'}) = FetchSQLData();
+        
+        $comment{'email'} .= Param('emailsuffix');
+        $comment{'name'} = $comment{'name'} || $comment{'email'};
+         
+        push (@comments, \%comment);
     }
-
-    my ($query) = ("SELECT profiles.realname, profiles.login_name, longdescs.bug_when, " .
-                   "       longdescs.thetext " .
-                   "FROM longdescs, profiles " .
-                   "WHERE profiles.userid = longdescs.who " .
-                   "      AND longdescs.bug_id = $id ");
-
-    if ($start && $start =~ /[1-9]/) {
-        # If the start is all zeros, then don't do this (because we want to
-        # not emit a leading "Additional Comments" line in that case.)
-        $query .= "AND longdescs.bug_when > '$start'";
-        $count = 1;
-    }
-    if ($end) {
-        $query .= "AND longdescs.bug_when <= '$end'";
-    }
-
-    $query .= "ORDER BY longdescs.bug_when";
-    SendSQL($query);
-    while (MoreSQLData()) {
-        my ($who, $email, $when, $text) = (FetchSQLData());
-        $email .= Param('emailsuffix');
-        if ($count) {
-            $result .= qq|<BR><BR><I>------- Additional Comment <a name="c$count" href="#c$count">#$count</a> From |;
-            if ($who) {
-                $result .= qq{<A HREF="mailto:$email">$who</A> };
-            } else {
-                $result .= qq{<A HREF="mailto:$email">$email</A> };
-            }
-              
-            $result .= time2str("%Y-%m-%d %H:%M", str2time($when)) . " -------</I><BR>\n";
-        }
-        $result .= "<PRE>" . quoteUrls(\%knownattachments, $text) . "</PRE>\n";
-        $count++;
-    }
-
-    return $result;
+    
+    return \@comments;
 }
+
 
 # Fills in a hashtable with info about the columns for the given table in the
 # database.  The hashtable has the following entries:
@@ -1128,7 +1238,7 @@ sub SqlQuote {
     $str =~ s/([\\\'])/\\$1/g;
     $str =~ s/\0/\\0/g;
     # If it's been SqlQuote()ed, then it's safe, so we tell -T that.
-    $str = detaint_string($str);
+    trick_taint($str);
     return "'$str'";
 }
 
@@ -1139,9 +1249,10 @@ sub UserInGroup {
     if ($::usergroupset eq "0") {
         return 0;
     }
-    ConnectToDatabase();
+    PushGlobalSQLState();
     SendSQL("select (bit & $::usergroupset) != 0 from groups where name = " . SqlQuote($groupname));
     my $bit = FetchOneColumn();
+    PopGlobalSQLState();
     if ($bit) {
         return 1;
     }
@@ -1160,9 +1271,10 @@ sub BugInGroup {
 
 sub GroupExists {
     my ($groupname) = (@_);
-    ConnectToDatabase();
+    PushGlobalSQLState();
     SendSQL("select count(*) from groups where name=" . SqlQuote($groupname));
     my $count = FetchOneColumn();
+    PopGlobalSQLState();
     return $count;
 }
 
@@ -1171,7 +1283,6 @@ sub GroupExists {
 # !!! Remove this function when the new group system is implemented!
 sub GroupNameToBit {
     my ($groupname) = (@_);
-    ConnectToDatabase();
     PushGlobalSQLState();
     SendSQL("SELECT bit FROM groups WHERE name = " . SqlQuote($groupname));
     my $bit = FetchOneColumn() || 0;
@@ -1185,9 +1296,10 @@ sub GroupNameToBit {
 sub GroupIsActive {
     my ($groupbit) = (@_);
     $groupbit ||= 0;
-    ConnectToDatabase();
+    PushGlobalSQLState();
     SendSQL("select isactive from groups where bit=$groupbit");
     my $isactive = FetchOneColumn();
+    PopGlobalSQLState();
     return $isactive;
 }
 
@@ -1213,7 +1325,6 @@ sub OpenStates {
 
 sub RemoveVotes {
     my ($id, $who, $reason) = (@_);
-    ConnectToDatabase();
     my $whopart = "";
     if ($who) {
         $whopart = " AND votes.who = $who";
@@ -1276,7 +1387,7 @@ sub RemoveVotes {
             if (Param('sendmailnow')) {
                $sendmailparm = '';
             }
-            if (open(SENDMAIL, "|/usr/lib/sendmail $sendmailparm -t")) {
+            if (open(SENDMAIL, "|/usr/lib/sendmail $sendmailparm -t -i")) {
                 my %substs;
 
                 $substs{"to"} = $name;
@@ -1314,13 +1425,6 @@ sub Param ($) {
         return $::param{$value};
     }
 
-    # See if it is a dynamically-determined param (can't be changed by user).
-    if ($value eq "commandmenu") {
-        return GetCommandMenu();
-    }
-    if ($value eq "settingsmenu") {
-        return GetSettingsMenu();
-    }
     # Um, maybe we haven't sourced in the params at all yet.
     if (stat("data/params")) {
         # Write down and restore the version # here.  That way, we get around
@@ -1381,14 +1485,296 @@ sub PerformSubsts {
     return $str;
 }
 
+# Min and max routines.
+sub min {
+    my $min = shift(@_);
+    foreach my $val (@_) {
+        $min = $val if $val < $min;
+    }
+    return $min;
+}
+
+sub max {
+    my $max = shift(@_);
+    foreach my $val (@_) {
+        $max = $val if $val > $max;
+    }
+    return $max;
+}
 
 # Trim whitespace from front and back.
 
 sub trim {
-    ($_) = (@_);
-    s/^\s+//g;
-    s/\s+$//g;
-    return $_;
+    my ($str) = @_;
+    $str =~ s/^\s+//g;
+    $str =~ s/\s+$//g;
+    return $str;
 }
+
+###############################################################################
+# Global Templatization Code
+
+# Use the template toolkit (http://www.template-toolkit.org/) to generate
+# the user interface using templates in the "template/" subdirectory.
+use Template;
+
+# Create the global template object that processes templates and specify
+# configuration parameters that apply to all templates processed in this script.
+
+# IMPORTANT - If you make any configuration changes here, make sure to make
+# them in t/004.template.t and checksetup.pl. You may also need to change the
+# date settings were last changed - see the comments in checksetup.pl for
+# details
+$::template ||= Template->new(
+  {
+    # Colon-separated list of directories containing templates.
+    INCLUDE_PATH => "template/en/custom:template/en/default" ,
+
+    # Remove white-space before template directives (PRE_CHOMP) and at the
+    # beginning and end of templates and template blocks (TRIM) for better 
+    # looking, more compact content.  Use the plus sign at the beginning 
+    # of directives to maintain white space (i.e. [%+ DIRECTIVE %]).
+    PRE_CHOMP => 1 ,
+    TRIM => 1 , 
+
+    COMPILE_DIR => 'data/',
+
+    # Functions for processing text within templates in various ways.
+    # IMPORTANT!  When adding a filter here that does not override a
+    # built-in filter, please also add a stub filter to checksetup.pl
+    # and t/004template.t.
+    FILTERS =>
+      {
+        # Render text in strike-through style.
+        strike => sub { return "<strike>" . $_[0] . "</strike>" } ,
+
+        # Returns the text with backslashes, single/double quotes,
+        # and newlines/carriage returns escaped for use in JS strings.
+        js => sub
+        {
+            my ($var) = @_;
+            $var =~ s/([\\\'\"])/\\$1/g; 
+            $var =~ s/\n/\\n/g; 
+            $var =~ s/\r/\\r/g; 
+            return $var;
+        } , 
+        
+        html => \&html_quote , 
+
+        # HTML collapses newlines in element attributes to a single space,
+        # so form elements which may have whitespace (ie comments) need
+        # to be encoded using &#013;
+        # See bugs 4928, 22983 and 32000 for more details
+        html_linebreak => sub
+        {
+            my ($var) = @_;
+            $var =~ s/\r\n/\&#013;/g;
+            $var =~ s/\n\r/\&#013;/g;
+            $var =~ s/\r/\&#013;/g;
+            $var =~ s/\n/\&#013;/g;
+            return $var;
+        } ,
+
+        # This subroutine in CGI.pl escapes characters in a variable
+        # or value string for use in a query string.  It escapes all
+        # characters NOT in the regex set: [a-zA-Z0-9_\-.].  The 'uri'
+        # filter should be used for a full URL that may have
+        # characters that need encoding.
+        url_quote => \&url_quote ,
+      } ,
+  }
+) || DisplayError("Template creation failed: " . Template->error())
+  && exit;
+
+# Use the Toolkit Template's Stash module to add utility pseudo-methods
+# to template variables.
+use Template::Stash;
+
+# Add "contains***" methods to list variables that search for one or more 
+# items in a list and return boolean values representing whether or not 
+# one/all/any item(s) were found.
+$Template::Stash::LIST_OPS->{ contains } =
+  sub {
+      my ($list, $item) = @_;
+      return grep($_ eq $item, @$list);
+  };
+
+$Template::Stash::LIST_OPS->{ containsany } =
+  sub {
+      my ($list, $items) = @_;
+      foreach my $item (@$items) { 
+          return 1 if grep($_ eq $item, @$list);
+      }
+      return 0;
+  };
+
+# Add a "substr" method to the Template Toolkit's "scalar" object
+# that returns a substring of a string.
+$Template::Stash::SCALAR_OPS->{ substr } = 
+  sub {
+      my ($scalar, $offset, $length) = @_;
+      return substr($scalar, $offset, $length);
+  };
+    
+# Add a "truncate" method to the Template Toolkit's "scalar" object
+# that truncates a string to a certain length.
+$Template::Stash::SCALAR_OPS->{ truncate } = 
+  sub {
+      my ($string, $length, $ellipsis) = @_;
+      $ellipsis ||= "";
+      
+      return $string if !$length || length($string) <= $length;
+      
+      my $strlen = $length - length($ellipsis);
+      my $newstr = substr($string, 0, $strlen) . $ellipsis;
+      return $newstr;
+  };
+    
+###############################################################################
+
+sub GetOutputFormats {
+    # Builds a set of possible output formats for a script by looking for
+    # format files in the appropriate template directories as specified by 
+    # the template include path, the sub-directory parameter, and the
+    # template name parameter.
+    
+    # This function is relevant for scripts with one basic function whose
+    # results can be represented in multiple formats, f.e. buglist.cgi, 
+    # which has one function (query and display of a list of bugs) that can 
+    # be represented in multiple formats (i.e. html, rdf, xml, etc.).
+    
+    # It is *not* relevant for scripts with several functions but only one
+    # basic output format, f.e. editattachstatuses.cgi, which not only lists 
+    # statuses but also provides adding, editing, and deleting functions.
+    # (although it may be possible to make this function applicable under 
+    # these circumstances with minimal modification).
+    
+    # Format files have names that look like SCRIPT-FORMAT.EXT.tmpl, where
+    # SCRIPT is the name of the CGI script being invoked, SUBDIR is the name 
+    # of the template sub-directory, FORMAT is the name of the format, and EXT 
+    # is the filename extension identifying the content type of the output.
+     
+    # When a format file is found, a record for that format is added to
+    # the hash of format records, indexed by format name, with each record
+    # containing the name of the format file, its filename extension,
+    # and its content type (obtained by reference to the $::contenttypes
+    # hash defined in localconfig).
+    
+    my ($subdir, $script) = @_;
+
+    # A set of output format records, indexed by format name, each record 
+    # containing template, extension, and contenttype fields.
+    my $formats = {};
+    
+    # Get the template include path from the template object.
+    my $includepath = $::template->context->{ LOAD_TEMPLATES }->[0]->include_path();
+    
+    # Loop over each include directory in reverse so that format files
+    # earlier in the path override files with the same name later in
+    # the path (i.e. "custom" formats override "default" ones).
+    foreach my $path (reverse @$includepath) {
+        # Get the list of files in the given sub-directory if it exists.
+        my $dirname = File::Spec->catdir($path, $subdir);
+        opendir(SUBDIR, $dirname) || next;
+        my @files = readdir SUBDIR;
+        closedir SUBDIR;
+        
+        # Loop over each file in the sub-directory looking for format files
+        # (files whose name looks like SCRIPT-FORMAT.EXT.tmpl).
+        foreach my $file (@files) {
+            if ($file =~ /^\Q$script\E-(.+)\.(.+)\.tmpl$/) {
+                # This must be a valid file
+                # If an attacker could add a previously unused format
+                # type to trick us into running it, then they could just
+                # change an existing one...
+                # (This implies that running without a webservergroup is
+                # insecure, but that is the case anyway)
+                trick_taint($file);
+
+                $formats->{$1} = { 
+                  'template'    => $file , 
+                  'extension'   => $2 , 
+                  'contenttype' => $::contenttypes->{$2} || "text/plain" , 
+                };
+            }
+        }
+    }
+    return $formats;
+}
+
+sub ValidateOutputFormat {
+    my ($format, $script, $subdir) = @_;
+    
+    # If the script name is undefined, assume the script currently being
+    # executed, deriving its name from Perl's built-in $0 (program name) var.
+    if (!defined($script)) {
+        my ($volume, $dirs, $filename) = File::Spec->splitpath($0);
+        $filename =~ /^(.+)\.cgi$/;
+        $script = $1
+          || DisplayError("Could not determine the name of the script.")
+          && exit;
+    }
+    
+    # If the format name is undefined or the default format is specified,
+    # do not do any validation but instead return the default format.
+    if (!defined($format) || $format eq "default") {
+        return 
+          { 
+            'template'    => "$script.html.tmpl" , 
+            'extension'   => "html" , 
+            'contenttype' => "text/html" , 
+          };
+    }
+    
+    # If the subdirectory name is undefined, assume the script name.
+    $subdir = $script if !defined($subdir);
+    
+    # Get the list of output formats supported by this script.
+    my $formats = GetOutputFormats($subdir, $script);
+    
+    # Validate the output format requested by the user.
+    if (!$formats->{$format}) {
+        my $escapedname = html_quote($format);
+        DisplayError("The <em>$escapedname</em> output format is not 
+          supported by this script.  Supported formats (besides the 
+          default HTML format) are <em>" . 
+          join("</em>, <em>", map(html_quote($_), keys(%$formats))) . 
+          "</em>.");
+        exit;
+    }
+    
+    # Return the validated output format.
+    return $formats->{$format};
+}
+
+###############################################################################
+
+# Define the global variables and functions that will be passed to the UI
+# template.  Additional values may be added to this hash before templates
+# are processed.
+$::vars =
+  {
+    # Function for retrieving global parameters.
+    'Param' => \&Param ,
+
+    # Function to create date strings
+    'time2str' => \&time2str ,
+
+    # Function for processing global parameters that contain references
+    # to other global parameters.
+    'PerformSubsts' => \&PerformSubsts ,
+
+    # Generic linear search function
+    'lsearch' => \&lsearch ,
+
+    # UserInGroup - you probably want to cache this
+    'UserInGroup' => \&UserInGroup ,
+
+    # SyncAnyPendingShadowChanges - called in the footer to sync the shadowdb
+    'SyncAnyPendingShadowChanges' => \&SyncAnyPendingShadowChanges ,
+    
+    # User Agent - useful for detecting in templates
+    'user_agent' => $ENV{'HTTP_USER_AGENT'} ,
+  };
 
 1;
