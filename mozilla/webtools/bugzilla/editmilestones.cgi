@@ -33,9 +33,9 @@ sub TestProduct ($)
     my $prod = shift;
 
     # does the product exist?
-    SendSQL("SELECT product
+    SendSQL("SELECT name
              FROM products
-             WHERE product=" . SqlQuote($prod));
+             WHERE name=" . SqlQuote($prod));
     return FetchOneColumn();
 }
 
@@ -62,9 +62,9 @@ sub TestMilestone ($$)
     my ($prod,$mile) = @_;
 
     # does the product exist?
-    SendSQL("SELECT product,value
-             FROM milestones
-             WHERE product=" . SqlQuote($prod) . " and value=" . SqlQuote($mile));
+    SendSQL("SELECT products.name, value
+             FROM milestones, products
+             WHERE milestones.product_id=products.id AND products.name=" . SqlQuote($prod) . " and value=" . SqlQuote($mile));
     return FetchOneColumn();
 }
 
@@ -164,6 +164,7 @@ unless (UserInGroup("editcomponents")) {
 # often used variables
 #
 my $product = trim($::FORM{product} || '');
+my $product_id = get_product_id($product);
 my $milestone = trim($::FORM{milestone} || '');
 my $sortkey = trim($::FORM{sortkey} || '0');
 my $action  = trim($::FORM{action}  || '');
@@ -183,10 +184,10 @@ if ($milestone) {
 unless ($product) {
     PutHeader("Select product");
 
-    SendSQL("SELECT products.product,products.description,'xyzzy'
+    SendSQL("SELECT products.name,products.description,'xyzzy'
              FROM products 
-             GROUP BY products.product
-             ORDER BY products.product");
+             GROUP BY products.name
+             ORDER BY products.name");
     print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR BGCOLOR=\"#6666FF\">\n";
     print "  <TH ALIGN=\"left\">Edit milestones of ...</TH>\n";
     print "  <TH ALIGN=\"left\">Description</TH>\n";
@@ -219,7 +220,7 @@ unless ($action) {
 
     SendSQL("SELECT value,sortkey
              FROM milestones
-             WHERE product=" . SqlQuote($product) . "
+             WHERE product_id=$product_id
              ORDER BY sortkey,value");
 
     print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR BGCOLOR=\"#6666FF\">\n";
@@ -305,10 +306,9 @@ if ($action eq 'new') {
 
     # Add the new milestone
     SendSQL("INSERT INTO milestones ( " .
-          "value, product, sortkey" .
+          "value, product_id, sortkey" .
           " ) VALUES ( " .
-          SqlQuote($milestone) . "," .
-          SqlQuote($product) . ", $sortkey)");
+          SqlQuote($milestone) . ", $product_id, $sortkey)");
 
     # Make versioncache flush
     unlink "data/versioncache";
@@ -331,15 +331,15 @@ if ($action eq 'del') {
     PutHeader("Delete milestone of $product");
     CheckMilestone($product, $milestone);
 
-    SendSQL("SELECT count(bug_id),product,target_milestone
+    SendSQL("SELECT count(bug_id), product_id, target_milestone
              FROM bugs
-             GROUP BY product,target_milestone
-             HAVING product=" . SqlQuote($product) . "
+             GROUP BY product_id, target_milestone
+             HAVING product_id=$product_id
                 AND target_milestone=" . SqlQuote($milestone));
     my $bugs = FetchOneColumn();
 
     SendSQL("SELECT defaultmilestone FROM products " .
-            "WHERE product=" . SqlQuote($product));
+            "WHERE id=$product_id");
     my $defaultmilestone = FetchOneColumn();
 
     print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0>\n";
@@ -422,7 +422,7 @@ if ($action eq 'delete') {
 
         SendSQL("SELECT bug_id
              FROM bugs
-             WHERE product=" . SqlQuote($product) . "
+             WHERE product_id=$product_id
                AND target_milestone=" . SqlQuote($milestone));
         while (MoreSQLData()) {
             my $bugid = FetchOneColumn();
@@ -439,13 +439,13 @@ if ($action eq 'delete') {
         # Deleting the rest is easier:
 
         SendSQL("DELETE FROM bugs
-             WHERE product=" . SqlQuote($product) . "
+             WHERE product_id=$product_id
                AND target_milestone=" . SqlQuote($milestone));
         print "Bugs deleted.<BR>\n";
     }
 
     SendSQL("DELETE FROM milestones
-             WHERE product=" . SqlQuote($product) . "
+             WHERE product_id=$product_id
                AND value=" . SqlQuote($milestone));
     print "Milestone deleted.<P>\n";
     SendSQL("UNLOCK TABLES");
@@ -467,8 +467,8 @@ if ($action eq 'edit') {
     PutHeader("Edit milestone of $product");
     CheckMilestone($product,$milestone);
 
-    SendSQL("SELECT sortkey FROM milestones WHERE product=" .
-            SqlQuote($product) . " AND value = " . SqlQuote($milestone));
+    SendSQL("SELECT sortkey FROM milestones WHERE product_id=$product_id " .
+            " AND value = " . SqlQuote($milestone));
     my $sortkey = FetchOneColumn();
 
     print "<FORM METHOD=POST ACTION=editmilestones.cgi>\n";
@@ -535,14 +535,14 @@ if ($action eq 'update') {
                  SET target_milestone=" . SqlQuote($milestone) . ",
                  delta_ts=delta_ts
                  WHERE target_milestone=" . SqlQuote($milestoneold) . "
-                   AND product=" . SqlQuote($product));
+                   AND product_id=$product_id");
         SendSQL("UPDATE milestones
                  SET value=" . SqlQuote($milestone) . "
-                 WHERE product=" . SqlQuote($product) . "
+                 WHERE product_id=$product_id
                    AND value=" . SqlQuote($milestoneold));
         SendSQL("UPDATE products " .
                 "SET defaultmilestone = " . SqlQuote($milestone) .
-                "WHERE product = " . SqlQuote($product) .
+                " WHERE id = $product_id" .
                 "  AND defaultmilestone = " . SqlQuote($milestoneold));
         unlink "data/versioncache";
         print "Updated milestone.<BR>\n";

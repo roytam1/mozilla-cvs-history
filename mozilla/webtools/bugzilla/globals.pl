@@ -433,7 +433,10 @@ sub GenerateArrayCode {
 
 
 sub GenerateVersionTable {
-    SendSQL("select value, program from versions order by value");
+    SendSQL("SELECT versions.value, products.name " .
+            "FROM versions, products " .
+            "WHERE products.id = versions.product_id " .
+            "ORDER BY versions.value");
     my @line;
     my %varray;
     my %carray;
@@ -445,7 +448,10 @@ sub GenerateVersionTable {
         push @{$::versions{$p1}}, $v;
         $varray{$v} = 1;
     }
-    SendSQL("select value, program from components order by value");
+    SendSQL("SELECT components.name, products.name " .
+            "FROM components, products " .
+            "WHERE products.id = components.product_id " .
+            "ORDER BY components.name");
     while (@line = FetchSQLData()) {
         my ($c,$p) = (@line);
         if (!defined $::components{$p}) {
@@ -463,7 +469,7 @@ sub GenerateVersionTable {
                                 # about them anyway.
 
     my $mpart = $dotargetmilestone ? ", milestoneurl" : "";
-    SendSQL("select product, description, votesperuser, disallownew$mpart from products ORDER BY product");
+    SendSQL("select name, description, votesperuser, disallownew$mpart from products ORDER BY name");
     while (@line = FetchSQLData()) {
         my ($p, $d, $votesperuser, $dis, $u) = (@line);
         $::proddesc{$p} = $d;
@@ -545,7 +551,10 @@ sub GenerateVersionTable {
 
     if ($dotargetmilestone) {
         # reading target milestones in from the database - matthew@zeroknowledge.com
-        SendSQL("SELECT value, product FROM milestones ORDER BY sortkey, value");
+        SendSQL("SELECT milestones.value, products.name " .
+                "FROM milestones, products " .
+                "WHERE products.id = milestones.product_id " .
+                "ORDER BY milestones.sortkey, milestones.value");
         my @line;
         my %tmarray;
         @::legal_target_milestone = ();
@@ -920,6 +929,50 @@ sub DBNameToIdAndCheck {
     ThrowUserError("The name <tt>$name</tt> is not a valid username.  
                     Either you misspelled it, or the person has not
                     registered for a Bugzilla account.");
+}
+
+sub get_product_id {
+    my ($prod) = @_;
+    PushGlobalSQLState();
+    SendSQL("SELECT id FROM products WHERE name = " . SqlQuote($prod));
+    my ($prod_id) = FetchSQLData();
+    PopGlobalSQLState();
+    detaint_natural($prod_id) || die "get_product_id() returned a non-integer";
+    return $prod_id;
+}
+
+sub get_product_name {
+    my ($prod_id) = @_;
+    detaint_natural($prod_id) || die "get_product_name() was called with a non-integer paramater";
+    PushGlobalSQLState();
+    SendSQL("SELECT name FROM products WHERE id = $prod_id");
+    my ($prod) = FetchSQLData();
+    PopGlobalSQLState();
+    return $prod;
+}
+
+sub get_component_id {
+    my ($prod, $comp) = @_;
+    PushGlobalSQLState();
+    SendSQL("SELECT components.id " .
+            "FROM components, products " .
+            "WHERE products.id = components.product_id " .
+            " AND products.name = " . SqlQuote($prod) .
+            " AND components.name = " . SqlQuote($comp));
+    my ($comp_id) = FetchSQLData();
+    PopGlobalSQLState();
+    detaint_natural($comp_id) || die "get_component_id() returned a non-integer";
+    return $comp_id;
+}
+
+sub get_component_name {
+    my ($comp_id) = @_;
+    detaint_natural($comp_id) || die "get_component_name() was called with a non-integer paramater";
+    PushGlobalSQLState();
+    SendSQL("SELECT name FROM components WHERE id = $comp_id");
+    my ($comp) = FetchSQLData();
+    PopGlobalSQLState();
+    return $comp;
 }
 
 # Use trick_taint() when you know that there is no way that the data
@@ -1421,7 +1474,7 @@ sub RemoveVotes {
             "FROM profiles " . 
             "LEFT JOIN votes ON profiles.userid = votes.who " .
             "LEFT JOIN bugs USING(bug_id) " .
-            "LEFT JOIN products USING(product)" .
+            "LEFT JOIN products ON products.id = bugs.product_id " .
             "WHERE votes.bug_id = $id " .
             $whopart);
     my @list;

@@ -328,13 +328,29 @@ sub GenerateSQL {
 
     # First, deal with all the old hard-coded non-chart-based poop.
 
-    unshift(@supptables,
-            ("profiles map_assigned_to",
-             "profiles map_reporter",
-             "LEFT JOIN profiles map_qa_contact ON bugs.qa_contact = map_qa_contact.userid"));
-    unshift(@wherepart,
-            ("bugs.assigned_to = map_assigned_to.userid",
-             "bugs.reporter = map_reporter.userid"));
+    if (lsearch($fieldsref, 'map_assigned_to.login_name') >= 0) {
+        push @supptables, "profiles AS map_assigned_to";
+        push @wherepart, "bugs.assigned_to = map_assigned_to.userid";
+    }
+
+    if (lsearch($fieldsref, 'map_reporter.login_name') >= 0) {
+        push @supptables, "profiles AS map_reporter";
+        push @wherepart, "bugs.assigned_to = map_reporter.userid";
+    }
+
+    if (lsearch($fieldsref, 'map_qa_contact.login_name') >= 0) {
+        push @supptables, "LEFT JOIN profiles map_qa_contact ON bugs.qa_contact = map_qa_contact.userid";
+    }
+
+    if (lsearch($fieldsref, 'map_products.name') >= 0) {
+        push @supptables, "products AS map_products";
+        push @wherepart, "bugs.product_id = map_products.id";
+    }
+
+    if (lsearch($fieldsref, 'map_components.name') >= 0) {
+        push @supptables, "components AS map_components";
+        push @wherepart, "bugs.component_id = map_components.id";
+    }
 
     my $minvotes;
     if (defined $F{'votes'}) {
@@ -368,9 +384,9 @@ sub GenerateSQL {
 #        push(@wherepart, "( $F{'sql'} )");
 #    }
 
-    my @legal_fields = ("product", "version", "rep_platform", "op_sys",
+    my @legal_fields = ("version", "rep_platform", "op_sys",
                         "bug_status", "resolution", "priority", "bug_severity",
-                        "assigned_to", "reporter", "component",
+                        "assigned_to", "reporter",
                         "target_milestone");
 
     foreach my $field (keys %F) {
@@ -378,6 +394,18 @@ sub GenerateSQL {
             push(@specialchart, [$field, "anyexact",
                                  join(',', @{$M{$field}})]);
         }
+    }
+
+    if ($F{'product'}) {
+        push(@supptables, "products products_");
+        push(@wherepart, "products_.id = bugs.product_id");
+        push(@specialchart, ["products_.name", "anyexact", $F{'product'}]);
+    }
+
+    if ($F{'component'}) {
+        push(@supptables, "components components_");
+        push(@wherepart, "components_.id = bugs.component_id");
+        push(@specialchart, ["components_.name", "anyexact", $F{'component'}]);
     }
 
     if ($F{'keywords'}) {
@@ -525,7 +553,7 @@ sub GenerateSQL {
     my @funcdefs =
         (
          "^(assigned_to|reporter)," => sub {
-             push(@supptables, "profiles map_$f");
+             push(@supptables, "profiles AS map_$f");
              push(@wherepart, "bugs.$f = map_$f.userid");
              $f = "map_$f.login_name";
          },
@@ -1220,8 +1248,8 @@ DefineColumn("resolution"        , "bugs.resolution"            , "Result"      
 DefineColumn("summary"           , "bugs.short_desc"            , "Summary"          );
 DefineColumn("summaryfull"       , "bugs.short_desc"            , "Summary"          );
 DefineColumn("status_whiteboard" , "bugs.status_whiteboard"     , "Status Summary"   );
-DefineColumn("component"         , "bugs.component"             , "Component"        );
-DefineColumn("product"           , "bugs.product"               , "Product"          );
+DefineColumn("component"         , "map_components.name"        , "Component"        );
+DefineColumn("product"           , "map_products.name"          , "Product"          );
 DefineColumn("version"           , "bugs.version"               , "Version"          );
 DefineColumn("os"                , "bugs.op_sys"                , "OS"               );
 DefineColumn("target_milestone"  , "bugs.target_milestone"      , "Target Milestone" );
@@ -1377,7 +1405,7 @@ if ($order) {
     # change it to order by the sortkey of the target_milestone first.
     if ($db_order =~ /bugs.target_milestone/) {
         $db_order =~ s/bugs.target_milestone/ms_order.sortkey,ms_order.value/;
-        $query =~ s/\sWHERE\s/ LEFT JOIN milestones ms_order ON ms_order.value = bugs.target_milestone AND ms_order.product = bugs.product WHERE /;
+        $query =~ s/\sWHERE\s/ LEFT JOIN milestones ms_order ON ms_order.value = bugs.target_milestone AND ms_order.product_id = bugs.product_id WHERE /;
     }
 
     # If we are sorting by votes, sort in descending order if no explicit

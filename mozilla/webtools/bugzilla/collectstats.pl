@@ -67,6 +67,7 @@ sub collect_stats {
     my $dir = shift;
     my $product = shift;
     my $when = localtime (time);
+    my $product_id = get_product_id($product) unless $product eq '-All-';
 
     # NB: Need to mangle the product for the filename, but use the real
     # product name in the query
@@ -82,7 +83,7 @@ sub collect_stats {
             if( $product eq "-All-" ) {
                 SendSQL("select count(bug_status) from bugs where bug_status='$status'");
             } else {
-                SendSQL("select count(bug_status) from bugs where bug_status='$status' and product='$product'");
+                SendSQL("select count(bug_status) from bugs where bug_status='$status' and product_id=$product_id");
             }
 
             push @row, FetchOneColumn();
@@ -92,7 +93,7 @@ sub collect_stats {
             if( $product eq "-All-" ) {
                 SendSQL("select count(resolution) from bugs where resolution='$resolution'");
             } else {
-                SendSQL("select count(resolution) from bugs where resolution='$resolution' and product='$product'");
+                SendSQL("select count(resolution) from bugs where resolution='$resolution' and product_id=$product_id");
             }
 
             push @row, FetchOneColumn();

@@ -89,6 +89,8 @@ grep($product eq $_ , @::legal_product)
   || DisplayError("The product name is invalid.")
   && exit;
 
+my $product_id = get_product_id($product);
+
 # Make sure the user is authorized to access this product.
 if (Param("usebuggroups") && GroupExists($product)) {
     confirm_login() unless $::userid;
@@ -102,9 +104,9 @@ if (Param("usebuggroups") && GroupExists($product)) {
 ######################################################################
 
 my @components;
-SendSQL("SELECT value, initialowner, initialqacontact, description FROM " .
-        "components WHERE program = " . SqlQuote($product) . " ORDER BY " .
-        "value");
+SendSQL("SELECT name, initialowner, initialqacontact, description FROM " .
+        "components WHERE product_id = $product_id ORDER BY " .
+        "name");
 while (MoreSQLData()) {
     my ($name, $initialowner, $initialqacontact, $description) =
       FetchSQLData();

@@ -552,7 +552,7 @@ sub GetUserInfo {
 sub CheckEmailSyntax {
     my ($addr) = (@_);
     my $match = Param('emailregexp');
-    if ($addr !~ /$match/ || $addr =~ /[\\\(\)<>&,;:"\[\] \t\r\n]/) {
+    if ($addr !~ /$match/ || $addr =~ /[\\\(\)<>&,;:\"\[\] \t\r\n]/) {
         ThrowUserError("The e-mail address you entered(<b>" .
         html_quote($addr) . "</b>) didn't pass our syntax checking 
         for a legal email address. " . Param('emailregexpdesc') .
@@ -948,7 +948,7 @@ sub CheckIfVotedConfirmed {
     SendSQL("SELECT bugs.votes, bugs.bug_status, products.votestoconfirm, " .
             "       bugs.everconfirmed " .
             "FROM bugs, products " .
-            "WHERE bugs.bug_id = $id AND products.product = bugs.product");
+            "WHERE bugs.bug_id = $id AND products.product_id = bugs.product_id");
     my ($votes, $status, $votestoconfirm, $everconfirmed) = (FetchSQLData());
     if ($votes >= $votestoconfirm && $status eq $::unconfirmedstate) {
         SendSQL("UPDATE bugs SET bug_status = 'NEW', everconfirmed = 1 " .

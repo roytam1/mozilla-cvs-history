@@ -173,7 +173,8 @@ sub CheckonComment( $ ) {
 # and make the user verify the version, component, target milestone,
 # and bug groups if so.
 if ( $::FORM{'id'} ) {
-    SendSQL("SELECT product FROM bugs WHERE bug_id = $::FORM{'id'}");
+    SendSQL("SELECT name FROM products, bugs " .
+            "WHERE products.id = bugs.product_id AND bug_id = $::FORM{'id'}");
     $::oldproduct = FetchSQLData();
 }
 if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct) 
@@ -495,8 +496,8 @@ while (my ($b, $isactive) = FetchSQLData()) {
 }
 
 foreach my $field ("rep_platform", "priority", "bug_severity",          
-                   "summary", "component", "bug_file_loc", "short_desc",
-                   "product", "version", "op_sys",
+                   "summary", "bug_file_loc", "short_desc",
+                   "version", "op_sys",
                    "target_milestone", "status_whiteboard") {
     if (defined $::FORM{$field}) {
         if ($::FORM{$field} ne $::dontchange) {
@@ -504,6 +505,41 @@ foreach my $field ("rep_platform", "priority", "bug_severity",
             $::query .= "$field = " . SqlQuote(trim($::FORM{$field}));
         }
     }
+}
+
+my $prod_id; # Remember, can't use this for mass changes
+if ($::FORM{'product'} ne $::dontchange) {
+    $prod_id = get_product_id($::FORM{'product'});
+    if (! $prod_id) {
+        DisplayError("The <tt>" . html_quote($::FORM{'product'}) .
+                     "</tt> product doesn't exist.");
+        exit;
+    }
+    DoComma();
+    $::query .= "product_id = $prod_id";
+} else {
+    SendSQL("SELECT DISTINCT product_id FROM bugs WHERE bug_id IN (" .
+            join(',', @idlist) . ") LIMIT 2");
+    $prod_id = FetchOneColumn();
+    $prod_id = undef if (FetchOneColumn());
+}
+
+my $comp_id; # Remember, can't use this for mass changes
+if ($::FORM{'component'} ne $::dontchange) {
+    if (!defined $prod_id) {
+        ThrowUserError("You cannot change the component from a list of bugs " .
+                       "covering more than one product");
+    }
+    $comp_id = get_component_id(get_product_name($prod_id),
+                                $::FORM{'component'});
+    if (! $comp_id) {
+        DisplayError("The <tt>" . html_quote($::FORM{'component'}) .
+                     "</tt> component doesn't exist in the <tt>" .
+                     html_quote($::FORM{'product'}) . "</tt> product");
+        exit;
+    }
+    DoComma();
+    $::query .= "component_id = $comp_id";
 }
 
 # If this installation uses bug aliases, and the user is changing the alias,
@@ -700,17 +736,15 @@ SWITCH: for ($::FORM{'knob'}) {
             DoConfirm();
         }
         ChangeStatus('NEW');
-        SendSQL("select initialowner from components where program=" .
-                SqlQuote($::FORM{'product'}) . " and value=" .
-                SqlQuote($::FORM{'component'}));
+        SendSQL("SELECT initialowner FROM components " .
+                "WHERE components.id = $comp_id");
         my $newid = FetchOneColumn();
         my $newname = DBID_to_name($newid);
         DoComma();
         $::query .= "assigned_to = $newid";
         if (Param("useqacontact")) {
-            SendSQL("select initialqacontact from components where program=" .
-                    SqlQuote($::FORM{'product'}) .
-                    " and value=" . SqlQuote($::FORM{'component'}));
+            SendSQL("SELECT initialqacontact FROM components " .
+                    "WHERE components.id = $comp_id");
             my $qacontact = FetchOneColumn();
             if (defined $qacontact && $qacontact != 0) {
                 DoComma();
@@ -915,10 +949,11 @@ foreach my $id (@idlist) {
     SendSQL("LOCK TABLES bugs $write, bugs_activity $write, cc $write, " .
             "cc AS selectVisible_cc $write, " .
             "profiles $write, dependencies $write, votes $write, " .
+            "products READ, components READ, " .
             "keywords $write, longdescs $write, fielddefs $write, " .
             "bug_group_map $write, " .
             "member_group_map READ, " .
-            "keyworddefs READ, groups READ, attachments READ, products READ");
+            "keyworddefs READ, groups READ, attachments READ");
     my @oldvalues = SnapShotBug($id);
     my %oldhash;
     my $i = 0;
@@ -1282,6 +1317,17 @@ foreach my $id (@idlist) {
             $new = "";
         }
         if ($old ne $new) {
+
+            # Products and components are now stored in the DB using ID's
+            # We need to translate this to English before logging it
+            if ($col eq 'product_id') {
+                $old = get_product_name($old);
+                $new = get_product_name($new);
+            }
+            if ($col eq 'component_id') {
+                $old = get_component_name($old);
+                $new = get_component_name($new);
+            }
 
             # save off the old value for passing to processmail so the old
             # owner can be notified

@@ -46,9 +46,9 @@ sub TestProduct ($)
     my $prod = shift;
 
     # does the product exist?
-    SendSQL("SELECT product
+    SendSQL("SELECT name
              FROM products
-             WHERE product=" . SqlQuote($prod));
+             WHERE name=" . SqlQuote($prod));
     return FetchOneColumn();
 }
 
@@ -75,9 +75,9 @@ sub TestVersion ($$)
     my ($prod,$ver) = @_;
 
     # does the product exist?
-    SendSQL("SELECT program,value
-             FROM versions
-             WHERE program=" . SqlQuote($prod) . " and value=" . SqlQuote($ver));
+    SendSQL("SELECT products.name,value
+             FROM versions, products
+             WHERE versions.product_id=products.id AND products.name=" . SqlQuote($prod) . " and value=" . SqlQuote($ver));
     return FetchOneColumn();
 }
 
@@ -191,10 +191,10 @@ if ($version) {
 unless ($product) {
     PutHeader("Select product");
 
-    SendSQL("SELECT products.product,products.description,'xyzzy'
+    SendSQL("SELECT products.name,products.description,'xyzzy'
              FROM products 
-             GROUP BY products.product
-             ORDER BY products.product");
+             GROUP BY products.name
+             ORDER BY products.name");
     print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR BGCOLOR=\"#6666FF\">\n";
     print "  <TH ALIGN=\"left\">Edit versions of ...</TH>\n";
     print "  <TH ALIGN=\"left\">Description</TH>\n";
@@ -217,7 +217,7 @@ unless ($product) {
     exit;
 }
 
-
+my $product_id = get_product_id($product);
 
 #
 # action='' -> Show nice list of versions
@@ -227,23 +227,9 @@ unless ($action) {
     PutHeader("Select version of $product");
     CheckProduct($product);
 
-=for me
-
-    # Das geht nicht wie vermutet. Ich bekomme nicht alle Versionen
-    # angezeigt!  Schade. Ich würde gerne sehen, wieviel Bugs pro
-    # Version angegeben sind ...
-
-    SendSQL("SELECT value,program,COUNT(bug_id)
-             FROM versions LEFT JOIN bugs
-               ON program=product AND value=version
-             WHERE program=" . SqlQuote($product) . "
-             GROUP BY value");
-
-=cut
-
-    SendSQL("SELECT value,program
-             FROM versions 
-             WHERE program=" . SqlQuote($product) . "
+    SendSQL("SELECT value
+             FROM versions
+             WHERE product_id=$product_id
              ORDER BY value");
 
     print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR BGCOLOR=\"#6666FF\">\n";
@@ -252,8 +238,7 @@ unless ($action) {
     print "  <TH ALIGN=\"left\">Action</TH>\n";
     print "</TR>";
     while ( MoreSQLData() ) {
-        my ($version,$dummy,$bugs) = FetchSQLData();
-        $bugs ||= 'none';
+        my $version = FetchOneColumn();
         print "<TR>\n";
         print "  <TD VALIGN=\"top\"><A HREF=\"editversions.cgi?product=", url_quote($product), "&version=", url_quote($version), "&action=edit\"><B>$version</B></A></TD>\n";
         #print "  <TD VALIGN=\"top\">$bugs</TD>\n";
@@ -327,10 +312,9 @@ if ($action eq 'new') {
 
     # Add the new version
     SendSQL("INSERT INTO versions ( " .
-          "value, program" .
+          "value, product_id" .
           " ) VALUES ( " .
-          SqlQuote($version) . "," .
-          SqlQuote($product) . ")");
+          SqlQuote($version) . ", $product_id)");
 
     # Make versioncache flush
     unlink "data/versioncache";
@@ -353,11 +337,10 @@ if ($action eq 'del') {
     PutHeader("Delete version of $product");
     CheckVersion($product, $version);
 
-    SendSQL("SELECT count(bug_id),product,version
+    SendSQL("SELECT count(bug_id)
              FROM bugs
-             GROUP BY product,version
-             HAVING product=" . SqlQuote($product) . "
-                AND version=" . SqlQuote($version));
+             WHERE product_id = $product_id
+               AND version = " . SqlQuote($version));
     my $bugs = FetchOneColumn();
 
     print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0>\n";
@@ -433,7 +416,7 @@ if ($action eq 'delete') {
 
         SendSQL("SELECT bug_id
              FROM bugs
-             WHERE product=" . SqlQuote($product) . "
+             WHERE product_id=$product_id
                AND version=" . SqlQuote($version));
         while (MoreSQLData()) {
             my $bugid = FetchOneColumn();
@@ -450,13 +433,13 @@ if ($action eq 'delete') {
         # Deleting the rest is easier:
 
         SendSQL("DELETE FROM bugs
-             WHERE product=" . SqlQuote($product) . "
+             WHERE product_id = $product_id
                AND version=" . SqlQuote($version));
         print "Bugs deleted.<BR>\n";
     }
 
     SendSQL("DELETE FROM versions
-             WHERE program=" . SqlQuote($product) . "
+             WHERE product_id = $product_id
                AND value=" . SqlQuote($version));
     print "Version deleted.<P>\n";
     SendSQL("UNLOCK TABLES");
@@ -515,7 +498,8 @@ if ($action eq 'update') {
     # them, be sure to test for WHERE='$version' or WHERE='$versionold'
 
     SendSQL("LOCK TABLES bugs WRITE,
-                         versions WRITE");
+                         versions WRITE,
+                         products READ");
 
     if ($version ne $versionold) {
         unless ($version) {
@@ -534,10 +518,10 @@ if ($action eq 'update') {
                  SET version=" . SqlQuote($version) . ",
                  delta_ts = delta_ts
                  WHERE version=" . SqlQuote($versionold) . "
-                   AND product=" . SqlQuote($product));
+                   AND product_id = $product_id");
         SendSQL("UPDATE versions
                  SET value=" . SqlQuote($version) . "
-                 WHERE program=" . SqlQuote($product) . "
+                 WHERE product_id = $product_id
                    AND value=" . SqlQuote($versionold));
         unlink "data/versioncache";
         print "Updated version.<BR>\n";
