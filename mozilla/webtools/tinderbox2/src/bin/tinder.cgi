@@ -39,7 +39,6 @@
 
 # Standard perl libraries
 use File::Basename;
-use Sys::Syslog;
 use Sys::Hostname;
 use Time::Local;
 
