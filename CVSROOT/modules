@@ -425,9 +425,16 @@ CalendarClient -a \
 	mozilla/view
 
 #######################################################################
-# Modules for the JavaScript Engine 
+# Modules for the JavaScript
 # (fur@netscape.com)
 #
 
 JSRef -a \
 	mozilla/js/src
+
+JSClient -a \
+        js/src \
+        js/jsd \
+        js/jsd/java \
+        js/jsd/classes \
+        js/jsd/macbuild
