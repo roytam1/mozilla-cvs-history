@@ -643,7 +643,7 @@ sub CanSeeBug {
         " reporter_accessible, cclist_accessible," .
         " cc.who IS NOT NULL," .
         " COUNT(DISTINCT(bug_group_map.group_id)) as cntbugingroups," .
-        " COUNT(DISTINCT(user_group_map.user_id)) as cntuseringroups" .
+        " COUNT(DISTINCT(user_group_map.group_id)) as cntuseringroups" .
         " FROM bugs" .
         " LEFT JOIN cc ON bugs.bug_id = cc.bug_id" .
         " AND cc.who = $userid" .
