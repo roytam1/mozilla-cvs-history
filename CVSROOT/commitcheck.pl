@@ -15,10 +15,10 @@ $mode{'55'} = 'Open';
 $branch{'55'} = 'HEAD';
 $fullname{'55'} = 'Build Config';
 $mode{'146'} = 'Restricted';
-$branch{'146'} = 'NSPRPUB_CLIENT_BRANCH';
+$branch{'146'} = 'NSPRPUB_PRE_4_2_CLIENT_BRANCH';
 $fullname{'146'} = 'Client NSPR';
 $blessed{'146'} = ['sfraser%netscape.com','sdagley%netscape.com','gordon%netscape.com','beard%netscape.com',];
-$super{'146'} = ['wtc%netscape.com','larryh%netscape.com','cls%seawood.org','leaf%mozilla.org',];
+$super{'146'} = ['wtc%netscape.com','cls%seawood.org','leaf%mozilla.org',];
 $mode{'96'} = 'Open';
 $branch{'96'} = 'HEAD';
 $fullname{'96'} = 'Clipping and Compositing';
@@ -360,7 +360,7 @@ if (m:^mozilla/gfx/src/qt/.*$:) {return '161';}
 if (m:^mozilla/widget/src/qt/.*$:) {return '161';}
 if (m:^mozilla/extensions/p3p/.*$:) {return '162';}
 }
-if ($b eq 'NSPRPUB_CLIENT_BRANCH') {
+if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
 }
 return '';
