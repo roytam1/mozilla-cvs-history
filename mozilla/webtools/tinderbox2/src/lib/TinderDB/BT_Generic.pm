@@ -301,7 +301,7 @@ sub status_table_row {
 
 	# a link to the cgibin page which displays the bug
 	
-	my ($href) = BTData::bug_id2bug_url($bug_id);
+	my ($href) = BTData::bug_id2bug_url($rec);
 	my ($window_title) = "BT Info bug_id: $bug_id";
 
 	# we display the list of names in 'teletype font' so that the
