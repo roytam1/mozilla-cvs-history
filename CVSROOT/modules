@@ -699,6 +699,27 @@ Webtools -a \
 
 #############################################################
 #
+# Module for the java webclient (edburns)
+#
+#############################################################
+
+Webclient    -a \
+	mozilla/java/Makefile.in \
+	mozilla/java/Makefile.win \
+	mozilla/java/README \
+	mozilla/java/README.commercial \
+	mozilla/java/build \
+	mozilla/java/config \
+	mozilla/java/dom \
+	mozilla/java/external \
+	mozilla/java/makefiles \
+	mozilla/java/util \
+	mozilla/java/webclient
+
+
+
+#############################################################
+#
 # Module for iPlanet Network Security Services
 #
 #############################################################
