@@ -58,8 +58,14 @@ $_POST["name"] = strip_tags($_POST["name"]);
 $_POST["title"] = strip_tags($_POST["title"]);
 $_POST["comments"] = strip_tags($_POST["comments"]);
 
+//Are we behind a proxy and given the IP via an alternate enviroment variable? If so, use it.
+    if ($_SERVER["HTTP_X_FORWARDED_FOR"]) {
+        $remote_addr = $_SERVER["HTTP_X_FORWARDED_FOR"];
+    } else {
+        $remote_addr = $_SERVER["REMOTE_ADDR"];
+    }
 
-$sql = "INSERT INTO `t_feedback` (`ID`, `CommentName`, `CommentVote`, `CommentTitle`, `CommentNote`, `CommentDate`, `commentip`) VALUES ('$_POST[id]', '$_POST[name]', '$_POST[rating]', '$_POST[title]', $_POST[comments], NOW(NULL), '$_SERVER[REMOTE_ADDR]');";
+$sql = "INSERT INTO `t_feedback` (`ID`, `CommentName`, `CommentVote`, `CommentTitle`, `CommentNote`, `CommentDate`, `commentip`) VALUES ('$_POST[id]', '$_POST[name]', '$_POST[rating]', '$_POST[title]', $_POST[comments], NOW(NULL), '$remote_addr');";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 
 
