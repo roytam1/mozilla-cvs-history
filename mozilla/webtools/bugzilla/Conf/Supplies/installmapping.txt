@@ -1,0 +1,101 @@
+# this file and installtypes.txt allow for the different installation types
+# in this file, every file in the bugzilla dist is listed. If a file is not listed,
+# it will not be copied into the the dist and will not work. Be sure to add all 
+# new files here. Note that files inside directories listed here will be automatically
+# copied. The | and code next to each filename indicates its type. installtypes.txt uses
+# these types to determine where to install the files. 
+# res: resources (images, html, js, etc)
+# cgi: cgi files
+# mod: modules
+# scpt: .pl or other scripts without extention
+# req: something that must be with the other cgi scripts for bugzilla to work
+# null: not needed in the dist, discard
+# man: documentation
+# oth: other things like tests
+# tem: templates
+
+1x1.gif|res
+ant.jpg|res
+attachment.cgi|cgi
+Attachment.pm|mod
+booleanchart.html|res
+Bug.pm|mod
+bug_form.pl|scpt
+bug_status.html|res
+buglist.cgi|cgi
+bugwritinghelp.html|res
+bugzilla.dtd|req
+CGI.pl|scpt
+changepassword.cgi|cgi
+checksetup.pl|null
+colchange.cgi|cgi
+collectstats.pl|scpt
+Conf/|null
+Conf.pm|mod
+Configure.pl|scpt
+confirmhelp.html|res
+contrib/|req
+createaccount.cgi|cgi
+createattachment.cgi|cgi
+CVS/|null
+defparams.pl|scpt
+describecomponents.cgi|cgi
+describekeywords.cgi|cgi
+docs/|man
+doeditparams.cgi|cgi
+doeditvotes.cgi|cgi
+duplicates.cgi|cgi
+editattachstatuses.cgi|cgi
+editcomponents.cgi|cgi
+editgroups.cgi|cgi
+editkeywords.cgi|cgi
+editmilestones.cgi|cgi
+editparams.cgi|cgi
+editproducts.cgi|cgi
+editusers.cgi|cgi
+editversions.cgi|cgi
+enter_bug.cgi|cgi
+globals.pl|scpt
+help.html|res
+helpemailquery.html|res
+how_to_mail.html|res
+importxml.pl|scpt
+index.html|res
+localconfig.js
+long_list.cgi|cgi
+move.pl|scpt
+new_comment.cgi|cgi
+notargetmilestone.html|res
+post_bug.cgi|cgi
+process_bug.cgi|cgi
+processmail|scpt
+query.cgi|cgi
+queryhelp.cgi|cgi
+quicksearch.html|res
+quicksearch.js|res
+quicksearchhack.html|res
+quips.cgi|cgi
+README|null
+RelationSet.pm|mod
+relogin.cgi|cgi
+reports.cgi|cgi
+robots.txt|cgi
+runtests.sh|oth
+sanitycheck.cgi|cgi
+show_activity.cgi|cgi
+show_bug.cgi|cgi
+showattachment.cgi|cgi
+showdependencygraph.cgi|cgi
+showdependencytree.cgi|cgi
+showvotes.cgi|cgi
+syncshadowdb|scpt
+t/|oth
+template/|tem
+token.cgi|cgi
+Token.pm|mod
+UPGRADING|null
+UPGRADING-pre-2.8|null
+userprefs.cgi|cgi
+votehelp.html|res
+whineatnews.pl|scpt
+xml.cgi|cgi

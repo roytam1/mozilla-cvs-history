@@ -1,0 +1,14 @@
+#note that tabs are filtered out. They are just used to make things easier to read.
+#userdir translates to a directory of the user's choice
+
+classicinstall: This is the classic bugzilla installaton layout
+	res|userdir
+	cgi|userdir
+	mod|userdir
+	scpt|userdir
+	req|userdir
+	null|null
+	man|userdir
+	oth|userdir
+	tem|userdir
+end
