@@ -537,6 +537,7 @@ SeaMonkeyCore -a \
 	mozilla/db/makefile.win \
 	mozilla/db/mork \
 	mozilla/db/mdb \
+	mozilla/gc/boehm \
 	mozilla/include \
 	mozilla/intl \
 	mozilla/jpeg \
