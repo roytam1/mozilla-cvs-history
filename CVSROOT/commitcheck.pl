@@ -310,10 +310,6 @@ $fullname{'93'} = 'Zlib';
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'HEAD') {
-if (m:^gfx/src/photon/.*$:) {return '113';}
-if (m:^widget/src/photon/.*$:) {return '113';}
-if (m:^mozilla/content/xul/.*$:) {return '106';}
-if (m:^mozilla/layout/xul/.*$:) {return '106';}
 if (m:^mozilla/profile$:) {return '120';}
 if (m:^mozilla/tools/.*$:) {return '112';}
 if (m:^xpcom/typelib$:) {return '117';}
@@ -452,6 +448,10 @@ if (m:^mozilla/content/xsl/.*$:) {return '140';}
 if (m:^mozilla/extensions/transformiix/.*$:) {return '140';}
 if (m:^mozilla/calendar/.*$:) {return '183';}
 if (m:^mozilla/other-licenses/libical/.*$:) {return '183';}
+if (m:^gfx/src/photon/.*$:) {return '113';}
+if (m:^widget/src/photon/.*$:) {return '113';}
+if (m:^mozilla/content/xul/.*$:) {return '106';}
+if (m:^mozilla/layout/xul/.*$:) {return '106';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
