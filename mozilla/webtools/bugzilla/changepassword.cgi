@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -24,16 +24,16 @@ use strict;
 
 print q{Content-type: text/html
 
-<HTML>
-<HEAD>
-<META HTTP-EQUIV="Refresh"
-  CONTENT="0; URL=userprefs.cgi">
-</HEAD>
-<BODY>
+<html>
+<head>
+<meta http-equiv="Refresh"
+  content="0; URL=userprefs.cgi">
+</head>
+<body>
 This URL is obsolete.  Forwarding you to the correct one.
-<P>
-Going to <A HREF="userprefs.cgi">userprefs.cgi</A>
-<BR>
-</BODY>
-</HTML>
+<p>
+Going to <a href="userprefs.cgi">userprefs.cgi</a>
+<br>
+</body>
+</html>
 }

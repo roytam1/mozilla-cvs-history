@@ -28,41 +28,18 @@
 # Make it harder for us to do dangerous things in Perl.
 use diagnostics;
 use strict;
+use lib ".";
+
+use vars qw(
+  $template
+  $vars
+);
 
 # Include the Bugzilla CGI and general utility library.
 require "CGI.pl";
 
 # Establish a connection to the database backend.
 ConnectToDatabase();
-
-# Use the template toolkit (http://www.template-toolkit.org/) to generate
-# the user interface (HTML pages and mail messages) using templates in the
-# "template/" subdirectory.
-use Template;
-
-# Create the global template object that processes templates and specify
-# configuration parameters that apply to all templates processed in this script.
-my $template = Template->new(
-  {
-    # Colon-separated list of directories containing templates.
-    INCLUDE_PATH => "template/default" ,
-    # Allow templates to be specified with relative paths.
-    RELATIVE => 1 
-  }
-);
-
-# Define the global variables and functions that will be passed to the UI 
-# template.  Individual functions add their own values to this hash before
-# sending them to the templates they process.
-my $vars = 
-  {
-    # Function for retrieving global parameters.
-    'Param' => \&Param , 
-
-    # Function for processing global parameters that contain references
-    # to other global parameters.
-    'PerformSubsts' => \&PerformSubsts
-  };
 
 # Make sure the user is logged in and is allowed to edit products
 # (i.e. the user has "editcomponents" privileges), since attachment
@@ -111,11 +88,16 @@ elsif ($action eq "update")
   validateSortKey();
   update();
 }
-elsif ($action eq "delete") 
+elsif ($action eq "confirmdelete") 
 { 
   validateID();
-  deleteStatus(); 
+  confirmDelete();
 } 
+elsif ($action eq "delete")
+{
+  validateID();
+  deleteStatus();
+}
 else 
 { 
   DisplayError("I could not figure out what you wanted to do.")
@@ -198,14 +180,18 @@ sub list
 
   # Retrieve a list of attachment status flags and create an array of hashes
   # in which each hash contains the data for one flag.
-  SendSQL("SELECT id, name, description, sortkey, product 
-           FROM attachstatusdefs ORDER BY sortkey");
+  SendSQL("SELECT id, name, description, sortkey, product, count(statusid)
+           FROM attachstatusdefs LEFT JOIN attachstatuses 
+                ON attachstatusdefs.id=attachstatuses.statusid
+           GROUP BY id
+           ORDER BY sortkey");
   my @statusdefs;
   while ( MoreSQLData() )
   {
-    my ($id, $name, $description, $sortkey, $product) = FetchSQLData();
+    my ($id, $name, $description, $sortkey, $product, $attachcount) = FetchSQLData();
     push @statusdefs, { 'id' => $id , 'name' => $name , 'description' => $description , 
-                        'sortkey' => $sortkey , 'product' => $product };
+                        'sortkey' => $sortkey , 'product' => $product, 
+                        'attachcount' => $attachcount };
   }
 
   # Define the variables and functions that will be passed to the UI template.
@@ -216,9 +202,8 @@ sub list
   print "Content-type: text/html\n\n";
 
   # Generate and return the UI (HTML page) from the appropriate template.
-  $template->process("attachstatus/list.atml", $vars)
-    || DisplayError("Template process failed: " . $template->error())
-    && exit;
+  $template->process("admin/attachstatus/list.html.tmpl", $vars)
+    || ThrowTemplateError($template->error());
 }
 
 
@@ -238,9 +223,8 @@ sub create
   print "Content-type: text/html\n\n";
 
   # Generate and return the UI (HTML page) from the appropriate template.
-  $template->process("attachstatus/create.atml", $vars)
-    || DisplayError("Template process failed: " . $template->error())
-    && exit;
+  $template->process("admin/attachstatus/create.html.tmpl", $vars)
+    || ThrowTemplateError($template->error());
 }
 
 
@@ -256,7 +240,8 @@ sub insert
 
   SendSQL("LOCK TABLES attachstatusdefs WRITE");
   SendSQL("SELECT MAX(id) FROM attachstatusdefs");
-  my $id = FetchSQLData() + 1;
+  my $id = FetchSQLData() || 0;
+  $id++;
   SendSQL("INSERT INTO attachstatusdefs (id, name, description, sortkey, product)
            VALUES ($id, $name, $desc, $::FORM{'sortkey'}, $product)");
   SendSQL("UNLOCK TABLES");
@@ -287,9 +272,8 @@ sub edit
   print "Content-type: text/html\n\n";
 
   # Generate and return the UI (HTML page) from the appropriate template.
-  $template->process("attachstatus/edit.atml", $vars)
-    || DisplayError("Template process failed: " . $template->error())
-    && exit;
+  $template->process("admin/attachstatus/edit.html.tmpl", $vars)
+    || ThrowTemplateError($template->error());
 }
 
 
@@ -317,6 +301,33 @@ sub update
   list("The attachment status has been updated.");
 }
 
+sub confirmDelete 
+{
+  # check if we need confirmation to delete:
+
+  SendSQL("SELECT COUNT(attach_id), name 
+           FROM attachstatusdefs LEFT JOIN attachstatuses
+                ON attachstatuses.statusid=attachstatusdefs.id
+           WHERE statusid = $::FORM{'id'}
+           GROUP BY attachstatuses.statusid;");
+  
+  my ($attachcount, $name) = FetchSQLData();
+
+  if ($attachcount > 0) {
+
+    $vars->{'id'} = $::FORM{'id'};
+    $vars->{'attachcount'} = $attachcount;
+    $vars->{'name'} = $name;
+
+    print "Content-type: text/html\n\n";
+    
+    $template->process("admin/attachstatus/delete.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
+  } 
+  else {
+    deleteStatus();
+  }
+}
 
 sub deleteStatus
 {
