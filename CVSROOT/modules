@@ -337,6 +337,7 @@ RaptorDist -a \
 	mozilla/dbm \
 	mozilla/editor \
 	mozilla/include \
+	mozilla/intl \
 	mozilla/jpeg \
 	mozilla/js \
 	mozilla/lib/liblayer \
@@ -349,7 +350,6 @@ RaptorDist -a \
 	mozilla/modules/oji \
 	mozilla/modules/plugin \
 	mozilla/modules/security/freenav \
-	mozilla/modules/unicharutil \
 	mozilla/modules/zlib \
 	mozilla/nav-java \
 	mozilla/network \
@@ -507,6 +507,7 @@ SeaMonkeyCore -a \
 	mozilla/cmd/xfe/icons/icondata.h \
 	mozilla/dbm \
 	mozilla/include \
+	mozilla/intl \
 	mozilla/jpeg \
 	mozilla/js \
 	mozilla/lib/liblayer \
@@ -519,7 +520,6 @@ SeaMonkeyCore -a \
 	mozilla/modules/oji \
 	mozilla/modules/plugin \
 	mozilla/modules/security/freenav \
-	mozilla/modules/unicharutil \
 	mozilla/modules/zlib \
 	mozilla/nav-java \
 	mozilla/network \
