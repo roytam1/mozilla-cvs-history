@@ -810,6 +810,7 @@ sub highlight_errors {
          'file' => $error[0],
          'line' => $error[1],
          'linktxt' =>  $line, 
+         'alt_linktxt' =>  $line, 
         );
     }
     
