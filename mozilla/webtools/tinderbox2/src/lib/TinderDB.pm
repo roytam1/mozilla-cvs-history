@@ -396,6 +396,8 @@ sub trim_db_history {
 # Really this is the names the columns produced by this DB
 
 sub notice_association {
+  my ($tree,) = @_;
+
   my (@outrow) = ();
 
   foreach $db (@{$DB}) {
