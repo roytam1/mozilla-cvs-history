@@ -44,10 +44,12 @@ use vars %::versions,
     %::legal_opsys,
     %::legal_platform,
     %::legal_priority,
-    %::settable_resolution,
+    %::settable_dupe_resolution,
+    %::settable_normal_resolution,
     %::target_milestone,
     %::legal_severity,
-    %::superusergroupset;
+    %::superusergroupset,
+    %::duperestype;
 
 my $whoid = confirm_login();
 
