@@ -34,7 +34,6 @@ BEGIN
       $cwd =~ s/\/[^\/]*$//;
       if ( $cwd ne "" )
       {
-         print "Changing directory to $cwd\n";
          chdir "$cwd";
       }
    }
