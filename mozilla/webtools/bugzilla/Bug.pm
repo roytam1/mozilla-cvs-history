@@ -35,11 +35,11 @@ my %ok_fields;
 
 # ok_fields is a quick hash of all the fields that can be touched by outsiders.
 # 
-for my $key (qw (bug_id product version rep_platform op_sys bug_status 
+for my $key (qw (product version rep_platform op_sys bug_status 
                 resolution priority bug_severity component assigned_to
-                reporter bug_file_loc short_desc target_milestone 
+                reporter short_desc target_milestone 
                 qa_contact status_whiteboard 
-                votes dependson blocking attachments keywords
+                dependson blocking attachments keywords
                 comment) ){
     $ok_fields{$key}++;
     }
@@ -222,8 +222,6 @@ sub initBug  {
       $self->{'blocks'} = \@blocks;
     }
   }
-  $self->{'query'} = "UPDATE bugs\nSET";
-  $self->{'comma'} = "";
   return $self;
 }
 
@@ -357,6 +355,13 @@ sub UserInGroup {
     return 0;
 }
 
+sub error {
+   my $self = shift;
+   
+   print $self->{'error'} . "\n";
+
+}
+
 sub CheckCanChangeField {
    my $self = shift();
    my ($f, $oldvalue, $newvalue) = (@_);
@@ -426,6 +431,7 @@ sub CheckCanChangeField {
     $self->{'error'} = "
 Only the owner or submitter of the bug, or a sufficiently
 empowered user, may make that change to the $f field.";
+    return 0;
 }
 
 sub CheckCollision {
@@ -447,24 +453,7 @@ sub CheckCollision {
     }
 }
 
-# need to check if user can even see this bug
-# also might remove this altogether
-sub AppendComment  {
-    my $self = shift();
-    my ($comment) = (@_);
-    $comment =~ s/\r\n/\n/g;     # Get rid of windows-style line endings.
-    $comment =~ s/\r/\n/g;       # Get rid of mac-style line endings.
-    if ($comment =~ /^\s*$/) {  # Nothin' but whitespace.
-        return;
-    }
-
-    &::SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) " .
-            "VALUES($self->{'bug_id'}, $self->{'whoid'}, now(), " . &::SqlQuote($comment) . ")");
-
-    &::SendSQL("UPDATE bugs SET delta_ts = now() WHERE bug_id = $self->{'bug_id'}");
-}
-
-sub AddComment {
+sub SetComment {
    my $self = shift;
    my ($comment) = (@_);
    $comment =~ s/\r\n/\n/g;     # Get rid of windows-style line endings.
@@ -494,6 +483,31 @@ sub display {
 sub ShowQuery {
     my $self = shift;
     print $self->{'query'} . "\n";
+}
+
+
+# check and see if a given field exists, is non-empty, and is set to a
+# legal value. 
+# if $legalsRef is not passed, just check to make sure the value exists and
+# is non-NULL
+#
+sub CheckField {
+    my $self = shift;
+    my ($newvalue,                # the value to check
+        $fieldname,              # the fieldname to check
+        $legalsRef               # (optional) ref to a list of legal values
+       ) = @_;
+
+    print $newvalue. "\n";
+    if (defined($legalsRef) &&
+          (&::lsearch($legalsRef, $newvalue)<0)) {
+
+        print "A legal $fieldname was not set; ";
+        return 0;
+    }
+    else {
+        return 1;
+    }
 }
 
 sub SnapShotBugInDB {
@@ -526,17 +540,259 @@ sub DoConfirm {
         $UserInCanConfirmGroupSet = &::UserInGroup($self, "canconfirm");
     }
     if ($UserInEditGroupSet || $UserInCanConfirmGroupSet) {
-        DoComma();
-        $self->{'query'} .= "everconfirmed = 1";
+        $self->{'everconfirmed'} = "everconfirmed = 1";
     }
 }
 
 
+sub BugExists {
+   my $self = shift;
+   my ($bugid) = (@_);
+
+   &::SendSQL("SELECT bug_id FROM bugs WHERE bug_id=$bugid");
+   return $::FetchOneColumn();
+}
+
+
+sub SetDependsOn {
+   my $self = shift;
+   my (@list) = (@_);
+
+   foreach my $bug (@list) {
+      unless (BugExists($bug)) {
+          $self->{'error'} = "Bug number $bug doesn\'t exist!"; 
+          return 0;
+      }
+   }
+   $self->{'dependson'} = \@list;
+   return 1;
+}
+
+
+sub SetBlocking {
+   my $self = shift;
+   my (@list) = (@_);
+
+   foreach my $bug (@list) {
+      unless (BugExists($bug)) {
+          $self->{'error'} = "Bug number $bug doesn\'t exist!";
+          return 0;
+      }
+   }
+   $self->{'blocking'} = \@list;
+   return 1;
+}
+
+sub SetKeywords {
+   my $self = shift;
+   my (@keywords) = (@_);
+   my $okay;
+
+   foreach my $keyword (@keywords) {
+      $okay = CheckField($self, 'keyword', \@::legal_keywords);
+      if (!$okay) {
+          $self->{'error'} = "Invalid keyword \'$keyword!\'";
+          return 0; 
+      }
+   }
+   $self->{'keywords'} = \@keywords;
+   return 1;
+}
+
+sub SetProductComponent {
+   my $self = shift;
+   my ($product, $component) = (@_);
+   my $okay;
+   
+   unless (CheckField($self, 'product', @::legal_product)) {
+     $self->{'error'} = "Invalid product \'$product\'";
+     return 0;
+   }
+   &::SendSQL("SELECT value FROM components WHERE value=$component AND program=$product");
+   $okay = &::FetchOneColumn();
+   if ($okay) {
+      $self->{'product'} = $product;
+      $self->{'component'} = $component;
+      return 1;
+   }
+   else {
+     $self->{'error'} = "Invalid component \'$component\'";
+     return 0;
+   }
+}
+
+sub SetVersion {
+   my $self = shift;
+   my ($platform) = (@_);
+   
+   unless (CheckField($self, 'rep_platform', \@::legal_versions)) {
+     $self->{'error'} = "Invalid platform \'$platform\'";
+     return 0;
+   }
+   $self->{'rep_platform'} = $platform;
+   return 1;
+}
+
+sub SetPlatform {
+   my $self = shift;
+   my ($platform) = (@_);
+   
+   print $platform . "\n"; 
+   unless (CheckField($self, $platform, 'rep_platform', \@::legal_platform)) {
+     $self->{'error'} = "Invalid platform \'$platform\'";
+     return 0;
+   }
+   $self->{'rep_platform'} = $platform;
+   return 1;
+}
+
+sub SetOperatingSystem {
+   my $self = shift;
+   my ($os) = (@_);
+   
+   unless (CheckField($self, 'op_sys', @::legal_opsys)) {
+     $self->{'error'} = "Invalid operating system \'$os\'";
+     return 0;
+   }
+   $self->{'op_sys'} = $os;
+   return 1;
+}
+
+sub SetPriority {
+   my $self = shift;
+   my ($priority) = (@_);
+
+   unless (CheckField($self, 'priority', @::legal_priority)) {
+     $self->{'error'} = "Invalid priority \'$priority\'";
+     return 0;
+   }
+   $self->{'priority'} = $priority;
+   return 1;
+}
+
+sub SetSeverity {
+   my $self = shift;
+   my ($severity) = (@_);
+   
+   unless (CheckField($self, 'bug_severity', @::legal_severity)) {
+     $self->{'error'} = "Invalid bug severity \'$severity\'";
+     return 0;
+   }
+   $self->{'bug_severity'} = $severity;
+   return 1;
+}
+
+sub CheckUserExists {
+  my $self = shift;
+  my ($user) = (@_);
+  my $user_id;
+
+     if ($user =~ /^\@/) {
+        $user_id = &::DBname_to_id($user);
+         unless ($user_id) {
+           $self->{'error'} = "No such user \'$user\'";
+           return 0;
+        }
+        return $user_id;
+     }
+     else {
+       &::SendSQL("SELECT userid from profiles where userid=$user");
+       my $okay = &::FetchOneColumn();
+       unless ($okay) {
+           $self->{'error'} = "No such userid \'$user\'";
+           return 0;
+       } 
+       return $user_id;
+     }
+}
+
+sub SetAssignedTo {
+   my $self = shift;
+   my ($assignee) = (@_);
+    
+   my $id = CheckUserExists($assignee);
+   if ($id) {
+      $self->{'assigned_to'} = $assignee;
+   }
+   else {
+      return 0;
+   }
+}
+
+#SetShortDescription {
+#
+#}
+#
+#SetTargetMilestone {
+#
+#}
+#
+#SetQAContact {
+#
+#}
+#
+#SetStatusWhiteboard {
+#
+#}
+
+sub SetStatus {
+   my $self = shift;
+   my ($status) = (@_);
+
+   unless(CheckField($self, 'bug_status', @::legal_bug_status)) {
+      $self->{'error'} = "Invalid status \'$status\'";
+      return 0;
+   }
+   $self->{'bug_status'} = $status;
+   return 1; 
+}
+
+sub SetResolution {
+   my $self = shift;
+   my ($resolution) = (@_);
+
+   unless(CheckField($self, 'resolution', @::legal_resolution)) {
+      $self->{'error'} = "Invalid resolution \'$resolution\'";
+      return 0;
+   }
+   $self->{'resolution'} = $resolution;
+   return 1;
+}
+
+sub CheckonComment {
+    my $self = shift;
+    my ($function) = (@_);
+
+    # Param is 1 if comment should be added !
+    my $ret = &::Param( "commenton" . $function );
+
+    # Allow without comment in case of undefined Params.
+    $ret = 0 unless ( defined( $ret ));
+
+    if( $ret ) {
+        if (!defined $self->{'comment'} || $self->{'comment'} =~ /^\s*$/) {
+            # No comment - sorry, action not allowed !
+            $ret = 1;
+           $self->{'error'} = "You have to specify a comment on this " .
+                         "change.  Please give some words " .
+                         "on the reason for your change.";
+        } else {
+            $ret = 0;
+        }
+    }
+    return( ! $ret ); # Return val has to be inverted
+}
+
 sub MarkResolvedFixed {
     my $self = shift;
 
-    $self->{'bug_status'} = 'RESOLVED';
-    $self->{'resolution'} = 'FIXED';
+    if (CheckonCommment('resolve')) { 
+      $self->{'bug_status'} = 'RESOLVED';
+      $self->{'resolution'} = 'FIXED';
+    }
+    else {
+       return 0;
+    }
 
 }
 
@@ -603,7 +859,6 @@ sub CommitChanges {
       my @oldvalues = SnapShotBugInDB($self);
       my @newvalues = SnapShotSelf($self);
 
-      $self->{'query'} = "UPDATE bugs set ";
       foreach my $i (@oldvalues) {
         if ($oldvalues[$i] ne $newvalues[$i]) {
           $self->{'error'} = CheckCanChangeField($self, $::log_columns[$i], $oldvalues[$i], 
