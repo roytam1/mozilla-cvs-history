@@ -38,18 +38,17 @@
 
 
 
-# Load standard perl libraries
-
-# Load Tinderbox libraries
-
+package VCDisplay;
 
 $VERSION = '#tinder_version#';
 
 
-package VCDisplay;
 
+# Load standard perl libraries
 
-# Tinderbox libraries
+# Load Tinderbox libraries
+
+use lib '#tinder_libdir#';
 
 use TreeData;
 use HTMLPopUp;

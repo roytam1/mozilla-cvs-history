@@ -40,7 +40,12 @@
 package VCDisplay;
 
 
-# Tinderbox libraries
+# Load standard perl libraries
+
+
+# Load Tinderbox libraries
+
+use lib '#tinder_libdir#';
 
 use HTMLPopUp;
 use TreeData;
