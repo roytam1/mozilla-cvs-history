@@ -523,7 +523,6 @@ LocalVar('platforms', '
 
 
 
-
 LocalVar('contenttypes', '
 #
 # The types of content that template files can generate, indexed by file extension.
@@ -536,6 +535,16 @@ $contenttypes = {
 };
 ');
 
+
+
+LocalVar('pages', '
+#
+# A mapping from tags to template names for the general page display system,
+# page.cgi.
+#
+%pages = (
+);
+');
 
 
 
@@ -892,6 +901,7 @@ END
          strike => sub { return $_; } ,
          js => sub { return $_; },
          html => sub { return $_; },
+         html_linebreak => sub { return $_; },
          url_quote => sub { return $_; },
         },
       }) || die ("Could not create Template: " . Template->error() . "\n");
@@ -1617,6 +1627,13 @@ $table{group_control_map} =
      ctl_canedit smallint not null default 0,
      unique(control_id, group_id),
      index(control_id)';
+
+# 2002-07-19, davef@tetsubo.com, bug 67950:
+# Store quips in the db.
+$table{quips} =
+    'quipid mediumint not null auto_increment primary key,
+     userid mediumint not null default 0, 
+     quip text not null';
 
 
 ###########################################################################
@@ -3199,6 +3216,33 @@ if(-e "data/params") {
     }
 }
 
+# 2002-07-15 davef@tetsubo.com - bug 67950
+# Move quips to the db.
+my $renamed_comments_file = 0;
+if (GetFieldDef("quips", "quipid")) {
+    if (-e 'data/comments' && open (COMMENTS, "<data/comments")) {
+        print "Populating quips table from data/comments...\n";
+        while (<COMMENTS>) {
+            chomp;
+            $dbh->do("INSERT INTO quips (quip) VALUES ("
+                      . $dbh->quote($_) . ")");
+        }
+        print "The data/comments file (used to store quips) has been        
+               copied into the database, and the data/comments file
+               moved to data/comments.bak - you can delete this file
+               once you're satisfied the migration worked correctly.\n\n";
+        close COMMENTS;
+        rename("data/comments", "data/comments.bak") or next;        
+        $renamed_comments_file = 1;
+    }
+}
+
+# Warn if data/comments.bak exists, as it should be deleted.
+if (-e 'data/comments.bak' && !$renamed_comments_file) {
+    print "The data/comments.bak file can be removed, as it's no longer
+           used.\n\n";
+}
+        
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
 #

@@ -61,6 +61,20 @@ sub sillyness {
     $zz = @::versions;
 };
 
+if (length($::buffer) == 0) {
+    $vars->{'title'} = "Parameters Required";
+    $vars->{'message'} = "This script is not meant to be invoked without any 
+                          search terms.";
+    $vars->{'url'} = "query.cgi";
+    $vars->{'link'} = "Please use the search form to specify some search
+                       criteria.";
+    print "Refresh: 10; URL=query.cgi\n";
+    print "Content-Type: text/html\n\n";
+    $template->process("global/message.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
+    exit;
+}    
+
 ConnectToDatabase();
 
 ################################################################################
@@ -256,18 +270,14 @@ sub LookupNamedQuery {
 }
 
 sub GetQuip {
-    return if !Param('usequip');
 
     my $quip;
 
-    # This is stupid.  We really really need to move the quip list into the DB!
-    if (open(COMMENTS, "<data/comments")) {
-        my @cdata;
-        push(@cdata, $_) while <COMMENTS>;
-        close COMMENTS;
-        $quip = $cdata[int(rand($#cdata + 1))];
+    SendSQL("SELECT quip FROM quips ORDER BY RAND() LIMIT 1");
+
+    if (MoreSQLData()) {
+        ($quip) = FetchSQLData();
     }
-    $quip ||= "Bugzilla would like to put a random quip here, but nobody has entered any.";
 
     return $quip;
 }
@@ -1053,18 +1063,22 @@ sub GenerateSQL {
 # Command Execution
 ################################################################################
 
-# Figure out if the user wanted to do anything besides just running the query
-# they defined on the query page, and take appropriate action.
-CMD: for ($::FORM{'cmdtype'}) {
-    /^runnamed$/ && do {
+# Backwards-compatibility - the old interface had cmdtype="runnamed" to run
+# a named command, and we can't break this because it's in bookmarks.
+if ($::FORM{'cmdtype'} eq "runnamed") {  
+    $::FORM{'cmdtype'} = "dorem"; 
+    $::FORM{'remaction'} = "run";
+}
+
+# Take appropriate action based on user's request.
+if ($::FORM{'cmdtype'} eq "dorem") {  
+    if ($::FORM{'remaction'} eq "run") {
         $::buffer = LookupNamedQuery($::FORM{"namedcmd"});
         $vars->{'title'} = "Bug List: $::FORM{'namedcmd'}";
         ProcessFormFields($::buffer);
         $order = $::FORM{'order'} || $order;
-        last CMD;
-    };
-
-    /^editnamed$/ && do {
+    }
+    elsif ($::FORM{'remaction'} eq "load") {
         my $url = "query.cgi?" . LookupNamedQuery($::FORM{"namedcmd"});
         print "Refresh: 0; URL=$url\n";
         print "Content-Type: text/html\n\n";
@@ -1075,9 +1089,8 @@ CMD: for ($::FORM{'cmdtype'}) {
         $template->process("global/message.html.tmpl", $vars)
           || ThrowTemplateError($template->error());
         exit;
-    };
-
-    /^forgetnamed$/ && do {
+    }
+    elsif ($::FORM{'remaction'} eq "forget") {
         confirm_login();
         my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
         my $qname = SqlQuote($::FORM{'namedcmd'});
@@ -1101,28 +1114,21 @@ CMD: for ($::FORM{'cmdtype'}) {
         $template->process("global/message.html.tmpl", $vars)
           || ThrowTemplateError($template->error());
         exit;
-    };
-
-    /^asdefault$/ && do {
+    }
+}
+elsif ($::FORM{'cmdtype'} eq "doit") {
+    if ($::FORM{'remember'} == 1 && $::FORM{'remtype'} eq "asdefault") {
         confirm_login();
         my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
         my $qname = SqlQuote($::defaultqueryname);
         my $qbuffer = SqlQuote($::buffer);
         SendSQL("REPLACE INTO namedqueries (userid, name, query)
                  VALUES ($userid, $qname, $qbuffer)");
-        print "Content-Type: text/html\n\n";
         # Generate and return the UI (HTML page) from the appropriate template.
-        $vars->{'title'} = "OK, default is set";
         $vars->{'message'} = "OK, you now have a new default query.  You may
                               also bookmark the result of any individual query.";
-        $vars->{'url'} = "query.cgi";
-        $vars->{'link'} = "Go back to the query page, using the new default.";
-        $template->process("global/message.html.tmpl", $vars)
-          || ThrowTemplateError($template->error());
-        exit;
-    };
-
-    /^asnamed$/ && do {
+    }
+    elsif ($::FORM{'remember'} == 1 && $::FORM{'remtype'} eq "asnamed") {
         confirm_login();
         my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
 
@@ -1139,7 +1145,7 @@ CMD: for ($::FORM{'cmdtype'}) {
         $::buffer =~ s/[\&\?]cmdtype=[a-z]+//;
         my $qbuffer = SqlQuote($::buffer);
 
-        my $tofooter= $::FORM{'tofooter'} ? 1 : 0;
+        my $tofooter = $::FORM{'tofooter'} ? 1 : 0;
 
         SendSQL("SELECT query FROM namedqueries WHERE userid = $userid AND name = $qname");
         if (FetchOneColumn()) {
@@ -1161,8 +1167,6 @@ CMD: for ($::FORM{'cmdtype'}) {
             }
         }        
         
-        print "Content-Type: text/html\n\n";
-        # Generate and return the UI (HTML page) from the appropriate template.        
         if ($new_in_footer) {
             my %query = (name => $name,
                          query => $::buffer, 
@@ -1170,14 +1174,8 @@ CMD: for ($::FORM{'cmdtype'}) {
             push(@{$vars->{'user'}{'queries'}}, \%query);
         }
         
-        $vars->{'title'} = "OK, query saved.";
-        $vars->{'message'} = "OK, you have a new query named <code>$name</code>";
-        $vars->{'url'} = "query.cgi";
-        $vars->{'link'} = "Go back to the query page.";
-        $template->process("global/message.html.tmpl", $vars)
-          || ThrowTemplateError($template->error());
-        exit;
-    };
+        $vars->{'message'} = "OK, you have a new query named <code>$name</code>.";
+    }
 }
 
 
@@ -1523,8 +1521,8 @@ if ($::FORM{'debug'}) {
 # the list more compact.
 $vars->{'splitheader'} = $::COOKIE{'SPLITHEADER'} ? 1 : 0;
 
-$vars->{'quip'} = GetQuip() if Param('usequip');
-$vars->{'currenttime'} = time2str("%a %b %e %T %Z %Y", time());
+$vars->{'quip'} = GetQuip();
+$vars->{'currenttime'} = time();
 
 # The following variables are used when the user is making changes to multiple bugs.
 if ($dotweak) {
