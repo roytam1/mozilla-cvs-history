@@ -412,23 +412,27 @@ sub fetch_rrd_data
       if ( (($zero_data_in_count * 100) / $total_data_count) > $MAX_ZERO_DATA_PERCENT )
       {
          &write_log_file($LOG_WARNING,
-                         "Greater than $MAX_ZERO_DATA_PERCENT\% 0 IN data.");
+                         sprintf("Circuit returned %1.1f\% 0 IN data.",
+                                 (($zero_data_in_count * 100) / $total_data_count)));
       }
       if ( (($zero_data_out_count * 100) / $total_data_count) > $MAX_ZERO_DATA_PERCENT )
       {
          &write_log_file($LOG_WARNING,
-                         "Greater than $MAX_ZERO_DATA_PERCENT\% 0 OUT data.");
+                         sprintf("Circuit returned %1.1f\% 0 OUT data.",
+                                 (($zero_data_out_count * 100) / $total_data_count)));
       }
 
       if ( (($nan_data_in_count * 100) / $total_data_count) > $MAX_NAN_DATA_PERCENT )
       {
          &write_log_file($LOG_WARNING,
-                         "Greater than $MAX_NAN_DATA_PERCENT\% NaN IN data.");
+                         sprintf("Circuit returned %1.1f\% NaN IN data.",
+                                 (($nan_data_in_count * 100) / $total_data_count)));
       }
       if ( (($nan_data_out_count * 100) / $total_data_count) > $MAX_NAN_DATA_PERCENT )
       {
          &write_log_file($LOG_WARNING,
-                         "Greater than $MAX_NAN_DATA_PERCENT\% NaN OUT data.");
+                         sprintf("Circuit returned %1.1f\% NaN OUT data.",
+                                 (($nan_data_out_count * 100) / $total_data_count)));
       }
    }
 
@@ -734,13 +738,13 @@ sub send_report_email
    $mime_mail->build('Type'    => "multipart/mixed",
                      'From'    => $MAIL_FROM,
                      'To'      => $REPORT_MAIL_TO,
-                     'Subject' => $report_filename);
+                     'Subject' => "BETA: 95/5 report");
 
    $mime_mail->attach('Path'     => "$report_filename",
                       'Type'     => "application/postscript",
                       'Encoding' => "base64");
 
-   $mime_mail->attach('Data' => "Attached configuration file: $report_filename\n");
+   $mime_mail->attach('Data' => "BETA 95/5 report!\nAttached report: $report_filename\n");
 
    $mail_fh = new IO::File "| /usr/lib/sendmail -t -i";
    if ( ! $mail_fh )
