@@ -4,13 +4,13 @@
    <META NAME="GENERATOR" CONTENT="Mozilla/4.04 [en] (WinNT; U) [Netscape]">
    <META NAME="KeyWords" CONTENT="client, source, documentation">
    <META NAME="Author" CONTENT="Kipp E.B. Hickman">
-   <TITLE>Raptor Windows Build Instructions</TITLE>
+   <TITLE>New Layout Windows Build Instructions</TITLE>
 </HEAD>
 <BODY BGCOLOR="#FFFFFF">
 
 <H2>
-<FONT FACE="Arial,Helvetica">Raptor Windows Build Instructions</FONT></H2>
-This document explains how to build Raptor for the Windows platform.
+<FONT FACE="Arial,Helvetica">New Layout Windows Build Instructions</FONT></H2>
+This document explains how to build New Layout for the Windows platform.
 <HR><B><FONT SIZE=+1>Required Tools:</FONT></B>
 <UL>
 <LI>
@@ -40,7 +40,7 @@ run VCVARS32.BAT out of the MSVC bin directory prior to attempting to build.</LI
 Download and install GNU tools. Put them in your path.</LI>
 
 <LI>
-Install Raptor source.</LI>
+Install New Layout source.</LI>
 
 <UL>
 <LI>
@@ -54,7 +54,7 @@ unzip -o -q win-19980415.zip</LI>
 There are several environment variables you will need to set, either manually
 or via a script within a command session, or by setting them in your system
 environment located through the Control Panel | System icon.<P>
-<B>Note: There is an additional variable for building Raptor!
+<B>Note: There is an additional variable for building New Layout!
 Use this list carefully!</B><P>
 The variables are:</LI>
 
@@ -122,7 +122,7 @@ nmake /f makefile.win</LI>
 </UL>
 
 <LI>
-<B>Build the Raptor:</B> This will do a complete build of the source tree.
+<B>Build the New Layout:</B> This will do a complete build of the source tree.
 You will end up with a viewer.exe at the end. The viewer.exe will be in
 your dist\win32_[OD].obj\bin directory (O will be used when you don't set
 MOZ_DEBUG; D will be used when you set MOZ_DEBUG).</LI>
