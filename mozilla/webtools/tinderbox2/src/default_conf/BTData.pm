@@ -62,6 +62,11 @@ $VERSION = '#tinder_version#';
 
 
 
+# a URL to the bug tracking systems main page.
+
+$BT_URL	= ($TinderConfig::BT_URL || 
+           'http://bugzilla.mozilla.org/');
+
 
 # Ticket variable names match this pattern
 
@@ -89,10 +94,6 @@ $BUGID_FIELD_NAME = 'Bug#';
 # the name of the bug tracking field which shows progress/slippage.
 
 $STATUS_FIELD_NAME = 'Status';
-
-# a URL to the bug tracking systems main page.
-
-$BT_URL	= 'http://bugzilla.mozilla.org/';
 
 
 # The values of the status field wich denote that the ticket is moving
