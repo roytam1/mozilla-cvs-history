@@ -104,7 +104,9 @@ sub initBug  {
   if (!$usergroupset) { $usergroupset = '0' }
   $self->{'usergroupset'} = $usergroupset;
 
-  my $query = "
+	my $query = "";
+	if ($::driver eq 'mysql') {
+		$query = "
     select
       bugs.bug_id, product, version, rep_platform, op_sys, bug_status,
       resolution, priority, bug_severity, component, assigned_to, reporter,
@@ -114,6 +116,22 @@ sub initBug  {
     from bugs left join votes using(bug_id)
     where bugs.bug_id = $bug_id
     group by bugs.bug_id";
+	} elsif ($::driver eq 'Pg') {
+		$query = "
+    select
+      bugs.bug_id, product, version, rep_platform, op_sys, bug_status,
+      resolution, priority, bug_severity, component, assigned_to, reporter,
+      bug_file_loc, short_desc, target_milestone, qa_contact,
+      status_whiteboard, creation_ts,
+      groupset, delta_ts, sum(votes.count)
+    from bugs left join votes using(bug_id)
+    where bugs.bug_id = $bug_id
+    and (bugs.groupset & int8($usergroupset)) = bugs.groupset
+    group by bugs.bug_id, product, version, rep_platform, op_sys, bug_status,
+		 resolution, priority, bug_severity, component, assigned_to, reporter,
+		 bug_file_loc, short_desc, target_milestone, qa_contact, status_whiteboard,
+		 creation_ts, groupset, delta_ts";
+	}
 
   &::SendSQL(&::SelectVisible($query, $user_id, $usergroupset));
   my @row;
@@ -359,7 +377,7 @@ sub UserInGroup {
         return 0;
     }
     &::ConnectToDatabase();
-    &::SendSQL("select (bit & $self->{'usergroupset'}) != 0 from groups where name = " 
+    &::SendSQL("select (group_bit & int8($self->{'usergroupset'})) != 0 from groups where name = " 
            . &::SqlQuote($groupname));
     my $bit = &::FetchOneColumn();
     if ($bit) {
@@ -443,14 +461,25 @@ sub Collision {
     my $self = shift();
     my $write = "WRITE";        # Might want to make a param to control
                                 # whether we do LOW_PRIORITY ...
+<<<<<<< Bug.pm
+	if ($::driver eq 'mysql') {
+	    &::SendSQL("LOCK TABLES bugs $write, bugs_activity $write, cc $write, " .
+    	        "profiles $write, dependencies $write, votes $write, " .
+        	    "keywords $write, longdescs $write, fielddefs $write, " .
+            	"keyworddefs READ, groups READ, attachments READ, products READ");
+	} 
+=======
     &::SendSQL("LOCK TABLES bugs $write, bugs_activity $write, cc $write, " .
                "cc AS selectVisible_cc $write, " .
             "profiles $write, dependencies $write, votes $write, " .
             "keywords $write, longdescs $write, fielddefs $write, " .
             "keyworddefs READ, groups READ, attachments READ, products READ");
+>>>>>>> 1.7
     &::SendSQL("SELECT delta_ts FROM bugs where bug_id=$self->{'bug_id'}");
     my $delta_ts = &::FetchOneColumn();
-    &::SendSQL("unlock tables");
+	if ($::driver eq 'mysql') {
+    	&::SendSQL("unlock tables");
+	}
     if ($self->{'delta_ts'} ne $delta_ts) {
        return 1;
     }
