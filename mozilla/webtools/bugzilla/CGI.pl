@@ -439,14 +439,14 @@ sub quietly_check_login() {
         defined $::COOKIE{"Bugzilla_logincookie"}) {
         SendSQL("SELECT profiles.userid, " .
                 "profiles.login_name, " .
-                "profiles.login_name = " .
+                "(profiles.login_name = " .
                 SqlQuote($::COOKIE{"Bugzilla_login"}) .
                 " AND logincookies.ipaddr = " .
                 SqlQuote($ENV{"REMOTE_ADDR"}) .
-                ", profiles.disabledtext " .
+                ") AS isok, profiles.disabledtext " .
                 " FROM profiles, logincookies WHERE logincookies.cookie = " .
                 SqlQuote($::COOKIE{"Bugzilla_logincookie"}) .
-                " AND profiles.userid = logincookies.userid");
+                " AND profiles.userid = logincookies.userid HAVING isok");
         my @row;
         if (@row = FetchSQLData()) {
             ($userid, my $loginname, my $ok, my $disabledtext) = (@row);
@@ -461,6 +461,8 @@ sub quietly_check_login() {
                     $::disabledreason = $disabledtext;
                     $userid = 0;
                 }
+            } else {
+                $userid = 0;
             }
         }
     }
