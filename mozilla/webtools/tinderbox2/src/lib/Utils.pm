@@ -141,6 +141,12 @@ sub set_static_vars {
   
   delete @ENV{'IFS', 'CDPATH', 'ENV', 'BASH_ENV', 'LD_PRELOAD'};
 
+  # sudo deletes these variables as well
+
+  delete @ENV{'KRB_CONF', 'KRB5_CONFIG'};
+  delete @ENV{'LOCALDOMAIN', 'RES_OPTIONS', 'HOSTALIASES'};
+
+
 
 
   # How do we run various commands?  The TinderConfig file contains
