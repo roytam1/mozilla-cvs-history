@@ -56,6 +56,9 @@ EOF
 		do("Conf/Supplies/config.pl");
 		output "\n";
 		$args .= "--perl=".getConf('perl');
+	} else {
+		# get rid of it so it won't cause any problems later
+		unlink("Conf/Supplies/config.pl");
 	}
 }
 
