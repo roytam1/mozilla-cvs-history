@@ -36,8 +36,8 @@ my %ok_field;
 for my $key (qw (bug_id alias product version rep_platform op_sys bug_status 
                 resolution priority bug_severity component assigned_to
                 reporter bug_file_loc short_desc target_milestone 
-                qa_contact status_whiteboard creation_ts groupset 
-                delta_ts votes whoid usergroupset comment query error) ){
+                qa_contact status_whiteboard creation_ts 
+                delta_ts votes whoid comment query error) ){
     $ok_field{$key}++;
     }
 
@@ -104,10 +104,6 @@ sub initBug  {
 
 
   $self->{'whoid'} = $user_id;
-  &::SendSQL("SELECT groupset FROM profiles WHERE userid=$self->{'whoid'}");
-  my $usergroupset = &::FetchOneColumn();
-  if (!$usergroupset) { $usergroupset = '0' }
-  $self->{'usergroupset'} = $usergroupset;
 
   my $query = "
     select
@@ -115,7 +111,7 @@ sub initBug  {
       resolution, priority, bug_severity, components.name, assigned_to, reporter,
       bug_file_loc, short_desc, target_milestone, qa_contact,
       status_whiteboard, date_format(creation_ts,'%Y-%m-%d %H:%i'),
-      groupset, delta_ts, sum(votes.count)
+      delta_ts, sum(votes.count)
     from bugs left join votes using(bug_id),
       products, components
     where bugs.bug_id = $bug_id
@@ -123,10 +119,10 @@ sub initBug  {
       AND components.id = bugs.component_id
     group by bugs.bug_id";
 
-  &::SendSQL(&::SelectVisible($query, $user_id, $usergroupset));
-  my @row;
+  &::SendSQL($query);
+  my @row = ();
 
-  if (@row = &::FetchSQLData()) {
+  if ((@row = &::FetchSQLData()) && CanSeeBug($bug_id, $self->{'whoid'})) {
     my $count = 0;
     my %fields;
     foreach my $field ("bug_id", "alias", "product", "version", "rep_platform",
@@ -134,7 +130,7 @@ sub initBug  {
                        "bug_severity", "component", "assigned_to", "reporter",
                        "bug_file_loc", "short_desc", "target_milestone",
                        "qa_contact", "status_whiteboard", "creation_ts",
-                       "groupset", "delta_ts", "votes") {
+                       "delta_ts", "votes") {
         $fields{$field} = shift @row;
         if ($fields{$field}) {
             $self->{$field} = $fields{$field};
@@ -142,8 +138,7 @@ sub initBug  {
         $count++;
     }
   } else {
-    &::SendSQL("select groupset from bugs where bug_id = $bug_id");
-    if (@row = &::FetchSQLData()) {
+    if (@row) {
       $self->{'bug_id'} = $bug_id;
       $self->{'error'} = "NotPermitted";
       return $self;
@@ -353,18 +348,21 @@ sub XML_Footer {
 sub UserInGroup {
     my $self = shift();
     my ($groupname) = (@_);
-    if ($self->{'usergroupset'} eq "0") {
-        return 0;
-    }
+    PushGlobalSQLState();
     &::ConnectToDatabase();
-    &::SendSQL("select (bit & $self->{'usergroupset'}) != 0 from groups where name = " 
-           . &::SqlQuote($groupname));
-    my $bit = &::FetchOneColumn();
-    if ($bit) {
+    &::SendSQL("SELECT groups.id FROM groups, user_group_map 
+        WHERE groups.id = user_group_map.group_id 
+        AND user_group_map.user_id = " . $self->{'whoid'} .
+        " AND isbless = 0
+        AND groups.name = " . SqlQuote($groupname));
+    my $rslt = FetchOneColumn();
+    PopGlobalSQLState();
+    if ($rslt) {
         return 1;
     }
     return 0;
 }
+
 
 sub CanChangeField {
    my $self = shift();
