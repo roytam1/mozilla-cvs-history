@@ -350,12 +350,6 @@ sub UserInGroup {
     return 0;
 }
 
-sub error {
-   my $self = shift;
-   
-   print $self->{'error'} . "\n";
-}
-
 sub CheckCanChangeField {
    my $self = shift();
    my ($f, $oldvalue, $newvalue) = (@_);
@@ -428,7 +422,7 @@ empowered user, may make that change to the $f field.";
     return 0;
 }
 
-sub CheckCollision {
+sub MyLock {
     my $self = shift();
     my $write = "WRITE";        # Might want to make a param to control
                                 # whether we do LOW_PRIORITY ...
@@ -447,6 +441,32 @@ sub CheckCollision {
     }
 }
 
+sub PushError {
+   my $self = shift;
+   my ($error) = @_;
+   my @emptylist = ();
+  
+   if (!defined($self->{'error'})) {
+       $self->{'error'} = \@emptylist;
+   }
+   push (@{$self->{'error'}}, $error);
+}
+
+sub PrintErrors {
+   my $self = shift;
+
+   foreach my $err (@{$self->{'error'}}) {
+       print $err . "\n";
+   }
+}
+
+sub SetDirtyFlag {
+   my $self = shift;
+
+   $self->{'dirty'} = 1;
+   return 1;
+}
+
 sub SetComment {
    my $self = shift;
    my ($comment) = (@_);
@@ -457,6 +477,7 @@ sub SetComment {
        return;
    }
    $self->{'comment'} = $comment;
+   SetDirtyFlag($self);
 } 
    
 
@@ -529,7 +550,6 @@ sub DoConfirm {
 
 
 sub BugExists {
-   my $self = shift;
    my ($bugid) = (@_);
 
    &::SendSQL("SELECT bug_id FROM bugs WHERE bug_id=$bugid");
@@ -543,11 +563,12 @@ sub SetDependsOn {
 
    foreach my $bug (@list) {
       unless (BugExists($bug)) {
-          $self->{'error'} = "Bug number $bug doesn\'t exist!"; 
+          PushError($self, "Bug number $bug doesn\'t exist!"); 
           return 0;
       }
    }
    $self->{'dependson'} = \@list;
+   SetDirtyFlag($self);
    return 1;
 }
 
@@ -563,6 +584,7 @@ sub SetBlocking {
       }
    }
    $self->{'blocking'} = \@list;
+   SetDirtyFlag($self);
    return 1;
 }
 
@@ -574,11 +596,12 @@ sub SetKeywords {
    foreach my $keyword (@keywords) {
       $okay = CheckField($self, 'keyword', \@::legal_keywords);
       if (!$okay) {
-          $self->{'error'} = "Invalid keyword \'$keyword!\'";
+          PushError($self,"Invalid keyword \'$keyword!\'");
           return 0; 
       }
    }
    $self->{'keywords'} = \@keywords;
+   SetDirtyFlag($self);
    return 1;
 }
 
@@ -596,23 +619,25 @@ sub SetProductComponent {
    if ($okay) {
       $self->{'product'} = $product;
       $self->{'component'} = $component;
+      SetDirtyFlag($self);
       return 1;
    }
    else {
-     $self->{'error'} = "Invalid component \'$component\'";
+     PushError($self,"Invalid component \'$component\'");
      return 0;
    }
 }
 
 sub SetVersion {
    my $self = shift;
-   my ($platform) = (@_);
+   my ($version) = (@_);
    
-   unless (CheckField($self, 'rep_platform', \@::legal_versions)) {
-     $self->{'error'} = "Invalid platform \'$platform\'";
+   unless (CheckField($self, 'version', \@::legal_versions)) {
+     PushError($self, "Invalid version \'$version\'");
      return 0;
    }
-   $self->{'rep_platform'} = $platform;
+   $self->{'version'} = $version;
+   SetDirtyFlag($self);
    return 1;
 }
 
@@ -621,7 +646,7 @@ sub SetPlatform {
    my ($platform) = (@_);
   
    unless (CheckField($self, $platform, 'rep_platform', \@::legal_platform)) {
-     $self->{'error'} = "Invalid platform \'$platform\'";
+     PushError($self, "Invalid platform \'$platform\'");
      return 0;
    }
    $self->{'rep_platform'} = "$platform";
@@ -633,10 +658,11 @@ sub SetOperatingSystem {
    my ($os) = (@_);
    
    unless (CheckField($self, $os, 'op_sys', \@::legal_opsys)) {
-     $self->{'error'} = "Invalid operating system \'$os\'";
+     PushError($self, "Invalid operating system \'$os\'");
      return 0;
    }
    $self->{'op_sys'} = $os;
+   SetDirtyFlag($self);
    return 1;
 }
 
@@ -645,10 +671,11 @@ sub SetPriority {
    my ($priority) = @_;
 
   unless (CheckField($priority, 'priority', \@::legal_priority)) {
-     $self->{'error'} = "Invalid priority \'$priority\'";
+     PushError($self,"Invalid priority \'$priority\'");
      return 0;
    }
    $self->{'priority'} = $priority;
+   SetDirtyFlag($self);
    return 1;
 }
 
@@ -657,10 +684,11 @@ sub SetSeverity {
    my ($severity) = (@_);
    
    unless (CheckField($self, 'bug_severity', @::legal_severity)) {
-     $self->{'error'} = "Invalid bug severity \'$severity\'";
+     PushError($self, "Invalid bug severity \'$severity\'");
      return 0;
    }
    $self->{'bug_severity'} = $severity;
+   SetDirtyFlag($self);
    return 1;
 }
 
@@ -672,7 +700,7 @@ sub CheckUserExists {
      if ($user =~ /^\@/) {
         $user_id = &::DBname_to_id($user);
          unless ($user_id) {
-           $self->{'error'} = "No such user \'$user\'";
+           PushError($self, "No such user \'$user\'");
            return 0;
         }
         return $user_id;
@@ -681,7 +709,7 @@ sub CheckUserExists {
        &::SendSQL("SELECT userid from profiles where userid=$user");
        my $okay = &::FetchOneColumn();
        unless ($okay) {
-           $self->{'error'} = "No such userid \'$user\'";
+           PushError($self, "No such user \'$user\'");
            return 0;
        } 
        return $user_id;
@@ -697,6 +725,7 @@ sub SetAssignedTo {
       $self->{'assigned_to'} = $assignee;
    }
    else {
+      PushError($self, "No such userid \'$assignee\'");
       return 0;
    }
 }
@@ -722,10 +751,11 @@ sub SetStatus {
    my ($status) = (@_);
 
    unless(CheckField($self, $status, 'bug_status', \@::legal_bug_status)) {
-      $self->{'error'} = "Invalid status \'$status\'";
+      PushError($self, "Invalid status \'$status\'");
       return 0;
    }
    $self->{'bug_status'} = $status;
+   SetDirtyFlag($self);
    return 1; 
 }
 
@@ -734,10 +764,11 @@ sub SetResolution {
    my ($resolution) = (@_);
 
    unless(CheckField($self, 'resolution', @::legal_resolution)) {
-      $self->{'error'} = "Invalid resolution \'$resolution\'";
+      PushError($self,"Invalid resolution \'$resolution\'");
       return 0;
    }
    $self->{'resolution'} = $resolution;
+   SetDirtyFlag($self);
    return 1;
 }
 
@@ -755,9 +786,9 @@ sub CheckonComment {
         if (!defined $self->{'comment'} || $self->{'comment'} =~ /^\s*$/) {
             # No comment - sorry, action not allowed !
             $ret = 1;
-           $self->{'error'} = "You have to specify a comment on this " .
+           PushError($self, "You have to specify a comment on this " .
                          "change.  Please give some words " .
-                         "on the reason for your change.";
+                         "on the reason for your change.");
         } else {
             $ret = 0;
         }
@@ -902,23 +933,24 @@ sub TestChanged {
    }
 }
 
-sub CommitChanges {
-   my $self = shift();
-   my @changed;
+#sub Collision {
+#   my $self = shift;
+#   my $delta_ts;
+#   my $id;
+#
+#   $id = $self->{'bug_id'};
+#
+#   &::SendSQL("SELECT FROM bugs delta_ts WHERE bug_id=$id");
+#   $delta_ts = &::FetchOneColumn;
+#
+#   if ($delta_ts > $self->{'delta_ts'}) {
+#       PushError($self, "A collision has occurred: someone has made changes to the bug already.");
+       return 1;   
+#   }
+#   return 0; 
+#
+#}
 
-   if ($self->{'dirty'}) {
-       @changed = ChangedFields;
-   }
-   if (@changed > 0) {
-       die;
-   }
-#snapshot dependencies
-#check can change fields
-#check collision
-#lock and change fields
-#notify through mail
-
-}
 
 sub AUTOLOAD {
   use vars qw($AUTOLOAD);
