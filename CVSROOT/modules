@@ -127,9 +127,11 @@ MozillaSourceWinOnly -a \
 
 
 MozillaSourceUnixOnly -a \
+    mozilla/Makefile  \
     mozilla/Makefile.in  \
     mozilla/configure.in  \
     mozilla/cmd/Makefile  \
+    mozilla/cmd/Makefile.in  \
     mozilla/cmd/stubfe  \
     mozilla/cmd/xfe  \
     mozilla/config/.cvsignore  \
@@ -151,6 +153,7 @@ MozillaSourceUnixOnly -a \
     mozilla/config/Linux.mk  \
     mozilla/config/makecopy.c  \
     mozilla/config/Makefile  \
+    mozilla/config/Makefile.in  \
     mozilla/config/mangle.c  \
     mozilla/config/mantomak.c  \
     mozilla/config/mkdepend  \
@@ -179,18 +182,27 @@ MozillaSourceUnixOnly -a \
     mozilla/config/SunOS5.mk  \
     mozilla/config/UNIXWARE.mk  \
     mozilla/lib/Makefile  \
-    mozilla/Makefile  \
+    mozilla/lib/Makefile.in  \
     mozilla/modules/edtplug/Makefile  \
+    mozilla/modules/edtplug/Makefile.in  \
     mozilla/modules/libfont/jmcgen  \
     mozilla/modules/libfont/Makefile  \
+    mozilla/modules/libfont/Makefile.in  \
     mozilla/modules/libfont/producers/Makefile  \
+    mozilla/modules/libfont/producers/Makefile.in  \
     mozilla/modules/Makefile  \
+    mozilla/modules/Makefile.in  \
     mozilla/modules/progress/Makefile  \
+    mozilla/modules/progress/Makefile.in  \
     mozilla/modules/progress/public  \
     mozilla/modules/security/Makefile  \
+    mozilla/modules/security/Makefile.in  \
     mozilla/modules/softupdt/Makefile  \
+    mozilla/modules/softupdt/Makefile.in  \
     mozilla/modules/zlib/Makefile  \
+    mozilla/modules/zlib/Makefile.in  \
     mozilla/nav-java/Makefile  \
+    mozilla/nav-java/Makefile.in  \
     mozilla/lib/mariner  \
     JavaStubUnix
 
