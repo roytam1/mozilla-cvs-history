@@ -40,7 +40,36 @@ MozillaSourceMac -a \
 
 MozillaSourceUnix -a \
 	MozillaSourceCommon \
+	mozilla/cmd/xfe \ 
 	MozillaSourceUnixOnly
+
+MozillaSourceMotif -a \
+        MozillaSourceCommon \
+	mozilla/cmd/xfe \
+        MozillaSourceUnixOnly
+
+MozillaSourceQtfe -a \
+        MozillaSourceCommon \
+	mozilla/cmd/qtfe \
+        MozillaSourceUnixOnly
+
+MozillaSourceGnomefe -a \
+        MozillaSourceCommon \
+	mozilla/cmd/gnomefe \
+        MozillaSourceUnixOnly
+
+MozillaSourceYbfe -a \
+        MozillaSourceCommon \
+	mozilla/cmd/ybfe \
+        MozillaSourceUnixOnly
+
+MozillaSourceUnixAllFE -a \
+        MozillaSourceCommon \
+	mozilla/cmd/xfe \
+	mozilla/cmd/gnomefe \
+	mozilla/cmd/qtfe \
+        mozilla/cmd/ybfe \
+        MozillaSourceUnixOnly
 
 MozillaSourceCommon -a \
 	mozilla/LEGAL \
@@ -136,7 +165,6 @@ MozillaSourceUnixOnly -a \
 	mozilla/cmd/Makefile \
 	mozilla/cmd/Makefile.in \
 	mozilla/cmd/stubfe \
-	mozilla/cmd/xfe \
 	mozilla/config/.cvsignore \
 	mozilla/config/AIX.mk \
 	mozilla/config/BSD_OS.mk \
