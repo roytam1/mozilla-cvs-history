@@ -211,9 +211,9 @@ sub GetGroupsByUserId {
     SendSQL("
         SELECT  groups.id, name, description, isactive
           FROM  groups, user_group_map
-         WHERE  user_id = $userid AND isbless = 0 
+         WHERE  user_id = $userid AND NOT isbless
            AND  user_group_map.group_id = groups.id
-           AND  isbuggroup = 1
+           AND  isbuggroup
       ORDER BY  description ");
 
     my @groups;
@@ -606,6 +606,9 @@ my @bugs; # the list of records
 
 while (my @row = FetchSQLData()) {
     my $bug = {}; # a record
+    # discard the first 2 fields - they are counters for filtering
+    shift @row;
+    shift @row;
 
     # Slurp the row of data into the record.
     foreach my $column (@selectcolumns) {

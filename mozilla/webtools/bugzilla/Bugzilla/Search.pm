@@ -813,9 +813,22 @@ sub init {
             $suppseen{$str} = 1;
         }
     }
-    my $query =  ("SELECT DISTINCT " . join(', ', @fields) .
+    my $query =  ("SELECT DISTINCT " . 
+                  " COUNT(ugmap.group_id) AS cntuseringroups, " .
+                  " COUNT(bgmap.group_id) AS cntbugingroups, " .
+                    join(', ', @fields) .
                   " FROM $suppstring" .
-                  " WHERE " . join(' AND ', (@wherepart, @andlist)));
+                  " LEFT JOIN bug_group_map AS bgmap " .
+                  " ON bgmap.bug_id = bugs.bug_id " .
+                  " LEFT JOIN user_group_map AS ugmap " .
+                  " ON bgmap.group_id = ugmap.group_id " .
+                  " AND ugmap.user_id = $::userid" .
+                  " AND ugmap.isbless = 0" .
+                  " WHERE " . join(' AND ', (@wherepart, @andlist)) .
+                  " GROUP BY bugs.bug_id " .
+                  " HAVING cntuseringroups = cntbugingroups" .
+                  " "
+              );
 
     if ($debug) {
         print "<p><code>" . value_quote($query) . "</code></p>\n";
