@@ -725,25 +725,6 @@ sub SelectVisible {
 #        PopGlobalSQLState();
 #    }
 
-    my @canseelist;
-    if ($userid) {
-        PushGlobalSQLState();
-        my $query = "
-        SELECT 
-            bugs.bug_id 
-        FROM 
-            bugs LEFT JOIN bug_group_map USING (bug_id) 
-            LEFT JOIN user_group_map ON bug_group_map.group_id = user_group_map.group_id 
-                AND user_group_map.user_id = $userid 
-        GROUP BY 
-            bugs.bug_id HAVING
-                (COUNT(user_group_map.group_id) = COUNT(bug_group_map.group_id))";
-        while (my @row = FetchSQLData()) {
-            push(@canseelist, $row[0]);
-        }
-        PopGlobalSQLState();
-    }
-
     # Users are authorized to access bugs if they are a member of all 
     # groups to which the bug is restricted.  User group membership and 
     # bug restrictions are stored as bits within bitsets, so authorization
@@ -764,16 +745,16 @@ sub SelectVisible {
     # and doing bitset arithmetic is probably not cross-database compatible,
     # however, so these mechanisms are likely to change in the future.
 
-    my $replace = " ";
+    my $replace = "";
 
-    if ($userid) {
-        $replace .= "LEFT JOIN cc selectVisible_cc ON 
-                     bugs.bug_id = selectVisible_cc.bug_id AND 
-                     selectVisible_cc.who = $userid "
-    }
+#    if ($userid) {
+#        $replace .= "LEFT JOIN cc selectVisible_cc ON 
+#                     bugs.bug_id = selectVisible_cc.bug_id AND 
+#                     selectVisible_cc.who = $userid "
+#    }
 
-    $replace .= "LEFT JOIN bug_group_map selectVisible_bug_groups ON
-                bugs.bug_id = selectVisible_bug_groups.bug_id ";
+#    $replace .= "LEFT JOIN bug_group_map selectVisible_bug_groups ON
+#                bugs.bug_id = selectVisible_bug_groups.bug_id ";
 
 #    if ($userid) {
 #        $replace .= "LEFT JOIN user_group_map selectVisible_user_groups ON
@@ -789,29 +770,73 @@ sub SelectVisible {
 #        $replace .= "WHERE ((selectVisible_bug_groups.group_id IS NULL) ";    
 #    }
 
-    if (@canseelist) {
-        $replace .= "WHERE ((bugs.bug_id IN (" . join(',', @canseelist) . ")) ";
-    } else {
-        $replace .= "WHERE ((selectVisible_bug_groups.group_id IS NULL) ";
-    }
+#    if (@canseelist) {
+#        $replace .= "WHERE ((bugs.bug_id IN (" . join(',', @canseelist) . ")) ";
+#    } else {
+#        $replace .= "WHERE ((selectVisible_bug_groups.group_id IS NULL) ";
+#    }
+
+    $query =~ /^SELECT (.*) FROM/i;
+    my $selectedCols = $1;
+
+    $query =~ /FROM (.*) WHERE/i;
+    my $frompart = $1;
+    $frompart =~ s/bugs,//;
+    $query =~ /WHERE (.*) GROUP .*/i;
+    my $wherecond = $1;
+
+    $replace = "
+    SELECT 
+        $selectedCols, 
+        bugs.bug_id SV_bugid, 
+        bugs.reporter SV_reporter,
+        bugs.reporter_accessible SV_reporter_accessible, 
+        bugs.assigned_to SV_assigned_to, 
+        bugs.assignee_accessible SV_assignee_accessible, 
+        bugs.qa_contact SV_qa_contact, 
+        bugs.qacontact_accessible SV_qacontact_accessible, 
+        SV_cc.who, 
+        bugs.cclist_accessible SV_cclist_accessible 
+    FROM 
+        $frompart, bugs 
+        LEFT JOIN bug_group_map USING (bug_id) 
+        LEFT JOIN user_group_map ON bug_group_map.group_id = user_group_map.group_id 
+            AND user_group_map.user_id = $userid 
+        LEFT JOIN cc SV_cc ON bugs.bug_id = SV_cc.bug_id 
+            AND SV_cc.who = $userid 
+    WHERE 
+        $wherecond 
+    GROUP BY
+        bugs.bug_id HAVING (COUNT(user_group_map.group_id) = COUNT(bug_group_map.group_id))";
 
     if ($userid) {
-        # There is a mysql bug affecting v3.22 and 3.23 (at least), where this will
-        # cause all rows to be returned! We work arround this by adding an not isnull
-        # test to the JOINed cc table. See http://lists.mysql.com/cgi-ez/ezmlm-cgi?9:mss:11417
-        # Its needed, even though it shouldn't be
-        $replace .= "OR (bugs.reporter_accessible = 1 AND bugs.reporter = $userid) 
-                    OR (bugs.assignee_accessible = 1 AND bugs.assigned_to = $userid) 
-                    OR (bugs.qacontact_accessible = 1 AND bugs.qa_contact = $userid) 
-                    OR (bugs.cclist_accessible = 1 AND selectVisible_cc.who = $userid 
-                    AND not isnull(selectVisible_cc.who))";
+        $replace .= " 
+        OR (SV_reporter = $userid AND SV_reporter_accessible = 1) 
+        OR (SV_assigned_to = $userid AND SV_assignee_accessible = 1) 
+        OR (SV_qa_contact = $userid AND SV_qacontact_accessible = 1) 
+        OR (NOT isnull(SV_cc.who) AND SV_cc.who = $userid AND SV_cclist_accessible = 1)";
     }
 
-    $replace .= ") AND ";
 
-    $query =~ s/\sWHERE\s/$replace/i;
+#    if ($userid) {
+#        # There is a mysql bug affecting v3.22 and 3.23 (at least), where this will
+#        # cause all rows to be returned! We work arround this by adding an not isnull
+#        # test to the JOINed cc table. See http://lists.mysql.com/cgi-ez/ezmlm-cgi?9:mss:11417
+#        # Its needed, even though it shouldn't be
+#        $replace .= "OR (bugs.reporter_accessible = 1 AND bugs.reporter = $userid) 
+#                    OR (bugs.assignee_accessible = 1 AND bugs.assigned_to = $userid) 
+#                    OR (bugs.qacontact_accessible = 1 AND bugs.qa_contact = $userid) 
+#                    OR (bugs.cclist_accessible = 1 AND selectVisible_cc.who = $userid 
+#                    AND not isnull(selectVisible_cc.who))";
+#    }
 
-    return $query;
+#    $replace .= ") AND ";
+
+#    $query =~ s/\sWHERE\s/$replace/i;
+
+#    return $query;
+
+    return $replace;
 }
 
 sub CanSeeBug {
@@ -825,12 +850,12 @@ sub CanSeeBug {
         $query = "SELECT COUNT(bug_id) FROM bug_group_map WHERE bug_id = $id";
         SendSQL($query);
         my $count = FetchOneColumn();
+        PopGlobalSQLState();
         if ($count) {
             return 0;
         } else {
             return 1;
         }
-        PopGlobalSQLState();
     }
 
     # We have a userid so let's check to see if this person can see the bug or not.
