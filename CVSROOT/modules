@@ -89,7 +89,6 @@ MozillaSourceCommon -a \
     mozilla/l10n \
     mozilla/nsprpub \
     mozilla/dbm  \
-    mozilla/modules/schedulr  \
     README 
 
 MozillaSourceWinOnly -a \
