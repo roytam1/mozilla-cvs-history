@@ -52,16 +52,14 @@ if ($@) { # an error
 	die "ack, something went wrong when I tried to use controller $controller"
 }
 
-eval("use Conf::Supplies::Config"); # do this in an eval because it may not exist yet
-# this module will store defaults for the installation
 
 # ASK:
 # call me like this:
 # ask('questionname','question?','default answer');
 sub ask {
     my ($name, $question, $default) = @_;
-    if ($Conf::Supplies::Config::answers{$name}) { # if it's in Config.pm, use it
-        $default = $Conf::Supplies::Config::answers{$name};
+    if ($main::c{$name}) { # if we have it already
+        $default = $main::c{$name};
     }
     my $answer = _ask($name,$question,$default);
     if ($answer eq "") { $answer = $default; } # handle the default
@@ -103,9 +101,10 @@ sub setParam($$) {
 }
 
 sub storeData() {
-	require Data::Dumper;
-	open(CONFIG,"Conf/Supplies/config.pl");
-	print CONFIG Data::Dumper::Dumper($main::c);
+	use Data::Dumper;
+	unlink('Conf/Supplies/config.pl');
+	open(CONFIG,">Conf/Supplies/config.pl");
+	print CONFIG Data::Dumper->Dump([\%main::c],['*main::c']);
 	close(CONFIG);
 }
 

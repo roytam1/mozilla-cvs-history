@@ -31,9 +31,6 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-eval("use Conf::Supplies::Config"); # do this in an eval so if 
-									# it doesn't exist (new installation)
-									# there won't be an error.
 use File::Spec;
 use Conf;
 
@@ -47,26 +44,26 @@ unless ($] >= 5.006) {
 # runconf('Conf/Foo.cm',"Title of section"); 
 # runconf() will handle the path mapping for XP purposes
 # XXX: NOT SURE IF WE REALLY NEED TO ADJUST THE PATH
+
 if (-e 'Conf/Supplies/config.pl') {
 	output <<EOF;
 I see you have settings saved from a pervious partial installation. 
 Would you like me to restore them and skip ahead to the 
-configuration section?
+configuration section, using your previous settings?
 EOF
 	ask('skipahead',"Yes or no?","yes");
 	if (getConf('skipahead') =~ /(y|yes)/i) {
-		eval("Conf/Supplies/config.pl");
+		do("Conf/Supplies/config.pl");
 		output "\n";
-		runconf('Conf/Configuration.cm',"Installation Configuration");
-		exit;
+		$args .= "--perl=".getConf('perl');
 	}
 }
-runconf('Conf/Begin.cm',"Welcome");
 
 if ($args =~ /--perl\=([\/A-Za-z0-9]+|[\/A-Za-z0-9]+ )/) { # they passed us a perl arg
 	setConf('perl',$1); # set the path to perl and move on...
 } else {
-	# they haven't run configure.pl before so run PerlCheck now...
+	# they haven't run configure.pl before so run Welcome and PerlCheck now...
+	runconf('Conf/Begin.cm',"Welcome");
 	runconf('Conf/PerlCheck.cm',"Checking perl"); 
 }
 runconf('Conf/ModuleCheck.cm',"Checking required modules");
@@ -80,7 +77,7 @@ if (getConf('installtype') eq 'convert') {
 	runconf('Conf/Upgrade.cm',"Upgrade");
 } elsif (getConf('installtype') eq 'new') {
 	runconf('Conf/Location.cm',"Installation Location");
-	runconf('Conf/Configuration.cm',"Installation Configuration");
+	runconf('Conf/NewConfiguration.cm',"Installation Configuration");
 }
 
 
