@@ -212,6 +212,8 @@ MozillaSourceUnixOnly -a \
 
 MozillaSourceMacOnly -a \
     mozilla/config/mac  \
+    mozilla/config/bdate.pl  \
+    mozilla/config/aboutime.pl  \
     mozilla/cmd/dialup  \
     mozilla/cmd/macfe \
     mozilla/lib/mac/AutoAdmin  \
