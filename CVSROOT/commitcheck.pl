@@ -301,7 +301,7 @@ if (m:^mozilla/modules/libreg/.*$:) {return '84';}
 if (m:^mozilla/modules/security/.*$:) {return '86';}
 if (m:^mozilla/modules/softupdt/.*$:) {return '87';}
 if (m:^mozilla/expat/.*$:) {return '88';}
-if (m:^mozilla/xpcom$:) {return '89';}
+if (m:^mozilla/xpcom/.*$:) {return '89';}
 if (m:^mozilla/include/shist\.h/.*$:) {return '91';}
 if (m:^mozilla/lib/libmisc/.*$:) {return '91';}
 if (m:^mozilla/modules/zlib/.*$:) {return '93';}
