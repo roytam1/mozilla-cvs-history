@@ -423,7 +423,7 @@ sub mail_to {
 }
 
 
-sub mail_from
+sub mail_from {
   return "tinderbox-build-daemon";
 }
 

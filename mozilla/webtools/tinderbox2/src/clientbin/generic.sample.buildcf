@@ -62,6 +62,11 @@ package UserDef;
 
 use lib '/home/build/lib';
 
+# set the standard tinderbox search path to allow us to compile on the
+# machine we run make on.
+
+use lib '#tinder_libdir#';
+
 use TreeData;
 
 
@@ -121,12 +126,12 @@ sub build_environment{
                   '/bin:'.
                   '/usr/local/bin:'.
                   '/home/build/bin'.
-                  );
+                  '');
 
     $ENV{CVSROOT} = (
                      "buildmaster\@cvs.yourcompany.com:".
-                     $TreeData::VC_TREE{tree_name()}{'root'}
-                     );
+                     $TreeData::VC_TREE{tree_name()}{'root'}.
+                     "");
     
     $ENV{CVS_RSH} = "ssh2";
     

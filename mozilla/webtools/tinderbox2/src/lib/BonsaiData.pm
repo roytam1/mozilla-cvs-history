@@ -49,7 +49,8 @@ package BonsaiData;
 use File::Basename;
 
 
-# Bonsai Specific Libraries
+# Tinderbox Specific Libraries
+use lib '#tinder_libdir#';
 
 use TreeData;
 
@@ -94,7 +95,7 @@ sub load_bonsai_libs {
             "Error in Tinderbox2 package: BonsaiData".
             "Could not load Bonsai file: \n".
             "\t'$BONSAI_DIR/adminfuncs.pl'\n ".
-            "or\n"
+            "or\n".
             "\t'$BONSAI_DIR/adminfuncs.pl'\n".
             "Check that CVS repository is readable at: '$::CVS_ROOT'\n".
             "\n".
