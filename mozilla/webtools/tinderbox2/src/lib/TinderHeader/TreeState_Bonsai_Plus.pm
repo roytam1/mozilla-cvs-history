@@ -80,6 +80,17 @@ sub gettree_header {
   my ($text_treestate) = $self->SUPER::gettree_header($tree);
   my $treestate;
 
+  # This is a problem since this is the same code which is used by
+  # the tinderbox page so that it can display the current state
+  # AND it is also used by the admin page to show the current
+  # state.  
+
+  # This is bad.  On the admin page you never see the
+  # Current_Bonsai_State pressed since that is never a returned state,
+  # since the Tinderbox Status page does not want that returned. I
+  # need to create a separate function to return the state for the
+  # admin page.
+
   if (!($text_treestate)) {
 
       # If there is no state, then force the default. This is needed
