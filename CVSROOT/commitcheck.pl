@@ -8,9 +8,6 @@ $fullname{'95'} = '2-D Graphics';
 $mode{'52'} = 'Open';
 $branch{'52'} = 'HEAD';
 $fullname{'52'} = 'Aurora/RDF BE';
-$mode{'51'} = 'Open';
-$branch{'51'} = 'HEAD';
-$fullname{'51'} = 'Aurora/RDF FE';
 $mode{'94'} = 'Open';
 $branch{'94'} = 'HEAD';
 $fullname{'94'} = 'Base XPCOM Classes';
@@ -220,7 +217,6 @@ if (m:^mozilla/widget/src/gtk/.*$:) {return '49';}
 if (m:^mozilla/cmd/stubfe/.*$:) {return '50';}
 if (m:^mozilla/include/fe_proto\.h/.*$:) {return '50';}
 if (m:^mozilla/include/structs\.h/.*$:) {return '50';}
-if (m:^mozilla/cmd/xfe/.*$:) {return '51';}
 if (m:^mozilla/modules/rdf/.*$:) {return '52';}
 if (m:^mozilla/dbm/.*$:) {return '53';}
 if (m:^mozilla/modules/libhook/.*$:) {return '54';}
