@@ -158,8 +158,7 @@ sub CheckonComment( $ ) {
     if( $ret ) {
         if (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/) {
             # No comment - sorry, action not allowed !
-            ThrowUserError("You have to specify a <b>comment</b> on this change.  
-                            Please give some words on the reason for your change.");
+            ThrowUserError("comment_required");
         } else {
             $ret = 0;
         }
@@ -229,7 +228,7 @@ if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct)
                     $defaults{'target_milestone'} = $::FORM{'target_milestone'};
                 } else {
                     SendSQL("SELECT defaultmilestone FROM products WHERE " .
-                            "product = " . SqlQuote($prod));
+                            "name = " . SqlQuote($prod));
                     $defaults{'target_milestone'} = FetchOneColumn();
                 }
             }
@@ -324,13 +323,12 @@ sub CheckCanChangeField {
              $qacontactid eq $whoid) {
         return 1;
     }
-    SendSQL("UNLOCK TABLES");
-    $oldvalue = html_quote($oldvalue);
-    $newvalue = html_quote($newvalue);
-    ThrowUserError("You tried to change the <strong>$f</strong> field 
-                    from <em>$oldvalue</em> to <em>$newvalue</em>, 
-                    but only the owner or submitter of the bug, or a 
-                    sufficiently empowered user, may change that field.");
+    
+    # The user doesn't have the necessary permissions to change this field.
+    $vars->{'oldvalue'} = $oldvalue;
+    $vars->{'newvalue'} = $newvalue;
+    $vars->{'field'} = $f;
+    ThrowUserError("illegal_change", "abort");
 }
 
 # Confirm that the reporter of the current bug can access the bug we are duping to.
@@ -554,38 +552,30 @@ if (Param("usebugaliases") && defined($::FORM{'alias'})) {
         if ($alias ne "") {
             # Make sure the alias isn't too long.
             if (length($alias) > 20) {
-                ThrowUserError("Bug aliases cannot be longer than 20 characters.
-                  Please choose a shorter alias.");
+                ThrowUserError("alias_too_long");
             }
 
             # Make sure the alias is unique.
             my $escaped_alias = SqlQuote($alias);
+            $vars->{'alias'} = $alias;
+            
             SendSQL("SELECT bug_id FROM bugs WHERE alias = $escaped_alias " . 
                     "AND bug_id != $idlist[0]");
             my $id = FetchOneColumn();
+            
             if ($id) {
-                my $escaped_alias = html_quote($alias);
-                my $bug_link = GetBugLink($id, "Bug $id");
-                ThrowUserError("$bug_link has already taken the alias 
-                  <em>$escaped_alias</em>.  Please choose another one.");
+                $vars->{'bug_link'} = GetBugLink($id, "Bug $id");
+                ThrowUserError("alias_in_use");
             }
 
             # Make sure the alias isn't just a number.
             if ($alias =~ /^\d+$/) {
-                ThrowUserError("You gave this bug the alias <em>$alias</em>,
-                  but aliases cannot be merely numbers, since they could
-                  then be confused with bug IDs.  Please choose another
-                  alias containing at least one letter.");
+                ThrowUserError("alias_is_numeric");
             }
 
             # Make sure the alias has no commas or spaces.
             if ($alias =~ /[, ]/) {
-                my $escaped_alias = html_quote($alias);
-                ThrowUserError("The alias you entered, <em>$escaped_alias</em>,
-                  contains one or more commas or spaces.  Aliases cannot contain
-                  commas or spaces because those characters are used to separate
-                  aliases from each other in lists.  Please choose another alias
-                  that does not contain commas and spaces.");
+                ThrowUserError("alias_has_comma_or_space");
             }
         }
         
@@ -631,6 +621,22 @@ if ( $::FORM{'id'} ) {
     }
 }
 
+if ($::FORM{'id'} && 
+    (Param("insidergroup") && UserInGroup(Param("insidergroup")))) {
+    detaint_natural($::FORM{'id'});
+    foreach my $field (keys %::FORM) {
+        if ($field =~ /when-([0-9]+)/) {
+            my $sequence = $1;
+            my $private = $::FORM{"isprivate-$sequence"} ? 1 : 0 ;
+            if ($private != $::FORM{"oisprivate-$sequence"}) {
+                detaint_natural($::FORM{"$field"});
+                SendSQL("UPDATE longdescs SET isprivate = $private 
+                    WHERE bug_id = $::FORM{'id'} AND bug_when = " . $::FORM{"$field"});
+            }
+        }
+
+    }
+}
 
 my $duplicate = 0;
 
@@ -712,11 +718,9 @@ SWITCH: for ($::FORM{'knob'}) {
         }
         ChangeStatus('NEW');
         DoComma();
-        if ( !defined$::FORM{'assigned_to'} ||
-             trim($::FORM{'assigned_to'}) eq "") {
-          ThrowUserError("You cannot reassign to a bug to nobody.  Unless you
-                          intentionally cleared out the \"Reassign bug to\" 
-                          field, " . Param("browserbugmessage"));
+        if (!defined$::FORM{'assigned_to'} ||
+            trim($::FORM{'assigned_to'}) eq "") {
+            ThrowUserError("reassign_to_empty");
         }
         my $newid = DBNameToIdAndCheck(trim($::FORM{'assigned_to'}));
         $::query .= "assigned_to = $newid";
@@ -724,12 +728,10 @@ SWITCH: for ($::FORM{'knob'}) {
     };
     /^reassignbycomponent$/  && CheckonComment( "reassignbycomponent" ) && do {
         if ($::FORM{'product'} eq $::dontchange) {
-            ThrowUserError("You must specify a product to help determine 
-                            the new owner of these bugs.");
+            ThrowUserError("need_product");
         }
         if ($::FORM{'component'} eq $::dontchange) {
-            ThrowUserError("You must specify a component whose owner 
-                            should get assigned these bugs.");
+            ThrowUserError("need_component");
         }
         if ($::FORM{'compconfirm'}) {
             DoConfirm();
@@ -777,33 +779,31 @@ SWITCH: for ($::FORM{'knob'}) {
         SendSQL("SELECT bug_id FROM bugs WHERE bug_id = " . SqlQuote($num));
         $num = FetchOneColumn();
         if (!$num) {
-            ThrowUserError("You must specify a valid bug number of which this bug
-                            is a duplicate.  The bug has not been changed.")
+            ThrowUserError("dupe_invalid_bug_id")
         }
         if (!defined($::FORM{'id'}) || $num == $::FORM{'id'}) {
-            ThrowUserError("Nice try, $::COOKIE{'Bugzilla_login'}, but it doesn't 
-                            really make sense to mark a bug as a duplicate of itself, 
-                            does it?");
+            ThrowUserError("dupe_of_self_disallowed");
         }
         my $checkid = trim($::FORM{'id'});
         SendSQL("SELECT bug_id FROM bugs where bug_id = " .  SqlQuote($checkid));
         $checkid = FetchOneColumn();
         if (!$checkid) {
-            ThrowUserError("The bug id $::FORM{'id'} is invalid.");
+            $vars->{'bug_id'} = $checkid;
+            ThrowUserError("invalid_bug_id");
         }
         $::FORM{'comment'} .= "\n\n*** This bug has been marked as a duplicate of $num ***";
         $duplicate = $num;
 
         last SWITCH;
     };
-    # default
-    my $escaped_knob = html_quote($::FORM{'knob'});
-    ThrowCodeError("Unknown action $escaped_knob!\n");
+    
+    $vars->{'action'} = $::FORM{'knob'};
+    ThrowCodeError("unknown_action");
 }
 
 
 if ($#idlist < 0) {
-    ThrowUserError("You apparently didn't choose any bugs to modify.");
+    ThrowUserError("no_bugs_chosen");
 }
 
 
@@ -817,9 +817,7 @@ if ($::FORM{'keywords'}) {
         }
         my $i = GetKeywordIdFromName($keyword);
         if (!$i) {
-            ThrowUserError("Unknown keyword named <code>" . html_quote($keyword) . 
-                           "</code>. <p>The legal keyword names are 
-                            <a href=\"describekeywords.cgi\">listed here</a></p>.");
+            ThrowUserError("unknown_keyword");
         }
         if (!$keywordseen{$i}) {
             push(@keywordlist, $i);
@@ -835,8 +833,7 @@ if ($::comma eq ""
     && defined $::FORM{'masscc'} && ! $::FORM{'masscc'}
     ) {
     if (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/) {
-        ThrowUserError("Um, you apparently did not change anything 
-                        on the selected bugs.");
+        ThrowUserError("bugs_not_changed");
     }
 }
 
@@ -970,15 +967,12 @@ foreach my $id (@idlist) {
         if (!defined $value || $value eq $::dontchange) {
             $value = $oldhash{'target_milestone'};
         }
-        SendSQL("SELECT defaultmilestone FROM products WHERE product = " .
+        SendSQL("SELECT defaultmilestone FROM products WHERE name = " .
                 SqlQuote($oldhash{'product'}));
         if ($value eq FetchOneColumn()) {
             SendSQL("UNLOCK TABLES");
-            ThrowUserError("You must determine a target milestone for bug $id
-                            if you are going to accept it.  Part of accepting 
-                            a bug is giving an estimate of when it will be fixed.", 
-                           undef, 
-                           "abort");
+            $vars->{'bug_id'} = $id;
+            ThrowUserError("milestone_required", "abort");
         }
     }   
     if (defined $::FORM{'delta_ts'} && $::FORM{'delta_ts'} ne $delta_ts) {
@@ -1013,9 +1007,7 @@ foreach my $id (@idlist) {
                 next if $i eq "";
                 
                 if ($id eq $i) {
-                    ThrowUserError("You can't make a bug blocked or dependent on itself.",
-                                   undef,
-                                   "abort");
+                    ThrowUserError("dependency_loop_single", "abort");
                 }
                 if (!exists $seen{$i}) {
                     push(@{$deptree{$target}}, $i);
@@ -1057,13 +1049,9 @@ foreach my $id (@idlist) {
                     foreach my $i (@isect) {
                        $both = $both . GetBugLink($i, "#" . $i) . " ";
                     }
-                    ThrowUserError(qq|Dependency loop detected!<p>
-                      The following bug(s) would appear on both the "depends on"
-                      and "blocks" parts of the dependency tree if these changes
-                      are committed: $both<br>This would create a circular 
-                      dependency, which is not allowed.</p>|,
-                      undef,
-                      "abort");
+                    
+                    $vars->{'both'} = $both;
+                    ThrowUserError("dependency_loop_multi", "abort");
                 }
             }
             my $tmp = $me;
@@ -1138,7 +1126,8 @@ foreach my $id (@idlist) {
     $groupAddNames =~ s/, $//;
     LogActivityEntry($id,"bug_group",$groupDelNames,$groupAddNames); 
     if (defined $::FORM{'comment'}) {
-        AppendComment($id, $::COOKIE{'Bugzilla_login'}, $::FORM{'comment'});
+        AppendComment($id, $::COOKIE{'Bugzilla_login'}, $::FORM{'comment'},
+            $::FORM{'commentprivacy'});
     }
     
     my $removedCcString = "";
@@ -1410,7 +1399,7 @@ foreach my $id (@idlist) {
             LogActivityEntry($duplicate,"cc","",DBID_to_name($reporter));
             SendSQL("INSERT INTO cc (who, bug_id) VALUES ($reporter, " . SqlQuote($duplicate) . ")");
         }
-        AppendComment($duplicate, $::COOKIE{'Bugzilla_login'}, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***");
+        AppendComment($duplicate, $::COOKIE{'Bugzilla_login'}, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***", 1);
         CheckFormFieldDefined(\%::FORM,'comment');
         SendSQL("INSERT INTO duplicates VALUES ($duplicate, $::FORM{'id'})");
         

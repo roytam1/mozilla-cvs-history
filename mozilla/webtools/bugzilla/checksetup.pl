@@ -658,7 +658,6 @@ unless (-d 'data' && -e 'data/nomail') {
     # permissions for non-webservergroup are fixed later on
     mkdir 'data', 0770;
     mkdir 'data/mimedump-tmp', 01777;
-    open FILE, '>>data/comments'; close FILE;
     open FILE, '>>data/nomail'; close FILE;
     open FILE, '>>data/mail'; close FILE;
 }
@@ -772,6 +771,17 @@ if ($my_create_htaccess) {
 END
     close HTACCESS;
     chmod $fileperm, ".htaccess";
+  }
+  if (!-e "Bugzilla/.htaccess") {
+    print "Creating Bugzilla/.htaccess...\n";
+    open HTACCESS, ">Bugzilla/.htaccess";
+    print HTACCESS <<'END';
+# nothing in this directory is retrievable unless overriden by an .htaccess
+# in a subdirectory
+deny from all
+END
+    close HTACCESS;
+    chmod $fileperm, "Bugzilla/.htaccess";
   }
   if (!-e "data/.htaccess") {
     print "Creating data/.htaccess...\n";
@@ -902,7 +912,6 @@ END
         {
          strike => sub { return $_; } ,
          js => sub { return $_; },
-         html => sub { return $_; },
          html_linebreak => sub { return $_; },
          url_quote => sub { return $_; },
         },
@@ -1102,6 +1111,7 @@ if ($my_webservergroup) {
     fixPerms('data/webdot/.htaccess', $<, $webservergid, 027);
     fixPerms('data/params', $<, $webservergid, 017);
     fixPerms('*', $<, $webservergid, 027);
+    fixPerms('Bugzilla', $<, $webservergid, 027, 1);
     fixPerms('template', $<, $webservergid, 027, 1);
     fixPerms('css', $<, $webservergid, 027, 1);
     chmod 0644, 'globals.pl';
@@ -1126,6 +1136,7 @@ if ($my_webservergroup) {
     fixPerms('data/webdot/.htaccess', $<, $gid, 022);
     fixPerms('data/params', $<, $gid, 011);
     fixPerms('*', $<, $gid, 022);
+    fixPerms('Bugzilla', $<, $gid, 022, 1);
     fixPerms('template', $<, $gid, 022, 1);
     fixPerms('css', $<, $gid, 022, 1);
 
@@ -1297,7 +1308,7 @@ $table{bugs_activity} =
 $table{attachments} =
    'attach_id mediumint not null auto_increment primary key,
     bug_id mediumint not null,
-    creation_ts timestamp,
+    creation_ts datetime not null,
     description mediumtext not null,
     mimetype mediumtext not null,
     ispatch tinyint,
@@ -1305,6 +1316,7 @@ $table{attachments} =
     thedata longblob not null,
     submitter_id mediumint not null,
     isobsolete tinyint not null default 0, 
+    isprivate tinyint not null default 0,
 
     index(bug_id),
     index(creation_ts)';
@@ -1402,7 +1414,7 @@ $table{longdescs} =
     who mediumint not null,
     bug_when datetime not null,
     thetext mediumtext,
-
+    isprivate tinyint not null default 0,
     index(bug_id),
     index(who),
     index(bug_when)';
@@ -1811,6 +1823,7 @@ AddFDef("attachments.thedata", "Attachment data", 0);
 AddFDef("attachments.mimetype", "Attachment mime type", 0);
 AddFDef("attachments.ispatch", "Attachment is patch", 0);
 AddFDef("attachments.isobsolete", "Attachment is obsolete", 0);
+AddFDef("attachments.isprivate", "Attachment is private", 0);
 AddFDef("attachstatusdefs.name", "Attachment Status", 0);
 AddFDef("target_milestone", "Target Milestone", 0);
 AddFDef("delta_ts", "Last changed date", 0);
@@ -1821,7 +1834,10 @@ AddFDef("alias", "Alias", 0);
 AddFDef("everconfirmed", "Ever Confirmed", 0);
 AddFDef("reporter_accessible", "Reporter Accessible", 0);
 AddFDef("bug_group", "Bug Group", 0);
-AddFDef("cc_accessible", "CC Accessible", 0);
+AddFDef("cclist_accessible", "CC Accessible", 0);
+
+# Oops. Bug 163299
+$dbh->do("DELETE FROM fielddefs WHERE name='cc_accessible'");
 
 ###########################################################################
 # Detect changed local settings
@@ -2595,6 +2611,12 @@ if (GetFieldDef('bugs_activity', 'field')) {
 
     DropField('bugs_activity', 'field');
 }
+
+# 2002-05-10 - enhanchment bug 143826
+# Add private comments and private attachments on less-private bugs
+AddField('longdescs', 'isprivate', 'tinyint not null default 0');
+AddField('attachments', 'isprivate', 'tinyint not null default 0');
+
         
 
 # 2000-01-18 New email-notification scheme uses a new field in the bug to 
@@ -2871,7 +2893,8 @@ if (!($sth->fetchrow_arrayref()->[0])) {
 
         foreach $key (keys(%dupes))
         {
-                $dupes{$key} =~ s/.*\*\*\* This bug has been marked as a duplicate of (\d{1,5}) \*\*\*.*?/$1/sm;
+                $dupes{$key} =~ /^.*\*\*\* This bug has been marked as a duplicate of (\d+) \*\*\*$/ms;
+                $dupes{$key} = $1;
                 $dbh->do("INSERT INTO duplicates VALUES('$dupes{$key}', '$key')");
                 #                                        BugItsADupeOf   Dupe
         }
@@ -3218,29 +3241,20 @@ if (GetFieldDef("profiles", "groupset")) {
 
 # 2002-07-15 davef@tetsubo.com - bug 67950
 # Move quips to the db.
-my $renamed_comments_file = 0;
-if (GetFieldDef("quips", "quipid")) {
-    if (-e 'data/comments' && open (COMMENTS, "<data/comments")) {
-        print "Populating quips table from data/comments...\n";
-        while (<COMMENTS>) {
-            chomp;
-            $dbh->do("INSERT INTO quips (quip) VALUES ("
-                      . $dbh->quote($_) . ")");
-        }
-        print "The data/comments file (used to store quips) has been        
-               copied into the database, and the data/comments file
-               moved to data/comments.bak - you can delete this file
-               once you're satisfied the migration worked correctly.\n\n";
-        close COMMENTS;
-        rename("data/comments", "data/comments.bak") or next;        
-        $renamed_comments_file = 1;
+if (-r 'data/comments' && -s 'data/comments'
+    && open (COMMENTS, "<data/comments")) {
+    print "Populating quips table from data/comments...\n\n";
+    while (<COMMENTS>) {
+        chomp;
+        $dbh->do("INSERT INTO quips (quip) VALUES ("
+                 . $dbh->quote($_) . ")");
     }
-}
-
-# Warn if data/comments.bak exists, as it should be deleted.
-if (-e 'data/comments.bak' && !$renamed_comments_file) {
-    print "The data/comments.bak file can be removed, as it's no longer
-           used.\n\n";
+    print "The data/comments file (used to store quips) has been copied into\n" .
+      "the database, and the data/comments file moved to data/comments.bak - \n" .
+      "you can delete this fileonce you're satisfied the migration worked\n" .
+      "correctly.\n\n";
+    close COMMENTS;
+    rename("data/comments", "data/comments.bak");
 }
 
 # 2002-07-31 bbaetz@student.usyd.edu.au bug 158236
@@ -3334,7 +3348,50 @@ if (GetFieldDef("products", "product")) {
     $dbh->do("ALTER TABLE components ADD UNIQUE (product_id, name)");
     $dbh->do("ALTER TABLE components ADD INDEX (name)");
 }
-        
+
+# 2002-08-XX - bbaetz@student.usyd.edu.au - bug 153578
+# attachments creation time needs to be a datetime, not a timestamp
+my $fielddef;
+if (($fielddef = GetFieldDef("attachments", "creation_ts")) &&
+    $fielddef->[1] =~ /^timestamp/) {
+    print "Fixing creation time on attachments...\n";
+
+    my $sth = $dbh->prepare("SELECT COUNT(attach_id) FROM attachments");
+    $sth->execute();
+    my ($attach_count) = $sth->fetchrow_array();
+
+    if ($attach_count > 1000) {
+        print "This may take a while...\n";
+    }
+    my $i = 0;
+
+    # This isn't just as simple as changing the field type, because
+    # the creation_ts was previously updated when an attachment was made
+    # obsolete from the attachment creation screen. So we have to go
+    # and recreate these times from the comments..
+    $sth = $dbh->prepare("SELECT bug_id, attach_id, submitter_id " .
+                         "FROM attachments");
+    $sth->execute();
+
+    # Restrict this as much as possible in order to avoid false positives, and
+    # keep the db search time down
+    my $sth2 = $dbh->prepare("SELECT bug_when FROM longdescs WHERE bug_id=? AND who=? AND thetext LIKE ? ORDER BY bug_when LIMIT 1");
+    while (my ($bug_id, $attach_id, $submitter_id) = $sth->fetchrow_array()) {
+        $sth2->execute($bug_id, $submitter_id, "Created an attachment (id=$attach_id)%");
+        my ($when) = $sth2->fetchrow_array();
+        if ($when) {
+            $dbh->do("UPDATE attachments SET creation_ts='$when' WHERE attach_id=$attach_id");
+        } else {
+            print "Warning - could not determine correct creation time for attachment $attach_id on bug $bug_id\n";
+        }
+        ++$i;
+        print "Converted $i of $attach_count attachments\n" if !($i % 1000);
+    }
+    print "Done - converted $i attachments\n";
+
+    ChangeFieldType("attachments", "creation_ts", "datetime NOT NULL");
+}
+
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
 #

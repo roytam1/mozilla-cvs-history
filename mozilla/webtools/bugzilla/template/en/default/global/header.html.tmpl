@@ -17,6 +17,7 @@
   # Rights Reserved.
   #
   # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 Vaskin Kissoyan <vkissoyan@yahoo.com>
   #%]
 
 [%# INTERFACE:
@@ -24,6 +25,7 @@
   # title: string. Page title.
   # h1: string. Main page header.
   # h2: string. Page subheader.
+  # h3: string. Right-aligned subheader.
   # bgcolor: string. the page's background color ("#rrggbb").
   # onload: string. JavaScript code to run when the page finishes loading.
   # header_html: string. Any other HTML to go inside the <head> tags.
@@ -38,11 +40,21 @@
 [% END %]
 
 [% DEFAULT
-  h1 = title
   h2 = ""
+  h3 = "" 
   bgcolor = "#ffffff"
   onload = ""
 %]
+
+[%# We should be able to set the default value of the h1 variable
+  # to the value of the title variable using the DEFAULT directive,
+  # but that doesn't work if a caller sets h1 to the empty string
+  # to avoid h1 inheriting the value of title, since DEFAULT
+  # mistakenly treats empty strings as undefined and gives h1 the
+  # value of title anyway.  To get around that problem we explicitly
+  # set h1's default value here only if it is undefined. %]
+[% IF !h1.defined %][% h1 = title %][% END %]
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
   <head>
@@ -85,7 +97,7 @@
 [% INCLUDE global/banner.html.tmpl %]
     
 [% IF h1 || h2 %]
-    <table border="0" cellspacing="0">
+    <table border="0" cellspacing="0" width="100%">
       <tr>
         <td valign="top" align="left">
           <table border="0" cellpadding="0" cellspacing="2">
@@ -96,8 +108,11 @@
             </tr>
           </table>
         </td>
-        <td valign="middle">&nbsp;</td>
+        <td valign="middle" align="left">&nbsp;</td>
         <td valign="middle" align="left">[% h2 %]</td>
+        [% IF h3 %]
+          <td valign="middle" align="right">[% h3 %]</td>
+        [% END %]
       </tr>
     </table>
 [% END %]

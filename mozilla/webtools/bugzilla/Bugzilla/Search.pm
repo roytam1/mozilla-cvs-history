@@ -35,6 +35,10 @@ use vars qw($userid );
 
 package Bugzilla::Search;
 
+use Bugzilla::Util;
+
+use Date::Format;
+
 # Create a new Search
 sub new {
     my $invocant = shift;
@@ -66,39 +70,37 @@ sub init {
     my @andlist;
 
     # First, deal with all the old hard-coded non-chart-based poop.
-    if (&::lsearch($fieldsref, 'map_assigned_to.login_name') >= 0) {
+    if (lsearch($fieldsref, 'map_assigned_to.login_name') >= 0) {
         push @supptables, "profiles AS map_assigned_to";
         push @wherepart, "bugs.assigned_to = map_assigned_to.userid";
     }
 
-    if (&::lsearch($fieldsref, 'map_reporter.login_name') >= 0) {
+    if (lsearch($fieldsref, 'map_reporter.login_name') >= 0) {
         push @supptables, "profiles AS map_reporter";
-        push @wherepart, "bugs.assigned_to = map_reporter.userid";
+        push @wherepart, "bugs.reporter = map_reporter.userid";
     }
 
-    if (&::lsearch($fieldsref, 'map_qa_contact.login_name') >= 0) {
+    if (lsearch($fieldsref, 'map_qa_contact.login_name') >= 0) {
         push @supptables, "LEFT JOIN profiles map_qa_contact ON bugs.qa_contact = map_qa_contact.userid";
     }
 
-    if (&::lsearch($fieldsref, 'map_products.name') >= 0) {
+    if (lsearch($fieldsref, 'map_products.name') >= 0) {
         push @supptables, "products AS map_products";
         push @wherepart, "bugs.product_id = map_products.id";
     }
 
-    if (&::lsearch($fieldsref, 'map_components.name') >= 0) {
+    if (lsearch($fieldsref, 'map_components.name') >= 0) {
         push @supptables, "components AS map_components";
         push @wherepart, "bugs.component_id = map_components.id";
     }
 
     my $minvotes;
     if (defined $F{'votes'}) {
-        my $c = &::trim($F{'votes'});
+        my $c = trim($F{'votes'});
         if ($c ne "") {
             if ($c !~ /^[0-9]*$/) {
-                my $htmlc = html_quote($c);
-                &::ThrowUserError("The <em>At least ___ votes</em> field must 
-                                   be a simple number.  You entered
-                                   <tt>$htmlc</tt>, which doesn't cut it.");
+                $::vars->{'value'} = $c;
+                &::ThrowUserError("illegal_at_least_x_votes");
             }
             push(@specialchart, ["votes", "greaterthan", $c - 1]);
         }
@@ -118,7 +120,7 @@ sub init {
                         "target_milestone", "bug_group");
 
     foreach my $field (keys %F) {
-        if (&::lsearch(\@legal_fields, $field) != -1) {
+        if (lsearch(\@legal_fields, $field) != -1) {
             push(@specialchart, [$field, "anyexact",
                                  join(',', @{$M{$field}})]);
         }
@@ -148,7 +150,7 @@ sub init {
         if (!defined ($F{"email$id"})) {
             next;
         }
-        my $email = &::trim($F{"email$id"});
+        my $email = trim($F{"email$id"});
         if ($email eq "") {
             next;
         }
@@ -156,7 +158,7 @@ sub init {
         if ($type eq "exact") {
             $type = "anyexact";
             foreach my $name (split(',', $email)) {
-                $name = &::trim($name);
+                $name = trim($name);
                 if ($name) {
                     &::DBNameToIdAndCheck($name);
                 }
@@ -181,21 +183,18 @@ sub init {
         if (@clist) {
             push(@specialchart, \@clist);
         } else {
-            my $htmlemail = html_quote($email);
-            &::ThrowUserError("You must specify one or more fields in which
-                               to search for <tt>$htmlemail</tt>.");
+            $::vars->{'email'} = $email;
+            &::ThrowUserError("missing_email_type");
         }
     }
 
 
     if (defined $F{'changedin'}) {
-        my $c = &::trim($F{'changedin'});
+        my $c = trim($F{'changedin'});
         if ($c ne "") {
             if ($c !~ /^[0-9]*$/) {
-                my $htmlc = &::html_quote($c);
-                &::ThrowUserError("The <em>changed in last ___ days</em> field
-                                   must be a simple number.  You entered
-                                   <tt>$htmlc</tt>, which doesn't cut it.");
+                $::vars->{'value'} = $c;
+                &::ThrowUserError("illegal_changed_in_last_x_days");
             }
             push(@specialchart, ["changedin",
                                  "lessthan", $c + 1]);
@@ -205,14 +204,14 @@ sub init {
     my $ref = $M{'chfield'};
 
     if (defined $ref) {
-        my $which = &::lsearch($ref, "[Bug creation]");
+        my $which = lsearch($ref, "[Bug creation]");
         if ($which >= 0) {
             splice(@$ref, $which, 1);
             push(@specialchart, ["creation_ts", "greaterthan",
                                  SqlifyDate($F{'chfieldfrom'})]);
             my $to = $F{'chfieldto'};
             if (defined $to) {
-                $to = &::trim($to);
+                $to = trim($to);
                 if ($to ne "" && $to !~ /^now$/i) {
                     push(@specialchart, ["creation_ts", "lessthan",
                                          SqlifyDate($to)]);
@@ -234,7 +233,7 @@ sub init {
              &::SqlQuote(SqlifyDate($F{'chfieldfrom'})));
         my $to = $F{'chfieldto'};
         if (defined $to) {
-            $to = &::trim($to);
+            $to = trim($to);
             if ($to ne "" && $to !~ /^now$/i) {
                 push(@wherepart, "actcheck.bug_when <= " .
                      &::SqlQuote(SqlifyDate($to)));
@@ -242,7 +241,7 @@ sub init {
         }
         my $value = $F{'chfieldvalue'};
         if (defined $value) {
-            $value = &::trim($value);
+            $value = trim($value);
             if ($value ne "") {
                 push(@wherepart, "actcheck.added = " .
                      &::SqlQuote($value))
@@ -253,7 +252,7 @@ sub init {
     foreach my $f ("short_desc", "long_desc", "bug_file_loc",
                    "status_whiteboard") {
         if (defined $F{$f}) {
-            my $s = &::trim($F{$f});
+            my $s = trim($F{$f});
             if ($s ne "") {
                 my $n = $f;
                 my $q = &::SqlQuote($s);
@@ -315,6 +314,9 @@ sub init {
          "^long_?desc," => sub {
              my $table = "longdescs_$chartid";
              push(@supptables, "longdescs $table");
+             if (Param("insidergroup") && !UserInGroup(Param("insidergroup"))) {
+                 push(@wherepart, "$table.isprivate < 1") ;
+             }
              push(@wherepart, "$table.bug_id = bugs.bug_id");
              $f = "$table.thetext";
          },
@@ -351,14 +353,10 @@ sub init {
                  $t = "greaterthan";
              }
              if ($field eq "ispatch" && $v ne "0" && $v ne "1") {
-                 &::ThrowUserError("The only legal values for the 
-                                    <em>Attachment is patch</em> field are 
-                                    0 and 1.");
+                 &::ThrowUserError("illegal_attachment_is_patch");
              }
              if ($field eq "isobsolete" && $v ne "0" && $v ne "1") {
-                 &::ThrowUserError("The only legal values for the 
-                                    <em>Attachment is obsolete</em> field are 
-                                    0 and 1.");
+                 &::ThrowUserError("illegal_is_obsolete");
              }
              $f = "$table.$field";
          },
@@ -456,11 +454,8 @@ sub init {
                      push(@list, "$table.keywordid = $id");
                  }
                  else {
-                     my $htmlv = &::html_quote($v);
-                     &::ThrowUserError("There is no keyword named<code>$htmlv
-                                        </code>. To search for keywords, consult
-                                        the <a href='describekeywords.cgi'>list
-                                        of legal keywords</a>.");
+                     $::vars->{'keyword'} = $v;
+                     &::ThrowUserError("unknown_keyword");
                  }
              }
              my $haveawordterm;
@@ -753,14 +748,14 @@ sub init {
                 $t = $F{"type$chart-$row-$col"} || "noop";
                 $v = $F{"value$chart-$row-$col"};
                 $v = "" if !defined $v;
-                $v = &::trim($v);
+                $v = trim($v);
                 if ($f eq "noop" || $t eq "noop" || $v eq "") {
                     next;
                 }
                 # chart -1 is generated by other code above, not from the user-
                 # submitted form, so we'll blindly accept any values in chart -1
                 if ((!$chartfields{$f}) && ($chart != -1)) {
-                    my $errstr = "Can't use " . &::html_quote($f) . " as a field name.  " .
+                    my $errstr = "Can't use " . html_quote($f) . " as a field name.  " .
                         "If you think you're getting this in error, please copy the " .
                         "entire URL out of the address bar at the top of your browser " .
                         "window and email it to <109679\@bugzilla.org>";
@@ -771,7 +766,7 @@ sub init {
                 # This is either from the internal chart (in which case we
                 # already know about it), or it was in %chartfields, so it is
                 # a valid field name, which means that its ok.
-                &::trick_taint($f);
+                trick_taint($f);
                 $q = &::SqlQuote($v);
                 my $func;
                 $term = undef;
@@ -798,11 +793,10 @@ sub init {
                     push(@orlist, $term);
                 }
                 else {
-                    my $errstr =
-                      qq|Cannot seem to handle <code>$F{"field$chart-$row-$col"}</code>
-                         and <code>$F{"type$chart-$row-$col"}</code> together|;
-                    $chart < 0 ? die "Internal error: $errstr"
-                               : &::ThrowCodeError($errstr);
+                    # This field and this type don't work together.
+                    $::vars->{'field'} = $F{"field$chart-$row-$col"};
+                    $::vars->{'type'} = $F{"type$chart-$row-$col"};
+                    &::ThrowCodeError("field_type_mismatch");
                 }
             }
             if (@orlist) {
@@ -826,7 +820,7 @@ sub init {
                   " WHERE " . join(' AND ', (@wherepart, @andlist)));
 
     if ($debug) {
-        print "<p><code>" . &::value_quote($query) . "</code></p>\n";
+        print "<p><code>" . value_quote($query) . "</code></p>\n";
         exit;
     }
     
@@ -862,9 +856,8 @@ sub SqlifyDate {
     }
     my $date = str2time($str);
     if (!defined($date)) {
-        my $htmlstr = html_quote($str);
-        ThrowUserError("The string <tt>$htmlstr</tt> is not a legal date.");
-        exit;
+        $::vars->{'date'} = $str;
+        ThrowUserError("illegal_date");
     }
     return time2str("%Y-%m-%d %H:%M:%S", $date);
 }

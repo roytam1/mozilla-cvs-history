@@ -147,18 +147,11 @@ if (Param("useqacontact")) {
     }
 }
 
-if (exists $::FORM{'bug_status'}) {
-    # Ignore the given status, so that we can set it to UNCONFIRMED
-    # or NEW, depending on votestoconfirm if either the given state was
-    # unconfirmed (so that a user can't override the below check), or if
-    # the user doesn't have permission to change the default status anyway
-    if ($::FORM{'bug_status'} eq $::unconfirmedstate
-        || (!UserInGroup("canedit") && !UserInGroup("canconfirm"))) {
-        delete $::FORM{'bug_status'};
-    }
-}
-
-if (!exists $::FORM{'bug_status'}) {
+if (UserInGroup("canedit") || UserInGroup("canconfirm")) {
+    # Default to NEW if the user hasn't selected another status
+    $::FORM{'bug_status'} ||= "NEW";
+} else {
+    # Default to UNCONFIRMED if we are using it, NEW otherwise
     $::FORM{'bug_status'} = $::unconfirmedstate;
     SendSQL("SELECT votestoconfirm FROM products WHERE id = $product_id");
     if (!FetchOneColumn()) {
@@ -251,15 +244,14 @@ foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
     if ($::FORM{$b}) {
         my $v = substr($b, 4);
         $v =~ /^(\d+)$/
-          || ThrowCodeError("One of the group ids submitted was invalid.",
-                                                                undef, "abort");
+          || ThrowCodeError("group_id_invalid", "abort");
         if (!GroupIsActive($v)) {
             # Prevent the user from adding the bug to an inactive group.
             # Should only happen if there is a bug in Bugzilla or the user
             # hacked the "enter bug" form since otherwise the UI 
             # for adding the bug to the group won't appear on that form.
-            ThrowCodeError("Attempted to add bug to an inactive group, " . 
-                           "identified by the bit '$v'.", undef, "abort");
+            $vars->{'bit'} = $v;
+            ThrowCodeError("inactive_group", "abort");
         }
         SendSQL("SELECT user_id FROM user_group_map 
                  WHERE user_id = $::userid

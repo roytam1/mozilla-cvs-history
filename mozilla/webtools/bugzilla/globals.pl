@@ -28,6 +28,8 @@
 use diagnostics;
 use strict;
 
+use Bugzilla::Util;
+
 # Shut up misguided -w warnings about "used only once".  For some reason,
 # "use vars" chokes on me when I try it here.
 
@@ -225,16 +227,6 @@ sub SqlLog {
     }
 }
 
-# This is from the perlsec page, slightly modifed to remove a warning
-# From that page:
-#      This function makes use of the fact that the presence of
-#      tainted data anywhere within an expression renders the
-#      entire expression tainted.
-# Don't ask me how it works...
-sub is_tainted {
-    return not eval { my $foo = join('',@_), kill 0; 1; };
-}
-
 sub SendSQL {
     my ($str, $dontshadow) = (@_);
 
@@ -326,7 +318,7 @@ sub FetchOneColumn {
                           "status", "resolution", "summary");
 
 sub AppendComment {
-    my ($bugid,$who,$comment) = (@_);
+    my ($bugid,$who,$comment,$isprivate) = (@_);
     $comment =~ s/\r\n/\n/g;     # Get rid of windows-style line endings.
     $comment =~ s/\r/\n/g;       # Get rid of mac-style line endings.
     if ($comment =~ /^\s*$/) {  # Nothin' but whitespace.
@@ -334,9 +326,10 @@ sub AppendComment {
     }
 
     my $whoid = DBNameToIdAndCheck($who);
-
-    SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) " .
-            "VALUES($bugid, $whoid, now(), " . SqlQuote($comment) . ")");
+    my $privacyval = $isprivate ? 1 : 0 ;
+    SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext, isprivate) " .
+        "VALUES($bugid, $whoid, now(), " . SqlQuote($comment) . ", " . 
+        $privacyval . ")");
 
     SendSQL("UPDATE bugs SET delta_ts = now() WHERE bug_id = $bugid");
 }
@@ -347,21 +340,6 @@ sub GetFieldID {
     my $fieldid = FetchOneColumn();
     die "Unknown field id: $f" if !$fieldid;
     return $fieldid;
-}
-        
-
-
-
-sub lsearch {
-    my ($list,$item) = (@_);
-    my $count = 0;
-    foreach my $i (@$list) {
-        if ($i eq $item) {
-            return $count;
-        }
-        $count++;
-    }
-    return -1;
 }
 
 # Generate a string which, when later interpreted by the Perl compiler, will
@@ -948,10 +926,8 @@ sub DBNameToIdAndCheck {
         return $result;
     }
 
-    $name = html_quote($name);
-    ThrowUserError("The name <tt>$name</tt> is not a valid username.  
-                    Either you misspelled it, or the person has not
-                    registered for a Bugzilla account.");
+    $::vars->{'name'} = $name;
+    ThrowUserError("invalid_username");
 }
 
 
@@ -998,24 +974,6 @@ sub get_component_name {
     my ($comp) = FetchSQLData();
     PopGlobalSQLState();
     return $comp;
-}
-
-# Use trick_taint() when you know that there is no way that the data
-# in a scalar can be tainted, but taint mode still bails on it.
-# WARNING!! Using this routine on data that really could be tainted
-#           defeats the purpose of taint mode.  It should only be
-#           used on variables that cannot be touched by users.
-
-sub trick_taint {
-    $_[0] =~ /^(.*)$/s;
-    $_[0] = $1;
-    return (defined($_[0]));
-}
-
-sub detaint_natural {
-    $_[0] =~ /^(\d+)$/;
-    $_[0] = $1;
-    return (defined($_[0]));
 }
 
 # This routine quoteUrls contains inspirations from the HTML::FromText CPAN
@@ -1185,8 +1143,9 @@ sub GetLongDescriptionAsText {
     my ($id, $start, $end) = (@_);
     my $result = "";
     my $count = 0;
+    my $anyprivate = 0;
     my ($query) = ("SELECT profiles.login_name, longdescs.bug_when, " .
-                   "       longdescs.thetext " .
+                   "       longdescs.thetext, longdescs.isprivate " .
                    "FROM   longdescs, profiles " .
                    "WHERE  profiles.userid = longdescs.who " .
                    "AND    longdescs.bug_id = $id ");
@@ -1204,25 +1163,29 @@ sub GetLongDescriptionAsText {
     $query .= "ORDER BY longdescs.bug_when";
     SendSQL($query);
     while (MoreSQLData()) {
-        my ($who, $when, $text) = (FetchSQLData());
+        my ($who, $when, $text, $isprivate) = (FetchSQLData());
         if ($count) {
             $result .= "\n\n------- Additional Comments From $who".Param('emailsuffix')."  ".
                 time2str("%Y-%m-%d %H:%M", str2time($when)) . " -------\n";
+        }
+        if (($isprivate > 0) && Param("insidergroup")) {
+            $anyprivate = 1;
         }
         $result .= $text;
         $count++;
     }
 
-    return $result;
+    return ($result, $anyprivate);
 }
 
 sub GetComments {
     my ($id) = (@_);
     my @comments;
-    
     SendSQL("SELECT  profiles.realname, profiles.login_name, 
                      date_format(longdescs.bug_when,'%Y-%m-%d %H:%i'), 
-                     longdescs.thetext
+                     longdescs.thetext,
+                     isprivate,
+                     date_format(longdescs.bug_when,'%Y%m%d%H%i%s') 
             FROM     longdescs, profiles
             WHERE    profiles.userid = longdescs.who 
               AND    longdescs.bug_id = $id 
@@ -1230,7 +1193,8 @@ sub GetComments {
              
     while (MoreSQLData()) {
         my %comment;
-        ($comment{'name'}, $comment{'email'}, $comment{'time'}, $comment{'body'}) = FetchSQLData();
+        ($comment{'name'}, $comment{'email'}, $comment{'time'}, $comment{'body'},
+        $comment{'isprivate'}, $comment{'when'}) = FetchSQLData();
         
         $comment{'email'} .= Param('emailsuffix');
         $comment{'name'} = $comment{'name'} || $comment{'email'};
@@ -1296,13 +1260,15 @@ sub SqlQuote {
 }
 
 
-
+# UserInGroup returns information aboout the current user if no second 
+# parameter is specified
 sub UserInGroup {
-    my ($groupname) = (@_);
+    my ($groupname, $userid) = (@_);
     PushGlobalSQLState();
+    $userid ||= $::userid;
     SendSQL("SELECT groups.id FROM groups, user_group_map 
         WHERE groups.id = user_group_map.group_id 
-        AND user_group_map.user_id = $::userid
+        AND user_group_map.user_id = $userid
         AND isbless = 0
         AND groups.name = " . SqlQuote($groupname));
     my $rslt = FetchOneColumn();
@@ -1628,80 +1594,6 @@ sub PerformSubsts {
     return $str;
 }
 
-# Min and max routines.
-sub min {
-    my $min = shift(@_);
-    foreach my $val (@_) {
-        $min = $val if $val < $min;
-    }
-    return $min;
-}
-
-sub max {
-    my $max = shift(@_);
-    foreach my $val (@_) {
-        $max = $val if $val > $max;
-    }
-    return $max;
-}
-
-# Trim whitespace from front and back.
-
-sub trim {
-    my ($str) = @_;
-    $str =~ s/^\s+//g;
-    $str =~ s/\s+$//g;
-    return $str;
-}
-
-# Make an ordered list out of a HTTP Accept-Language header see RFC 2616, 14.4
-# We ignore '*' and <language-range>;q=0
-# For languages with the same priority q the order remains unchanged.
-sub sortAcceptLanguage {
-    sub sortQvalue { $b->{'qvalue'} <=> $a->{'qvalue'} }
-    my $accept_language = $_[0];
-
-    # clean up string.
-    $accept_language =~ s/[^A-Za-z;q=0-9\.\-,]//g;
-    my @qlanguages;
-    my @languages;
-    foreach(split /,/, $accept_language) {
-        my ($lang, $qvalue) = split /;q=/;
-        next if not defined $lang;
-        $qvalue = 1 if not defined $qvalue;
-        next if $qvalue == 0;
-        $qvalue = 1 if $qvalue > 1;
-        push(@qlanguages, {'qvalue' => $qvalue, 'language' => $lang});
-    }
-
-    return map($_->{'language'}, (sort sortQvalue @qlanguages));
-}
-
-# Returns the path to the templates based on the Accept-Language
-# settings of the user and of the available languages
-# If no Accept-Language is present it uses the defined default
-sub getTemplateIncludePath () {
-    my @languages       = sortAcceptLanguage(Param('languages'));
-    my @accept_language = sortAcceptLanguage($ENV{'HTTP_ACCEPT_LANGUAGE'} || "");
-    my @usedlanguages;
-    foreach my $lang (@accept_language) {
-        # match exactly (case insensitive)
-        if(my @found = grep /^$lang$/i, @languages) {
-            push (@usedlanguages, $found[0]);
-        }
-        # Per RFC 1766 and RFC 2616 any language tag matches also its 
-        # primary tag. That is en-gb matches also en but not en-uk
-        $lang =~ s/(-.*)//;
-        if($1) {
-            if(my @found = grep /^$lang$/i, @languages) {
-                push (@usedlanguages, $found[0]);
-            }
-        }
-    }
-    push(@usedlanguages, Param('defaultlanguage'));
-    return join(':', map("template/$_/custom:template/$_/default",@usedlanguages)); 
-}
-
 ###############################################################################
 # Global Templatization Code
 
@@ -1719,7 +1611,7 @@ use Template;
 $::template ||= Template->new(
   {
     # Colon-separated list of directories containing templates.
-    INCLUDE_PATH => getTemplateIncludePath() ,
+    INCLUDE_PATH => "template/en/custom:template/en/default" ,
 
     # Remove white-space before template directives (PRE_CHOMP) and at the
     # beginning and end of templates and template blocks (TRIM) for better 
@@ -1749,8 +1641,6 @@ $::template ||= Template->new(
             $var =~ s/\r/\\r/g; 
             return $var;
         } , 
-        
-        html => \&html_quote , 
 
         # HTML collapses newlines in element attributes to a single space,
         # so form elements which may have whitespace (ie comments) need
@@ -1956,7 +1846,7 @@ $::vars =
     'PerformSubsts' => \&PerformSubsts ,
 
     # Generic linear search function
-    'lsearch' => \&lsearch ,
+    'lsearch' => \&Bugzilla::Util::lsearch ,
 
     # UserInGroup - you probably want to cache this
     'UserInGroup' => \&UserInGroup ,

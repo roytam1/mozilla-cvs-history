@@ -244,25 +244,17 @@ sub check_urlbase {
     return "";
 }
 
-DefParam("languages",
-         "A comma-separated list of RFC 1766 language tags. These identify the languages in which you wish Bugzilla output to be displayed. Note that you must install the appropriate language pack before adding a language to this Param. The language used is the one in this list with the highest q-value in the user's Accept-Language header.",
-         "t",
-         "en");
-
-DefParam("defaultlanguage",
-         "The UI language Bugzilla falls back on if no suitable language is found in the user's Accept-Language header.",
-         "t",
-         "en");
-
 DefParam("cookiepath", 
   "Directory path under your document root that holds your Bugzilla installation. Make sure to begin with a /.",
   "t",
   "/");
 
-DefParam("usequip",
-        "If this is on, Bugzilla displays a silly quip at the beginning of buglists, and lets users add to the list of quips.",
-        "b",
-        1);
+DefParam("enablequips",
+        "If this is on, Bugzilla displays a silly quip at the beginning of buglists, and lets users add to the list of quips. If this is frozen, Bugzilla will display the quip but not permit new additions.",
+        "s",
+        [['on','frozen','off'], (($::param{"usequip"} || 1) ? 'on' : 'off')],
+        \&check_multi);
+
 
 # Added parameter - JMR, 2/16/00
 DefParam("usebuggroups",
@@ -725,4 +717,10 @@ DefParam("maxattachmentsize" ,
          "t" , 
          '1000');
 
+DefParam("insidergroup",
+         "The name of the group of users who can see/change private comments
+          and attachments.",
+         "t",
+         '');
 1;
+

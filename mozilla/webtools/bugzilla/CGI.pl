@@ -33,6 +33,8 @@ use lib ".";
 
 # use Carp;                       # for confess
 
+use Bugzilla::Util;
+
 # commented out the following snippet of code. this tosses errors into the
 # CGI if you are perl 5.6, and doesn't if you have perl 5.003. 
 # We want to check for the existence of the LDAP modules here.
@@ -59,10 +61,7 @@ use vars qw($template $vars);
 # this message, of course, since it needs to be available in order for
 # the administrator to open Bugzilla back up.
 if (Param("shutdownhtml") && $0 !~ m:[\\/](do)?editparams.cgi$:) {
-    # The shut down message we are going to display to the user.
-    $::vars->{'title'} = "Bugzilla is Down";
-    $::vars->{'h1'} = "Bugzilla is Down";
-    $::vars->{'message'} = Param("shutdownhtml");
+    $::vars->{'message'} = "shutdown";
     
     # Return the appropriate HTTP response headers.
     print "Content-Type: text/html\n\n";
@@ -218,11 +217,13 @@ sub CheckFormField (\%$;\@) {
         SendSQL("SELECT description FROM fielddefs WHERE name=" . SqlQuote($fieldname));
         my $result = FetchOneColumn();
         if ($result) {
-            ThrowCodeError("A legal $result was not set.", undef, "abort");
+            $vars->{'field'} = $result;
         }
         else {
-            ThrowCodeError("A legal $fieldname was not set.", undef, "abort");
+            $vars->{'field'} = $fieldname;
         }
+        
+        ThrowCodeError("illegal_field", "abort");
       }
 }
 
@@ -233,9 +234,9 @@ sub CheckFormFieldDefined (\%$) {
        ) = @_;
 
     if (!defined $formRef->{$fieldname}) {
-          ThrowCodeError("$fieldname was not defined; " . 
-                                                    Param("browserbugmessage"));
-      }
+        $vars->{'field'} = $fieldname;  
+        ThrowCodeError("undefined_field");
+    }
 }
 
 sub BugAliasToID {
@@ -325,31 +326,6 @@ sub ValidateComment {
         DisplayError("Comments cannot be longer than 65,535 characters.");
         exit;
     }
-}
-
-sub html_quote {
-    my ($var) = (@_);
-    $var =~ s/\&/\&amp;/g;
-    $var =~ s/</\&lt;/g;
-    $var =~ s/>/\&gt;/g;
-    $var =~ s/"/\&quot;/g;
-    return $var;
-}
-
-sub value_quote {
-    my ($var) = (@_);
-    $var =~ s/\&/\&amp;/g;
-    $var =~ s/</\&lt;/g;
-    $var =~ s/>/\&gt;/g;
-    $var =~ s/"/\&quot;/g;
-    # See bug http://bugzilla.mozilla.org/show_bug.cgi?id=4928 for 
-    # explanaion of why bugzilla does this linebreak substitution. 
-    # This caused form submission problems in mozilla (bug 22983, 32000).
-    $var =~ s/\r\n/\&#013;/g;
-    $var =~ s/\n\r/\&#013;/g;
-    $var =~ s/\r/\&#013;/g;
-    $var =~ s/\n/\&#013;/g;
-    return $var;
 }
 
 # Adds <link> elements for bug lists. These can be inserted into the header by
@@ -553,12 +529,8 @@ sub CheckEmailSyntax {
     my ($addr) = (@_);
     my $match = Param('emailregexp');
     if ($addr !~ /$match/ || $addr =~ /[\\\(\)<>&,;:"\[\] \t\r\n]/) {
-        ThrowUserError("The e-mail address you entered(<b>" .
-        html_quote($addr) . "</b>) didn't pass our syntax checking 
-        for a legal email address. " . Param('emailregexpdesc') .
-        ' It must also not contain any of these special characters:
-        <tt>\ ( ) &amp; &lt; &gt; , ; : " [ ]</tt>, or any whitespace.', 
-        "Check e-mail address syntax");
+        $vars->{'addr'} = $addr;
+        ThrowUserError("illegal_email_address");
     }
 }
 
@@ -612,7 +584,7 @@ sub confirm_login {
         if ( defined $::FORM{"PleaseMailAPassword"} && !$userid ) {
             # Ensure the new login is valid
             if(!ValidateNewUser($enteredlogin)) {
-                ThrowUserError("That account already exists.");
+                ThrowUserError("account_exists");
             }
 
             my $password = InsertNewUser($enteredlogin, "");
@@ -801,10 +773,8 @@ Set-Cookie: Bugzilla_logincookie= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:
 Content-type: text/html
 
 ";
-            ThrowUserError($::disabledreason . "<hr>" .
-            "If you believe your account should be restored, please " .
-            "send email to " . Param("maintainer") . " explaining why.",
-            "Your account has been disabled");
+            $vars->{'disabled_reason'} = $::disabledreason;
+            ThrowUserError("account_disabled");
         }
         
         if (!defined $nexturl || $nexturl eq "") {
@@ -877,7 +847,7 @@ sub DisplayError {
 # For "this shouldn't happen"-type places in the code.
 # $vars->{'variables'} is a reference to a hash of useful debugging info.
 sub ThrowCodeError {
-  ($vars->{'error'}, $vars->{'variables'}, my $unlock_tables) = (@_);
+  ($vars->{'error'}, my $unlock_tables, $vars->{'variables'}) = (@_);
 
   SendSQL("UNLOCK TABLES") if $unlock_tables;
   
@@ -896,7 +866,7 @@ sub ThrowCodeError {
 # undef as the second parameter and $unlock_tables as the third.
 # The second parameter will eventually go away.
 sub ThrowUserError {
-  ($vars->{'error'}, $vars->{'title'}, my $unlock_tables) = (@_);
+  ($vars->{'error'}, my $unlock_tables) = (@_);
 
   SendSQL("UNLOCK TABLES") if $unlock_tables;
   
@@ -965,7 +935,7 @@ sub CheckIfVotedConfirmed {
         }
         
         AppendComment($id, DBID_to_name($who),
-                      "*** This bug has been confirmed by popular vote. ***");
+                      "*** This bug has been confirmed by popular vote. ***", 0);
                       
         $vars->{'type'} = "votes";
         $vars->{'id'} = $id;
