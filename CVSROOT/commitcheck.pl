@@ -310,12 +310,6 @@ $fullname{'93'} = 'Zlib';
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'HEAD') {
-if (m:^js/src/xpconnect$:) {return '118';}
-if (m:^xpcom/reflect/xptcall$:) {return '118';}
-if (m:^xpcom/reflect/xptinfo$:) {return '118';}
-if (m:^mozilla/mailnews/news/.*$:) {return '122';}
-if (m:^mozilla/mailnews/[^/]*$:) {return '123';}
-if (m:^mozilla/mailnews/mime/[^/]*$:) {return '124';}
 if (m:^mozilla/java/xpcom/.*$:) {return '128';}
 if (m:^mozilla/java/plugins/.*$:) {return '129';}
 if (m:^mozilla/java/webclient/.*$:) {return '127';}
@@ -452,6 +446,12 @@ if (m:^mozilla/layout/xul/.*$:) {return '106';}
 if (m:^mozilla/profile$:) {return '120';}
 if (m:^mozilla/tools/.*$:) {return '112';}
 if (m:^xpcom/typelib$:) {return '117';}
+if (m:^js/src/xpconnect$:) {return '118';}
+if (m:^xpcom/reflect/xptcall$:) {return '118';}
+if (m:^xpcom/reflect/xptinfo$:) {return '118';}
+if (m:^mozilla/mailnews/news/.*$:) {return '122';}
+if (m:^mozilla/mailnews/[^/]*$:) {return '123';}
+if (m:^mozilla/mailnews/mime/[^/]*$:) {return '124';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
