@@ -29,11 +29,6 @@ use lib ".";
 
 require "CGI.pl";
 
-# Prevents &make_options in CGI.pl from throwing an error if we give it
-# an invalid list of selections (from a remembered query containing values
-# that no longer exist), since we don't want to die in the query page.
-$::CheckOptionValues = 0;
-
 use vars qw(
     @CheckOptionValues
     @legal_resolution
@@ -381,6 +376,5 @@ $vars->{'default'} = \%default;
 
 # Generate and return the UI (HTML page) from the appropriate template.
 print "Content-type: text/html\n\n";
-$template->process("query/query.atml", $vars)
-  || DisplayError("Template process failed: " . $template->error())
-  && exit;
+$template->process("search/search.html.tmpl", $vars)
+  || ThrowTemplateError($template->error());

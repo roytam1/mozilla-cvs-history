@@ -90,6 +90,17 @@ use File::Spec;
 # Some environment variables are not taint safe
 delete @::ENV{'PATH', 'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
 
+# Cwd.pm in perl 5.6.1 gives a warning if $::ENV{'PATH'} isn't defined
+# Set this to '' so that we don't get warnings cluttering the logs on every
+# system call
+$::ENV{'PATH'} = '';
+
+# Ignore SIGTERM and SIGPIPE - this prevents DB corruption. If the user closes
+# their browser window while a script is running, the webserver sends these
+# signals, and we don't want to die half way through a write.
+$::SIG{TERM} = 'IGNORE';
+$::SIG{PIPE} = 'IGNORE';
+
 # Contains the version string for the current running Bugzilla.
 $::param{'version'} = '2.15';
 
@@ -109,6 +120,18 @@ $::superusergroupset = "72057594037927935";
 #    confess($err_msg);
 #}
 #$::SIG{__DIE__} = \&die_with_dignity;
+
+# Some files in the data directory must be world readable iff we don't have
+# a webserver group. Call this function to do this.
+sub ChmodDataFile($$) {
+    my ($file, $mask) = @_;
+    my $perm = 0770;
+    if ((stat('data'))[2] & 0002) {
+        $perm = 0777;
+    }
+    $perm = $perm & $mask;
+    chmod $perm,$file;
+}
 
 sub ConnectToDatabase {
     my ($useshadow) = (@_);
@@ -152,6 +175,9 @@ sub SyncAnyPendingShadowChanges {
                 return;
             } elsif (defined $pid) {
                 # child process code runs here
+                my $redir = ($^O =~ /MSWin32/i) ? "NUL" : "/dev/null";
+                open STDOUT,">$redir";
+                open STDERR,">$redir";
                 exec("./syncshadowdb","--") or die "Unable to exec syncshadowdb: $!";
                 # the idea was that passing the second parameter tricks it into
                 # using execvp instead of running a shell. Not really necessary since
@@ -430,61 +456,6 @@ sub lsearch {
     return -1;
 }
 
-sub Product_element {
-    my ($prod,$onchange) = (@_);
-    return make_popup("product", keys %::versions, $prod, 1, $onchange);
-}
-
-sub Component_element {
-    my ($comp,$prod,$onchange) = (@_);
-    my $componentlist;
-    if (! defined $::components{$prod}) {
-        $componentlist = [];
-    } else {
-        $componentlist = $::components{$prod};
-    }
-    my $defcomponent;
-    if ($comp ne "" && lsearch($componentlist, $comp) >= 0) {
-        $defcomponent = $comp;
-    } else {
-        $defcomponent = $componentlist->[0];
-    }
-    return make_popup("component", $componentlist, $defcomponent, 1, "");
-}
-
-sub Version_element {
-    my ($vers, $prod, $onchange) = (@_);
-    my $versionlist;
-    if (!defined $::versions{$prod}) {
-        $versionlist = [];
-    } else {
-        $versionlist = $::versions{$prod};
-    }
-    my $defversion = $versionlist->[0];
-    if (lsearch($versionlist,$vers) >= 0) {
-        $defversion = $vers;
-    }
-    return make_popup("version", $versionlist, $defversion, 1, $onchange);
-}
-        
-sub Milestone_element {
-    my ($tm, $prod, $onchange) = (@_);
-    my $tmlist;
-    if (!defined $::target_milestone{$prod}) {
-        $tmlist = [];
-    } else {
-        $tmlist = $::target_milestone{$prod};
-    }
-
-    my $deftm = $tmlist->[0];
-
-    if (lsearch($tmlist, $tm) >= 0) {
-        $deftm = $tm;
-    }
-
-    return make_popup("target_milestone", $tmlist, $deftm, 1, $onchange);
-}
-
 # Generate a string which, when later interpreted by the Perl compiler, will
 # be the same as the given string.
 
@@ -643,8 +614,6 @@ sub GenerateVersionTable {
 
     my @list = sort { uc($a) cmp uc($b)} keys(%::versions);
     @::legal_product = @list;
-    mkdir("data", 0777);
-    chmod 0777, "data";
     my $tmpname = "data/versioncache.$$";
     open(FID, ">$tmpname") || die "Can't create $tmpname";
 
@@ -714,7 +683,7 @@ sub GenerateVersionTable {
     print FID "1;\n";
     close FID;
     rename $tmpname, "data/versioncache" || die "Can't rename $tmpname to versioncache";
-    chmod 0666, "data/versioncache";
+    ChmodDataFile('data/versioncache', 0666);
 }
 
 
@@ -749,6 +718,8 @@ sub GetVersionTable {
         $mtime = 0;
     }
     if (time() - $mtime > 3600) {
+        use Token;
+        Token::CleanTokenTable();
         GenerateVersionTable();
     }
     require 'data/versioncache';
@@ -763,6 +734,31 @@ sub GetVersionTable {
     $::VersionTableLoaded = 1;
 }
 
+
+# Validates a given username as a new username
+# returns 1 if valid, 0 if invalid
+sub ValidateNewUser {
+    my ($username, $old_username) = @_;
+
+    if(DBname_to_id($username) != 0) {
+        return 0;
+    }
+
+    # Reject if the new login is part of an email change which is 
+    # still in progress
+    SendSQL("SELECT eventdata FROM tokens WHERE tokentype = 'emailold' 
+                AND eventdata like '%:$username' 
+                 OR eventdata like '$username:%'");
+    if (my ($eventdata) = FetchSQLData()) {
+        # Allow thru owner of token
+        if($old_username && ($eventdata eq "$old_username:$username")) {
+            return 1;
+        }
+        return 0;
+    }
+
+    return 1;
+}
 
 sub InsertNewUser {
     my ($username, $realname) = (@_);
@@ -1122,28 +1118,16 @@ sub DBname_to_id {
 
 
 sub DBNameToIdAndCheck {
-    my ($name, $forceok) = (@_);
-    $name = html_quote($name);
+    my ($name) = (@_);
     my $result = DBname_to_id($name);
     if ($result > 0) {
         return $result;
     }
-    if ($forceok) {
-        InsertNewUser($name, "");
-        $result = DBname_to_id($name);
-        if ($result > 0) {
-            return $result;
-        }
-        print "Yikes; couldn't create user $name.  Please report problem to " .
-            Param("maintainer") ."\n";
-    } else {
-        print "\n";  # http://bugzilla.mozilla.org/show_bug.cgi?id=80045
-        print "The name <TT>$name</TT> is not a valid username.  Either you\n";
-        print "misspelled it, or the person has not registered for a\n";
-        print "Bugzilla account.\n";
-        print "<P>Please hit the <B>Back</B> button and try again.\n";
-    }
-    exit(0);
+
+    $name = html_quote($name);
+    ThrowUserError("The name <TT>$name</TT> is not a valid username.  
+                    Either you misspelled it, or the person has not
+                    registered for a Bugzilla account.");
 }
 
 # Use trick_taint() when you know that there is no way that the data
@@ -1233,7 +1217,7 @@ sub quoteUrls {
         my $num = $4;
         $item = value_quote($item); # Not really necessary, since we know
                                     # there's no special chars in it.
-        $item = qq{<A HREF="attachment.cgi?id=$num&action=view">$item</A>};
+        $item = qq{<a href="attachment.cgi?id=$num&amp;action=view">$item</a>};
         $things[$count++] = $item;
     }
     while ($text =~ s/\*\*\* This bug has been marked as a duplicate of (\d+) \*\*\*/"##$count##"/ei) {
@@ -1381,85 +1365,24 @@ sub GetLongDescriptionAsText {
     return $result;
 }
 
-
-sub GetLongDescriptionAsHTML {
-    my ($id, $start, $end) = (@_);
-    my $result = "";
-    my $count = 0;
-
-    my $query = "
-    SELECT 
-        profiles.realname, 
-        profiles.login_name, ";
-
-    if ($::driver eq 'mysql') {
-        $query .= "
-        longdescs.bug_when, ";
-    } elsif ($::driver eq 'Pg') {
-        $query .= "
-        TO_CHAR(longdescs.bug_when, 'YYYY-MM-DD HH24:MI:SS'), ";
-    }
-
-    $query .= "
-        longdescs.thetext
-    FROM 
-        longdescs, profiles
-    WHERE 
-        profiles.userid = longdescs.who     
-        AND longdescs.bug_id = $id ";
-
-    if ($start && $start =~ /[1-9]/) {
-        # If the start is all zeros, then don't do this (because we want to
-        # not emit a leading "Additional Comments" line in that case.)
-        if ($::driver eq 'mysql') {
-            $query .= "AND longdescs.bug_when > '$start' ";
-        } elsif ($::driver eq 'Pg') {
-            $query .= "AND TO_CHAR(longdescs.bug_when, 'YYYYMMDDHH24MISS') >= '$start' ";
-        }
-        $count = 1;
-    }
-    if ($end) {
-        if ($::driver eq 'mysql') {
-            $query .= "AND longdescs.bug_when <= '$end' ";
-        } elsif ($::driver eq 'Pg') {
-            $query .= "AND TO_CHAR(longdescs.bug_when, 'YYYYMMDDHH24MISS') <= '$end' ";
-        }
-    }
-
-    $query .= "ORDER BY longdescs.bug_when";
-    SendSQL($query);
-    while (MoreSQLData()) {
-        my ($who, $email, $when, $text) = (FetchSQLData());
-        $email .= Param('emailsuffix');
-        if ($count) {
-            $result .= qq|<BR><BR><I>------- Additional Comment <a name="c$count" href="#c$count">#$count</a> From |;
-            if ($who) {
-                $result .= qq{<A HREF="mailto:$email">$who</A> };
-            } else {
-                $result .= qq{<A HREF="mailto:$email">$email</A> };
-            }
-              
-            $result .= time2str("%Y-%m-%d %H:%M", str2time($when)) . " -------</I><BR>\n";
-        }
-        $result .= "<PRE>" . quoteUrls($text) . "</PRE>\n";
-        $count++;
-    }
-
-    return $result;
-}
-
-
 sub GetComments {
     my ($id) = (@_);
     my @comments;
-    
-    SendSQL("SELECT  profiles.realname, profiles.login_name, 
-                     date_format(longdescs.bug_when,'%Y-%m-%d %H:%i'), 
-                     longdescs.thetext
+    my $query = "SELECT  profiles.realname, profiles.login_name, ";
+
+    if ($::driver eq 'mysql') {
+        $query .= "date_format(longdescs.bug_when,'%Y-%m-%d %H:%i'), ";
+    } elsif ($::driver eq 'Pg') {
+        $query .= "TO_CHAR(longdescs.bug_when,'YYYY-MM-DD HH24:MI'), ";
+    }
+
+    $query .= "longdescs.thetext
             FROM     longdescs, profiles
             WHERE    profiles.userid = longdescs.who 
               AND    longdescs.bug_id = $id 
-            ORDER BY longdescs.bug_when");
+            ORDER BY longdescs.bug_when";
+
+    SendSQL($query);
              
     while (MoreSQLData()) {
         my %comment;
@@ -1876,7 +1799,7 @@ use Template;
 $::template ||= Template->new(
   {
     # Colon-separated list of directories containing templates.
-    INCLUDE_PATH => "template/custom:template/default" ,
+    INCLUDE_PATH => "template/custom:template/default:template/en/custom:template/en/default" ,
 
     # Remove white-space before template directives (PRE_CHOMP) and at the
     # beginning and end of templates and template blocks (TRIM) for better 
@@ -1903,6 +1826,13 @@ $::template ||= Template->new(
         } , 
         
         html => \&html_quote , 
+
+        # This subroutine in CGI.pl escapes characters in a variable
+        # or value string for use in a query string.  It escapes all
+        # characters NOT in the regex set: [a-zA-Z0-9_\-.].  The 'uri'
+        # filter should be used for a full URL that may have
+        # characters that need encoding.
+        url_quote => \&url_quote ,
       } ,
   }
 ) || DisplayError("Template creation failed: " . Template->error())
@@ -2079,6 +2009,9 @@ $::vars =
 
     # UserInGroup - you probably want to cache this
     'UserInGroup' => \&UserInGroup ,
+
+    # SyncAnyPendingShadowChanges - called in the footer to sync the shadowdb
+    'SyncAnyPendingShadowChanges' => \&SyncAnyPendingShadowChanges ,
   };
 
 1;

@@ -56,9 +56,8 @@ sub sillyness {
     $zz = @::settable_resolution;
     $zz = @::target_milestone;
     $zz = $::unconfirmedstate;
+    # $zz = $::userid;
     $zz = @::versions;
-    $zz = $::userid;
-    $zz = $::usergroupset;
 };
 
 ConnectToDatabase();
@@ -70,7 +69,7 @@ ConnectToDatabase();
 # Determine the format in which the user would like to receive the output.
 # Uses the default format if the user did not specify an output format;
 # otherwise validates the user's choice against the list of available formats.
-my $format = ValidateOutputFormat($::FORM{'format'});
+my $format = ValidateOutputFormat($::FORM{'format'}, "list");
 
 # Whether or not the user wants to change multiple bugs.
 my $dotweak = $::FORM{'tweak'} ? 1 : 0;
@@ -93,6 +92,7 @@ my $serverpush =
             || $::FORM{'serverpush'};
 
 my $order = $::FORM{'order'} || "";
+my $order_from_cookie = 0;  # True if $order set using $::COOKIE{'LASTORDER'}
 
 # If the user is retrieving the last bug list they looked at, hack the buffer
 # storing the query string so that it looks like a query retrieving those bugs.
@@ -117,7 +117,7 @@ if ($::buffer =~ /&cmd-/) {
     $vars->{'url'} = $url;
     $vars->{'link'} = "Click here if the page does not redisplay automatically.";
     $template->process("global/message.html.tmpl", $vars)
-      || DisplayError("Template process failed: " . $template->error());
+      || ThrowTemplateError($template->error());
     exit;
 }
 
@@ -254,9 +254,9 @@ sub GetGroupsByGroupSet {
     my ($groupset) = @_;
 
     return if !$groupset;
-    
+
     if ($::driver eq 'mysql') {
-    SendSQL("
+        SendSQL("
         SELECT  bit, name, description, isactive
           FROM  groups
         WHERE  (bit & $groupset) != 0
@@ -519,9 +519,12 @@ sub GenerateSQL {
          },
 
          "^cc," => sub {
-            push(@supptables,                                                  
-              ("LEFT JOIN cc cc_$chartid ON bugs.bug_id = cc_$chartid.bug_id LEFT JOIN profiles map_cc_$chartid ON cc_$chartid.who = map_cc_$chartid.userid"));
-            $f = "map_cc_$chartid.login_name";  
+            push(@supptables, "cc cc_$chartid");
+            push(@wherepart, "bugs.bug_id = cc_$chartid.bug_id");
+
+            push(@supptables, "profiles map_cc_$chartid");
+            push(@wherepart, "cc_$chartid.who = map_cc_$chartid.userid");
+            $f = "map_cc_$chartid.login_name";
          },
 
          "^long_?desc,changedby" => sub {
@@ -584,34 +587,67 @@ sub GenerateSQL {
              $f = "$table.$field";
          },
          "^attachstatusdefs.name," => sub {
+             # The below has Fun with the names for attachment statuses. This
+             # isn't needed for changed* queries, so exclude those - the
+             # generic stuff will cope
+             return if ($t =~ m/^changed/);
+
+             # Searching for "status != 'bar'" wants us to look for an
+             # attachment without the 'bar' status, not for an attachment with
+             # a status not equal to 'bar' (Which would pick up an attachment
+             # with more than one status). We do this by LEFT JOINS, after
+             # grabbing the matching attachment status ids.
+             # Note that this still won't find bugs with no attachments, since
+             # that isn't really what people would expect.
+
+             # First, get the attachment status ids, using the other funcs
+             # to match the WHERE term.
+             # Note that we need to reverse the negated bits for this to work
+             # This somewhat abuses the definitions of the various terms -
+             # eg, does 'contains all' mean that the status has to contain all
+             # those words, or that all those words must be exact matches to
+             # statuses, which must all be on a single attachment, or should
+             # the match on the status descriptions be a contains match, too?
+
+             my $inverted = 0;
+             if ($t =~ m/not(.*)/) {
+                 $t = $1;
+                 $inverted = 1;
+             }
+
+             $ref = $funcsbykey{",$t"};
+             &$ref;
+             SendSQL("SELECT id FROM attachstatusdefs WHERE $term");
+
+             my @as_ids;
+             while (MoreSQLData()) {
+                 push @as_ids, FetchOneColumn();
+             }
+
              # When searching for multiple statuses within a single boolean chart,
              # we want to match each status record separately.  In other words,
              # "status = 'foo' AND status = 'bar'" should match attachments with
              # one status record equal to "foo" and another one equal to "bar",
              # not attachments where the same status record equals both "foo" and
              # "bar" (which is nonsensical).  In order to do this we must add an
-             # additional counter to the end of the "attachstatuses" and 
-             # "attachstatusdefs" table references.
+             # additional counter to the end of the "attachstatuses" table
+             # reference.
              ++$statusid;
 
              my $attachtable = "attachments_$chartid";
              my $statustable = "attachstatuses_${chartid}_$statusid";
-             my $statusdefstable = "attachstatusdefs_${chartid}_$statusid";
-             push(@supptables, "attachments $attachtable");
-             push(@supptables, "attachstatuses $statustable");
-             push(@supptables, "attachstatusdefs $statusdefstable");
-             push(@wherepart, "bugs.bug_id = $attachtable.bug_id");
-             push(@wherepart, "$attachtable.attach_id = $statustable.attach_id");
-             push(@wherepart, "$statustable.statusid = $statusdefstable.id");
 
-             # When the operator is changedbefore, changedafter, changedto, 
-             # or changedby, $f appears in the query as "fielddefs.name = '$f'",
-             # so it must be the exact name of the table/field as they appear
-             # in the fielddefs table (i.e. attachstatusdefs.name).  For all 
-             # other operators, $f appears in the query as "$f = value", so it
-             # should be the name of the table/field with the correct table
-             # alias for this chart entry (f.e. attachstatusdefs_0.name).
-             $f = ($t =~ /^changed/) ? "attachstatusdefs.name" : "$statusdefstable.name";
+             push(@supptables, "attachments $attachtable");
+             my $join = "LEFT JOIN attachstatuses $statustable ON ".
+               "($attachtable.attach_id = $statustable.attach_id AND " .
+                "$statustable.statusid IN (" . join(",", @as_ids) . "))";
+             push(@supptables, $join);
+             push(@wherepart, "bugs.bug_id = $attachtable.bug_id");
+             if ($inverted) {
+                 $term = "$statustable.statusid IS NULL";
+             } else {
+                 $term = "$statustable.statusid IS NOT NULL";
+             }
          },
          "^changedin," => sub {
              $f = "(to_days(now()) - to_days(bugs.delta_ts))";
@@ -1035,7 +1071,7 @@ CMD: for ($::FORM{'cmdtype'}) {
         $vars->{'url'} = $url;
         $vars->{'link'} = "Click here if the page does not redisplay automatically.";
         $template->process("global/message.html.tmpl", $vars)
-          || DisplayError("Template process failed: " . $template->error());
+          || ThrowTemplateError($template->error());
         exit;
     };
 
@@ -1051,7 +1087,7 @@ CMD: for ($::FORM{'cmdtype'}) {
         $vars->{'url'} = "query.cgi";
         $vars->{'link'} = "Go back to the query page.";
         $template->process("global/message.html.tmpl", $vars)
-          || DisplayError("Template process failed: " . $template->error());
+          || ThrowTemplateError($template->error());
         exit;
     };
 
@@ -1061,19 +1097,19 @@ CMD: for ($::FORM{'cmdtype'}) {
         my $qname = SqlQuote($::defaultqueryname);
         my $qbuffer = SqlQuote($::buffer);
         if ($::driver eq 'mysql') {
-            SendSQL("REPLACE INTO namedqueries (userid, name, query)" . 
+            SendSQL("REPLACE INTO namedqueries (userid, name, query)" .
                     "VALUES ($userid, $qname, $qbuffer)");
         } elsif ($::driver eq 'Pg') {
             SendSQL("SELECT userid FROM namedqueries WHERE userid = $userid " .
                     "AND name = $qname");
             my $result = FetchOneColumn();
             if ( $result ) {
-                SendSQL("UPDATE namedqueries SET query = $qbuffer " . 
+                SendSQL("UPDATE namedqueries SET query = $qbuffer " .
                         "WHERE userid = $userid AND name = $qname");
-            } else {    
+            } else {
                 SendSQL("INSERT INTO namedqueries (userid, name, query, watchfordiffs, linkinfooter) VALUES " .
                         "($userid, $qname, $qbuffer, '', '')");
-            }        
+            }
         }
         print "Content-Type: text/html\n\n";
         # Generate and return the UI (HTML page) from the appropriate template.
@@ -1083,7 +1119,7 @@ CMD: for ($::FORM{'cmdtype'}) {
         $vars->{'url'} = "query.cgi";
         $vars->{'link'} = "Go back to the query page, using the new default.";
         $template->process("global/message.html.tmpl", $vars)
-          || DisplayError("Template process failed: " . $template->error());
+          || ThrowTemplateError($template->error());
         exit;
     };
 
@@ -1099,21 +1135,22 @@ CMD: for ($::FORM{'cmdtype'}) {
           && DisplayError("The name of your query cannot contain any
                            of the following characters: &lt;, &gt;, &amp;.")
             && exit;
+        my $qname = SqlQuote($name);
 
         $::buffer =~ s/[\&\?]cmdtype=[a-z]+//;
         my $qbuffer = SqlQuote($::buffer);
-        my $qname = SqlQuote($name);
-        my $tofooter= ( $::FORM{'tofooter'} ? 1 : 0 );
-        
-        SendSQL("SELECT query FROM namedqueries " .
-                "WHERE userid = $userid AND name = $qname");
-        if (!FetchOneColumn()) {
-            SendSQL("INSERT INTO namedqueries (userid, name, query, watchfordiffs, linkinfooter) " .
-                    "VALUES ($userid, $qname, $qbuffer, '', " . $tofooter . ")");
-        } else {
-            SendSQL("UPDATE namedqueries SET query = $qbuffer, " .
-                    " linkinfooter = " . $tofooter .
-                    " WHERE userid = $userid AND name = $qname");
+
+        my $tofooter= $::FORM{'tofooter'} ? 1 : 0;
+
+        SendSQL("SELECT query FROM namedqueries WHERE userid = $userid AND name = $qname");
+        if (FetchOneColumn()) {
+            SendSQL("UPDATE  namedqueries
+                        SET  query = $qbuffer , linkinfooter = $tofooter
+                      WHERE  userid = $userid AND name = $qname");
+        }
+        else {
+            SendSQL("INSERT INTO namedqueries (userid, name, query, linkinfooter)
+                     VALUES ($userid, $qname, $qbuffer, $tofooter)");
         }
         print "Content-Type: text/html\n\n";
         # Generate and return the UI (HTML page) from the appropriate template.
@@ -1122,7 +1159,7 @@ CMD: for ($::FORM{'cmdtype'}) {
         $vars->{'url'} = "query.cgi";
         $vars->{'link'} = "Go back to the query page.";
         $template->process("global/message.html.tmpl", $vars)
-          || DisplayError("Template process failed: " . $template->error());
+          || ThrowTemplateError($template->error());
         exit;
     };
 }
@@ -1229,9 +1266,16 @@ else {
 # Add the votes column to the list of columns to be displayed
 # in the bug list if the user is searching for bugs with a certain
 # number of votes and the votes column is not already on the list.
-push(@displaycolumns, 'votes') 
-  if $::FORM{'votes'} && !grep($_ eq 'votes', @displaycolumns);
 
+# Some versions of perl will taint 'votes' if this is done as a single
+# statement, because $::FORM{'votes'} is tainted at this point
+if (trim($::FORM{'votes'}) && !grep($_ eq 'votes', @displaycolumns)) {
+    push(@displaycolumns, 'votes');
+}
+
+################################################################################
+# Select Column Determination
+################################################################################
 
 ################################################################################
 # Select Column Determination
@@ -1279,9 +1323,12 @@ my $query = GenerateSQL(\@selectnames, $::buffer, \@groupbynames);
 # Add to the query some instructions for sorting the bug list.
 if ($::COOKIE{'LASTORDER'} && !$order || $order =~ /^reuse/i) {
     $order = url_decode($::COOKIE{'LASTORDER'});
+    $order_from_cookie = 1;
 }
 
 if ($order) {
+    my $db_order;  # Modified version of $order for use with SQL query
+
     # Convert the value of the "order" form field into a list of columns
     # by which to sort the results.
     ORDER: for ($order) {
@@ -1292,9 +1339,16 @@ if ($order) {
                 my @columnnames = map($columns->{lc($_)}->{'name'}, keys(%$columns));
                 if (!grep($_ eq $fragment, @columnnames)) {
                     my $qfragment = html_quote($fragment);
-                    DisplayError("The custom sort order you specified in your
-                                  form submission or cookie contains an invalid
-                                  column name <em>$qfragment</em>.");
+                    my $error = "The custom sort order you specified in your "
+                              . "form submission contains an invalid column "
+                              . "name <em>$qfragment</em>.";
+                    if ($order_from_cookie) {
+                        my $cookiepath = Param("cookiepath");
+                        print "Set-Cookie: LASTORDER= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:00:00 GMT\n";
+                        $error =~ s/form submission/cookie/;
+                        $error .= "  The cookie has been cleared.";
+                    }
+                    DisplayError($error);
                     exit;
                 }
             }
@@ -1323,19 +1377,21 @@ if ($order) {
         $order = "bugs.bug_status, bugs.priority, map_assigned_to.login_name, bugs.bug_id";
     }
 
+    $db_order = $order;  # Copy $order into $db_order for use with SQL query
+
     # Extra special disgusting hack: if we are ordering by target_milestone,
     # change it to order by the sortkey of the target_milestone first.
-    if ($order =~ /bugs.target_milestone/) {
-        $order =~ s/bugs.target_milestone/ms_order.sortkey,ms_order.value/;
+    if ($db_order =~ /bugs.target_milestone/) {
+        $db_order =~ s/bugs.target_milestone/ms_order.sortkey,ms_order.value/;
         $query =~ s/\sWHERE\s/ LEFT JOIN milestones ms_order ON ms_order.value = bugs.target_milestone AND ms_order.product = bugs.product WHERE /;
     }
 
     # If we are sorting by votes, sort in descending order.
-    if ($order =~ /bugs.votes\s+(asc|desc){0}/i) {
-        $order =~ s/bugs.votes/bugs.votes desc/i;
+    if ($db_order =~ /bugs.votes\s+(asc|desc){0}/i) {
+        $db_order =~ s/bugs.votes/bugs.votes desc/i;
     }
 
-    $query .= " ORDER BY $order ";
+    $query .= " ORDER BY $db_order ";
 }
 
 
@@ -1353,9 +1409,8 @@ if ($serverpush) {
     print "Content-Type: text/html\n\n";
 
     # Generate and return the UI (HTML page) from the appropriate template.
-    $template->process("buglist/server-push.html.tmpl", $vars)
-      || DisplayError("Template process failed: " . $template->error())
-      && exit;
+    $template->process("list/server-push.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
 }
 
 # Connect to the shadow database if this installation is using one to improve
@@ -1365,6 +1420,12 @@ ReconnectToShadowDatabase();
 # Tell MySQL to store temporary tables on the hard drive instead of memory
 # to avoid "table out of space" errors on MySQL versions less than 3.23.2.
 SendSQL("SET OPTION SQL_BIG_TABLES=1") if Param('expectbigqueries') && $::driver eq 'mysql';
+
+# Normally, we ignore SIGTERM and SIGPIPE (see globals.pl) but we need to
+# respond to them here to prevent someone DOSing us by reloading a query
+# a large number of times.
+$::SIG{TERM} = 'DEFAULT';
+$::SIG{PIPE} = 'DEFAULT';
 
 # Execute the query.
 SendSQL($query);
@@ -1380,14 +1441,12 @@ SendSQL($query);
 my $bugowners = {};
 my $bugproducts = {};
 my $bugstatuses = {};
-my @buglist = ();
-my @canseebugs = ();
 
 my @bugs; # the list of records
 
 while (my @row = FetchSQLData()) {
     my $bug = {}; # a record
-    
+
     # Slurp the row of data into the record.
     foreach my $column (@selectcolumns) {
         $bug->{$column} = shift @row;
@@ -1406,18 +1465,8 @@ while (my @row = FetchSQLData()) {
     $bugproducts->{$bug->{'product'}} = 1 if $bug->{'product'};
     $bugstatuses->{$bug->{'status'}} = 1 if $bug->{'status'};
 
-    # Keep list of bugs so we can check them later for permission
-    push(@buglist, $bug->{id});
-
     # Add the record to the list.
     push(@bugs, $bug);
-}
-
-# Check to see which bugs we have permission to see
-my $canseeref = CanSeeBug(\@buglist, $::userid, $::usergroupset);
-foreach my $bug (@bugs) {
-    next if !$canseeref->{$bug->{id}};
-    push(@canseebugs, $bug);
 }
 
 # Switch back from the shadow database to the regular database so PutFooter()
@@ -1431,7 +1480,8 @@ SendSQL("USE $::db_name") if $::driver eq 'mysql';
 
 # Define the variables and functions that will be passed to the UI template.
 
-$vars->{'bugs'} = \@canseebugs;
+$vars->{'bugs'} = \@bugs;
+$vars->{'buglist'} = join(',', map($_->{id}, @bugs));
 $vars->{'columns'} = $columns;
 $vars->{'displaycolumns'} = \@displaycolumns;
 
@@ -1515,7 +1565,11 @@ if ($dotweak) {
         $vars->{'targetmilestones'} = $::target_milestone{$product} if Param('usetargetmilestone');
     }
 }
+else {
+    print "Content-Type: $format->{'contenttype'}\n";
+}
 
+print "\n"; # end HTTP headers
 
 ################################################################################
 # HTTP Header Generation
@@ -1532,18 +1586,20 @@ print "\n--thisrandomstring\n" if $serverpush;
 print "Content-Disposition: inline; filename=$filename\n" unless $serverpush;
 
 if ($format->{'extension'} eq "html") {
+    my $cookiepath = Param("cookiepath");
     print "Content-Type: text/html\n";
 
     if ($order) {
         my $qorder = url_quote($order);
-        print "Set-Cookie: LASTORDER=$qorder ; path=/; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+        print "Set-Cookie: LASTORDER=$qorder ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
     }
     my $bugids = join(":", map( $_->{'id'}, @bugs));
+    # See also Bug 111999
     if (length($bugids) < 4000) {
-        print "Set-Cookie: BUGLIST=$bugids\n";
+        print "Set-Cookie: BUGLIST=$bugids ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
     }
     else {
-        print "Set-Cookie: BUGLIST=\n";
+        print "Set-Cookie: BUGLIST= ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
         $vars->{'toolong'} = 1;
     }
 }
@@ -1559,9 +1615,8 @@ print "\n"; # end HTTP headers
 ################################################################################
 
 # Generate and return the UI (HTML page) from the appropriate template.
-$template->process("buglist/$format->{'template'}", $vars)
-  || DisplayError("Template process failed: " . $template->error())
-  && exit;
+$template->process("list/$format->{'template'}", $vars)
+  || ThrowTemplateError($template->error());
 
 
 ################################################################################

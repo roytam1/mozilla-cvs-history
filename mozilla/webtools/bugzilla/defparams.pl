@@ -64,8 +64,6 @@ sub WriteParams {
             delete $::param{$item};
         }
     }
-    mkdir("data", 0777);
-    chmod 0777, "data";
     my $tmpname = "data/params.$$";
     open(FID, ">$tmpname") || die "Can't create $tmpname";
     my $v = $::param{'version'};
@@ -76,7 +74,7 @@ sub WriteParams {
     print FID "1;\n";
     close FID;
     rename $tmpname, "data/params" || die "Can't rename $tmpname to data/params";
-    chmod 0666, "data/params";
+    ChmodDataFile('data/params', 0666);
 }
     
 
@@ -349,7 +347,7 @@ DefParam("mostfreqthreshold",
 DefParam("mybugstemplate",
          "This is the URL to use to bring up a simple 'all of my bugs' list for a user.  %userid% will get replaced with the login name of a user.",
          "t",
-         "buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&email1=%userid%&emailtype1=exact&emailassigned_to1=1&emailreporter1=1");
+         "buglist.cgi?bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;email1=%userid%&amp;emailtype1=exact&amp;emailassigned_to1=1&amp;emailreporter1=1");
     
 
 
@@ -539,9 +537,43 @@ DefParam("usedependencies",
          1);
 
 DefParam("webdotbase",
-         "This is the URL prefix that is common to all requests for webdot.  The <a href=\"http://www.research.att.com/~north/cgi-bin/webdot.cgi\">webdot package</a> is a very swell thing that generates pictures of graphs.  If you have an installation of bugsplat that hides behind a firewall, then to get graphs to work, you will have to install a copy of webdot behind your firewall, and change this path to match.  Also, webdot has some trouble with software domain names, so you may have to play games and hack the %urlbase% part of this.  If this all seems like too much trouble, you can set this paramater to be the empty string, which will cause the graphing feature to be disabled entirely.",
+         "It is possible to show graphs of dependent bugs. You may set this parameter to
+any of the following:
+<ul>
+<li>A complete file path to \'dot\' (part of <a
+href=\"http://www.graphviz.org\">GraphViz</a>) will generate the graphs
+locally.</li>
+<li>A URL prefix pointing to an installation of the <a
+href=\"http://www.research.att.com/~north/cgi-bin/webdot.cgi\">webdot
+package</a> will generate the graphs remotely.</li>
+<li>A blank value will disable dependency graphing.</li>
+</ul>
+The default value is a publically-accessible webdot server.",
          "t",
-         "http://www.research.att.com/~north/cgi-bin/webdot.cgi/%urlbase%");
+         "http://www.research.att.com/~north/cgi-bin/webdot.cgi/%urlbase%",
+         \&check_webdotbase);
+
+sub check_webdotbase {
+    my ($value) = (@_);
+    $value = trim($value);
+    if ($value eq "") {
+        return "";
+    }
+    if($value !~ /^https?:/) {
+        if(! -x $value) {
+            return "The file path \"$value\" is not a valid executable.  Please specify the complete file path to 'dot' if you intend to generate graphs locally.";
+        }
+        # Check .htaccess allows access to generated images
+        if(-e "data/webdot/.htaccess") {
+            open HTACCESS, "data/webdot/.htaccess";
+            if(! grep(/png/,<HTACCESS>)) {
+                print "Dependency graph images are not accessible.\nDelete data/webdot/.htaccess and re-run checksetup.pl to rectify.\n";
+            }
+            close HTACCESS;
+        }
+    }
+    return "";
+}
 
 DefParam("entryheaderhtml",
          "This is a special header for the bug entry page. The text will be printed after the page header, before the bug entry form. It is meant to be a place to put pointers to intructions on how to enter bugs.",
@@ -589,6 +621,12 @@ Reason: %reason%
          
 DefParam("allowbugdeletion",
          q{The pages to edit products and components and versions can delete all associated bugs when you delete a product (or component or version).  Since that is a pretty scary idea, you have to turn on this option before any such deletions will ever happen.},
+         "b",
+         0);
+
+
+DefParam("allowemailchange",
+         q{Users can change their own email address through the preferences.  Note that the change is validated by emailing both addresses, so switching this option on will not let users use an invalid address.},
          "b",
          0);
 

@@ -52,6 +52,8 @@ use CGI::Carp qw(fatalsToBrowser);
 
 require 'globals.pl';
 
+use vars qw($template $vars);
+
 # If Bugzilla is shut down, do not go any further, just display a message
 # to the user about the downtime.  (do)editparams.cgi is exempted from
 # this message, of course, since it needs to be available in order for
@@ -67,33 +69,14 @@ if (Param("shutdownhtml") && $0 !~ m:[\\/](do)?editparams.cgi$:) {
     
     # Generate and return an HTML message about the downtime.
     $::template->process("global/message.html.tmpl", $::vars)
-      || DisplayError("Template process failed: " . $::template->error());
+      || ThrowTemplateError($::template->error());
     exit;
 }
-
-sub GeneratePersonInput {
-    my ($field, $required, $def_value, $extraJavaScript) = (@_);
-    $extraJavaScript ||= "";
-    if ($extraJavaScript ne "") {
-        $extraJavaScript = "onChange=\"$extraJavaScript\"";
-    }
-    return "<INPUT NAME=\"$field\" SIZE=32 $extraJavaScript VALUE=\"$def_value\">";
-}
-
-sub GeneratePeopleInput {
-    my ($field, $def_value) = (@_);
-    return "<INPUT NAME=\"$field\" SIZE=45 VALUE=\"$def_value\">";
-}
-
-
-
 
 # Implementations of several of the below were blatently stolen from CGI.pm,
 # by Lincoln D. Stein.
 
-
 # Get rid of all the %xx encoding and the like from the given URL.
-
 sub url_decode {
     my ($todecode) = (@_);
     $todecode =~ tr/+/ /;       # pluses become spaces
@@ -101,15 +84,12 @@ sub url_decode {
     return $todecode;
 }
 
-
 # Quotify a string, suitable for putting into a URL.
-
 sub url_quote {
     my($toencode) = (@_);
     $toencode=~s/([^a-zA-Z0-9_\-.])/uc sprintf("%%%02x",ord($1))/eg;
     return $toencode;
 }
-
 
 sub ParseUrlString {
     # We don't want to detaint the user supplied data...
@@ -169,7 +149,6 @@ sub ProcessFormFields {
     return ParseUrlString($buffer, \%::FORM, \%::MFORM);
 }
 
-
 sub ProcessMultipartFormFields {
     my ($boundary) = @_;
 
@@ -189,7 +168,7 @@ sub ProcessMultipartFormFields {
 
         # If the current input line is a boundary line, save the previous
         # form value and reset the storage variables.
-        if ($_ =~ m/^-*$boundary/) {
+        if ($_ =~ m/^-*\Q$boundary\E/) {
             if ( $fieldname ) {
                 chomp($fieldvalue);
                 $fieldvalue =~ s/\r$//;
@@ -231,12 +210,10 @@ sub ProcessMultipartFormFields {
     }
 }
 
-
 # check and see if a given field exists, is non-empty, and is set to a 
 # legal value.  assume a browser bug and abort appropriately if not.
 # if $legalsRef is not passed, just check to make sure the value exists and 
 # is non-NULL
-# 
 sub CheckFormField (\%$;\@) {
     my ($formRef,                # a reference to the form to check (a hash)
         $fieldname,              # the fieldname to check
@@ -251,19 +228,15 @@ sub CheckFormField (\%$;\@) {
         SendSQL("SELECT description FROM fielddefs WHERE name=" . SqlQuote($fieldname));
         my $result = FetchOneColumn();
         if ($result) {
-            PuntTryAgain("A legal $result was not set.");
+            ThrowCodeError("A legal $result was not set.", undef, "abort");
         }
         else {
-            PuntTryAgain("A legal $fieldname was not set.");
-            print Param("browserbugmessage");
+            ThrowCodeError("A legal $fieldname was not set.", undef, "abort");
         }
-        PutFooter();
-        exit 0;
       }
 }
 
 # check and see if a given field is defined, and abort if not
-# 
 sub CheckFormFieldDefined (\%$) {
     my ($formRef,                # a reference to the form to check (a hash)
         $fieldname,              # the fieldname to check
@@ -324,7 +297,6 @@ sub ValidateBugID {
 
 }
 
-
 sub ValidateComment {
     # Make sure a comment is not too large (greater than 64K).
     
@@ -336,31 +308,12 @@ sub ValidateComment {
     }
 }
 
-
-# check and see if a given string actually represents a positive
-# integer, and abort if not.
-# 
-sub CheckPosInt($) {
-    my ($number) = @_;              # the fieldname to check
-
-    if ( $number !~ /^[1-9][0-9]*$/ ) {
-        print "Received string \"$number\" when positive integer expected; ";
-        print Param("browserbugmessage");
-        PutFooter();
-        exit 0;
-      }
-}
-
-sub FormData {
-    my ($field) = (@_);
-    return $::FORM{$field};
-}
-
 sub html_quote {
     my ($var) = (@_);
     $var =~ s/\&/\&amp;/g;
     $var =~ s/</\&lt;/g;
     $var =~ s/>/\&gt;/g;
+    $var =~ s/"/\&quot;/g;
     return $var;
 }
 
@@ -380,34 +333,10 @@ sub value_quote {
     return $var;
 }
 
-sub navigation_header {
-    if (defined $::COOKIE{"BUGLIST"} && $::COOKIE{"BUGLIST"} ne "" &&
-        defined $::FORM{'id'}) {
-        my @bugs = split(/:/, $::COOKIE{"BUGLIST"});
-        my $cur = lsearch(\@bugs, $::FORM{"id"});
-        print "<B>Bug List:</B> (@{[$cur + 1]} of @{[$#bugs + 1]})\n";
-        print "<A HREF=\"show_bug.cgi?id=$bugs[0]\">First</A>\n";
-        print "<A HREF=\"show_bug.cgi?id=$bugs[$#bugs]\">Last</A>\n";
-        if ($cur > 0) {
-            print "<A HREF=\"show_bug.cgi?id=$bugs[$cur - 1]\">Prev</A>\n";
-        } else {
-            print "<I><FONT COLOR=\#777777>Prev</FONT></I>\n";
-        }
-        if ($cur < $#bugs) {
-            $::next_bug = $bugs[$cur + 1];
-            print "<A HREF=\"show_bug.cgi?id=$::next_bug\">Next</A>\n";
-        } else {
-            print "<I><FONT COLOR=\#777777>Next</FONT></I>\n";
-        }
-        print qq{&nbsp;&nbsp;<A HREF="buglist.cgi?regetlastlist=1">Show list</A>\n};
-    }
-    print "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF=query.cgi>Query page</A>\n";
-    print "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF=enter_bug.cgi>Enter new bug</A>\n"
-}
-
 # Adds <link> elements for bug lists. These can be inserted into the header by
 # (ab)using the "jscript" parameter to PutHeader, which inserts an arbitrary
-# string into the header. This function is modelled on the one above.
+# string into the header. This is currently used only in
+# template/en/default/bug/edit.html.tmpl.
 sub navigation_links($) {
     my ($buglist) = @_;
     
@@ -447,145 +376,9 @@ sub navigation_links($) {
     return $retval;
 } 
 
-sub make_checkboxes {
-    my ($src,$default,$isregexp,$name) = (@_);
-    my $last = "";
-    my $capitalized = "";
-    my $popup = "";
-    my $found = 0;
-    $default = "" if !defined $default;
-
-    if ($src) {
-        foreach my $item (@$src) {
-            if ($item eq "-blank-" || $item ne $last) {
-                if ($item eq "-blank-") {
-                    $item = "";
-                }
-                $last = $item;
-                $capitalized = $item;
-                $capitalized =~ tr/A-Z/a-z/;
-                $capitalized =~ s/^(.?)(.*)/\u$1$2/;
-                if ($isregexp ? $item =~ $default : $default eq $item) {
-                    $popup .= "<INPUT NAME=$name TYPE=CHECKBOX VALUE=\"$item\" CHECKED>$capitalized<br>";
-                    $found = 1;
-                } else {
-                    $popup .= "<INPUT NAME=$name TYPE=CHECKBOX VALUE=\"$item\">$capitalized<br>";
-                }
-            }
-        }
-    }
-    if (!$found && $default ne "") {
-        $popup .= "<INPUT NAME=$name TYPE=CHECKBOX CHECKED>$default";
-    }
-    return $popup;
-}
-
-#
-# make_selection_widget: creates an HTML selection widget from a list of text strings.
-# $groupname is the name of the setting (form value) that this widget will control
-# $src is the list of options
-# you can specify a $default value which is either a string or a regex pattern to match to
-#    identify the default value
-# $capitalize lets you optionally capitalize the option strings; the default is the value
-#    of Param("capitalizelists")
-# $multiple is 1 if several options are selectable (default), 0 otherwise.
-# $size is used for lists to control how many items are shown. The default is 7. A list of
-#    size 1 becomes a popup menu.
-# $preferLists is 1 if selection lists should be used in favor of radio buttons and
-#    checkboxes, and 0 otherwise. The default is the value of Param("preferlists").
-#
-# The actual widget generated depends on the parameter settings:
-# 
-#        MULTIPLE     PREFERLISTS    SIZE     RESULT
-#       0 (single)        0           =1      Popup Menu (normal for list of size 1)
-#       0 (single)        0           >1      Radio buttons
-#       0 (single)        1           =1      Popup Menu (normal for list of size 1)
-#       0 (single)        1           n>1     List of size n, single selection
-#       1 (multi)         0           n/a     Check boxes; size ignored
-#       1 (multi)         1           n/a     List of size n, multiple selection, of size n
-#
-sub make_selection_widget {
-    my ($groupname,$src,$default,$isregexp,$multiple, $size, $capitalize, $preferLists) = (@_);
-    my $last = "";
-    my $popup = "";
-    my $found = 0;
-    my $displaytext = "";
-    $groupname = "" if !defined $groupname;
-    $default = "" if !defined $default;
-    $capitalize = Param("capitalizelists") if !defined $capitalize;
-    $multiple = 1 if !defined $multiple;
-    $preferLists = Param("preferlists") if !defined $preferLists;
-    $size = 7 if !defined $size;
-    my $type = "LIST";
-    if (!$preferLists) {
-        if ($multiple) {
-            $type = "CHECKBOX";
-        } else {
-            if ($size > 1) {
-                $type = "RADIO";
-            }
-        }
-    }
-
-    if ($type eq "LIST") {
-        $popup .= "<SELECT NAME=\"$groupname\"";
-        if ($multiple) {
-            $popup .= " MULTIPLE";
-        }
-        $popup .= " SIZE=$size>\n";
-    }
-    if ($src) {
-        foreach my $item (@$src) {
-            if ($item eq "-blank-" || $item ne $last) {
-                if ($item eq "-blank-") {
-                    $item = "";
-                }
-                $last = $item;
-                $displaytext = $item;
-                if ($capitalize) {
-                    $displaytext =~ tr/A-Z/a-z/;
-                    $displaytext =~ s/^(.?)(.*)/\u$1$2/;
-                }   
-
-                if ($isregexp ? $item =~ $default : $default eq $item) {
-                    if ($type eq "CHECKBOX") {
-                        $popup .= "<INPUT NAME=$groupname type=checkbox VALUE=\"$item\" CHECKED>$displaytext<br>";
-                    } elsif ($type eq "RADIO") {
-                        $popup .= "<INPUT NAME=$groupname type=radio VALUE=\"$item\" CHECKED>$displaytext<br>";
-                    } else {
-                        $popup .= "<OPTION SELECTED VALUE=\"$item\">$displaytext\n";
-                    }
-                    $found = 1;
-                } else {
-                    if ($type eq "CHECKBOX") {
-                        $popup .= "<INPUT NAME=$groupname type=checkbox VALUE=\"$item\">$displaytext<br>";
-                    } elsif ($type eq "RADIO") {
-                        $popup .= "<INPUT NAME=$groupname type=radio VALUE=\"$item\">$displaytext<br>";
-                    } else {
-                        $popup .= "<OPTION VALUE=\"$item\">$displaytext";
-                    }
-                }
-            }
-        }
-    }
-    if (!$found && $default ne "") {
-        if ($type eq "CHECKBOX") {
-            $popup .= "<INPUT NAME=$groupname type=checkbox CHECKED>$default";
-        } elsif ($type eq "RADIO") {
-            $popup .= "<INPUT NAME=$groupname type=radio checked>$default";
-        } else {
-            $popup .= "<OPTION SELECTED>$default\n";
-        }
-    }
-    if ($type eq "LIST") {
-        $popup .= "</SELECT>";
-    }
-    return $popup;
-}
-
-
 $::CheckOptionValues = 1;
 
+# This sub is still used in reports.cgi.
 sub make_options {
     my ($src,$default,$isregexp) = (@_);
     my $last = "";
@@ -633,48 +426,6 @@ sub make_options {
     return $popup;
 }
 
-
-sub make_popup {
-    my ($name,$src,$default,$listtype,$onchange) = (@_);
-    my $popup = "<SELECT NAME=$name";
-    if ($listtype > 0) {
-        $popup .= " SIZE=5";
-        if ($listtype == 2) {
-            $popup .= " MULTIPLE";
-        }
-    }
-    if (defined $onchange && $onchange ne "") {
-        $popup .= " onchange=$onchange";
-    }
-    $popup .= ">" . make_options($src, $default,
-                                 ($listtype == 2 && $default ne ""));
-    $popup .= "</SELECT>";
-    return $popup;
-}
-
-
-sub BuildPulldown {
-    my ($name, $valuelist, $default) = (@_);
-
-    my $entry = qq{<SELECT NAME="$name">};
-    foreach my $i (@$valuelist) {
-        my ($tag, $desc) = (@$i);
-        my $selectpart = "";
-        if ($tag eq $default) {
-            $selectpart = " SELECTED";
-        }
-        if (!defined $desc) {
-            $desc = $tag;
-        }
-        $entry .= qq{<OPTION$selectpart VALUE="$tag">$desc\n};
-    }
-    $entry .= qq{</SELECT>};
-    return $entry;
-}
-
-
-
-
 sub PasswordForLogin {
     my ($login) = (@_);
     SendSQL("select cryptpassword from profiles where login_name = " .
@@ -685,7 +436,6 @@ sub PasswordForLogin {
     }
     return $result;
 }
-
 
 sub quietly_check_login() {
     $::usergroupset = '0';
@@ -735,9 +485,6 @@ sub quietly_check_login() {
     return $loginok;
 }
 
-
-
-
 sub CheckEmailSyntax {
     my ($addr) = (@_);
     my $match = Param('emailregexp');
@@ -761,8 +508,6 @@ sub CheckEmailSyntax {
     }
 }
 
-
-
 sub MailPassword {
     my ($login, $password) = (@_);
     my $urlbase = Param("urlbase");
@@ -776,7 +521,6 @@ sub MailPassword {
     print SENDMAIL $msg;
     close SENDMAIL;
 }
-
 
 sub confirm_login {
     my ($nexturl) = (@_);
@@ -813,6 +557,12 @@ sub confirm_login {
         # If this is a new user, generate a password, insert a record
         # into the database, and email their password to them.
         if ( defined $::FORM{"PleaseMailAPassword"} && !$userid ) {
+            # Ensure the new login is valid
+            if(!ValidateNewUser($enteredlogin)) {
+                DisplayError("Account Exists");
+                exit;
+            }
+
             my $password = InsertNewUser($enteredlogin, "");
             # There's a template for this - account_created.tmpl - but
             # it's easier to wait to use it until templatisation has progressed
@@ -1178,7 +928,6 @@ $h2
     }
 }
 
-
 # Putfooter echoes footerhtml and by default prints closing tags
 #
 # param
@@ -1187,7 +936,6 @@ $h2
 # Example:
 # Putfooter(); # normal close
 # Putfooter(1); # don't send closing tags
-
 sub PutFooter {
     my ( $dontclose ) = @_;
     print PerformSubsts(Param("footerhtml"));
@@ -1195,33 +943,81 @@ sub PutFooter {
     SyncAnyPendingShadowChanges();
 }
 
+###############################################################################
+# Error handling
+#
+# If you are doing incremental output, set $vars->{'header_done'} once you've
+# done the header.
+###############################################################################
 
+# DisplayError is deprecated. Use ThrowCodeError, ThrowUserError or 
+# ThrowTemplateError instead.
 sub DisplayError {
-  my ($message, $title) = (@_);
-  $title ||= "Error";
-  $message ||= "An unknown error occurred.";
-  
-  print "Content-type: text/html\n\n";
-  PutHeader($title);
+  ($vars->{'error'}, $vars->{'title'}) = (@_);
+  $vars->{'title'} ||= "Error";
 
-  print PerformSubsts( Param("errorhtml") , {errormsg => $message} );
-
-  PutFooter();
+  print "Content-type: text/html\n\n" if !$vars->{'header_done'};
+  $template->process("global/user-error.html.tmpl", $vars)
+    || ThrowTemplateError($template->error());   
 
   return 1;
 }
 
-sub PuntTryAgain ($) {
-    my ($str) = (@_);
-    print PerformSubsts(Param("errorhtml"),
-                        {errormsg => $str});
-    if ($::driver eq 'mysql') {
-        SendSQL("UNLOCK TABLES");
-    } 
-    PutFooter();
-    exit;
+# For "this shouldn't happen"-type places in the code.
+# $vars->{'variables'} is a reference to a hash of useful debugging info.
+sub ThrowCodeError {
+  ($vars->{'error'}, $vars->{'variables'}, my $unlock_tables) = (@_);
+  $vars->{'title'} = "Code Error";
+
+  SendSQL("UNLOCK TABLES") if $unlock_tables && $::driver eq 'mysql';
+  
+  # We may optionally log something to file here.
+  
+  print "Content-type: text/html\n\n" if !$vars->{'header_done'};
+  $template->process("global/code-error.html.tmpl", $vars)
+    || ThrowTemplateError($template->error());
+    
+  exit;
 }
 
+# For errors made by the user.
+sub ThrowUserError {
+  ($vars->{'error'}, $vars->{'title'}, my $unlock_tables) = (@_);
+  $vars->{'title'} ||= "Error";
+
+  SendSQL("UNLOCK TABLES") if $unlock_tables && $::driver eq 'mysql';
+  
+  print "Content-type: text/html\n\n" if !$vars->{'header_done'};
+  $template->process("global/user-error.html.tmpl", $vars)
+    || ThrowTemplateError($template->error());
+    
+  exit;
+}
+
+# If the template system isn't working, we can't use a template.
+# This should only be called if a template->process() fails.
+# The Content-Type will already have been printed.
+sub ThrowTemplateError {
+    my ($error) = html_quote((@_));
+    my $maintainer = Param('maintainer');
+    
+    print <<END;
+    <tt>
+      <p>
+        Bugzilla has suffered an internal error. Please save this page and send
+        it to $maintainer with details of what you were doing at the time this
+        message appeared.
+      </p>
+      <script> <!--
+        document.write("<p>URL: " + document.location + "</p>");
+      // -->
+      </script>
+      <p>Template->process() failed: $error</p>
+    </tt>
+END
+
+    exit;  
+}
 
 sub CheckIfVotedConfirmed {
     my ($id, $who) = (@_);
@@ -1252,9 +1048,7 @@ sub CheckIfVotedConfirmed {
 
 }
 
-
-
-sub DumpBugActivity {
+sub GetBugActivity {
     my ($id, $starttime) = (@_);
     my $datepart = "";
     my $query = "";
@@ -1292,48 +1086,55 @@ sub DumpBugActivity {
 
     SendSQL($query);
     
-    # Instead of outright printing this, we are going to store it in a $html
-    # variable and print it and the end.  This is so we can explain ? (if nesc.)
-    # at the top of the activity table rather than the botom.
-    my $html = "";
-    $html .= "<table border cellpadding=4>\n";
-    $html .= "<tr>\n";
-    $html .= "    <th>Who</th><th>What</th><th>Removed</th><th>Added</th><th>When</th>\n";
-    $html .= "</tr>\n";
-    
-    my @row;
+    my @operations;
+    my $operation = {};
+    my $changes = [];
     my $incomplete_data = 0;
-    while (@row = FetchSQLData()) {
-        my ($field,$attachid,$when,$removed,$added,$who) = (@row);
-        $field =~ s/^Attachment/<a href="attachment.cgi?id=$attachid&amp;action=view">Attachment #$attachid<\/a>/ 
-          if $attachid;
-        $removed = html_quote($removed);
-        $added = html_quote($added);
-        $removed = "&nbsp;" if $removed eq "";
-        $added = "&nbsp;" if $added eq "";
-        if ($added =~ /^\?/ || $removed =~ /^\?/) {
-            $incomplete_data = 1;
-        }
-        $html .= "<tr>\n";
-        $html .= "<td>$who</td>\n";
-        $html .= "<td>$field</td>\n";
-        $html .= "<td>$removed</td>\n";
-        $html .= "<td>$added</td>\n";
-        $html .= "<td>$when</td>\n";
-        $html .= "</tr>\n";
-    }
-    $html .= "</table>\n";
-    if ($incomplete_data) {
-        print "There was a bug in older versions of Bugzilla which caused activity data \n";
-        print "to be lost if there was a large number of cc's or dependencies.  That \n";
-        print "has been fixed, however, there was some data already lost on this bug \n";
-        print "that could not be regenerated.  The changes that the script could not \n";
-        print "reliably determine are prefixed by '?'\n";
-        print "<p>\n";
-    }
-    print $html;
-}
+    
+    while (my ($field, $attachid, $when, $removed, $added, $who) 
+                                                               = FetchSQLData())
+    {
+        my %change;
+        
+        # This gets replaced with a hyperlink in the template.
+        $field =~ s/^Attachment// if $attachid;
 
+        # Check for the results of an old Bugzilla data corruption bug
+        $incomplete_data = 1 if ($added =~ /^\?/ || $removed =~ /^\?/);
+        
+        # An operation, done by 'who' at time 'when', has a number of
+        # 'changes' associated with it.
+        # If this is the start of a new operation, store the data from the
+        # previous one, and set up the new one.
+        if ($operation->{'who'} 
+            && ($who ne $operation->{'who'} 
+                || $when ne $operation->{'when'})) 
+        {
+            $operation->{'changes'} = $changes;
+            push (@operations, $operation);
+            
+            # Create new empty anonymous data structures.
+            $operation = {};
+            $changes = [];
+        }  
+        
+        $operation->{'who'} = $who;
+        $operation->{'when'} = $when;            
+        
+        $change{'field'} = $field;
+        $change{'attachid'} = $attachid;
+        $change{'removed'} = $removed;
+        $change{'added'} = $added;
+        push (@$changes, \%change);
+    }
+    
+    if ($operation->{'who'}) {
+        $operation->{'changes'} = $changes;
+        push (@operations, $operation);
+    }
+    
+    return(\@operations, $incomplete_data);
+}
 
 sub GetCommandMenu {
     my $loggedin = quietly_check_login();
@@ -1360,7 +1161,7 @@ Actions:
 };
     if ($loggedin) {
         if ($::anyvotesallowed) {
-            $html .= " | <A HREF=\"showvotes.cgi\">My votes</A>\n";
+            $html .= " | <A HREF=\"votes.cgi?action=show_user\">My votes</A>\n";
         }
     }
     if ($loggedin) {
@@ -1441,7 +1242,6 @@ Edit <a href="userprefs.cgi">prefs</a>
 
 ############# Live code below here (that is, not subroutine defs) #############
 
-
 $| = 1;
 
 # Uncommenting this next line can help debugging.
@@ -1471,7 +1271,6 @@ if (defined $ENV{"REQUEST_METHOD"}) {
         }
     }
 }
-
 
 if (defined $ENV{"HTTP_COOKIE"}) {
     # Don't trust anything which came in as a cookie

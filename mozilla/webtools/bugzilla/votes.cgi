@@ -110,8 +110,9 @@ sub show_bug {
     $vars->{'total'} = $total;
     
     print "Content-type: text/html\n\n";
-    $template->process("bug/votes/list-for-bug.html.tmpl", $vars)
-      || ThrowTemplateError($template->error());
+    $template->process("voting/show-bug-votes.html.tmpl", $vars)
+      || DisplayError("Template process failed: " . $template->error())
+      && exit;
 }
 
 # Display all the votes for a particular user. If it's the user
@@ -217,8 +218,9 @@ sub show_user {
     $vars->{'products'} = \@products;
 
     print "Content-type: text/html\n\n";
-    $template->process("bug/votes/list-for-user.html.tmpl", $vars)
-      || ThrowTemplateError($template->error());
+    $template->process("voting/show-user-votes.html.tmpl", $vars)
+      || DisplayError("Template process failed: " . $template->error())
+      && exit;
 }
 
 # Update the user's votes in the database.
@@ -237,8 +239,8 @@ sub record_votes {
     if (scalar(@buglist) == 0) {
         if (!defined($::FORM{'delete_all_votes'})) {
             print "Content-type: text/html\n\n";
-            $template->process("bug/votes/delete-all.html.tmpl", $vars)
-              || ThrowTemplateError($template->error());
+            $template->process("voting/delete-all-votes.html.tmpl", $vars)
+              || DisplayError("Template process failed: " . $template->error());
             exit();
         }
         elsif ($::FORM{'delete_all_votes'} == 0) {

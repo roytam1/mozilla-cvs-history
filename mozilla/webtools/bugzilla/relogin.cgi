@@ -60,18 +60,17 @@ Set-Cookie: Bugzilla_logincookie= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:
 # as logged out if %commandmenu% is in the header
 delete $::COOKIE{"Bugzilla_login"};
 
-    $vars->{'title'} = "Logged Out";
-    $vars->{'message'} = "<b>Your login has been forgotten</b>.
-                          The cookie that was remembering your login is 
-                          now gone. You will be prompted for a login the 
-                          next time it is required.";
-    $vars->{'url'} = "query.cgi?GoAheadAndLogIn=1";
-    $vars->{'link'} = "Log in again here";
+$vars->{'title'} = "Logged Out";
+$vars->{'message'} = "<b>Your login has been forgotten</b>.
+                      The cookie that was remembering your login is 
+                      now gone. You will be prompted for a login the 
+                      next time it is required.";
+$vars->{'url'} = "query.cgi?GoAheadAndLogIn=1";
+$vars->{'link'} = "Log in again here";
     
-    print "Content-Type: text/html\n\n";
-    $template->process("global/message.html.tmpl", $vars)
-      || DisplayError("Template process failed: " . $template->error())
-      && exit;
+print "Content-Type: text/html\n\n";
+$template->process("global/message.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
 
 exit;
 

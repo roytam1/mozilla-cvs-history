@@ -53,6 +53,11 @@ use vars qw(
   %versions
 );
 
+# We have to connect to the database, even though we don't use it in this code,
+# because we might occasionally rebuild the version cache, which causes tokens
+# to get deleted from the database, which needs a database connection.
+ConnectToDatabase();
+
 # If we're using bug groups to restrict bug entry, we need to know who the 
 # user is right from the start. 
 confirm_login() if (Param("usebuggroupsentry"));
@@ -86,8 +91,8 @@ if (!defined $::FORM{'product'}) {
                     "First, you must pick a product on which to enter a bug.";
         
         print "Content-type: text/html\n\n";
-        $template->process("global/choose_product.tmpl", $vars)
-          || DisplayError("Template process failed: " . $template->error());
+        $template->process("global/choose-product.html.tmpl", $vars)
+          || ThrowTemplateError($template->error());
         exit;        
     }
 
@@ -173,11 +178,11 @@ sub pickos {
             /\(.*IBM.*\)/ && do {return "OS/2";};
             /\(.*QNX.*\)/ && do {return "Neutrino";};
             /\(.*VMS.*\)/ && do {return "OpenVMS";};
-#            /\(.*Windows XP.*\)/ && do {return "Windows XP";};
-#            /\(.*Windows NT 5\.1.*\)/ && do {return "Windows XP";};
+            /\(.*Windows XP.*\)/ && do {return "Windows XP";};
+            /\(.*Windows NT 5\.1.*\)/ && do {return "Windows XP";};
             /\(.*Windows 2000.*\)/ && do {return "Windows 2000";};
-            /Windows NT 5.*\)/ && do {return "Windows 2000";};
-            /\(Windows.*NT/ && do {return "Windows NT";};
+            /\(.*Windows NT 5.*\)/ && do {return "Windows 2000";};
+            /\(.*Windows.*NT.*\)/ && do {return "Windows NT";};
             /\(.*Win.*98.*4\.9.*\)/ && do {return "Windows ME";};
             /\(.*Win98.*\)/ && do {return "Windows 98";};
             /\(.*Win95.*\)/ && do {return "Windows 95";};
@@ -367,6 +372,6 @@ if ($::usergroupset ne '0') {
 $vars->{'default'} = \%default;
 
 print "Content-type: text/html\n\n";
-$template->process("entry/enter_bug.tmpl", $vars)
-  || DisplayError("Template process failed: " . $template->error());          
+$template->process("bug/create/create.html.tmpl", $vars)
+  || ThrowTemplateError($template->error());          
 exit;

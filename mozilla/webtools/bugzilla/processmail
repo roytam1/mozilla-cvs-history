@@ -346,7 +346,7 @@ sub ProcessOneBug {
     }
 
     print "<br><center>If you wish to tweak the kinds of mail Bugzilla sends you, you can";
-    print " <a href=\"userprefs.cgi?bank=diffs\">change your preferences</a></center>\n";
+    print " <a href=\"userprefs.cgi?tab=email\">change your preferences</a></center>\n";
 
 }
 
@@ -837,10 +837,15 @@ if ($#ARGV >= 0 && $ARGV[0] eq "-forceqacontact") {
     @{$force{'QAcontact'}} = (trim(shift(@ARGV)));
 }
 
+if ($#ARGV >= 0 && $ARGV[0] eq "-forcereporter") {
+    shift(@ARGV);
+    @{$force{'Reporter'}} = trim(shift(@ARGV));
+}
+
 if (($#ARGV < 0) || ($#ARGV > 1)) {
     print "Usage:\n processmail {bugid} {nametoexclude} " . 
       "[-forcecc list,of,users]\n             [-forceowner name] " .
-      "[-forceqacontact name]\nor\n" .
+      "[-forceqacontact name]\n             [-forcereporter name]\nor\n" .
       " processmail rescanall\n";
     exit;
 }
@@ -850,12 +855,6 @@ if ($#ARGV == 1) {
 }
 
 if ($ARGV[0] eq "rescanall") {
-    if ($::driver eq 'mysql') {
-        SendSQL("select bug_id from bugs where to_days(now()) - to_days(delta_ts) <= 2 order by bug_id");
-    } elsif ($::driver eq 'Pg') {
-        SendSQL("select bug_id from bugs where now() - delta_ts <= '2 days' order by bug_id");
-    }
-    
     print "Collecting bug ids...\n";
     if ($::driver eq 'mysql') {
         SendSQL("select bug_id, lastdiffed, delta_ts from bugs " . 

@@ -171,6 +171,7 @@ sub choose_product {
     print <<FIN;
 <center>
 <h1>Welcome to the Bugzilla Query Kitchen</h1>
+</center>
 <form method=get action=reports.cgi>
 <table border=1 cellpadding=5>
 <tr>
@@ -350,7 +351,9 @@ FIN
                 push @cdata, $_;
             }
             close COMMENTS;
-            $quip = "<i>" . $cdata[int(rand($#cdata + 1))] . "</i>";
+            if(@cdata) {
+                $quip = "<i>" . $cdata[int(rand(scalar(@cdata)))] . "</i>";
+            }
         }
     } 
 
