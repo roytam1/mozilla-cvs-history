@@ -172,17 +172,17 @@ $VERSION = '#tinder_version#';
 	    # these are dummy trees for testing.	    
  
 	    'Project_A' =>  {
-                   root => ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot',
+                   root => '/cvsroot',
                    module => 'SeaMonkeyAll',
                    branch => 'main',
                   },
 	    'Project_B' =>  {
-                   root => ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot',
+                   root => '/cvsroot',
                    module => 'Grendel',
                    branch => 'main',
                   },
 	    'Project_C' =>  {
-                   root => ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot',
+                   root => '/cvsroot',
                    module => 'NSPR',
                    branch => 'main',
                   },

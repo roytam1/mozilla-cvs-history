@@ -94,7 +94,7 @@ sub load_bonsai_libs {
         die(
             "Error in Tinderbox2 package: BonsaiData".
             "Could not load Bonsai file: \n".
-            "\t'$BONSAI_DIR/adminfuncs.pl'\n ".
+            "\t'$BONSAI_DIR/cvsquery.pl'\n ".
             "or\n".
             "\t'$BONSAI_DIR/adminfuncs.pl'\n".
             "Check that CVS repository is readable at: '$::CVS_ROOT'\n".
