@@ -88,6 +88,7 @@ MozillaCommon -a \
 MozillaWinOnly -a \
     ns/client.mak  \
     ns/cmd/makefile.win  \
+    ns/cmd/dialup  \
     ns/cmd/wincom  \
     ns/cmd/winfe  \
     ns/config  \
@@ -197,6 +198,7 @@ MozillaUnixOnly -a \
 
 
 MozillaMacOnly -a \
+    ns/cmd/dialup  \
     ns/cmd/macfe \
     ns/lib/mac/AutoAdmin  \
     ns/lib/mac/Includes  \
