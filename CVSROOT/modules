@@ -262,31 +262,31 @@ JavaStubWin -a \
 #
 
 RaptorDist -a \
-	nsprpub \
-	include \
-	jpeg \
-	modules\libreg \
-	xpcom \
-	modules\zlib \
-	modules\libutil \
-	sun-java \
-	nav-java \
-	js \
-	modules\security\freenav \
-	modules\libpref \
-	modules\libimg \
-	lib\xp \
-	lib\libnet \
-	base
+	ns/nsprpub \
+	ns/include \
+	ns/jpeg \
+	ns/modules/libreg \
+	ns/xpcom \
+	ns/modules/zlib \
+	ns/modules/libutil \
+	ns/sun-java \
+	ns/nav-java \
+	ns/js \
+	ns/modules/security/freenav \
+	ns/modules/libpref \
+	ns/modules/libimg \
+	ns/lib/xp \
+	ns/lib/libnet \
+	ns/base
 
 Raptor -a \
-	htmlparser \
-	dom \
-	gfx \
-	view \
-	widget \
-	layout \
-	webshell
+	ns/htmlparser \
+	ns/dom \
+	ns/gfx \
+	ns/view \
+	ns/widget \
+	ns/layout \
+	ns/webshell
 
 RaptorAll -a \
 	RaptorDist  \
