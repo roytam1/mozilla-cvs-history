@@ -487,9 +487,24 @@ JSRef -a \
 # is illegal on some operating systems.
 #
 JSBriano -a \
-	mozilla/js \
+	mozilla/js/Makefile.in \
+	mozilla/js/makefile.win \
+	mozilla/js/macbuild \
+	mozilla/js/src \
+	!mozilla/js/src/Makefile.ref \
+	!mozilla/js/src/config.mk \
+	!mozilla/js/src/jsconfig.mk \
+	!mozilla/js/src/rules.mk \
+	!mozilla/js/src/fdlibm/Makefile.ref \
+	!mozilla/js/src/liveconnect/Makefile.ref \
 	!mozilla/js/src/config \
-	!mozilla/js/src/liveconnect/config
+	!mozilla/js/src/editline \
+	!mozilla/js/src/liveconnect/config \
+	!mozilla/js/src/mininspr \
+	!mozilla/js/src/os \
+	!mozilla/js/src/perlconnect \
+	!mozilla/js/src/sh \
+	!mozilla/js/src/xpcom
 
 JSClient -a \
 	mozilla/js/Makefile.in \
