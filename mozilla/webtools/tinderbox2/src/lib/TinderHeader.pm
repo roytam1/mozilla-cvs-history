@@ -111,7 +111,6 @@ $DEBUG = 1;
                          
                          'Build' => "",
                          'IgnoreBuilds' => "",
-                         'Image' => "",
                          'MOTD' => "",
                          'TreeState' => "Open",
                          
@@ -291,16 +290,6 @@ be processed this value only effects the display.
 
 =over 4
 
-=item B<TinderHeader::Image>
-
-A random image and caption which is displayed on the status page.  It
-is similar to the old program 'fortune' and is not set by the
-administrators.  Images are added by the users.
-
-=back
-
-
-=over 4
 
 =item B<TinderHeader::TreeState>
 
