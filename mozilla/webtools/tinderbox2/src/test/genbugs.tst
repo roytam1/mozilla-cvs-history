@@ -82,7 +82,7 @@ $TINDERBOX_DATA_DIR = ( $TinderConfig::TINDERBOX_DATA_DIR ||
 	      'assertions caused my multi-part news messages', 
 
 	      'Time shown ought to be UTC',
-	      'Make distclean failes: too many args on command line',
+	      'Make distclean failed: too many args on command line',
 	      'Connection fails; no error message',
 
 	      ('Clicking on &quot;Twisty&quot; in &lt;Subscribe dialog&gt;'.
