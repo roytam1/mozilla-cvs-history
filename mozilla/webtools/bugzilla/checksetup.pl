@@ -1976,6 +1976,10 @@ if (GetFieldDef('profiles', 'groupset')) {
         $dbh->do("INSERT INTO group_group_map 
             (child_id, parent_id, isbless) 
             VALUES ($adminid, $id, 1)");
+        # admins are initially members of every group
+        $dbh->do("INSERT INTO group_group_map 
+            (child_id, parent_id, isbless) 
+            VALUES ($adminid, $id, 0)");
     }
                           
 }

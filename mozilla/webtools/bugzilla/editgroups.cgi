@@ -580,7 +580,7 @@ if ($action eq 'postchanges') {
         SendSQL("UPDATE groups SET description = " . 
             SqlQuote($::FORM{"desc"}) . " WHERE id = $gid");
     }
-    if ($isbuggroup && ($::FORM{"oldrexp"} ne $::FORM{"rexp"})) {
+    if ($::FORM{"oldrexp"} ne $::FORM{"rexp"}) {
         $chgs = 1;
         if (!eval {qr/$::FORM{"rexp"}/}) {
             ShowError("The regular expression you entered is invalid. " .

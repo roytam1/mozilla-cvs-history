@@ -872,14 +872,14 @@ sub DeriveGroup {
                 my ($groupid) = FetchSQLData();
                 if (!defined($groupidschecked{"$groupid"})) {
                     push(@groupidstocheck,$groupid);
-                    if (!$groupidsadded{$groupid}) {
-                        $groupidsadded{$groupid} = 1;
-                        PushGlobalSQLState();
-                        SendSQL("INSERT INTO user_group_map 
-                                 (user_id, group_id, isbless, isderived)
-                                 VALUES ($user, $groupid, 0, 1)");
-                        PopGlobalSQLState();
-                    }
+                }
+                if (!$groupidsadded{$groupid}) {
+                    $groupidsadded{$groupid} = 1;
+                    PushGlobalSQLState();
+                    SendSQL("INSERT INTO user_group_map 
+                             (user_id, group_id, isbless, isderived)
+                             VALUES ($user, $groupid, 0, 1)");
+                    PopGlobalSQLState();
                 }
             }
         }
