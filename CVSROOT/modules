@@ -127,6 +127,8 @@ MozillaSourceWinOnly -a \
 
 
 MozillaSourceUnixOnly -a \
+    mozilla/Makefile.in  \
+    mozilla/configure.in  \
     mozilla/cmd/Makefile  \
     mozilla/cmd/stubfe  \
     mozilla/cmd/xfe  \
