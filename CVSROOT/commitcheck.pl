@@ -187,7 +187,7 @@ $mode{'145'} = 'Restricted';
 $branch{'145'} = 'HEAD';
 $fullname{'145'} = 'security';
 $blessed{'145'} = ['cotter%netscape.com',];
-$super{'145'} = ['jgmyers%netscape.com','wtc%netscape.com','sonmi%netscape.com','roeber%netscape.com','nicolson%netscape.com','nelsonb%netscape.com','mcgreer%netscape.com','larryh%netscape.com','kirke%netscape.com','javi%netscape.com','chrisk%netscape.com','thayes%netscape.com','relyea%netscape.com','ddrinan%netscape.com','bryner%uiuc.edu',];
+$super{'145'} = ['wtc%netscape.com','sonmi%netscape.com','roeber%netscape.com','nicolson%netscape.com','nelsonb%netscape.com','mcgreer%netscape.com','larryh%netscape.com','kirke%netscape.com','jgmyers%netscape.com','javi%netscape.com','chrisk%netscape.com','bryner%uiuc.edu','thayes%netscape.com','relyea%netscape.com','ddrinan%netscape.com',];
 $mode{'151'} = 'Open';
 $branch{'151'} = 'HEAD';
 $fullname{'151'} = 'Security - Mozilla PSM Glue';
@@ -262,7 +262,9 @@ sub GetT {
 if ($b eq 'HEAD') {
 if (m:^CVSROOT/commitcheck\.pl$:) {return '3';}
 if (m:^CVSROOT/passwd$:) {return '3';}
-if (m:^mozilla/security/.*$:) {return '145';}
+if (m:^mozilla/security/coreconf/.*$:) {return '145';}
+if (m:^mozilla/security/jss/.*$:) {return '145';}
+if (m:^mozilla/security/nss/.*$:) {return '145';}
 if (m:^mozilla/[^/]*$:) {return '19';}
 if (m:^mozilla/gfx/src/xlib/.*$:) {return '121';}
 if (m:^mozilla/widget/src/xlib/.*$:) {return '121';}
