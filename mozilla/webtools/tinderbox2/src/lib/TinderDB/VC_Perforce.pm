@@ -22,7 +22,7 @@
 # The only perforce commands this module runs are:
 #
 #		 'p4 describe -s $num'
-#		 'p4 changes  -s \@$date_str\@now $filespec'
+#		 'p4 changes  -s submitted \@$date_str\@now $filespec'
 
 # 			which looks like this 
 
@@ -910,7 +910,7 @@ sub get_new_change_sets {
 
   $filespec = TreeData::Tree2Filespec($tree);
   my (@cmd) = (
-               'p4', 'changes', '-s', 
+               'p4', 'changes', '-s', 'submitted',
                '@'.$date_str.',@now', 
                $filespec,
                );
