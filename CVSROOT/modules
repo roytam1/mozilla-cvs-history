@@ -221,9 +221,7 @@ MozillaSourceMacOnly -a \
     mozilla/lib/mac/UserInterface  \
     mozilla/modules/coreincl  \
     mozilla/modules/edtplug/macbuild  \
-    mozilla/modules/libfont/jmcgen/include  \
-    mozilla/modules/libfont/jmcgen/src  \
-    mozilla/modules/libfont/macbuild  \
+    mozilla/modules/libfont  \
     mozilla/modules/progress/macbuild  \
     mozilla/modules/progress/public  \
     mozilla/modules/softupdt/macbuild  \
