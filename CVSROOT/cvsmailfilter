@@ -1,0 +1,25 @@
+#!/bin/sh
+PATH=/bin:/usr/bin;export PATH
+
+(
+URL=`echo "$1" | tr ' ' '+' | sed -e 's/\([^+]*\)\+\(.*\)/\subdir=\1\&files=\2/'`
+
+echo "Subject: $1"
+echo 'Content-Type: text/html; charset=us-ascii'
+echo 'Content-Transfer-Encoding: 7bit'
+echo 'Content-Disposition: inline'
+
+TMP=/tmp/cvsmf.$$
+trap "rm -f $TMP" 0 1 2 15
+cat > $TMP
+BRANCH=`sed -n 's@^Revision/Branch: \(.*\)@\1@p' $TMP`
+if test -n "$BRANCH"; then
+    URL="$URL&branch=$BRANCH"
+fi
+
+echo '<A HREF="http://warp.netscape.com/webtools/bonsai/cvsview2.cgi?'$URL'&command=DIRECTORY">View differences</A><BR>\n'
+echo '<HR ALIGN=left WIDTH=50%>\n'
+echo '<PRE VARIABLE>\n'
+
+echo '</PRE>\n'
+) | mail $2
