@@ -148,6 +148,11 @@ $branch{'78'} = 'HEAD';
 $fullname{'78'} = 'NSPR';
 $blessed{'78'} = ['sfraser%netscape.com','sdagley%netscape.com','gordon%netscape.com','beard%netscape.com',];
 $super{'78'} = ['srinivas%netscape.com','seawood%netscape.com','wtc%netscape.com',];
+$mode{'163'} = 'Restricted';
+$branch{'163'} = 'NSS_3_3_BRANCH';
+$fullname{'163'} = 'NSS Stable Release Branch';
+$blessed{'163'} = [];
+$super{'163'} = ['wtc%netscape.com','relyea%netscape.com','ddrinan%netscape.com','glen.beasley%sun.com','ian.mcgreer%sun.com','javi%netscape.com','jpierre%netscape.com','kirk.erickson%sun.com','nelsonb%netscape.com','nicolson%netscape.com','sonja.mirtitsch%sun.com','tfox%netscape.com',];
 $mode{'159'} = 'Open';
 $branch{'159'} = 'HEAD';
 $fullname{'159'} = 'NSS Trunk';
@@ -361,6 +366,10 @@ if (m:^mozilla/extensions/p3p/.*$:) {return '162';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
+}
+if ($b eq 'NSS_3_3_BRANCH') {
+if (m:^mozilla/security/coreconf/.*$:) {return '163';}
+if (m:^mozilla/security/nss/.*$:) {return '163';}
 }
 return '';
 }
