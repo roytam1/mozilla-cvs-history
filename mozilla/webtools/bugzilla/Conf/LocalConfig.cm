@@ -23,7 +23,7 @@ END
 do pathfix('Conf/Supplies/localconfig'); #pathfix so it works on win
 do pathfix('Conf/Supplies/localconfig.vars'); #read in the vars which are in another file
 
-if ($newstuff == "") {
+if ($newstuff ne "") {
 	output <<'EOF';
 	
 After further checking, it has been realized that you do not require any localconfig 
