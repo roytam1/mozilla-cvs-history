@@ -361,7 +361,6 @@ sub CheckCanChangeField {
       $oldvalue = '';
    }
 
-   print "$f old=$oldvalue new=$newvalue\n";
     if ($f eq "assigned_to" || $f eq "reporter" || $f eq "qa_contact") {
         if ($oldvalue =~ /^\d+$/) {
             if ($oldvalue == 0) {
@@ -906,8 +905,8 @@ sub MarkResolvedFixed {
     my $self = shift;
 
     if (CheckonCommment('resolve')) { 
-      $self->{'bug_status'} = 'RESOLVED';
-      $self->{'resolution'} = 'FIXED';
+      SetStatus($self, 'RESOLVED');
+      SetResolution($self, 'FIXED');
     }
     else {
        return 0;
@@ -917,43 +916,156 @@ sub MarkResolvedFixed {
 
 sub MarkResolvedInvalid {
     my $self = shift;
-    
-    $self->{'bug_status'} = 'RESOLVED';
-    $self->{'resolution'} = 'INVALID';
+
+    if (CheckonCommment('resolve')) {    
+        SetStatus($self, 'RESOLVED');
+        SetResolution($self, 'INVALID');
+    }
+    else {
+       return 0;
+    }
 
 }
 
 sub MarkResolvedWontFix {
     my $self = shift;
-    
-    $self->{'bug_status'} =  'RESOLVED';
-    $self->{'resolution'} = 'WONTFIX';
+
+    if (CheckonCommment('resolve')) {
+        SetStatus($self, 'RESOLVED');
+        SetResolution($self, 'WONTFIX');
+    }
+    else {
+       return 0;
+    }
 
 }
 
 sub MarkResolvedLater {
     my $self = shift;
-    
-    $self->{'bug_status'} = 'RESOLVED';
-    $self->{'resolution'} = 'LATER';
+
+    if (CheckonCommment('resolve')) {
+        SetStatus($self, 'RESOLVED');
+        SetResolution($self, 'LATER');
+    }
+    else {
+       return 0;
+    }    
 
 }
 
 sub MarkResolvedRemind {
     my $self = shift;
-    
-    $self->{'bug_status'} = 'RESOLVED';
-    $self->{'resolution'} = 'REMIND';
+   
+    if (CheckonCommment('resolve')) {
+        SetStatus($self, 'RESOLVED');
+        SetResolution($self, 'REMIND');
+    }
+    else {
+       return 0;
+    } 
 
 }
 
 sub MarkResolvedWorksForMe {
     my $self = shift;
-    
-    $self->{'bug_status'} = 'RESOLVED';
-    $self->{'resolution'} = 'WORKSFORME';
+
+    if (CheckonCommment('resolve')) {
+        SetStatus($self, 'RESOLVED');
+        SetResolution($self, 'WORKSFORME');
+    }
+    else {
+       return 0;
+    }    
 
 }
+
+sub ClearResolution {
+    my $self = shift;
+
+    if (CheckonCommment('clearresolution')) {
+        SetResolution($self, '');
+    }
+    else {
+       return 0;
+    }
+
+}
+
+sub Reassign {
+    my $self = shift;
+    my ($assignee) = @_;
+
+    if (CheckonCommment('reassign')) {
+        SetAssignedTo($assignee);
+    }
+    else {
+       return 0;
+    }
+
+}
+
+sub Reopen {
+   my $self = shift;
+
+    
+   if (CheckonComment('reopen')) {
+        SetStatus($self, 'REOPENED');
+        SetResolution($self, '');
+   }
+   else {
+      return 0;
+   }
+}
+
+sub Verify {
+   my $self = shift;
+
+   
+   if(CheckonComment('verify')) {
+        ChangeStatus($self, 'VERIFIED');
+   }
+   else {
+      return 0;
+   }
+}
+
+sub Close {
+    my $self = shift;
+
+    if(CheckonComment('close')) {
+        SetStatus('CLOSED');
+    }
+    else {
+       return 0;
+    }
+}
+
+sub MarkDuplicate {
+    my $self = shift;
+    my ($dupid) = @_;
+    my $num;
+
+    if (CheckonComment('duplicate')) {
+       $dupid = &::trim($dupid);
+       &::SendSQL("SELECT bug_id FROM bugs WHERE bug_id =\'$dupid\'");
+       $dupid = &::FetchOneColumn(); 
+       if (!$dupid) {
+           PushError($self, "You must specify a bug number of which this bug " .
+                         "is a duplicate.  The bug has not been changed.");
+           return 0;
+       }
+       if ($self->{'bug_id'} == $dupid) {
+           PushError($self, "Nice try.  But it doesn't really ".
+                         "make sense to mark a bug as a duplicate of " .
+                         "itself, does it?");  
+           return 0;
+       }
+       AppendComment($num, $self->{'whoid'}, "*** Bug $self->{'bug_id'} has been marked as a duplicate of this bug. ***");
+       $self->{'comment'} .= "\n\n*** This bug has been marked as a duplicate of $dupid ***";
+    }
+
+}
+
 
 # stupid subroutine for checking if lists are equal.
 sub ListDiff {
