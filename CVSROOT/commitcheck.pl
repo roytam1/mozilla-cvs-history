@@ -301,32 +301,6 @@ $fullname{'93'} = 'Zlib';
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'HEAD') {
-if (m:^mozilla/modules/security/.*$:) {return '86';}
-if (m:^mozilla/content/xml/.*$:) {return '88';}
-if (m:^mozilla/extensions/xmlextras/.*$:) {return '88';}
-if (m:^mozilla/parser/expat/.*$:) {return '88';}
-if (m:^mozilla/xpcom/.*$:) {return '89';}
-if (m:^xpcom/io$:) {return '90';}
-if (m:^mozilla/modules/zlib/.*$:) {return '93';}
-if (m:^gfx/src/xprint$:) {return '179';}
-if (m:^mozilla/view/.*$:) {return '96';}
-if (m:^mozilla/layout/base/.*$:) {return '98';}
-if (m:^mozilla/layout/build/.*$:) {return '98';}
-if (m:^mozilla/layout/doc/.*$:) {return '98';}
-if (m:^mozilla/layout/forms/.*$:) {return '98';}
-if (m:^mozilla/layout/generic/.*$:) {return '98';}
-if (m:^mozilla/layout/html/.*$:) {return '98';}
-if (m:^mozilla/layout/macbuild/.*$:) {return '98';}
-if (m:^mozilla/layout/printing/.*$:) {return '98';}
-if (m:^mozilla/layout/tables/.*$:) {return '98';}
-if (m:^mozilla/layout/tools/.*$:) {return '98';}
-if (m:^modules/libpr0n/decoders/mng/.*$:) {return '155';}
-if (m:^mozilla/modules/libimg/mng/.*$:) {return '155';}
-if (m:^mozilla/layout/style/.*$:) {return '100';}
-if (m:^mozilla/docshell/.*$:) {return '101';}
-if (m:^mozilla/embedding/.*$:) {return '101';}
-if (m:^mozilla/webshell/.*$:) {return '101';}
-if (m:^mozilla/parser/htmlparser$:) {return '102';}
 if (m:^mozilla/content/base/.*$:) {return '103';}
 if (m:^mozilla/content/events/.*$:) {return '103';}
 if (m:^mozilla/content/html/content/.*$:) {return '103';}
@@ -447,6 +421,32 @@ if (m:^mozilla/modules/plugin/.*$:) {return '81';}
 if (m:^mozilla/extensions/inspector$:) {return '184';}
 if (m:^mozilla/modules/libpref/.*$:) {return '82';}
 if (m:^mozilla/modules/libreg/.*$:) {return '84';}
+if (m:^mozilla/modules/security/.*$:) {return '86';}
+if (m:^mozilla/content/xml/.*$:) {return '88';}
+if (m:^mozilla/extensions/xmlextras/.*$:) {return '88';}
+if (m:^mozilla/parser/expat/.*$:) {return '88';}
+if (m:^mozilla/xpcom/.*$:) {return '89';}
+if (m:^xpcom/io$:) {return '90';}
+if (m:^mozilla/modules/zlib/.*$:) {return '93';}
+if (m:^gfx/src/xprint$:) {return '179';}
+if (m:^mozilla/view/.*$:) {return '96';}
+if (m:^mozilla/layout/base/.*$:) {return '98';}
+if (m:^mozilla/layout/build/.*$:) {return '98';}
+if (m:^mozilla/layout/doc/.*$:) {return '98';}
+if (m:^mozilla/layout/forms/.*$:) {return '98';}
+if (m:^mozilla/layout/generic/.*$:) {return '98';}
+if (m:^mozilla/layout/html/.*$:) {return '98';}
+if (m:^mozilla/layout/macbuild/.*$:) {return '98';}
+if (m:^mozilla/layout/printing/.*$:) {return '98';}
+if (m:^mozilla/layout/tables/.*$:) {return '98';}
+if (m:^mozilla/layout/tools/.*$:) {return '98';}
+if (m:^modules/libpr0n/decoders/mng/.*$:) {return '155';}
+if (m:^mozilla/modules/libimg/mng/.*$:) {return '155';}
+if (m:^mozilla/layout/style/.*$:) {return '100';}
+if (m:^mozilla/docshell/.*$:) {return '101';}
+if (m:^mozilla/embedding/.*$:) {return '101';}
+if (m:^mozilla/webshell/.*$:) {return '101';}
+if (m:^mozilla/parser/htmlparser$:) {return '102';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
