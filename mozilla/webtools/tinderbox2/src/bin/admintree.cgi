@@ -127,8 +127,11 @@ sub get_passwd_table {
 
   my ($file) = FileStructure::get_filename($TREE, 'passwd');
 
-  (-r $file) &&
-    require $file;
+  (-r $file) ||
+   return ;
+  
+  my ($r) = Persistence::load_structure($file);
+  $PASSWD_TABLE{$TREE} = $r;
 
   return ; 
 }
@@ -314,14 +317,7 @@ sub save_passwd_table {
   my ($file) = FileStructure::get_filename($TREE, 'passwd');
 
   if ( keys %{ $PASSWD_TABLE{$TREE} } ) {
-    Persistence::save_structure( 
-                                [ 
-                                 $PASSWD_TABLE{$TREE},
-                                ],
-                                [
-                                 "\$PASSWD_TABLE{'$TREE'}", 
-                                ],
-                                $file);
+    Persistence::save_structure($PASSWD_TABLE{$TREE},$file);
   }
 
   return ;
