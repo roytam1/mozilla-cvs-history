@@ -353,8 +353,10 @@ sub Link {
     $out .= "onClick=\" ";
     ($args{'windowtxt'}) &&
       ($out .= "tip(".(
-                       "$args{'windowwidth'},".
-                       "$args{'windowheight'},".
+#                        "$args{'windowheight'},".
+#                        "$args{'windowwidth'},".
+                       "$HTMLPopUp::DEFAULT_POPUP_HEIGHT,".
+                       "$HTMLPopUp::DEFAULT_POPUP_WIDTH,".
                        "\'$args{'windowtxt'}\'".
                       "").
        "); ");

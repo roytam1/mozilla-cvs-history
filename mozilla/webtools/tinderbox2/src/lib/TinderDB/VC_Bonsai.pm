@@ -502,8 +502,8 @@ sub render_authors {
             $link_choices .= 
               VCDisplay::query(
                                'tree' => $tree,
-                               'mindate' => $mindate,
-                               'maxdate' => $maxdate - $main::SECONDS_PER_DAY,
+                               'mindate' => $mindate - $main::SECONDS_PER_DAY,
+                               'maxdate' => $maxdate,
                                'who' => $author,
                                
                                "linktxt" => "Check-ins within 24 hours",
@@ -512,8 +512,8 @@ sub render_authors {
             $link_choices .= 
               VCDisplay::query(
                                'tree' => $tree,
-                               'mindate' => $mindate,
-                               'maxdate' => $maxdate - $main::SECONDS_PER_WEEK,
+                               'mindate' => $mindate - $main::SECONDS_PER_WEEK,
+                               'maxdate' => $maxdate,
                                'who' => $author,
                                
                                "linktxt" => "Check-ins within 7 days",
