@@ -93,6 +93,9 @@ sub url_quote {
 
 
 sub ParseUrlString {
+    # We don't want to detaint the user supplied data...
+    use re 'taint';
+
     my ($buffer, $f, $m) = (@_);
     undef %$f;
     undef %$m;
@@ -118,6 +121,7 @@ sub ParseUrlString {
             $name = $item;
             $value = "";
         }
+
         if ($value ne "") {
             if (defined $f->{$name}) {
                 $f->{$name} .= $value;
@@ -140,7 +144,6 @@ sub ParseUrlString {
         }
     }
 }
-
 
 sub ProcessFormFields {
     my ($buffer) = (@_);
@@ -259,25 +262,20 @@ sub ValidateBugID {
     # Validates and verifies a bug ID, making sure the number is a 
     # positive integer, that it represents an existing bug in the
     # database, and that the user is authorized to access that bug.
+    # We detaint the number here, too
 
     my ($id, $userid) = @_;
 
     # Make sure the bug number is a positive integer.
     # Whitespace can be ignored because the SQL server will ignore it.
     $id =~ /^\s*([1-9][0-9]*)\s*$/
+    $_[0] = trim($_[0]); # Allow whitespace arround the number
+    detaint_natural($_[0])
       || DisplayError("The bug number is invalid. If you are trying to use " .
                       "QuickSearch, you need to enable JavaScript in your " .
                       "browser. To help us fix this limitation, look " .
                       "<a href=\"http://bugzilla.mozilla.org/show_bug.cgi?id=70907\">here</a>.") 
       && exit;
-
-    # Users are authorized to access bugs if they are a member of one of
-    # groups to which the bug is restricted.    
-    # A user is also authorized to access a bug if she is the reporter, 
-    # assignee, QA contact, or member of the cc: list of the bug and the bug 
-    # allows users in those roles to see the bug.  The boolean fields 
-    # reporter_accessible, assignee_accessible, qacontact_accessible, and 
-    # cclist_accessible identify whether or not those roles can see the bug.
 
     # First check that the bug exists
     SendSQL("SELECT bug_id FROM bugs WHERE bug_id = $id");
@@ -682,6 +680,8 @@ sub quietly_check_login {
                     $::COOKIE{"Bugzilla_login"} = $loginname; # Makes sure case
                                                               # is in
                                                               # canonical form.
+                    # We've just verified that this is ok
+                    detaint_natural($::COOKIE{"Bugzilla_logincookie"});
                 } else {
                     $userid = 0;
                     $::disabledreason = $disabledtext;
@@ -1429,6 +1429,8 @@ if (defined $ENV{"REQUEST_METHOD"}) {
 
 
 if (defined $ENV{"HTTP_COOKIE"}) {
+    # Don't trust anything which came in as a cookie
+    use re 'taint';
     foreach my $pair (split(/;/, $ENV{"HTTP_COOKIE"})) {
         $pair = trim($pair);
         if ($pair =~ /^([^=]*)=(.*)$/) {

@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -29,6 +29,8 @@ use strict;
 my $hasEditGroup = -1;
 my $hasCanConfirmGroup = -1;
 
+use lib qw(.);
+
 require "CGI.pl";
 use RelationSet;
 
@@ -42,6 +44,7 @@ use vars %::versions,
     %::legal_opsys,
     %::legal_platform,
     %::legal_priority,
+    %::settable_resolution,
     %::target_milestone,
     %::legal_severity;
 
@@ -57,13 +60,18 @@ my $requiremilestone = 0;
 # This list will either consist of a single bug number from the "id"
 # form/URL field or a series of numbers from multiple form/URL fields
 # named "id_x" where "x" is the bug number.
+# For each bug being modified, make sure its ID is a valid bug number 
+# representing an existing bug that the user is authorized to access.
 my @idlist;
 if (defined $::FORM{'id'}) {
+    ValidateBugID($::FORM{'id'});
     push @idlist, $::FORM{'id'};
 } else {
     foreach my $i (keys %::FORM) {
         if ($i =~ /^id_([1-9][0-9]*)/) {
-            push @idlist, $1;
+            my $id = $1;
+            ValidateBugID($id);
+            push @idlist, $id;
         }
     }
 }
@@ -534,7 +542,7 @@ sub ChangeResolution {
     my ($str) = (@_);
     if ($str ne $::dontchange) {
         DoComma();
-        $::query .= "resolution = '$str'";
+        $::query .= "resolution = " . SqlQuote($str);
     }
 }
 
@@ -661,6 +669,8 @@ SWITCH: for ($::FORM{'knob'}) {
         last SWITCH;
     };
     /^resolve$/ && CheckonComment( "resolve" ) && do {
+        # Check here, because its the only place we require the resolution
+        CheckFormField(\%::FORM, 'resolution', \@::settable_resolution);
         ChangeStatus('RESOLVED');
         ChangeResolution($::FORM{'resolution'});
         last SWITCH;
@@ -996,8 +1006,15 @@ The changes made were:
             foreach my $i (split('[\s,]+', $::FORM{$target})) {
                 if ($i eq "") {
                     next;
-
                 }
+
+                my $orig = $i;
+                if (!detaint_natural($i)) {
+                    PuntTryAgain("$orig is not a legal bug number");
+                }
+
+                # Don't use CanSeeBug, since we want to keep deps to bugs a
+                # user can't see
                 SendSQL("select bug_id from bugs where bug_id = " .
                         SqlQuote($i));
                 my $comp = FetchOneColumn();
@@ -1015,7 +1032,8 @@ The changes made were:
             my @stack = @{$deps{$target}};
             while (@stack) {
                 my $i = shift @stack;
-                SendSQL("select $target from dependencies where $me = $i");
+                SendSQL("select $target from dependencies where $me = " .
+                        SqlQuote($i));
                 while (MoreSQLData()) {
                     my $t = FetchOneColumn();
                     if ($t == $id) {

@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -23,6 +23,8 @@
 
 use diagnostics;
 use strict;
+
+use lib qw(.);
 
 require "CGI.pl";
 
@@ -144,7 +146,7 @@ while (MoreSQLData()) {
 }
 SendSQL("delete from votes where who = $who");
 foreach my $id (@buglist) {
-    if ($::FORM{$id} > 0) {
+    if (detaint_natural($::FORM{$id}) && $::FORM{$id} > 0) {
         SendSQL("insert into votes (who, bug_id, count) values ($who, $id, $::FORM{$id})");
     }
     $affected{$id} = 1;
