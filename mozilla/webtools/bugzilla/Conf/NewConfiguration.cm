@@ -103,14 +103,65 @@ installation is in must be within the jurisdiction of a <Directory> block
 in the httpd.conf file that has 'AllowOverride Limit' in it.  If it has
 'AllowOverride All' or other options with Limit, that's fine.
 (Older Apache installations may use an access.conf file to store these
-<Directory> blocks.) See the Bugzilla Guide for more information
+<Directory> blocks.) See the Bugzilla Guide for more information.
 EOF
 
 ask('create_htaccess','Create .htaccess files?','y');
 
 # normalize the input so we don't have to do this later in the makefile
-if (getConf('create_htaccess') =~ /(y|yes|1)/i) {
-	setConf('create_htaccess','y');
-} else { setConf('create_htaccess','n') }
+normalizeYN('create_htaccess');
+
+output <<EOF;
+
+Bugzilla uses index.cgi for it's homepage instead of the traditional 
+index.html. Some web servers ship pre-configured to use index.cgi files 
+automatically, but it may not be possible to configure your server 
+in this way. Bugzilla can generate an index.html file to automatically redirect 
+users to your index.cgi file. See the Bugzilla Guide for more information.
+EOF
+
+ask('index_html',"Create index.html file?",'n');
+normalizeYN('index_html');
+
+output "Security related settings\n";
+if ($^O !~ /MSWin32/i) { # no webservergroup for win
+		output <<EOF;
+You will now need to set the group your web server runs on.
+If you do not have access to the group your web server runs under,
+set this to "". However, if you do set this to "", then your Bugzilla 
+installationwill be _VERY_ insecure, because some files will be world 
+readable/writable,and so anyone who can get local access to your machine 
+can do whatever theywant. You should only have this set to "" if this is 
+a testing installation and you cannot set this up any other way. 
+YOU HAVE BEEN WARNED. If you set this to anything besides "", 
+you will need to run make as root, or as a user who is a 
+member of the specified group.
+EOF
+	
+	{ # we redo to here if they give an invalid name
+		ask('webservergroup','Web server group?','nobody');
+		unless (getgrnam(getConf('webservergroup'))) {
+			# if we got here, the group doesn't exist
+			output "Invalid group name on your system\n";
+			redo;
+		}
+	}
+	
+}
+
+output "Installation configuration\n\n";
+
+use File::Temp;
+my ($fh,$tempname) = File::Temp::tempfile();
+
+output "In order to finish configuring your Bugzilla install, I will need\n";
+output "to open your editor of choice. If this fails, please run the following commands\n";
+output "manually and set your settings in the config file:\n";
+output getConf('editor')." $tempname\n";
+output "perl Configure.pl --perl=".getConf('perl')." --tempfile=$tempname\n";
+
+system(getConf('editor')." ".$tempname); # run the editor
+
+
 
 1;

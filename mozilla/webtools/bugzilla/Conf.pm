@@ -35,7 +35,7 @@ no warnings; # evil beings...
 
 use Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(ask holduntilkey output setConf getConf getParam setParam storeData);
+@EXPORT = qw(ask holduntilkey output setConf getConf getParam setParam storeData normalizeYN);
 
 # this is very important. We set a default controller which is responsible 
 # for getting data from the user and returning it back to us. Our default 
@@ -112,6 +112,14 @@ sub storeData() {
 	chmod(0600,'Conf/Supplies/config.pl');
 	print CONFIG Data::Dumper->Dump([\%main::c],['*main::c']);
 	close(CONFIG);
+}
+
+sub normalizeYN($) {
+	# reduce a yes or no answer to 1 or 0
+	my $var = shift;
+	if (getConf($var) =~ /(y|yes|1)/i) {
+		setConf($var,'1');
+	} else { setConf($var,'0') }	
 }
 
 1;

@@ -50,7 +50,7 @@ use Exporter;
 # Or, perhaps you are creating a custom version of the controller and you 
 # want to change the default answers to reflect your distro. Just add 
 # setConf lines below to change default values: 
-# example: setConf('questionName','answer');
+# example: _setConf('questionName','answer');
 
 sub _ask($$$) {
 	my ($name,$question, $default) = @_;
