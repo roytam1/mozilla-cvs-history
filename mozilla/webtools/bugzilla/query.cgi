@@ -51,6 +51,7 @@ use vars qw(
 );
 
 my $userid = 0;
+ConnectToDatabase();
 if (defined $::FORM{"GoAheadAndLogIn"}) {
     # We got here from a login page, probably from relogin.cgi.  We better
     # make sure the password is legit.
@@ -199,7 +200,7 @@ foreach my $p (@::legal_product) {
     # If we're using bug groups to restrict entry on products, and
     # this product has a bug group, and the user is not in that
     # group, we don't want to include that product in this list.
-    next if (Param("usebuggroups") && GroupExists($p) && !UserInGroup($userid, $p));
+    next if (!CanSeeProduct($userid, $p));
 
     # We build up boolean hashes in the "-set" hashes for each of these things 
     # before making a list because there may be duplicates names across products.
@@ -302,7 +303,6 @@ $vars->{'userid'} = $userid;
 # Boolean charts
 my @fields;
 push(@fields, { name => "noop", description => "---" });
-ConnectToDatabase();
 SendSQL("SELECT name, description FROM fielddefs ORDER BY sortkey");
 while (MoreSQLData()) {
     my ($name, $description) = FetchSQLData();

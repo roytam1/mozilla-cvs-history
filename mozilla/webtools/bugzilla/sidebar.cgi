@@ -45,14 +45,14 @@ $vars->{'anyvotesallowed'} = $::anyvotesallowed;
 $vars->{'userid'} = $userid;
 
 if ($userid) {
-    SendSQL("SELECT mybugslink FROM profiles WHERE user_id = $userid");
+    SendSQL("SELECT mybugslink FROM profiles WHERE userid = $userid");
     my $mybugslink = FetchOneColumn();
     if ($mybugslink) {
         my $mybugstemplate = Param("mybugstemplate");
         my %substs = ( 'userid' => url_quote($::COOKIE{'Bugzilla_login'}) );
         $vars->{'mybugsurl'} = PerformSubsts($mybugstemplate, \%substs);
     }
-    SendSQL("SELECT name FROM namedqueries WHERE userid = $userid AND linkinfooter");
+    SendSQL("SELECT name FROM namedqueries WHERE userid = $userid AND linkinfooter = 1");
     while (MoreSQLData()) {
         my ($name) = FetchSQLData();
         push(@{$vars->{'namedqueries'}}, $name);

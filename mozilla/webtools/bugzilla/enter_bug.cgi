@@ -64,10 +64,6 @@ ConnectToDatabase();
 # user is right from the start.
 my $userid = confirm_login();
 
-# If we're using bug groups to restrict bug entry, we need to know who the 
-# user is right from the start. 
-$userid = confirm_login() if (Param("usebuggroupsentry"));
-
 if (!defined $::FORM{'product'}) {
     GetVersionTable();
     $userid = quietly_check_login();
@@ -75,12 +71,11 @@ if (!defined $::FORM{'product'}) {
     my %products;
 
     foreach my $p (@enterable_products) {
-        if (!(Param("usebuggroupsentry")
-              && GroupExists($p)
-              && !UserInGroup($userid, $p)))
-        {
-            $products{$p} = $::proddesc{$p};
-        }
+        # If we're using bug groups to restrict entry on products, and
+        # this product is private to one or more bug groups and the user is not
+        # in one of those groups group, we don't want to include that product in this list.
+        next if !CanSeeProduct($userid, $p);
+        $products{$p} = $proddesc{$p};
     }
 
     my $prodsize = scalar(keys %products);
@@ -226,18 +221,9 @@ sub pickos {
 # End of subroutines
 ##############################################################################
 
-##############################################################################
-# End of subroutines
-##############################################################################
+$userid = confirm_login();
 
-$userid = confirm_login() if (!(Param("usebuggroupsentry")));
-
-# If the usebuggroupsentry parameter is set, we need to check and make sure
-# that the user has permission to enter a bug against this product.
-if(Param("usebuggroupsentry")
-   && GroupExists($product)
-   && !UserInGroup($userid, $product))  
-{
+if (!CanSeeProduct($userid, $product)) {
     DisplayError("Sorry; you do not have the permissions necessary to " .
                  "enter a bug against this product.\n");
     exit;
@@ -324,16 +310,15 @@ $vars->{'bug_status'} = \@status;
 $default{'bug_status'} = $status[0];
 
 if ($userid) {
-    # First we get the bit and description for the group.
-    my $group_id = '0';
-
-    if(Param("usebuggroups") && GroupExists($product)) {
-        SendSQL("SELECT group_id FROM groups ".
-                "WHERE name = " . SqlQuote($product) . " " .
-                "AND isbuggroup != 0");
-        ($group_id) = FetchSQLData();
-    }
-
+    my %productgroups;
+    SendSQL("SELECT product_group_map.group_id " . 
+            "FROM product_group_map, products " . 
+            "WHERE product_group_map.product_id = products.product_id " .
+            "AND products.product = " . SqlQuote($product));
+    while (my ($groupid) = FetchSQLData()) {
+        $productgroups{$groupid} = 1;
+    }   
+    
     SendSQL("SELECT user_group_map.group_id, groups.name, groups.description " . 
             "FROM user_group_map, groups " .
             "WHERE user_group_map.group_id = groups.group_id " .
@@ -344,10 +329,10 @@ if ($userid) {
     my @groups;
 
     while (MoreSQLData()) {
-        my ($id, $prodname, $description) = FetchSQLData();
+        my ($id, $name, $description) = FetchSQLData();
         # Don't want to include product groups other than this product.
-        next unless($prodname eq $product ||
-                    !defined($::proddesc{$prodname}));
+        next unless($name eq $product ||
+                    !defined($::proddesc{$name}));
 
         my $check;
 
@@ -364,7 +349,7 @@ if ($userid) {
             # bug groups and have one for this product.
             # If $group_bit is 0, it won't match the current group, so compare 
             # it to the current bit instead of checking for non-zero.
-            $check = ($group_id == $id);
+            $check = $productgroups{$id} ? 1 : 0;
         }
 
         my $group =

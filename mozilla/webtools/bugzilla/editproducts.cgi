@@ -112,13 +112,16 @@ sub EmitFormElements ($$$$$$$$$)
         print qq{<INPUT TYPE=HIDDEN NAME="defaultmilestone" VALUE="$defaultmilestone">\n};
     }
 
-    # Added -JMR, 2/16/00
-    if (Param("usebuggroups")) {
-        $userregexp = value_quote($userregexp);
-        print "</TR><TR>\n";
-        print "  <TH ALIGN=\"right\">User Regexp for Bug Group:</TH>\n";
-        print "  <TD><INPUT TYPE=TEXT SIZE=64 MAXLENGTH=255 NAME=\"userregexp\" VALUE=\"$userregexp\"></TD>\n";
-    }
+    print "</tr><tr>\n";
+    print "  <TH ALIGN=\"right\">Create Product Specific Group:</TH>\n";
+    SendSQL("SELECT group_id FROM groups WHERE name = " . SqlQuote($product));
+    my $checked = FetchOneColumn() ? "CHECKED" : "";
+    print "  <TD><INPUT TYPE=\"CHECKBOX\" NAME=\"productgroup\" $checked></TD>\n";
+
+    $userregexp = value_quote($userregexp);
+    print "</TR><TR>\n";
+    print "  <TH ALIGN=\"right\">User Regexp for Product Group:</TH>\n";
+    print "  <TD><INPUT TYPE=TEXT SIZE=64 MAXLENGTH=255 NAME=\"userregexp\" VALUE=\"$userregexp\"></TD>\n";
 
     print "</TR><TR>\n";
     print "  <TH ALIGN=\"right\">Closed for bug entry:</TH>\n";
@@ -136,6 +139,46 @@ sub EmitFormElements ($$$$$$$$$)
     print "</TR><TR>\n";
     print "  <TH ALIGN=\"right\">Number of votes a bug in this product needs to automatically get out of the <A HREF=\"bug_status.html#status\">UNCONFIRMED</A> state:</TH>\n";
     print "  <TD><INPUT SIZE=5 MAXLENGTH=5 NAME=\"votestoconfirm\" VALUE=\"$votestoconfirm\"></TD>\n";
+
+    # Find list of groups that this product can be marked private to
+    print "</TR><TR>\n";
+    print "  <TH ALIGN=\"right\">Other Group Access:</TH>\n";
+    print "  <TD><TABLE>\n";
+    my $productid = 0;
+    my %productbelongs = ();
+    if ($product) {
+        SendSQL("select product_id from products where product = " . SqlQuote($product));
+        $productid = FetchOneColumn();
+        SendSQL("select groups.group_id from groups, product_group_map " .
+                "where groups.group_id = product_group_map.group_id ".
+                "and product_group_map.product_id = $productid");
+        while (my ($groupid) = FetchSQLData()) {
+            $productbelongs{$groupid} = 1;
+        }
+    }
+
+    my %groupsbelong = ();
+    my %groupsbelongname = ();
+    my %groupsbelongdesc = ();
+    SendSQL("select groups.group_id, groups.name, groups.description " .
+            "from groups, user_group_map " .
+            "where groups.group_id = user_group_map.group_id " .
+            "and groups.isbuggroup = 1 " .
+            "and user_group_map.user_id = $userid");
+    while (my ($groupid, $name, $desc) = FetchSQLData()) {
+        $groupsbelong{$groupid} = 1;
+        $groupsbelongname{$groupid} = $name;
+        $groupsbelongdesc{$groupid} = $desc;
+    }
+
+    foreach my $groupid (keys %groupsbelong) {
+        my $checked = defined ($productbelongs{$groupid}) ? "CHECKED" : "";
+        print "<TR>\n<TD><INPUT TYPE=\"checkbox\" NAME=\"group_$groupid\" VALUE=\"$groupid\" $checked></TD>\n";
+        print "<TD><B>" . ucfirst($groupsbelongname{$groupid}) . ":</B> ";
+        print "$groupsbelongdesc{$groupid}</TD>\n</TR>\n";
+    }
+    print "</TABLE>\n</TD>\n";
+    print "<INPUT TYPE=\"hidden\" NAME=\"productid\" VALUE=\"$productid\">\n";
 }
 
 
@@ -206,10 +249,16 @@ my $localtrailer = "<A HREF=\"editproducts.cgi\">edit</A> more products";
 unless ($action) {
     PutHeader("Select product");
 
+#    SendSQL("SELECT products.product,description,disallownew,
+#                    votesperuser,maxvotesperbug,votestoconfirm,COUNT(bug_id)
+#             FROM products LEFT JOIN bugs
+#               ON products.product=bugs.product
+#             GROUP BY products.product,description,disallownew,
+#                      votesperuser,maxvotesperbug,votestoconfirm
+#             ORDER BY products.product");
     SendSQL("SELECT products.product,description,disallownew,
-                    votesperuser,maxvotesperbug,votestoconfirm,COUNT(bug_id)
-             FROM products LEFT JOIN bugs
-               ON products.product=bugs.product
+                    votesperuser,maxvotesperbug,votestoconfirm
+             FROM products 
              GROUP BY products.product,description,disallownew,
                       votesperuser,maxvotesperbug,votestoconfirm
              ORDER BY products.product");
@@ -220,7 +269,7 @@ unless ($action) {
     print "  <TH ALIGN=\"left\">Votes<br>per<br>user</TH>\n";
     print "  <TH ALIGN=\"left\">Max<br>Votes<br>per<br>bug</TH>\n";
     print "  <TH ALIGN=\"left\">Votes<br>to<br>confirm</TH>\n";
-    print "  <TH ALIGN=\"left\">Bugs</TH>\n";
+#    print "  <TH ALIGN=\"left\">Bugs</TH>\n";
     print "  <TH ALIGN=\"left\">Action</TH>\n";
     print "</TR>";
     while ( MoreSQLData() ) {
@@ -237,12 +286,13 @@ unless ($action) {
         print "  <TD VALIGN=\"top\" ALIGN=\"right\">$votesperuser</TD>\n";
         print "  <TD VALIGN=\"top\" ALIGN=\"right\">$maxvotesperbug</TD>\n";
         print "  <TD VALIGN=\"top\" ALIGN=\"right\">$votestoconfirm</TD>\n";
-        print "  <TD VALIGN=\"top\" ALIGN=\"right\">$bugs</TD>\n";
+#        print "  <TD VALIGN=\"top\" ALIGN=\"right\">$bugs</TD>\n";
         print "  <TD VALIGN=\"top\"><A HREF=\"editproducts.cgi?action=del&product=", url_quote($product), "\">Delete</A></TD>\n";
         print "</TR>";
     }
     print "<TR>\n";
-    print "  <TD VALIGN=\"top\" COLSPAN=7>Add a new product</TD>\n";
+    print "  <TD VALIGN=\"top\" COLSPAN=6>Add a new product</TD>\n";
+    # print "  <TD VALIGN=\"top\" COLSPAN=7>Add a new product</TD>\n";
     print "  <TD VALIGN=\"top\" ALIGN=\"middle\"><FONT SIZE =-1><A HREF=\"editproducts.cgi?action=add\">Add</A></FONT></TD>\n";
     print "</TR></TABLE>\n";
 
@@ -329,6 +379,7 @@ if ($action eq 'new') {
     my $votestoconfirm = $::FORM{votestoconfirm};
     $votestoconfirm ||= 0;
     my $defaultmilestone = $::FORM{defaultmilestone} || "---";
+    my $productgroup = $::FORM{'productgroup'} || "";
 
     # Add the new product.
     SendSQL("INSERT INTO products ( " .
@@ -352,15 +403,13 @@ if ($action eq 'new') {
 
     SendSQL("INSERT INTO milestones (product, value, sortkey) VALUES (" .
             SqlQuote($product) . ", " . SqlQuote($defaultmilestone) . ", 0)");
-    
-    # If we're using bug groups, then we need to create a group for this
-    # product as well.  -JMR, 2/16/00
-    if(Param("usebuggroups")) {
+
+    if ($productgroup) {    
         # Check for a group already by this name
         SendSQL("SELECT name FROM groups WHERE name = " . SqlQuote($product));
         my $name = FetchOneColumn();
         if ($name) {
-             DisplayError("There is already a group by that name.")
+            DisplayError("There is already a group by that name.")
                 && exit;
         } else {
             # Next we insert into the groups table
@@ -408,6 +457,29 @@ if ($action eq 'new') {
                     SendSQL("INSERT INTO user_group_map VALUES ($userid, $groupid, 0)");
                 }
             }
+        }
+    }
+
+    # Update group permissions for this product
+    my %newgroups = ();
+    foreach (keys %::FORM) {
+        next unless /^group_/;
+        detaint_natural($::FORM{$_});
+        $newgroups{$::FORM{$_}} = 1;
+    }
+
+    my %groupsbelong = ();
+    SendSQL("select groups.group_id from groups, user_group_map " .
+            "where groups.group_id = user_group_map.group_id " .
+            "and groups.isbuggroup = 1 " .
+            "and user_group_map.user_id = $userid");
+    while (my ($groupid) = FetchSQLData()) {
+        $groupsbelong{$groupid} = 1;
+    }
+
+    foreach my $groupid (keys %groupsbelong) {
+        if ($newgroups{$groupid}) {
+            SendSQL("INSERT INTO product_group_map (product_id, group_id) VALUES ($productid, $groupid)");
         }
     }
 
@@ -590,8 +662,12 @@ if ($action eq 'delete') {
                 groups WRITE,
                 profiles WRITE,
                 milestones WRITE,
-                user_group_map WRITE");
+                user_group_map WRITE,
+                product_group_map WRITE");
     }
+
+    SendSQL("SELECT product_id FROM products WHERE product = " . SqlQuote($product));
+    my $productid = FetchOneColumn();
 
     # According to MySQL doc I cannot do a DELETE x.* FROM x JOIN Y,
     # so I have to iterate over bugs and delete all the indivial entries
@@ -642,6 +718,10 @@ if ($action eq 'delete') {
        print "Users removed from product group and group removed.<br>\n";
     }
 
+    # Deleting any product groups
+    SendSQL("DELETE FROM product_group_map WHERE product_id = $productid");
+    print "Other product groups deleted.<BR>\n";
+
     SendSQL("DELETE FROM products
              WHERE product=" . SqlQuote($product));
     print "Product '$product' deleted.<BR>\n";
@@ -675,12 +755,10 @@ if ($action eq 'edit') {
         FetchSQLData();
 
     my $userregexp = '';
-    if(Param("usebuggroups")) {
-        SendSQL("SELECT userregexp
-                 FROM groups
-                 WHERE name=" . SqlQuote($product));
-        $userregexp = FetchOneColumn() || "";
-    }
+    SendSQL("SELECT userregexp
+             FROM groups
+             WHERE name=" . SqlQuote($product));
+    $userregexp = FetchOneColumn() || "";
 
     print "<FORM METHOD=POST ACTION=editproducts.cgi>\n";
     print "<TABLE  BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
@@ -771,10 +849,8 @@ if ($action eq 'edit') {
         value_quote($description) . "\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"milestoneurlold\" VALUE=\"" .
         value_quote($milestoneurl) . "\">\n";
-    if(Param("usebuggroups")) {
-        print "<INPUT TYPE=HIDDEN NAME=\"userregexpold\" VALUE=\"" .
-            value_quote($userregexp) . "\">\n";
-    }
+    print "<INPUT TYPE=HIDDEN NAME=\"userregexpold\" VALUE=\"" .
+        value_quote($userregexp) . "\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"disallownewold\" VALUE=\"$disallownew\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"votesperuserold\" VALUE=\"$votesperuser\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"maxvotesperbugold\" VALUE=\"$maxvotesperbug\">\n";
@@ -819,7 +895,8 @@ if ($action eq 'update') {
     my $votestoconfirmold   = trim($::FORM{votestoconfirmold}   || 0);
     my $defaultmilestone    = trim($::FORM{defaultmilestone}    || '---');
     my $defaultmilestoneold = trim($::FORM{defaultmilestoneold} || '---');
-
+    my $productgroup        = trim($::FORM{productgroup}        || 0);
+    my $productgroupold     = trim($::FORM{productgroupold}     || 0);
     my $checkvotes = 0;
 
     CheckProduct($productold);
@@ -840,7 +917,8 @@ if ($action eq 'update') {
                              groups WRITE,
                              profiles WRITE,
                              milestones WRITE,
-                             user_group_map WRITE");
+                             user_group_map WRITE,
+                             product_group_map WRITE");
     }
 
     if ($disallownew ne $disallownewold) {
@@ -873,8 +951,7 @@ if ($action eq 'update') {
         print "Updated mile stone URL.<BR>\n";
     }
 
-        # Added -JMR, 2/16/00
-    if (Param("usebuggroups") && $userregexp ne $userregexpold) {
+    if ($userregexp ne $userregexpold && $productgroup) {
         # This will take a little bit of work here, since there may not be
         # an existing bug group for this product, and we will also have to
         # update users groupsets.
@@ -924,6 +1001,38 @@ if ($action eq 'update') {
             print "Added users matching regexp to group.<BR>\n";
         }
     }
+
+    # Update group permissions for this product
+    my %newgroups = ();
+    foreach (keys %::FORM) {
+        next unless /^group_/;
+        detaint_natural($::FORM{$_});
+        $newgroups{$::FORM{$_}} = 1;
+    }
+
+    my %groupsbelong = ();
+    SendSQL("select groups.group_id from groups, user_group_map " .
+            "where groups.group_id = user_group_map.group_id " .
+            "and groups.isbuggroup = 1 " .
+            "and user_group_map.user_id = $userid");
+    while (my ($groupid) = FetchSQLData()) {
+        $groupsbelong{$groupid} = 1;
+    }
+
+    foreach my $groupid (keys %groupsbelong) {
+        if ($newgroups{$groupid}) {
+            SendSQL("SELECT group_id FROM product_group_map " . 
+                    "WHERE product_id = $productid AND group_id = $groupid");
+            if (!FetchOneColumn()) {
+                SendSQL("INSERT INTO product_group_map (product_id, group_id) VALUES ($productid, $groupid)");
+            } 
+        } else {
+            SendSQL("DELETE FROM product_group_map " . 
+                    "WHERE product_id = $productid AND group_id = $groupid");
+        }
+    }
+    print "Groups updated.<br>\n";
+
 
     if ($votesperuser ne $votesperuserold) {
         SendSQL("UPDATE products

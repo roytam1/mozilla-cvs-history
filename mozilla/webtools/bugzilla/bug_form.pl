@@ -165,15 +165,7 @@ GROUP BY
             next;
         }
 
-        if (Param("usebuggroupsentry")
-          && GroupExists($product)
-          && !UserInGroup($userid, $product))
-        {
-            # If we're using bug groups to restrict entry on products, and
-            # this product has a bug group, and the user is not in that
-            # group, we don't want to include that product in this list.
-            next;
-        }
+        next if !CanSeeProduct($userid, $product);
 
         push(@prodlist, $product);
     }

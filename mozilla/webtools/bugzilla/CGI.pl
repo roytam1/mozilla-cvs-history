@@ -930,6 +930,8 @@ sub DisplayError {
   $template->process("global/user-error.html.tmpl", $vars)
     || ThrowTemplateError($template->error());   
 
+  RollBack();
+  
   return 1;
 }
 
@@ -946,7 +948,9 @@ sub ThrowCodeError {
   print "Content-type: text/html\n\n" if !$vars->{'header_done'};
   $template->process("global/code-error.html.tmpl", $vars)
     || ThrowTemplateError($template->error());
-    
+ 
+  RollBack();
+   
   exit;
 }
 
@@ -1054,11 +1058,17 @@ sub GetBugActivity {
             bugs_activity.bug_when, ";
 
     } elsif ($::driver eq 'Pg') {
+#        $query = "
+#        SELECT 
+#            COALESCE(fielddefs.name, chr(bugs_activity.fieldid)), 
+#            bugs_activity.attach_id,
+#            TO_CHAR(bugs_activity.bug_when, 'YYYY-MM-DD'), ";
         $query = "
         SELECT 
-            COALESCE(fielddefs.name, chr(bugs_activity.fieldid)), 
+            bugs_activity.fieldid, 
             bugs_activity.attach_id,
             TO_CHAR(bugs_activity.bug_when, 'YYYY-MM-DD'), ";
+
     }
 
     $query .= "

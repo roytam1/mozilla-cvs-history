@@ -76,17 +76,13 @@ my $userid = quietly_check_login();
 GetVersionTable();
 
 my @myproducts;
-if(Param("usebuggroups")) {
-    push( @myproducts, "-All-");
-    foreach my $this_product (@legal_product) {
-        if(GroupExists($this_product) && !UserInGroup($userid, $this_product)) {
-            next;
-        } else {
-            push( @myproducts, $this_product )
-        }
+push( @myproducts, "-All-");
+foreach my $this_product (@legal_product) {
+    if (!CanSeeProduct($userid, $this_product)) {
+        next;
+    } else {
+        push(@myproducts, $this_product)
     }
-} else {
-    push( @myproducts, "-All-", @legal_product );
 }
 
 if (! defined $FORM{'product'}) {
@@ -106,11 +102,10 @@ if (! defined $FORM{'product'}) {
 
     # If usebuggroups is on, we don't want people to be able to view
     # reports for products they don't have permissions for...
-    Param("usebuggroups")
-      && GroupExists($FORM{'product'})
-      && !UserInGroup($userid, $FORM{'product'})
-      && DisplayError("You do not have the permissions necessary to view reports for this product.")
-      && exit;
+    $::FORM{'product'} != '-All-' 
+        && !CanSeeProduct($::FORM{'product'}, $userid)      
+            && DisplayError("You do not have the permissions necessary to view reports for this product.")
+                && exit;
 
     # For security and correctness, validate the value of the "output" form variable.
     # Valid values are the keys from the %reports hash defined above which appear in
@@ -169,7 +164,7 @@ sub choose_product {
 <h1>Welcome to the Bugzilla Query Kitchen</h1>
 </center>
 <form method=get action=reports.cgi>
-<table border=1 cellpadding=5>
+<table border=1 cellpadding=5 align="center">
 <tr>
 <td align=center><b>Product:</b></td>
 <td align=center>

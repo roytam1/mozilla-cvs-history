@@ -1555,21 +1555,21 @@ AddGroup('editcomponents', 'Can create, destroy, and edit components.');
 AddGroup('editkeywords', 'Can create, destroy, and edit keywords.');
 
 if (!GroupDoesExist("editbugs")) {
-    my $id = AddGroup('editbugs',  'Can edit all aspects of any bug.', ".*");
-    my $sth = $dbh->prepare("SELECT userid FROM profiles ORDER BY userid");
-    $sth->execute();
-    while ( my ($userid) = $sth->fetchrow_array() ) {
-        $dbh->do("INSERT INTO user_group_map VALUES ($userid, $id)");
-    }
+    my $id = AddGroup('editbugs',  'Can edit all aspects of any bug.', "");
+#    my $sth = $dbh->prepare("SELECT userid FROM profiles ORDER BY userid");
+#    $sth->execute();
+#    while ( my ($userid) = $sth->fetchrow_array() ) {
+#        $dbh->do("INSERT INTO user_group_map VALUES ($userid, $id)");
+#    }
 }
 
 if (!GroupDoesExist("canconfirm")) {
-    my $id = AddGroup('canconfirm',  'Can confirm a bug.', ".*");
-    my $sth = $dbh->prepare("SELECT userid FROM profiles ORDER BY userid");
-    $sth->execute();
-    while ( my ($userid) = $sth->fetchrow_array() ) {
-        $dbh->do("INSERT INTO user_group_map VALUES ($userid, $id)");
-    }
+    my $id = AddGroup('canconfirm',  'Can confirm a bug.', "");
+#    my $sth = $dbh->prepare("SELECT userid FROM profiles ORDER BY userid");
+#    $sth->execute();
+#    while ( my ($userid) = $sth->fetchrow_array() ) {
+#        $dbh->do("INSERT INTO user_group_map VALUES ($userid, $id)");
+#    }
 }
 
 
@@ -2335,32 +2335,33 @@ if (GetFieldDef('bugs', 'long_desc')) {
 # different fields we keep an activity log on.  The bugs_activity table
 # now has a pointer into that table instead of recording the name directly.
 
-if (GetFieldDef('bugs_activity', 'field')) {
-    AddField('bugs_activity', 'fieldid', 'integer not null');
-
-    print "Populating new fieldid field ...\n";
-
-    my $sth = $dbh->prepare('SELECT DISTINCT field FROM bugs_activity');
-    $sth->execute();
-    my %ids;
-    while (my ($f) = ($sth->fetchrow_array())) {
-        my $q = $dbh->quote($f);
-        my $s2 =
-            $dbh->prepare("SELECT fieldid FROM fielddefs WHERE name = $q");
-        $s2->execute();
-        my ($id) = ($s2->fetchrow_array());
-        if (!$id) {
-            $dbh->do("INSERT INTO fielddefs (name, description) VALUES " .
-                     "($q, $q)");
-            $s2 = $dbh->prepare("select last_value from fielddefs_fieldid_seq");
-            $s2->execute();
-            ($id) = ($s2->fetchrow_array());
-        }
-        $dbh->do("UPDATE bugs_activity SET fieldid = $id WHERE field = $q");
-    }
-
-    DropField('bugs_activity', 'field');
-}
+#if (GetFieldDef('bugs_activity', 'field')) {
+#    AddField('bugs_activity', 'fieldid', 'integer not null');
+#
+#    print "Populating new fieldid field ...\n";
+#
+#    my $sth = $dbh->prepare('SELECT DISTINCT field FROM bugs_activity');
+#    $sth->execute();
+#    my %ids;
+#    while (my ($f) = ($sth->fetchrow_array())) {
+#        my $q = $dbh->quote($f);
+#        next if !$q || $q =~ /NULL/;
+#        print "$q\n";
+#        my $s2 = $dbh->prepare("SELECT fieldid FROM fielddefs WHERE name = $q");
+#        $s2->execute();
+#        my ($id) = ($s2->fetchrow_array());
+#        if (!$id) {
+#            $dbh->do("INSERT INTO fielddefs (name, description, mailhead, sortkey) VALUES " .
+#                     "($q, $q, 0, 0)");
+#            $s2 = $dbh->prepare("select last_value from fielddefs_fieldid_seq");
+#            $s2->execute();
+#            ($id) = ($s2->fetchrow_array());
+#        }
+#        $dbh->do("UPDATE bugs_activity SET fieldid = $id WHERE field = $q");
+#    }
+#
+#    DropField('bugs_activity', 'field');
+#}
         
 
 # 2000-01-18 New email-notification scheme uses a new field in the bug to 
@@ -2634,7 +2635,7 @@ if (!($sth->fetchrow_arrayref()->[0])) {
 
     foreach $key (keys(%dupes))
     {
-        $dupes{$key} =~ s/.*\*\*\* This bug has been marked as a duplicate of (\d{1,5}) \*\*\*.*?/$1/sm;
+        $dupes{$key} =~ s/^.*\*\*\* This bug has been marked as a duplicate of (\d{1,5}?) \*\*\*.*/$1/sm;
         $dbh->do("INSERT INTO duplicates VALUES('$dupes{$key}', '$key')");
         #                    BugItsADupeOf   Dupe
     }
@@ -2952,25 +2953,25 @@ if (!GetFieldDef('products', 'product_id')) {
 # 2002-02-04 bbaetz@student.usyd.edu.au bug 95732
 # Remove logincookies.cryptpassword, and delete entries which become
 # invalid
-if (GetFieldDef("logincookies", "cryptpassword")) {
-    # We need to delete any cookies which are invalid, before dropping the
-    # column
-
-    print "Removing invalid login cookies...\n";
-
-    # mysql doesn't support DELETE with multi-table queries, so we have
-    # to iterate
-    my $sth = $dbh->prepare("SELECT cookie FROM logincookies, profiles " .
-                            "WHERE logincookies.cryptpassword != " .
-                            "profiles.cryptpassword AND " .
-                            "logincookies.userid = profiles.userid");
-    $sth->execute();
-    while (my ($cookie) = $sth->fetchrow_array()) {
-        $dbh->do("DELETE FROM logincookies WHERE cookie = $cookie");
-    }
-
-    DropField("logincookies", "cryptpassword");
-}
+#if (GetFieldDef("logincookies", "cryptpassword")) {
+#    # We need to delete any cookies which are invalid, before dropping the
+#    # column
+#
+#    print "Removing invalid login cookies...\n";
+#
+#    # mysql doesn't support DELETE with multi-table queries, so we have
+#    # to iterate
+#    my $sth = $dbh->prepare("SELECT cookie FROM logincookies, profiles " .
+#                            "WHERE logincookies.cryptpassword != " .
+#                            "profiles.cryptpassword AND " .
+#                            "logincookies.userid = profiles.userid");
+#    $sth->execute();
+#    while (my ($cookie) = $sth->fetchrow_array()) {
+#        $dbh->do("DELETE FROM logincookies WHERE cookie = $cookie");
+#    }
+#
+#    DropField("logincookies", "cryptpassword");
+#}
 
 # 2002-02-13 bbaetz@student.usyd.edu.au - bug 97471
 # qacontact/assignee should always be able to see bugs,

@@ -94,12 +94,10 @@ umask 0;
 ConnectToDatabase();
 
 # Some sanity checking
-if(Param("usebuggroupsentry") && GroupExists($product)) {
-    if(!UserInGroup($userid, $product)) {
-        DisplayError("Sorry; you do not have the permissions necessary to enter
-                      a bug against this product.", "Permission Denied");
-        exit;
-    }
+if(!CanSeeProduct($product, $userid)) {
+    DisplayError("Sorry; you do not have the permissions necessary to enter
+                 a bug against this product.", "Permission Denied");
+    exit;
 }
 
 if (!$::FORM{'component'}) {

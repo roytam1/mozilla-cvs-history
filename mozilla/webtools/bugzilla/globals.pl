@@ -147,6 +147,25 @@ sub ConnectToDatabase {
             || die "Bugzilla is currently broken. Please try again later. " . 
                    "If the problem persists, please contact " . Param("maintainer") .
                    ". The error you should quote is: " . $DBI::errstr;
+        if ($::driver eq 'Pg' && Param('usetransactions')) {
+            $::db->{AutoCommit} = 1;
+        }
+    }
+}
+
+sub EndTransaction {
+    if ($::driver eq 'Pg' && Param('usetransactions')) {
+        if ($::db) {
+            $::db->commit || die "Error commiting current transaction: " . $DBI::errstr;
+        }
+    }
+}
+
+sub RollBack {
+    if ($::driver eq 'Pg' && Param('usetransactions')) {
+        if ($::db) {
+            $::db->rollback || die "Error rolling back current transaction: " . $DBI::errstr;
+        }
     }
 }
 
@@ -903,8 +922,41 @@ sub CanSeeProduct {
     my ($userid, $product) = (@_);
     my @groups = ();
 
+    # If group name same as product and user in that group then return success
+    # Based on the old method of handling product privacy.
+    return 1 if UserInGroup($userid, $product);
+
     ConnectToDatabase();
     PushGlobalSQLState();
+
+    # Check first to see if this product is private
+    SendSQL("SELECT count(*) FROM product_group_map, products " .
+            "WHERE products.product_id = product_group_map.product_id " . 
+            "AND products.product = " . SqlQuote($product));
+    my $count = FetchOneColumn();
+
+    # Product is not private to any groups so user can see it.
+    if (!$count) {
+        return 1;
+    }
+
+    # User does not have account or is not logged in and product is private so
+    # return 0 value.
+    if (!$userid && $count) {
+        return 0;
+    } 
+
+    SendSQL("SELECT groups.group_id FROM groups " .
+            "LEFT JOIN user_group_map ON groups.group_id = user_group_map.group_id " .
+            "WHERE user_group_map.user_id = $userid");
+    while (MoreSQLData()) {
+        my ($groupid) = FetchSQLData();
+        push (@groups, $groupid);
+    }
+    
+    if (@groups < 1) {
+        @groups = (0);
+    }
 
     SendSQL("
     SELECT
@@ -914,11 +966,10 @@ sub CanSeeProduct {
         LEFT JOIN product_group_map ON products.product_id = product_group_map.product_id
     WHERE 
         products.product = " . SqlQuote($product) . "
-        AND (product_group_map.group_id IN (" . join(",", @groups) . ") OR product_group_map.group_id IS NULL)");
+        AND product_group_map.group_id IN (" . join(",", @groups) . ")");
     my $result = FetchOneColumn(); 
     PopGlobalSQLState();
     return 1 if $result;
-    return 0;
 }
 
 sub ValidatePassword {
