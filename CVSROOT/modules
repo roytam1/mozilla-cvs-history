@@ -69,6 +69,7 @@ MozillaSourceCommon -a \
     mozilla/modules/libfont/src  \
     mozilla/modules/libhook  \
     mozilla/modules/libimg  \
+    mozilla/modules/libnls  \
     mozilla/modules/libpref  \
     mozilla/modules/libreg  \
     mozilla/modules/libutil  \
