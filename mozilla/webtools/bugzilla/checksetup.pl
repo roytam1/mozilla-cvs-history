@@ -1586,7 +1586,7 @@ $table{tokens} =
 $table{member_group_map} =
     'member_id mediumint not null,
      group_id mediumint not null,
-     maptype smallint default 0,
+     maptype smallint not null default 0,
      isderived tinyint not null default 0,
 
      unique(member_id, group_id, maptype, isderived),
