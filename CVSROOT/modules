@@ -587,7 +587,8 @@ SeaMonkeyMailNews -a \
 
 SeaMonkeyEditor -a \
 	SeaMonkeyBrowser \
-	mozilla/editor
+	mozilla/editor  \
+	mozilla/mailnews
 
 #############################################################
 # This module is the whole banana, and this
