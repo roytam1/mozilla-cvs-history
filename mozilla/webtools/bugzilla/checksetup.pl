@@ -3234,6 +3234,14 @@ if (GetFieldDef("profiles", "groupset")) {
         while (my ($n) = $sth2->fetchrow_array) {
             push @logrem, $n;
         }
+        $sth2 = $dbh->prepare("SELECT ((($removed | $added) & ~BIT_OR(bit)) = 0)  FROM groups WHERE (bit & ($removed | $added)) != 0");
+        $sth2->execute();
+        my ($ok) = $sth2->fetchrow_array;
+        if (!$ok) {
+            print "\nWARNING - GROUPSET ACTIVITY ON BUG $bid CONTAINS DELETED GROUPS\n";
+            push @logrem, '?';
+            push @logadd, '?';
+        }
         $dbh->do("UPDATE bugs_activity SET fieldid = $bgfid, added = " .
                   $dbh->quote(join(", ", @logadd)) . ", removed = " . 
                   $dbh->quote(join(", ", @logrem)) .
