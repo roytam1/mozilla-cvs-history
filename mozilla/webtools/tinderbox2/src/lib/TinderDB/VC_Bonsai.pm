@@ -112,25 +112,7 @@ $VC_NAME = $TinderConfig::VC_NAME || "CVS";
 $VC_BUGNUM_REGEXP = $TinderConfig::VC_BUGNUM_REGEXP ||
     "(\d\d\d+)";
 
-$EMPTY_TABLE_CELL = $HTMLPopUp::EMPTY_TABLE_CELL ||
-
-# remove all records from the database which are older then last_time.
-
-sub trim_db_history {
-  my ($self, $tree,) = (@_);
-
-  my ($last_time) =  $main::TIME - $TinderDB::TRIM_SECONDS;
-
-  # sort numerically ascending
-  my (@times) = sort {$a <=> $b} keys %{ $DATABASE{$tree} };
-  foreach $time (@times) {
-    ($time >= $last_time) && last;
-
-    delete $DATABASE{$tree}{$time};
-  }
-
-  return ;
-}
+$EMPTY_TABLE_CELL = $HTMLPopUp::EMPTY_TABLE_CELL;
 
 
 # Return the most recent times that we recieved treestate and checkin
@@ -411,15 +393,14 @@ sub status_table_row {
           $rowspan++ ;
       }
       
-      my ($cell_color) = BuildStatus::status2html_colors('not_running');
       my ($cell_options) = ("rowspan=$rowspan ".
                             "bgcolor=$cell_color ");
-      my ($lc_time) = localtime($current_rec->{'timenow'});
+      my ($lc_time) = localtime($DB_TIMES[$NEXT_DB]);
 
-      push @outrow, ("\t<!-- not_running: Build:".
+      push @outrow, ("\t<!-- not_running: VC_Bonsai ".
                      "tree: $tree, ".
                      "build: $buildname, ".
-                     "previous_end: $lc_time, ".
+                     "Next_End: $lc_time, ".
                      "-->\n".
                      
                      "\t\t<td align=center $cell_options>".
