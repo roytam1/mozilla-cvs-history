@@ -126,7 +126,7 @@ package BuildStatus;
                         # for the header of broken builds. If you
                         # don't want it then remove this line.
 
-                        'header_background_gif'=> 'flames.gif',  
+                        'header_background_gif'=> 'flames1.gif',  
                         'handler' => \&main::null,
                         'description' => 'Build failed',
                         'order' => 2
