@@ -1,8 +1,0 @@
-These libraries were compiled using .NET/VC7.  The original
-sources can be found at ftp://ftp.gtk.org/pub/gtk/v1.2/glib-1.2.10.tar.gz &
-ftp://ftp.mozilla.org/pub/mozilla/libraries/source/libIDL-0.6.8.tar.gz.
-The patches used to build can be found at
-http://bugzilla.mozilla.org/show_bug.cgi?id=123743 .
-
-- cls, 2002/10/18
-
