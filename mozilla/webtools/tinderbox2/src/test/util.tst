@@ -237,7 +237,7 @@ sub median_tst {
 {
   set_static_vars();	
 
-  extract_digit_tst();
+  extract_digits_tst();
   extract_user_tst();
   extract_html_chars_tst();
   is_time_valid_tst();
