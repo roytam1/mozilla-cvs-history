@@ -368,7 +368,7 @@ if ($action eq 'new') {
                  SET ctl_entry = " . Param("useentrygroupdefault")
                  . ", ctl_default = 1, ctl_permitted = 1
                  WHERE control_id = $product_id AND group_id = $gid");
-        # FIXME -- add all the other buggroups who are not named same 
+        # Now, add all the other buggroups who are not named same 
         # as products
         SendSQL("SELECT group_id, ISNULL(product_id) 
                  FROM groups 

@@ -358,21 +358,12 @@ while (MoreSQLData()) {
     next if (!$uflag || !$pflag || $rflag);
     $check = $dflag;
 
-    # FIXME
-    # if(formvalue("maketemplate") eq 
-    #"Remember values as bookmarkable template") 
-    #{
+    if(formvalue("maketemplate") eq 
+        "Remember values as bookmarkable template") {
         # If this is a bookmarked template, then we only want to set the
         # bit for those bits set in the template.        
-        #$check = formvalue("bit-$id", 0);
-        #}
-        #else {
-        # $group_bit will only have a non-zero value if we're using
-        # bug groups and have one for this product.
-        # If $group_bit is 0, it won't match the current group, so compare 
-        # it to the current bit instead of checking for non-zero.
-        # FIXME $check = ($group_id == $id);
-        #}
+        $check = formvalue("bit-$id", 0);
+        }
 
     my $group = 
     {
