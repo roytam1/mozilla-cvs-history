@@ -19,6 +19,7 @@
 #include <assert.h>
 #define INCL_DOSFILEMGR
 #define INCL_DOSERRORS
+#define INCL_WINERRORS
 #include <os2.h>
 #pragma hdrstop
 
@@ -74,6 +75,7 @@ shellNsinstall (char **pArgv)
 	int dirOnly = 0;	/* 1 if and only if -D is specified */
 	char **pSrc;
 	char **pDst;
+	int len;
 
 	/*
 	 * Process the command-line options.  We ignore the
@@ -116,7 +118,12 @@ shellNsinstall (char **pArgv)
 	while ( *pArgv ) 
 		pDst = pArgv++;
 
-  	retVal = shellMkdir ( pDst );
+	/* remove trailing slash from desination directory */
+	len = strlen( *pDst );
+	if ( pDst[0][len-1] == '/' )
+		pDst[0][len-1] = '\0';
+	
+	retVal = shellMkdir ( pDst );
 	if ( retVal )
 		return retVal;
 	if ( !dirOnly )
@@ -183,18 +190,27 @@ static const char *
 sh_GetLastErrorMessage()
 {
     static char buf[128];
+    ERRORID error = WinGetLastError(0);
+    
+    switch (ERRORIDSEV(error))
+    {
+      case SEVERITY_ERROR:
+      {
+        sprintf( buf, "error %d",  ERRORIDERROR(error));
+        break;
+      }
+      case SEVERITY_SEVERE:
+      {
+        sprintf( buf, "severe error %d",  ERRORIDERROR(error));
+        break;
+      }
+      case SEVERITY_UNRECOVERABLE:
+      {
+        sprintf( buf, "unrecoverable error %d",  ERRORIDERROR(error));
+        break;
+      }
+    }
 
-#ifdef OLDCODE
-    FormatMessage(
-            FORMAT_MESSAGE_FROM_SYSTEM,
-            NULL,
-            GetLastError(),
-            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),  /* default language */
-            buf,
-            sizeof(buf),
-            NULL
-    );
-#endif
     return buf;
 }
 
@@ -723,5 +739,6 @@ static ULONG GetFileAttributes(PSZ pszFileName)
 
 static APIRET SetFileAttributes(PSZ pszFileName, ULONG ulFileAttributes)
 {
+  return NULL;
 }
 
