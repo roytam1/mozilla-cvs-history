@@ -1,4 +1,3 @@
-#!/usr/bonsaitools/bin/perl -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -42,7 +41,7 @@ use Template;
 my $template = Template->new(
   {
     # Colon-separated list of directories containing templates.
-    INCLUDE_PATH => 'template/default' ,
+    INCLUDE_PATH => 'template/custom:template/default' ,
     # Allow templates to be specified with relative paths.
     RELATIVE => 1 
   }
@@ -72,15 +71,13 @@ sub list
   my @attachments = ();
   while (&::MoreSQLData()) {
     my %a;
-    ($a{'attachid'}, $a{'date'}, $a{'mimetype'}, $a{'description'}, $a{'ispatch'}, $a{'isobsolete'}) = &::FetchSQLData();
+    ($a{'attachid'}, $a{'date'}, $a{'contenttype'}, $a{'description'}, $a{'ispatch'}, $a{'isobsolete'}) = &::FetchSQLData();
 
-    # Format the attachment's creation/modification date into something readable.
-    if ($a{'date'} =~ /^(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)$/) {
-        $a{'date'} = "$3/$4/$2&nbsp;$5:$6";
+    # Format the attachment's creation/modification date into a standard
+    # format (YYYY-MM-DD HH:MM)
+    if ($a{'date'} =~ /^(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)$/) {
+        $a{'date'} = "$1-$2-$3 $4:$5";
     }
-
-    # Quote HTML characters (&<>) in the description so they display correctly.
-    $a{'description'} = &::value_quote($a{'description'});
 
     # Retrieve a list of status flags that have been set on the attachment.
     &::PushGlobalSQLState();
