@@ -68,8 +68,8 @@ require "CGI.pl";
 require "globals.pl";
 $::lockcount = 0;
 
-GetVersionTable();
 ConnectToDatabase();
+GetVersionTable();
 
 
 sub sillyness {
@@ -373,19 +373,20 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
   }
 
   my @product;
+  my $prod_id;
   my @component;
   if ((@product = grep /^$prod$/i, @::legal_product) &&
       (@component = grep /^$comp$/i, @{$::components{$product[0]}}) ) {
-    push (@query, "product");
-    push (@values, SqlQuote($product[0]) );
-    push (@query, "component");
-    push (@values, SqlQuote($component[0]) );
+    push (@query, "product_id");
+    push (@values, ($prod_id = get_product_id($product[0])));
+    push (@query, "component_id");
+    push (@values, get_component_id($prod_id, $component[0]));
   } elsif ((@product = grep /^$default_prod$/i, @::legal_product) &&
       (@component = grep /^$default_comp$/i, @{$::components{$product[0]}}) ) {
-    push (@query, "product");
-    push (@values, SqlQuote($product[0]) );
-    push (@query, "component");
-    push (@values, SqlQuote($component[0]) );
+    push (@query, "product_id");
+    push (@values, ($prod_id = get_product_id($product[0])));
+    push (@query, "component_id");
+    push (@values, get_component_id($prod_id, $component[0]));
   } else {
     my $subject = "Bug import error: invalid default product or component";
     my $message = "Cannot import these bugs because an invalid default ";
@@ -456,7 +457,7 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
       push (@query, "target_milestone");
     } else {
       SendSQL("SELECT defaultmilestone FROM products " .
-              "WHERE product = " . SqlQuote($product[0]));
+              "WHERE name = " . SqlQuote($product[0]));
       my $tm = FetchOneColumn();
       push (@values, SqlQuote($tm));
       push (@query, "target_milestone");
