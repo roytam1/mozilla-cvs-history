@@ -1246,13 +1246,7 @@ END
 	SendSQL($long_desc_query);
 
 	# Cool, the mail was successful
-        # chdir back to the main directory which has the processmail script
-        # Oh, for a processmail module....
-        use Cwd;
-        my $old_cwd = getcwd();
-        chdir("..");
         system("./processmail", $id, $SenderShort);
-        chdir($old_cwd);
     } else {
 	$id = 0xFFFF;  # TEST !
 	print "\n-------------------------------------------------------------------------\n";
