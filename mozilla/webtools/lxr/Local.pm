@@ -382,7 +382,7 @@ sub dirdesc {
         $string =~ s/\s*\n$//gs;
         chomp($string);
 
-        print($string);
+        print($string . "<P>\n");
     }
 }
 
