@@ -133,7 +133,7 @@ sub get_filename {
      # the per tree time stamp file to ensure all updates are at least 
      # $MIN_TABLE_SPACING apart
      
-     'update_time_stamp'  => "$tree_dir/db/Mail.time.stamp",
+     'update_time_stamp'  => "$tree_dir/db/Mail.Build.time.stamp",
      
      # where the tree specific generated html pages are placed
      # in this directory
