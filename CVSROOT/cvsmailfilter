@@ -20,8 +20,5 @@ if test -n "$BRANCH"; then
 fi
 
 echo '<A HREF="http://warp.netscape.com/webtools/bonsai/cvsview2.cgi?'$URL'&command=DIRECTORY">View differences</A><BR>\n'
-echo '<HR ALIGN=left WIDTH=50%>\n'
-echo '<PRE VARIABLE>\n'
 
-echo '</PRE>\n'
 ) | mail $2
