@@ -412,6 +412,13 @@ sub baseurl {
     return($Conf->baseurl);
 }
 
+sub dotdoturl {
+    my $url = $Conf->baseurl;
+    $url =~ s@/$@@;
+    $url =~ s@/[^/]*$@@;
+    return($url);
+}
+
 # This one isn't too bad either.  We just expand the "modes" template
 # by filling in all the relevant values in the nested "modelink"
 # template.
@@ -581,6 +588,7 @@ sub makeheader {
 			  ('title',	\&titleexpand),
 			  ('banner',	\&bannerexpand),
 			  ('baseurl',	\&baseurl),
+			  ('dotdoturl',	\&dotdoturl),
 			  ('thisurl',	\&thisurl),
 			  ('pathname',	\&pathname),
     			  ('modes',	\&modeexpand),
