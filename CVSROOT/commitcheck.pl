@@ -282,6 +282,7 @@ if (m:^mozilla/sun-java/.*$:) {return '68';}
 if (m:^mozilla/caps/.*$:) {return '69';}
 if (m:^mozilla/js/ref/.*$:) {return '70';}
 if (m:^mozilla/js/src/.*$:) {return '70';}
+if (m:^mozilla/extensions/jsd/.*$:) {return '71';}
 if (m:^mozilla/js/jsd/.*$:) {return '71';}
 if (m:^mozilla/js/jsj/.*$:) {return '72';}
 if (m:^mozilla/cck/.*$:) {return '108';}
