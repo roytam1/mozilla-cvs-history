@@ -119,25 +119,26 @@ $::extraerrorsref = sub ($) {
     }
 
     # Restype change check
-    SendSQL("SELECT resolutions.restype, bugs.bug_id IS NOT NULL " .
-            "FROM resolutions LEFT JOIN bugs ON resolutions.id = bugs.resolution_id " .
-            "WHERE resolutions.id = $fieldsref->{id}");
-    my ($oldrestype, $isused) = FetchSQLData();
+    if (defined $fieldsref->{id}) {
+        SendSQL("SELECT resolutions.restype, bugs.bug_id IS NOT NULL " .
+                "FROM resolutions LEFT JOIN bugs ON resolutions.id = bugs.resolution_id " .
+                "WHERE resolutions.id = $fieldsref->{id}");
+        my ($oldrestype, $isused) = FetchSQLData();
     
-    if ($isused) {
-        my $oldisdupe = ($oldrestype == $::duperestype);
-        my $newisdupe = ($fieldsref->{restype} == $::duperestype);
-        
-        if ($oldisdupe && !$newisdupe) {
-            DisplayError("You can't change the resolution type of an in-use resolutoion from 'Duplicate'. $::tryagain");
-            exit;
-        }
-        elsif (!$oldisdupe && $newisdupe) { 
-            DisplayError("You can't change the resolution type of an in-use resolution to 'Duplicate'. $::tryagain");
-            exit;
+        if ($isused) {
+            my $oldisdupe = ($oldrestype == $::duperestype);
+            my $newisdupe = ($fieldsref->{restype} == $::duperestype);
+            
+            if ($oldisdupe && !$newisdupe) {
+                DisplayError("You can't change the resolution type of an in-use resolutoion from 'Duplicate'. $::tryagain");
+                exit;
+            }
+            elsif (!$oldisdupe && $newisdupe) { 
+                DisplayError("You can't change the resolution type of an in-use resolution to 'Duplicate'. $::tryagain");
+                exit;
+            }
         }
     }
-
 };
 
 $::extravarsref = sub ($) {
