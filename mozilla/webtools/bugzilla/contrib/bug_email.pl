@@ -66,7 +66,6 @@
 # - integrate some setup in the checksetup.pl script
 # - gpg signatures for security
 
-use diagnostics;
 use strict;
 use MIME::Parser;
 
