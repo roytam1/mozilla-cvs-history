@@ -122,7 +122,7 @@ sub initBug  {
   &::SendSQL($query);
   my @row = ();
 
-  if ((@row = &::FetchSQLData()) && CanSeeBug($bug_id, $self->{'whoid'})) {
+  if ((@row = &::FetchSQLData()) && &::CanSeeBug($bug_id, $self->{'whoid'})) {
     my $count = 0;
     my %fields;
     foreach my $field ("bug_id", "alias", "product", "version", "rep_platform",
