@@ -398,7 +398,8 @@ RaptorMac -a \
 	mozilla/lib/mac/MoreFiles \
 	mozilla/lib/mac/NSRuntime \
 	mozilla/lib/mac/NSStdLib \
-	mozilla/lib/mac/PowerPlant
+	mozilla/lib/mac/PowerPlant \
+	mozilla/silentdl 
 
 #####################
 # An all inclusive modules for tinderbox to use
@@ -547,6 +548,7 @@ SeaMonkeyXPToolKit -a \
 
 SeaMonkeyBrowser -a \
 	mozilla/modules/softupdt \
+	mozilla/silentdl \
 	mozilla/editor/Makefile.in \
 	mozilla/editor/public \
 	SeaMonkeyXPToolKit
