@@ -182,9 +182,9 @@ package BuildStatus;
 sub TinderboxPrintLegend {
     my $out;
 
-    my @keys = sort keys %TinderboxPrintLegand;
+    my @keys = sort keys %TinderboxPrint;
     foreach $key (@keys) {
-        my $value = $TinderboxPrintLegand{$key}{'description'};
+        my $value = $TinderboxPrint{$key}{'description'};
         
         $out .= "\t\t\t<tr><td align=center><TT>$key</TT></td>\n";
         $out .= "\t\t\t\t<td>= $value</td></tr>\n";
