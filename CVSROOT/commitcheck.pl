@@ -237,6 +237,9 @@ $fullname{'118'} = 'XPConnect';
 $mode{'117'} = 'Open';
 $branch{'117'} = 'HEAD';
 $fullname{'117'} = 'XPIDL';
+$mode{'150'} = 'Open';
+$branch{'150'} = 'HEAD';
+$fullname{'150'} = 'XPInstall';
 $mode{'106'} = 'Open';
 $branch{'106'} = 'HEAD';
 $fullname{'106'} = 'XPToolkit';
@@ -342,6 +345,7 @@ if (m:^mozilla/java/util/.*$:) {return '133';}
 if (m:^mozilla/extensions/xmlterm/.*$:) {return '141';}
 if (m:^xpcom/remote$:) {return '143';}
 if (m:^mozilla/mstone/.*$:) {return '147';}
+if (m:^mozilla/xpinstall/.*$:) {return '150';}
 }
 if ($b eq 'NSPRPUB_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
