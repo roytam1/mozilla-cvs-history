@@ -307,6 +307,7 @@ DirectorySDKSource -a \
 DirectorySDKSourceCommon -a \
        mozilla/directory/ldapsdk.mak \
        mozilla/directory/ldapsdk.mk \
+       mozilla/directory/buildsdk.txt \
        mozilla/directory/Makefile \
        mozilla/directory/c-sdk
  
