@@ -56,7 +56,7 @@ my $serverpush = 0;
 ConnectToDatabase();
 
 #print "Content-type: text/plain\n\n";    # Handy for debugging.
-$::FORM{'debug'} = 1;
+#$::FORM{'debug'} = 0;
 
 
 if (grep(/^cmd-/, keys(%::FORM))) {

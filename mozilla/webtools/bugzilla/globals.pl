@@ -283,6 +283,13 @@ sub FetchOneColumn {
     return $row[0];
 }
 
+# subroutine:  SqlRegEx
+# description: Outputs SQL syntax for doing regular expressions searches in format
+#              suitable for a given database.
+# Params:      $field = name of db field regular expression applied against (scalar)
+#              $pattern = regular express search pattern (scalar)
+#              $not = return if not within search patter (scalar)
+# Returns:     formatted SQL for regular expression search (scalar)
 
 sub SqlRegEx {
 	my ($field, $pattern, $not) = @_;
@@ -301,6 +308,14 @@ sub SqlRegEx {
 	} 
 }
 
+# subroutine:  SqlStrSearch
+# description: Outputs SQL syntax for doing string searches in format
+#              suitable for a given database.
+# Params:      $field = name of db field containing string search for (scalar)
+#              $str = string to search for (scalar)
+#              $lower = whether the search is case sensitive or not (scalar)
+#              $not = return SQL for when string is NOT in searched field (scalar) 
+# Returns:     formatted SQL for regular expression search (scalar)
 
 sub SqlStrSearch {
 	my ($field, $str, $lower, $not) = @_;
@@ -1188,11 +1203,26 @@ sub GetLongDescriptionAsText {
     my ($id, $start, $end) = (@_);
     my $result = "";
     my $count = 0;
-    my ($query) = ("SELECT profiles.login_name, longdescs.bug_when, " .
-                   "       longdescs.thetext " .
-                   "FROM longdescs, profiles " .
-                   "WHERE profiles.userid = longdescs.who " .
-                   "      AND longdescs.bug_id = $id ");
+    my $query = "
+    SELECT 
+        profiles.login_name, ";
+
+    if ($::driver eq 'mysql') {
+        $query .= "
+        longdescs.bug_when, ";
+    } elsif ($::driver eq 'Pg') {
+        $query .= "
+        TO_CHAR(longdescs.bug_when, 'YYYY-MM-DD HH24:MI:SS'), ";
+    }
+    
+    $query .= "
+        longdescs.thetext
+    FROM 
+        longdescs, 
+        profiles
+    WHERE 
+        profiles.userid = longdescs.who
+        AND longdescs.bug_id = $id ";
 
     if ($start && $start =~ /[1-9]/) {
         # If the start is all zeros, then don't do this (because we want to
@@ -1200,7 +1230,7 @@ sub GetLongDescriptionAsText {
 		if ($::driver eq 'mysql') {
     	    $query .= "AND longdescs.bug_when > '$start' ";
 		} elsif ($::driver eq 'Pg') {
-			$query .= "AND to_char(longdescs.bug_when, 'YYYYMMDDHH24MISS') >= '$start' ";
+			$query .= "AND TO_CHAR(longdescs.bug_when, 'YYYYMMDDHH24MISS') >= '$start' ";
 		}
         $count = 1;
     }
@@ -1208,7 +1238,7 @@ sub GetLongDescriptionAsText {
 		if ($::driver eq 'mysql') {
 	        $query .= "AND longdescs.bug_when <= '$end' ";
 		} elsif ($::driver eq 'Pg') {
-			$query .= "AND to_char(longdescs.bug_when, 'YYYYMMDDHH24MISS') <= '$end' ";
+			$query .= "AND TO_CHAR(longdescs.bug_when, 'YYYYMMDDHH24MISS') <= '$end' ";
 		}
     }
 
@@ -1238,20 +1268,43 @@ sub GetLongDescriptionAsHTML {
         $knownattachments{FetchOneColumn()} = 1;
     }
 
-    my ($query) = ("SELECT profiles.realname, profiles.login_name, longdescs.bug_when, " .
-                   "       longdescs.thetext " .
-                   "FROM longdescs, profiles " .
-                   "WHERE profiles.userid = longdescs.who " .
-                   "      AND longdescs.bug_id = $id ");
+    my $query = "
+    SELECT 
+        profiles.realname, 
+        profiles.login_name, ";
+
+    if ($::driver eq 'mysql') {
+        $query .= "
+        longdescs.bug_when, ";
+    } elsif ($::driver eq 'Pg') {
+        $query .= "
+        TO_CHAR(longdescs.bug_when, 'YYYY-MM-DD HH24:MI:SS'), ";
+    }
+
+    $query .= "
+        longdescs.thetext
+    FROM 
+        longdescs, profiles
+    WHERE 
+        profiles.userid = longdescs.who     
+        AND longdescs.bug_id = $id ";
 
     if ($start && $start =~ /[1-9]/) {
         # If the start is all zeros, then don't do this (because we want to
         # not emit a leading "Additional Comments" line in that case.)
-        $query .= "AND longdescs.bug_when > '$start'";
+        if ($::driver eq 'mysql') {
+            $query .= "AND longdescs.bug_when > '$start' ";
+        } elsif ($::driver eq 'Pg') {
+            $query .= "AND TO_CHAR(longdescs.bug_when, 'YYYYMMDDHH24MISS') >= '$start' ";
+        }
         $count = 1;
     }
     if ($end) {
-        $query .= "AND longdescs.bug_when <= '$end'";
+        if ($::driver eq 'mysql') {
+            $query .= "AND longdescs.bug_when <= '$end' ";
+        } elsif ($::driver eq 'Pg') {
+            $query .= "AND TO_CHAR(longdescs.bug_when, 'YYYYMMDDHH24MISS') <= '$end' ";
+        }
     }
 
     $query .= "ORDER BY longdescs.bug_when";

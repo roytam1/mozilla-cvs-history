@@ -49,38 +49,7 @@ my $loginok = quietly_check_login();
 
 my $id = $::FORM{'id'};
 
-my $query = "";
-
-if ($::driver eq 'mysql') {
-	$query = "
-select
-        bugs.bug_id,
-        product,
-        version,
-        rep_platform,
-        op_sys,
-        bug_status,
-        resolution,
-        priority,
-        bug_severity,
-        component,
-        assigned_to,
-        reporter,
-        bug_file_loc,
-        short_desc,
-        target_milestone,
-        qa_contact,
-        status_whiteboard,
-        date_format(creation_ts,'%Y-%m-%d %H:%i'),
-        groupset,
-        delta_ts,
-        sum(votes.count)
-from bugs left join votes using(bug_id)
-where bugs.bug_id = $id
-group by bugs.bug_id";
-
-} elsif ($::driver eq 'Pg') {
-	$query = "
+my $query = "
 SELECT
     bugs.bug_id,
     product,
@@ -98,16 +67,47 @@ SELECT
     short_desc,
     target_milestone,
     qa_contact,
-    status_whiteboard,
+    status_whiteboard, ";
+
+if ($::driver eq 'mysql') {
+    $query .= "
+    creation_ts, 
+    groupset,  
+    delta_ts, ";
+} elsif ($::driver eq 'Pg') {
+    $query .= "
     TO_CHAR(creation_ts, 'YYYY-MM-DD HH24:MI:SS'),
     groupset,
-    TO_CHAR(delta_ts, 'YYYYMMDDHH24MISS')
-FROM
-	bugs
-WHERE 
-	bugs.bug_id = $id
-	AND (bugs.groupset & int8($::usergroupset)) = bugs.groupset";
+    TO_CHAR(delta_ts, 'YYYYMMDDHH24MISS'), ";
 }
+
+$query .= "
+    SUM(votes.count)
+FROM 
+    bugs LEFT JOIN votes USING(bug_id)
+WHERE 
+    bugs.bug_id = $id
+GROUP BY 
+    bugs.bug_id,
+    product,
+    version,
+    rep_platform,
+    op_sys,
+    bug_status,
+    resolution,
+    priority,
+    bug_severity,
+    component,
+    assigned_to,
+    reporter,
+    bug_file_loc,
+    short_desc,
+    target_milestone,
+    qa_contact,
+    status_whiteboard,
+    creation_ts,
+    groupset,
+    delta_ts ";
 
 SendSQL($query);
 my %bug;
