@@ -1475,15 +1475,15 @@ document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCh
     <TD ALIGN=RIGHT><B>Version:</B></TD>
     <TD><SELECT NAME=version>$version_popup</SELECT></TD>
 <TR>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#rep_platform\">Platform:</A></B></TD>
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.cgi#rep_platform\">Platform:</A></B></TD>
     <TD><SELECT NAME=rep_platform>$platform_popup</SELECT></TD>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#priority\">Priority:</A></B></TD>
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.cgi#priority\">Priority:</A></B></TD>
     <TD><SELECT NAME=priority>$priority_popup</SELECT></TD>
 </TR>
 <TR>
     <TD ALIGN=RIGHT><B>Component:</B></TD>
     <TD><SELECT NAME=component>$component_popup</SELECT></TD>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#severity\">Severity:</A></B></TD>
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.cgi#severity\">Severity:</A></B></TD>
     <TD><SELECT NAME=bug_severity>$sev_popup</SELECT></TD>
 </TR>";
 
@@ -1624,7 +1624,7 @@ if($::usergroupset ne '0') {
         $knum++;
         print "
 <INPUT TYPE=radio NAME=knob VALUE=resolve>
-        Resolve bugs, changing <A HREF=\"bug_status.html\">resolution</A> to
+        Resolve bugs, changing <A HREF=\"bug_status.cgi\">resolution</A> to
         <SELECT NAME=resolution
           ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\">
           $resolution_popup</SELECT><br>";
@@ -1654,7 +1654,7 @@ if($::usergroupset ne '0') {
     }
     print "
 <INPUT TYPE=radio NAME=knob VALUE=reassign>
-        <A HREF=\"bug_status.html#assigned_to\">Reassign</A> bugs to
+        <A HREF=\"bug_status.cgi#assigned_to\">Reassign</A> bugs to
         <INPUT NAME=assigned_to SIZE=32
           ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\"
           VALUE=\"$::COOKIE{'Bugzilla_login'}\"><br>";

@@ -329,9 +329,9 @@ print "
   </TR>
   <tr><td>&nbsp<td> <td> <td> <td> <td> </tr>
   <TR>
-    <td align=right><B><A HREF=\"bug_status.html#rep_platform\">Platform:</A></B></td>
+    <td align=right><B><A HREF=\"bug_status.cgi#rep_platform\">Platform:</A></B></td>
     <TD>$platform_popup</TD>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#op_sys\">OS:</A></B></TD>
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.cgi#op_sys\">OS:</A></B></TD>
     <TD>$opsys_popup</TD>
     <td align=right valign=top></td>
     <td rowspan=3></td>
@@ -340,14 +340,14 @@ print "
   <TR>";
 if (Param('letsubmitterchoosepriority')) {
     print "
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#priority\">Resolution<br>Priority</A>:</B></TD>
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.cgi#priority\">Resolution<br>Priority</A>:</B></TD>
     <TD>$priority_popup</TD>";
 } else {
     print '<INPUT TYPE=HIDDEN NAME=priority VALUE="' .
         value_quote($priority) . '">';
 }
 print "
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#severity\">Severity:</A></B></TD>
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.cgi#severity\">Severity:</A></B></TD>
     <TD>$sev_popup</TD>
     <td></td>
     <td></td>
@@ -361,7 +361,7 @@ if (UserInGroup("editbugs") || UserInGroup("canconfirm")) {
     if (FetchOneColumn()) {
         print qq{
   <TR>
-    <TD ALIGN="right"><B><A HREF="bug_status.html#status">Initial state:</B></A></TD>
+    <TD ALIGN="right"><B><A HREF="bug_status.cgi#status">Initial state:</B></A></TD>
     <TD COLSPAN="5">
 };
         print BuildPulldown("bug_status",
@@ -374,7 +374,7 @@ if (UserInGroup("editbugs") || UserInGroup("canconfirm")) {
 
 print "
   <tr>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#assigned_to\">Assigned To:</A></B></TD>
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.cgi#assigned_to\">Assigned To:</A></B></TD>
     <TD colspan=5>$assign_element
     (Leave blank to assign to default component owner)</td>
   </tr>

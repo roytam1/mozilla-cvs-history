@@ -1,34 +1,43 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
-<HTML>
+#!/usr/bonsaitools/bin/perl -wT
+# -*- Mode: perl; indent-tabs-mode: nil -*-
+#
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is the Bugzilla Bug Tracking System.
+#
+# The Initial Developer of the Original Code is Netscape Communications
+# Corporation. Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s):         Terry Weissman <terry@mozilla.org>
+#                         Matthew Tuck <matty@chariot.net.au>
 
-<!--
-     The contents of this file are subject to the Mozilla Public
-     License Version 1.1 (the "License"); you may not use this file
-     except in compliance with the License. You may obtain a copy of
-     the License at http://www.mozilla.org/MPL/
-    
-     Software distributed under the License is distributed on an "AS
-     IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-     implied. See the License for the specific language governing
-     rights and limitations under the License.
-    
-     The Original Code is the Bugzilla Bug Tracking System.
-    
-     The Initial Developer of the Original Code is Netscape Communications
-     Corporation. Portions created by Netscape are
-     Copyright (C) 1998 Netscape Communications Corporation. All
-     Rights Reserved.
-    
-     Contributor(s): 
+use diagnostics;
+use strict;
+use lib ".";
 
-     Contributor(s): Terry Weissman <terry@mozilla.org>
--->
+require "CGI.pl";
 
-<TITLE>A Bug's Life Cycle</TITLE>
+# Silliness
+my $silly = $::queryable_resolution;
 
-<h1 ALIGN=CENTER>A Bug's Life Cycle</h1>
+ConnectToDatabase();
+GetVersionTable();
 
-The <B>status</B> and <B>resolution</B> field define and track the
+print "Content-type: text/html\n\n";
+
+PutHeader("A Bug's Life Cycle");
+
+print qq{The <B>status</B> and <B>resolution</B> field define and track the
 life cycle of a bug.
 
 <a name="status"></a>
@@ -92,29 +101,22 @@ certain status transitions are allowed.
 </DL>
 
 <TD>
-<DL>
-<DT><B>FIXED</B>
-<DD> A fix for this bug is checked into the tree and tested.
-<DT><B>INVALID</B>
-<DD> The problem described is not a bug 
-<DT><B>WONTFIX</B>
-<DD> The problem described is a bug which will never be fixed.
-<DT><B>LATER</B>
-<DD> The problem described is a bug which will not be fixed in this
-     version of the product.
-<DT><B>REMIND</B>
-<DD> The problem described is a bug which will probably not be fixed in this
-     version of the product, but might still be.
-<DT><B>DUPLICATE</B>
-<DD> The problem is a duplicate of an existing bug. Marking a bug
-     duplicate requires the bug# of the duplicating bug and will at
-     least put that bug number in the description field.
-<DT><B>WORKSFORME</B>
-<DD> All attempts at reproducing this bug were futile, reading the
-     code produces no clues as to why this behavior would occur. If
-     more information appears later, please re-assign the bug, for
-     now, file it.
-</DL>
+<DL>};
+
+SendSQL("SELECT name, description FROM resolutions");
+
+while (MoreSQLData()) {
+    my ($name, $description) = FetchSQLData();
+    if (lsearch(\@::queryable_resolution, $name) != -1) {
+        $name = html_quote($name);
+        $description = html_quote($description);
+
+        print "<dt><b>$name</b>\n";
+        print "<dd> $description\n";
+    }
+}
+
+print qq{</DL>
 </TABLE>
 
 <H1>Other Fields</H1>
@@ -182,21 +184,19 @@ operating systems include:
 <LI> Linux
 </UL>
 
-Note that the operating system implies the platform, but not always.
-For example, Linux can run on PC and Macintosh and others.
+<p>Note that the operating system implies the platform, but not always.
+For example, Linux can run on PC and Macintosh and others.</p>
 
 <h2><a name="assigned_to">Assigned To</a></h2>
 
-This is the person in charge of resolving the bug.  Every time this
-field changes, the status changes to <B>NEW</B> to make it easy to see
-which new bugs have appeared on a person's list.
+<p>This is the person in charge of resolving the bug.  Every time this
+field changes, the status changes to <b>NEW</b> to make it easy to see
+which new bugs have appeared on a person's list.</p>
 
-The default status for queries is set to NEW, ASSIGNED and REOPENED. When
+<p>The default status for queries is set to NEW, ASSIGNED and REOPENED. When
 searching for bugs that have been resolved or verified, remember to set the
-status field appropriately. 
+status field appropriately.</p>
 
-<hr>
-<!-- hhmts start -->
-Last modified: Thu Aug 23 03:04:27 2000
-<!-- hhmts end -->
-</body> </html>
+};
+
+PutFooter();

@@ -59,28 +59,28 @@ $::wentwrong = 'Something went wrong.';
 ################################################################################
 
 # What we're editing eg ('resolution', 'Resolution', 'resolutions').
-#my ($::valuetype, $::valuetypeicap, $::valuetypeplural);
+($::valuetype, $::valuetypeicap, $::valuetypeplural) = ();
 
 # What group you have to be in to edit these.
-#my $::grouprestrict;
+$::grouprestrict = undef;
 
 # The name of the CGI calling the editor.
-#my $::thiscgi;
+$::thiscgi = undef;
 
 # The name of the table that stores what we're editing.
-#my $::tablename;
+$::tablename = undef;
 
 # The name of the table that has references to what we're editing.
 # This currently doesn't support multiple references.
-#my $::bugsreftablename;
+$::bugsreftablename = undef;
 
 # The full field name of the field that has references to what we're editing,
 # eg 'bugs.resolution_id'.
-#my $::bugsreffieldref;
+$::bugsreffieldref = undef;
 
 # The maximum number of characters allowed in the name of what we're editing.
 # Get this information from the schema.
-#my $::maxnamesize;
+$::maxnamesize = undef;
 
 ################################################################################
 # The following may be changed by the caller.
@@ -239,34 +239,35 @@ sub AdminEditor() {
     confirm_login();
 
     $::db->{Taint} = 1;
+    $::db->{Taint} = 1; # Silliness
 
     unless (UserInGroup($::grouprestrict)) {
-	DisplayError("Sorry, you aren't a member of the $::grouprestrict group. " .
-		     "And so, you aren't allowed to add, modify or delete $::valuetypeplural.",
-		     "Not allowed");
-	exit;
+        DisplayError("Sorry, you aren't a member of the $::grouprestrict group. " .
+                     "And so, you aren't allowed to add, modify or delete $::valuetypeplural.",
+                     "Not allowed");
+        exit;
     }
 
     # Define the global variables and functions that will be passed to the UI 
     # template.  Individual functions add their own values to this hash before
     # sending them to the templates they process.
     $vars = {
-	# Function for retrieving global parameters.
-	'Param' => \&Param,
-	
-	# Function for processing global parameters that contain references
-	# to other global parameters.
-	'PerformSubsts' => \&PerformSubsts,
-	
-	# Uses for links that point back to this script.
-	'thiscgi' => $::thiscgi,
-	
-	# What we are actually editing.
-	'valuetype' => $::valuetype,
-	'valuetypeicap' => $::valuetypeicap,
-	
-	# Maximum size allowed for a name of this value
-	'maxnamesize' => $::maxnamesize,
+        # Function for retrieving global parameters.
+        'Param' => \&Param,
+
+        # Function for processing global parameters that contain references
+        # to other global parameters.
+        'PerformSubsts' => \&PerformSubsts,
+        
+        # Uses for links that point back to this script.
+        'thiscgi' => $::thiscgi,
+        
+        # What we are actually editing.
+        'valuetype' => $::valuetype,
+        'valuetypeicap' => $::valuetypeicap,
+        
+        # Maximum size allowed for a name of this value
+        'maxnamesize' => $::maxnamesize,
     };
 
     &$::extravarsref($vars);
@@ -282,43 +283,43 @@ sub AdminEditor() {
 
     if ($action eq "list") {
 
-	ListScreen("");
+        ListScreen("");
 
     } elsif ($action eq "add") {
-	
-	CreateScreen();
-	
+        
+        CreateScreen();
+        
     } elsif ($action eq "new") {
-	
-	ValidateName(\%fields);
-	ValidateDesc(\%fields);
-	&$::validaterestref(\%fields);
-	InsertNew(%fields);
-	
+        
+        ValidateName(\%fields);
+        ValidateDesc(\%fields);
+        &$::validaterestref(\%fields);
+        InsertNew(%fields);
+        
     } elsif ($action eq "edit") {
-	
-	ValidateID(\%fields);
-	EditScreen(%fields);
-	
+        
+        ValidateID(\%fields);
+        EditScreen(%fields);
+        
     } elsif ($action eq "update") {
-	
-	ValidateID(\%fields);
-	ValidateName(\%fields);
-	ValidateDesc(\%fields);
-	ValidateIsActive(\%fields);
-	&$::validaterestref(\%fields);
-	UpdateExisting(%fields);
-	
+        
+        ValidateID(\%fields);
+        ValidateName(\%fields);
+        ValidateDesc(\%fields);
+        ValidateIsActive(\%fields);
+        &$::validaterestref(\%fields);
+        UpdateExisting(%fields);
+        
     } elsif ($action eq "delete") {
-	
-	ValidateID(\%fields);
-	DeleteExisting(%fields);
-	
+        
+        ValidateID(\%fields);
+        DeleteExisting(%fields);
+        
     } else {
-	
-	print "Content-type: text/html\n\n";
-	ThatDoesntValidate("action");
-	
+        
+        print "Content-type: text/html\n\n";
+        ThatDoesntValidate("action");
+        
     }
 
 }
@@ -348,7 +349,7 @@ sub ListScreen ($) {
         $bugcount ||= 0;
 
         push( @values, { 'id' => $id, 'name' => $name, 'description' => $description,
-			 'isactive' => $isactive, 'bugcount' => $bugcount } );
+                         'isactive' => $isactive, 'bugcount' => $bugcount } );
     }
 
     # Define the variables and functions that will be passed to the UI template.
@@ -545,7 +546,7 @@ sub DeleteExisting (%) {
     }
 
     if ($bugcount > 0) {
-	&$::deleterefsref($id);
+        &$::deleterefsref($id);
     }
 
     SendSQL("DELETE FROM $::tablename WHERE id = $id");

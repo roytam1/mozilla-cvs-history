@@ -160,7 +160,7 @@ print "
   <TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0><TR>
     <TD ALIGN=RIGHT><B>Bug#:</B></TD><TD><A HREF=\"" . Param('urlbase') . "show_bug.cgi?id=$bug{'bug_id'}\">$bug{'bug_id'}</A></TD>
   <TD>&nbsp;</TD>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#rep_platform\">Platform:</A></B></TD>
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.cgi#rep_platform\">Platform:</A></B></TD>
     <TD><SELECT NAME=rep_platform>$platform_popup</SELECT></TD>
   <TD>&nbsp;</TD>
     <TD ALIGN=RIGHT><B>Reporter:</B></TD><TD>$bug{'reporter'}</TD>
@@ -190,21 +190,21 @@ print "
     <TD ROWSPAN=4 ALIGN=RIGHT VALIGN=TOP><B>CC:</B></TD>
     <TD ROWSPAN=4 VALIGN=TOP> $cc_element </TD>
 </TR><TR>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html\">Status:</A></B></TD>
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.cgi\">Status:</A></B></TD>
       <TD>$bug{'bug_status'}</TD>
   <TD>&nbsp;</TD>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#priority\">Priority:</A></B></TD>
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.cgi#priority\">Priority:</A></B></TD>
       <TD><SELECT NAME=priority>$priority_popup</SELECT></TD>
   <TD>&nbsp;</TD>
 </TR><TR>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html\">Resolution:</A></B></TD>
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.cgi\">Resolution:</A></B></TD>
       <TD>$bug{'resolution'}</TD>
   <TD>&nbsp;</TD>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#severity\">Severity:</A></B></TD>
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.cgi#severity\">Severity:</A></B></TD>
       <TD><SELECT NAME=bug_severity>$sev_popup</SELECT></TD>
   <TD>&nbsp;</TD>
 </TR><TR>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#assigned_to\">Assigned&nbsp;To:
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.cgi#assigned_to\">Assigned&nbsp;To:
         </A></B></TD>
       <TD>$bug{'assigned_to'}</TD>
   <TD>&nbsp;</TD>";
@@ -493,7 +493,7 @@ if ($canedit || $::userid == $assignedtoid ||
         my $resolution_popup = make_options(\@::settable_normal_resolution,
                                             $bug{'resolution'});
         print "<INPUT TYPE=radio NAME=knob VALUE=resolve>
-        Resolve bug, changing <A HREF=\"bug_status.html\">resolution</A> to
+        Resolve bug, changing <A HREF=\"bug_status.cgi\">resolution</A> to
         <SELECT NAME=resolution
           ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\">
           $resolution_popup</SELECT><br>\n";
@@ -517,7 +517,7 @@ if ($canedit || $::userid == $assignedtoid ||
 
         my $assign_element = "<INPUT NAME=\"assigned_to\" SIZE=32 ONCHANGE=\"if ((this.value != ".SqlQuote($bug{'assigned_to_email'}) .") && (this.value != '')) { document.changeform.knob\[$knum\].checked=true; }\" VALUE=\"$bug{'assigned_to_email'}\">";
         print "<INPUT TYPE=radio NAME=knob VALUE=reassign> 
-          <A HREF=\"bug_status.html#assigned_to\">Reassign</A> bug to
+          <A HREF=\"bug_status.cgi#assigned_to\">Reassign</A> bug to
           $assign_element
         <br>\n";
         if ($status eq $::unconfirmedstate && ($canconfirm || $canedit)) {
