@@ -33,4 +33,10 @@ _xpidlgen
 ti_files
 *.rpo
 .*.timestamp
+*.dll
+*.lib
+*.exp
+*.rc
+*.res
+Makefile
 
