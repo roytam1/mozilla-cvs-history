@@ -348,6 +348,7 @@ if (m:^mozilla/modules/libpr0n/.*$:) {return '63';}
 if (m:^mozilla/browser/.*$:) {return '166';}
 if (m:^mozilla/other-licenses/branding/firefox/.*$:) {return '166';}
 if (m:^jpeg$:) {return '64';}
+if (m:^mozilla/chrome/.*$:) {return '169';}
 if (m:^mozilla/toolkit/.*$:) {return '169';}
 if (m:^mozilla/modules/libimg/png/.*$:) {return '65';}
 if (m:^mozilla/mail/.*$:) {return '170';}
