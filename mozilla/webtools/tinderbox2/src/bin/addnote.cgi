@@ -272,8 +272,6 @@ sub save_note {
 
   my ($localtime) = localtime($EFFECTIVE_TIME);
   
-  my ($pretty_time) = HTMLPopUp::timeHTML($time);
-
   my %association;
   foreach $association (@CHOSEN_ASSOCIATIONS) {
       $association{$association} = 1;
@@ -297,7 +295,7 @@ sub save_note {
                  };
 
   my ($update_file) = (FileStructure::get_filename($TREE, 'TinderDB_Dir').
-                       "/Notice\.Update\.$time\.$MAILADDR"); 
+                       "/Notice\.Update\.$TIME\.$MAILADDR"); 
 
   $update_file =~ s/\@/\./g;
   $update_file = main::extract_safe_filename($update_file);
