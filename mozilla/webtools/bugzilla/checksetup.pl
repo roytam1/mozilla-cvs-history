@@ -992,7 +992,7 @@ $table{logincookies} =
    'cookie mediumint not null auto_increment primary key,
     userid mediumint not null,
     cryptpassword varchar(34),
-    hostname varchar(128),
+    ipaddr varchar(40) NOT NULL,
     lastused timestamp,
 
     index(lastused)';
@@ -2469,6 +2469,18 @@ AddField("bugs", "reporter_accessible", "tinyint not null default 1");
 AddField("bugs", "assignee_accessible", "tinyint not null default 1");
 AddField("bugs", "qacontact_accessible", "tinyint not null default 1");
 AddField("bugs", "cclist_accessible", "tinyint not null default 1");
+
+# 2002-03-15 bbaetz@student.usyd.edu.au - bug 129466; 
+# 2002-05-13 2_14_1-BRANCH backport - preed@sigkill.com
+# Use the ip, not the hostname, in the logincookies table
+if (GetFieldDef("logincookies", "hostname")) {
+    # We've changed what we match against, so all entries are now invalid
+    $dbh->do("DELETE FROM logincookies");
+
+    # Now update the logincookies schema
+    DropField("logincookies", "hostname");
+    AddField("logincookies", "ipaddr", "varchar(40) NOT NULL");
+}
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
