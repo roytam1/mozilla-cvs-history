@@ -88,7 +88,23 @@ if ( defined(@TinderConfig::DBImpl) ) {
            );
 }
 
+# Add an empty object, of this DB subclass, to end of the set of all
+# HTML columns.  This registers the subclass with TinderDB and defines
+# the order of the HTML columns.
+
+sub strings2columns {
+  my @impls = @_;
+  my @columns = ();
+
+  foreach $impl (@impls) {    
+    push @columns, $impl->new();
+  }
+
+  return @columns;
+}
+
 main::require_modules(@IMPLS);
+@HTML_COLUMNS = strings2columns(@IMPLS);
 
 
 

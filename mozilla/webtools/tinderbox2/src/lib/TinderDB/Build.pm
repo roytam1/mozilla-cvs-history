@@ -154,14 +154,6 @@ $VERSION = '#tinder_version#';
 @ISA = qw(TinderDB::BasicTxtDB);
 
 
-# Add an empty object, of this DB subclass, to end of the set of all
-# HTML columns.  This registers the subclass with TinderDB and defines
-# the order of the HTML columns.
-
-push @TinderDB::HTML_COLUMNS, TinderDB::Build->new();
-
-
-
 # Find the name of each build and the proper order to display them.
 # No part of the code should peek at keys %{ $DATABASE{$tree} } directly.
 

@@ -38,7 +38,7 @@
 
 
 
-package TinderDB::BT;
+package TinderDB::BT_Generic;
 
 #   We store the hash of all names who modified the tree at a
 #   particular time as follows:
@@ -72,12 +72,6 @@ use VCDisplay;
 $VERSION = ( qw $Revision$ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
-
-# Add an empty object, of this DB subclass, to end of the set of all
-# HTML columns.  This registers the subclass with TinderDB and defines
-# the order of the HTML columns.
-
-push @TinderDB::HTML_COLUMNS, TinderDB::BT->new();
 
 
 # name of the bug tracking system

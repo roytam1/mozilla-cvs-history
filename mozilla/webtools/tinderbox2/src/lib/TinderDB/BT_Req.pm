@@ -79,12 +79,6 @@ $VERSION = ( qw $Revision$ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
-# Add an empty object, of this DB subclass, to end of the set of all
-# HTML columns.  This registers the subclass with TinderDB and defines
-# the order of the HTML columns.
-
-push @TinderDB::HTML_COLUMNS, TinderDB::BT_Req->new();
-
 
 # name of the bug tracking system
 $REQ_NAME = $TinderConfig::REQ_NAME || "Req";
