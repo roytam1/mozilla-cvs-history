@@ -52,24 +52,6 @@ else {
   testfailed => 'FFAA00'
 );
 
-%titlemap = (
-  success    => 'success',
-  busted     => 'busted',
-  building   => 'building',
-  testfailed => 'testfailed',
-  flames     => 'burning',
-  star       => ''
-);
-
-%textmap = (
-  success    => 'L',
-  busted     => 'L!',
-  building   => 'L/',
-  testfailed => 'L-',
-  flames     => '%',
-  star       => '*'
-);
-
 %images = (
   flames    => '1afi003r.gif',
   star      => 'star.gif'
@@ -123,7 +105,7 @@ sub show_tree_selector {
   foreach (@list) {
     print "<LI><a href=showbuilds.cgi?tree=$_>$_</a>\n";
   }
-  print "</UL></TD></TR></TABLE></TD></TR></TABLE>";
+  print "<//UL></TD></TR></TABLE></TD></TR></TABLE>";
   
   print "<P><TABLE WIDTH=\"100%\">";
   print "<TR><TD ALIGN=CENTER><a href=admintree.cgi>";
@@ -134,7 +116,7 @@ sub show_tree_selector {
   foreach (@list) {
     print "<LI><a href=admintree.cgi?tree=$_>$_</a>\n";
   }
-  print "</UL></TD></TR></TABLE></TD></TR></TABLE>";
+  print "<//UL></TD></TR></TABLE></TD></TR></TABLE>";
 }
 
 sub do_static {
@@ -165,7 +147,7 @@ sub do_static {
     eval "$call";
 
     close(OUT);
-    system("mv $outfile.$$ $outfile");
+    system "mv $outfile.$$ $outfile";
   }
   select $oldfh;
 }
@@ -202,9 +184,6 @@ sub print_page_head {
     
     do "$::tree/status.pl";
     print "<a NAME=\"status\"></a>$status_message<br>";  # from $::tree/status.pl
-
-    # keeps the main table from clearing the IFRAME
-    print "<br clear=\"all\">\n";
   }
 
   # Quote and Legend
@@ -236,7 +215,7 @@ sub print_page_head {
               </tr>
               <tr>
                 <td align=center>
-                  <img src="$images{star}" title="$titlemap{star}" alt="$textmap{star}"></td>
+                  <img src="$images{star}"></td>
                 <td>= Show Log comments</td>
               </tr>
               <tr>
@@ -247,9 +226,8 @@ sub print_page_head {
                         Successful Build, optional bloaty stats:<br>
                         <tt>Lk:XXX</tt> (bytes leaked)<br>
                         <tt>Bl:YYYY</tt> (bytes allocated, bloat)<br>
-                        <tt>Tp:TT.T</tt> (page-loader time, ms)<br>
-                        <tt>Txul:TT.T</tt> (XUL openwindow time, ms)<br>
-                        <tt>Ts:TT.T</tt>   (startup time, sec)<br>
+                        <tt>Tp:TT.T</tt> (page-loader time, sec)<br>
+                        <tt>Ts:TT.T</tt> (startup time, sec)<br>
                       </td>
                 <tr bgcolor="$colormap{building}">
                   <td>Build in progress</td>
@@ -280,6 +258,25 @@ sub print_table_body {
   }
 }
 
+sub print_bloat_delta {
+  my ($value, $compare) = @_;
+  my $units = 'B';
+  $value = $value || 0;
+  $compare = $compare || 0;
+
+  if ($value >= 1000000) {
+    $value = int($value / 1000000);
+    $min =   int($min / 1000000);
+    $units = 'MB';
+  } elsif ($value >= 10000) {
+    $value = int($value / 1000);
+    $min =   int($min / 1000);
+    $units = 'KB';
+  }
+
+  # Took out colors because the numbers jump around too much. -slamm
+  return "$value$units";
+}
 
 BEGIN {
   # Make $lasthour persistent private variable for print_table_row().
@@ -348,11 +345,9 @@ BEGIN {
       my $logurl = "${rel_path}showlog.cgi?log=$buildtree/$logfile";
       
       if ($br->{hasnote}) {
-        print qq|
-<a href="$logurl"
- onclick="return note(event,$br->{noteid},'$logfile');">
-<img src="$images{star}" title="$titlemap{star}" alt="$textmap{star}" border=0></a>
-|;
+        print "<a href='$logurl' onclick=\"return ",
+          "note(event,$br->{noteid},'$logfile');\">",
+          "<img src='$images{star}' border=0></a>\n";
       }
         
       # Build Log
@@ -360,12 +355,9 @@ BEGIN {
       # Uncomment this line to print logfile names in build rectangle.
       # print "$logfile<br>";
       
-      print qq|
-<A HREF="$logurl"
- onclick="return log(event,$build_index,'$logfile');"
- title="$titlemap{$br->{buildstatus}}">
-$textmap{$br->{buildstatus}}</a>
-|;
+      print "<A HREF='$logurl'"
+           ." onclick=\"return log(event,$build_index,'$logfile');\">"
+           ."L</a>";
  
       # What Changed
       #
@@ -390,6 +382,30 @@ $textmap{$br->{buildstatus}}</a>
           print" <A HREF=$binaryurl>D</A>";
       }
       
+      # Leak/Bloat
+      if (defined $td->{bloaty}{$logfile}) {
+        my ($leaks, $bloat, $leaks_cmp, $bloat_cmp)
+            = @{ $td->{bloaty}{$logfile} };
+        # ex: Lk:21KB
+        print "<br>Lk:", print_bloat_delta($leaks, $leaks_cmp),
+              "<br>Bl:", print_bloat_delta($bloat, $bloat_cmp);
+      }
+
+      # Pageloader data
+      if (defined $td->{pageloader}{$logfile}) {
+        my ($pageloader_time)
+            = @{ $td->{pageloader}{$logfile} };
+        # ex: Tp:8.4s
+        print sprintf "<br>Tp:%dms", $pageloader_time;
+      }
+
+      # Startup data
+      if (defined $td->{startup}{$logfile}) {
+        my ($startup_time)
+            = @{ $td->{startup}{$logfile} };
+        # ex: Tp:5.45s
+        print sprintf "<br>Ts:%4.2fs", $startup_time/1000;
+      }
 
       # Scrape data
       if (defined $td->{scrape}{$logfile}) {
@@ -434,10 +450,10 @@ sub print_table_header {
     my $last_status = tb_last_status($ii);
     if ($last_status eq 'busted') {
       if ($form{noflames}) {
-        print "<td rowspan=2 bgcolor=$colormap{busted}><a title='$titlemap{flames}'>$bn $textmap{flames}</a></td>";
+        print "<td rowspan=2 bgcolor=$colormap{busted}>$bn</td>";
       } else {
         print "<td rowspan=2 bgcolor=000000 background='$images{flames}'>";
-        print "<font color=white><a title='$titlemap{flames}'>$bn $textmap{flames}</a></font></td>";
+        print "<font color=white>$bn</font></td>";
       }
     }
     else {
@@ -503,8 +519,6 @@ sub query_ref {
   $output = "<a href=${rel_path}../bonsai/cvsquery.cgi";
   $output .= "?module=$td->{cvs_module}";
   $output .= "&branch=$td->{cvs_branch}"   if $td->{cvs_branch} ne 'HEAD';
-  $output .= "&branchtype=regexp"
-    if $td->{cvs_branch} =~ /\+|\?|\*/;
   $output .= "&cvsroot=$td->{cvs_root}"    if $td->{cvs_root} ne $default_root;
   $output .= "&date=explicit&mindate=$mindate";
   $output .= "&maxdate=$maxdate"           if $maxdate and $maxdate ne '';
@@ -515,13 +529,9 @@ sub query_ref {
 sub who_menu {
   my ($td, $mindate, $maxdate, $who) = @_;
   my $treeflag;
-  # this variable isn't doing anything, so i'm going to use it shamelessly
-  $treeflag = $td->{cvs_branch};
-  # trick who.cgi into using regexps, escaping & and =
-  $treeflag .= '%26branchtype%3Dregexp' if $treeflag =~ /\+|\?|\*/;
 
   my $qr = "${rel_path}../registry/who.cgi?email=". url_encode($who)
-      . "&d=$td->{cvs_module}|$treeflag|$td->{cvs_root}|$mindate|$maxdate";
+      . "&d=$td->{cvs_module}|$td->{cvs_branch}|$td->{cvs_root}|$mindate|$maxdate";
 
   return "<a href='$qr' onclick=\"return who(event);\">";
 }
@@ -606,7 +616,6 @@ sub print_javascript {
       margin: -5em 0 0 -5em;
       }
     .who#popup{
-      border: 0px;
       height: 8em;
       width: 16em;
       }
@@ -657,7 +666,7 @@ sub print_javascript {
       if (noDHTML) {
         return true;
       }
-      if (typeof document.layers != 'undefined') {
+      if (document.layers) {
         var l  = document.layers['popup'];
         l.src  = d.target.href;
         l.top  = d.target.y - 6;
@@ -688,7 +697,7 @@ sub print_javascript {
         document.location = log_url(logfile);
         return false;
       }
-      if (typeof document.layers != 'undefined') {
+      if (document.layers) {
         var l = document.layers['popup'];
         l.document.write("<table border=1 cellspacing=1><tr><td>"
                          + notes[noteid] + "</tr></table>");
@@ -725,7 +734,7 @@ sub print_javascript {
         document.location = logurl;
         return false;
       }
-      if (typeof document.layers != 'undefined') {
+      if (document.layers) {
         var q = document.layers["logpopup"];
         q.top = e.target.y - 6;
 

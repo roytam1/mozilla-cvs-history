@@ -101,8 +101,6 @@ my $module = $::TreeInfo{$::TreeID}{'module'};
 
 my $toplevel = Param('toplevel');
 
-PutsHeader("Repository Directory $toplevel/$dir $s", "");
-
 my $output = "<DIV ALIGN=LEFT>";
 $output .= "<A HREF='toplevel.cgi" . BatchIdPart('?') . "'>$toplevel</a>/ ";
 
@@ -119,8 +117,9 @@ chop ($output);
 $output .= " $dir_tail/ $s ";
 $output .= "</DIV>";
 
-print $output;
-print '<table width="100%"><tr><td width="70%">';
+PutsHeader("Repository Directory $toplevel/$dir $s", $output);
+
+cvsmenu("align=right width=30%");
 
 my $other_dir;
 
@@ -202,17 +201,15 @@ $split = int(@files/4)+1;
 
 for $_ (@files){
     $_ =~ s/\,v//;
-    print qq{<dt><a href="$registryurl/file.cgi?cvsroot=$CVS_ROOT&file=$_&dir=$dir$revstr"}
+    print qq{<a href="$registryurl/file.cgi?cvsroot=$CVS_ROOT&file=$_&dir=$dir"}
           . " onclick=\"return js_file_menu('$dir','$_','$rev','$CVS_ROOT',event)\">\n";
-    print "$_</a>\n";
+    print "<dt>$_</a>\n";
     if( $j % $split == 0 ){
-        print "\n</td><td>\n";
+        print "\n<td>\n";
     }
     $j++;
 }
-print "\n</tr></table>\n</td><td>";
-cvsmenu("");
-print "\n</td></tr></table>\n";
+print "\n</tr></table>\n";
 
 PutsTrailer();
 
@@ -220,7 +217,7 @@ PutsTrailer();
 sub setup_script {
 
 $script_str = qq%
-<script $::script_type><!--
+<script type="application/x-javascript"><!--
 
 var event = new Object;
 
@@ -272,7 +269,7 @@ function js_file_menu(dir,file,rev,root,d) {
 }
 
 
-//--></script>
+</script>
 
 <layer name="popup"  onMouseOut="this.visibility='hide';" left=0 top=0 bgcolor="#ffffff" visibility="hide">
 </layer>

@@ -221,14 +221,10 @@ my $menu = "
 <p align=center>$e
 <p align=left>
 <a href=cvsqueryform.cgi?$ENV{QUERY_STRING}>Modify Query</a>
-";
-if ($pCount) {
-    $menu .= "
 <br><a href=mailto:$s>Mail everyone on this page</a>
 <NOBR>($pCount people)</NOBR>
 <br><a href=cvsquery.cgi?$ENV{QUERY_STRING}&generateBackoutCVSCommands=1>Show commands which could be used to back out these changes</a>
 ";
-}
 
 if (defined $::FORM{'generateBackoutCVSCommands'}) {
     print "Content-type: text/plain
@@ -238,17 +234,6 @@ if (defined $::FORM{'generateBackoutCVSCommands'}) {
 # backout the changes selected by your query.
 
 ";
-    unless ($pCount) {
-        print "
-#
-# No changes occurred during this interval.
-# There is nothing to back out.
-#
-
-";
-        exit;
-    }
-
     foreach my $ci (reverse @{$result}) {
         if ($ci->[$::CI_REV] eq "") {
             print "echo 'Changes made to $ci->[$::CI_DIR]/$ci->[$::CI_FILE] need to be backed out by hand'\n";
@@ -389,12 +374,11 @@ sub print_ci {
 
     my $log = &html_log($ci->[$::CI_LOG]);
     my $rev = $ci->[$::CI_REV];
-    my $url_who = url_quote($ci->[$::CI_WHO]);
 
     print "<tr>\n";
     print "<TD width=2%>${sm_font_tag}$t</font>";
-    print "<TD width=2%><a href='$registryurl/who.cgi?email=$url_who'"
-          . " onClick=\"return js_who_menu('$url_who','',event);\" >"
+    print "<TD width=2%><a href='$registryurl/who.cgi?email=$ci->[$::CI_WHO]'"
+          . " onClick=\"return js_who_menu('$ci->[$::CI_WHO]','',event);\" >"
           . "$ci->[$::CI_WHO]</a>\n";
     print "<TD width=45%><a href='cvsview2.cgi?subdir=$ci->[$::CI_DIR]&files=$ci->[$::CI_FILE]\&command=DIRECTORY&branch=$::query_branch&root=$::CVS_ROOT'\n"
           . " onclick=\"return js_file_menu('$::CVS_ROOT', '$ci->[$::CI_DIR]','$ci->[$::CI_FILE]','$ci->[$::CI_REV]','$::query_branch',event)\">\n";
@@ -536,7 +520,7 @@ sub parse_date {
 sub setup_script {
 
     my $script_str = qq{
-<script $::script_type><!--
+<script type="application/x-javascript"><!--
 var event = 0;	// Nav3.0 compatibility
 
 function js_who_menu(n,extra,d) {
@@ -604,21 +588,21 @@ sub query_to_english {
         $english .= "to <i>All Repositories</i> ";
     }
     elsif( $::query_module ne 'all' && @::query_dirs == 0 ){
-        $english .= "to module <i>" . html_quote($::query_module) . "</i> ";
+        $english .= "to module <i>$::query_module</i> ";
     }
     elsif( $::FORM{dir} ne "" ) {
         my $word = "directory";
         if (@::query_dirs > 1) {
             $word = "directories";
         }
-        $english .= "to $word <i>" . html_quote($::FORM{dir}) . "</i> ";
+        $english .= "to $word <i>$::FORM{dir}</i> ";
     }
 
     if ($::query_file ne "") {
         if ($english ne 'Checkins ') {
             $english .= "and ";
         }
-        $english .= "to file " . html_quote($::query_file) . " ";
+        $english .= "to file $::query_file ";
     }
 
     if( ! ($::query_branch =~ /^[ ]*HEAD[ ]*$/i) ){
@@ -626,17 +610,17 @@ sub query_to_english {
             $english .= "on all branches ";
         }
         else {
-            $english .= "on branch <i>" . html_quote($::query_branch) . "</i> ";
+            $english .= "on branch <i>$::query_branch</i> ";
         }
     }
 
     if( $::query_who) {
-        $english .= "by " . html_quote($::query_who) . " ";
+        $english .= "by $::query_who ";
     }
 
     $::query_date_type = $::FORM{'date'};
     if( $::query_date_type eq 'hours' ){
-        $english .="in the last " . html_quote($::FORM{hours}) . " hours";
+        $english .="in the last $::FORM{hours} hours";
     }
     elsif( $::query_date_type eq 'day' ){
         $english .="in the last day";

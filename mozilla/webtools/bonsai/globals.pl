@@ -965,7 +965,7 @@ sub CheckGlobalPassword {
      my ($password, $encoded) = @_;
 
      my $correct = trim(`cat data/passwd`);
-     $encoded = crypt($password, "aa")
+     $encoded = trim(`./data/trapdoor '$password'`)
           unless ($encoded);
 
      unless ($correct eq $encoded) {
@@ -982,7 +982,7 @@ Please click the <b>Back</b> button and try again.";
 sub CheckPassword {
      my ($password) = @_;
 
-     my $encoded = crypt($password, "aa");
+     my $encoded = trim(`./data/trapdoor '$password'`);
      my $pw_file = DataDir() . "/treepasswd";
      my $correct = "xxx $encoded";
 
@@ -1051,8 +1051,7 @@ sub validateRepository {
         }
     }
 
-    my $escaped_root = html_quote($root);
-    print "Invalid repository `$escaped_root' selected.\n";
+    print "Invalid repository `$root' selected.\n";
     print ConstructMailTo(Param('maintainer'), "Invalid Repository '$root'");
     print " if you think this should have worked.\n";
     exit;

@@ -96,15 +96,14 @@ else {
     if( $bMultiRepos ){
         print "<OPTION VALUE='allrepositories'>All Files in all Repositories\n";
     }
-    my $escaped_module = html_quote($::FORM{module});
-    print "<OPTION SELECTED VALUE='$escaped_module'>$escaped_module\n";
+    print "<OPTION SELECTED VALUE='$::FORM{module}'>$::FORM{module}\n";
 }
 
 #
 # Print out all the Different Modules
 #
 for my $k  (sort( keys( %$::modules ) ) ){
-	if (defined $::FORM{module} && $k eq $::FORM{module}) { 
+	if ($k eq $::FORM{module}) { 
 		next; 
 	}
     print "<OPTION value='$k'>$k\n";
@@ -181,13 +180,9 @@ regexpradio('whotype') . "
 # Log contains
 #
 #print "
-#<tr>
-#<th align=right>Log contains:</th>
-#<td colspan=2> <input type=text name=logexpr value='$::FORM{logexpr}' size=45><br>
-#(you can use <a href=cvsregexp.html>regular expressions</a>)
-#</td>
-#</tr>
-#";
+#<br>
+#<nobr><b>Log contains:</b>
+#<input type=text name=logexpr size=45></nobr>(you can use <a href=cvsregexp.html>regular expressions</a>)\n";
 
 
 #
@@ -279,7 +274,7 @@ PutsTrailer();
 sub sortTest {
      return ""
           unless (exists($::FORM{sortby}) && defined($_[0]) &&
-                 ($_[0] eq $::FORM{sortby}));
+                 ($_[0] ne $::FORM{sortby}));
 
      return " SELECTED";
 }

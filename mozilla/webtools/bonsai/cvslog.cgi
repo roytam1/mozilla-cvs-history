@@ -54,6 +54,8 @@ use SourceChecker;
 #
 $| = 1;
 
+print "Content-Type:text/html\n\n";
+
 my @src_roots = getRepositoryList();
 
 
@@ -63,7 +65,6 @@ my $filename = '';
 $filename = $::FORM{'file'} if defined($::FORM{'file'});
 if ($filename eq '') 
 {
-    print "Content-Type:text/html\n\n";
     &print_usage;
     exit;
 }
@@ -73,9 +74,7 @@ my ($file_head, $file_tail) = $filename =~ m@(.*/)?(.+)@;
 # Handle the "rev" argument
 #
 $::opt_rev = "";
-$::opt_rev = $::FORM{'rev'} if defined $::FORM{'rev'} && $::FORM{'rev'} !~ m/^(HEAD|MAIN)$/;
-my $revstr = '';
-$revstr = "&rev=$::opt_rev" unless $::opt_rev eq '';
+$::opt_rev = $::FORM{'rev'} if defined($::FORM{'rev'} && $::FORM{'rev'} ne 'HEAD');
 my $browse_revtag = 'HEAD';
 $browse_revtag = $::opt_rev if ($::opt_rev =~ /[A-Za-z]/);
 my $revision = '';
@@ -90,7 +89,6 @@ if (defined $root && $root ne '') {
     if (-d $root) {
         unshift(@src_roots, $root);
     } else {
-        print "Content-Type:text/html\n\n";
         &print_top;
         print "Error:  Root, $root, is not a directory.<BR><BR>\n";
         print "</BODY></HTML>\n";
@@ -113,10 +111,8 @@ foreach (@src_roots) {
     goto found_file if -r $rcs_filename;
 }
 # File not found
-print "Content-Type:text/html\n\n";
 &print_top;
-my $escaped_filename = html_quote($filename);
-print "Rcs file, $escaped_filename, does not exist.<BR><BR>\n";
+print "Rcs file, $filename, does not exist.<BR><BR>\n";
 print "</BODY></HTML>\n";
 &print_bottom;
 exit;
@@ -132,15 +128,6 @@ my $rcs_path;
 $revision = &parse_cvs_file($rcs_filename);
 my $file_rev = $revision;
 
-my $start_rev;
-if ($browse_revtag eq 'HEAD') {
-    $start_rev = $::head_revision;  # $::head_revision is a global from cvsblame.pl
-} else {
-    $start_rev = map_tag_to_revision($browse_revtag);
-}
-print "Content-Type:text/html\n";
-print "Last-Modified: ".time2str("%a, %d %b %Y %T %Z", str2time($::revision_ctime{$start_rev}), "GMT")."\n";
-print "\n";
 
 # Handle the "mark" argument
 #
@@ -195,15 +182,6 @@ foreach my $path (split('/',$rcs_path)) {
 $lxr_path = Fix_LxrLink("$link_path$file_tail");
 print "<A HREF='$lxr_path'>$file_tail</a> ";
 
-my $graph_cell = Param('cvsgraph') ? <<"--endquote--" : "";
-       </TR><TR>
-        <TD>
-         <A HREF="cvsgraph.cgi?file=$filename">graph</A>&nbsp;
-        </TD><TD NOWRAP>
-         View the revision history as a graph
-        </TD>
---endquote--
-
 print " (";
 print "$browse_revtag:" unless $browse_revtag eq 'HEAD';
 print $revision if $revision;
@@ -226,17 +204,16 @@ print qq(
         </TD>
        </TR><TR>
         <TD>
-         <A HREF="cvsview2.cgi?command=DIRECTORY&subdir=$rcs_path&files=$file_tail&branch=$::opt_rev">diff</A>
+         <A HREF="cvsview2.cgi?command=DIRECTORY&subdir=$rcs_path&files=$file_tail">diff</A>
         </TD><TD NOWRAP>
          Compare any two version.
         </TD>
        </TR><TR>
         <TD>
-         <A HREF="cvsblame.cgi?file=$filename&rev=$::opt_rev&cvsroot=$root">blame</A>&nbsp;
+         <A HREF="cvsblame.cgi?file=$filename">blame</A>&nbsp;
         </TD><TD NOWRAP>
          Annotate the author of each line.
         </TD>
-$graph_cell
        </TR>
       </TABLE>
      </TD>
@@ -264,6 +241,12 @@ print "$table_tag$table_header_tag";
 
 # Print each line of the revision, preceded by its annotation.
 #
+my $start_rev;
+if ($browse_revtag eq 'HEAD') {
+    $start_rev = $::head_revision;  # $::head_revision is a global from cvsblame.pl
+} else {
+    $start_rev = map_tag_to_revision($browse_revtag);
+}
 my $row_count = 0;
 my $max_rev_length = length($start_rev);
 my $max_author_length = 8;
@@ -283,11 +266,8 @@ foreach $revision (@revisions)
     $log = MarkUpText($log);
     $log =~ s/\n|\r|\r\n/<BR>/g;
 
-    if ($revision eq $::opt_rev) {
-        $bgcolor = ' BGCOLOR="LIGHTBLUE"';
-    } elsif ($mark{$revision}) {
-        $bgcolor = ' BGCOLOR="LIGHTGREEN"';
-    } elsif (!defined $bgcolor || $bgcolor eq '') {
+    if (!defined $bgcolor || $bgcolor eq '') {
+        #$bgcolor = ' BGCOLOR="#EEEEEE"';# My browser translates this to white.
         $bgcolor = ' BGCOLOR="#E7E7E7"'; # Pick a grey that shows up on 8-bit.
     } else {
         $bgcolor = '';
@@ -303,23 +283,23 @@ foreach $revision (@revisions)
     $output .= "<TR$bgcolor VALIGN=TOP><TD>"
         ."<A NAME=$revision>";
 
-    my $anchor = "<A HREF=cvsview2.cgi";
+    my $anchor = "cvsview2.cgi";
 
     if (defined($::prev_revision{$revision})) {
-        $anchor .= "?diff_mode=context&whitespace_mode=show&file=$file_tail&branch=$::opt_rev"
+        $anchor .= "?diff_mode=context&whitespace_mode=show&file=$file_tail"
             ."&root=$root&subdir=$rcs_path&command=DIFF_FRAMESET"
             ."&rev1=$::prev_revision{$revision}&rev2=$revision";
     } else {
         $anchor .= "?files=$file_tail"
-            ."&root=$root&subdir=$rcs_path\&command=DIRECTORY\&rev2=$revision&branch=$::opt_rev";
+            ."&root=$root&subdir=$rcs_path\&command=DIRECTORY\&rev2=$revision";
         $anchor .= "&branch=$browse_revtag" unless $browse_revtag eq 'HEAD';
     }
 
     $anchor = &url_encode3($anchor);
 
-    $output .= $anchor;
+    $output .= "<A HREF=\"$anchor";
 
-    $output .= ">$revision</A>"
+    $output .= "\">$revision</A>"
         .'&nbsp' x ($max_rev_length - length($revision)).'</TD>';
 
     $output .= "<TD>".$author
@@ -521,8 +501,8 @@ sub print_useful_links {
 
     my $lxr_path = $path;
     my $lxr_link = Fix_LxrLink($lxr_path);
-    my $diff_link = "$diff_base?command=DIRECTORY\&subdir=$dir\&files=$file\&branch=$::opt_rev";
-    my $blame_link = "$blame_base?root=$::CVS_ROOT\&file=$path\&rev=$::opt_rev";
+    my $diff_link = "$diff_base?command=DIRECTORY\&subdir=$dir\&files=$file";
+    my $blame_link = "$blame_base?root=$::CVS_ROOT\&file=$path";
 
 print "<DIV ALIGN=RIGHT>
  <TABLE BORDER CELLPADDING=10 CELLSPACING=0>

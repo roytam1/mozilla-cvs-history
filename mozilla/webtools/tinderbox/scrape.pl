@@ -80,16 +80,12 @@ sub find_scrape_data {
   while (<$fh>) {
     if (/TinderboxPrint:/) {
       # Line format:
-      #  TinderboxPrint:<general html>
+      #  TinderboxPrint:aaa,bbb,ccc,ddd
 
       # Strip off the TinderboxPrint: part of the line
       chomp;
       s/.*TinderboxPrint://;
-
-      # No longer use ; to create separate lines.
-      #@line = split(';', $_);
-
-      $line[0] = $_;
+      @line = split(',', $_);
       push(@rv, @line);
     }
   }

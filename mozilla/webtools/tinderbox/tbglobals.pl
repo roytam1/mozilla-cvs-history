@@ -32,7 +32,6 @@ use Backwards;
 
 # From load_data()
 $ignore_builds = {};
-$scrape_builds = {};
 
 # From get_build_name_index()
 $build_name_index = {};     
@@ -115,17 +114,15 @@ BEGIN {
 }
 
 sub tb_load_data {
-  $tree = $form{'tree'};  # Testing: $tree = "SeaMonkey";
+  $tree = $form{'tree'};
 
   return undef unless $tree;
   
   tb_load_treedata($tree);
         
   $ignore_builds = {};
-  $scrape_builds = {};
 
   require "$tree/ignorebuilds.pl" if -r "$tree/ignorebuilds.pl";
-  require "$tree/scrapebuilds.pl" if -r "$tree/scrapebuilds.pl";
         
   $td = {};
   $td->{name} = $tree;
@@ -133,7 +130,6 @@ sub tb_load_data {
   $td->{cvs_module} = $cvs_module;
   $td->{cvs_branch} = $cvs_branch;
   $td->{ignore_builds} = $ignore_builds;
-  $td->{scrape_builds} = $scrape_builds;
   $cvs_root = '/m/src' if $cvs_root eq '';
   $td->{cvs_root} = $cvs_root;
 
@@ -146,6 +142,9 @@ sub tb_load_data {
 
   make_build_table($td, $build_list);
 
+  $td->{bloaty}     = load_bloaty($td);
+  $td->{pageloader} = load_pageloader($td);
+  $td->{startup}    = load_startup($td);
   $td->{scrape}     = load_scrape($td);
   $td->{warnings}   = load_warnings($td);
 
@@ -233,14 +232,11 @@ sub tb_check_password {
     }
   }
 
-  # Force a return here to test w/o a password.
-  # return;
-
   require 'header.pl';
 
   print "Content-type: text/html\n";
   print "Set-Cookie: tinderbox_password= ; path=/ ; "
-       ." Expires = Sun, 1-Mar-2020 00:00:00 GMT\n";
+       ." expires = Sun, 1-Mar-2020 00:00:00 GMT\n";
   print "\n";
 
   EmitHtmlHeader("What's the magic word?",
@@ -299,7 +295,7 @@ sub tb_build_static {
   # Build tinderbox static pages
   $ENV{QUERY_STRING}="tree=$tree&static=1";
   $ENV{REQUEST_METHOD}="GET";
-  system("./showbuilds.cgi >/dev/null&");
+  system './showbuilds.cgi >/dev/null&';
 }
 
 # end of public functions
@@ -388,8 +384,91 @@ sub load_who {
   #  $who_list->[$time_count] = {};
   #}
 }
+    
+
+# Load data about code bloat & leaks
+#   File format: <logfile>|<leak_delta>|<bloat_delta>
+#
+sub load_bloaty {
+  my $treedata = $_[0];
+  local $_;
+
+  my $bloaty = {};
+  my ($bloat_baseline,  $leaks_baseline)  = (0,0);
+
+  open(BLOATLOG, "<$treedata->{name}/bloat.dat");
+  while (<BLOATLOG>) {
+    chomp;
+    my ($logfile, $leaks, $bloat) = split /\|/;
+
+    # Allow 1k of noise
+    my $leaks_cmp = int(($leaks - $leaks_baseline) / 1000);
+    my $bloat_cmp = int(($bloat - $bloat_baseline) / 1000);
+    
+    # If there was a rise or drop, set a new baseline
+    $leaks_baseline = $leaks unless $leaks_cmp == 0;
+    $bloat_baseline = $bloat unless $bloat_cmp == 0;
+
+    $bloaty->{$logfile} = [ $leaks, $bloat, $leaks_cmp, $bloat_cmp ];
+  }
+  return $bloaty;
+}
 
 
+# Load data about pageloader times.
+#   File format: <logfile>|<pageloader time>
+#
+sub load_pageloader {
+  my $treedata = $_[0];
+  local $_;
+
+  my $pageloader = {};
+  
+  open(BLOATLOG, "<$treedata->{name}/pageloader.dat");
+  while (<BLOATLOG>) {
+    chomp;
+    my ($logfile, $pageloader_time) = split /\|/;
+
+    # Allow 1k of noise
+    # my $leaks_cmp = int(($leaks - $leaks_baseline) / 1000);
+    # my $bloat_cmp = int(($bloat - $bloat_baseline) / 1000);
+    
+    # If there was a rise or drop, set a new baseline
+    # $leaks_baseline = $leaks unless $leaks_cmp == 0;
+    # $bloat_baseline = $bloat unless $bloat_cmp == 0;
+
+    $pageloader->{$logfile} = [ $pageloader_time ];
+  }
+  return $pageloader;
+}
+
+
+# Load data about startup times.
+#   File format: <logfile>|<pageloader time>
+#
+sub load_startup {
+  my $treedata = $_[0];
+  local $_;
+
+  my $startup = {};
+  
+  open(BLOATLOG, "<$treedata->{name}/startup.dat");
+  while (<BLOATLOG>) {
+    chomp;
+    my ($logfile, $startup_time) = split /\|/;
+
+    # Allow 1k of noise
+    # my $leaks_cmp = int(($leaks - $leaks_baseline) / 1000);
+    # my $bloat_cmp = int(($bloat - $bloat_baseline) / 1000);
+    
+    # If there was a rise or drop, set a new baseline
+    # $leaks_baseline = $leaks unless $leaks_cmp == 0;
+    # $bloat_baseline = $bloat unless $bloat_cmp == 0;
+
+    $startup->{$logfile} = [ $startup_time ];
+  }
+  return $startup;
+}
 
 # Load data about scrape data.
 #   File format: <logfile>|<aaa>|<bbb>|...
@@ -400,8 +479,8 @@ sub load_scrape {
 
   my $scrape = {};
   
-  open(SCRAPELOG, "<$treedata->{name}/scrape.dat");
-  while (<SCRAPELOG>) {
+  open(BLOATLOG, "<$treedata->{name}/scrape.dat");
+  while (<BLOATLOG>) {
     chomp;
     my @list =  split /\|/;
     my $logfile = @list[0];
