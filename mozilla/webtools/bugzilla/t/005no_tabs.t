@@ -18,30 +18,37 @@
 # Rights Reserved.
 #
 # Contributor(s): Jacob Steenhagen <jake@acutex.net>
+#                 David D. Kilzer <ddkilzer@kilzer.net>
 #
 
 #################
 #Bugzilla Test 5#
 #####no_tabs#####
 
-BEGIN { use lib "t/"; }
-BEGIN { use Support::Files; }
-BEGIN { $tests = @Support::Files::testitems; }
-BEGIN { use Test::More tests => $tests; }
-
 use strict;
 
+use lib 't';
+
+use Support::Files;
+use Support::Templates;
+
+use File::Spec 0.82;
+use Test::More tests => (  scalar(@Support::Files::testitems)
+                         + scalar(@Support::Templates::actual_files));
+
 my @testitems = @Support::Files::testitems;
-my $verbose = $::ENV{TEST_VERBOSE};
+my @templates = map(File::Spec->catfile($Support::Templates::include_path, $_),
+                    @Support::Templates::actual_files);
+push(@testitems, @templates);
 
 foreach my $file (@testitems) {
     open (FILE, "$file");
-    my @file = <FILE>;
-    close (FILE);
-    if (grep /\t/, @file) {
+    if (grep /\t/, <FILE>) {
         ok(0, "$file contains tabs --WARNING");
     } else {
         ok(1, "$file has no tabs");
     }
+    close (FILE);
 }
 
+exit 0;
