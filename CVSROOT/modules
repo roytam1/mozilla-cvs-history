@@ -99,7 +99,7 @@ MozillaSourceCommon -a \
 	mozilla/include \
 	mozilla/caps \
 	mozilla/jpeg \
-	JSClient \
+	mozilla/js \
 	mozilla/lib/htmldlgs \
 	mozilla/lib/layout \
 	mozilla/lib/libcnv \
@@ -347,7 +347,7 @@ RaptorDist -a \
 	mozilla/include \
 	mozilla/intl \
 	mozilla/jpeg \
-	mozilla/js \
+	JSClient \
 	mozilla/lib/liblayer \
 	mozilla/lib/libpwcac \
 	mozilla/lib/xp \
@@ -483,12 +483,10 @@ JSRef -a \
 	mozilla/js/src
 
 JSClient -a \
-	mozilla/js/Makefile \
 	mozilla/js/Makefile.in \
 	mozilla/js/makefile.win \
 	mozilla/js/src \
-	mozilla/js/macbuild \
-	mozilla/js/jsd
+	mozilla/js/macbuild
 
 #######################################################################
 # Modules for SeaMonkey 
@@ -525,7 +523,7 @@ SeaMonkeyCore -a \
 	mozilla/include \
 	mozilla/intl \
 	mozilla/jpeg \
-	mozilla/js \
+	JSClient \
 	mozilla/lib/liblayer \
 	mozilla/lib/libpwcac \
 	mozilla/lib/mac/MacMemoryAllocator \
