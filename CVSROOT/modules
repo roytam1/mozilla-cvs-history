@@ -336,6 +336,7 @@ RaptorDist -a \
 	mozilla/Makefile.in \
 	mozilla/base \
 	mozilla/build \
+	mozilla/caps \
 	mozilla/config \
 	mozilla/dbm \
 	mozilla/editor \
