@@ -640,7 +640,8 @@ sub dump_entity {
 	if(  $msg_part =~ /^attachment/ ) {
 	    # Attached File
 	    my $des = $entity->head->get('Content-Description');
-	    $des ||= "";
+	    $des ||= $entity->head->recommended_filename;
+	    $des ||= "unnamed attachment";
 
 	    if( defined( $body->path )) { # Data is on disk
 		$on_disk = 1;

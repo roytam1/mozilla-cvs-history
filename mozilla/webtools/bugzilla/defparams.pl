@@ -202,6 +202,26 @@ sub check_netmask {
   },
 
   {
+   name => 'languages' ,
+   desc => 'A comma-separated list of RFC 1766 language tags. These ' .
+           'identify the languages in which you wish Bugzilla output ' .
+           'to be displayed. Note that you must install the appropriate ' .
+           'language pack before adding a language to this Param. The ' .
+           'language used is the one in this list with the highest ' .
+           'q-value in the user\'s Accept-Language header.' ,
+   type => 't' ,
+   default => 'en'
+  },
+
+  {
+   name => 'defaultlanguage',
+   desc => 'The UI language Bugzilla falls back on if no suitable ' .
+           'language is found in the user\'s Accept-Language header.' ,
+   type => 't' ,
+   default => 'en'
+  },
+
+  {
    name => 'cookiepath',
    desc => 'Path, relative to your web document root, to which to restrict ' .
            'Bugzilla cookies.  Normally this is the URI portion of your URL ' .
@@ -226,11 +246,12 @@ sub check_netmask {
    name => 'enablequips',
    desc => 'Controls the appearance of quips at the top of buglists.<ul> ' .
            '<li>on - Bugzilla will display a quip, and lets users add to ' .
-           'the list.</li><li>frozen - Bugzilla will display a quip but ' .
-           'not permit new additions.</li><li>off - Bugzilla will not ' .
-           'display quips.</li></ul>',
+           'the list.</li><li>approved - quips can be entered, but need ' .
+           'be approved before shown</li><li>frozen - Bugzilla will display ' .
+           'a quip but not permit new additions.</li><li>off - Bugzilla ' .
+           'will not display quips.</li></ul>',
    type => 's',
-   choices => ['on','frozen','off'],
+   choices => ['on', 'approved', 'frozen', 'off'],
    default => 'on',
    checker => \&check_multi
   },

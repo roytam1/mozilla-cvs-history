@@ -35,6 +35,7 @@ use lib qw(.);
 
 use vars qw($cgi $template $vars);
 
+use Bugzilla;
 use Bugzilla::Search;
 
 # Include the Bugzilla CGI and general utility library.
@@ -100,12 +101,13 @@ my $format = GetFormat("list/list", $::FORM{'format'}, $::FORM{'ctype'});
 # http://www.browsercaps.org used as source of compatible browsers.
 #
 my $serverpush =
-  exists $ENV{'HTTP_USER_AGENT'} 
-    && $ENV{'HTTP_USER_AGENT'} =~ /Mozilla.[3-9]/ 
-      && $ENV{'HTTP_USER_AGENT'} !~ /[Cc]ompatible/
-        && $format->{'extension'} eq "html"
-          && !defined($::FORM{'serverpush'})
-            || $::FORM{'serverpush'};
+  $format->{'extension'} eq "html"
+    && exists $ENV{'HTTP_USER_AGENT'} 
+      && $ENV{'HTTP_USER_AGENT'} =~ /Mozilla.[3-9]/ 
+        && $ENV{'HTTP_USER_AGENT'} !~ /[Cc]ompatible/
+          && $ENV{'HTTP_USER_AGENT'} !~ /WebKit/
+            && !defined($::FORM{'serverpush'})
+              || $::FORM{'serverpush'};
 
 my $order = $::FORM{'order'} || "";
 my $order_from_cookie = 0;  # True if $order set using $::COOKIE{'LASTORDER'}
@@ -190,7 +192,7 @@ sub GetQuip {
 
     my $quip;
 
-    SendSQL("SELECT quip FROM quips ORDER BY RAND() LIMIT 1");
+    SendSQL("SELECT quip FROM quips WHERE approved = 1 ORDER BY RAND() LIMIT 1");
 
     if (MoreSQLData()) {
         ($quip) = FetchSQLData();
@@ -425,7 +427,7 @@ elsif (defined $::COOKIE{'COLUMNLIST'}) {
     $columnlist =~ s/owner_realname/assigned_to_realname/;
     $columnlist =~ s/[^_]platform/rep_platform/;
     $columnlist =~ s/[^_]severity/bug_severity/;
-    $columnlist =~ s/[^_]status/bug_status/;
+    $columnlist =~ s/[^_]status\b/bug_status/;
     $columnlist =~ s/summaryfull/short_desc/;
     $columnlist =~ s/summary/short_short_desc/;
 
@@ -627,7 +629,7 @@ if ($serverpush) {
 
 # Connect to the shadow database if this installation is using one to improve
 # query performance.
-ReconnectToShadowDatabase();
+Bugzilla->instance->switch_to_shadow_db();
 
 # Normally, we ignore SIGTERM and SIGPIPE (see globals.pl) but we need to
 # respond to them here to prevent someone DOSing us by reloading a query
@@ -684,11 +686,6 @@ while (my @row = FetchSQLData()) {
     # Add id to list for checking for bug privacy later
     push(@bugidlist, $bug->{'bug_id'});
 }
-
-# Switch back from the shadow database to the regular database so PutFooter()
-# can determine the current user even if the "logincookies" table is corrupted
-# in the shadow database.
-ReconnectToMainDatabase();
 
 # Check for bug privacy and set $bug->{isingroups} = 1 if private 
 # to 1 or more groups

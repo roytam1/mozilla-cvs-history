@@ -362,6 +362,8 @@ sub user {
     $self->{'user'} = {};
 
     my $movers = Param("movers");
+    $movers =~ s/\s?,\s?/|/g;
+    $movers =~ s/@/\@/g;
     $self->{'user'}->{'canmove'} = Param("move-enabled") 
       && (defined $::COOKIE{"Bugzilla_login"}) 
         && ($::COOKIE{"Bugzilla_login"} =~ /$movers/);
@@ -373,9 +375,9 @@ sub user {
     # in the world; their permissions will get checked when they log in
     # and actually try to make the change.
     $self->{'user'}->{'canedit'} = $::userid == 0
-                                   || $::userid == $self->{'reporter'}
-                                   || $::userid == $self->{'qa_contact'}
-                                   || $::userid == $self->{'assigned_to'}
+                                   || $::userid == $self->{'reporter'}{'id'}
+                                   || ($self->{'qa_contact'} && $::userid == $self->{'qa_contact'}{'id'})
+                                   || $::userid == $self->{'assigned_to'}{'id'}
                                    || &::UserInGroup("editbugs");
     $self->{'user'}->{'canconfirm'} = ($::userid == 0)
                                    || &::UserInGroup("canconfirm")
