@@ -86,9 +86,6 @@ if ($filename eq '')
     print "\n";
     &print_usage;
     exit;
-} elsif ($filename =~ /CVSROOT/) {
-    print "\nFiles in the CVSROOT dir cannot be viewed.\n";
-    exit;
 }
 my ($file_head, $file_tail) = $filename =~ m@(.*/)?(.+)@;
 my $url_filename = url_quote($filename);
@@ -147,10 +144,10 @@ print "</BODY></HTML>\n";
   exit;
 }
 
+&ChrootFilename($root, $rcs_filename);
+
 my $rcs_path;
 ($rcs_path) = $rcs_filename =~ m@$root/(.*)/.+?,v@;
-
-CheckHidden($rcs_filename);
 
 # Parse the rcs file ($::opt_rev is passed as a global)
 #

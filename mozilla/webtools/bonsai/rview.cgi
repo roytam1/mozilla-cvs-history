@@ -60,6 +60,7 @@ $dir = "" unless defined $dir;
 $dir = "" if ($dir =~ /^\.\.\/$/);
 $dir =~ s/^\/([^:]*)/$1/;
 $dir =~ s/([^:]*)\/$/$1/;
+&ChrootFilename($CVS_ROOT, $path);
 
 my $rev = '';
 $rev = SanitizeRevision($::FORM{"rev"}) if defined($::FORM{"rev"});

@@ -122,6 +122,7 @@ print "</BODY></HTML>\n";
 exit;
 
 found_file:
+&ChrootFilename($root, $rcs_filename);
 
 my $rcs_path;
 ($rcs_path) = $rcs_filename =~ m@$root/(.*)/.+?,v@;
