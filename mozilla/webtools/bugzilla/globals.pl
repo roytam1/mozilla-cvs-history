@@ -656,7 +656,7 @@ sub InsertNewUser {
     # Determine what groups the user should be in by default
     # and add them to those groups.
     PushGlobalSQLState();
-    SendSQL("select bit, userregexp from groups where userregexp != ''");
+    SendSQL("select userregexp from groups where userregexp != ''");
     my $groupset = "0";
     while (MoreSQLData()) {
         my @row = FetchSQLData();
@@ -708,8 +708,9 @@ sub GenerateRandomPassword {
 }
 
 sub SelectVisible {
-    my ($query, $userid, $usergroupset) = @_;
-
+#     my ($query, $userid, $usergroupset) = @_;
+    my ($query, $userid) = @_;
+    
     # Run the SQL $query with the additional restriction that
     # the bugs can be seen by $userid. $usergroupset is provided
     # as an optimisation when this is already known, eg from CGI.pl
@@ -723,14 +724,22 @@ sub SelectVisible {
     # additional tables), you will need to update anywhere which does a
     # LOCK TABLE, and then calls routines which call this
 
-    $usergroupset = 0 unless $userid;
+#    $usergroupset = 0 unless $userid;
+#
+#    unless (defined($usergroupset)) {
+#        PushGlobalSQLState();
+#        SendSQL("SELECT groupset FROM profiles WHERE userid = $userid");
+#        $usergroupset = FetchOneColumn();
+#        PopGlobalSQLState();
+#    }
 
-    unless (defined($usergroupset)) {
-        PushGlobalSQLState();
-        SendSQL("SELECT groupset FROM profiles WHERE userid = $userid");
-        $usergroupset = FetchOneColumn();
-        PopGlobalSQLState();
+    my @usergroupset = ();
+    PushGlobalSQLState();
+    SendSQL("SELECT group_id FROM user_group_map WHERE user_id = $userid");
+    while (my @row = FetchSQLData()) {
+        push (@usergroupset, $row[0]);
     }
+    PopGlobalSQLState();
 
     # Users are authorized to access bugs if they are a member of all 
     # groups to which the bug is restricted.  User group membership and 
@@ -760,7 +769,15 @@ sub SelectVisible {
                      selectVisible_cc.who = $userid "
     }
 
-    $replace .= "WHERE ((bugs.groupset & $usergroupset) = bugs.groupset ";
+    $replace .= "LEFT JOIN bug_group_map selectVisible_bug_groups ON
+                bugs.bug_id = selectVisible_bug_groups.bug_id ";
+    $replace .= "LEFT JOIN user_group_map selectVisible_user_groups ON
+                selectVisible_bug_groups.group_id = selectVisible_user_groups.group_id AND
+                selectVisible_user_groups.user_id ";
+
+    # $replace .= "WHERE ((bugs.groupset & $usergroupset) = bugs.groupset ";
+    # $replace .= "WHERE ((selectVisible_groups.group_id IN (" . join(',', @usergroupset) . ")) ";
+    $replace .= "WHERE ((isnull(selectVisible_user_groups.group_id)) ";
 
     if ($userid) {
         # There is a mysql bug affecting v3.22 and 3.23 (at least), where this will
@@ -768,9 +785,9 @@ sub SelectVisible {
         # test to the JOINed cc table. See http://lists.mysql.com/cgi-ez/ezmlm-cgi?9:mss:11417
         # Its needed, even though it shouldn't be
         $replace .= "OR (bugs.reporter_accessible = 1 AND bugs.reporter = $userid) 
-                   OR (bugs.assignee_accessible = 1 AND bugs.assigned_to = $userid) 
-                   OR (bugs.qacontact_accessible = 1 AND bugs.qa_contact = $userid) 
-                   OR (bugs.cclist_accessible = 1 AND selectVisible_cc.who = $userid AND not isnull(selectVisible_cc.who))";
+                    OR (bugs.assignee_accessible = 1 AND bugs.assigned_to = $userid) 
+                    OR (bugs.qacontact_accessible = 1 AND bugs.qa_contact = $userid) 
+                    OR (bugs.cclist_accessible = 1 AND selectVisible_cc.who = $userid AND not isnull(selectVisible_cc.who))";
     }
 
     $replace .= ") AND ";
@@ -785,14 +802,16 @@ sub CanSeeBug {
     # in most cases (ie viewing bugs). Maybe make this an optional
     # parameter?
 
-    my ($id, $userid, $usergroupset) = @_;
+#    my ($id, $userid, $usergroupset) = @_;
+    my ($id, $userid) = @_;
 
     # Query the database for the bug, retrieving a boolean value that
     # represents whether or not the user is authorized to access the bug.
 
     PushGlobalSQLState();
-    SendSQL(SelectVisible("SELECT bugs.bug_id FROM bugs WHERE bugs.bug_id = $id",
-                          $userid, $usergroupset));
+#    SendSQL(SelectVisible("SELECT bugs.bug_id FROM bugs WHERE bugs.bug_id = $id",
+#                          $userid, $usergroupset));
+    SendSQL(SelectVisible("SELECT bugs.bug_id FROM bugs WHERE bugs.bug_id = $id", $userid));
 
     my $ret = defined(FetchSQLData());
     PopGlobalSQLState();
@@ -1084,7 +1103,8 @@ sub GetBugLink {
     $link_text = value_quote($link_text);
     $link_return .= qq{<a href="show_bug.cgi?id=$bug_num" title="$bug_stat};
     if ($bug_res ne "") {$link_return .= " $bug_res"}
-    if ($bug_grp == 0 || CanSeeBug($bug_num, $::userid, $::usergroupset)) {
+#    if ($bug_grp == 0 || CanSeeBug($bug_num, $::userid, $::usergroupset)) {
+    if ($bug_grp == 0 || CanSeeBug($bug_num, $::userid)) {
         $link_return .= " - $bug_desc";
     }
     $link_return .= qq{">$link_text</a>};
@@ -1238,14 +1258,17 @@ sub SqlQuote {
 
 
 sub UserInGroup {
-    my ($groupname) = (@_);
-    if ($::usergroupset eq "0") {
+    my ($userid, $groupname) = (@_);
+    if ($userid eq "0") {
         return 0;
     }
     ConnectToDatabase();
-    SendSQL("select (bit & $::usergroupset) != 0 from groups where name = " . SqlQuote($groupname));
-    my $bit = FetchOneColumn();
-    if ($bit) {
+	SendSQL("SELECT user_id FROM user_group_map, groups
+			WHERE user_group_map.group_id = groups.group_id 
+			AND groups.name = '$groupname'
+			AND user_id = $userid");
+    my $result = FetchOneColumn();
+    if ($result) {
         return 1;
     }
     return 0;
@@ -1253,9 +1276,12 @@ sub UserInGroup {
 
 sub BugInGroup {
     my ($bugid, $groupname) = (@_);
-    my $groupbit = GroupNameToBit($groupname);
+    my $groupid = GroupNameToId($groupname);
     PushGlobalSQLState();
-    SendSQL("SELECT (bugs.groupset & $groupbit) != 0 FROM bugs WHERE bugs.bug_id = $bugid");
+	SendSQL("SELECT bug_id FROM bug_group_map 
+			WHERE bug_group_map.group_id = groups.group_id
+			AND groups.name = '$groupname'
+			AND bug_id = $bugid");
     my $bugingroup = FetchOneColumn();
     PopGlobalSQLState();
     return $bugingroup;
@@ -1272,24 +1298,24 @@ sub GroupExists {
 # Given the name of an existing group, returns the bit associated with it.
 # If the group does not exist, returns 0.
 # !!! Remove this function when the new group system is implemented!
-sub GroupNameToBit {
+sub GroupNameToId {
     my ($groupname) = (@_);
     ConnectToDatabase();
     PushGlobalSQLState();
-    SendSQL("SELECT bit FROM groups WHERE name = " . SqlQuote($groupname));
-    my $bit = FetchOneColumn() || 0;
+    SendSQL("SELECT group_id FROM groups WHERE name = " . SqlQuote($groupname));
+    my $id = FetchOneColumn() || 0;
     PopGlobalSQLState();
-    return $bit;
+    return $id;
 }
 
 # Determines whether or not a group is active by checking 
 # the "isactive" column for the group in the "groups" table.
 # Note: This function selects groups by bit rather than by name.
 sub GroupIsActive {
-    my ($groupbit) = (@_);
-    $groupbit ||= 0;
+    my ($groupid) = (@_);
+    $groupid ||= 0;
     ConnectToDatabase();
-    SendSQL("select isactive from groups where bit=$groupbit");
+    SendSQL("select isactive from groups where group_id=$groupid");
     my $isactive = FetchOneColumn();
     return $isactive;
 }

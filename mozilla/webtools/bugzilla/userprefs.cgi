@@ -505,9 +505,10 @@ sub ShowPermissions {
     print "<TR><TD>You have the following permission bits set on your account:\n";
     print "<P><UL>\n";
     my $found = 0;
-    SendSQL("SELECT description FROM groups " .
-            "WHERE bit & $::usergroupset != 0 " .
-            "ORDER BY bit");
+    SendSQL("SELECT description FROM groups, user_group_map " .
+            "WHERE groups.group_id = user_group_map.group_id " .
+			"AND user_group_map.user_id = $userid " .
+            "ORDER BY description");
     while (MoreSQLData()) {
         my ($description) = (FetchSQLData());
         print "<LI>$description\n";
@@ -517,32 +518,31 @@ sub ShowPermissions {
         print "<LI>(No extra permission bits have been set).\n";
     }
     print "</UL>\n";
-    SendSQL("SELECT blessgroupset FROM profiles WHERE userid = $userid");
-    my $blessgroupset = FetchOneColumn();
-    if ($blessgroupset) {
-        print "And you can turn on or off the following bits for\n";
-        print qq{<A HREF="editusers.cgi">other users</A>:\n};
-        print "<P><UL>\n";
-        SendSQL("SELECT description FROM groups " .
-                "WHERE bit & $blessgroupset != 0 " .
-                "ORDER BY bit");
-        while (MoreSQLData()) {
-            my ($description) = (FetchSQLData());
-            print "<LI>$description\n";
-        }
+	  SendSQL("SELECT COUNT(group_id) FROM bless_group_map WHERE user_id = $userid");
+	  my $blessgroupset = FetchOneColumn();
+	  if ( $blessgroupset ) {
+	   	  print "And you can turn on or off the following bits for\n";
+    	  print qq{<A HREF="editusers.cgi">other users</A>:\n};
+	   	  print "<P><UL>\n";
+    	  SendSQL("SELECT description FROM groups, bless_group_map " .
+              	"WHERE groups.group_id = bless_group_map.group_id " .
+				        "AND bless_group_map.user_id = $userid " .
+              	"ORDER BY description");
+	      while (MoreSQLData()) {
+    	      my ($description) = (FetchSQLData());
+        	  print "<LI>$description\n";
+	      }
         print "</UL>\n";
-    }
-    print "</TR></TD>\n";
+	  }
+	  print "</TR></TD>\n";
 }
         
-
-
 
 ######################################################################
 ################# Live code (not sub defs) starts here ###############
 
 
-confirm_login();
+$userid = confirm_login();
 
 print "Content-type: text/html\n\n";
 
@@ -609,8 +609,6 @@ print qq{
 
 
 if (defined $bankdescription) {
-    $userid = DBNameToIdAndCheck($::COOKIE{'Bugzilla_login'});
-
     if ($::FORM{'dosave'}) {
         &$savefunc;
         print "Your changes have been saved.";

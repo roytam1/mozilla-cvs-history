@@ -287,7 +287,7 @@ my %milestone_set;
 foreach my $p (@::legal_product) {
   if(Param("usebuggroups")
      && GroupExists($p)
-     && !UserInGroup($p)) {
+     && !UserInGroup($userid, $p)) {
     # If we're using bug groups to restrict entry on products, and
     # this product has a bug group, and the user is not in that
     # group, we don't want to include that product in this list.
@@ -1048,13 +1048,13 @@ print "
 ### the footer for these links, they can uncomment this section. 
 ###
 
-# if (UserInGroup("tweakparams")) {
+# if (UserInGroup($userid, "tweakparams")) {
 #     print "<a href=editparams.cgi>Edit Bugzilla operating parameters</a><br>\n";
 # }
-# if (UserInGroup("editcomponents")) {
+# if (UserInGroup($userid, "editcomponents")) {
 #     print "<a href=editproducts.cgi>Edit Bugzilla products and components</a><br>\n";
 # }
-# if (UserInGroup("editkeywords")) {
+# if (UserInGroup($userid, "editkeywords")) {
 #     print "<a href=editkeywords.cgi>Edit Bugzilla keywords</a><br>\n";
 # }
 # if ($userid) {

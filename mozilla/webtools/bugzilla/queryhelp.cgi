@@ -540,9 +540,11 @@ while (MoreSQLData()) {
 
 print "</table><p>\n";
 
+my $userid = 0;
 quietly_check_login();
+$userid = DBname_to_id($::FORM{'Bugzilla_login'});
 
-if (UserInGroup("editkeywords")) {
+if (UserInGroup($userid, "editkeywords")) {
     print qq{<p><a href="editkeywords.cgi">Edit keywords</a>\n};
 }
 
@@ -622,7 +624,7 @@ print qq{
 
 </table></td></tr></table> };
 
-if (UserInGroup("editcomponents")) {
+if (UserInGroup($userid, "editcomponents")) {
     print qq{<p><a href="editproducts.cgi">Edit products</a><p>};
 }
 
@@ -681,7 +683,7 @@ foreach $product (@products)
 }
 
 print qq{</table>};
-if (UserInGroup("editcomponents")) {
+if (UserInGroup($userid, "editcomponents")) {
     print qq{<p><a href="editcomponents.cgi">Edit components</a><p>};
 }
 
@@ -747,7 +749,7 @@ Containing at least <INPUT NAME=votes SIZE=3 VALUE=""> votes
 <td>
 Where the field(s)
 <SELECT NAME="chfield" MULTIPLE SIZE=4>
-<OPTION VALUE="[Bug creation]">[Bug creation]<OPTION VALUE="assigned_to">assigned_to<OPTION VALUE="bug_file_loc">bug_file_loc<OPTION VALUE="bug_severity">bug_severity<OPTION VALUE="bug_status">bug_status<OPTION VALUE="component">component<OPTION VALUE="everconfirmed">everconfirmed<OPTION VALUE="groupset">groupset<OPTION VALUE="keywords">keywords<OPTION VALUE="op_sys">op_sys<OPTION VALUE="priority">priority<OPTION VALUE="product">product<OPTION VALUE="qa_contact">qa_contact<OPTION VALUE="rep_platform">rep_platform<OPTION VALUE="reporter">reporter<OPTION VALUE="resolution">resolution<OPTION VALUE="short_desc">short_desc<OPTION VALUE="status_whiteboard">status_whiteboard<OPTION VALUE="target_milestone">target_milestone<OPTION VALUE="version">version<OPTION VALUE="votes">votes
+<OPTION VALUE="[Bug creation]">[Bug creation]<OPTION VALUE="assigned_to">assigned_to<OPTION VALUE="bug_file_loc">bug_file_loc<OPTION VALUE="bug_severity">bug_severity<OPTION VALUE="bug_status">bug_status<OPTION VALUE="component">component<OPTION VALUE="everconfirmed">everconfirmed<OPTION VALUE="keywords">keywords<OPTION VALUE="op_sys">op_sys<OPTION VALUE="priority">priority<OPTION VALUE="product">product<OPTION VALUE="qa_contact">qa_contact<OPTION VALUE="rep_platform">rep_platform<OPTION VALUE="reporter">reporter<OPTION VALUE="resolution">resolution<OPTION VALUE="short_desc">short_desc<OPTION VALUE="status_whiteboard">status_whiteboard<OPTION VALUE="target_milestone">target_milestone<OPTION VALUE="version">version<OPTION VALUE="votes">votes
 </SELECT> changed to <INPUT NAME="chfieldvalue" SIZE="10">
 </td>
 </tr>
@@ -836,7 +838,6 @@ queries, but it's not the easiest thing to learn (or explain).
 <table>
 <tr><td>
 <table><tr><td>&nbsp;</td><td><SELECT NAME="field0-0-0"><OPTION SELECTED VALUE="noop">---
-<OPTION VALUE="groupset">groupset
 <OPTION VALUE="bug_id">Bug #
 <OPTION VALUE="short_desc">Summary
 <OPTION VALUE="product">Product
@@ -916,7 +917,6 @@ Field 3: What the search term is<br>
 <table>
 <tr><td>
 <table><tr><td>&nbsp;</td><td><SELECT NAME="field0-0-0"><OPTION SELECTED VALUE="noop">---
-<OPTION VALUE="groupset">groupset
 <OPTION VALUE="bug_id">Bug #
 <OPTION VALUE="short_desc">Summary
 <OPTION VALUE="product">Product
@@ -964,7 +964,6 @@ Field 3: What the search term is<br>
 <OPTION VALUE="changedto">changed to
 <OPTION VALUE="changedby">changed by
 </SELECT><INPUT NAME="value0-0-0" VALUE=""></td></tr><tr><td><b>OR</b></td><td><SELECT NAME="field0-0-1"><OPTION SELECTED VALUE="noop">---
-<OPTION VALUE="groupset">groupset
 <OPTION VALUE="bug_id">Bug #
 <OPTION VALUE="short_desc">Summary
 <OPTION VALUE="product">Product
@@ -1046,7 +1045,6 @@ the query will be anything that matches either of the terms.
 <tr><td>
 
 <table><tr><td>&nbsp;</td><td><SELECT NAME="field0-0-0"><OPTION SELECTED VALUE="noop">---
-<OPTION VALUE="groupset">groupset
 <OPTION VALUE="bug_id">Bug #
 <OPTION VALUE="short_desc">Summary
 <OPTION VALUE="product">Product
@@ -1094,7 +1092,6 @@ the query will be anything that matches either of the terms.
 <OPTION VALUE="changedto">changed to
 <OPTION VALUE="changedby">changed by
 </SELECT><INPUT NAME="value0-0-0" VALUE=""><INPUT TYPE="button" VALUE="Or" NAME="cmd-add0-0-1" ONCLICK="document.forms[0].action='query.cgi#chart' ; document.forms[0].method='POST' ; return 1;"></td></tr><tr><td>&nbsp;</td><td align="center" valign="middle"><b>AND</b></td></tr><tr><td>&nbsp;</td><td><SELECT NAME="field0-1-0"><OPTION SELECTED VALUE="noop">---
-<OPTION VALUE="groupset">groupset
 <OPTION VALUE="bug_id">Bug #
 <OPTION VALUE="short_desc">Summary
 <OPTION VALUE="product">Product
@@ -1177,7 +1174,6 @@ can think of the lines of "Or" as having parenthesis around them.
 <table>
 <tr><td>
 <table><tr><td>&nbsp;</td><td><SELECT NAME="field0-0-0"><OPTION SELECTED VALUE="noop">---
-<OPTION VALUE="groupset">groupset
 <OPTION VALUE="bug_id">Bug #
 <OPTION VALUE="short_desc">Summary
 <OPTION VALUE="product">Product
@@ -1231,7 +1227,6 @@ can think of the lines of "Or" as having parenthesis around them.
                 <td colspan="2"><hr></td>
                 </tr><tr><td>&nbsp;</td><td>
                 <SELECT NAME="field1-0-0"><OPTION SELECTED VALUE="noop">---
-<OPTION VALUE="groupset">groupset
 <OPTION VALUE="bug_id">Bug #
 <OPTION VALUE="short_desc">Summary
 <OPTION VALUE="product">Product

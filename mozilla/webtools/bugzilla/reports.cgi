@@ -73,6 +73,8 @@ my %reports =
 ConnectToDatabase(1);
 quietly_check_login();
 
+my $userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
+
 GetVersionTable();
 
 # If the usebuggroups parameter is set, we don't want to list all products.
@@ -81,7 +83,7 @@ my @myproducts;
 if(Param("usebuggroups")) {
     push( @myproducts, "-All-");
     foreach my $this_product (@legal_product) {
-        if(GroupExists($this_product) && !UserInGroup($this_product)) {
+        if(GroupExists($this_product) && !UserInGroup($userid, $this_product)) {
             next;
         } else {
             push( @myproducts, $this_product )
@@ -110,7 +112,7 @@ if (! defined $FORM{'product'}) {
     # reports for products they don't have permissions for...
     Param("usebuggroups") 
       && GroupExists($FORM{'product'}) 
-      && !UserInGroup($FORM{'product'})
+      && !UserInGroup($userid, $FORM{'product'})
       && DisplayError("You do not have the permissions necessary to view reports for this product.")
       && exit;
           

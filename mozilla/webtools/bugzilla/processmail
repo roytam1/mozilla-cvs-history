@@ -646,14 +646,13 @@ sub NewProcessOnePerson ($$$$$$$$$$$) {
     }
 
         
-    SendSQL("SELECT userid, groupset " .
+    SendSQL("SELECT userid " .
             "FROM profiles WHERE login_name = " . SqlQuote($person));
-    my ($userid, $groupset) =  (FetchSQLData());
+    my ($userid) = FetchOneColumn();
 
     $seen{$person} = 1;
 
     detaint_natural($userid);
-    detaint_natural($groupset);
 
     # if this person doesn't have permission to see info on this bug, 
     # return.
@@ -663,7 +662,7 @@ sub NewProcessOnePerson ($$$$$$$$$$$) {
     # see the action of restricting the bug itself; the bug will just 
     # quietly disappear from their radar.
     #
-    return unless CanSeeBug($id, $userid, $groupset);
+    return unless CanSeeBug($id, $userid);
     
     my %mailhead = %defmailhead;
     

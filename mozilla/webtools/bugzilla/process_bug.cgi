@@ -76,13 +76,13 @@ scalar(@idlist)
 # For each bug being modified, make sure its ID is a valid bug number 
 # representing an existing bug that the user is authorized to access.
 foreach my $id (@idlist) {
-    ValidateBugID($id);
+    ValidateBugID($id, $whoid);
 }
 
 # If we are duping bugs, let's also make sure that we can change 
 # the original.  This takes care of issue A on bug 96085.
 if (defined $::FORM{'dup_id'} && $::FORM{'knob'} eq "duplicate") {
-    ValidateBugID($::FORM{'dup_id'});
+    ValidateBugID($::FORM{'dup_id'}, $whoid);
 
     # Also, let's see if the reporter has authorization to see the bug
     # to which we are duping.  If not we need to prompt.
@@ -99,7 +99,7 @@ if ( defined $::COOKIE{"BUGLIST"} && defined $::FORM{'id'} ) {
     my $idx = lsearch( \@buglist , $::FORM{"id"} );
     if ($idx < $#buglist) {
         my $nextbugid = $buglist[$idx + 1];
-        ValidateBugID($nextbugid);
+        ValidateBugID($nextbugid, $whoid);
     }
 }
 
@@ -296,7 +296,7 @@ sub CheckCanChangeField {
         return 1;             # it'll flag it when "status" is checked.
     }
     if ($UserInEditGroupSet < 0) {
-        $UserInEditGroupSet = UserInGroup("editbugs");
+        $UserInEditGroupSet = UserInGroup($whoid, "editbugs");
     }
     if ($UserInEditGroupSet) {
         return 1;
@@ -321,7 +321,7 @@ sub CheckCanChangeField {
         # isn't legal.
 
         if ($UserInCanConfirmGroupSet < 0) {
-            $UserInCanConfirmGroupSet = UserInGroup("canconfirm");
+            $UserInCanConfirmGroupSet = UserInGroup($whoid, "canconfirm");
         }
         if ($UserInCanConfirmGroupSet) {
             return 1;
@@ -359,13 +359,11 @@ sub DuplicateUserConfirm {
 
     my $dupe = trim($::FORM{'id'});
     my $original = trim($::FORM{'dup_id'});
-    
+
     SendSQL("SELECT reporter FROM bugs WHERE bug_id = " . SqlQuote($dupe));
     my $reporter = FetchOneColumn();
-    SendSQL("SELECT profiles.groupset FROM profiles WHERE profiles.userid =".SqlQuote($reporter));
-    my $reportergroupset = FetchOneColumn();
 
-    if (CanSeeBug($original, $reporter, $reportergroupset)) {
+    if (CanSeeBug($original, $reporter)) {
         $::FORM{'confirm_add_duplicate'} = "1";
         return;
     }
@@ -465,10 +463,10 @@ sub DoComma {
 
 sub DoConfirm {
     if ($UserInEditGroupSet < 0) {
-        $UserInEditGroupSet = UserInGroup("editbugs");
+        $UserInEditGroupSet = UserInGroup($whoid, "editbugs");
     }
     if ($UserInCanConfirmGroupSet < 0) {
-        $UserInCanConfirmGroupSet = UserInGroup("canconfirm");
+        $UserInCanConfirmGroupSet = UserInGroup($whoid, "canconfirm");
     }
     if ($UserInEditGroupSet || $UserInCanConfirmGroupSet) {
         DoComma();
@@ -540,30 +538,50 @@ sub CheckonComment( $ ) {
 }
 
 # Changing this so that it will process groups from checkboxes instead of
-# select lists.  This means that instead of looking for the bit-X values in
+# select lists.  This means that instead of looking for the group-X values in
 # the form, we need to loop through all the bug groups this user has access
 # to, and for each one, see if it's selected.
-# In order to make mass changes work correctly, keep a sum of bits for groups
-# added, and another one for groups removed, and then let mysql do the bit
-# operations
-# If the form element isn't present, or the user isn't in the group, leave
-# it as-is
-if($::usergroupset ne '0') {
-    my $groupAdd = "0";
-    my $groupDel = "0";
+# In addition, adding a little extra work so that we don't clobber groupsets
+# for bugs where the user doesn't have access to the group, but does to the
+# bug (as with the proposed reporter access patch.)
+if($whoid ne '0') {
+    # First, find out what groups this bug is currently private to.
+    SendSQL("select group_id from bug_group_map where bug_id = $::FORM{id}");
+    my %buggroups = ();
+    while ( my @row = FetchSQLData() ) {
+        $buggroups{$row[0]} = 1 if $row[0];
+    }
 
-    SendSQL("SELECT bit, isactive FROM groups WHERE " .
-            "isbuggroup != 0 AND bit & $::usergroupset != 0 ORDER BY bit");
-    while (my ($b, $isactive) = FetchSQLData()) {
-        if (!$::FORM{"bit-$b"}) {
-            $groupDel .= "+$b";
-        } elsif ($::FORM{"bit-$b"} == 1 && $isactive) {
-            $groupAdd .= "+$b";
+    # Second, find out what groups this person is a member of.
+    SendSQL("select group_id from user_group_map where user_id = $whoid");
+    my @mygroups = ();
+    while ( my @row = FetchSQLData() ) {
+        push (@mygroups, $row[0]) if $row[0];
+    }
+
+    # Third, find out which ones were checked.
+    my %checked = ();
+    foreach my $b ( grep(/^group-.*$/, keys %::FORM) ) {
+       if ( $::FORM{$b} ) {
+            $b =~ s/^group-//;
+            $checked{$b} = 1;
+       }
+    }
+
+    # Create an effective list of groups for insertion
+    foreach my $group ( @mygroups ) {
+        if ( $checked{$group} ) {
+            $buggroups{$group} = 1; 
+        } else {
+            $buggroups{$group} = 0;
         }
     }
-    if ($groupAdd ne "0" || $groupDel ne "0") {
-        DoComma();
-        $::query .= "groupset = ((groupset & ~($groupDel)) | ($groupAdd))";
+
+    # Update the bug_group table with new group values.
+    SendSQL("delete from bug_group_map where bug_id = $::FORM{id}");
+    foreach my $group ( keys %buggroups ) {
+        next if $buggroups{$group} != 1;
+        SendSQL("INSERT INTO bug_group_map VALUES ($::FORM{id}, $group)");
     }
 }
 
@@ -599,8 +617,8 @@ if (defined $::FORM{'qa_contact'}) {
 # and cc list can see the bug even if they are not members of all groups 
 # to which the bug is restricted.
 if ( $::FORM{'id'} ) {
-    SendSQL("SELECT groupset FROM bugs WHERE bug_id = $::FORM{'id'}");
-    my ($groupset) = FetchSQLData();
+    SendSQL("SELECT count(group_id) FROM bug_group_map WHERE bug_id = $::FORM{'id'}");
+    my $groupset = FetchOneColumn();
     if ( $groupset ) {
         DoComma();
         $::FORM{'reporter_accessible'} = $::FORM{'reporter_accessible'} ? '1' : '0';
@@ -940,7 +958,8 @@ foreach my $id (@idlist) {
             "cc AS selectVisible_cc $write, " .
             "profiles $write, dependencies $write, votes $write, " .
             "keywords $write, longdescs $write, fielddefs $write, " .
-            "keyworddefs READ, groups READ, attachments READ, products READ");
+            "keyworddefs READ, groups READ, attachments READ, products READ, " .
+			"user_group_map READ, bug_group_map READ");
     my @oldvalues = SnapShotBug($id);
     my %oldhash;
     my $i = 0;
@@ -1239,9 +1258,8 @@ The changes made were:
     ) {
         if (
           # the user wants to add the bug to the new product's group;
-          ($::FORM{'addtonewgroup'} eq 'yes' 
-            || ($::FORM{'addtonewgroup'} eq 'yesifinold' 
-                  && GroupNameToBit($oldhash{'product'}) & $oldhash{'groupset'})) 
+          ($::FORM{'addtonewgroup'} eq 'yes' || ($::FORM{'addtonewgroup'} eq 'yesifinold'))
+                  # && GroupNameToId($oldhash{'product'}) & $oldhash{'groupset'})) 
 
           # the new product is associated with a group;
           && GroupExists($::FORM{'product'})
@@ -1263,12 +1281,16 @@ The changes made were:
           && (UserInGroup($::FORM{'product'}) || !Param('usebuggroupsentry'))
 
           # the associated group is active, indicating it can accept new bugs;
-          && GroupIsActive(GroupNameToBit($::FORM{'product'}))
+          && GroupIsActive(GroupNameToId($::FORM{'product'}))
         ) { 
             # Add the bug to the group associated with its new product.
-            my $groupbit = GroupNameToBit($::FORM{'product'});
-            SendSQL("UPDATE bugs SET groupset = groupset + $groupbit WHERE bug_id = $id");
-        }
+            my $groupid = GroupNameToId($::FORM{'product'});
+            my $query = "SELECT group_id FROM bug_group_map WHERE bug_id = $id AND group_id = $groupid";
+            SendSQL($query);
+            if (!FetchOneColumn()) {
+                SendSQL("INSERT INTO bug_group_map VALUES ($id, $groupid)");
+            } 
+       }
 
         if ( 
           # the old product is associated with a group;
@@ -1278,8 +1300,8 @@ The changes made were:
           && BugInGroup($id, $oldhash{'product'}) 
         ) { 
             # Remove the bug from the group associated with its old product.
-            my $groupbit = GroupNameToBit($oldhash{'product'});
-            SendSQL("UPDATE bugs SET groupset = groupset - $groupbit WHERE bug_id = $id");
+            my $groupid = GroupNameToId($oldhash{'product'});
+            SendSQL("DELETE FROM bug_group_map WHERE group_id = $groupid AND bug_id = $id");
         }
 
         print qq|</p>|;

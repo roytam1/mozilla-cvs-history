@@ -32,6 +32,7 @@ if ($::FORM{'GoAheadAndLogIn'}) {
 } else {
     quietly_check_login();
 }
+my $userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
 
 ######################################################################
 # Begin Data/Security Validation
@@ -40,7 +41,7 @@ if ($::FORM{'GoAheadAndLogIn'}) {
 # Make sure the bug ID is a positive integer representing an existing
 # bug that the user is authorized to access.
 if (defined ($::FORM{'id'})) {
-    ValidateBugID($::FORM{'id'});
+    ValidateBugID($::FORM{'id'}, $userid);
 }
 
 ######################################################################

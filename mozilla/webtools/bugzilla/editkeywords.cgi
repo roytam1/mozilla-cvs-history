@@ -107,11 +107,11 @@ sub Validate ($$) {
 # Preliminary checks:
 #
 
-confirm_login();
+my $userid = confirm_login();
 
 print "Content-type: text/html\n\n";
 
-unless (UserInGroup("editkeywords")) {
+unless (UserInGroup($userid, "editkeywords")) {
     PutHeader("Not allowed");
     print "Sorry, you aren't a member of the 'editkeywords' group.\n";
     print "And so, you aren't allowed to add, modify or delete keywords.\n";

@@ -258,7 +258,7 @@ sub ValidateBugID {
     # positive integer, that it represents an existing bug in the
     # database, and that the user is authorized to access that bug.
 
-    my ($id) = @_;
+    my ($id, $userid) = @_;
 
     # Make sure the bug number is a positive integer.
     # Whitespace can be ignored because the SQL server will ignore it.
@@ -269,17 +269,20 @@ sub ValidateBugID {
                       "<a href=\"http://bugzilla.mozilla.org/show_bug.cgi?id=70907\">here</a>.") 
       && exit;
 
-    # Get the values of the usergroupset and userid global variables
-    # and write them to local variables for use within this function,
-    # setting those local variables to the default value of zero if
-    # the global variables are undefined.
+    # Users are authorized to access bugs if they are a member of one of
+    # groups to which the bug is restricted.    
+	# A user is also authorized to access a bug if she is the reporter, 
+    # assignee, QA contact, or member of the cc: list of the bug and the bug 
+    # allows users in those roles to see the bug.  The boolean fields 
+    # reporter_accessible, assignee_accessible, qacontact_accessible, and 
+    # cclist_accessible identify whether or not those roles can see the bug.
 
     # First check that the bug exists
     SendSQL("SELECT bug_id FROM bugs WHERE bug_id = $id");
 
     FetchOneColumn()
       || DisplayError("Bug #$id does not exist.")
-        && exit;
+      && exit;
 
     return if CanSeeBug($id, $::userid, $::usergroupset);
 
@@ -287,7 +290,7 @@ sub ValidateBugID {
     # are not authorized to see the bug.  Display an error and stop execution.
     # The error the user sees depends on whether or not they are logged in
     # (i.e. $::userid contains the user's positive integer ID).
-    if ($::userid) {
+    if ($userid) {
         DisplayError("You are not authorized to access bug #$id.");
     } else {
         DisplayError(
@@ -297,7 +300,6 @@ sub ValidateBugID {
         );
     }
     exit;
-
 }
 
 # check and see if a given string actually represents a positive
@@ -651,7 +653,6 @@ sub PasswordForLogin {
 
 
 sub quietly_check_login() {
-    $::usergroupset = '0';
     my $loginok = 0;
     $::disabledreason = '';
     $::userid = 0;
@@ -661,7 +662,7 @@ sub quietly_check_login() {
         if (!defined $ENV{'REMOTE_HOST'}) {
             $ENV{'REMOTE_HOST'} = $ENV{'REMOTE_ADDR'};
         }
-        SendSQL("SELECT profiles.userid, profiles.groupset, " .
+        SendSQL("SELECT profiles.userid, " .
                 "profiles.login_name, " .
                 "profiles.login_name = " .
                 SqlQuote($::COOKIE{"Bugzilla_login"}) .
@@ -674,12 +675,11 @@ sub quietly_check_login() {
                 " AND profiles.userid = logincookies.userid");
         my @row;
         if (@row = FetchSQLData()) {
-            my ($userid, $groupset, $loginname, $ok, $disabledtext) = (@row);
+            my ($userid, $loginname, $ok, $disabledtext) = (@row);
             if ($ok) {
                 if ($disabledtext eq '') {
                     $loginok = 1;
                     $::userid = $userid;
-                    $::usergroupset = $groupset;
                     $::COOKIE{"Bugzilla_login"} = $loginname; # Makes sure case
                                                               # is in
                                                               # canonical form.
@@ -1276,7 +1276,13 @@ sub DumpBugActivity {
 
 sub GetCommandMenu {
     my $loggedin = quietly_check_login();
-    if (!defined $::anyvotesallowed) {
+	my $userid = 0;
+	if ( $::COOKIE{'Bugzilla_login'} ) {
+		$userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
+	} else {
+		$userid = 0;
+	}   
+ 	if (!defined $::anyvotesallowed) {
         GetVersionTable();
     }
     my $html = qq {
@@ -1315,24 +1321,24 @@ Actions:
 </TD><TD VALIGN="middle">
 Edit <a href="userprefs.cgi">prefs</a>
 };
-        if (UserInGroup("tweakparams")) {
+        if (UserInGroup($userid, "tweakparams")) {
             $html .= ", <a href=\"editparams.cgi\">parameters</a>\n";
         }
-        if (UserInGroup("editusers") || $blessgroupset) {
+        if (UserInGroup($userid, "editusers") || $blessgroupset) {
             $html .= ", <a href=\"editusers.cgi\">users</a>\n";
         }
-        if (UserInGroup("editcomponents")) {
+        if (UserInGroup($userid, "editcomponents")) {
             $html .= ", <a href=\"editproducts.cgi\">components</a>\n";
             $html .= ", <a href=\"editattachstatuses.cgi\">
               attachment&nbsp;statuses</a>\n" if Param('useattachmenttracker');
         }
-        if (UserInGroup("creategroups")) {
+        if (UserInGroup($userid, "creategroups")) {
             $html .= ", <a href=\"editgroups.cgi\">groups</a>\n";
         }
-        if (UserInGroup("editkeywords")) {
+        if (UserInGroup($userid, "editkeywords")) {
             $html .= ", <a href=\"editkeywords.cgi\">keywords</a>\n";
         }
-        if (UserInGroup("tweakparams")) {
+        if (UserInGroup($userid, "tweakparams")) {
             $html .= "| <a href=\"sanitycheck.cgi\">Sanity&nbsp;check</a>\n";
         }
 

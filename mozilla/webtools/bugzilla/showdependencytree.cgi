@@ -35,7 +35,7 @@ ConnectToDatabase();
 quietly_check_login();
 
 # More warning suppression silliness.
-$::userid = $::userid;
+$::userid = DBname_to_id($::COOKIE{'Bugzilla_login'}); 
 $::usergroupset = $::usergroupset;
 
 ######################################################################
@@ -43,8 +43,8 @@ $::usergroupset = $::usergroupset;
 ######################################################################
 
 # Make sure the bug ID is a positive integer representing an existing
-# bug that the user is authorized to access
-ValidateBugID($::FORM{'id'});
+# bug that the user is authorized to access.
+ValidateBugID($::FORM{'id'}, $userid);
 
 my $id = $::FORM{'id'};
 my $hide_resolved = $::FORM{'hide_resolved'} || 0;
@@ -137,6 +137,9 @@ sub DumpKids {
                 ($bugid, $stat, $userid, $short_desc) = (FetchSQLData());
 
             }
+			      #if ( !ValidateBugID($kid, $userid) ) {
+				    #    next;
+			      #}
             if (! defined $bugid) { next; }
             my $opened = IsOpenedState($stat);
             if ($hide_resolved && ! $opened) { next; }

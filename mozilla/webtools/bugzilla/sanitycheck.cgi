@@ -30,7 +30,7 @@ use vars %::FORM;
 
 ConnectToDatabase();
 
-confirm_login();
+my $userid = confirm_login();
 
 # Make sure the user is authorized to access sanitycheck.cgi.  Access
 # is restricted to logged-in users who have "editbugs" privileges,
@@ -39,7 +39,7 @@ confirm_login();
 # and restricting access to this installation's administrators (which
 # prevents users with a legitimate interest in Bugzilla integrity
 # from accessing the script).
-UserInGroup("editbugs")
+UserInGroup($userid, "editbugs")
   || DisplayError("You are not authorized to access this script,
                    which is reserved for users with the ability to edit bugs.")
   && exit;
@@ -189,23 +189,20 @@ CrossCheck("products", "product",
 
 
 Status("Checking groups");
-SendSQL("select bit from groups where bit != pow(2, round(log(bit) / log(2)))");
-while (my $bit = FetchOneColumn()) {
-    Alert("Illegal bit number found in group table: $bit");
+my %legal_groups = ();
+SendSQL("select group_id from groups order by group_id");
+while ( my @row = FetchSQLData() ) {
+	$legal_groups{$row[0]} = 1;
 }
-    
-SendSQL("select sum(bit) from groups where isbuggroup != 0");
-my $buggroupset = FetchOneColumn();
-if (!defined $buggroupset || $buggroupset eq "") {
-    $buggroupset = 0;
+SendSQL("select distinct group_id from user_group_map order by group_id");
+while ( my @row = FetchSQLData() ) {
+    Alert("Illegal group_id number found in user_group_map table: $row[0]") if !$legal_groups{$row[0]};
 }
-SendSQL("select bug_id, groupset from bugs where groupset & $buggroupset != groupset");
-while (@row = FetchSQLData()) {
-    Alert("Bad groupset $row[1] found in bug " . BugLink($row[0]));
-}
-
-
-
+SendSQL("select distinct group_id from bug_group_map order by group_id");
+while ( my @row = FetchSQLData() ) {
+    Alert("Illegal group_id number found in bug_group_map table: $row[0]") if !$legal_groups{$row[0]};
+} 
+ 
 
 Status("Checking version/products");
 

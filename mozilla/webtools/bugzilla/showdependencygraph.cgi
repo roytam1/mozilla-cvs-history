@@ -30,7 +30,7 @@ ConnectToDatabase();
 quietly_check_login();
 
 # More warning suppression silliness.
-$::userid = $::userid;
+$::userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
 $::usergroupset = $::usergroupset;
 
 ######################################################################
@@ -40,7 +40,7 @@ $::usergroupset = $::usergroupset;
 # Make sure the bug ID is a positive integer representing an existing
 # bug that the user is authorized to access.
 if (defined $::FORM{'id'}) {
-  ValidateBugID($::FORM{'id'});
+  ValidateBugID($::FORM{'id'}, $userid);
 }
 
 ######################################################################
@@ -134,6 +134,9 @@ node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
             SendSQL("select bug_status from bugs where bug_id = $k");
             $stat = FetchOneColumn();
         }
+		if ( !ValidateBugID($k, $userid) ) {
+			next;
+		}
         my @params;
 #        print DOT "$k [URL" . qq{="${urlbase}show_bug.cgi?id=$k"};
         if ($summary ne "") {

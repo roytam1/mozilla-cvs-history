@@ -195,7 +195,7 @@ sub GenerateSQL {
     my @legal_fields = ("product", "version", "rep_platform", "op_sys",
                         "bug_status", "resolution", "priority", "bug_severity",
                         "assigned_to", "reporter", "component",
-                        "target_milestone", "groupset");
+                        "target_milestone");
 
     foreach my $field (keys %F) {
         if (lsearch(\@legal_fields, $field) != -1) {
@@ -823,8 +823,7 @@ sub GenerateSQL {
 
 sub LookupNamedQuery {
     my ($name) = (@_);
-    confirm_login();
-    my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
+    my $userid = confirm_login();
     SendSQL("SELECT query FROM namedqueries " .
             "WHERE userid = $userid AND name = " . SqlQuote($name));
     my $result = FetchOneColumn();
@@ -860,8 +859,7 @@ Refresh: 0; URL=$url
         exit;
     };
     /^forgetnamed$/ && do {
-        confirm_login();
-        my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
+        my $userid = confirm_login();
         SendSQL("DELETE FROM namedqueries WHERE userid = $userid " .
                 "AND name = " . SqlQuote($::FORM{'namedcmd'}));
 
@@ -877,8 +875,7 @@ OK, the <B>$::FORM{'namedcmd'}</B> query is gone.
         exit;
     };
     /^asdefault$/ && do {
-        confirm_login();
-        my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
+        my $userid = confirm_login();
         print "Content-type: text/html\n\n";
         SendSQL("REPLACE INTO namedqueries (userid, name, query) VALUES " .
                 "($userid, '$::defaultqueryname'," .
@@ -894,8 +891,7 @@ individual query.
         exit();
     };
     /^asnamed$/ && do {
-        confirm_login();
-        my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
+        my $userid = confirm_login();
         print "Content-type: text/html\n\n";
         my $name = trim($::FORM{'newqueryname'});
         if ($name eq "" || $name =~ /[<>&]/) {
@@ -1018,9 +1014,11 @@ if (defined $::FORM{'votes'}) {
 
 my $dotweak = defined $::FORM{'tweak'};
 
+my $userid = 0;
+
 if ($dotweak) {
-    confirm_login();
-    if (!UserInGroup("editbugs")) {
+    $userid = confirm_login();
+    if (!UserInGroup($userid, "editbugs")) {
         print qq{
 Sorry; you do not have sufficient privileges to edit a bunch of bugs
 at once.
@@ -1030,10 +1028,11 @@ at once.
     }
 } else {
     quietly_check_login();
+	$userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
 }
 
 
-my @fields = ("bugs.bug_id", "bugs.groupset");
+my @fields = ("bugs.bug_id");
 
 foreach my $c (@collist) {
     if (exists $::needquote{$c}) {
@@ -1523,58 +1522,58 @@ document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCh
 <BR>
 <TEXTAREA WRAP=HARD NAME=comment ROWS=5 COLS=80></TEXTAREA><BR>";
 
-if($::usergroupset ne '0') {
-    SendSQL("select bit, name, description, isactive ".
-            "from groups where bit & $::usergroupset != 0 ".
-            "and isbuggroup != 0 ".
-            "order by description");
-    # We only print out a header bit for this section if there are any
-    # results.
-    my $groupFound = 0;
-    my $inactiveFound = 0;
-    while (MoreSQLData()) {
-        my ($bit, $groupname, $description, $isactive) = (FetchSQLData());
-        if(($prodhash{$groupname}) || (!defined($::proddesc{$groupname}))) {
-          if(!$groupFound) {
-            print "<B>Groupset:</B><BR>\n";
-            print "<TABLE BORDER=1><TR>\n";
-            print "<TH ALIGN=center VALIGN=middle>Don't<br>change<br>this group<br>restriction</TD>\n";
-            print "<TH ALIGN=center VALIGN=middle>Remove<br>bugs<br>from this<br>group</TD>\n";
-            print "<TH ALIGN=center VALIGN=middle>Add<br>bugs<br>to this<br>group</TD>\n";
-            print "<TH ALIGN=left VALIGN=middle>Group name:</TD></TR>\n";
-            $groupFound = 1;
-          }
-          # Modifying this to use radio buttons instead
-          print "<TR>";
-          print "<TD ALIGN=center><input type=radio name=\"bit-$bit\" value=\"-1\" checked></TD>\n";
-          print "<TD ALIGN=center><input type=radio name=\"bit-$bit\" value=\"0\"></TD>\n";
-          if ($isactive) {
-            print "<TD ALIGN=center><input type=radio name=\"bit-$bit\" value=\"1\"></TD>\n";
-          } else {
-            $inactiveFound = 1;
-            print "<TD>&nbsp;</TD>\n";
-          }
-          print "<TD>";
-          if(!$isactive) {
-            print "<I>";
-          }
-          print "$description";
-          if(!$isactive) {
-            print "</I>";
-          }
-          print "</TD></TR>\n";
-        }
-    }
-    # Add in some blank space for legibility
-    if($groupFound) {
-      print "</TABLE>\n";
-      if ($inactiveFound) {
-        print "<FONT SIZE=\"-1\">(Note: Bugs may not be added to inactive groups (<I>italicized</I>), only removed)</FONT><BR>\n";
-      }
-      print "<BR><BR>\n";
-    }
-}
-
+#if($::usergroupset ne '0') {
+#    SendSQL("select bit, name, description, isactive ".
+#            "from groups where bit & $::usergroupset != 0 ".
+#            "and isbuggroup != 0 ".
+#            "order by description");
+#    # We only print out a header bit for this section if there are any
+#    # results.
+#    my $groupFound = 0;
+#    my $inactiveFound = 0;
+#    while (MoreSQLData()) {
+#        my ($bit, $groupname, $description, $isactive) = (FetchSQLData());
+#        if(($prodhash{$groupname}) || (!defined($::proddesc{$groupname}))) {
+#          if(!$groupFound) {
+#            print "<B>Groupset:</B><BR>\n";
+#            print "<TABLE BORDER=1><TR>\n";
+#            print "<TH ALIGN=center VALIGN=middle>Don't<br>change<br>this group<br>restriction</TD>\n";
+#            print "<TH ALIGN=center VALIGN=middle>Remove<br>bugs<br>from this<br>group</TD>\n";
+#            print "<TH ALIGN=center VALIGN=middle>Add<br>bugs<br>to this<br>group</TD>\n";
+#            print "<TH ALIGN=left VALIGN=middle>Group name:</TD></TR>\n";
+#            $groupFound = 1;
+#          }
+#          # Modifying this to use radio buttons instead
+#          print "<TR>";
+#          print "<TD ALIGN=center><input type=radio name=\"bit-$bit\" value=\"-1\" checked></TD>\n";
+#          print "<TD ALIGN=center><input type=radio name=\"bit-$bit\" value=\"0\"></TD>\n";
+#          if ($isactive) {
+#            print "<TD ALIGN=center><input type=radio name=\"bit-$bit\" value=\"1\"></TD>\n";
+#          } else {
+#            $inactiveFound = 1;
+#            print "<TD>&nbsp;</TD>\n";
+#          }
+#          print "<TD>";
+#          if(!$isactive) {
+#            print "<I>";
+#          }
+#          print "$description";
+#          if(!$isactive) {
+#            print "</I>";
+#          }
+#          print "</TD></TR>\n";
+#        }
+#    }
+#    # Add in some blank space for legibility
+#    if($groupFound) {
+#      print "</TABLE>\n";
+#      if ($inactiveFound) {
+#        print "<FONT SIZE=\"-1\">(Note: Bugs may not be added to inactive groups (<I>italicized</I>), only removed)</FONT><BR>\n";
+#      }
+#      print "<BR><BR>\n";
+#    }
+#}
+#
 
 
 
@@ -1680,14 +1679,14 @@ if ($count > 0) {
 <NOBR><A HREF=\"enter_bug.cgi\">Enter New Bug</A></NOBR>
 &nbsp;&nbsp;
 <NOBR><A HREF=\"colchange.cgi?$::buffer\">Change columns</A></NOBR>";
-    if (!$dotweak && $count > 1 && UserInGroup("editbugs")) {
+    if (!$dotweak && $count > 1 && UserInGroup($userid, "editbugs")) {
         print "&nbsp;&nbsp;\n";
         print "<NOBR><A HREF=\"buglist.cgi?$fields$orderpart&tweak=1\">";
         print "Change several bugs at once</A></NOBR>\n";
     }
     my @owners = sort(keys(%ownerhash));
     my $suffix = Param('emailsuffix');
-    if (@owners > 1 && UserInGroup("editbugs")) {
+    if (@owners > 1 && UserInGroup($userid, "editbugs")) {
         if ($suffix ne "") {
             map(s/$/$suffix/, @owners);
         }

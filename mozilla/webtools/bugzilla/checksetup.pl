@@ -915,7 +915,6 @@ $table{attachstatusdefs} =
 #
 $table{bugs} =
    'bug_id mediumint not null auto_increment primary key,
-    groupset bigint not null,
     assigned_to mediumint not null, # This is a comment.
     bug_file_loc text,
     bug_severity enum($my_severities) not null,
@@ -1004,13 +1003,6 @@ $table{dependencies} =
     index(dependson)';
 
 
-# Group bits must be a power of two. Groups are identified by a bit; sets of
-# groups are indicated by or-ing these values together.
-#
-# isbuggroup is nonzero if this is a group that controls access to a set
-# of bugs.  In otherword, the groupset field in the bugs table should only
-# have this group's bit set if isbuggroup is nonzero.
-#
 # User regexp is which email addresses are initially put into this group.
 # This is only used when an email account is created; otherwise, profiles
 # may be individually tweaked to add them in and out of groups.
@@ -1023,14 +1015,14 @@ $table{dependencies} =
 # http://bugzilla.mozilla.org/show_bug.cgi?id=75482
 
 $table{groups} =
-   'bit bigint not null,
+	'group_id mediumint not null auto_increment primary key,
     name varchar(255) not null,
     description text not null,
     isbuggroup tinyint not null,
     userregexp tinytext not null,
     isactive tinyint not null default 1,
 
-    unique(bit),
+	unique(group_id),
     unique(name)';
 
 
@@ -1061,12 +1053,10 @@ $table{profiles} =
     login_name varchar(255) not null,
     cryptpassword varchar(34),
     realname varchar(255),
-    groupset bigint not null,
     disabledtext mediumtext not null,
     mybugslink tinyint not null default 1,
-    blessgroupset bigint not null default 0,
     emailflags mediumtext,
-
+	admin tinyint not null default 0,
 
     unique(login_name)';
 
@@ -1172,7 +1162,29 @@ $table{tokens} =
 
      index(userid)';
 
+# 2001-09-18, dkl@redhat.com
+# Group tables for tracking group memberships, admin memberships, 
+# product permissions, and bug permissions.
 
+# This table determines the groups that a user belongs to
+$table{user_group_map} = 
+	'user_id mediumint not null,
+	 group_id mediumint not null';
+
+# This table determines which groups have permission to see a bug
+$table{bug_group_map} =
+    'bug_id mediumint not null,
+     group_id mediumint not null';
+
+# This table determines which groups may report bugs against a product
+$table{product_group_map} =
+    'product_id mediumint not null,
+     group_id mediumint not null';
+
+# This table determines which groups a user can put another user into
+$table{bless_group_map} = 
+	'user_id mediumint not null,
+	 group_id mediumint not null';
 
 ###########################################################################
 # Create tables
@@ -1228,7 +1240,7 @@ sub GroupExists ($)
 
 #
 # This subroutine checks if a group exist. If not, it will be automatically
-# created with the next available bit set
+# created with the next available groupid 
 #
 
 sub AddGroup {
@@ -1237,26 +1249,17 @@ sub AddGroup {
 
     return if GroupExists($name);
     
-    # get highest bit number
-    my $sth = $dbh->prepare("SELECT bit FROM groups ORDER BY bit DESC");
-    $sth->execute;
-    my @row = $sth->fetchrow_array;
-
-    # normalize bits
-    my $bit;
-    if (defined $row[0]) {
-        $bit = $row[0] << 1;
-    } else {
-        $bit = 1;
-    }
-
-   
     print "Adding group $name ...\n";
-    $sth = $dbh->prepare('INSERT INTO groups
-                          (bit, name, description, userregexp, isbuggroup)
-                          VALUES (?, ?, ?, ?, ?)');
-    $sth->execute($bit, $name, $desc, $userregexp, 0);
-    return $bit;
+    my $sth = $dbh->prepare('INSERT INTO groups
+                          (name, description, userregexp, isbuggroup)
+                          VALUES (?, ?, ?, ?)');
+    $sth->execute($name, $desc, $userregexp, 0);
+
+	$sth = $dbh->prepare("select last_insert_id()");
+	$sth->execute();
+	my ($last) = $sth->fetchrow_array();
+
+    return $last;
 }
 
 
@@ -1270,20 +1273,23 @@ AddGroup 'creategroups',     'Can create and destroy groups.';
 AddGroup 'editcomponents',   'Can create, destroy, and edit components.';
 AddGroup 'editkeywords',   'Can create, destroy, and edit keywords.';
 
-# Add the groupset field here because this code is run before the
-# code that updates the database structure.
-&AddField('profiles', 'groupset', 'bigint not null');
-
 if (!GroupExists("editbugs")) {
     my $id = AddGroup('editbugs',  'Can edit all aspects of any bug.', ".*");
-    $dbh->do("UPDATE profiles SET groupset = groupset | $id");
+	my $sth = $dbh->prepare("SELECT userid FROM profiles ORDER BY userid");
+	$sth->execute();
+	while ( my ($userid) = $sth->fetchrow_array() ) {
+	    $dbh->do("INSERT INTO user_group_map VALUES ($userid, $id)");
+	}
 }
 
 if (!GroupExists("canconfirm")) {
     my $id = AddGroup('canconfirm',  'Can confirm a bug.', ".*");
-    $dbh->do("UPDATE profiles SET groupset = groupset | $id");
+	my $sth = $dbh->prepare("SELECT userid FROM profiles ORDER BY userid");
+    $sth->execute();
+    while ( my ($userid) = $sth->fetchrow_array() ) {
+        $dbh->do("INSERT INTO user_group_map VALUES ($userid, $id)");
+    }
 }
-
 
 
 
@@ -1470,17 +1476,25 @@ CheckEnumField('bugs', 'rep_platform', @my_platforms);
 #  Prompt the user for the email address and name of an administrator.  Create
 #  that login, if it doesn't exist already, and make it a member of all groups.
 
+my @groups = ();
+my $sth = $dbh->prepare("select group_id from groups");
+$sth->execute();
+while ( my @row = $sth->fetchrow_array() ) {
+    push (@groups, $row[0]);
+}
+
 sub bailout {   # this is just in case we get interrupted while getting passwd
     system("stty","echo"); # re-enable input echoing
     exit 1;
 }
 
-my $sth = $dbh->prepare(<<_End_Of_SQL_);
-  SELECT login_name
+$sth = $dbh->prepare(<<_End_Of_SQL_);
+  SELECT login_name  
   FROM profiles
-  WHERE groupset=9223372036854775807
+  WHERE admin = 1 
 _End_Of_SQL_
 $sth->execute;
+
 # when we have no admin users, prompt for admin email address and password ...
 if ($sth->rows == 0) {
   my $login = "";
@@ -1610,15 +1624,61 @@ _End_Of_SQL_
 
     $dbh->do(<<_End_Of_SQL_);
       INSERT INTO profiles
-      (login_name, realname, cryptpassword, groupset)
-      VALUES ($login, $realname, $cryptedpassword, 0x7fffffffffffffff)
+      (login_name, realname, cryptpassword, admin)
+      VALUES ($login, $realname, $cryptedpassword, 1)
 _End_Of_SQL_
+
+	# Put the admin in each group if not already	
+	my $query = "select userid from profiles where login_name = $login";	
+	$sth = $dbh->prepare($query); 
+	$sth->execute();
+	my ($userid) = $sth->fetchrow_array();
+
+	foreach my $group ( @groups ) {
+		my $query = "select 
+            user_id 
+        from 
+            user_group_map 
+        where 
+            group_id = $group
+            and user_id = $userid";
+		$sth = $dbh->prepare($query);
+		$sth->execute();
+
+		if ( !$sth->fetchrow_array() ) {
+			$sth = $dbh->do("insert into user_group_map values ($userid, $group)");
+		}
+	}
+
   } else {
     $dbh->do(<<_End_Of_SQL_);
       UPDATE profiles
-      SET groupset=0x7fffffffffffffff
+      SET admin=1
       WHERE login_name=$login
 _End_Of_SQL_
+
+	# Put the admin in each group if not already    
+	my $query = "select userid from profiles where login_name = $login";
+	$sth = $dbh->prepare($query);
+    $sth->execute();
+    my ($userid) = $sth->fetchrow_array();
+    
+	foreach my $group ( @groups ) {
+		my $query = "select 
+            user_id 
+        from 
+            user_group_map 
+        where 
+            group_id = $group
+            and user_id = $userid";
+        $sth = $dbh->prepare($query);
+        $sth->execute();
+
+        if ( !$sth->fetchrow_array() ) {
+            $dbh->do("insert into user_group_map values ( $userid, $group)");
+        }
+    }
+
   }
   print "\n$login is now set up as the administrator account.\n";
 }
@@ -1666,7 +1726,7 @@ sub Crypt {
 $sth = $dbh->prepare(<<_End_Of_SQL_);
   SELECT userid
   FROM profiles
-  WHERE groupset=9223372036854775807
+  WHERE admin=1
 _End_Of_SQL_
 $sth->execute;
 my ($adminuid) = $sth->fetchrow_array;
@@ -1793,7 +1853,6 @@ sub TableExists ($)
 # but aren't in very old bugzilla's (like 2.1)
 # Steve Stock (sstock@iconnect-inc.com)
 AddField('bugs', 'target_milestone', 'varchar(20) not null default "---"');
-AddField('bugs', 'groupset', 'bigint not null');
 AddField('bugs', 'qa_contact', 'mediumint not null');
 AddField('bugs', 'status_whiteboard', 'mediumtext not null');
 AddField('products', 'disallownew', 'tinyint not null');

@@ -55,8 +55,10 @@ sub sillyness {
 # doing it now instead of a bit later.  -JMR, 2/18/00
 # Except that it will cause people without cookies enabled to have to log
 # in an extra time.  Only do it here if we really need to.  -terry, 3/10/00
+my $userid = 0;
 if (Param("usebuggroupsentry")) {
     confirm_login();
+	$userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
 }
 
 if (!defined $::FORM{'product'}) {
@@ -71,7 +73,7 @@ if (!defined $::FORM{'product'}) {
         }
         if(Param("usebuggroupsentry")
            && GroupExists($p)
-           && !UserInGroup($p)) {
+           && !UserInGroup($userid, $p)) {
           # If we're using bug groups to restrict entry on products, and
           # this product has a bug group, and the user is not in that
           # group, we don't want to include that product in this list.
@@ -305,7 +307,7 @@ PutHeader ("Enter Bug","Enter Bug","This page lets you enter a new bug into Bugz
 # added GroupExists check so we don't choke on a groupless product
 if(Param("usebuggroupsentry")
    && GroupExists($product)
-   && !UserInGroup($product)) {
+   && !UserInGroup($userid, $product)) {
   print "<H1>Permission denied.</H1>\n";
   print "Sorry; you do not have the permissions necessary to enter\n";
   print "a bug against this product.\n";
@@ -329,12 +331,12 @@ if(Param("usebuggroupsentry")
 # when the select boxes for all the groups this user has access to are read
 # in later on.
 # First we get the bit and description for the group.
-my $group_bit=0;
+my $group_id = 0;
 if(Param("usebuggroups") && GroupExists($product)) {
-    SendSQL("select bit from groups ".
+    SendSQL("select group_id from groups ".
             "where name = ".SqlQuote($product)." ".
             "and isbuggroup != 0");
-    ($group_bit) = FetchSQLData();
+    ($group_id) = FetchSQLData();
 }
 
 print "
@@ -396,7 +398,7 @@ print "
   <tr><td>&nbsp<td> <td> <td> <td> <td> </tr>
 ";
 
-if (UserInGroup("editbugs") || UserInGroup("canconfirm")) {
+if (UserInGroup($userid, "editbugs") || UserInGroup($userid, "canconfirm")) {
     SendSQL("SELECT votestoconfirm FROM products WHERE product = " .
             SqlQuote($product));
     if (FetchOneColumn()) {
@@ -450,15 +452,16 @@ print "
    <td></td><td colspan=5>
 ";
 
-if ($::usergroupset ne '0') {
-    SendSQL("SELECT bit, name, description FROM groups " .
-            "WHERE bit & $::usergroupset != 0 " .
-            "  AND isbuggroup != 0 AND isactive = 1 ORDER BY description");
+if ($userid ne '0') {
+    SendSQL("SELECT groups.group_id, name, description FROM groups, user_group_map " .
+            "WHERE groups.group_id = user_group_map.group_id " .
+			"AND user_group_map.user_id = $userid " . 
+            "AND isbuggroup != 0 AND isactive = 1 ORDER BY description");
     # We only print out a header bit for this section if there are any
     # results.
     my $groupFound = 0;
     while (MoreSQLData()) {
-        my ($bit, $prodname, $description) = (FetchSQLData());
+        my ($group_id, $prodname, $description) = (FetchSQLData());
         # Don't want to include product groups other than this product.
         unless(($prodname eq $product) || (!defined($::proddesc{$prodname}))) {
             next;
@@ -468,27 +471,19 @@ if ($::usergroupset ne '0') {
           print "<font size=\"-1\">(Leave all boxes unchecked to make this a public bug.)</font><br><br>\n";
           $groupFound = 1;
         }
-        # Rather than waste time with another Param check and another database
-        # access, $group_bit will only have a non-zero value if we're using
-        # bug groups and have  one for this product, so I'll check on that
-        # instead here.  -JMR, 2/18/00
-        # Moved this check to this location to fix conflict with existing
-        # select-box patch.  Also, if $group_bit is 0, it won't match the
-        # current group, either, so I'll compare it to the current bit
-        # instead of checking for non-zero. -DDM, 3/11/00
         # Modifying this to use checkboxes instead of a select list.
         # -JMR, 5/11/01
         # If this is the group for this product, make it checked.
-        my $check = ($group_bit == $bit);
+        my $check = ($group_id);
         # If this is a bookmarked template, then we only want to set the bit
         # for those bits set in the template.
         if(formvalue("maketemplate","") eq "Remember values as bookmarkable template") {
-          $check = formvalue("bit-$bit",0);
+          $check = formvalue("group-$group_id",0);
         }
         my $checked = $check ? " CHECKED" : "";
         # indent these a bit
         print "&nbsp;&nbsp;&nbsp;&nbsp;";
-        print "<input type=checkbox name=\"bit-$bit\" value=1$checked>\n";
+        print "<input type=checkbox name=\"group-$group_id\" value=1 $checked>\n";
         print "$description<br>\n";
     }
 }
