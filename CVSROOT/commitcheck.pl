@@ -402,7 +402,7 @@ if (m:^mozilla/mstone/.*$:) {return '147';}
 if (m:^mozilla/xpinstall/.*$:) {return '150';}
 if (m:^mozilla/security/manager/.*$:) {return '151';}
 if (m:^mozilla/extensions/vixen/.*$:) {return '156';}
-if (m:^mozilla/mailnews/movemail$:) {return '157';}
+if (m:^mozilla/mailnews/movemail/.*$:) {return '157';}
 if (m:^mozilla/uriloader/.*$:) {return '158';}
 if (m:^mozilla/string/.*$:) {return '160';}
 if (m:^mozilla/gfx/src/qt/.*$:) {return '161';}
