@@ -183,4 +183,9 @@ $BONSAI_URL = "http://tinderbox.mozilla.org/bonsai";
 
 $DEFAULT_DISPLAY_HOURS = 6;
 
+
+$BRIEF_LOG_TRIM_DAYS = 1;
+
+$FULL_LOG_TRIM_DAYS = 7;
+
 1;
