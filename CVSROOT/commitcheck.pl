@@ -121,11 +121,6 @@ $fullname{'98'} = 'New Layout Engine';
 $mode{'78'} = 'Open';
 $branch{'78'} = 'HEAD';
 $fullname{'78'} = 'NSPR';
-$mode{'24'} = 'Restricted';
-$branch{'24'} = 'HEAD';
-$fullname{'24'} = 'nsprpub';
-$blessed{'24'} = ['gordon%netscape.com',];
-$super{'24'} = ['wtc%netscape.com','larryh%netscape.com','srinivas%netscape.com',];
 $mode{'80'} = 'Open';
 $branch{'80'} = 'HEAD';
 $fullname{'80'} = 'PICS';
@@ -187,7 +182,6 @@ if (m:^CVSROOT/passwd$:) {return '3';}
 if (m:^jpeg/.*$:) {return '12';}
 if (m:^mozilla/[^/]*$:) {return '19';}
 if (m:^mozilla/cmd/macfe/.*$:) {return '47';}
-if (m:^mozilla/nsprpub/.*$:) {return '24';}
 if (m:^mozilla/ef/.*$:) {return '46';}
 if (m:^mozilla/cmd/wincom/.*$:) {return '48';}
 if (m:^mozilla/cmd/winfe/.*$:) {return '48';}
