@@ -212,7 +212,7 @@ if ($F::mozillaOrgAsNscp eq "yes") {
 } elsif ($F::mozillaOrgAsNscp eq "no" ) {
 	$NetscapeSQL = ' regexp "[@%]netscape\\.com"';
 } else {
-	die ("Internal error: mozillaOrgCountsAs not set");
+	die ("Internal error: mozillaOrgAsNscp not set");
 }
 
 print header();
