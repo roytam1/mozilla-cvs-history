@@ -83,7 +83,9 @@ open(ENT, "<CVS/Entries" );
 while( <ENT> ){
     chop;
     ($d,$fn,$rev,$mod_time,$sticky,$tag) = split(/\//);
-    $fbranch{$fn} = $sticky;
+    if ($tag =~ /^T(.*)$/) {
+	$fbranch{$fn} = $1;
+    }
 }
 close ENT;
 
@@ -142,7 +144,7 @@ foreach $f (@files) {
     }
     if (!$ok) {
         print STDERR "You may not check into partition $fullname{$t}\n";
-	print STDERR "the file $repository/$f\n";
+	print STDERR "the file $repository/$f on branch $b\n";
         print STDERR "If you think you should be allowed to, send mail to\n";
         print STDERR "one of the below people:\n";
         $s = $super{$t};
