@@ -91,8 +91,9 @@ package BuildStatus;
 
            'not_running'=> {
 
-                            # You may want this to be 'aqua' if you
-                            # need to distinguish from 'building'
+                            # You may want not want distinguish from
+                            # 'building', in that case change the
+                            # color to yellow.
 
                             'html_color'=>  'white',
                             'hdml_char'=> '.',
@@ -133,6 +134,22 @@ package BuildStatus;
                          'order' => 4,
                         },
           );
+
+sub get_status_handler {
+    my $buildstatus = @_;
+
+    my $handler = $BuildStatus::STATUS{$buildstatus}{'handler'};
+
+    return $handler;
+}
+
+sub set_status_handler {
+    my ($buildstatus, $handler) = @_;
+
+    $BuildStatus::STATUS{$buildstatus}{'handler'} = $handler;
+
+    return $handler;
+}
 
 # return true if and only if the status indicates that the build is
 # complete.
