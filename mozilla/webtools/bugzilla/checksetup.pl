@@ -1713,9 +1713,10 @@ sub AddGroup {
 # BugZilla uses --GROUPS-- to assign various rights to its users. 
 #
 
-sub RenameField ($$$);
+#sub RenameField ($$$);
 sub GetFieldDef ($$);
 sub AddField ($$$);
+AddField('groups', 'id', 'mediumint not null auto_increment primary key');
 
 AddGroup 'tweakparams',      'Can tweak operating parameters';
 AddGroup 'editusers',      'Can edit or disable users';
@@ -1723,42 +1724,6 @@ AddGroup 'creategroups',     'Can create and destroy groups.';
 AddGroup 'editcomponents',   'Can create, destroy, and edit components.';
 AddGroup 'editkeywords',   'Can create, destroy, and edit keywords.';
 AddGroup 'admin',  'Administrators';
-
-#  Add the group_id here because this code is run before the code 
-#  that updates the database structure
-AddField('groups', 'id', 'mediumint not null auto_increment primary key');
-if (GetFieldDef('profiles', 'groupset')) {
-    my $sth = $dbh->prepare("SELECT id FROM groups 
-                WHERE name = 'admin'");
-    $sth->execute();
-    my ($adminid) = $sth->fetchrow_array();
-    # Don't lose admins from DBs where Bug 157704 applies
-    $sth = $dbh->prepare("SELECT userid FROM profiles 
-                WHERE (groupset | 65536) = 9223372036854775807");
-    $sth->execute();
-    while ( my ($userid) = $sth->fetchrow_array() ) {
-        # existing administrators are made members of group "admin"
-        $dbh->do("INSERT INTO user_group_map 
-            (user_id, group_id, isbless, isderived) 
-            VALUES ($userid, $adminid, 0, 0)");
-        # existing administrators are made blessers of group "admin"
-        # only explitly defined blessers can bless group admin
-        # other groups can be blessed by any admin or additional
-        # defined blessers
-        $dbh->do("INSERT INTO user_group_map 
-            (user_id, group_id, isbless, isderived) 
-            VALUES ($userid, $adminid, 1, 0)");
-    }
-    $sth = $dbh->prepare("SELECT id FROM groups");
-    $sth->execute();
-    while ( my ($id) = $sth->fetchrow_array() ) {
-        # admins can bless every group
-        $dbh->do("INSERT INTO group_group_map 
-            (child_id, parent_id, isbless) 
-            VALUES ($adminid, $id, 1)");
-    }
-                          
-}
 
 
 if (!GroupDoesExist("editbugs")) {
@@ -1975,8 +1940,44 @@ CheckEnumField('bugs', 'rep_platform', @my_platforms);
 # Create Administrator  --ADMIN--
 ###########################################################################
 
-#  Prompt the user for the email address and name of an administrator.  Create
-#  that login, if it doesn't exist already, and make it a member of all groups.
+
+sub bailout {   # this is just in case we get interrupted while getting passwd
+    system("stty","echo"); # re-enable input echoing
+    exit 1;
+}
+
+if (GetFieldDef('profiles', 'groupset')) {
+    my $sth = $dbh->prepare("SELECT id FROM groups 
+                WHERE name = 'admin'");
+    $sth->execute();
+    my ($adminid) = $sth->fetchrow_array();
+    # Don't lose admins from DBs where Bug 157704 applies
+    $sth = $dbh->prepare("SELECT userid FROM profiles 
+                WHERE (groupset | 65536) = 9223372036854775807");
+    $sth->execute();
+    while ( my ($userid) = $sth->fetchrow_array() ) {
+        # existing administrators are made members of group "admin"
+        $dbh->do("INSERT INTO user_group_map 
+            (user_id, group_id, isbless, isderived) 
+            VALUES ($userid, $adminid, 0, 0)");
+        # existing administrators are made blessers of group "admin"
+        # only explitly defined blessers can bless group admin
+        # other groups can be blessed by any admin or additional
+        # defined blessers
+        $dbh->do("INSERT INTO user_group_map 
+            (user_id, group_id, isbless, isderived) 
+            VALUES ($userid, $adminid, 1, 0)");
+    }
+    $sth = $dbh->prepare("SELECT id FROM groups");
+    $sth->execute();
+    while ( my ($id) = $sth->fetchrow_array() ) {
+        # admins can bless every group
+        $dbh->do("INSERT INTO group_group_map 
+            (child_id, parent_id, isbless) 
+            VALUES ($adminid, $id, 1)");
+    }
+                          
+}
 
 
 my @groups = ();
@@ -1985,21 +1986,17 @@ $sth->execute();
 while ( my @row = $sth->fetchrow_array() ) {
     push (@groups, $row[0]);
 }
-    
 
-sub bailout {   # this is just in case we get interrupted while getting passwd
-    system("stty","echo"); # re-enable input echoing
-    exit 1;
-}
+#  Prompt the user for the email address and name of an administrator.  Create
+#  that login, if it doesn't exist already, and make it a member of all groups.
 
 $sth = $dbh->prepare(<<_End_Of_SQL_);
   SELECT user_id
   FROM groups, user_group_map
-  WHERE groups.name = 'admin'
-  AND groups.id = user_group_map.group_id
+  WHERE name = 'admin'
+  AND id = group_id
 _End_Of_SQL_
 $sth->execute;
-
 # when we have no admin users, prompt for admin email address and password ...
 if ($sth->rows == 0) {
   my $login = "";
@@ -2162,6 +2159,11 @@ _End_Of_SQL_
     $dbh->do("INSERT INTO user_group_map 
         (user_id, group_id, isbless, isderived) 
         VALUES ($userid, $id, 1, 0)");
+    foreach my $group ( @groups ) {
+        $dbh->do("INSERT INTO group_group_map
+            (child_id, parent_id, isbless)
+            VALUES ($id, $group, 1)");
+    }
 
   print "\n$login is now set up as the administrator account.\n";
 }
