@@ -262,7 +262,7 @@ foreach $tree (keys %VC_TREE) {
                          "html_color" => '#eeff00', # a yellow
                          "hdml_char" => "M",
                          "order" => 4,
-                         "description" => "Require Current Sherriff approval",
+                         "description" => "Require Current Sheriff approval",
                      },
 
 		    );
