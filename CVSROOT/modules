@@ -760,6 +760,7 @@ MozillaTinderboxAll -a \
 	SeaMonkeyAll \
         mozilla/security/psm \
         mozilla/accessible \
+        mozilla/ipc/ipcd \
         mozilla/security/manager \
         mozilla/tools/trace-malloc \
         mozilla/modules/libpr0n
