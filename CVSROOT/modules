@@ -61,11 +61,11 @@ MozillaSourceMac -a \
 
 MozillaSourceUnix -a \
 	MozillaSourceCommon \
-        MozillaSourceUnixOnly \
-        mozilla/cmd/xfe \
-        mozilla/cmd/gnomefe \
-        mozilla/cmd/qtfe \
-        mozilla/cmd/ybfe
+	MozillaSourceUnixOnly \
+	mozilla/cmd/xfe \
+	mozilla/cmd/gnomefe \
+	mozilla/cmd/qtfe \
+	mozilla/cmd/ybfe
 
 MozillaSourceMotif -a \
 	MozillaSourceCommon \
@@ -398,6 +398,15 @@ RaptorMac -a \
 	mozilla/lib/mac/NSStdLib \
 	mozilla/lib/mac/PowerPlant
 
+#####################
+# An all inclusive modules for tinderbox to use
+#####################
+
+RaptorAll -a \
+	RaptorWin \
+	RaptorUnix \
+	RaptorMac
+
 #######################################################################
 # Modules for the Directory SDK.  There are two users of the libldap
 # Mozilla and the DirectorySDK. Maintained by Chuck Boatwright 
@@ -462,12 +471,12 @@ JSRef -a \
 	mozilla/js/src
 
 JSClient -a \
-        mozilla/js/Makefile \
-        mozilla/js/Makefile.in \
-        mozilla/js/makefile.win \
-        mozilla/js/src \
-        mozilla/js/macbuild \
-        mozilla/js/jsd
+	mozilla/js/Makefile \
+	mozilla/js/Makefile.in \
+	mozilla/js/makefile.win \
+	mozilla/js/src \
+	mozilla/js/macbuild \
+	mozilla/js/jsd
 
 #######################################################################
 # Modules for SeaMonkey 
