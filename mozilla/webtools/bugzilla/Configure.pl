@@ -46,7 +46,21 @@ unless ($] >= 5.006) {
 # Insert lines in this space to run .cm files like:
 # runconf('Conf/Foo.cm',"Title of section"); 
 # runconf() will handle the path mapping for XP purposes
-# NOT SURE IF WE REALLY NEED TO ADJUST THE PATH
+# XXX: NOT SURE IF WE REALLY NEED TO ADJUST THE PATH
+if (-e 'Conf/Supplies/config.pl') {
+	output <<EOF;
+I see you have settings saved from a pervious partial installation. 
+Would you like me to restore them and skip ahead to the 
+configuration section?
+EOF
+	ask('skipahead',"Yes or no?","yes");
+	if (getConf('skipahead') =~ /(y|yes)/i) {
+		eval("Conf/Supplies/config.pl");
+		output "\n";
+		runconf('Conf/Configuration.cm',"Installation Configuration");
+		exit;
+	}
+}
 runconf('Conf/Begin.cm',"Welcome");
 
 if ($args =~ /--perl\=([\/A-Za-z0-9]+|[\/A-Za-z0-9]+ )/) { # they passed us a perl arg
@@ -66,19 +80,20 @@ if (getConf('installtype') eq 'convert') {
 	runconf('Conf/Upgrade.cm',"Upgrade");
 } elsif (getConf('installtype') eq 'new') {
 	runconf('Conf/Location.cm',"Installation Location");
+	runconf('Conf/Configuration.cm',"Installation Configuration");
 }
 
 
 sub runconf {
     my ($path,$text) = @_;
     my @pathlist = split('/',$path);
-    print "\n";
+    output "\n";
     # oh, isn't ascii art cute? ;)
-    for (split(//, $text)) { print "=" }
-    print "\n";
-    print $text."\n";
-    for (split(//, $text)) { print "=" }
-    print "\n";
+    for (split(//, $text)) { output "=" }
+    output "\n";
+    output $text."\n";
+    for (split(//, $text)) { output "=" }
+    output "\n";
     require File::Spec->catfile(@pathlist);
 }
 

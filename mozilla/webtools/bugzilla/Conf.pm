@@ -35,7 +35,7 @@ no warnings; # evil beings...
 
 use Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(ask holduntilkey output setConf getConf getParam setParam);
+@EXPORT = qw(ask holduntilkey output setConf getConf getParam setParam storeData);
 
 # this is very important. We set a default controller which is responsible 
 # for getting data from the user and returning it back to us. Our default 
@@ -100,6 +100,13 @@ sub getParam($) {
 sub setParam($$) {
     my ($name, $value) = @_;
     $params{$name} = $value; # and set it
+}
+
+sub storeData() {
+	require Data::Dumper;
+	open(CONFIG,"Conf/Supplies/config.pl");
+	print CONFIG Data::Dumper::Dumper($main::c);
+	close(CONFIG);
 }
 
 1;
