@@ -1,12 +1,15 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
-# Persistence - an abstract interface to give our objects persistance.
-# An effort is made to ensure files are updated atomically.  This
-# interface allows us to easily change the perl module we use
-# (Data::Dumper, Storable, etc).  You will have choices between
-# Data::Dumper which is slow but text files allows great debugging
-# capabilities and Storable (not yet implemented) which is much faster
-# but binary format.
+# Persistence - an abstract interface to save the data structures to
+# disk and load the data back.  An effort is made to ensure files are
+# updated atomically.  This interface allows us to easily change the
+# perl module we use to store the data (Data::Dumper, Storable, etc).
+# You will have choices between Data::Dumper which is slow but text
+# files allows great debugging capabilities and Storable (not yet
+# implemented) which is much faster but binary format.  testing is
+# going into this function.  Data::Dumper module has an implicit eval
+# and should not be used for securty sensitive uses.
+
 
 
 # $Revision$ 
