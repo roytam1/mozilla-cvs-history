@@ -209,13 +209,8 @@ sub construct_uniform_times_vec {
   my (@out) =();
   
   my ($table_spacing_sec) = $table_spacing*$main::SECONDS_PER_MINUTE;
-  my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
-    localtime($start_time);
 
-  # the first entry is rounded down to nearest 5 minutes 
-
-  my $remainder = $min % 5;
-  my ($time) = $start_time - ($remainder*$main::SECONDS_PER_MINUTE) - $sec;
+  my ($time) = main::round_time($start_time);
 
   while ($time > $end_time) {
     push @out, $time;
