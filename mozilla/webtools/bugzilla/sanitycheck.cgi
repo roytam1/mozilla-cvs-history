@@ -179,6 +179,7 @@ CrossCheck("attachstatusdefs", "id",
 
 CrossCheck("bugs", "bug_id",
            ["bugs_activity", "bug_id"],
+           ["bug_group_map", "bug_id"],
            ["attachments", "bug_id"],
            ["cc", "bug_id"],
            ["longdescs", "bug_id"],
@@ -188,6 +189,12 @@ CrossCheck("bugs", "bug_id",
            ["keywords", "bug_id"],
            ["duplicates", "dupe_of", "dupe"],
            ["duplicates", "dupe", "dupe_of"]);
+
+CrossCheck("groups", "id",
+           ["bug_group_map", "group_id"],
+           ["group_group_map", "parent_id"],
+           ["group_group_map", "child_id"],
+           ["user_group_map", "group_id"]);
 
 CrossCheck("profiles", "userid",
            ["bugs", "reporter", "bug_id"],
@@ -204,6 +211,7 @@ CrossCheck("profiles", "userid",
            ["watch", "watched"],
            ["tokens", "userid"],
            ["components", "initialowner", "name"],
+           ["user_group_map", "user_id"],
            ["components", "initialqacontact", "name", ["0"]]);
 
 CrossCheck("products", "id",
