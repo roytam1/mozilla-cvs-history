@@ -743,7 +743,7 @@ my $drh = DBI->install_driver($db_base)
 if ($my_db_check) {
     # Do we have the database itself?
 
-    my $sql_want = "7.1.2";  # minimum version of PostgreSQL 
+    my $sql_want = "7.1";  # minimum version of PostgreSQL 
 
     my $dsn = "dbi:$db_base:dbname=template1;host=$my_db_host";
     my $dbh = DBI->connect($dsn, "postgres", "")
@@ -1375,21 +1375,17 @@ sub AddFDef ($$$) {
     $description = $dbh->quote($description);
 
     my $query = "SELECT fieldid FROM fielddefs WHERE name = $name";
-    print "$query\n";
     my $sth = $dbh->prepare($query);
     $sth->execute();
     my ($fieldid) = $sth->fetchrow_array();
-    # print "FieldID = $fieldid\n"; 
     if (!$fieldid) {
         $query = "INSERT INTO fielddefs (name, description, mailhead, sortkey) VALUES " .
                  "($name, $description, $mailhead, $headernum)"; 
-        # print "$query\n";
         $dbh->do($query);
     } else {
         $query = "UPDATE fielddefs set name = $name, description = $description, " . 
                  "mailhead = $mailhead, sortkey = $headernum" . 
                  "WHERE fieldid = $fieldid";
-        # print "$query\n";
         $dbh->do($query);
     }
     $headernum++;
@@ -1792,6 +1788,7 @@ sub ChangeFieldType ($$$)
         print "new: $newtype\n";
         $newtype .= " NOT NULL" if $$ref[3];
         # FIXME Not yet supported by PostgreSQL
+        print "SORRY: Alter field type not yet supported by PostgreSQL\n";
         #$dbh->do("ALTER TABLE $table
         #          ALTER COLUMN $field
         #          $field $newtype");

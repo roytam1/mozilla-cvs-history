@@ -230,7 +230,9 @@ sub changePassword {
     if ($::driver eq 'mysql') {
         SendSQL("UNLOCK TABLES");
     }
-    
+
+    InvalidateLogins($userid);
+
     # Return HTTP response headers.
     print "Content-Type: text/html\n\n";
 
