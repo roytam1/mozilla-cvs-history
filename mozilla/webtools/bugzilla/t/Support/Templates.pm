@@ -18,42 +18,73 @@
 # Rights Reserved.
 #
 # Contributor(s): Jacob Steenhagen <jake@acutex.net>
+#                 David D. Kilzer <ddkilzer@kilzer.net>
 #
 
 package Support::Templates;
 
-$include_path = "template/default";
+use diagnostics;
+use strict;
 
-# Scan Bugzilla's code looking for templates used and put them
-# in the @testitems array to be used by the template.t test.
+use lib 't';
+use vars qw($include_path @referenced_files @actual_files);
 
-my @files = glob('*');
-my %t;
+use Support::Files;
 
-foreach my $file (@files) {
+use File::Find;
+use File::Spec 0.82;
+
+# Note that $include_path is assumed to only contain ONE path, not
+# a list of colon-separated paths.
+$include_path = File::Spec->catdir('template', 'en', 'default');
+@referenced_files = ();
+@actual_files = ();
+
+# Local subroutine used with File::Find
+sub find_templates {
+    # Prune CVS directories
+    if (-d $_ && $_ eq 'CVS') {
+        $File::Find::prune = 1;
+        return;
+    }
+
+    # Only include files ending in '.tmpl'
+    if (-f $_ && $_ =~ m/\.tmpl$/i) {
+        my $filename;
+        my $local_dir = File::Spec->abs2rel($File::Find::dir,
+                                            $File::Find::topdir);
+
+        if ($local_dir) {
+            $filename = File::Spec->catfile($local_dir, $_);
+        } else {
+            $filename = $_;
+        }
+
+        push(@actual_files, $filename);
+    }
+}
+
+# Scan the template include path for templates then put them in
+# in the @actual_files array to be used by various tests.
+map(find(\&find_templates, $_), split(':', $include_path));
+
+# Scan Bugzilla's perl code looking for templates used and put them
+# in the @referenced_files array to be used by the 004template.t test.
+my %seen;
+
+foreach my $file (@Support::Files::testitems) {
     open (FILE, $file);
     my @lines = <FILE>;
     close (FILE);
     foreach my $line (@lines) {
         if ($line =~ m/template->process\(\"(.+?)\", .+?\)/) {
-            $template = $1;
-            push (@testitems, $template) unless $t{$template};
-            $t{$template} = 1;
-        }
-    }
-}
-
-# Now let's look at the templates and find any other templates
-# that are INCLUDEd.
-foreach my $file(@testitems) {
-    open (FILE, $include_path . "/" . $file) || next;
-    my @lines = <FILE>;
-    close (FILE);
-    foreach my $line (@lines) {
-        if ($line =~ m/\[% (?:INCLUDE|PROCESS) (.+?) /) {
             my $template = $1;
-            push (@testitems, $template) unless $t{$template};
-            $t{$template} = 1;
+            # Ignore templates with $ in the name, since they're
+            # probably vars, not real files
+            next if $template =~ m/\$/;
+            next if $seen{$template};
+            push (@referenced_files, $template);
+            $seen{$template} = 1;
         }
     }
 }
