@@ -3238,11 +3238,6 @@ if (GetFieldDef("profiles", "groupset")) {
 # BugZilla uses --GROUPS-- to assign various rights to its users. 
 #
 
-#sub RenameField ($$$);
-#sub GetFieldDef ($$);
-#sub GetIndexDef ($$);
-#sub AddField ($$$);
-
 AddGroup 'tweakparams',    'Can tweak operating parameters';
 AddGroup 'editusers',      'Can edit or disable users';
 AddGroup 'creategroups',   'Can create and destroy groups.';

@@ -604,18 +604,10 @@ my @bugs; # the list of records
 
 while (my @row = FetchSQLData()) {
     my $bug = {}; # a record
+
     # Slurp the row of data into the record.
     foreach my $column (@selectcolumns) {
         $bug->{$column} = shift @row;
-    }
-
-    # paranoia check to see if this user can see this bug
-    if (!CanSeeBug($bug->{'id'}, $::userid))
-    {
-        my $a1 = shift @row;
-        my $a2 = shift @row;
-        my $a3 = shift @row;
-        die("aieee -- Search selected wrong bug " . $bug->{'id'} . " a1 = $a1 a2 = $a2 a3 = $a3 ");
     }
 
     # Process certain values further (i.e. date format conversion).
