@@ -50,6 +50,7 @@ MozillaSourceCommon -a \
     mozilla/lib/libaddr  \
     mozilla/lib/layout  \
     mozilla/lib/libcnv  \
+    mozilla/lib/libdom  \
     mozilla/lib/libi18n  \
     mozilla/lib/liblayer  \
     mozilla/lib/libmsg  \
