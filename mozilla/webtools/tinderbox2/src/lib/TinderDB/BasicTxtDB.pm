@@ -160,7 +160,7 @@ sub readdir_file_prefix {
 
 
 # load the DB, since the save may have been interrupted we try and
-# recover if there is a good DB file availible.
+# recover if there is a good DB file available.
 
 sub loadtree_db {
   my ($self, $tree) = @_;

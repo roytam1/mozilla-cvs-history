@@ -62,7 +62,7 @@ sub summary_pages {
 
   # Build all the summary pages and save data into the $symmary_ref
   # also take the time to build an index page for this tree pointing
-  # to each type of information availible for this tree.
+  # to each type of information available for this tree.
 
   # Summary pages really do not fit in this framework but this is the best
   # place to put them.

@@ -144,7 +144,7 @@ Builds which take a long time to complete can send multiple status
 mails each one conaining the log file which has been completed so far.
 All mails sent before the build is finished should have the status
 'building'.  The last mail must contain the results of the build.  The
-website will make each build log availible so that everyone can see
+website will make each build log available so that everyone can see
 the log file and get a feel for how far into the compilation the build
 machine has progressed.
 

@@ -845,7 +845,7 @@ sub apply_db_updates {
     }    
 
     # If there is a final disposition then we need to add a bunch of
-    # other data which depends on what is already availible.
+    # other data which depends on what is already available.
     
     if ($buildstatus ne 'not_running') {
 

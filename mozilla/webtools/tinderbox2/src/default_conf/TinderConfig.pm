@@ -236,7 +236,7 @@ $VCDisplayImpl = (
 $VC_NAME = "CVS";
 
 # Pick one method for storting data, Data::Dumper is slow but text
-# files allows great debugging capabilities and Storable, availible
+# files allows great debugging capabilities and Storable, available
 # from CPAN, which is a much faster binary format.
 
 # If you are worried about security you should use Storable because
