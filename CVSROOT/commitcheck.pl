@@ -313,12 +313,6 @@ $fullname{'93'} = 'Zlib';
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'HEAD') {
-if (m:^mozilla/build/.*$:) {return '55';}
-if (m:^mozilla/config/.*$:) {return '55';}
-if (m:^mozilla/l10n/.*$:) {return '55';}
-if (m:^mozilla/extensions/vixen/.*$:) {return '156';}
-if (m:^mozilla/editor/.*$:) {return '56';}
-if (m:^mozilla/mailnews/movemail/.*$:) {return '157';}
 if (m:^mozilla/directory/buildsdk\.txt$:) {return '59';}
 if (m:^mozilla/directory/c-sdk/.*$:) {return '59';}
 if (m:^mozilla/directory/ldapsdk\.mak$:) {return '59';}
@@ -457,6 +451,12 @@ if (m:^mozilla/xpinstall/.*$:) {return '150';}
 if (m:^mozilla/rdf/.*$:) {return '52';}
 if (m:^mozilla/security/manager/.*$:) {return '151';}
 if (m:^mozilla/dbm/.*$:) {return '53';}
+if (m:^mozilla/build/.*$:) {return '55';}
+if (m:^mozilla/config/.*$:) {return '55';}
+if (m:^mozilla/l10n/.*$:) {return '55';}
+if (m:^mozilla/extensions/vixen/.*$:) {return '156';}
+if (m:^mozilla/editor/.*$:) {return '56';}
+if (m:^mozilla/mailnews/movemail/.*$:) {return '157';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
