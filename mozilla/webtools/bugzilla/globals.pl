@@ -834,8 +834,8 @@ sub SelectVisible {
     my $replace = " ";
 
     if ($userid) {
-        $replace .= "LEFT JOIN cc selectVisible_cc ON 
-                     bugs.bug_id = selectVisible_cc.bug_id AND 
+        $replace .= ", bugs AS selectVisible_bugs LEFT JOIN cc selectVisible_cc ON 
+                     selectVisible_bugs.bug_id = selectVisible_cc.bug_id AND 
                      selectVisible_cc.who = $userid "
     }
 
@@ -856,7 +856,7 @@ sub SelectVisible {
 		$replace .= "OR (bugs.reporter_accessible = 1 AND bugs.reporter = $userid) 
                    OR (bugs.assignee_accessible = 1 AND bugs.assigned_to = $userid) 
                    OR (bugs.qacontact_accessible = 1 AND bugs.qa_contact = $userid) 
-                   OR (bugs.cclist_accessible = 1 AND selectVisible_cc.who = $userid AND selectVisible_cc.who IS NOT NULL)";
+                   OR (selectVisible_bugs.cclist_accessible = 1 AND selectVisible_cc.who = $userid AND selectVisible_cc.who IS NOT NULL)";
     }
 
     $replace .= ") AND ";

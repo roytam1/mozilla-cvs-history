@@ -890,8 +890,13 @@ my $delta_ts;
 
 sub SnapShotBug {
     my ($id) = (@_);
-    SendSQL("select delta_ts, " . join(',', @::log_columns) .
-            " from bugs where bug_id = $id");
+    if ($::driver eq 'mysql') {
+        SendSQL("select delta_ts, " . join(',', @::log_columns) .
+                " from bugs where bug_id = $id");
+    } elsif ($::driver eq 'Pg') {
+        SendSQL("SELECT TO_CHAR(delta_ts, 'YYYYMMDDHH24MISS'), " . join(',', @::log_columns) .
+                " FROM bugs WHERE bug_id = $id");
+    }
     my @row = FetchSQLData();
     $delta_ts = shift @row;
 

@@ -142,11 +142,13 @@ sub Error {
 
 sub GenerateSQL {
     my $debug = 0;
-    my ($fieldsref, $supptablesref, $wherepartref, $urlstr) = (@_);
+    my ($fieldsref, $supptablesref, $wherepartref, $urlstr, $groupbyref) = (@_);
     my @fields;
+	my @groupbylist;
     my @supptables;
     my @wherepart;
     @fields = @$fieldsref if $fieldsref;
+	@groupbylist = @$groupbyref if $groupbyref;
     @supptables = @$supptablesref if $supptablesref;
     @wherepart = @$wherepartref if $wherepartref;
     my %F;
@@ -160,8 +162,11 @@ sub GenerateSQL {
     unshift(@supptables,
             ("profiles map_assigned_to",
 			 "profiles map_reporter"));
-#			 "profiles map_reporter",
-#			 "LEFT JOIN profiles map_qa_contact ON map_qa_contact.userid = bugs.qa_contact "));
+
+#    unshift(@supptables,
+#                "profiles map_qa_contact LEFT JOIN map_qa_contact ON " . 
+#                "map_qa_contact.userid = bugs.qa_contact ");
+
     unshift(@wherepart,
             ("bugs.assigned_to = map_assigned_to.userid",
              "bugs.reporter = map_reporter.userid"));
@@ -809,7 +814,7 @@ sub GenerateSQL {
     my $query =  ("SELECT " . join(', ', @fields) .
                   " FROM $suppstring" .
                   " WHERE " . join(' AND ', (@wherepart, @andlist)) .
-                  " GROUP BY bugs.bug_id");
+                  " GROUP BY " . join(", ", @groupbylist));
 
     $query = SelectVisible($query, $::userid, $::usergroupset);
 
@@ -970,6 +975,7 @@ Content-type: text/html\n
     print "Content-disposition: inline; filename=bugzilla_bug_list.html\n";
     # Note! Don't finish HTML header yet!  Only one newline so far!
 }
+
 sub DefCol {
     my ($name, $k, $t, $s, $q) = (@_);
 
@@ -1019,7 +1025,7 @@ DefCol("version", "substring(bugs.version, 1, 5)", "Vers", "bugs.version");
 DefCol("os", "substring(bugs.op_sys, 1, 4)", "OS", "bugs.op_sys");
 DefCol("target_milestone", "bugs.target_milestone", "TargetM",
 	   "bugs.target_milestone");
-DefCol("votes", "bugs.votes", "Votes", "bugs.votes desc");
+DefCol("votes", "bugs.votes", "Votes", "bugs.votes");
 DefCol("keywords", "bugs.keywords", "Keywords", "bugs.keywords", 5);
 
 my @collist;
@@ -1057,16 +1063,19 @@ at once.
 
 
 my @fields = ("bugs.bug_id", "bugs.groupset");
+my @groupbylist = ("bugs.bug_id", "bugs.groupset");
 
 foreach my $c (@collist) {
     if (exists $::needquote{$c}) {
         push(@fields, "$::key{$c}");
+		push(@groupbylist, "$::sortkey{$c}");
     }
 }
 
 
 if ($dotweak) {
     push(@fields, "bugs.product", "bugs.bug_status");
+	push(@groupbylist, "bugs.product", "bugs.bug_status");
 }
 
 
@@ -1093,7 +1102,7 @@ query.  You will have to start over at the <A HREF="query.cgi">query page</A>.
 
 ReconnectToShadowDatabase();
 
-my $query = GenerateSQL(\@fields, undef, undef, $::buffer);
+my $query = GenerateSQL(\@fields, undef, undef, $::buffer, \@groupbylist);
 
 if ($::COOKIE{'LASTORDER'}) {
     if ((!$::FORM{'order'}) || $::FORM{'order'} =~ /^reuse/i) {
@@ -1123,7 +1132,7 @@ if (defined $::FORM{'order'} && $::FORM{'order'} ne "") {
             last ORDER;
         };
         /Assign/ && do {
-            $::FORM{'order'} = "map_assigned_to.login_name, bugs.bug_status, priority, bugs.bug_id";
+            $::FORM{'order'} = "map_assigned_to.login_name, bugs.bug_status, bugs.priority, bugs.bug_id";
             last ORDER;
         };
         /Changed/ && do {
