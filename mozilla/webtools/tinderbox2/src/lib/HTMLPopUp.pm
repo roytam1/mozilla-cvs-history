@@ -56,6 +56,7 @@ package HTMLPopUp;
 use lib '#tinder_libdir#';
 
 use Utils;
+use FileStructure;
 
 # Pick how you wish to the Tinderbox popup windows to be implemented:
 # Uncomment only one HTMLPopUp implementation.
