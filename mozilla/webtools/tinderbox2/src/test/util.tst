@@ -155,6 +155,17 @@ sub extract_html_chars_tst {
 }
 
 
+sub fix_time_format_tst {
+
+( '973724041' == fix_time_format('11/8/2000 17:54:01') ) || die();
+( '973724041' == fix_time_format('11/08/2000    17:54:1\n') ) || die();
+
+( '973724041' == fix_time_format('973724041') ) || die();
+
+( fix_time_format('foobar') ) && die();
+
+  return 1;
+}
 
 sub is_time_valid_tst {
 
@@ -240,6 +251,7 @@ sub median_tst {
   extract_digits_tst();
   extract_user_tst();
   extract_html_chars_tst();
+  fix_time_format_tst();
   is_time_valid_tst();
 
   uniq_tst();
