@@ -52,13 +52,14 @@ $URL_HTML = "http://tinderbox.mozilla.org/";
 
 $TINDERBOX_HTML_DIR = "/usr/apache/cgibin/webtools/tinderbox";
 
-# the full path name tinderbox will use to access the tinderbox
+# The full path name tinderbox will use to access the tinderbox
 # servers root data directory where the data will be written.  For
 # debugging you may wish to make this the same as the
-# $TINDERBOX_HTML_DIR and set Persistence::Storable.  This setting
-# will allow a browser can look at the internal data structures. For
+# $TINDERBOX_HTML_DIR and set Persistence::Dumper.  This setting will
+# allow a browser can look at the internal data structures. For
 # production use it is more secure to keep internal tinderbox data
-# outside of the HTML tree.
+# outside of the HTML tree so that the webserver can not send the
+# internal data over the network.
 
 $TINDERBOX_DATA_DIR = "/usr/apache/cgibin/webtools/tinderbox";
 
@@ -181,8 +182,7 @@ $VCDisplayImpl = (
 
 # Pick one method for storting data, Data::Dumper is slow but text
 # files allows great debugging capabilities and Storable, availible
-# from CPAN, (not yet fully implemented or tested) which is a much
-# faster binary format.
+# from CPAN, which is a much faster binary format.
 
 $PersistenceImpl = (
                     'Persistence::Dumper',

@@ -63,7 +63,6 @@ $VERSION = '#tinder_version#';
 $IMPLS = ( ($TinderConfig::PersistenceImpl) ||
            (
             'Persistence::Dumper',
-# storable has not been tested yet
             # 'Persistence::Storable',
            )
          );
