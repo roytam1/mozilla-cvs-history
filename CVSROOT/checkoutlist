@@ -16,4 +16,4 @@ readers
 commitcheck.pl
 dolog.pl
 FilesToNotExport
-
+cvsmailfilter.pl
