@@ -54,8 +54,7 @@ sub WriteParams {
             }
         }
     }
-    mkdir("data", 0777);
-    chmod 0777, "data";
+
     my $tmpname = "data/params.$$";
     open(FID, ">$tmpname") || die "Can't create $tmpname";
     my $v = $::param{'version'};
@@ -66,7 +65,7 @@ sub WriteParams {
     print FID "1;\n";
     close FID;
     rename $tmpname, "data/params" || die "Can't rename $tmpname to data/params";
-    chmod 0666, "data/params";
+    ChmodDataFile('data/params', 0666);
 }
     
 
@@ -145,17 +144,6 @@ DefParam("cookiepath",
   "t",
   "/");
 
-DefParam("preferlists",
-        "If this is on, Bugzilla will display most selection options as selection lists. If this is off, Bugzilla will use radio buttons and checkboxes instead.",
-        "b",
-        1);
-
-DefParam("capitalizelists",
-        "If this is on, Bugzilla will capitalize list entries, checkboxes, and radio buttons. If this is off, Bugzilla will leave these items untouched.",
-        "b",
-        0);
-
-
 DefParam("usequip",
         "If this is on, Bugzilla displays a silly quip at the beginning of buglists, and lets users add to the list of quips.",
         "b",
@@ -184,27 +172,6 @@ DefParam("queryagainstshadowdb",
          "b",
          0);
          
-
-DefParam("usedespot",
-         "If this is on, then we are using the Despot system to control our database of users.  Bugzilla won't ever write into the user database, it will let the Despot code maintain that.  And Bugzilla will send the user over to Despot URLs if they need to change their password.  Also, in that case, Bugzilla will treat the passwords stored in the database as being crypt'd, not plaintext.",
-         "b",
-         0);
-
-DefParam("despotbaseurl",
-         "The base URL for despot.  Used only if <b>usedespot</b> is turned on, above.",
-         "t",
-         "http://cvs-mirror.mozilla.org/webtools/despot/despot.cgi",
-         \&check_despotbaseurl);
-
-
-sub check_despotbaseurl {
-    my ($url) = (@_);
-    if ($url !~ /^http.*cgi$/) {
-        return "must be a legal URL, that starts with http and ends with .cgi";
-    }
-    return "";
-}
-
 
 # Adding in four parameters for LDAP authentication.  -JMR, 7/28/00
 DefParam("useLDAP",
@@ -236,112 +203,17 @@ DefParam("LDAPmailattribute",
 #End of LDAP parameters
 
 
-DefParam("headerhtml",
-         "Additional HTML to add to the HEAD area of documents, eg. links to stylesheets.",
-         "l",
-         '');
-
-DefParam("bodyhtml",
-         "Additional parameters to add to the BODY tag at the beginning of documents, eg. background image/colors, link colors, etc",
-         "l",
-         'BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000"');
-
-DefParam("footerhtml",
-         "HTML to add to the bottom of every page. By default it displays the blurbhtml, and %commandmenu%, a menu of useful commands.  You probably really want either bannerhtml or footerhtml to include %commandmenu%.",
-         "l",
-         '<TABLE BORDER="0"><TR><TD BGCOLOR="#000000" VALIGN="TOP">
-<TABLE BORDER="0" CELLPADDING="10" CELLSPACING="0" WIDTH="100%" BGCOLOR="lightyellow">
-<TR><TD>
-%blurbhtml%
-<BR>
-%commandmenu%
-</TD></TR></TABLE></TD></TR></TABLE>');
-
-DefParam("errorhtml",
-         "This is what is printed out when a form is improperly filled out.  %errormsg% is replaced by the actual error itself; %<i>anythingelse</i>% gets replaced by the definition of that parameter (as defined on this page).",
-         "l",
-         qq{<TABLE CELLPADDING=20><TR><TD BGCOLOR="#ff0000">
-<FONT SIZE="+2">%errormsg%</FONT></TD></TR></TABLE>
-<P>Please press <B>Back</B> and try again.<P>});
-
-
-
-DefParam("bannerhtml",
-         "The html that gets emitted at the head of every Bugzilla page. 
-Anything of the form %<i>word</i>% gets replaced by the defintion of that 
-word (as defined on this page).",
-         "l",
-         q{<TABLE BGCOLOR="#000000" WIDTH="100%" BORDER=0 CELLPADDING=0 CELLSPACING=0>
-<TR><TD><A HREF="http://www.mozilla.org/"><IMG
- SRC="http://www.mozilla.org/images/mozilla-banner.gif" ALT=""
-BORDER=0 WIDTH=600 HEIGHT=58></A></TD></TR></TABLE>
-<CENTER><FONT SIZE=-1>Bugzilla version %version%
-</FONT></CENTER>});
-
-DefParam("blurbhtml",
-         "A blurb that appears as part of the header of every Bugzilla page.  This is a place to put brief warnings, pointers to one or two related pages, etc.",
-         "l",
-         "This is <B>Bugzilla</B>: the Mozilla bug system.  For more 
-information about what Bugzilla is and what it can do, see 
-<A HREF=\"http://www.mozilla.org/\">mozilla.org</A>'s
-<A HREF=\"http://www.mozilla.org/bugs/\"><B>bug pages</B></A>.");
-
-
-DefParam("mostfreqhtml",
-         "The HTML which appears at the top of the list of most-frequently-reported bugs. Use it to explain the page, set a maintainer etc.",
-         "l",
-         q{
-<br><p>
-
-<b>What are "most frequent bugs"?</b>
-
-<blockquote>The Most Frequent Bugs page lists the known open bugs which 
-are reported most frequently in recent builds of Mozilla. It is automatically
-generated from the Bugzilla database every 24 hours, by counting the number
-of direct and indirect duplicates of bugs.
-This information is provided in order to assist in minimizing
-the amount of duplicate bugs entered into Bugzilla which in turn cuts down
-on development time.
-</blockquote>
-
-<b>How do I use this list?</b>
-
-<ul>
-<li>Review the most frequent bugs list.</li>
-<li>If problem is listed:</li>
-
-<ul>
-<li>Click on Bug # link to confirm that you have found the same bug and comment
-if you have additional information. Or move on with your testing
-of the product.</li>
-</ul>
-
-<li>If problem not listed:</li>
-
-<ul>
-<li>Go to the <a href="query.cgi">Bugzilla Query/Search</a>
-page to try and locate a similar bug that has already been written.</li>
-<li>If you find your bug in Bugzilla, feel free to comment with any new or
-additional data you may have.</li>
-<li>If you cannot find your problem already documented in Bugzilla, go to the
-<a href="http://www.mozilla.org/quality/help/bug-form.html">Bugzilla Helper</a> and post a new bug.</li>
-</ul>
-
-</ul>
-<br>
-});
-
 DefParam("mostfreqthreshold",
-         "The minimum number of duplicates a bug needs to show up on the <A HREF=\"duplicates.cgi\">most frequently reported bugs page</a>. If you have a large database and this page takes a long time to load, try increasing this number.",
+         "The minimum number of duplicates a bug needs to show up on the <a href=\"duplicates.cgi\">most frequently reported bugs page</a>. If you have a large database and this page takes a long time to load, try increasing this number.",
          "t",
          "2");
+
 
 DefParam("mybugstemplate",
          "This is the URL to use to bring up a simple 'all of my bugs' list for a user.  %userid% will get replaced with the login name of a user.",
          "t",
-         "buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&email1=%userid%&emailtype1=exact&emailassigned_to1=1&emailreporter1=1");
+         "buglist.cgi?bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;email1=%userid%&amp;emailtype1=exact&amp;emailassigned_to1=1&amp;emailreporter1=1");
     
-
 
 DefParam("shutdownhtml",
          "If this field is non-empty, then Bugzilla will be completely disabled and this text will be displayed instead of all the Bugzilla pages.",
@@ -458,7 +330,7 @@ You will get this message once a day until you've dealt with these bugs!
 DefParam("defaultquery",
           "This is the default query that initially comes up when you submit a bug.  It's in URL parameter format, which makes it hard to read.  Sorry!",
          "t",
-         "bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&order=%22Importance%22");
+         "bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&emailassigned_to1=1&emailassigned_to2=1&emailreporter2=1&emailcc2=1&emailqa_contact2=1&order=%22Importance%22");
 
 
 DefParam("letsubmitterchoosepriority",
@@ -523,30 +395,71 @@ DefParam("usebrowserinfo",
          "b",
          1);
 
-DefParam("usedependencies",
-         "Do you wish to use dependencies (allowing you to mark which bugs depend on which other ones)?",
+DefParam("usevotes",
+         "Do you wish to allow users to vote for bugs? Note that in order for this to be effective, you will have to change the maximum votes allowed in a product to be non-zero in <a href=\"editproducts.cgi\">the product edit page</a>.",
          "b",
          1);
 
-DefParam("webdotbase",
-         "This is the URL prefix that is common to all requests for webdot.  The <a href=\"http://www.research.att.com/~north/cgi-bin/webdot.cgi\">webdot package</a> is a very swell thing that generates pictures of graphs.  If you have an installation of bugsplat that hides behind a firewall, then to get graphs to work, you will have to install a copy of webdot behind your firewall, and change this path to match.  Also, webdot has some trouble with software domain names, so you may have to play games and hack the %urlbase% part of this.  If this all seems like too much trouble, you can set this paramater to be the empty string, which will cause the graphing feature to be disabled entirely.",
-         "t",
-         "http://www.research.att.com/~north/cgi-bin/webdot.cgi/%urlbase%");
-
-DefParam("entryheaderhtml",
-         "This is a special header for the bug entry page. The text will be printed after the page header, before the bug entry form. It is meant to be a place to put pointers to intructions on how to enter bugs.",
-         "l",
-         '<A HREF="bugwritinghelp.html">Bug writing guidelines</A>');
-
-DefParam("expectbigqueries",
-         "If this is on, then we will tell mysql to <tt>set option SQL_BIG_TABLES=1</tt> before doing queries on bugs.  This will be a little slower, but one will not get the error <tt>The table ### is full</tt> for big queries that require a big temporary table.",
+DefParam("usebugaliases",
+         "Do you wish to use bug aliases, which allow you to assign bugs 
+          an easy-to-remember name by which you can refer to them?",
          "b",
          0);
+
+DefParam("webdotbase",
+         "It is possible to show graphs of dependent bugs. You may set this parameter to
+any of the following:
+<ul>
+<li>A complete file path to \'dot\' (part of <a
+href=\"http://www.graphviz.org\">GraphViz</a>) will generate the graphs
+locally.</li>
+<li>A URL prefix pointing to an installation of the <a
+href=\"http://www.research.att.com/~north/cgi-bin/webdot.cgi\">webdot
+package</a> will generate the graphs remotely.</li>
+<li>A blank value will disable dependency graphing.</li>
+</ul>
+The default value is a publically-accessible webdot server. If you change
+this value, make certain that the webdot server can read files from your
+data/webdot directory. On Apache you do this by editing the .htaccess file,
+for other systems the needed measures may vary. You can run checksetup.pl
+to recreate the .htaccess file if it has been lost.",
+         "t",
+         "http://www.research.att.com/~north/cgi-bin/webdot.cgi/%urlbase%",
+         \&check_webdotbase);
+
+sub check_webdotbase {
+    my ($value) = (@_);
+    $value = trim($value);
+    if ($value eq "") {
+        return "";
+    }
+    if($value !~ /^https?:/) {
+        if(! -x $value) {
+            return "The file path \"$value\" is not a valid executable.  Please specify the complete file path to 'dot' if you intend to generate graphs locally.";
+        }
+        # Check .htaccess allows access to generated images
+        if(-e "data/webdot/.htaccess") {
+            open HTACCESS, "data/webdot/.htaccess";
+            if(! grep(/png/,<HTACCESS>)) {
+                return "Dependency graph images are not accessible.\nDelete data/webdot/.htaccess and re-run checksetup.pl to rectify.\n";
+            }
+            close HTACCESS;
+        }
+    }
+    return "";
+}
+
+sub checkregexp {
+    my ($value) = (@_);
+    eval { qr/$value/ };
+    return $@;
+}
 
 DefParam("emailregexp",
          'This defines the regexp to use for legal email addresses.  The default tries to match fully qualified email addresses.  Another popular value to put here is <tt>^[^@]+$</tt>, which means "local usernames, no @ allowed."',
          "t",
-         q:^[^@]+@[^@]+\\.[^@]+$:);
+         q:^[^@]+@[^@]+\\.[^@]+$:,
+         \&checkregexp);
 
 DefParam("emailregexpdesc",
          "This describes in english words what kinds of legal addresses are allowed by the <tt>emailregexp</tt> param.",
@@ -583,20 +496,19 @@ DefParam("allowbugdeletion",
          0);
 
 
+DefParam("allowemailchange",
+         q{Users can change their own email address through the preferences.  Note that the change is validated by emailing both addresses, so switching this option on will not let users use an invalid address.},
+         "b",
+         0);
+
+
 DefParam("allowuserdeletion",
          q{The pages to edit users can also let you delete a user.  But there is no code that goes and cleans up any references to that user in other tables, so such deletions are kinda scary.  So, you have to turn on this option before any such deletions will ever happen.},
          "b",
          0);
 
-
-DefParam("strictvaluechecks",
-         "Do stricter integrity checking on both form submission values and values read in from the database.",
-         "b",
-         0);
-
-
 DefParam("browserbugmessage",
-         "If strictvaluechecks is on, and the bugzilla gets unexpected data from the browser, in addition to displaying the cause of the problem, it will output this HTML as well.",
+         "If bugzilla gets unexpected data from the browser, in addition to displaying the cause of the problem, it will output this HTML as well.",
          "l",
          "this may indicate a bug in your browser.\n");
 
@@ -674,9 +586,28 @@ DefParam("moved-default-component",
          "t",
          '');
 
-DefParam("useattachmenttracker",
-         "Whether or not to use the attachment tracker that adds additional features for tracking bug attachments.",
-         "b",
-         0);
+# The maximum size (in bytes) for patches and non-patch attachments.
+# The default limit is 1000KB, which is 24KB less than mysql's default
+# maximum packet size (which determines how much data can be sent in a
+# single mysql packet and thus how much data can be inserted into the
+# database) to provide breathing space for the data in other fields of
+# the attachment record as well as any mysql packet overhead (I don't
+# know of any, but I suspect there may be some.)
+
+DefParam("maxpatchsize",
+         "The maximum size (in kilobytes) of patches.  Bugzilla will not 
+          accept patches greater than this number of kilobytes in size.
+          To accept patches of any size (subject to the limitations of 
+          your server software), set this value to zero." ,
+         "t",
+         '1000');
+
+DefParam("maxattachmentsize" , 
+         "The maximum size (in kilobytes) of non-patch attachments.  Bugzilla 
+          will not accept attachments greater than this number of kilobytes 
+          in size.  To accept attachments of any size (subject to the
+          limitations of your server software), set this value to zero." , 
+         "t" , 
+         '1000');
 
 1;
