@@ -382,14 +382,14 @@ sub is_break_cell {
 
     my $is_state1_different = 
         (
-         (defined($last_treestate)) &&
+         (defined($LAST_TREESTATE)) &&
          (defined($DATABASE{$tree}{$next_time}{'treestate'})) &&
          ($LAST_TREESTATE ne $DATABASE{$tree}{$next_time}{'treestate'}) &&
          1);
 
     my $is_state2_different = 
         (
-         (defined($last_treestate)) &&
+         (defined($LAST_TREESTATE)) &&
          (defined($DATABASE{$tree}{$time}{'treestate'})) &&
          ($LAST_TREESTATE ne $DATABASE{$tree}{$time}{'treestate'}) &&
          1);
