@@ -304,20 +304,6 @@ $fullname{'93'} = 'Zlib';
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'HEAD') {
-if (m:^mozilla/nsprpub/.*$:) {return '78';}
-if (m:^mozilla/gfx/public/.*$:) {return '177';}
-if (m:^mozilla/widget/public/.*$:) {return '177';}
-if (m:^mozilla/modules/plugin/.*$:) {return '81';}
-if (m:^mozilla/gfx/src/mac/.*$:) {return '178';}
-if (m:^mozilla/widget/src/mac/.*$:) {return '178';}
-if (m:^mozilla/modules/libpref/.*$:) {return '82';}
-if (m:^mozilla/modules/progress/.*$:) {return '83';}
-if (m:^mozilla/modules/libreg/.*$:) {return '84';}
-if (m:^mozilla/modules/security/.*$:) {return '86';}
-if (m:^mozilla/modules/softupdt/.*$:) {return '87';}
-if (m:^mozilla/content/xml/.*$:) {return '88';}
-if (m:^mozilla/expat/.*$:) {return '88';}
-if (m:^mozilla/extensions/xmlextras/.*$:) {return '88';}
 if (m:^mozilla/xpcom/.*$:) {return '89';}
 if (m:^xpcom/io$:) {return '90';}
 if (m:^mozilla/modules/zlib/.*$:) {return '93';}
@@ -433,6 +419,20 @@ if (m:^mozilla/extensions/help$:) {return '174';}
 if (m:^mozilla/netwerk/.*$:) {return '77';}
 if (m:^mozilla/gfx/src/windows/.*$:) {return '175';}
 if (m:^mozilla/widget/src/windows/.*$:) {return '175';}
+if (m:^mozilla/nsprpub/.*$:) {return '78';}
+if (m:^mozilla/gfx/public/.*$:) {return '177';}
+if (m:^mozilla/widget/public/.*$:) {return '177';}
+if (m:^mozilla/modules/plugin/.*$:) {return '81';}
+if (m:^mozilla/gfx/src/mac/.*$:) {return '178';}
+if (m:^mozilla/widget/src/mac/.*$:) {return '178';}
+if (m:^mozilla/modules/libpref/.*$:) {return '82';}
+if (m:^mozilla/modules/progress/.*$:) {return '83';}
+if (m:^mozilla/modules/libreg/.*$:) {return '84';}
+if (m:^mozilla/modules/security/.*$:) {return '86';}
+if (m:^mozilla/modules/softupdt/.*$:) {return '87';}
+if (m:^mozilla/content/xml/.*$:) {return '88';}
+if (m:^mozilla/expat/.*$:) {return '88';}
+if (m:^mozilla/extensions/xmlextras/.*$:) {return '88';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
