@@ -73,7 +73,7 @@ sub search {
                 $searchtext =~ s/([;,#><\-\$.^*[^|()\!])/\\$1/g;
             }
 	    exec($Conf->glimpsebin,"-i","-H".$Conf->dbdir,'-y','-n',$searchtext);
-	    print("Glimpse subprocess died unexpextedly: $!\n");
+	    print("Glimpse subprocess died unexpectedly: $!\n");
 	    exit;
 	}
 
