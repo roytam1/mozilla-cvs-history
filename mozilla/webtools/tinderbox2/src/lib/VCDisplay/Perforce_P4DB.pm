@@ -127,7 +127,7 @@ sub time2p4db {
   # Is this necessary? I saw it during testing and 
   # I am afraid to take it out.
 
-  push @out, 'ignore=GO%21';
+  push @out, 'ignore=GO!';
   
   return @out;
 }
@@ -159,17 +159,16 @@ sub prepare_perforce_args {
     ($args{'mindate'}) &&
         (push @url_args, time2p4db($args{'mindate'}) );
     
+    # I am not sure of the calling sequence for FSPC, I think this is
+    # correct but someone who runs this should confirm it.
+
+    my $filespec =TreeData::Tree2Filespec($args{'tree'});
 
     if ($args{'file'}) {
+        $filespec .= $args{'file'};
+    }    
 
-	# I am not sure of the calling sequence for FSPC perhaps I
-	# need to preface the file with this string '%2F%2F...', some
-	# tests I ran indicated that this was not necessary.
-
-        push @url_args, "FSPC=".HTMLPopUp::escapeURL($args{'file'}) ;
-    } else {
-        push @url_args, 'FSPC=%2F%2F...' ;
-    }
+    push @url_args, "FSPC=".HTMLPopUp::escapeURL($filespec) ;
 
     return @url_args;
 }
