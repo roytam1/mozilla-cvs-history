@@ -216,6 +216,9 @@ $fullname{'87'} = 'SmartUpdate';
 $mode{'154'} = 'Open';
 $branch{'154'} = 'HEAD';
 $fullname{'154'} = 'tools';
+$mode{'158'} = 'Open';
+$branch{'158'} = 'HEAD';
+$fullname{'158'} = 'URI Loader';
 $mode{'156'} = 'Open';
 $branch{'156'} = 'HEAD';
 $fullname{'156'} = 'ViXEn';
@@ -360,6 +363,7 @@ if (m:^mozilla/xpinstall/.*$:) {return '150';}
 if (m:^mozilla/extensions/psm-glue/.*$:) {return '151';}
 if (m:^mozilla/extensions/vixen/.*$:) {return '156';}
 if (m:^mozilla/mailnews/movemail$:) {return '157';}
+if (m:^mozilla/uriloader/.*$:) {return '158';}
 }
 if ($b eq 'NSPRPUB_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
