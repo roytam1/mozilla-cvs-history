@@ -120,7 +120,7 @@ if ( defined($TinderConfig::DB_LEGEND_BORDER) ) {
 # finest spacing on html page (in minutes), this resticts the
 # minimum time between builds (to this value plus 5 minutes).
 
-$MIN_TABLE_SPACING = $TinderConfig::DB_MIN_TABLE_SPACING || (5);
+$TABLE_SPACING = $TinderConfig::DB_TABLE_SPACING || (5);
 
 # number of times a database can be updated before its contents must
 # be trimmed of old data.  This scan of the database is used to
