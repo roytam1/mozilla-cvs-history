@@ -70,6 +70,7 @@ if ( defined(@TinderConfig::HeaderImpl) ) {
   @IMPLS = (
             'TinderHeader::Build',
             'TinderHeader::IgnoreBuilds',
+            'TinderHeader::Banner',
             'TinderHeader::MOTD',
 
             # TinderDB::VC_Bonsai provides a
@@ -109,6 +110,7 @@ $DEBUG = 1;
                          
                          'Build' => "",
                          'IgnoreBuilds' => "",
+                         'Banner' => "",
                          'MOTD' => "",
                          'TreeState' => "Open",
                          
@@ -300,6 +302,11 @@ operation of the version control system.
 
 
 =over 4
+
+=item B<TinderHeader::Banner>
+
+A message for all projects as set by the administrators.
+
 
 =item B<TinderHeader::MOTD>
 
