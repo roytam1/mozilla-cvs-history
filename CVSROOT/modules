@@ -29,8 +29,6 @@ ClientSourceProduct -a \
 	ClientSourceProductWin \
 	ClientSourceProductMac \
 	ClientSourceProductUnix \
-	ns/nsprpub \
-	ns/modules/schedulr
 
 ClientSourceProductWin -a MozillaCommon MozillaWinOnly
 
@@ -75,7 +73,10 @@ MozillaCommon -a \
     ns/nav-java/stubs  \
     ns/nsprpub  \
     ns/xpcom \
-    ns/l10n
+    ns/l10n \
+    ns/nsprpub \
+    ns/dbm  \
+    ns/modules/schedulr
 
 MozillaWinOnly -a \
     ns/client.mak  \
@@ -102,6 +103,7 @@ MozillaWinOnly -a \
     ns/modules/security/makefile.win  \
     ns/modules/zlib/makefile.win  \
     ns/nav-java/makefile.win  \
+    JavaStubWin
 
 
 MozillaUnixOnly -a \
@@ -186,7 +188,8 @@ MozillaUnixOnly -a \
     ns/modules/softupdt/Makefile  \
     ns/modules/zlib/Makefile  \
     ns/nav-java/Makefile  \
-    ns/lib/mariner  
+    ns/lib/mariner  \
+    JavaStubUnix
 
 
 MozillaMacOnly -a \
@@ -210,9 +213,34 @@ MozillaMacOnly -a \
     ns/modules/progress/macbuild  \
     ns/modules/progress/public  \
     ns/modules/zlib/macbuild  \
-    ns/lib/mariner  
+    ns/lib/mariner  \
+    JavaStubMac
 
+JavaStubAll -a \
+	JavaStubWin \
+	JavaStubMac \
+	JavaStubUnix
 
+JavaStubCore -a \
+	ns/sun-java/stubs/include \
+	ns/sun-java/stubs/src
+
+JavaStubMac -a \
+	JavaStubCore \
+	ns/sun-java/stubs/macbuild \
+	ns/sun-java/stubs/macjri
+
+JavaStubUnix -a \
+	JavaStubCore \
+	ns/sun-java/Makefile \
+	ns/sun-java/stubs/jri \
+	ns/sun-java/stubs/Makefile
+
+JavaStubWin -a \
+	JavaStubCore \
+	ns/sun-java/makefile.win \
+	ns/sun-java/stubs/jri \
+	ns/sun-java/stubs/makefile.win
 
 
 
