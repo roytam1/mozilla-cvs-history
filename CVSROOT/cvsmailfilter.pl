@@ -47,6 +47,7 @@ sub get_response_code {
 
 my $debug = 0;
 my $addsonly = 0;
+my $showcommitter = 0;
 
 my $mailhost = "127.0.0.1";
 my $urlbase = "";
@@ -55,6 +56,7 @@ my $cvsroot = "";
 my @mailto;
 my $fileregexp = "";
 
+my $username = $ENV{"CVS_USER"} || getlogin || (getpwuid($<))[0] || "nobody";
 
 while (@ARGV) {
     my $arg = shift @ARGV;
@@ -62,6 +64,8 @@ while (@ARGV) {
     if ($arg eq '-d') {
         $debug = 1;
         print STDERR "Debug turned on...\n";
+    } elsif ($arg eq '-c') {
+        $showcommitter = 1;
     } elsif ($arg eq '-r') {
         $cvsroot = shift @ARGV;
     } elsif ($arg eq '-h') {
@@ -94,6 +98,11 @@ if ($urlbase ne "" && $cvsargs ne "") {
 }
 
 my $message = "";
+
+if ($showcommitter) {
+    $message .= "Changes committed by $username:\n\n";
+}
+
 my $filesadded = 0;
 while (<>) {
     my $line = $_;
