@@ -21,6 +21,8 @@
 #                 Dawn Endico <endico@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Joe Robins <jmrobins@tgix.com>
+#				  David Lawrence <dkl@redhat.com>
+
 
 # This file defines all the parameters that we have a GUI to edit within
 # Bugzilla.
@@ -82,7 +84,8 @@ sub check_numeric {
     }
     return "";
 }
-    
+
+
 sub check_shadowdb {
     my ($value) = (@_);
     $value = trim($value);
@@ -100,10 +103,8 @@ sub check_shadowdb {
     SendSQL("INSERT INTO shadowlog (command) VALUES ('SYNCUP')", 1);
     return "";
 }
-
+    
 @::param_list = ();
-
-
 
 # OK, here are the definitions themselves.
 #
@@ -117,6 +118,16 @@ sub check_shadowdb {
 # defenum -- This param defines an enum that defines a column in one of
 #	     the database tables.  The name of the parameter is of the form
 #	     "tablename.columnname".
+
+DefParam("contract",
+     "Contract support (Red Hat)",
+     "b",
+     0);
+
+DefParam("templatepath",
+	 "The path to your html template files",
+	 "t",
+	 "/var/httpd/html/newzilla/templates");
 
 DefParam("maintainer",
 	 "The email address of the person who maintains this installation of Bugzilla.",
@@ -158,18 +169,19 @@ DefParam("usequip",
 	"b",
 	1);
 
+
 # Added parameter - JMR, 2/16/00
 DefParam("usebuggroups",
          "If this is on, Bugzilla will associate a bug group with each product in the database, and use it for querying bugs.",
          "b",
          0); 
-
+ 
 # Added parameter - JMR, 2/16/00
 DefParam("usebuggroupsentry",
          "If this is on, Bugzilla will use product bug groups to restrict who can enter bugs.  Requires usebuggroups to be on as well.",
          "b",
          0); 
-
+ 
 DefParam("shadowdb",
          "If non-empty, then this is the name of another database in which Bugzilla will keep a shadow read-only copy of everything.  This is done so that long slow read-only operations can be used against this db, and not lock up things for everyone else.  Turning on this parameter will create the given database; be careful not to use the name of an existing database with useful data in it!",
          "t",
@@ -219,13 +231,13 @@ DefParam("footerhtml",
 %commandmenu%
 </TD></TR></TABLE></TD></TR></TABLE>');
 
+
 DefParam("errorhtml",
          "This is what is printed out when a form is improperly filled out.  %errormsg% is replaced by the actual error itself; %<i>anythingelse</i>% gets replaced by the definition of that parameter (as defined on this page).",
          "l",
          qq{<TABLE CELLPADDING=20><TR><TD BGCOLOR="#ff0000">
 <FONT SIZE="+2">%errormsg%</FONT></TD></TR></TABLE>
 <P>Please press <B>Back</B> and try again.<P>});
-
 
 
 DefParam("bannerhtml",
@@ -239,6 +251,7 @@ word (as defined on this page).",
 BORDER=0 WIDTH=600 HEIGHT=58></A></TD></TR></TABLE>
 <CENTER><FONT SIZE=-1>Bugzilla version %version%
 </FONT></CENTER>});
+
 
 DefParam("blurbhtml",
          "A blurb that appears as part of the header of every Bugzilla page.  This is a place to put brief warnings, pointers to one or two related pages, etc.",
@@ -402,6 +415,7 @@ sub check_priority {
     return "";
 }
 
+
 DefParam("defaultpriority",
          "This is the priority that newly entered bugs are set to.",
          "t",
@@ -414,6 +428,7 @@ DefParam("usetargetmilestone",
 	 "b",
 	 0);
 
+
 DefParam("nummilestones",
          "If using Target Milestone, how many milestones do you wish to
           appear?",
@@ -421,21 +436,25 @@ DefParam("nummilestones",
          10,
          \&check_numeric);
 
+
 DefParam("curmilestone",
          "If using Target Milestone, Which milestone are we working toward right now?",
          "t",
          1,
          \&check_numeric);
 
+
 DefParam("useqacontact",
 	 "Do you wish to use the QA Contact field?",
 	 "b",
 	 0);
 
+
 DefParam("usestatuswhiteboard",
 	 "Do you wish to use the Status Whiteboard field?",
 	 "b",
 	 0);
+
 
 DefParam("usebrowserinfo",
 	 "Do you want bug reports to be assigned an OS & Platform based on the browser
@@ -443,35 +462,42 @@ DefParam("usebrowserinfo",
 	 "b",
 	 1);
 
+
 DefParam("usedependencies",
          "Do you wish to use dependencies (allowing you to mark which bugs depend on which other ones)?",
          "b",
          1);
+
 
 DefParam("webdotbase",
          "This is the URL prefix that is common to all requests for webdot.  The <a href=\"http://www.research.att.com/~north/cgi-bin/webdot.cgi\">webdot package</a> is a very swell thing that generates pictures of graphs.  If you have an installation of bugsplat that hides behind a firewall, then to get graphs to work, you will have to install a copy of webdot behind your firewall, and change this path to match.  Also, webdot has some trouble with software domain names, so you may have to play games and hack the %urlbase% part of this.  If this all seems like too much trouble, you can set this paramater to be the empty string, which will cause the graphing feature to be disabled entirely.",
          "t",
          "http://www.research.att.com/~north/cgi-bin/webdot.cgi/%urlbase%");
 
+
 DefParam("entryheaderhtml",
          "This is a special header for the bug entry page. The text will be printed after the page header, before the bug entry form. It is meant to be a place to put pointers to intructions on how to enter bugs.",
          "l",
          '<A HREF="bugwritinghelp.html">Bug writing guidelines</A>');
+
 
 DefParam("expectbigqueries",
          "If this is on, then we will tell mysql to <tt>set option SQL_BIG_TABLES=1</tt> before doing queries on bugs.  This will be a little slower, but one will not get the error <tt>The table ### is full</tt> for big queries that require a big temporary table.",
          "b",
          0);
 
+
 DefParam("emailregexp",
          'This defines the regexp to use for legal email addresses.  The default tries to match fully qualified email addresses.  Another popular value to put here is <tt>^[^@, ]*$</tt>, which means "local usernames, no @ allowed.',
          "t",
          q:^[^@, ]*@[^@, ]*\\.[^@, ]*$:);
 
+
 DefParam("emailregexpdesc",
          "This describes in english words what kinds of legal addresses are allowed by the <tt>emailregexp</tt> param.",
          "l",
          "A legal address must contain exactly one '\@', and at least one '.' after the \@, and may not contain any commas or spaces.");
+
 
 DefParam("emailsuffix",
          "This is a string to append to any email addresses when actually sending mail to that address.  It is useful if you have changed the <tt>emailregexp</tt> param to only allow local usernames, but you want the mail to be delivered to username\@my.local.hostname.",
@@ -480,7 +506,7 @@ DefParam("emailsuffix",
 
 
 DefParam("voteremovedmail",
-q{This is a mail message to send to anyone who gets a vote removed from a bug for any reason.  %to% gets replaced by a comma-separated list of people who used to be voting for this bug.  %bugid% gets replaced by the bug number.  %reason% gets replaced by a short reason describing why the vote was removed.  %count% is how many votes got removed.%<i>anythingelse</i>% gets replaced by the definition of that parameter (as defined on this page).},
+q{This is a mail message to send to anyone who gets a vote removed from a bug for any reason.  %to% gets replaced by a comma-separated list of people who used to be voting for this bug.  %bugid% gets replaced by the bug number.  %reason% gets replaced by a short reason describing why the vote was removed. %count% is how many votes got removed. %<i>anythingelse</i>% gets replaced by the definition of thatparameter (as defined on this page).},
          "l",
 "From: bugzilla-daemon
 To: %to%
@@ -494,6 +520,7 @@ Votes removed: %count%
 
 %urlbase%show_bug.cgi?id=%bugid%
 ");
+
          
 DefParam("allowbugdeletion",
          q{The pages to edit products and components and versions can delete all associated bugs when you delete a product (or component or version).  Since that is a pretty scary idea, you have to turn on this option before any such deletions will ever happen.},
@@ -517,6 +544,7 @@ DefParam("browserbugmessage",
          "If strictvaluechecks is on, and the bugzilla gets unexpected data from the browser, in addition to displaying the cause of the problem, it will output this HTML as well.",
          "l",
          "this may indicate a bug in your browser.\n");
+
 
 #
 # Parameters to force users to comment their changes for different actions.

@@ -1,16 +1,15 @@
 rem * Table to hold valid priority values in bugzilla
 rem * Contributed by David Lawrence <dkl@redhat.com>
 
-drop table priority;
+drop table priority cascade constraints;
 
 create table priority (
-	id 		INTEGER			CONSTRAINT PRIORITY_PK_ID    PRIMARY KEY NOT NULL, 
-	value	VARCHAR(255)	CONSTRAINT PRIORITY_NN_VALUE NOT NULL
+	value	VARCHAR(255)	CONSTRAINT PRIORITY_PK_VALUE PRIMARY KEY NOT NULL
 );
 
-rem insert into priority (id, value) values ('1', 'high');
-rem insert into priority (id, value) values ('2', 'normal');
-rem insert into priority (id, value) values ('3', 'low');
-rem insert into priority (id, value) values ('4', 'contract');
+rem insert into priority (value) values ('high');
+rem insert into priority (value) values ('normal');
+rem insert into priority (value) values ('low');
+rem insert into priority (value) values ('contract');
 
 exit;

@@ -2,7 +2,6 @@ rem Table to hold list of cc persons for particular bug
 rem Contributed by David Lawrence <dkl@redhat.com>
 
 drop table cc;
-drop index cc_index;
 
 create table cc (
     bug_id 	INTEGER CONSTRAINT CC_NN_BUGID NOT NULL,

@@ -1,17 +1,16 @@
 rem * Table to hold valid bug class values in bugzilla
 rem * Contributed by David Lawrence <dkl@redhat.com>
 
-drop table class;
+drop table class cascade constraints;
 
 create table class (
-	id 	INTEGER		CONSTRAINT CLASS_PK_ID 		PRIMARY KEY,
-	value	VARCHAR(255)	CONSTRAINT CLASS_NN_VALUE	NOT NULL
+	value	VARCHAR(255)	CONSTRAINT CLASS_PK_VALUE PRIMARY KEY	NOT NULL
 );
 
-rem insert into class (id, value) values ('1', 'install/upgrade');
-rem insert into class (id, value) values ('2', 'packaging');
-rem insert into class (id, value) values ('3', 'functionality');
-rem insert into class (id, value) values ('4', 'security');
-rem insert into class (id, value) values ('5', 'documentation');
+rem insert into class (value) values ('install/upgrade');
+rem insert into class (value) values ('packaging');
+rem insert into class (value) values ('functionality');
+rem insert into class (value) values ('security');
+rem insert into class (value) values ('documentation');
 
 exit;

@@ -2,7 +2,6 @@ rem * Table to hold valid bug class values in bugzilla
 rem * Contributed by David Lawrence <dkl@redhat.com>
 
 drop table longdescs;
-drop index longdescs_index;
 
 create table longdescs (
 	bug_id 		INTEGER 	CONSTRAINT LONG_NN_BUGID	NOT NULL,

@@ -2,7 +2,6 @@ rem * Table to hold valid bug class values in bugzilla
 rem * Contributed by David Lawrence <dkl@redhat.com>
 
 drop table bug_group;
-drop index buggroup_index;
 
 create table bug_group (
 	bugid 		INTEGER			CONSTRAINT BUGGROUP_NN_BUGID	NOT NULL,

@@ -2,7 +2,6 @@ rem Creates the bug activity table
 rem Contributed by David Lawrence <dkl@redhat.com>
 
 drop table bugs_activity;
-drop index bugact_index;
 
 create table bugs_activity (
     bug_id		INTEGER 		CONSTRAINT ACT_NN_BUGID  NOT NULL,

@@ -2,7 +2,6 @@ rem * Table to hold valid user group values in bugzilla
 rem * Contributed by David Lawrence <dkl@redhat.com>
 
 drop table user_group;
-drop index usergroup_index;
 
 create table user_group (
 	userid 		INTEGER			CONSTRAINT USERGROUP_NN_BUGID		NOT NULL,

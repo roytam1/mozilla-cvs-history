@@ -2,8 +2,6 @@ rem Table to hold attachements to bugs
 rem Contributed by David Lawrence <dkl@redhat.com>
 
 drop table attachments;
-drop sequence attachid_seq;
-drop index attach_index;
 
 create table attachments (
 	attach_id 		INTEGER 		CONSTRAINT ATTACH_PK_ATTACHID PRIMARY KEY NOT NULL,
@@ -17,7 +15,9 @@ create table attachments (
 	submitter_id 	INTEGER  		CONSTRAINT ATTACH_NN_SUBMIT		NOT NULL
 );
 
-create sequence attachid_seq NOCACHE START WITH 1 INCREMENT BY 1;
 create index attach_index on attachments (bug_id, creation_ts);
+
+drop sequence attachments_seq;
+create sequence attachments_seq NOCACHE START WITH 1 INCREMENT BY 1;
 
 exit;

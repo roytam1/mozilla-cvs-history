@@ -2,7 +2,6 @@ rem * Table to hold the current list of products in bugzilla
 rem * Contributed by David Lawrence <dkl@redhat.com>
 
 drop table products;
-drop sequence product_seq;
 
 create table products (
 	product 		VARCHAR2(255) 	CONSTRAINT PRODUCT_NN_PRODUCT 	NOT NULL,
@@ -13,6 +12,7 @@ create table products (
 	id				INTEGER			CONSTRAINT PRODUCT_PK_ID 		PRIMARY KEY NOT NULL 
 );
 
+drop sequence product_seq;
 create sequence product_seq NOCACHE START WITH 1 INCREMENT BY 1;
 
 rem insert into products(product, description, id) values ('TestProduct', 'This is a test product.  This ought to be blown away and replaced with real stuff in a finished installation of bugzilla.', product_seq.nextval);

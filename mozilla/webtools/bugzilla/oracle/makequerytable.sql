@@ -2,7 +2,6 @@ rem * Table to hold valid member queries in bugzilla
 rem * Contributed by David Lawrence <dkl@redhat.com>
 
 drop table queries ;
-drop index queries_index;
 
 create table queries (
 	userid 		INTEGER		CONSTRAINT QUERY_NN_USRID 	NOT NULL,
