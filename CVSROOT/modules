@@ -578,6 +578,7 @@ SeaMonkeyCore -a \
 	mozilla/xpcom/threads \
 	mozilla/xpcom/tests \
 	mozilla/xpcom/tools \
+	!mozilla/xpcom/tools/xpidl \
 	mozilla/xpcom/typelib \
 	mozilla/xpinstall \
 	MozillaLicense
