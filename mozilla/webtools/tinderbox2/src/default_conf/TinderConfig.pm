@@ -158,7 +158,6 @@ $EMPTY_TABLE_CELL = "";
 # bonsai or are using CVS raw.
 
 @DBImpl = (
-	   'TinderDB::BT_Generic',
 #	   'TinderDB::BT_Req',
 	   'TinderDB::Time',
 	   'TinderDB::Notice',
@@ -166,6 +165,7 @@ $EMPTY_TABLE_CELL = "";
 	   'TinderDB::VC_Bonsai',
 #          'TinderDB::VC_Perforce',
 	   'TinderDB::Build',
+	   'TinderDB::BT_Generic',
 	  );
 
 # What border should the status legends use?  new browsers allow us to
