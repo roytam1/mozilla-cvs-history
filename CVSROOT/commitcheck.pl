@@ -42,9 +42,6 @@ $branch{'3'} = 'HEAD';
 $fullname{'3'} = 'despotaccess';
 $blessed{'3'} = [];
 $super{'3'} = ['despotdaemon%netscape.com',];
-$mode{'58'} = 'Open';
-$branch{'58'} = 'HEAD';
-$fullname{'58'} = 'Dialup';
 $mode{'59'} = 'Open';
 $branch{'59'} = 'HEAD';
 $fullname{'59'} = 'Directory SDK';
@@ -293,7 +290,6 @@ if (m:^mozilla/build/.*$:) {return '55';}
 if (m:^mozilla/config/.*$:) {return '55';}
 if (m:^mozilla/l10n/.*$:) {return '55';}
 if (m:^mozilla/editor$:) {return '56';}
-if (m:^mozilla/cmd/dialup/.*$:) {return '58';}
 if (m:^mozilla/directory/.*$:) {return '59';}
 if (m:^gfx/src/ps/.*$:) {return '62';}
 if (m:^mozilla/modules/libimg/.*$:) {return '63';}
