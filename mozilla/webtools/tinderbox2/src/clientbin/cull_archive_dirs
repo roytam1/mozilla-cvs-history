@@ -233,7 +233,7 @@ sub get_day_of_year {
     $mon++;
     $year += 1900;
 
-    ($yday) or 
+    defined($yday) or 
 	die("Could not convert time: $time: $! \n");
 
     $YDAY{$time} = $yday;
