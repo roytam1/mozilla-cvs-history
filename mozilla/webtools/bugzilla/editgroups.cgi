@@ -188,14 +188,14 @@ if ($action eq 'changeform') {
         print "$name";
     } else {
         print "<INPUT TYPE=HIDDEN NAME=\"oldname\" VALUE=$name>
-        <INPUT NAME=\"name\" VALUE=\"$name\">";
+        <INPUT SIZE=60 NAME=\"name\" VALUE=\"$name\">";
     }
     print "</TD></TR><TR><TH>Description:</TH><TD>";
     if ($isbuggroup == 0) {
         print "$description";
     } else {
         print "<INPUT TYPE=HIDDEN NAME=\"olddesc\" VALUE=\"$description\">
-        <INPUT NAME=\"desc\" VALUE=\"$description\">";
+        <INPUT SIZE=70 NAME=\"desc\" VALUE=\"$description\">";
     }
     print "</TD></TR><TR>
            <TH>User Regexp:</TH><TD>";
