@@ -135,26 +135,13 @@ foreach $tree (@TREES) {
       my ($localtimenow) = localtime($timenow);
 
       my ($pretty_time) = HTMLPopUp::timeHTML($timenow);
-      my ($rendered_notice) = (
-			       "\t\t<p>\n".
-			       
-			       ("\t\t\t[<b>".
-				$mailaddr." - $pretty_time".
-				"</b>]\n").
-			       
-			       "\t\t</p>\n".
-			       
-			       "\t\t<p>\n".
-			       "\t\t\t$note\n".
-			       "\t\t</p>\n"
-			      );
-
       my (%data) = (
 		    'tree' => $tree,
 		    'mailaddr' => $mailaddr,
-		    'rendered_notice' => $rendered_notice, 
+		    'note' => $note,
 		    'time' => $timenow,
 		    'localtime' => $localtimenow,
+	            'remote_host' => '127.0.0.1',
 		   );
 
       my ($update_file) = ("$TINDERBOX_DATA_DIR/$tree/db/".

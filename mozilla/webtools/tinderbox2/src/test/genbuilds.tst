@@ -229,6 +229,7 @@ sub write_update_record {
 # an idea of what the real link will look like and acts as a comment to make debugging easier.
 
 	      'brieflog' => "http://www.mozilla.org/tree=$tree/buildname=$build/starttime=$starttime/status=$status",
+	      'fulllog' => "http://www.mozilla.org/tree=$tree/buildname=$build/starttime=$starttime/status=$status",
               'errorparser' => "unix",
 	  );
 
