@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl
+#!/usr/bonsaitools/bin/perl -w
 
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -10,7 +10,7 @@
 # implied. See the License for the specific language governing
 # rights and limitations under the License.
 #
-# The Original Code are the Bugzilla Tests.
+# The Original Code is the Bugzilla Installer.
 #
 # The Initial Developer of the Original Code is Zach Lipton
 # Portions created by Zach Lipton are
@@ -31,7 +31,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-
+use strict;
 use Config;
 use File::Spec;
 use Conf;

@@ -8,7 +8,7 @@
 # implied. See the License for the specific language governing
 # rights and limitations under the License.
 #
-# The Original Code are the Bugzilla Tests.
+# The Original Code is the Bugzilla Installer.
 #
 # The Initial Developer of the Original Code is Zach Lipton
 # Portions created by Zach Lipton are
@@ -37,7 +37,7 @@ use Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(ask output setConf getConf getParam setParam);
 
-use Bugzilla::Config;
+eval "use Conf::Supplies::Config";
 
 # ASK:
 # call me like this:
@@ -82,3 +82,4 @@ sub setParam($$) {
 	$params{$name} = $value; # and set it
 }
 
+1;
