@@ -78,17 +78,19 @@ sub GetBug  {
     return %bug;
   }
 
+
+  &::ConnectToDatabase();
+
 # default userid 0, or get DBID if you used an email address
   unless (defined $user_id) {
     $user_id = 0;
   }
   else {
-     if ($user_id =~ /^\@/) {
+     if ($user_id =~ m/\@/) {
 	$user_id = &::DBname_to_id($user_id); 
      }
   }
      
-  &::ConnectToDatabase();
   &::GetVersionTable();
 
   $bug{'whoid'} = $user_id;
@@ -553,7 +555,7 @@ sub DoConfirm {
 
 
 sub BugExists {
-   my ($bugid) = (@_);
+   my ($bugid) = @_;
 
    &::SendSQL("SELECT bug_id FROM bugs WHERE bug_id=$bugid");
    return $::FetchOneColumn();
@@ -578,7 +580,7 @@ sub SetDependsOn {
 
 sub SetBlocking {
    my $self = shift;
-   my (@list) = (@_);
+   my (@list) = @_;
 
    foreach my $bug (@list) {
       unless (BugExists($bug)) {
@@ -593,7 +595,7 @@ sub SetBlocking {
 
 sub SetKeywords {
    my $self = shift;
-   my (@keywords) = (@_);
+   my (@keywords) = @_;
    my $okay;
 
    foreach my $keyword (@keywords) {
@@ -661,6 +663,7 @@ sub SetPlatform {
       return 0;
    }
    $self->{'rep_platform'} = "$platform";
+   SetDirtyFlag($self);
    return 1;
 }
 
@@ -1060,12 +1063,20 @@ sub MarkDuplicate {
                          "itself, does it?");  
            return 0;
        }
-       AppendComment($num, $self->{'whoid'}, "*** Bug $self->{'bug_id'} has been marked as a duplicate of this bug. ***");
        $self->{'comment'} .= "\n\n*** This bug has been marked as a duplicate of $dupid ***";
     }
 
 }
 
+sub WriteComment {
+    my $self = shift;
+  
+    &::SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) " .
+             "VALUES($self->{'bug_id'}, $self->{'whoid'}, " . 
+              &::SqlQuote($self->{'delta_ts'}) . ", " . 
+              &::SqlQuote($self->{'comment'}) . ")");
+
+}
 
 # stupid subroutine for checking if lists are equal.
 sub ListDiff {
@@ -1103,10 +1114,10 @@ sub ChangedFields {
 # first we find if any new hash key/values have been added to
 # $self. if we do, we push them onto the changed list...
 
-    foreach (keys %{$self}) {
-       unless (exists $snapshot{$_}) {
-           if ($ok_fields{$_}) {
-               push(@changed, $_);
+    foreach my $newf (keys %{$self}) {
+       unless (exists $snapshot{$newf}) {
+           if ($ok_fields{$newf}) {
+               push(@changed, $newf);
            } 
        }
     }
@@ -1120,7 +1131,8 @@ sub ChangedFields {
             if (&::Param("usedependencies")) {
                 if (($field eq 'dependson') || ($field eq 'blocking')) {
                     if (ListDiff($self->{$field}, $snapshot{$field})) {
-                        push(@changed, $field);
+#                        push(@changed, $field);
+                         next;
                     }
                 }
             }
@@ -1129,7 +1141,7 @@ sub ChangedFields {
                    push(@changed, $field);
                 }
             }
-            if ($self->{$field} ne $snapshot{$field}) {
+            elsif ($self->{$field} ne $snapshot{$field}) {
                 push (@changed, $field);
             }
         }
@@ -1169,60 +1181,182 @@ sub Collision {
 
 }
 
+sub CommitDepedencies {
 
+
+
+}
+
+
+
+sub CommitKeywords {
+   my $self = shift;
+   my (@keywords) = @_;
+   my @keyids;
+
+# get id #'s instead of text
+   foreach my $keyword (@keywords) {
+       &::SendSQL("SELECT id FROM keyworddefs WHERE name=$keyword");
+       push(@keyids, FetchOneColumn());
+   }
+
+   if (@::legal_keywords) {
+       foreach my $keyword (@keyids) {
+               SendSQL("DELETE FROM keywords
+                      WHERE bug_id = $self->{'bug_id'} AND keywordid = $keyword");
+       }
+       foreach my $keyword (@keyids) {
+                SendSQL("INSERT INTO keywords
+                       (bug_id, keywordid) VALUES ($self->{'bug_id'}, $keyword)");
+       }
+       SendSQL("SELECT keyworddefs.name
+                FROM keyworddefs, keywords
+                WHERE keywords.bug_id = $self->{'bug_id'}
+                AND keyworddefs.id = keywords.keywordid
+                ORDER BY keyworddefs.name");
+            my @list;
+            while (MoreSQLData()) {
+                push(@list, FetchOneColumn());
+            }
+            SendSQL("UPDATE bugs SET keywords = " .
+                    SqlQuote(join(', ', @list)) .
+                    " WHERE bug_id = $self->{'bug_id'}");
+    }
+}
+
+sub CommitDependencies {
+    
+
+
+}
+
+sub CommitCCChanges {
+   my $self = shift;
+   my (%snap) = @_;
+
+   my $origCcSet = new RelationSet;
+   my $newCcSet = new RelationSet; 
+
+   $origCcSet->mergeFromString($snap{'cc'});
+   $newCcSet->mergeFromstring($self->{'cc'});
+
+    if (!$origCcSet->isEqual($newCcSet)) {
+        my @CCDELTAS = $origCcSet->generateSqlDeltas($newCcSet, "cc",
+                                                     "bug_id", $self->{'bug_id'}, 
+                                                     "who");
+        $CCDELTAS[0] eq "" || &::SendSQL($CCDELTAS[0]);
+        $CCDELTAS[1] eq "" || &::SendSQL($CCDELTAS[1]);
+
+        my $col = &::GetFieldID('cc');
+        my $origq = &::SqlQuote($snap{'cc'});
+        my $newq = &::SqlQuote($self->{'cc'});
+        &::SendSQL("INSERT INTO bugs_activity " .
+                "(bug_id,who,bug_when,fieldid,oldvalue,newvalue) VALUES " .
+                "($self->{bug_id}, $self->{'who'},'$self->{'delta_ts'}',$col,$origq,$newq)");
+   }
+}
+
+sub UpdateBugsActivity {
+   my $self = shift;
+   my ($snapshot, $logfields) = @_;
+
+   foreach my $col (@$logfields) {
+      my $old = $snapshot->{$col};
+      my $new = $self->{$col}; 
+      if ($col eq 'assigned_to' || $col eq 'qa_contact') {
+         $old = DBID_to_name($old) if $old != 0;
+         $new = DBID_to_name($new) if $new != 0;
+# FIX ME         $origCcString .= ",$old"; # make sure to send mail to people
+                                          # if they are going to no longer get
+                                          # updates about this bug.
+      }
+      if ($col eq 'product') {
+           &::RemoveVotes($self->{'bug_id'}, 0,
+           "This bug has been moved to a different product");
+       }
+       $col = &::GetFieldID($col);
+       $old = &::SqlQuote($old);
+       $new = &::SqlQuote($new);
+       my $q = "insert into bugs_activity (bug_id,who,bug_when,fieldid,oldvalue,newvalue)" .
+             "values ($self->{'bug_id'},$self->{'whoid'}," .
+             &::SqlQuote($self->{'delta_ts'}) . ",$col,$old,$new)";
+       &::SendSQL($q);
+
+   }
+}
+   
 sub WriteChanges {
    my $self = shift;
-   my (@fields) = @_;
+   my ($fields, $snap) = @_;
+   my @activityfields;
    my $sql;
    my $comma = "";
 
    $sql = "UPDATE bugs set\n";
-#if it's something on the bug table, build onto a query
-#else 
-   foreach my $field (@fields) {
+   $comma = "";
+
+# we are changing the bug, move the delta_ts to now
+# this is safe, we have a lock and stuff
+   &::SendSQL("select now()");
+   my $timestamp = &::FetchOneColumn(); 
+   $self->{'delta_ts'} = $timestamp;
+
+   foreach my $field (@$fields) {
+       print $field . "\n";
        if (($field eq 'dependson') || ($field eq 'blocks')) {
             #go into dependency hell
+            #we are going to punt for now
+          next;
        }
        elsif ($field eq 'comment') {
-         &::AppendComment($self->{'bug_id'}, $self->{'whoid'}, $self->{'comment'});
+         WriteComment($self); 
+         next;
        }
        elsif ($field eq 'keywords') {
-
-
-
+         CommitKeywords($self, $self->{'keywords'});
+         next;
+       }
+       elsif ($field eq 'cc') {
+         CommitCCchanges($self, $snap);
+         next;
        }
        else {
+          push(@activityfields, $field);
           $sql .= "$comma $field=\'$self->{$field}\'";
           if ($comma eq "") {
               $comma = ", ";
           }
        }
    }
-   print $sql . "\n";
-   &::SendSQL($sql);
+   if ($sql ne "UPDATE bugs set\n") {
+      &::SendSQL($sql);
+      UpdateBugsActivity($self, $snap, \@activityfields);
+      return 1;
+   }
 }
 
 sub Commit {
    my $self = shift;
    my %snapshot;
-   my @changed;
+   my @changed = ();
 
    print "committing\n"; 
-   if (($self->{'dirty'}) && (defined($self->{'error'}))) {
+   if (($self->{'dirty'}) && !(defined($self->{'error'}))) {
        print "locking\n";
        LockDatabase();
        print "locked\n";
        unless (Collision($self)) {
            %snapshot = SnapShotBugInDB($self);
            @changed = ChangedFields($self, %snapshot); 
+           print @changed . " items\n";
            if (@changed > 0) {
-               print "changed fields\n";
-               WriteChanges($self, @changed);
+               WriteChanges($self, \@changed, \%snapshot);
                UnlockDatabase();
-#           DoMailNotification();
+               DoMailNotification();
                delete $self->{'dirty'};
                return 1;
            }
+           UnlockDatabase();
        }
        else {
            UnlockDatabase();
@@ -1231,7 +1365,19 @@ sub Commit {
    }
 }
 
+sub DoMailNotification {
+   my $self = shift;
+   my $cc;
 
+   if (defined($self->{'cc'})) {
+      $cc = join(",", $self->{'cc'});
+   } 
+   else {
+      $cc = '';
+   } 
+   system("./processmail", "-forcecc", $cc, $self->{'bug_id'}, $self->{'who'}); 
+
+}
 
 sub AUTOLOAD {
   use vars qw($AUTOLOAD);
