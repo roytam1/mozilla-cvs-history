@@ -31,7 +31,7 @@ sub find {
     print("<P ALIGN=CENTER>\n",
 	  "Search for files (by name) using regular expressions.\n",
 	  "<BR>(Need some <A HREF=\"search-help.html\">Hints</A> ",
-	  "on performing searches?)\n");
+	  "on performing searches?)</P>\n");
 
     print ("<form method=get action=\"find\">\n");
 
