@@ -564,7 +564,7 @@ sub pvcs_date_str2time {
         split('/', $pvcs_date_str);
 
     $mon--;
-    print " $pvcs_date_str\n";
+
     my ($time) = timelocal($sec,$min,$hour,$mday,$mon,$year);    
     
     return $time;
