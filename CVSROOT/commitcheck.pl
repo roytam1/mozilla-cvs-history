@@ -85,6 +85,9 @@ $fullname{'68'} = 'Java Stubs';
 $mode{'128'} = 'Open';
 $branch{'128'} = 'HEAD';
 $fullname{'128'} = 'Java to XPCOM Bridge';
+$mode{'133'} = 'Open';
+$branch{'133'} = 'HEAD';
+$fullname{'133'} = 'Java Utility Classes';
 $mode{'129'} = 'Open';
 $branch{'129'} = 'HEAD';
 $fullname{'129'} = 'Java-Implemented Plugins';
@@ -307,6 +310,7 @@ if (m:^mozilla/java/plugins/.*$:) {return '129';}
 if (m:^mozilla/hjava/webshell/.*$:) {return '127';}
 if (m:^mozilla/java/dom/.*$:) {return '130';}
 if (m:^mozilla/java/fe/.*$:) {return '131';}
+if (m:^mozilla/java/util/.*$:) {return '133';}
 }
 return '';
 }
