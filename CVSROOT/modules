@@ -578,7 +578,6 @@ SeaMonkeyXPToolKit -a \
 	mozilla/xpfe
 
 SeaMonkeyBrowser -a \
-	mozilla/modules/softupdt \
 	mozilla/silentdl \
 	mozilla/editor/Makefile.in \
 	mozilla/editor/public \
