@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -19,27 +19,32 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Gervase Markham <gerv@gerv.net>
 
 use diagnostics;
 use strict;
 
-sub sillyness { # shut up "used only once" warnings
-  my $zz = @::legal_keywords;
-}
+use lib qw(.);
+
+use vars qw(
+  @legal_keywords
+  $buffer
+  $template
+  $vars
+);
 
 require "CGI.pl";
 
-print "Content-type: text/html\n";
+ConnectToDatabase();
+quietly_check_login();
+
+GetVersionTable();
 
 # The master list not only says what fields are possible, but what order
 # they get displayed in.
-
-ConnectToDatabase();
-GetVersionTable();
-
 my @masterlist = ("opendate", "changeddate", "severity", "priority",
                   "platform", "owner", "reporter", "status", "resolution",
-                  "component", "product", "version", "os", "votes");
+                  "product", "component", "version", "os", "votes");
 
 if (Param("usetargetmilestone")) {
     push(@masterlist, "target_milestone");
@@ -54,9 +59,9 @@ if (@::legal_keywords) {
     push(@masterlist, "keywords");
 }
 
-
 push(@masterlist, ("summary", "summaryfull"));
 
+$vars->{'masterlist'} = \@masterlist;
 
 my @collist;
 if (defined $::FORM{'rememberedquery'}) {
@@ -76,14 +81,15 @@ if (defined $::FORM{'rememberedquery'}) {
     my $list = join(" ", @collist);
     my $urlbase = Param("urlbase");
     my $cookiepath = Param("cookiepath");
+    
     print "Set-Cookie: COLUMNLIST=$list ; path=$cookiepath ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
     print "Set-Cookie: SPLITHEADER=$::FORM{'splitheader'} ; path=$cookiepath ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
     print "Refresh: 0; URL=buglist.cgi?$::FORM{'rememberedquery'}\n";
-    print "\n";
-    print "<META HTTP-EQUIV=Refresh CONTENT=\"1; URL=$urlbase"."buglist.cgi?$::FORM{'rememberedquery'}\">\n";
-    print "<TITLE>What a hack.</TITLE>\n";
-    PutHeader ("Change columns");
-    print "Resubmitting your query with new columns...\n";
+    print "Content-type: text/html\n\n";
+    $vars->{'message'} = "Resubmitting your query with new columns...";
+    $vars->{'title'} = "Change columns";
+    $template->process("global/message.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
     exit;
 }
 
@@ -93,50 +99,12 @@ if (defined $::COOKIE{'COLUMNLIST'}) {
     @collist = @::default_column_list;
 }
 
-my $splitheader = 0;
-if ($::COOKIE{'SPLITHEADER'}) {
-    $splitheader = 1;
-}
+$vars->{'collist'} = \@collist;
+$vars->{'splitheader'} = $::COOKIE{'SPLITHEADER'} ? 1 : 0;
 
+$vars->{'buffer'} = $::buffer;
 
-my %desc;
-foreach my $i (@masterlist) {
-    $desc{$i} = $i;
-}
-
-$desc{'summary'} = "Summary (first 60 characters)";
-$desc{'summaryfull'} = "Full Summary";
-
-
-print "\n";
-PutHeader ("Change columns");
-print "Check which columns you wish to appear on the list, and then click\n";
-print "on submit.  (Cookies are required.)\n";
-print "<p>\n";
-print "<FORM ACTION=colchange.cgi>\n";
-print "<INPUT TYPE=HIDDEN NAME=rememberedquery VALUE=$::buffer>\n";
-
-foreach my $i (@masterlist) {
-    my $c;
-    if (lsearch(\@collist, $i) >= 0) {
-        $c = 'CHECKED';
-    } else {
-        $c = '';
-    }
-    print "<INPUT TYPE=checkbox NAME=column_$i $c>$desc{$i}<br>\n";
-}
-print "<P>\n";
-print BuildPulldown("splitheader",
-                    [["0", "Normal headers (prettier)"],
-                     ["1", "Stagger headers (often makes list more compact)"]],
-                    $splitheader);
-print "<P>\n";
-
-print "<INPUT TYPE=\"submit\" VALUE=\"Submit\">\n";
-print "</FORM>\n";
-print "<FORM ACTION=colchange.cgi>\n";
-print "<INPUT TYPE=HIDDEN NAME=rememberedquery VALUE=$::buffer>\n";
-print "<INPUT TYPE=HIDDEN NAME=resetit VALUE=1>\n";
-print "<INPUT TYPE=\"submit\" VALUE=\"Reset to Bugzilla default\">\n";
-print "</FORM>\n";
-PutFooter();
+# Generate and return the UI (HTML page) from the appropriate template.
+print "Content-type: text/html\n\n";
+$template->process("list/change-columns.html.tmpl", $vars)
+  || ThrowTemplateError($template->error());
