@@ -352,9 +352,9 @@ if ($action eq 'new') {
         SendSQL("SELECT last_insert_id()");
         my $gid = FetchOneColumn();
         my $admin = GroupNameToId('admin');
-        SendSQL("INSERT INTO group_group_map (child_id, parent_id, isbless)
+        SendSQL("INSERT INTO group_group_map (member_id, grantor_id, isbless)
                  VALUES ($admin, $gid, 0)");
-        SendSQL("INSERT INTO group_group_map (child_id, parent_id, isbless)
+        SendSQL("INSERT INTO group_group_map (member_id, grantor_id, isbless)
                  VALUES ($admin, $gid, 1)");
         
     }

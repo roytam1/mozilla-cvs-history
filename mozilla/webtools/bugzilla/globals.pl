@@ -776,7 +776,7 @@ sub DeriveGroup {
         }
     }
 
-    # get a list of the groups of which the user is a member
+    # Get a list of the groups of which the user is a member.
     my %groupidschecked = ();
     my @groupidstocheck = ();
     SendSQL("SELECT group_id FROM user_group_map WHERE user_id = $user
@@ -786,13 +786,13 @@ sub DeriveGroup {
         push(@groupidstocheck,$groupid);
     }
 
-    # each group needs to be checked for parent memberships once
+    # Each group needs to be checked for inherited memberships once.
     while (@groupidstocheck) {
         my $group = shift @groupidstocheck;
         if (!defined($groupidschecked{"$group"})) {
             $groupidschecked{"$group"} = 1;
-            SendSQL("SELECT parent_id FROM group_group_map WHERE"
-                 . " child_id = $group AND NOT isbless");
+            SendSQL("SELECT grantor_id FROM group_group_map WHERE"
+                 . " member_id = $group AND NOT isbless");
             while (MoreSQLData()) {
                 my ($groupid) = FetchSQLData();
                 if (!defined($groupidschecked{"$groupid"})) {
@@ -1245,11 +1245,11 @@ sub UserCanBlessGroup {
     # this group does not count
     SendSQL("SELECT groups.id FROM groups, user_group_map, 
         group_group_map 
-        WHERE groups.id = parent_id 
+        WHERE groups.id = grantor_id 
         AND user_group_map.user_id = $::userid
         AND user_group_map.isbless = 0
         AND group_group_map.isbless = 1
-        AND user_group_map.group_id = child_id
+        AND user_group_map.group_id = member_id
         AND groups.name = " . SqlQuote($groupname));
     $result = FetchOneColumn();
     PopGlobalSQLState();
@@ -1273,10 +1273,10 @@ sub UserCanBlessAnything {
     # check if user is a member of a group that can bless this group
     SendSQL("SELECT groups.id FROM groups, user_group_map, 
         group_group_map 
-        WHERE groups.id = parent_id 
+        WHERE groups.id = grantor_id 
         AND user_group_map.user_id = $::userid
         AND group_group_map.isbless = 1
-        AND user_group_map.group_id = child_id");
+        AND user_group_map.group_id = member_id");
     $result = FetchOneColumn();
     PopGlobalSQLState();
     if ($result) {

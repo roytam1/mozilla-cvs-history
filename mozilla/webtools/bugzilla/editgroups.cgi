@@ -226,20 +226,20 @@ if ($action eq 'changeform') {
     print "<TR><TD ALIGN=CENTER>|</TD><TD ALIGN=CENTER>|</TD><TD COLSPAN=2></TD><TR>";
 
     # For each group, we use left joins to establish the existance of
-    # a record making that group a child of this group
+    # a record making that group a member of this group
     # and the existance of a record permitting that group to bless
     # this one
     SendSQL("SELECT groups.id, groups.name, groups.description," .
-             " group_group_map.child_id IS NOT NULL," .
-             " B.child_id IS NOT NULL" .
+             " group_group_map.member_id IS NOT NULL," .
+             " B.member_id IS NOT NULL" .
              " FROM groups" .
              " LEFT JOIN group_group_map" .
-             " ON group_group_map.child_id = groups.id" .
-             " AND group_group_map.parent_id = $group_id" .
+             " ON group_group_map.member_id = groups.id" .
+             " AND group_group_map.grantor_id = $group_id" .
              " AND group_group_map.isbless = 0" .
              " LEFT JOIN group_group_map as B" .
-             " ON B.child_id = groups.id" .
-             " AND B.parent_id = $group_id" .
+             " ON B.member_id = groups.id" .
+             " AND B.grantor_id = $group_id" .
              " AND B.isbless" .
              " WHERE groups.id != $group_id ORDER by name");
 
@@ -380,9 +380,9 @@ if ($action eq 'new') {
     SendSQL("SELECT last_insert_id()");
     my $gid = FetchOneColumn();
     my $admin = GroupNameToId('admin');
-    SendSQL("INSERT INTO group_group_map (child_id, parent_id, isbless)
+    SendSQL("INSERT INTO group_group_map (member_id, grantor_id, isbless)
              VALUES ($admin, $gid, 0)");
-    SendSQL("INSERT INTO group_group_map (child_id, parent_id, isbless)
+    SendSQL("INSERT INTO group_group_map (member_id, grantor_id, isbless)
              VALUES ($admin, $gid, 1)");
     print "OK, done.<p>\n";
     PutTrailer("<a href=\"editgroups.cgi?action=add\">Add another group</a>",
@@ -530,8 +530,8 @@ if ($action eq 'delete') {
     }
 
     if ($cantdelete == 1) {
-      ShowError("This group cannot be deleted because there are child " .
-          "records in the database which refer to it.  All child records " .
+      ShowError("This group cannot be deleted because there are " .
+          "records in the database which refer to it.  All such records " .
           "must be removed or altered to remove the reference to this " .
           "group before the group can be deleted.");
       print "<A HREF=\"editgroups.cgi?action=del&group=$gid\">" .
@@ -541,7 +541,7 @@ if ($action eq 'delete') {
     }
 
     SendSQL("DELETE FROM user_group_map WHERE group_id = $gid");
-    SendSQL("DELETE FROM group_group_map WHERE parent_id = $gid");
+    SendSQL("DELETE FROM group_group_map WHERE grantor_id = $gid");
     SendSQL("DELETE FROM bug_group_map WHERE group_id = $gid");
     SendSQL("DELETE FROM groups WHERE id = $gid");
     print "<B>Group $gid has been deleted.</B><BR>";
@@ -605,12 +605,12 @@ if ($action eq 'postchanges') {
                 if ($grp != 0) {
                     print " set ";
                     SendSQL("INSERT INTO group_group_map 
-                             (child_id, parent_id, isbless)
+                             (member_id, grantor_id, isbless)
                              VALUES ($v, $gid, 0)");
                 } else {
                     print " cleared ";
                     SendSQL("DELETE FROM group_group_map
-                             WHERE child_id = $v AND parent_id = $gid
+                             WHERE member_id = $v AND grantor_id = $gid
                              AND isbless = 0");
                 }
             }
@@ -622,12 +622,12 @@ if ($action eq 'postchanges') {
                 if ($bless != 0) {
                     print " set ";
                     SendSQL("INSERT INTO group_group_map 
-                             (child_id, parent_id, isbless)
+                             (member_id, grantor_id, isbless)
                              VALUES ($v, $gid, 1)");
                 } else {
                     print " cleared ";
                     SendSQL("DELETE FROM group_group_map
-                             WHERE child_id = $v AND parent_id = $gid
+                             WHERE member_id = $v AND grantor_id = $gid
                              AND isbless = 1");
                 }
             }

@@ -253,8 +253,8 @@ CrossCheck("bugs", "bug_id",
 
 CrossCheck("groups", "id",
            ["bug_group_map", "group_id"],
-           ["group_group_map", "parent_id"],
-           ["group_group_map", "child_id"],
+           ["group_group_map", "grantor_id"],
+           ["group_group_map", "member_id"],
            ["user_group_map", "group_id"]);
 
 CrossCheck("profiles", "userid",

@@ -160,13 +160,13 @@ sub EmitFormElements ($$$$)
                         "AND user_id = $user_id " .
                         "AND group_id = $groupid");
                 my ($blchecked) = FetchSQLData() ? 1 : 0;
-                SendSQL("SELECT parent_id FROM user_group_map, 
+                SendSQL("SELECT grantor_id FROM user_group_map, 
                     group_group_map 
-                    WHERE $groupid = parent_id 
+                    WHERE $groupid = grantor_id 
                     AND user_group_map.user_id = $user_id
                     AND user_group_map.isbless = 0
                     AND group_group_map.isbless = 1
-                    AND user_group_map.group_id = child_id");
+                    AND user_group_map.group_id = member_id");
                 my $derivedbless = FetchOneColumn();
                 PopGlobalSQLState();
                 print "</TR><TR";

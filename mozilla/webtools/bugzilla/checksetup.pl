@@ -1615,11 +1615,11 @@ $table{user_group_map} =
      unique(user_id, group_id, isderived, isbless)';
 
 $table{group_group_map} =
-    'child_id mediumint not null,
-     parent_id mediumint not null,
+    'member_id mediumint not null,
+     grantor_id mediumint not null,
      isbless tinyint not null default 0,
 
-     unique(child_id, parent_id, isbless)';
+     unique(member_id, grantor_id, isbless)';
 
 # This table determines which groups a user must be a member of
 # in order to see a bug.
@@ -3073,6 +3073,7 @@ if (GetFieldDef("profiles", "groupset")) {
     # so all unique keys are removed first and then added back in
     $dbh->do("ALTER TABLE groups DROP INDEX bit") if GetIndexDef("groups","bit");
     $dbh->do("ALTER TABLE groups DROP INDEX name") if GetIndexDef("groups","name");
+    $dbh->do("ALTER TABLE groups DROP PRIMARY KEY"); 
     AddField('groups', 'id', 'mediumint not null auto_increment primary key');
     $dbh->do("ALTER TABLE groups ADD UNIQUE (name)");
     AddField('profiles', 'refreshed_when', 'datetime not null');
@@ -3321,12 +3322,12 @@ if (@admins) {
     while ( my ($id) = $sth->fetchrow_array() ) {
         # Admins can bless every group.
         $dbh->do("INSERT INTO group_group_map 
-            (child_id, parent_id, isbless) 
+            (member_id, grantor_id, isbless) 
             VALUES ($adminid, $id, 1)");
         # Admins are initially members of every group.
         next if ($id == $adminid);
         $dbh->do("INSERT INTO group_group_map 
-            (child_id, parent_id, isbless) 
+            (member_id, grantor_id, isbless) 
             VALUES ($adminid, $id, 0)");
     }
 }
@@ -3515,7 +3516,7 @@ if ($sth->rows == 0) {
         VALUES ($userid, $id, 1, 0)");
     foreach my $group ( @groups ) {
         $dbh->do("INSERT INTO group_group_map
-            (child_id, parent_id, isbless)
+            (member_id, grantor_id, isbless)
             VALUES ($id, $group, 1)");
     }
 
