@@ -138,7 +138,7 @@ sub prepare_bonsai_args {
     my ($root) = TreeData::TreeName2Root($tree);
     $root = remote_cvsroot2local_cvsroot($root);
         
-    my ($branch) = TreeData::TreeName2Module($tree);
+    my ($branch) = TreeData::TreeName2Branch($tree);
     
     ($tree) &&
         (push @url_args, "treeid=".HTMLPopUp::escapeURL($tree));
