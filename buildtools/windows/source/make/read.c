@@ -727,9 +727,10 @@ read_makefile (filename, flags)
 		break;
 	    }
 #if defined(__MSDOS__) || defined(NETSCAPE)
-	  /* For MS-DOS, skip a "C:\...".  */
-	  if (p != 0 && p[1] == '\\' && isalpha (p[-1]))
-	    p = 0;
+	  /* For MS-DOS and WIN32, skip a "C:\..." or a "C:/...".  */
+	  while (p != 0 && (p[1] == '\\' || p[1] == '/')
+              && isalpha (p[-1]) && (p[-2] == ':' || isspace (p[-2])))
+	    p = index (p + 1, ':');
 #endif
 	  if (p != 0)
 	    {
@@ -1550,8 +1551,9 @@ parse_file_seq (stringp, stopchar, size, strip)
       p = find_char_unquote (q, stopchars, 1);
 #if defined(__MSDOS__) || defined(NETSCAPE)
       /* For MS-DOS, skip a "C:\...".  */
-      if (stopchar == ':' && p != 0 && p[1] == '\\' && isalpha (p[-1]))
-	p = 0;
+      if (stopchar == ':' && p != 0 && p - q == 1 && *p == ':'
+          && (p[1] == '\\' || p[1] == '/') && isalpha (p[-1]))
+	p = find_char_unquote (p + 1, stopchars, 1);
 #endif
       if (p == 0)
 	p = q + strlen (q);
