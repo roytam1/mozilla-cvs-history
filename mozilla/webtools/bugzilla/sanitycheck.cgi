@@ -110,6 +110,17 @@ sub CrossCheck {
     }
 }
 
+sub DateCheck {
+    my $table = shift @_;
+    my $field = shift @_;
+    Status("Checking dates in $table.$field");
+    SendSQL("SELECT COUNT( $field ) FROM $table WHERE $field > NOW()");
+    my $c = FetchOneColumn();
+    if ($c) {
+        Alert("Found $c dates in future");
+    }
+}
+
     
 my @badbugs;
 
@@ -220,6 +231,10 @@ CrossCheck("products", "id",
            ["milestones", "product_id", "value"],
            ["versions", "product_id", "value"],
            ["attachstatusdefs", "product_id", "name"]);
+
+DateCheck("groups", "group_when");
+DateCheck("profiles", "profile_when");
+DateCheck("profiles", "refreshed_when");
 
 ###########################################################################
 # Perform group checks

@@ -1479,7 +1479,6 @@ $table{profiles} =
     disabledtext mediumtext not null,
     mybugslink tinyint not null default 1,
     emailflags mediumtext,
-    profile_when datetime not null,
     refreshed_when datetime not null,
     unique(login_name)';
 
@@ -3134,7 +3133,6 @@ if (GetFieldDef("profiles", "groupset")) {
     AddField('groups', 'group_when', 'datetime not null');
     AddField('products', 'id', 
         'mediumint primary key auto_increment not null');
-    AddField('profiles', 'profile_when', 'datetime not null');
     AddField('profiles', 'refreshed_when', 'datetime not null');
 
     $sth = $dbh->prepare("SELECT bit, id FROM groups
