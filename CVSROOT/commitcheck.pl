@@ -302,7 +302,9 @@ if (m:^mozilla/modules/progress/.*$:) {return '83';}
 if (m:^mozilla/modules/libreg/.*$:) {return '84';}
 if (m:^mozilla/modules/security/.*$:) {return '86';}
 if (m:^mozilla/modules/softupdt/.*$:) {return '87';}
+if (m:^mozilla/content/xml/.*$:) {return '88';}
 if (m:^mozilla/expat/.*$:) {return '88';}
+if (m:^mozilla/extensions/xmlextras/.*$:) {return '88';}
 if (m:^mozilla/xpcom/.*$:) {return '89';}
 if (m:^xpcom/io$:) {return '90';}
 if (m:^mozilla/modules/zlib/.*$:) {return '93';}
