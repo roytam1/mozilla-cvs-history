@@ -435,6 +435,7 @@ if (m:^mozilla/directory/ldapsdk\.mk$:) {return '59';}
 if (m:^mozilla/directory/Makefile$:) {return '59';}
 if (m:^mozilla/uriloader/.*$:) {return '158';}
 if (m:^gfx/src/ps/.*$:) {return '62';}
+if (m:^gfx/src/psshared/.*$:) {return '62';}
 if (m:^mozilla/modules/libpr0n/.*$:) {return '63';}
 if (m:^mozilla/string/.*$:) {return '160';}
 if (m:^jpeg$:) {return '64';}
