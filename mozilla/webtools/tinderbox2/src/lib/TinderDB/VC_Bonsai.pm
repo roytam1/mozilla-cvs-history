@@ -447,7 +447,8 @@ sub status_table_row {
 
   }
 
-  $next_time = $DB_TIMES[$next_index];
+  $next_time = $DB_TIMES[$NEXT_DB];
+
 
   # If there is no treestate, then the tree state has not changed
   # since an early time.  The earliest time was assigned a state in
