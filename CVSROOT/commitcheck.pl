@@ -277,6 +277,9 @@ if (m:^gfx/src/photon/.*$:) {return '113';}
 if (m:^widget/src/photon/.*$:) {return '113';}
 if (m:^mozilla/xpfe$:) {return '105';}
 if (m:^mozilla/tools/.*$:) {return '112';}
+if (m:^js/src/xpconnect$:) {return '118';}
+if (m:^xpcom/reflect/xptcall$:) {return '118';}
+if (m:^xpcom/reflect/xptinfo$:) {return '118';}
 }
 return '';
 }
