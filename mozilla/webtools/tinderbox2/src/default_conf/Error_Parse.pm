@@ -177,7 +177,7 @@ sub line_type {
 
                      ($line =~ m/Status token, FAILED, not found/) ||
 
-                     ($line =~ m!WARNING: NS_ENSURE_TRUE(presShell) failed, file /builds/tinderbox/SeaMonkey/Linux_2.2.5-22smp_Clobber/mozilla/content/html/content/src/nsGenericHTMLElement.cpp!) ||
+                     ($line =~ m!WARNING: NS_ENSURE_TRUE\(presShell\) failed, file /builds/tinderbox/SeaMonkey/Linux_2.2.5-22smp_Clobber/mozilla/content/html/content/src/nsGenericHTMLElement.cpp!) ||
 
                      # note that the word widget was followed by a
                      # quote mark which emacs thought was a bit funny
