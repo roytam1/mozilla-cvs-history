@@ -122,7 +122,7 @@ EOF
 
 
 sub status_table_header {
-  return ("\t<th>Notices</th>\n");
+  return ("\t<th>Notes</th>\n");
 }
 
 
