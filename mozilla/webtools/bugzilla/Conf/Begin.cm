@@ -1,0 +1,26 @@
+package Conf::Begin;
+use Conf;
+no warnings;
+
+output <<"END";
+Welcome to Bugzilla!
+
+I'm going to ask you a few questions about how you would like your 
+new Bugzilla installation to be setup. If you have configured Bugzilla 
+before, I will load defaults from that installation, otherwise, 
+I will display recomended values for your system. 
+
+You may see this message more than once if Configure needs to restart. 
+This is normal. 
+
+Press any key to continue.
+
+Thanks for using Bugzilla,
+
+The Bugzilla Team
+
+END
+holduntilkey(); # expect input from them
+
+
+1;

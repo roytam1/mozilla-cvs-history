@@ -1,0 +1,9 @@
+classicinstall:This is the classic bugzilla installaton layout
+res|userdir
+cgi|userdir
+mod|userdir
+req|userdir
+null|/dev/null
+doc|userdir|all
+tst|userdir
+tem|userdir

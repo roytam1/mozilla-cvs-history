@@ -1,0 +1,71 @@
+package Conf::PerlCheck;
+use Conf;
+use File::Spec;
+no warnings;
+
+my @path = split(':',$ENV{PATH});
+
+output <<END;
+
+I need to check your system for some required programs and perl modules.
+Please stand by...
+
+END
+
+output "checking for perl: ";
+if (-e "/usr/bonsaitools/bin/perl") {
+	setConf("perl","/usr/bonsaitools/bin/perl");
+	output "FOUND: /usr/bonsaitools/bin/perl\n");
+} else {
+	unless (searchpathforapp('perl')) { #search the path
+		#if we are here, we didn't find perl in the path, ask for it
+		output "hrmm, I can't find perl anywhere in /usr/bonsaitools/bin/perl\n";
+		output "or in your path. Please enter the path to your perl installation\n";
+		output "or press control-c to abort";
+		ask('perl','What is the path to perl?',''); # no default
+	}
+}
+
+# check to make sure we have a path set:
+if (getConf('perl') { # they have one set
+	
+	output <<EOF;
+
+I'm now going to need to restart Configure.pl to pick up any changes 
+in the location of perl you wish to use. If this gives an error message 
+or simply dies, it probably means that something is wrong with: your 
+perl installation, the path to perl that was detected or specified, or Bugzilla.
+Try running Configure.pl again.
+EOF
+
+	exec(getConf('perl')." Configure.pl --perl=".getConf('perl')); # exec the new perl with an arg
+	exit; # and we are done here...
+
+} else {
+	# something went wrong so we bail out
+	output <<EOF;
+Something appears to have gone wrong and I couldn't find perl. Try calling Configure.pl 
+using the full path to perl and passing the --perl= option like so:
+/my/path/to/perl Configure.pl --perl=/my/path/to/perl
+EOF
+	die "Couldn't find perl\n";
+}
+
+sub searchpathforapp($) {
+	my $app = shift;
+	foreach $cur (@path) {
+		if (-e correctpath("$cur/$app") {
+			output "FOUND: $cur/$app\n";
+			setconf($app,$cur."/"$app);
+			return "found";
+		}
+	}
+}
+
+sub correctpath($) { # fix the dir seperator, do we really need this?
+	my ($path) = @_;
+    my @pathlist = split('/',$path);
+    return File::Spec->catfile(@pathlist);
+}
+
+1;
