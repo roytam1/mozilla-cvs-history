@@ -3,8 +3,7 @@
 
 # TinderHeader::TreeState_Bonsai - an interface to the bonasi VC
 # managment system this module will get the current tree state and set
-# the current tree state using the bonsai conventions when we have
-# implemented it.  
+# the current tree state using the bonsai conventions. 
 
 # $Revision$ 
 # $Date$ 

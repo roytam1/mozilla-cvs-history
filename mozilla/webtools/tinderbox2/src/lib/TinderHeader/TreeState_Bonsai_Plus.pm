@@ -80,7 +80,10 @@ sub gettree_header {
   my ($text_treestate) = $self->SUPER::gettree_header($tree);
   my $treestate;
 
-  if ($text_treestate) {
+  if (
+      ($text_treestate) &&
+      ($text_treestate != 'Current_Bonsai_State') 
+      ) {
       $treestate = $text_treestate;
   } else {
       $treestate = $bonsai_treestate;
@@ -88,6 +91,9 @@ sub gettree_header {
 
   return $treestate;
 }
+
+# We save the states which are not the bonsai states. If people wish
+# to change bonsai they must use the bonsai pages.
 
 sub savetree_header {
   my ($self, $tree, $value) = @_;
