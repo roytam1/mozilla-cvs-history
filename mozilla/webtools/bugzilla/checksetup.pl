@@ -3163,6 +3163,27 @@ if (!GetFieldDef("bugs", "alias")) {
 #
 # If the whole groups system is new, but the installation isn't, 
 # convert all the old groupset groups, etc...
+#
+# ListBits(arg) returns a list of UNKNOWN<n> for all bits set in arg
+sub ListBits {
+    my ($num) = @_;
+    my @res = ();
+    my $curr = 1;
+    while (1) {
+        my $sth = $dbh->prepare("SELECT ($num & ~$curr) > 0, 
+                                        ($num & $curr), 
+                                        ($num & ~$curr), 
+                                        $curr << 1");
+        $sth->execute;
+        my ($more, $thisbit, $remain, $nval) = $sth->fetchrow_array;
+        push @res,"UNKNOWN<$curr>" if ($thisbit);
+        $curr = $nval;
+        $num = $remain;
+        last if (!$more);
+    }
+    return @res;
+}
+
 if (GetFieldDef("profiles", "groupset")) {
     AddField('groups', 'group_when', 'datetime not null');
     AddField('products', 'id', 
@@ -3234,14 +3255,22 @@ if (GetFieldDef("profiles", "groupset")) {
         while (my ($n) = $sth2->fetchrow_array) {
             push @logrem, $n;
         }
-        $sth2 = $dbh->prepare("SELECT ((($removed | $added) & ~BIT_OR(bit)) = 0)  FROM groups WHERE (bit & ($removed | $added)) != 0");
+        $sth2 = $dbh->prepare("SELECT ($added & ~BIT_OR(bit)) FROM groups");
         $sth2->execute();
-        my ($ok) = $sth2->fetchrow_array;
-        if (!$ok) {
+        my ($miss) = $sth2->fetchrow_array;
+        if ($miss) {
+            push @logadd, ListBits($miss);
             print "\nWARNING - GROUPSET ACTIVITY ON BUG $bid CONTAINS DELETED GROUPS\n";
-            push @logrem, '?';
-            push @logadd, '?';
         }
+        $sth2 = $dbh->prepare("SELECT ($removed & ~BIT_OR(bit)) FROM groups");
+        $sth2->execute();
+        ($miss) = $sth2->fetchrow_array;
+        if ($miss) {
+            push @logrem, ListBits($miss);
+            print "\nWARNING - GROUPSET ACTIVITY ON BUG $bid CONTAINS DELETED GROUPS\n";
+        }
+        push @logrem, '?' if @logrem;
+        push @logadd, '?' if @logadd;
         $dbh->do("UPDATE bugs_activity SET fieldid = $bgfid, added = " .
                   $dbh->quote(join(", ", @logadd)) . ", removed = " . 
                   $dbh->quote(join(", ", @logrem)) .
