@@ -234,9 +234,20 @@ sub escapeHTML {
 
     $toencode=~s/&/&amp;/g;
     $toencode=~s/\"/&quot;/g;
-    $toencode=~s/\'/&\#039;/g;
     $toencode=~s/>/&gt;/g;
     $toencode=~s/</&lt;/g;
+
+
+	# I need to escape the apostrophe because that character is 
+	# used as a java script terminator in my code.
+
+	# use an acute accent instead of an apostrophe because netscape 
+	# does not get the escape correct and will not render my 
+	# popups with the escaped apostrophe any other character seems
+	# to work though.  The escape for apostrope is #039. 
+
+    $toencode=~s/\'/&acute;/g;
+
     return $toencode;
 }
 
