@@ -75,6 +75,9 @@ MozillaCommon -a \
     ns/modules/rdf  \
     ns/modules/schedulr  \
     ns/modules/security/freenav  \
+    ns/modules/softupdt/classes  \
+    ns/modules/softupdt/include  \
+    ns/modules/softupdt/src  \
     ns/modules/xml  \
     ns/modules/zlib/src  \
     ns/nav-java/stubs  \
@@ -108,6 +111,7 @@ MozillaWinOnly -a \
     ns/modules/progress/makefile.win  \
     ns/modules/progress/public  \
     ns/modules/security/makefile.win  \
+    ns/modules/softupdt/makefile.win  \
     ns/modules/zlib/makefile.win  \
     ns/nav-java/makefile.win  \
     JavaStubWin
@@ -191,6 +195,7 @@ MozillaUnixOnly -a \
     ns/modules/progress/Makefile  \
     ns/modules/progress/public  \
     ns/modules/security/Makefile  \
+    ns/modules/softupdt/Makefile  \
     ns/modules/zlib/Makefile  \
     ns/nav-java/Makefile  \
     ns/lib/mariner  \
@@ -217,6 +222,7 @@ MozillaMacOnly -a \
     ns/modules/libfont/macbuild  \
     ns/modules/progress/macbuild  \
     ns/modules/progress/public  \
+    ns/modules/softupdt/macbuild  \
     ns/modules/zlib/macbuild  \
     ns/lib/mariner  \
     JavaStubMac
