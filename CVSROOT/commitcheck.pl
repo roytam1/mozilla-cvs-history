@@ -100,9 +100,6 @@ $fullname{'70'} = 'JavaScript';
 $mode{'71'} = 'Open';
 $branch{'71'} = 'HEAD';
 $fullname{'71'} = 'JavaScript Debugger';
-$mode{'12'} = 'Open';
-$branch{'12'} = 'HEAD';
-$fullname{'12'} = 'jpeg';
 $mode{'64'} = 'Open';
 $branch{'64'} = 'HEAD';
 $fullname{'64'} = 'JPEG Image Handling';
@@ -251,7 +248,6 @@ if ($b eq 'ColorSync_19980824_BRANCH') {
 if ($b eq 'HEAD') {
 if (m:^CVSROOT/commitcheck\.pl$:) {return '3';}
 if (m:^CVSROOT/passwd$:) {return '3';}
-if (m:^jpeg/.*$:) {return '12';}
 if (m:^mozilla/[^/]*$:) {return '19';}
 if (m:^mozilla/cmd/macfe/.*$:) {return '47';}
 if (m:^mozilla/gfx/src/xlib/.*$:) {return '121';}
