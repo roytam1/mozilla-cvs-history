@@ -361,7 +361,7 @@ sub Link {
                    "");
     }
     
-    $out .= "<A $name $href $popup>$linktxt</a>";
+    $out .= "<A $name $href $popup>$linktxt</A>";
     
     return $out;
 }

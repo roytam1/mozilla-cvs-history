@@ -284,7 +284,7 @@ sub Link {
 
   }
 
-  $out .= ">$args{'linktxt'}</a>";
+  $out .= ">$args{'linktxt'}</A>";
 
   return $out;
 }

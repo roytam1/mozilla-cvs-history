@@ -1520,7 +1520,7 @@ sub Link {
       $href .= "HREF=\"javascript:void(0);\"";
   }
   
-    $out .= "<A $name $href $popup>$linktxt</a>";
+    $out .= "<A $name $href $popup>$linktxt</A>";
     
     return $out;
 }
