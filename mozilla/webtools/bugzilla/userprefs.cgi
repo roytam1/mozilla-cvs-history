@@ -332,10 +332,10 @@ sub DoPermissions {
     my (@has_bits, @set_bits);
     
     SendSQL("SELECT description FROM groups, user_group_map " .
-            "WHERE user_group_map.group_id = groups.group_id " .
+            "WHERE user_group_map.group_id = groups.id " .
             "AND user_id = $::userid " .
             "AND isbless = 0 " .
-            "ORDER BY groups.group_id");
+            "ORDER BY groups.id");
     while (MoreSQLData()) {
         push(@has_bits, FetchSQLData());
     }

@@ -474,8 +474,8 @@ sub ChangeResolution {
 my @groupAdd = ();
 my @groupDel = ();
 
-SendSQL("SELECT groups.group_id, isactive FROM groups, user_group_map WHERE " .
-        "groups.group_id = user_group_map.group_id AND " .
+SendSQL("SELECT groups.id, isactive FROM groups, user_group_map WHERE " .
+        "groups.id = user_group_map.group_id AND " .
         "user_group_map.user_id = $::userid AND " .
         "isbless = 0 AND isbuggroup = 1");
 while (my ($b, $isactive) = FetchSQLData()) {

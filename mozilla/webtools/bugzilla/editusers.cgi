@@ -133,12 +133,12 @@ sub EmitFormElements ($$$$)
     
     if($user ne "") {
         print "</TR><TR><TH VALIGN=TOP ALIGN=RIGHT>Group Access:</TH><TD><TABLE><TR>";
-        SendSQL("SELECT groups.group_id, groups.name, groups.description, " .
+        SendSQL("SELECT groups.id, groups.name, groups.description, " .
                 "ISNULL(user_id) = 0, " .
                 "isderived " .
                 "FROM groups " .
                 "LEFT JOIN user_group_map " .
-                "ON user_group_map.group_id = groups.group_id " .
+                "ON user_group_map.group_id = groups.id " .
                 "AND isbless = 0 " .
                 "AND user_id = $user_id " .
                 "ORDER BY groups.name");
@@ -527,7 +527,7 @@ if ($action eq 'del') {
     print "  <TD VALIGN=\"top\">";
     SendSQL("SELECT name
              FROM groups, user_group_map
-             WHERE groups.group_id = user_group_map.group_id
+             WHERE groups.id = user_group_map.group_id
              AND user_group_map.user_id = $thisuserid
              AND isbless = 0
              ORDER BY name");
