@@ -188,6 +188,9 @@ $fullname{'115'} = 'small-devices';
 $mode{'87'} = 'Open';
 $branch{'87'} = 'HEAD';
 $fullname{'87'} = 'SmartUpdate';
+$mode{'134'} = 'Open';
+$branch{'134'} = 'HEAD';
+$fullname{'134'} = 'Widgets';
 $mode{'48'} = 'Open';
 $branch{'48'} = 'HEAD';
 $fullname{'48'} = 'Windows FE';
@@ -294,6 +297,7 @@ if (m:^base/src/photon/.*$:) {return '113';}
 if (m:^gfx/src/photon/.*$:) {return '113';}
 if (m:^widget/src/photon/.*$:) {return '113';}
 if (m:^mozilla/xpfe$:) {return '105';}
+if (m:^mozilla/widget/public/.*$:) {return '134';}
 if (m:^mozilla/profile$:) {return '120';}
 if (m:^mozilla/tools/.*$:) {return '112';}
 if (m:^xpcom/typelib$:) {return '117';}
