@@ -8,7 +8,6 @@ I am now going to check your system for any required perl modules or application
 Please stand by . . .
 
 END
-1;
 
 unless (eval "require 5.005") {
     die "Sorry, you need at least Perl version 5.005\n";
@@ -126,3 +125,4 @@ sub have_vers {
   print ((($vok) ? "ok: " : " "), "$vstr\n");
   return $vok;
 }
+1;
