@@ -52,6 +52,7 @@ MozillaSourceCommon -a \
     mozilla/lib/libmisc  \
     mozilla/lib/libmime  \
     mozilla/lib/libmocha \
+    mozilla/lib/libnet \
     mozilla/lib/libparse  \
     mozilla/lib/libpics  \
     mozilla/lib/libpwcac  \
