@@ -715,13 +715,13 @@ sub SelectVisible {
     # additional tables), you will need to update anywhere which does a
     # LOCK TABLE, and then calls routines which call this
 
-    my @usergroupset = ();
-    PushGlobalSQLState();
-    SendSQL("SELECT group_id FROM user_group_map WHERE user_id = $userid");
-    while (my @row = FetchSQLData()) {
-        push (@usergroupset, $row[0]);
-    }
-    PopGlobalSQLState();
+    #my @usergroupset = ();
+    #PushGlobalSQLState();
+    #SendSQL("SELECT group_id FROM user_group_map WHERE user_id = $userid");
+    #while (my @row = FetchSQLData()) {
+    #     push (@usergroupset, $row[0]);
+    #}
+    #PopGlobalSQLState();
 
     # Users are authorized to access bugs if they are a member of all 
     # groups to which the bug is restricted.  User group membership and 
@@ -751,18 +751,14 @@ sub SelectVisible {
                      selectVisible_cc.who = $userid "
     }
 
-    $replace .= "\nLEFT JOIN bug_group_map selectVisible_bug_groups ON
+    $replace .= "LEFT JOIN bug_group_map selectVisible_bug_groups ON
                 bugs.bug_id = selectVisible_bug_groups.bug_id ";
-    $replace .= "\nLEFT JOIN user_group_map selectVisible_user_groups ON
+    $replace .= "LEFT JOIN user_group_map selectVisible_user_groups ON
                 selectVisible_bug_groups.group_id = selectVisible_user_groups.group_id AND
-                selectVisible_user_groups.user_id ";
+                selectVisible_user_groups.user_id = $userid ";
 
-    if (@usergroupset) {
-        $replace .= "\nWHERE ((selectVisible_user_groups.group_id IN (" . join(',', @usergroupset) . ")
-                    OR isnull(selectVisible_bug_groups.group_id)) ";
-    } else {
-        $replace .= "\nWHERE (isnull(selectVisible_bug_groups.group_id)) ";
-    }
+    $replace .= "WHERE ((selectVisible_user_groups.group_id IS NOT NULL
+                    OR selectVisible_bug_groups.group_id IS NULL) ";
 
     if ($userid) {
         # There is a mysql bug affecting v3.22 and 3.23 (at least), where this will
