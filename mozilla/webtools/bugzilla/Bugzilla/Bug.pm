@@ -359,7 +359,6 @@ sub error {
    my $self = shift;
    
    print $self->{'error'} . "\n";
-
 }
 
 sub CheckCanChangeField {
@@ -498,11 +497,8 @@ sub CheckField {
         $legalsRef               # (optional) ref to a list of legal values
        ) = @_;
 
-    print $newvalue. "\n";
     if (defined($legalsRef) &&
           (&::lsearch($legalsRef, $newvalue)<0)) {
-
-        print "A legal $fieldname was not set; ";
         return 0;
     }
     else {
@@ -637,7 +633,6 @@ sub SetPlatform {
    my $self = shift;
    my ($platform) = (@_);
    
-   print $platform . "\n"; 
    unless (CheckField($self, $platform, 'rep_platform', \@::legal_platform)) {
      $self->{'error'} = "Invalid platform \'$platform\'";
      return 0;
