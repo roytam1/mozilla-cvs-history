@@ -217,12 +217,6 @@ sub show_bug {
              AND member_group_map.member_id = $::userid
              AND member_group_map.maptype = 0
              WHERE isbuggroup != 0 ");
-             # FIXME Include active groups as well as inactive groups to which
-             # the bug already belongs.  This way the bug can be removed
-             # from an inactive group but can only be added to active ones.
-             #
-             #"AND ((isactive = 1 AND (bit & $::usergroupset != 0)) OR
-             # (bit & $bug_groupset != 0))");
 
     $user{'inallgroups'} = 1;
 

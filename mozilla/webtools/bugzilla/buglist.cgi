@@ -272,15 +272,16 @@ sub GetQuip {
     return $quip;
 }
 
-sub GetGroupsByGroupSet {
-    my ($groupset) = @_;
+sub GetGroupsByUserId {
+    my ($userid) = @_;
 
-    return if !$groupset;
+    return if !$userid;
 
     SendSQL("
-        SELECT  bit, name, description, isactive
-          FROM  groups
-         WHERE  (bit & $groupset) != 0
+        SELECT  groups.group_id, name, description, isactive
+          FROM  groups, member_group_map
+         WHERE  member_id = $userid AND maptype = 0 
+           AND  member_group_map.group_id = groups.group_id
            AND  isbuggroup != 0
       ORDER BY  description ");
 
@@ -288,7 +289,7 @@ sub GetGroupsByGroupSet {
 
     while (MoreSQLData()) {
         my $group = {};
-        ($group->{'bit'}, $group->{'name'},
+        ($group->{'id'}, $group->{'name'},
          $group->{'description'}, $group->{'isactive'}) = FetchSQLData();
         push(@groups, $group);
     }
@@ -1545,7 +1546,7 @@ if ($dotweak) {
     $vars->{'bugstatuses'} = [ keys %$bugstatuses ];
 
     # The groups to which the user belongs.
-    $vars->{'groups'} = GetGroupsByGroupSet($::usergroupset) if $::usergroupset ne '0';
+    $vars->{'groups'} = GetGroupsByUserId($::userid);
 
     # If all bugs being changed are in the same product, the user can change
     # their version and component, so generate a list of products, a list of

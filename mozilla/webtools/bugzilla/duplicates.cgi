@@ -41,7 +41,7 @@ GetVersionTable();
 
 quietly_check_login();
 
-use vars qw (%FORM $userid $usergroupset @legal_product);
+use vars qw (%FORM $userid @legal_product);
 
 my %dbmcount;
 my %count;
@@ -150,10 +150,8 @@ my $query = "
 # Limit to a single product if requested             
 $query .= (" AND product = " . SqlQuote($product)) if $product;
  
-SendSQL(SelectVisible($query, 
-                      $userid, 
-                      $usergroupset));
-                       
+SendSQL($query, $::userid);
+
 my @bugs;
 my @bug_ids; 
 
@@ -163,6 +161,7 @@ while (MoreSQLData()) {
     my ($id, $component, $bug_severity, $op_sys, $target_milestone, 
         $short_desc, $bug_status, $resolution) = FetchSQLData();
 
+    next if (!CanSeeBug($id, $::userid));
     # Limit to open bugs only if requested
     next if $openonly && ($resolution ne "");
 
