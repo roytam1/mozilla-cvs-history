@@ -437,15 +437,12 @@ sub Link {
 
 
 # After all the links have been rendered we may need to dump some
-# static data structures into the top of the HTML file.  Passing
-# indexes to static structures should allow us to embed quotes and new
-# lines in our strings.
+# static data structures into the top of the HTML file. 
 
-
-# ( not yet used, 
-#   attempts at utilization caused netscape to exit, 
-#   don't forget that tip() is recursive
-# )
+# ( Passing indexes to static structures should allow us to embed
+#    quotes and new lines in our strings.
+#    not yet used, attempts at utilization caused netscape to exit, 
+#    don't forget that tip() is recursive )
 
 sub test_define_structures {
   my (@out) =();
