@@ -91,19 +91,6 @@ if (defined $::FORM{'dup_id'} && $::FORM{'knob'} eq "duplicate") {
     DuplicateUserConfirm();
 }
 
-# If the user has a bug list and is processing one bug, then after
-# we process the bug we are going to show them the next bug on their
-# list.  Thus we have to make sure this bug ID is also valid,
-# since a malicious cracker might alter their cookies for the purpose
-# gaining access to bugs they are not authorized to access.
-if ( defined $::COOKIE{"BUGLIST"} && defined $::FORM{'id'} ) {
-    my @buglist = split( /:/ , $::COOKIE{"BUGLIST"} );
-    my $idx = lsearch( \@buglist , $::FORM{"id"} );
-    if ($idx < $#buglist) {
-        my $nextbugid = $buglist[$idx + 1];
-        ValidateBugID($nextbugid, $whoid);
-    }
-}
 
 ######################################################################
 # End Data/Security Validation

@@ -167,10 +167,10 @@ sub have_vers {
   $vnum = ${"${pkg}::VERSION"} || ${"${pkg}::Version"} || 0;
   $vnum = -1 if $@;
 
-  if ($vnum < 0) {
+  if ($vnum eq "-1") { # string compare just in case it's non-numeric
     $vstr = "not found";
   }
-  elsif ($vnum > 0) {
+  elsif (vers_cmp($vnum,"0") > -1) {
     $vstr = "found v$vnum";
   }
   else {
@@ -770,6 +770,20 @@ sub fixPerms {
 }
 
 if ($my_webservergroup) {
+        unless ($< == 0) { # zach: if not root, yell at them, bug 87398 
+        print <<EOF;
+
+Warning: you have entered a value for the "webservergroup" parameter
+in localconfig, but you are not running this script as root.
+This can cause permissions problems and decreased security.  If you
+experience problems running Bugzilla scripts, log in as root and re-run
+this script, or remove the value of the "webservergroup" parameter.
+Note that any warnings about "uninitialized values" that you may
+see below are caused by this.
+
+EOF
+    }
+
     # Funny! getgrname returns the GID if fed with NAME ...
     my $webservergid = getgrnam($my_webservergroup);
     # chown needs to be called with a valid uid, not 0.  $< returns the
@@ -933,11 +947,9 @@ $table{attachments} =
     index(bug_id),
     index(creation_ts)';
 
-# 2001-05-05 myk@mozilla.org: Tables to support the attachment tracker.
+# 2001-05-05 myk@mozilla.org: Tables to support attachment statuses.
 # "attachstatuses" stores one record for each status on each attachment.
 # "attachstatusdefs" defines the statuses that can be set on attachments.
-# Note: These tables are only used if the parameter "useattachmenttracker"
-# is turned on via editparameters.cgi.
 
 $table{attachstatuses} =
    '
@@ -1075,7 +1087,6 @@ $table{groups} =
 $table{logincookies} =
    'cookie mediumint not null auto_increment primary key,
     userid mediumint not null,
-    cryptpassword varchar(34),
     hostname varchar(128),
     lastused timestamp,
 
@@ -2782,6 +2793,29 @@ if (!GetFieldDef('products', 'product_id')) {
         $sth2->finish;
     }
     $sth->finish;
+}
+
+# 2001-01-17 bbaetz@student.usyd.edu.au bug 95732
+# Remove logincookies.cryptpassword, and delete entries which become
+# invalid
+if (GetFieldDef("logincookies", "cryptpassword")) {
+    # We need to delete any cookies which are invalid, before dropping the
+    # column
+
+    print "Removing invalid login cookies...\n";
+
+    # mysql doesn't support DELETE with multi-table queries, so we have
+    # to iterate
+    my $sth = $dbh->prepare("SELECT cookie FROM logincookies, profiles " .
+                            "WHERE logincookies.cryptpassword != " .
+                            "profiles.cryptpassword AND " .
+                            "logincookies.userid = profiles.userid");
+    $sth->execute();
+    while (my ($cookie) = $sth->fetchrow_array()) {
+        $dbh->do("DELETE FROM logincookies WHERE cookie = $cookie");
+    }
+
+    DropField("logincookies", "cryptpassword");
 }
 
 # If you had to change the --TABLE-- definition in any way, then add your

@@ -52,6 +52,25 @@ use CGI::Carp qw(fatalsToBrowser);
 
 require 'globals.pl';
 
+# If Bugzilla is shut down, do not go any further, just display a message
+# to the user about the downtime.  (do)editparams.cgi is exempted from
+# this message, of course, since it needs to be available in order for
+# the administrator to open Bugzilla back up.
+if (Param("shutdownhtml") && $0 !~ m:[\\/](do)?editparams.cgi$:) {
+    # The shut down message we are going to display to the user.
+    $::vars->{'title'} = "Bugzilla is Down";
+    $::vars->{'h1'} = "Bugzilla is Down";
+    $::vars->{'message'} = Param("shutdownhtml");
+    
+    # Return the appropriate HTTP response headers.
+    print "Content-Type: text/html\n\n";
+    
+    # Generate and return an HTML message about the downtime.
+    $::template->process("global/message.html.tmpl", $::vars)
+      || DisplayError("Template process failed: " . $::template->error());
+    exit;
+}
+
 sub GeneratePersonInput {
     my ($field, $required, $def_value, $extraJavaScript) = (@_);
     $extraJavaScript ||= "";
@@ -675,8 +694,7 @@ sub quietly_check_login {
                 "profiles.login_name, " .
                 "profiles.login_name = " .
                 SqlQuote($::COOKIE{"Bugzilla_login"}) .
-                " AND profiles.cryptpassword = logincookies.cryptpassword " .
-                "AND logincookies.hostname = " .
+                " AND logincookies.hostname = " .
                 SqlQuote($ENV{"REMOTE_HOST"}) .
                 ", profiles.disabledtext " .
                 " FROM profiles, logincookies WHERE logincookies.cookie = " .
@@ -749,11 +767,6 @@ sub MailPassword {
     open SENDMAIL, "|/usr/lib/sendmail -t";
     print SENDMAIL $msg;
     close SENDMAIL;
-
-    print "The password for the e-mail address\n";
-    print "$login has been e-mailed to that address.\n";
-    print "<p>When the e-mail arrives, you can click <b>Back</b>\n";
-    print "and enter your password in the form there.\n";
 }
 
 
@@ -793,9 +806,17 @@ sub confirm_login {
         # into the database, and email their password to them.
         if ( defined $::FORM{"PleaseMailAPassword"} && !$userid ) {
             my $password = InsertNewUser($enteredlogin, "");
+            # There's a template for this - account_created.tmpl - but
+            # it's easier to wait to use it until templatisation has progressed
+            # further; we want to avoid sprinkling multiple copies of the
+            # template setup code everywhere - Gerv.
             print "Content-Type: text/html\n\n";
             PutHeader("Account Created");
             MailPassword($enteredlogin, $password);
+            print "The password for the e-mail address\n";
+            print "$enteredlogin has been e-mailed to that address.\n";
+            print "<p>When the e-mail arrives, you can click <b>Back</b>\n";
+            print "and enter your password in the form there.\n";
             PutFooter();
             exit;
         }
@@ -959,7 +980,7 @@ sub confirm_login {
        if (!defined $ENV{'REMOTE_HOST'}) {
          $ENV{'REMOTE_HOST'} = $ENV{'REMOTE_ADDR'};
        }
-       SendSQL("insert into logincookies (userid,cryptpassword,hostname) values (@{[DBNameToIdAndCheck($enteredlogin)]}, @{[SqlQuote($realcryptpwd)]}, @{[SqlQuote($ENV{'REMOTE_HOST'})]})");
+       SendSQL("insert into logincookies (userid,hostname) values (@{[DBNameToIdAndCheck($enteredlogin)]}, @{[SqlQuote($ENV{'REMOTE_HOST'})]})");
        SendSQL("select LAST_INSERT_ID()");
        my $logincookie = FetchOneColumn();
 
@@ -1109,16 +1130,6 @@ sub PutHeader {
        $extra = "";
     }
     $jscript ||= "";
-    # If we are shutdown, we want a very basic page to give that
-    # information.  Also, the page title should indicate that
-    # we are down.  
-    if (Param('shutdownhtml')) {
-        $title = "Bugzilla is Down";
-        $h1 = "Bugzilla is currently down";
-        $h2 = "";
-        $extra = "";
-        $jscript = "";
-    }
 
     print qq|
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
@@ -1269,7 +1280,7 @@ sub DumpBugActivity {
     while (@row = FetchSQLData()) {
         my ($field,$attachid,$when,$removed,$added,$who) = (@row);
         $field =~ s/^Attachment/<a href="attachment.cgi?id=$attachid&amp;action=view">Attachment #$attachid<\/a>/ 
-          if (Param('useattachmenttracker') && $attachid);
+          if $attachid;
         $removed = html_quote($removed);
         $added = html_quote($added);
         $removed = "&nbsp;" if $removed eq "";
@@ -1347,7 +1358,7 @@ Edit <a href="userprefs.cgi">prefs</a>
         if (UserInGroup($userid, "editcomponents")) {
             $html .= ", <a href=\"editproducts.cgi\">products</a>\n";
             $html .= ", <a href=\"editattachstatuses.cgi\">
-              attachment&nbsp;statuses</a>\n" if Param('useattachmenttracker');
+              attachment&nbsp;statuses</a>\n";
         }
         if (UserInGroup($userid, "creategroups")) {
             $html .= ", <a href=\"editgroups.cgi\">groups</a>\n";

@@ -51,6 +51,8 @@ sub globals_pl_sillyness {
     $zz = @main::legal_versions;
     $zz = @main::milestoneurl;
     $zz = @main::prodmaxvotes;
+    $zz = $main::template;
+    $zz = $main::vars;
 }
 
 #
@@ -59,6 +61,7 @@ sub globals_pl_sillyness {
 # 
 
 $::db_host = "localhost";
+$::db_port = 3306;
 $::db_name = "bugs";
 $::db_user = "bugs";
 $::db_pass = "";
@@ -99,7 +102,7 @@ sub ConnectToDatabase {
             $name = Param("shadowdb");
             $::dbwritesallowed = 0;
         }
-        $::db = DBI->connect("DBI:mysql:host=$::db_host;database=$name", $::db_user, $::db_pass)
+        $::db = DBI->connect("DBI:mysql:host=$::db_host;database=$name;port=$::db_port", $::db_user, $::db_pass)
             || die "Bugzilla is currently broken. Please try again later. " . 
       "If the problem persists, please contact " . Param("maintainer") .
       ". The error you should quote is: " . $DBI::errstr;
@@ -704,6 +707,19 @@ sub InsertNewUser {
     return $password;
 }
 
+# Removes all entries from logincookies for $userid, except for the
+# optional $keep, which refers the logincookies.cookie primary key.
+# (This is useful so that a user changing their password stays logged in)
+sub InvalidateLogins {
+    my ($userid, $keep) = @_;
+
+    my $remove = "DELETE FROM logincookies WHERE userid = $userid";
+    if (defined $keep) {
+        $remove .= " AND cookie != " . SqlQuote($keep);
+    }
+    SendSQL($remove);
+}
+
 sub GenerateRandomPassword {
     my ($size) = @_;
 
@@ -1041,7 +1057,7 @@ sub quoteUrls {
         my $num = $2;
         $item = value_quote($item); # Not really necessary, since we know
                                     # there's no special chars in it.
-        $item = qq{<A HREF="showattachment.cgi?attach_id=$num">$item</A>};
+        $item = qq{<A HREF="attachment.cgi?id=$num&action=view">$item</A>};
         $things[$count++] = $item;
     }
     while ($text =~ s/\*\*\* This bug has been marked as a duplicate of (\d+) \*\*\*/"##$count##"/ei) {
@@ -1056,7 +1072,7 @@ sub quoteUrls {
         my $item = $&;
         my $num = $1;
         if ($knownattachments->{$num}) {
-            $item = qq{<A HREF="showattachment.cgi?attach_id=$num">$item</A>};
+            $item = qq{<A HREF="attachment.cgi?id=$num&action=view">$item</A>};
         }
         $things[$count++] = $item;
     }
@@ -1554,5 +1570,95 @@ sub trim {
     $str =~ s/\s+$//g;
     return $str;
 }
+
+###############################################################################
+# Global Templatization Code
+
+# Use the template toolkit (http://www.template-toolkit.org/) to generate
+# the user interface using templates in the "template/" subdirectory.
+use Template;
+
+# Create the global template object that processes templates and specify
+# configuration parameters that apply to all templates processed in this script.
+$::template = Template->new(
+  {
+    # Colon-separated list of directories containing templates.
+    INCLUDE_PATH => "template/custom:template/default" ,
+
+    # Allow templates to be specified with relative paths.
+    RELATIVE => 1 ,
+
+    # Remove white-space before template directives (PRE_CHOMP) and at the
+    # beginning and end of templates and template blocks (TRIM) for better 
+    # looking, more compact content.  Use the plus sign at the beginning 
+    # of directives to maintain white space (i.e. [%+ DIRECTIVE %]).
+    PRE_CHOMP => 1 ,
+    TRIM => 1 , 
+
+    # Functions for processing text within templates in various ways.
+    FILTERS =>
+      {
+        # Render text in strike-through style.
+        strike => sub { return "<strike>" . $_[0] . "</strike>" } ,
+      } ,
+  }
+);
+
+# Use the Toolkit Template's Stash module to add utility pseudo-methods
+# to template variables.
+use Template::Stash;
+
+# Add "contains***" methods to list variables that search for one or more 
+# items in a list and return boolean values representing whether or not 
+# one/all/any item(s) were found.
+$Template::Stash::LIST_OPS->{ contains } =
+  sub {
+      my ($list, $item) = @_;
+      return grep($_ eq $item, @$list);
+  };
+
+$Template::Stash::LIST_OPS->{ containsany } =
+  sub {
+      my ($list, $items) = @_;
+      foreach my $item (@$items) { 
+          return 1 if grep($_ eq $item, @$list);
+      }
+      return 0;
+  };
+
+# Add a "substr" method to the Template Toolkit's "scalar" object
+# that returns a substring of a string.
+$Template::Stash::SCALAR_OPS->{ substr } = 
+  sub {
+      my ($scalar, $offset, $length) = @_;
+      return substr($scalar, $offset, $length);
+  };
+    
+# Add a "truncate" method to the Template Toolkit's "scalar" object
+# that truncates a string to a certain length.
+$Template::Stash::SCALAR_OPS->{ truncate } = 
+  sub {
+      my ($string, $length, $ellipsis) = @_;
+      $ellipsis ||= "";
+      
+      return $string if !$length || length($string) <= $length;
+      
+      my $strlen = $length - length($ellipsis);
+      my $newstr = substr($string, 0, $strlen) . $ellipsis;
+      return $newstr;
+  };
+    
+# Define the global variables and functions that will be passed to the UI
+# template.  Additional values may be added to this hash before templates
+# are processed.
+$::vars =
+  {
+    # Function for retrieving global parameters.
+    'Param' => \&Param ,
+
+    # Function for processing global parameters that contain references
+    # to other global parameters.
+    'PerformSubsts' => \&PerformSubsts ,
+  };
 
 1;
