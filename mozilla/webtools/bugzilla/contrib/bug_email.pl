@@ -746,8 +746,6 @@ die (" *** Cant find Sender-adress in sent mail ! ***\n" ) unless defined( $Send
 chomp( $Sender );
 chomp( $Message_ID );
 
-ConnectToDatabase();
-
 $SenderShort = $Sender;
 $SenderShort =~ s/^.*?([a-zA-Z0-9_.-]+?\@[a-zA-Z0-9_.-]+\.[a-zA-Z0-9_.-]+).*$/$1/;
 
