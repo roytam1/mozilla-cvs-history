@@ -165,7 +165,7 @@ foreach $tree (@TREES) {
 		   );
  
       my ($update_file) = ("$TINDERBOX_DATA_DIR/$tree/db/".
-			   "BT.Update.$timenow.$bug_id");
+			   "BT_Generic.Update.$timenow.$bug_id");
       
       # first we try and make the file name leagal, then we check by using
       # the definiative legal filename checker.

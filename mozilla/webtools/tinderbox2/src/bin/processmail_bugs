@@ -411,7 +411,7 @@ sub set_tinderbox_variables {
                          $TINDERBOX{'tinderbox_mailfrom'},
                         );
     
-    MailProcess::write_update_file('BT', $uniq_id, $tree, %TINDERBOX );
+    MailProcess::write_update_file('BT_Generic', $uniq_id, $tree, %TINDERBOX );
 
   } # foreach $tree
 
