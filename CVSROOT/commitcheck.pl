@@ -302,7 +302,7 @@ if (m:^mozilla/extensions/jsd/.*$:) {return '71';}
 if (m:^mozilla/js/jsd/.*$:) {return '71';}
 if (m:^js/src/liveconnect/.*$:) {return '72';}
 if (m:^mozilla/cck/.*$:) {return '108';}
-if (m:^mozilla/network/.*$:) {return '77';}
+if (m:^mozilla/netwerk/.*$:) {return '77';}
 if (m:^mozilla/nsprpub/.*$:) {return '78';}
 if (m:^mozilla/lib/libpics/.*$:) {return '80';}
 if (m:^mozilla/modules/plugin/.*$:) {return '81';}
