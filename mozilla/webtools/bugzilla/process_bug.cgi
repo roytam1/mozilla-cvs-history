@@ -560,8 +560,12 @@ SWITCH: for ($::FORM{'knob'}) {
                 PuntTryAgain("Nice Try. You are already on the CC list of bug $::FORM{'id'}.");
             } else {
                 SendSQL("INSERT INTO cc VALUES ($::FORM{'id'}, $whoid)");
-				last SWITCH;
-            }
+            	print "<CENTER><H2>You have been added to the Cc list. " . 
+					  "<A HREF=\"show_bug.cgi?id=$::FORM{'id'}\">" .
+                  	  "Back to bug #$::FORM{'id'}.</A></CENTER>\n";
+            	PutFooter();
+				exit;
+			}
         } else {
             PuntTryAgain("<CENTER><B>You are the reporter of this bug. ". 
 						 "You will already receive mail for this report.</B>" .
@@ -579,7 +583,11 @@ SWITCH: for ($::FORM{'knob'}) {
             $cc_query = "DELETE FROM cc " .
                         "WHERE bug_id = '$::FORM{'id'}' and who = '$whoid'";
             SendSQL($cc_query);
-			last SWITCH;
+			print "<CENTER><H2>You have been removed from the Cc list. " . 
+				  "<A HREF=\"show_bug.cgi?id=$::FORM{'id'}\">" .
+                  "Back to bug #$::FORM{'id'}.</A></CENTER>\n";
+            PutFooter();
+			exit;
         } else {
             PuntTryAgain("Nice Try. You are not on the CC list of bug " . $::FORM{'id'});
         }
@@ -588,7 +596,11 @@ SWITCH: for ($::FORM{'knob'}) {
     /^add_comment$/ && do {
         if (defined $::FORM{'comment'} && $::FORM{'comment'} ne "") {
             AppendComment($::FORM{'id'}, $::COOKIE{'Bugzilla_login'}, $::FORM{'comment'});
-            last SWITCH;
+			print "<CENTER><H2>Your comment has been added. " . 
+				  "<A HREF=\"show_bug.cgi?id=$::FORM{'id'}\">" . 
+				  "Back to bug #$::FORM{'id'}.</A></CENTER>\n";
+			PutFooter();
+			exit;
         } else {
             PuntTryAgain("<B>You did not type a comment for submission."); 
         }
