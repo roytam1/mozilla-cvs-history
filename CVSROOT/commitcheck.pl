@@ -168,9 +168,6 @@ $fullname{'111'} = 'PerlConnect';
 $mode{'113'} = 'Open';
 $branch{'113'} = 'HEAD';
 $fullname{'113'} = 'Photon';
-$mode{'80'} = 'Open';
-$branch{'80'} = 'HEAD';
-$fullname{'80'} = 'PICS';
 $mode{'81'} = 'Open';
 $branch{'81'} = 'HEAD';
 $fullname{'81'} = 'Plugins';
@@ -308,7 +305,6 @@ if (m:^js/src/liveconnect/.*$:) {return '72';}
 if (m:^mozilla/cck/.*$:) {return '108';}
 if (m:^mozilla/netwerk/.*$:) {return '77';}
 if (m:^mozilla/nsprpub/.*$:) {return '78';}
-if (m:^mozilla/lib/libpics/.*$:) {return '80';}
 if (m:^mozilla/modules/plugin/.*$:) {return '81';}
 if (m:^mozilla/modules/libpref/.*$:) {return '82';}
 if (m:^mozilla/modules/progress/.*$:) {return '83';}
