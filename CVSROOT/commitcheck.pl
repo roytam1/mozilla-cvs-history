@@ -187,8 +187,8 @@ $fullname{'138'} = 'Rhino';
 $mode{'145'} = 'Restricted';
 $branch{'145'} = 'HEAD';
 $fullname{'145'} = 'security';
-$blessed{'145'} = ['alecf%netscape.com','scc%mozilla.org','jgmyers%netscape.com','jaggernaut%netscape.com','cotter%netscape.com','cls%seawood.org','bryner%netscape.com',];
-$super{'145'} = ['wtc%netscape.com','tfox%netscape.com','sonja.mirtitsch%sun.com','rangansen%netscape.com','nicolson%netscape.com','nelsonb%netscape.com','larryh%netscape.com','kirk.erickson%sun.com','kaie%netscape.com','jpierre%netscape.com','javi%netscape.com','ian.mcgreer%sun.com','chrisk%netscape.com','thayes%netscape.com','relyea%netscape.com','ddrinan%netscape.com',];
+$blessed{'145'} = ['scc%mozilla.org','jgmyers%netscape.com','jaggernaut%netscape.com','cotter%netscape.com','cls%seawood.org','bryner%netscape.com','alecf%netscape.com',];
+$super{'145'} = ['wtc%netscape.com','tfox%netscape.com','sonja.mirtitsch%sun.com','rangansen%netscape.com','nicolson%netscape.com','nelsonb%netscape.com','kirk.erickson%sun.com','kaie%netscape.com','jpierre%netscape.com','javi%netscape.com','ian.mcgreer%sun.com','chrisk%netscape.com','thayes%netscape.com','relyea%netscape.com','ddrinan%netscape.com',];
 $mode{'151'} = 'Open';
 $branch{'151'} = 'HEAD';
 $fullname{'151'} = 'Security - Mozilla PSM Glue';
@@ -265,7 +265,6 @@ if (m:^CVSROOT/commitcheck\.pl$:) {return '3';}
 if (m:^CVSROOT/passwd$:) {return '3';}
 if (m:^mozilla/security/coreconf/.*$:) {return '145';}
 if (m:^mozilla/security/jss/.*$:) {return '145';}
-if (m:^mozilla/security/manager/.*$:) {return '145';}
 if (m:^mozilla/security/nss/.*$:) {return '145';}
 if (m:^mozilla/[^/]*$:) {return '19';}
 if (m:^mozilla/gfx/src/xlib/.*$:) {return '121';}
