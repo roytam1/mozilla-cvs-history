@@ -540,8 +540,6 @@ SeaMonkeyCore -a \
 	mozilla/db/mdb \
 	mozilla/docshell \
 	mozilla/embedding \
-	mozilla/embed.mak \
-	mozilla/embed.mk \
 	mozilla/gc/boehm \
 	mozilla/include \
 	mozilla/intl \
