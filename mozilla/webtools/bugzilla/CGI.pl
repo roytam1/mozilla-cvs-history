@@ -330,6 +330,19 @@ sub ValidateBugID {
     exit;
 }
 
+
+sub ValidateComment {
+    # Make sure a comment is not too large (greater than 64K).
+    
+    my ($comment) = @_;
+    
+    if (defined($comment) && length($comment) > 65535) {
+        DisplayError("Comments cannot be longer than 65,535 characters.");
+        exit;
+    }
+}
+
+
 # check and see if a given string actually represents a positive
 # integer, and abort if not.
 # 
@@ -687,15 +700,12 @@ sub quietly_check_login {
     if (defined $::COOKIE{"Bugzilla_login"} &&
         defined $::COOKIE{"Bugzilla_logincookie"}) {
         ConnectToDatabase();
-        if (!defined $ENV{'REMOTE_HOST'}) {
-            $ENV{'REMOTE_HOST'} = $ENV{'REMOTE_ADDR'};
-        }
         SendSQL("SELECT profiles.userid, " .
                 "profiles.login_name, " .
                 "profiles.login_name = " .
                 SqlQuote($::COOKIE{"Bugzilla_login"}) .
-                " AND logincookies.hostname = " .
-                SqlQuote($ENV{"REMOTE_HOST"}) .
+                " AND logincookies.ipaddr = " .
+                SqlQuote($ENV{"REMOTE_ADDR"}) .
                 ", profiles.disabledtext " .
                 " FROM profiles, logincookies WHERE logincookies.cookie = " .
                 SqlQuote($::COOKIE{"Bugzilla_logincookie"}) .
@@ -977,10 +987,7 @@ sub confirm_login {
      # the cookies.
      if($enteredlogin ne "") {
        $::COOKIE{"Bugzilla_login"} = $enteredlogin;
-       if (!defined $ENV{'REMOTE_HOST'}) {
-         $ENV{'REMOTE_HOST'} = $ENV{'REMOTE_ADDR'};
-       }
-       SendSQL("insert into logincookies (userid,hostname) values (@{[DBNameToIdAndCheck($enteredlogin)]}, @{[SqlQuote($ENV{'REMOTE_HOST'})]})");
+       SendSQL("insert into logincookies (userid,ipaddr) values (@{[DBNameToIdAndCheck($enteredlogin)]}, @{[SqlQuote($ENV{'REMOTE_ADDR'})]})");
        SendSQL("select LAST_INSERT_ID()");
        my $logincookie = FetchOneColumn();
 
@@ -1190,7 +1197,8 @@ sub PutFooter {
 sub DisplayError {
   my ($message, $title) = (@_);
   $title ||= "Error";
-
+  $message ||= "An unknown error occurred.";
+  
   print "Content-type: text/html\n\n";
   PutHeader($title);
 

@@ -38,7 +38,6 @@ sub sillyness {
     $zz = %::COOKIE;
     $zz = %::components;
     $zz = %::versions;
-    $zz = @::legal_bug_status;
     $zz = @::legal_opsys;
     $zz = @::legal_platform;
     $zz = @::legal_priority;
@@ -48,6 +47,8 @@ sub sillyness {
 }
 
 my $userid = confirm_login();
+
+ValidateComment($::FORM{'comment'});
 
 my $cookiepath = Param("cookiepath");
 print "Set-Cookie: PLATFORM=$::FORM{'product'} ; path=$cookiepath ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n" if ( exists $::FORM{'product'} );
@@ -119,7 +120,12 @@ if (Param("useqacontact")) {
 }
 
 if (exists $::FORM{'bug_status'}) {
-    if (!UserInGroup($userid, "canedit") && !UserInGroup($userid, "canconfirm")) {
+    # Ignore the given status, so that we can set it to UNCONFIRMED
+    # or NEW, depending on votestoconfirm if either the given state was
+    # unconfirmed (so that a user can't override the below check), or if
+    # the user doesn't have permission to change the default status anyway
+    if ($::FORM{'bug_status'} eq $::unconfirmedstate
+        || (!UserInGroup($userid, "canedit") && !UserInGroup($userid, "canconfirm"))) {
         delete $::FORM{'bug_status'};
     }
 }
@@ -139,6 +145,10 @@ if (!exists $::FORM{'target_milestone'}) {
     $::FORM{'target_milestone'} = FetchOneColumn();
 }
 
+if (!Param('letsubmitterchoosepriority')) {
+    $::FORM{'priority'} = Param('defaultpriority');
+}
+
 GetVersionTable();
 CheckFormField(\%::FORM, 'product', \@::legal_product);
 CheckFormField(\%::FORM, 'version', \@{$::versions{$::FORM{'product'}}});
@@ -149,7 +159,7 @@ CheckFormField(\%::FORM, 'bug_severity', \@::legal_severity);
 CheckFormField(\%::FORM, 'priority', \@::legal_priority);
 CheckFormField(\%::FORM, 'op_sys', \@::legal_opsys);
 CheckFormFieldDefined(\%::FORM, 'assigned_to');
-CheckFormField(\%::FORM, 'bug_status', \@::legal_bug_status);
+CheckFormField(\%::FORM, 'bug_status', [$::unconfirmedstate, 'NEW']);
 CheckFormFieldDefined(\%::FORM, 'bug_file_loc');
 CheckFormField(\%::FORM, 'component', 
                \@{$::components{$::FORM{'product'}}});

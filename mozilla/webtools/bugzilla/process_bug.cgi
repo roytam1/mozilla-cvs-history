@@ -91,6 +91,8 @@ if (defined $::FORM{'dup_id'} && $::FORM{'knob'} eq "duplicate") {
     DuplicateUserConfirm();
 }
 
+ValidateComment($::FORM{'comment'});
+
 ######################################################################
 # End Data/Security Validation
 ######################################################################

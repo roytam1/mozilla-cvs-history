@@ -76,6 +76,7 @@ elsif ($action eq "insert")
 {
   confirm_login();
   ValidateBugID($::FORM{'bugid'}, $::userid);
+  ValidateComment($::FORM{'comment'});
   validateFilename();
   validateData();
   validateDescription();
@@ -97,6 +98,7 @@ elsif ($action eq "update")
   UserInGroup($::userid, "editbugs")
     || DisplayError("You are not authorized to edit attachments.")
     && exit;
+  ValidateComment($::FORM{'comment'});
   validateID();
   validateCanEdit($::FORM{'id'});
   validateDescription();

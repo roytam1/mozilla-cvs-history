@@ -193,6 +193,7 @@ unless (have_vers("Date::Parse",0))       { push @missing,"Date::Parse" }
 unless (have_vers("AppConfig","1.52"))    { push @missing,"AppConfig" }
 unless (have_vers("Template","2.06"))     { push @missing,"Template" }
 unless (have_vers("Text::Wrap","2001.0131")) { push @missing,"Text::Wrap" }
+unless (have_vers("File::Spec", "0.82"))  { push @missing,"File::Spec" }
 
 # If CGI::Carp was loaded successfully for version checking, it changes the
 # die and warn handlers, we don't want them changed, so we need to stash the
@@ -225,8 +226,9 @@ if (!$xmlparser) {
 }
 if (@missing > 0) {
     print "\n\n";
-    print "You are missing some Perl modules which are required by Bugzilla.\n";
-    print "They can be installed by running (as root) the following:\n";
+    print "Bugzilla requires some Perl modules which are either missing from your\n",
+    "system, or the version on your system is too old.\n",
+    "They can be installed by running (as root) the following:\n";
     foreach my $module (@missing) {
         print "   perl -MCPAN -e 'install \"$module\"'\n";
     }
@@ -265,8 +267,9 @@ if (@missing > 0) {
 #
 
 print "Checking user setup ...\n";
+$@ = undef;
 do 'localconfig';
-if ($@ ne "") { # capture errors in localconfig, bug 97290
+if ($@) { # capture errors in localconfig, bug 97290
    print STDERR <<EOT;
 An error has occurred while reading your 
 'localconfig' file.  The text of the error message is:
@@ -482,6 +485,21 @@ LocalVar('platforms', '
         "Sun",
         "Other"
 );
+');
+
+
+
+
+LocalVar('contenttypes', '
+#
+# The types of content that template files can generate, indexed by file extension.
+#
+$contenttypes = {
+  "html" => "text/html" , 
+   "rdf" => "application/xml" , 
+   "xml" => "text/xml" , 
+    "js" => "application/x-javascript" , 
+};
 ');
 
 
@@ -1129,11 +1147,10 @@ $table{groups} =
     unique(group_id),
     unique(name)';
 
-
 $table{logincookies} =
    'cookie mediumint not null auto_increment primary key,
     userid mediumint not null,
-    hostname varchar(128),
+    ipaddr varchar(40) NOT NULL,
     lastused timestamp,
 
     index(lastused)';
@@ -2873,6 +2890,17 @@ if (GetFieldDef("bugs","qacontact_accessible")) {
 
     DropField("bugs", "qacontact_accessible");
     DropField("bugs", "assignee_accessible");
+}
+
+# 2002-03-15 bbaetz@student.usyd.edu.au - bug 129466
+# Use the ip, not the hostname, in the logincookies table
+if (GetFieldDef("logincookies", "hostname")) {
+    # We've changed what we match against, so all entries are now invalid
+    $dbh->do("DELETE FROM logincookies");
+
+    # Now update the logincookies schema
+    DropField("logincookies", "hostname");
+    AddField("logincookies", "ipaddr", "varchar(40) NOT NULL");
 }
 
 # If you had to change the --TABLE-- definition in any way, then add your
