@@ -192,7 +192,7 @@ sub build_names {
 # set ignore_builds.
 
 sub all_build_names {
-  my ($self, $tree) = (@_);
+  my ($tree) = (@_);
   
   my (@build_names) = keys %{ $DATABASE{$tree} };
   my (@outrow) =  TreeData::sort_tree_buildnames( 
