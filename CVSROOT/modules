@@ -433,8 +433,8 @@ JSRef -a \
 	mozilla/js/src
 
 JSClient -a \
-        js/src \
-        js/jsd \
-        js/jsd/java \
-        js/jsd/classes \
-        js/jsd/macbuild
+        mozilla/js/src \
+        mozilla/js/jsd \
+        mozilla/js/jsd/java \
+        mozilla/js/jsd/classes \
+        mozilla/js/jsd/macbuild
