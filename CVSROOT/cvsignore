@@ -22,6 +22,7 @@ _stubs
 *_DBG_EDT.OBJ
 *_OPT.OBJ
 *_OPT_EDT.OBJ
+*_DBG.OBJD
 so_locations
 *.flc
 depend.mk
