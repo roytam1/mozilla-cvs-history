@@ -293,15 +293,15 @@ sub rec2bug_url {
 }
 
 
-sub get_all_progress_states {
+sub get_all_columns {
 
-  my (@progress_states) = main::uniq( values %BTData::STATUS_PROGRESS );
+  my (@columns) = main::uniq( values %BTData::STATUS_PROGRESS );
 
   # If the first element is null ignore it.
-  ($progress_states[0]) ||
-    (shift @progress_states);
+  ($columns[0]) ||
+    (shift @columns);
 
-  return @progress_states;
+  return @columns;
 }
 
 
