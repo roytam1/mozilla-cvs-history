@@ -109,6 +109,9 @@ $fullname{'114'} = 'js-tests';
 $mode{'72'} = 'Open';
 $branch{'72'} = 'HEAD';
 $fullname{'72'} = 'LiveConnect';
+$mode{'136'} = 'Open';
+$branch{'136'} = 'HEAD';
+$fullname{'136'} = 'Locked-Content';
 $mode{'47'} = 'Open';
 $branch{'47'} = 'HEAD';
 $fullname{'47'} = 'Macintosh FE';
@@ -206,9 +209,6 @@ $fullname{'90'} = 'XP File Handling';
 $mode{'91'} = 'Open';
 $branch{'91'} = 'HEAD';
 $fullname{'91'} = 'XP Miscellany';
-$mode{'105'} = 'Open';
-$branch{'105'} = 'HEAD';
-$fullname{'105'} = 'XPApps';
 $mode{'89'} = 'Open';
 $branch{'89'} = 'HEAD';
 $fullname{'89'} = 'XPCOM';
@@ -299,8 +299,6 @@ if (m:^mozilla/silentdl/.*$:) {return '110';}
 if (m:^base/src/photon/.*$:) {return '113';}
 if (m:^gfx/src/photon/.*$:) {return '113';}
 if (m:^widget/src/photon/.*$:) {return '113';}
-if (m:^!mozilla/xpfe/global/resources/skin/xul\.css$:) {return '105';}
-if (m:^mozilla/xpfe$:) {return '105';}
 if (m:^mozilla/widget/public/.*$:) {return '134';}
 if (m:^mozilla/profile$:) {return '120';}
 if (m:^mozilla/tools/.*$:) {return '112';}
