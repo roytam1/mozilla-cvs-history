@@ -49,8 +49,9 @@ sub find {
 
 
     if ($searchtext ne "") {
-	unless (open(FILELLISTING,$Conf->dbdir."/.glimpse_filenames")) {
-	    &warning("Could not open .glimpse_filenames.");
+	my $filename = $Conf->dbdir."/.glimpse_filenames";
+	unless (open(FILELLISTING,$filename)) {
+	    &warning("Could not open $filename");
 	    return;
 	}
 	print("<P><hr>\n");
