@@ -72,12 +72,20 @@ use vars qw($template $vars);
 my @idlist;
 if (defined $::FORM{'id'}) {
     ValidateBugID($::FORM{'id'});
+    if (!CanEditBug($::FORM{'id'},$::userid)) {
+        DisplayError("You are not authorized to edit bug $::FORM{'id'}");
+        exit;
+    }
     push @idlist, $::FORM{'id'};
 } else {
     foreach my $i (keys %::FORM) {
         if ($i =~ /^id_([1-9][0-9]*)/) {
             my $id = $1;
             ValidateBugID($id);
+            if (!CanEditBug($id,$::userid)) {
+                DisplayError("You are not authorized to edit bug $id");
+                exit;
+            }
             push @idlist, $id;
         }
     }
@@ -203,7 +211,7 @@ if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct)
     # If the product-specific fields need to be verified, or we need to verify
     # whether or not to add the bugs to their new product's group, display
     # a verification form.
-    if (!$vok || !$cok || !$mok || (Param('usebuggroups') && !defined($::FORM{'addtonewgroup'}))) {
+    if (!$vok || !$cok || !$mok || 0 && (Param('usebuggroups') && !defined($::FORM{'addtonewgroup'}))) {
         $vars->{'form'} = \%::FORM;
         
         if (!$vok || !$cok || !$mok) {
@@ -242,7 +250,7 @@ if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct)
             $vars->{"verify_fields"} = 0;
         }
         
-        $vars->{'verify_bug_group'} = (Param('usebuggroups') 
+        $vars->{'verify_bug_group'} = (0 && Param('usebuggroups') 
                                        && !defined($::FORM{'addtonewgroup'}));
         
         $template->process("bug/process/verify-new-product.html.tmpl", $vars)
@@ -1207,7 +1215,7 @@ foreach my $id (@idlist) {
     # about which can be found in comments within the conditionals below.
     if ( 
       # the "usebuggroups" parameter is on, indicating that products
-      # are associated with groups of the same name;
+      0 && # are associated with groups of the same name;
       Param('usebuggroups')
 
       # the user has changed the product to which the bug belongs;

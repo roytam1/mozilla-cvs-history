@@ -289,7 +289,7 @@ sub GetGroupsByUserId {
 
     while (MoreSQLData()) {
         my $group = {};
-        ($group->{'id'}, $group->{'name'},
+        ($group->{'bit'}, $group->{'name'},
          $group->{'description'}, $group->{'isactive'}) = FetchSQLData();
         push(@groups, $group);
     }
@@ -1499,7 +1499,6 @@ $vars->{'order'} = $order;
 my $login = $::COOKIE{'Bugzilla_login'};
 
 $vars->{'caneditbugs'} = UserInGroup('editbugs');
-$vars->{'usebuggroups'} = Param('usebuggroups');
 
 # Whether or not this user is authorized to move bugs to another installation.
 $vars->{'ismover'} = 1

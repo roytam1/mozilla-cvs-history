@@ -735,7 +735,21 @@ sub CanSeeBug {
     SendSQL($query);
     my ($found_id, $found_group, $found_member) = FetchSQLData();
     PopGlobalSQLState();
+    # FIXME - reporter and cc sometimes can also see bug as well as assignee
     my $ret = (($found_group == 1) || ($found_member == 0)) ? 1 : 0;
+    return $ret;
+}
+
+sub CanEditBug {
+
+    my ($id, $userid) = @_;
+
+    PushGlobalSQLState();
+    SendSQL("SELECT product FROM bugs WHERE bug_id = $id");
+    my ($product) = FetchSQLData();
+    my $ret = UserCanActOnProduct($product, 'canedit');
+    PopGlobalSQLState();
+    # FIXME - reporter and cc sometimes can also edit bug as well as assignee
     return $ret;
 }
 
@@ -1321,6 +1335,7 @@ sub UserCanActOnProduct {
     # in order to enter, the product must have no group restrictions
     # for groups of which the user is not a member. Return product id permitted
     my ($p, $control) = (@_);
+    PushGlobalSQLState();
     SendSQL("SELECT product_id, 
              (ISNULL(control_id) = 0) as C, (ISNULL(member_id) = 0) as M
              FROM products
@@ -1335,6 +1350,7 @@ sub UserCanActOnProduct {
              WHERE product = " . SqlQuote($p) .
              " ORDER BY C DESC, M");
     my ($pid, $ctlid, $memid) = FetchSQLData();
+    PopGlobalSQLState();
     return (($ctlid == 0) || ($memid == 1)) ? $pid : 0; 
 }
 

@@ -202,41 +202,66 @@ sub show_bug {
     # Groups
     my @groups;
 
-    SendSQL("SELECT groups.group_id, name, description, 
-             ISNULL(bug_group_map.group_id) = 0,
-             ISNULL(member_group_map.group_id) = 0,
-             isactive
-             FROM groups 
-             LEFT JOIN bug_group_map 
-             ON bug_group_map.group_id = groups.group_id
-             AND bug_group_map.bug_id = $bug{'bug_id'}
-             LEFT JOIN member_group_map 
-             ON member_group_map.group_id = groups.group_id
-             AND member_group_map.member_id = $::userid
-             AND member_group_map.maptype = $::Tmaptype->{'u2gm'}
-             WHERE group_type = $::Tgroup_type->{'buggroup'}");
+    SendSQL("SELECT product_id FROM products WHERE product = " 
+             . SqlQuote($bug{'product'}));
+    my ($pid) = FetchSQLData();
+    SendSQL("SELECT groups.group_id, name, groups.description,
+             ISNULL(D.control_id) = 0,
+             ISNULL(P.control_id) = 0,
+             ISNULL(R.control_id) = 0,
+             ISNULL(C.control_id) = 0,
+             ISNULL(B.group_id) = 0,
+             ISNULL(member_id) = 0
+             FROM groups
+             LEFT JOIN group_control_map as D
+             ON groups.group_id = D.group_id
+             AND D.control_id = $pid
+             AND D.control_id_type = $::Tcontrol_id_type->{'product'}
+             AND D.control_type = $::Tcontrol_type->{'default'}
+             LEFT JOIN group_control_map as P
+             ON groups.group_id = P.group_id
+             AND P.control_id = $pid
+             AND P.control_id_type = $::Tcontrol_id_type->{'product'}
+             AND P.control_type = $::Tcontrol_type->{'permitted'}
+             LEFT JOIN group_control_map as R
+             ON groups.group_id = R.group_id
+             AND R.control_id = $pid
+             AND R.control_id_type = $::Tcontrol_id_type->{'product'}
+             AND R.control_type = $::Tcontrol_type->{'required'}
+             LEFT JOIN group_control_map as C
+             ON groups.group_id = C.group_id
+             AND C.control_id = $pid
+             AND C.control_id_type = $::Tcontrol_id_type->{'product'}
+             AND C.control_type = $::Tcontrol_type->{'canedit'}
+             LEFT JOIN bug_group_map as B
+             ON B.group_id = groups.group_id
+             AND B.bug_id = $bug{'bug_id'}
+             LEFT JOIN member_group_map
+             ON member_group_map.group_id = groups.group_id 
+             AND member_id = $::userid 
+             AND maptype = $::Tmaptype->{'u2gm'} 
+             WHERE group_type = $::Tgroup_type->{'buggroup'} 
+             AND isactive = 1 
+             ORDER BY description");
+    
+    my @groups;
+    
+    while (MoreSQLData()) {
+        my ($groupid, $prodname, $description, $dflag, $pflag, $rflag, 
+            $cflag, $bflag, $uflag) = FetchSQLData();
 
     $user{'inallgroups'} = 1;
 
-    while (MoreSQLData()) {
-        my ($groupid, $name, $description, $ison, $ingroup, $isactive) 
-            = FetchSQLData();
         # For product groups, we only want to display the checkbox if either
-        # (1) The bit is already set, or
-        # (2) The user is in the group, but either:
-        #     (a) The group is a product group for the current product, or
-        #     (b) The group name isn't a product name
-        # This means that all product groups will be skipped, but 
-        # non-product bug groups will still be displayed.
-        if($ison || 
-           ($isactive && ($ingroup && (($name eq $bug{'product'}) ||
-                         (!defined $::proddesc{$name})))))
-        {
-            $user{'inallgroups'} &= $ingroup;
+        # (1) The bit is not required and already set, or
+        # (2) The user is in the group and the group is permitted but
+        #     not required.
+        if (!$rflag && (($pflag && $uflag) || $bflag)) {
+            $user{'inallgroups'} &= $uflag;
 
             push (@groups, { "bit" => $groupid,
-                             "ison" => $ison,
-                             "ingroup" => $ingroup,
+                             "ison" => $bflag,
+                             "ingroup" => $uflag,
                              "description" => $description });            
         }
     }
