@@ -441,9 +441,9 @@ sub mail_tinderbox_cmdlog {
   #	    " TreeName and BuildName.\n");
 
 
+  # remove duplicate printing of unmonitored build list.
+
   my ($message) = <<"EOF";
-
-
 From: $MAIL_FROM
 To: $MAIL_TO
 Subject: Tinderbox Build Update 
