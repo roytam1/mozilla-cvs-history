@@ -250,7 +250,7 @@ echo"
 <SPAN style=\"itemdescription\">Released on $verdateadded</SPAN><BR>
 <DIV class=\"moreinfoinstall\">";
 if ($appname=="Thunderbird") { 
-echo"<A HREF=\"install.php?id=$id&vid=$vid\" TITLE=\"Download $name $version\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" ALT=\"\">&nbsp;( Download Now )</A><BR>";
+echo"<A HREF=\"install.php/$filename?id=$id&vid=$vid\" TITLE=\"Download $name $version\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" ALT=\"\">&nbsp;( Download Now )</A><BR>";
 } else {
 //Make Theme Install work again, Bug 246754
 //echo"<A HREF=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'install.php/$filename?id=$id&vid=$vid','$name'))\"";
@@ -371,14 +371,14 @@ echo"</SPAN>\n";
 //Icon Bar Modules
 echo"<DIV style=\"height: 34px\">";
 echo"<DIV class=\"iconbar\" style=\"width: 100px;\">";
-if ($type=="T") {
-//Make Theme Install work again, Bug 246754
-//echo"<A HREF=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'install.php?id=$id&vid=$vid','$name'))\">";
-echo"<A HREF=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'$uri','$name $version'))\">";
+
+if ($appname=="Thunderbird") { 
+echo"<A HREF=\"install.php/$filename?id=$id&vid=$vid\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" TITLE=\"Install $name (Right-Click to Download)\" ALT=\"\">Download</A>";
 } else {
-echo"<A HREF=\"install.php?id=$id&vid=$vid\">";
+echo"<A HREF=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'$uri','$name $version'))\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" TITLE=\"Install $name\" ALT=\"\">Install</A>";
 }
-echo"<IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" TITLE=\"Install $name\" ALT=\"\">Install</A><BR><SPAN class=\"filesize\">Size: $filesize kb</SPAN></DIV>";
+
+echo"<BR><SPAN class=\"filesize\">Size: $filesize kb</SPAN></DIV>";
 echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($appname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float: left\" ALT=\"$appname \">&nbsp;Works with:<BR>&nbsp;&nbsp;$minappver - $maxappver</DIV>";
 echo"<DIV class=\"iconbar\" style=\"width: 90px;\"><IMG SRC=\"/images/".strtolower($osname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float: left\" ALT=\"\">OS:<BR>"; if($osname=="ALL") {echo"All OSes";} else {echo"$osname";} echo"</DIV>";
 echo"</DIV>";
