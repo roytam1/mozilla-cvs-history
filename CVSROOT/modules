@@ -544,7 +544,6 @@ SeaMonkeyCore -a \
 	mozilla/modules/zlib \
 	mozilla/nav-java \
 	mozilla/network \
-	mozilla/nglayout.mak \
 	mozilla/nglayout.mk \
 	mozilla/nsprpub \
 	mozilla/rdf \
@@ -589,7 +588,7 @@ SeaMonkeyMailNews -a \
 
 SeaMonkeyEditor -a \
 	SeaMonkeyBrowser \
-	mozilla/editor  \
+	mozilla/editor \
 	mozilla/mailnews
 
 #############################################################
