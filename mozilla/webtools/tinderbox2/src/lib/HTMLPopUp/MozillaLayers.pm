@@ -322,6 +322,13 @@ sub Link {
 
 
     
+    if (!($args{'windowtxt'})) {
+        $out .= "<a $name href=\"$args{'href'}\">";
+        $out .= "$args{'linktxt'}</a>\n";
+        
+        return $out;
+    }
+
     if ($args{'windowtxt'}) {
 
       # These characters inside the popupwindow will confuse my popup
