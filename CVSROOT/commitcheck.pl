@@ -268,7 +268,6 @@ if (m:^mozilla/cmd/dialup/.*$:) {return '58';}
 if (m:^mozilla/directory/.*$:) {return '59';}
 if (m:^mozilla/modules/libimg/.*$:) {return '63';}
 if (m:^mozilla/modules/libutil/.*$:) {return '63';}
-if (m:^mozilla/lib/libcnv/.*$:) {return '65';}
 if (m:^mozilla/include/libcnv\.h/.*$:) {return '66';}
 if (m:^mozilla/include/csid\.h/.*$:) {return '67';}
 if (m:^mozilla/include/intl_csi\.h/.*$:) {return '67';}
