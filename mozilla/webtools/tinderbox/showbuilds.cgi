@@ -186,7 +186,7 @@ sub print_page_head {
     print "<a NAME=\"status\"></a>$status_message<br>";  # from $::tree/status.pl
   }
 
-  # Quote and Legend
+  # Quote and Lengend
   #
   if ($form{legend}) {
     my ($imageurl,$imagewidth,$imageheight,$quote) = &get_image;
@@ -214,27 +214,16 @@ sub print_page_head {
                 <td>= Download Build</td>
               </tr>
               <tr>
-                <td align=center>
-                  <img src="$images{star}"></td>
-                <td>= Show Log comments</td>
-              </tr>
-              <tr>
-                <td colspan=2>
-                  <table cellspacing=1 cellpadding=1 border=1>
-                    <tr bgcolor="$colormap{success}">
-                      <td>
-                        Successful Build, optional bloaty stats:<br>
-                        <tt>Lk:XXX</tt> (bytes leaked)<br>
-                        <tt>Bl:YYYY</tt> (bytes allocated, bloat)<br>
-                        <tt>Tp:TT.T</tt> (page-loader time, sec)<br>
-                        <tt>Ts:TT.T</tt> (startup time, sec)<br>
-                      </td>
-                <tr bgcolor="$colormap{building}">
-                  <td>Build in progress</td>
-                <tr bgcolor="$colormap{testfailed}">
-                  <td>Successful build, but tests failed</td>
-                <tr bgcolor="$colormap{busted}">
-                  <td>Build failed</td>
+              <td align=center>
+              <img src="$images{star}"></td><td>= Show Log comments
+            </td></tr><tr><td colspan=2>
+              <table cellspacing=1 cellpadding=1 border=1>
+                <tr bgcolor="$colormap{success}"><td>Successful Build, optional bloaty stats:<br>
+                  <tt>Lk:XXX</tt> (bytes leaked)<br><tt>Bl:YYYY</tt> (bytes allocated, bloat)</td>
+                <tr bgcolor="$colormap{building}"><td>Build in Progress</td>
+                <tr bgcolor="$colormap{testfailed}"><td>Successful Build,
+                                                          but Tests Failed</td>
+                <tr bgcolor="$colormap{busted}"><td>Build Failed</td>
               </table>
             </td></tr></table>
           </td>
@@ -386,25 +375,8 @@ BEGIN {
       if (defined $td->{bloaty}{$logfile}) {
         my ($leaks, $bloat, $leaks_cmp, $bloat_cmp)
             = @{ $td->{bloaty}{$logfile} };
-        # ex: Lk:21KB
         print "<br>Lk:", print_bloat_delta($leaks, $leaks_cmp),
               "<br>Bl:", print_bloat_delta($bloat, $bloat_cmp);
-      }
-
-      # Pageloader data
-      if (defined $td->{pageloader}{$logfile}) {
-        my ($pageloader_time)
-            = @{ $td->{pageloader}{$logfile} };
-        # ex: Tp:8.4s
-        print sprintf "<br>Tp:%3.1fs", $pageloader_time/1000;
-      }
-
-      # Startup data
-      if (defined $td->{startup}{$logfile}) {
-        my ($startup_time)
-            = @{ $td->{startup}{$logfile} };
-        # ex: Tp:5.45s
-        print sprintf "<br>Ts:%3.1fs", $startup_time/1000;
       }
 
       # Warnings
@@ -438,7 +410,7 @@ sub print_table_header {
 
     my $last_status = tb_last_status($ii);
     if ($last_status eq 'busted') {
-      if ($form{noflames}) {
+      unless ($form{legend}) {
         print "<td rowspan=2 bgcolor=$colormap{busted}>$bn</td>";
       } else {
         print "<td rowspan=2 bgcolor=000000 background='$images{flames}'>";
@@ -605,7 +577,7 @@ sub print_javascript {
       margin: -5em 0 0 -5em;
       }
     .who#popup{
-      height: 8em;
+      height: 9em;
       width: 16em;
       }
     .note#popup {
@@ -670,7 +642,7 @@ sub print_javascript {
           t = t.parentNode;
         }
         closepopup()
-        l = document.createElement("iframe");
+        var l = document.createElement("iframe");
         l.setAttribute("src", t.href);
         l.setAttribute("id", "popup");
         l.className = "who";
@@ -705,7 +677,7 @@ sub print_javascript {
           t = t.parentNode;
         }
         closepopup()
-        l = document.createElement("div");
+        var l = document.createElement("div");
         nodewrite(l,notes[noteid]);
         l.setAttribute("id", "popup");
         l.style.position = "absolute";
@@ -759,8 +731,8 @@ sub print_javascript {
       return false;
     }
 
-    var notes = new Array();
-    var builds = new Array();
+    notes = new Array();
+    builds = new Array();
 
 __ENDJS
   print $script;
@@ -783,7 +755,7 @@ __ENDJS
       print "builds[$ii]='$bn';\n";
     }
   }
-  print "var buildtree = '$::tree';\n";
+  print "buildtree = '$::tree';\n";
 
   # Use JavaScript to refresh the page every 15 minutes
   print "setTimeout('location.reload()',900000);\n" if $nowdate eq $maxdate;

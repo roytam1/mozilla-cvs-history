@@ -142,10 +142,8 @@ sub tb_load_data {
 
   make_build_table($td, $build_list);
 
-  $td->{bloaty}     = load_bloaty($td);
-  $td->{pageloader} = load_pageloader($td);
-  $td->{startup}    = load_startup($td);
-  $td->{warnings}   = load_warnings($td);
+  $td->{bloaty} = load_bloaty($td);
+  $td->{warnings} = load_warnings($td);
 
   return $td;
 }
@@ -385,8 +383,8 @@ sub load_who {
 }
     
 
-# Load data about code bloat & leaks
-#   File format: <logfile>|<leak_delta>|<bloat_delta>
+# Load data about code bloat
+#   File format: <build_time>|<build_name>|<leak_delta>|<bloat_delta>
 #
 sub load_bloaty {
   my $treedata = $_[0];
@@ -412,63 +410,6 @@ sub load_bloaty {
   }
   return $bloaty;
 }
-
-
-# Load data about pageloader times.
-#   File format: <logfile>|<pageloader time>
-#
-sub load_pageloader {
-  my $treedata = $_[0];
-  local $_;
-
-  my $pageloader = {};
-  
-  open(BLOATLOG, "<$treedata->{name}/pageloader.dat");
-  while (<BLOATLOG>) {
-    chomp;
-    my ($logfile, $pageloader_time) = split /\|/;
-
-    # Allow 1k of noise
-    # my $leaks_cmp = int(($leaks - $leaks_baseline) / 1000);
-    # my $bloat_cmp = int(($bloat - $bloat_baseline) / 1000);
-    
-    # If there was a rise or drop, set a new baseline
-    # $leaks_baseline = $leaks unless $leaks_cmp == 0;
-    # $bloat_baseline = $bloat unless $bloat_cmp == 0;
-
-    $pageloader->{$logfile} = [ $pageloader_time ];
-  }
-  return $pageloader;
-}
-
-
-# Load data about startup times.
-#   File format: <logfile>|<pageloader time>
-#
-sub load_startup {
-  my $treedata = $_[0];
-  local $_;
-
-  my $startup = {};
-  
-  open(BLOATLOG, "<$treedata->{name}/startup.dat");
-  while (<BLOATLOG>) {
-    chomp;
-    my ($logfile, $startup_time) = split /\|/;
-
-    # Allow 1k of noise
-    # my $leaks_cmp = int(($leaks - $leaks_baseline) / 1000);
-    # my $bloat_cmp = int(($bloat - $bloat_baseline) / 1000);
-    
-    # If there was a rise or drop, set a new baseline
-    # $leaks_baseline = $leaks unless $leaks_cmp == 0;
-    # $bloat_baseline = $bloat unless $bloat_cmp == 0;
-
-    $startup->{$logfile} = [ $startup_time ];
-  }
-  return $startup;
-}
-
 
 # Load data about build warnings
 #   File format: <logfile>|<warning_count>

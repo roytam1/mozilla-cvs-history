@@ -146,32 +146,20 @@ print "
 <FORM method=post action=doadmin.cgi>
 <INPUT TYPE=HIDDEN NAME=tree VALUE=$tree>
 <INPUT TYPE=HIDDEN NAME=command VALUE=create_tree>
-<b>Create a new tinderbox page, examples for SeaMonkey shown in parens.</b>
+<b>Create a new tinderbox page.</b>
 <TABLE>
 <TR>
 <TD>tinderbox tree name:</TD>
 <TD><INPUT NAME=treename VALUE=''></TD>
-<TD>(SeaMonkey)</TD>
-</TR>
-<TR>
+</TR><TR>
 <TD>cvs repository:</TD>
 <TD><INPUT NAME=repository VALUE=''></TD>
-<TD>(/cvsroot)</TD>
-</TR>
-<TR>
+</TR><TR>
 <TD>cvs module name:</TD>
 <TD><INPUT NAME=modulename VALUE=''></TD>
-<TD>(MozillaTinderboxAll)</TD>
-</TR>
-<TR>
+</TR><TR>
 <TD>cvs branch:</TD>
 <TD><INPUT NAME=branchname VALUE='HEAD'></TD>
-<TD>(HEAD)</TD>
-</TR>
-<TR>
-<TD>bonsai tree:</TD>
-<TD><INPUT NAME=bonsaitreename></TD>
-<TD>(SeaMonkey)</TD>
 </TR>
 </TABLE>
 <B>Password:</B> <INPUT NAME=password TYPE=password>
