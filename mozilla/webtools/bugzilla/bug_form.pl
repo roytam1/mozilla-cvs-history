@@ -212,6 +212,11 @@ sub show_bug {
     # Groups
     my @groups;
 
+    # For every group, we need to know if there is ANY bug_group_map
+    # record putting the current bug in that group and if there is ANY
+    # user_group_map record putting the user in that group.
+    # The LEFT JOINs are checking for record existence.
+    #
     SendSQL("SELECT DISTINCT groups.id, name, description, 
              ISNULL(bug_group_map.group_id) = 0,
              ISNULL(user_group_map.group_id) = 0,
@@ -231,6 +236,9 @@ sub show_bug {
     while (MoreSQLData()) {
         my ($groupid, $name, $description, $ison, $ingroup, $isactive) 
             = FetchSQLData();
+
+        $bug{'inagroup'} = 1 if ($ison);
+
         # For product groups, we only want to display the checkbox if either
         # (1) The bit is already set, or
         # (2) The user is in the group, but either:
@@ -255,8 +263,7 @@ sub show_bug {
     # the user to set whether or not the reporter 
     # and cc list can see the bug even if they are not members of all 
     # groups to which the bug is restricted.
-    if (BugInAnyGroup($id) != 0) {
-        $bug{'inagroup'} = 1;
+    if ($bug{'inagroup'}) {
 
         # Determine whether or not the bug is always accessible by the
         # reporter, QA contact, and/or users on the cc: list.

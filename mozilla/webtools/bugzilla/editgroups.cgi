@@ -227,6 +227,11 @@ if ($action eq 'changeform') {
     print "<TR><TD COLSPAN=4>Members of these groups can grant membership to this group</TD></TR>";
     print "<TR><TD ALIGN=CENTER>|</TD><TD COLSPAN=3>Members of these groups are included in this group</TD></TR>";
     print "<TR><TD ALIGN=CENTER>|</TD><TD ALIGN=CENTER>|</TD><TD COLSPAN=2></TD><TR>";
+
+    # For each group, we use left joins to establish the existance of
+    # a record making that group a child of this group
+    # and the existance of a record permitting that group to bless
+    # this one
     SendSQL("SELECT groups.id, groups.name, groups.description,
              ISNULL(group_group_map.child_id) = 0, 
              ISNULL(B.child_id) = 0

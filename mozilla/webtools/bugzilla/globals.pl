@@ -826,19 +826,23 @@ sub DeriveGroup {
     PushGlobalSQLState();
 
     SendSQL("LOCK TABLES profiles WRITE, user_group_map WRITE, group_group_map READ, groups READ");
+
+    # avoid races,  we are only as up to date as the BEGINNING of this process
     SendSQL("SELECT login_name, NOW() FROM profiles WHERE userid = $user");
     my ($login, $starttime) = FetchSQLData();
     
+    # first remove any old derived stuff for this user
     SendSQL("DELETE FROM user_group_map WHERE user_id = $user " .
-            "AND isbless = 0 AND isderived = 1");
+            "AND isderived = 1");
 
-    my %groupsadded = ();
+    my %groupidsadded = ();
+    # add derived records for any matching regexps
     SendSQL("SELECT id, userregexp FROM groups WHERE userregexp != ''");
     while (MoreSQLData()) {
         my ($groupid, $rexp) = FetchSQLData();
         if ($login =~ m/$rexp/i) {        
             PushGlobalSQLState();
-            $groupsadded{$groupid} = 1;
+            $groupidsadded{$groupid} = 1;
             SendSQL("INSERT INTO user_group_map " .
                     "(user_id, group_id, isbless, isderived) " .
                     "VALUES ($user, $groupid, 0, 1)");
@@ -847,26 +851,29 @@ sub DeriveGroup {
         }
     }
 
-    my %groupschecked = ();
-    my @groupstocheck = ();
+    # get a list of the groups of which the user is a member
+    my %groupidschecked = ();
+    my @groupidstocheck = ();
     SendSQL("SELECT group_id FROM user_group_map WHERE user_id = $user
              AND isbless = 0");
     while (MoreSQLData()) {
         my ($groupid) = FetchSQLData();
-        push(@groupstocheck,$groupid);
+        push(@groupidstocheck,$groupid);
     }
-    while (@groupstocheck) {
-        my $group = shift @groupstocheck;
-        if (!defined($groupschecked{"$group"})) {
-            $groupschecked{"$group"} = 1;
+
+    # each group needs to be checked for parent memberships once
+    while (@groupidstocheck) {
+        my $group = shift @groupidstocheck;
+        if (!defined($groupidschecked{"$group"})) {
+            $groupidschecked{"$group"} = 1;
             SendSQL("SELECT parent_id FROM group_group_map WHERE
                      child_id = $group AND isbless = 0");
             while (MoreSQLData()) {
                 my ($groupid) = FetchSQLData();
-                if (!defined($groupschecked{"$groupid"})) {
-                    push(@groupstocheck,$groupid);
-                    if (!$groupsadded{$groupid}) {
-                        $groupsadded{$groupid} = 1;
+                if (!defined($groupidschecked{"$groupid"})) {
+                    push(@groupidstocheck,$groupid);
+                    if (!$groupidsadded{$groupid}) {
+                        $groupidsadded{$groupid} = 1;
                         PushGlobalSQLState();
                         SendSQL("INSERT INTO user_group_map 
                                  (user_id, group_id, isbless, isderived)
@@ -1274,24 +1281,6 @@ sub SplitEnumType {
 }
 
 
-# Get a type name from the type value hash, creating the inverse hash
-# if not already done.  
-sub GetTypeNameByVal {
-    my ($typ, $val) = (@_);
-    my $r = $::vars->{'R'}->{$typ}->{$val};
-    return $r if $r;
-    local %::w = reverse %{$::vars->{'T'}->{$typ}};
-    $::vars->{'R'}->{$typ} = \%::w;
-    return $::vars->{'R'}->{$typ}->{$val};
-}
-
-sub GetTypeValByName {
-    my ($typ, $nam) = (@_);
-    my $r = $::vars->{'T'}->{$typ}->{$nam};
-    return $r; 
-}
-
-
 # This routine is largely copied from Mysql.pm.
 
 sub SqlQuote {
@@ -1404,16 +1393,6 @@ sub BugInGroupId {
     my $bugingroup = FetchOneColumn();
     PopGlobalSQLState();
     return $bugingroup;
-}
-
-sub BugInAnyGroup {
-    my ($bugid) = (@_);
-    PushGlobalSQLState();
-    SendSQL("SELECT COUNT(bug_id) FROM bug_group_map
-            WHERE bug_id = $bugid"); 
-    my $buginanygroup = FetchOneColumn();
-    PopGlobalSQLState();
-    return $buginanygroup;
 }
 
 sub GroupExists {

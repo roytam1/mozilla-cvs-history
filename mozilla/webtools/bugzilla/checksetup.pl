@@ -1446,7 +1446,6 @@ $table{groups} =
     userregexp tinytext not null,
     isactive tinyint not null default 1,
 
-    unique(id),
     unique(name)';
 
 $table{logincookies} =
@@ -1715,8 +1714,10 @@ sub AddGroup {
 
 #sub RenameField ($$$);
 sub GetFieldDef ($$);
+sub GetIndexDef ($$);
 sub AddField ($$$);
 AddField('groups', 'id', 'mediumint not null auto_increment primary key');
+$dbh->do("ALTER TABLE groups DROP INDEX bit") if GetIndexDef("groups","bit");
 
 AddGroup 'tweakparams',      'Can tweak operating parameters';
 AddGroup 'editusers',      'Can edit or disable users';
@@ -1820,6 +1821,7 @@ AddFDef("longdesc", "Comment", 0);
 AddFDef("alias", "Alias", 0);
 AddFDef("everconfirmed", "Ever Confirmed", 0);
 AddFDef("reporter_accessible", "Reporter Accessible", 0);
+AddFDef("bug_group", "Bug Group", 0);
 AddFDef("cc_accessible", "CC Accessible", 0);
 
 ###########################################################################
@@ -2610,7 +2612,7 @@ if (!GetFieldDef('bugs', 'lastdiffed')) {
 # in my database.  This code detects that, cleans up the duplicates, and
 # then tweaks the table to declare the field to be unique.  What a pain.
 
-if (GetIndexDef('profiles', 'login_name')) {
+if (GetIndexDef('profiles', 'login_name')->[1]) {
     print "Searching for duplicate entries in the profiles table ...\n";
     while (1) {
         # This code is weird in that it loops around and keeps doing this
@@ -3174,7 +3176,6 @@ if (GetFieldDef("profiles", "groupset")) {
                    VALUES($bid, $gid)");
         }
     }
-    AddFDef("bug_group", "Bug Group", 0);
     DropField('profiles','groupset');
     DropField('profiles','blessgroupset');
     DropField('bugs','groupset');

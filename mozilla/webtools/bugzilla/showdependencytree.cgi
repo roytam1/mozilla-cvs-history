@@ -144,7 +144,9 @@ sub GetBug {
     # and returns it to the calling code.
     my ($id) = @_;
     
-    SendSQL("SELECT 1, 
+    my $bug = {};
+    if (CanSeeBug($id,$::userid)) {
+        SendSQL("SELECT 1, 
                                   bug_status, 
                                   short_desc, 
                                   $milestone_column, 
@@ -154,14 +156,14 @@ sub GetBug {
                             WHERE bugs.bug_id = $id
                               AND bugs.assigned_to = assignee.userid");
     
-    my $bug = {};
     
-    ($bug->{'exists'}, 
-     $bug->{'status'}, 
-     $bug->{'summary'}, 
-     $bug->{'milestone'}, 
-     $bug->{'assignee_id'}, 
-     $bug->{'assignee_email'}) = FetchSQLData() if (CanSeeBug($id,$::userid));
+        ($bug->{'exists'}, 
+         $bug->{'status'}, 
+         $bug->{'summary'}, 
+         $bug->{'milestone'}, 
+         $bug->{'assignee_id'}, 
+         $bug->{'assignee_email'}) = FetchSQLData();
+     }
     
     $bug->{'open'} = IsOpenedState($bug->{'status'});
     $bug->{'dependencies'} = [];

@@ -621,23 +621,23 @@ while (my @row = FetchSQLData()) {
     }
 
     # check to see if this user can see this bug
-    if (CanSeeBug($bug->{'id'}, $::userid)) {
-        # Process certain values further (i.e. date format conversion).
-        if ($bug->{'changeddate'}) {
-            $bug->{'changeddate'} =~ 
-              s/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})$/$1-$2-$3 $4:$5:$6/;
-            $bug->{'changeddate'} = DiffDate($bug->{'changeddate'});
-        }
-        ($bug->{'opendate'} = DiffDate($bug->{'opendate'})) if $bug->{'opendate'};
-    
-        # Record the owner, product, and status in the big hashes of those things.
-        $bugowners->{$bug->{'owner'}} = 1 if $bug->{'owner'};
-        $bugproducts->{$bug->{'product'}} = 1 if $bug->{'product'};
-        $bugstatuses->{$bug->{'status'}} = 1 if $bug->{'status'};
-    
-        # Add the record to the list.
-        push(@bugs, $bug);
+    next unless (CanSeeBug($bug->{'id'}, $::userid));
+
+    # Process certain values further (i.e. date format conversion).
+    if ($bug->{'changeddate'}) {
+        $bug->{'changeddate'} =~ 
+          s/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})$/$1-$2-$3 $4:$5:$6/;
+        $bug->{'changeddate'} = DiffDate($bug->{'changeddate'});
     }
+    ($bug->{'opendate'} = DiffDate($bug->{'opendate'})) if $bug->{'opendate'};
+
+    # Record the owner, product, and status in the big hashes of those things.
+    $bugowners->{$bug->{'owner'}} = 1 if $bug->{'owner'};
+    $bugproducts->{$bug->{'product'}} = 1 if $bug->{'product'};
+    $bugstatuses->{$bug->{'status'}} = 1 if $bug->{'status'};
+
+    # Add the record to the list.
+    push(@bugs, $bug);
 }
 
 # Switch back from the shadow database to the regular database so PutFooter()
