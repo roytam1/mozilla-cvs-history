@@ -8,5 +8,85 @@ Now I am going to need to ask you a few questions about your installation.
 Again, if you have configured this installation before, I will load defaults 
 from your past installation. Otherwise, I will recommend some values for you.
 
+First of all, I am going to ask you to complete the 'localconfig' portion 
+of the configuration. To allow you to do this, I will need to put you into 
+a text editor (such as emacs, pico, vi, joe, etc). You can set many configuration 
+settings in the text editor and I will take over from there when you are done. 
+
 END
+
+ask('editor',<<'END','pico');
+What text editor would you like to use?
+END
+
+
+do pathfix('Conf/Supplies/localconfig'); #path fix so it works on win
+do pathfix('Conf/Supplies/localconfig.vars'); #read in the vars which are in another file
+
+if ($newstuff == "") {
+	output <<'EOF';
+	
+	After further checking, it has been realized that you do not require any localconfig 
+	configuration.
+	
+	EOF
+}
+
+if ($newstuff ne "") {
+	system(getConf('editor')."Conf/Supplies/localconfig")l
+}
+
+# 2000-Dec-18 - justdave@syndicomm.com - see Bug 52921
+# This is a hack to read in the values defined in localconfig without getting
+# them predeclared at compile time if they're missing from localconfig.
+# Ideas swiped from pp. 281-282, O'Reilly's "Programming Perl 2nd Edition"
+# Note that we won't need to do this in globals.pl because globals.pl couldn't
+# care less whether they were defined ahead of time or not. 
+my $my_db_check = ${*{$main::{'db_check'}}{SCALAR}};
+my $my_db_host = ${*{$main::{'db_host'}}{SCALAR}};
+my $my_db_port = ${*{$main::{'db_port'}}{SCALAR}};
+my $my_db_name = ${*{$main::{'db_name'}}{SCALAR}};
+my $my_db_user = ${*{$main::{'db_user'}}{SCALAR}};
+my $my_db_pass = ${*{$main::{'db_pass'}}{SCALAR}};
+my $my_create_htaccess = ${*{$main::{'create_htaccess'}}{SCALAR}};
+my $my_webservergroup = ${*{$main::{'webservergroup'}}{SCALAR}};
+my @my_severities = @{*{$main::{'severities'}}{ARRAY}};
+my @my_priorities = @{*{$main::{'priorities'}}{ARRAY}};
+my @my_platforms = @{*{$main::{'platforms'}}{ARRAY}};
+my @my_opsys = @{*{$main::{'opsys'}}{ARRAY}};
+
+
+# If they are here they must have answered localconfig questions so we need to 
+# rerun this module.
+output <<'EOF';
+
+Because localconfig has been changed, I need to reload values from the file.
+To accomplish this, I will need to restart this portion of Configure. 
+Please stand by...
+
+
+
+
+EOF
+require(pathfix('Conf/LocalConfig.cm'));
+
+#=================================================#
+#Helper subs:
+
+sub LocalVar ($$)
+{
+    my ($name, $definition) = @_;
+    return if ($main::{$name}); # if localconfig declared it, we're done.
+    $newstuff .= " " . $name;
+    open FILE, '>>localconfig';
+    print FILE $definition, "\n\n";
+    close FILE;
+}
+
+sub pathfix {
+    my ($path) = @_;
+    my @pathlist = split('/',$path);
+    return File::Spec->catfile(@pathlist);
+}
+
 1;
