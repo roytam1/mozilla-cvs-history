@@ -251,7 +251,7 @@ sub update2tree {
 
 sub bug_id2bug_url {
   my ($tinderbox_ref) = @_;
-  my ($bug_id) = $tinderbox{$BTData::BUGID_FIELD_NAME};
+  my ($bug_id) = $tinderbox_ref->{$BTData::BUGID_FIELD_NAME};
 
   my ($out);
 
