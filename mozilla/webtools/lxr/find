@@ -28,9 +28,12 @@ use LXR::Common;
 use LXR::Config;
 
 sub find {
-    print("<p align=center>\n",
-	  "Search for files using regular expressions\n",
-	  "<form method=get action=\"find\">\n");
+    print("<P ALIGN=CENTER>\n",
+	  "Search for files (by name) using regular expressions.\n",
+	  "<BR>(Need some <A HREF=\"search-help.html\">Hints</A> ",
+	  "on performing searches?)\n");
+
+    print ("<form method=get action=\"find\">\n");
 
     foreach ($Conf->allvariables) {
 	if ($Conf->variable($_) ne $Conf->vardefault($_)) {

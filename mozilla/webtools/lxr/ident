@@ -41,6 +41,13 @@ use DB_File;
 
 
 sub ident {
+
+    print("<P ALIGN=CENTER>\n",
+	  "Free-text search for an identifier (function name, variable ",
+	  "name, typedef, etc.).\n",
+	  "<BR>(Need some <A HREF=\"search-help.html\">Hints</A> ",
+	  "on performing searches?)\n");
+
     print("<form method=get action=\"ident\">\n");
 
     foreach ($Conf->allvariables) {
@@ -50,8 +57,8 @@ sub ident {
 	}
     }
     
-    print("Identifier: <input type=text name=\"i\" ",
-	  "value=\"",$identifier,"\" size=40>\n",
+    print("<B>Identifier: </B><input type=text name=\"i\" ",
+	  "value=\"",$identifier,"\" size=50>\n",
 	  "<input type=submit value=\"Find\">\n",
 	  "</form>\n");
 
