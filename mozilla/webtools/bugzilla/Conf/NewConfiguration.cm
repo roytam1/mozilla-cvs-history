@@ -129,7 +129,7 @@ if ($^O !~ /MSWin32/i) { # no webservergroup for win
 You will now need to set the group your web server runs on.
 If you do not have access to the group your web server runs under,
 set this to "". However, if you do set this to "", then your Bugzilla 
-installationwill be _VERY_ insecure, because some files will be world 
+installation will be _VERY_ insecure, because some files will be world 
 readable/writable,and so anyone who can get local access to your machine 
 can do whatever theywant. You should only have this set to "" if this is 
 a testing installation and you cannot set this up any other way. 
@@ -150,9 +150,106 @@ EOF
 }
 
 output "Installation configuration\n\n";
+# ZLL: note that currently this has not been adjusted to allow distributors to customize
+# this should be done if there is demand
 
+# we use File::Temp to get a secure temp file for the user to edit
 use File::Temp;
-my ($fh,$tempname) = File::Temp::tempfile();
+my ($fh,$tempname) = File::Temp::tempfile(); 
+
+print $fh <<EOF;
+# Configuration of additional settings
+# These settings would be too difficult to set in the normal 
+# configuration interface, so you can set them here instead.
+
+# If you need to change these settings later, simply rerun Configure.pl, 
+# selecting the option to upgrade or change your settings. Change these settings
+# as you desire and Configure.pl will adjust your database as needed. It is not 
+# recomended to attempt to change your settings manually
+
+# IMPORTANT: do not change this line:
+package EditorSettings;
+
+###############################
+# Begin configuration section #
+###############################
+\@severities = (
+        "blocker",
+        "critical",
+        "major",
+        "normal",
+        "minor",
+        "trivial",
+        "enhancement"
+);
+
+\@priorities = (
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P5"
+);
+
+\@opsys = (
+        "All",
+        "Windows 3.1",
+        "Windows 95",
+        "Windows 98",
+        "Windows ME",  # Millenium Edition (upgrade of 98)
+        "Windows 2000",
+        "Windows NT",
+        "Windows XP",
+        "Mac System 7",
+        "Mac System 7.5",
+        "Mac System 7.6.1",
+        "Mac System 8.0",
+        "Mac System 8.5",
+        "Mac System 8.6",
+        "Mac System 9.x",
+        "Mac OS X 10.0",
+        "Mac OS X 10.1",
+        "Mac OS X 10.2",
+        "Linux",
+        "BSDI",
+        "FreeBSD",
+        "NetBSD",
+        "OpenBSD",
+        "AIX",
+        "BeOS",
+        "HP-UX",
+        "IRIX",
+        "Neutrino",
+        "OpenVMS",
+        "OS/2",
+        "OSF/1",
+        "Solaris",
+        "SunOS",
+        "other"
+);
+
+\@platforms = (
+        "All",
+        "DEC",
+        "HP",
+        "Macintosh",
+        "PC",
+        "SGI",
+        "Sun",
+        "Other"
+);
+
+\$contenttypes = {
+  "html" => "text/html" , 
+   "rdf" => "application/xml" , 
+   "xml" => "text/xml" , 
+    "js" => "application/x-javascript" , 
+   "csv" => "text/plain" ,
+   "png" => "image/png" ,
+};
+EOF
+
+close($fh);
 
 output "In order to finish configuring your Bugzilla install, I will need\n";
 output "to open your editor of choice. If this fails, please run the following commands\n";
@@ -160,8 +257,14 @@ output "manually and set your settings in the config file:\n";
 output getConf('editor')." $tempname\n";
 output "perl Configure.pl --perl=".getConf('perl')." --tempfile=$tempname\n";
 
+output "\nLaunching your editor, this may take a moment...\n";
+sleep(4); # wait a bit so they can read this or at least know it's here
+	      # probably should ask them to hit return instead
+
 system(getConf('editor')." ".$tempname); # run the editor
 
+do($fh);
 
+storeData();
 
 1;
