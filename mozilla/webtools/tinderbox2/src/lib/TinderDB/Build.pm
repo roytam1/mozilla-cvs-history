@@ -805,13 +805,18 @@ sub apply_db_updates {
           ($different_builds) && 
           ($separation < $safe_separation) 
           ) {
+
           print LOG (
                      "Not enough separation between builds. ".
                      "separation: $separation tree: $tree build: $build \n".
                      "");
+
+          # Remove old entry
           shift @{ $DATABASE{$tree}{$build}{'recs'} };          
       }
 
+
+    } 
     # Is this report for the same build as the [0] entry? If so we do not
     # want two entries for the same build. Must throw out either
     # update or record in the database.
