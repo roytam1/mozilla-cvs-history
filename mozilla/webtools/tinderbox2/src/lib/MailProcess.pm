@@ -279,8 +279,6 @@ sub mailstring2time {
   # Date: Sun, 28 Feb 1999 08:36:38 +0800 (CST)
   # Date: Thu, 3 Sep 1998 22:14:08 -0400 (EDT)
   
-  my $time = undef;
-
   my ($mday, $month_str, $year, $hour, $min, $sec, $tz_offset) = ();
 
   if ( $string =~ m/
@@ -305,7 +303,8 @@ sub mailstring2time {
   # remember that the local time of the machine doing the conversion
   # may not be in the same time zone as the string we are processing.
 
-  my ($time) = timegm($sec,$min,$hour,$mday,$month,$year);
+  my $time = undef;
+  ($time) = timegm($sec,$min,$hour,$mday,$month,$year);
   $time -= $hour_offset;
 
   return $time;
