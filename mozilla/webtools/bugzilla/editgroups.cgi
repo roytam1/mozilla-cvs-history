@@ -103,7 +103,7 @@ unless ($action) {
     print "<form method=post action=editgroups.cgi>\n";
     print "<table border=1>\n";
     print "<tr>";
-    print "<th>Bit</th>";
+    print "<th>Id</th>";
     print "<th>Name</th>";
     print "<th>Description</th>";
     print "<th>User RegExp</th>";
@@ -111,24 +111,23 @@ unless ($action) {
     print "<th>Action</th>";
     print "</tr>\n";
 
-    SendSQL("SELECT bit,name,description,userregexp,isactive " .
+    SendSQL("SELECT group_id,name,description,userregexp,isactive " .
             "FROM groups " .
-            "WHERE isbuggroup != 0 " .
-            "ORDER BY bit");
+            "ORDER BY group_id");
 
     while (MoreSQLData()) {
-        my ($bit, $name, $desc, $regexp, $isactive) = FetchSQLData();
+        my ($groupid, $name, $desc, $regexp, $isactive) = FetchSQLData();
         print "<tr>\n";
-        print "<td valign=middle>$bit</td>\n";
-        print "<td><input size=20 name=\"name-$bit\" value=\"$name\">\n";
-        print "<input type=hidden name=\"oldname-$bit\" value=\"$name\"></td>\n";
-        print "<td><input size=40 name=\"desc-$bit\" value=\"$desc\">\n";
-        print "<input type=hidden name=\"olddesc-$bit\" value=\"$desc\"></td>\n";
-        print "<td><input size=30 name=\"regexp-$bit\" value=\"$regexp\">\n";
-        print "<input type=hidden name=\"oldregexp-$bit\" value=\"$regexp\"></td>\n";
-        print "<td><input type=\"checkbox\" name=\"isactive-$bit\" value=\"1\"" . ($isactive ? " checked" : "") . ">\n";
-        print "<input type=hidden name=\"oldisactive-$bit\" value=\"$isactive\"></td>\n";
-        print "<td align=center valign=middle><a href=\"editgroups.cgi?action=del&group=$bit\">Delete</a></td>\n";
+        print "<td valign=middle>$groupid</td>\n";
+        print "<td>$groupid\n";
+        print "<input type=hidden name=\"oldname-$groupid\" value=\"$name\"></td>\n";
+        print "<td><input size=40 name=\"desc-$groupid\" value=\"$desc\">\n";
+        print "<input type=hidden name=\"olddesc-$groupid\" value=\"$desc\"></td>\n";
+        print "<td><input size=30 name=\"regexp-$groupid\" value=\"$regexp\">\n";
+        print "<input type=hidden name=\"oldregexp-$groupid\" value=\"$regexp\"></td>\n";
+        print "<td><input type=\"checkbox\" name=\"isactive-$groupid\" value=\"1\"" . ($isactive ? " checked" : "") . ">\n";
+        print "<input type=hidden name=\"oldisactive-$groupid\" value=\"$isactive\"></td>\n";
+        print "<td align=center valign=middle><a href=\"editgroups.cgi?action=del&group=$groupid\">Delete</a></td>\n";
         print "</tr>\n";
     }
 
@@ -158,38 +157,6 @@ than deleting the group would be.<p>";
     print "In addition, the following groups that determine user privileges
 exist.  You can only edit the User rexexp on these groups.  You should also take
 care not to duplicate the Names of any of them in your user groups.<p>";
-    print "Also please note that both of the Submit Changes buttons on this page
-will submit the changes in both tables.  There are two buttons simply for the
-sake of convience.<p>";
-
-    print "<table border=1>\n";
-    print "<tr>";
-    print "<th>Bit</th>";
-    print "<th>Name</th>";
-    print "<th>Description</th>";
-    print "<th>User RegExp</th>";
-    print "</tr>\n";
-
-    SendSQL("SELECT bit,name,description,userregexp " .
-            "FROM groups " .
-            "WHERE isbuggroup = 0 " .
-            "ORDER BY bit");
-
-    while (MoreSQLData()) {
-        my ($bit, $name, $desc, $regexp) = FetchSQLData();
-        print "<tr>\n";
-        print "<td>$bit</td>\n";
-        print "<td>$name</td>\n";
-        print "<input type=hidden name=\"name-$bit\" value=\"$name\">\n";
-        print "<input type=hidden name=\"oldname-$bit\" value=\"$name\">\n";
-        print "<td>$desc</td>\n";
-        print "<td><input type=text size=30 name=\"regexp-$bit\" value=\"$regexp\"></td>\n";
-        print "<input type=hidden name=\"oldregexp-$bit\" value=\"$regexp\">\n";
-        print "</tr>\n";
-    }
-
-    print "</table><p>\n";
-    print "<input type=submit value=\"Submit changes\">\n";
     print "</form>\n";
 
     PutFooter();
@@ -288,62 +255,17 @@ if ($action eq 'new') {
         exit;
     }
 
-    # Major hack for bit values...  perl can't handle 64-bit ints, so I can't
-    # just do the math to get the next available bit number, gotta handle
-    # them as strings...  also, we're actually only going to allow 63 bits
-    # because that's all that opblessgroupset masks for (the high bit is off
-    # to avoid signing issues).
-
-    my @bitvals = ('1','2','4','8','16','32','64','128','256','512','1024',
-                   '2048','4096','8192','16384','32768',
-
-                   '65536','131072','262144','524288','1048576','2097152',
-                   '4194304','8388608','16777216','33554432','67108864',
-                   '134217728','268435456','536870912','1073741824',
-                   '2147483648',
-
-                   '4294967296','8589934592','17179869184','34359738368',
-                   '68719476736','137438953472','274877906944',
-                   '549755813888','1099511627776','2199023255552',
-                   '4398046511104','8796093022208','17592186044416',
-                   '35184372088832','70368744177664','140737488355328',
-
-                   '281474976710656','562949953421312','1125899906842624',
-                   '2251799813685248','4503599627370496','9007199254740992',
-                   '18014398509481984','36028797018963968','72057594037927936',
-                   '144115188075855872','288230376151711744',
-                   '576460752303423488','1152921504606846976',
-                   '2305843009213693952','4611686018427387904');
-
-    # First the next available bit
-    my $bit = "";
-    foreach (@bitvals) {
-        if ($bit eq "") {
-            SendSQL("SELECT bit FROM groups WHERE bit=" . SqlQuote($_));
-            if (!FetchOneColumn()) { $bit = $_; }
-        }
-    }
-    if ($bit eq "") {
-        ShowError("Sorry, you already have the maximum number of groups " .
-                  "defined.<BR><BR>You must delete a group first before you " .
-                  "can add any more.</B>");
-        PutTrailer("<a href=editgroups.cgi>Back to the group list</a>");
-        exit;
-    }
-
     # Add the new group
     SendSQL("INSERT INTO groups ( " .
-            "bit, name, description, isbuggroup, userregexp, isactive" .
+            "name, description, isbuggroup, userregexp, isactive, group_when " .
             " ) VALUES ( " .
-            $bit . "," .
             SqlQuote($name) . "," .
             SqlQuote($desc) . "," .
             "1," .
             SqlQuote($regexp) . "," . 
-            $isactive . ")" );
+            $isactive . ", NOW())" );
 
     print "OK, done.<p>\n";
-    print "Your new group was assigned bit #$bit.<p>";
     PutTrailer("<a href=\"editgroups.cgi?action=add\">Add another group</a>",
                "<a href=\"editgroups.cgi\">Back to the group list</a>");
     exit;

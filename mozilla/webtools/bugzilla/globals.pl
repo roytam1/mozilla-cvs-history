@@ -889,6 +889,16 @@ sub Crypt {
     return $cryptedpassword;
 }
 
+sub CheckGroup {
+    my ($user) = (@_);
+    PushGlobalSQLState();
+    SendSQL("SELECT userid FROM profiles, groups WHERE userid = $user " .
+            "AND  profiles.refreshed_when <= groups.group_when ");
+    my $ret = FetchSQLData();
+    PopGlobalSQLState();
+    return $ret;
+}
+
 sub DeriveGroup {
     my ($user) = (@_);
     PushGlobalSQLState();
@@ -901,7 +911,7 @@ sub DeriveGroup {
         my ($groupid, $rexp) = FetchSQLData();
         if ($login =~ m/$rexp/i) {        
             PushGlobalSQLState();
-            SendSQL("INSERT INTO member_group_map " .
+            SendSQL("INSERT IGNORE INTO member_group_map " .
                     "(member_id, group_id, maptype, isderived) " .
                     "VALUES ($user, $groupid, 0, 1)");
             PopGlobalSQLState();

@@ -504,6 +504,9 @@ sub quietly_check_login() {
     }
                     
     $::userid = $userid;
+    if (CheckGroup($userid)) {
+        DeriveGroup($userid);
+    }
     $vars->{'user'} = GetUserInfo($::userid);
     return $userid;
 }
@@ -910,6 +913,9 @@ Content-type: text/html
     if ($::dbwritesallowed) {
         SendSQL("UPDATE logincookies SET lastused = null " .
                 "WHERE cookie = $::COOKIE{'Bugzilla_logincookie'}");
+    }
+    if (CheckGroup($userid)) {
+        DeriveGroup($userid);
     }
     return $userid;
 }
