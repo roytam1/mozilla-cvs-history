@@ -268,9 +268,8 @@ sub ValidateBugID {
 
     # Make sure the bug number is a positive integer.
     # Whitespace can be ignored because the SQL server will ignore it.
-    $id =~ /^\s*([1-9][0-9]*)\s*$/
-    $_[0] = trim($_[0]); # Allow whitespace arround the number
-    detaint_natural($_[0])
+    $id = trim($id); # Allow whitespace arround the number
+    detaint_natural($id)
       || DisplayError("The bug number is invalid. If you are trying to use " .
                       "QuickSearch, you need to enable JavaScript in your " .
                       "browser. To help us fix this limitation, look " .
