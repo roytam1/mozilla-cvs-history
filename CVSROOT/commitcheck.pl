@@ -16,6 +16,9 @@ $branch{'3'} = 'HEAD';
 $fullname{'3'} = 'despotaccess';
 $blessed{'3'} = [];
 $super{'3'} = ['despotdaemon%netscape.com',];
+$mode{'46'} = 'Open';
+$branch{'46'} = 'HEAD';
+$fullname{'46'} = 'ef';
 $mode{'21'} = 'Open';
 $branch{'21'} = 'HEAD';
 $fullname{'21'} = 'gnomefe';
@@ -44,6 +47,7 @@ if (m:^jpeg/.*$:) {return '12';}
 if (m:^mozilla/[^/]*$:) {return '19';}
 if (m:^mozilla/cmd/gnomefe/.*$:) {return '21';}
 if (m:^nsprpub/.*$:) {return '24';}
+if (m:^mozilla/ef/.*$:) {return '46';}
 }
 return '';
 }
