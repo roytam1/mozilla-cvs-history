@@ -117,8 +117,7 @@ sub summary_pages {
                      );
   }
 
-  my ($index_file) = (FileStructure::get_filename($tree,'tree_HTML').
-                      "/index.html");
+  my ($index_file) = FileStructure::get_filename($tree,'index');
 
   push @index_html, (
                      "<html>\n\t<head><title>Tree: $tree</title></head>\n".
@@ -293,7 +292,10 @@ EOF
 EOF
   }
 
-  my $global_index_file = "$FileStructure::TINDERBOX_DIR/index.html";
+  my $global_index_file = (
+                           $FileStructure::TINDERBOX_DIR.
+                           "/".$FileStructure::GLOBAL_INDEX_FILE
+                          );
   
   main::overwrite_file ($global_index_file, $out);
 
@@ -345,7 +347,7 @@ EOF
                                      "/status\.html"),
                           );
   
-  $body .= "\t\t</tr><tr>\n\n";
+  $body .= "\t\t</th></tr><tr>\n\n";
   
   for ($i=0; $i <= $#BUILD_NAMES; $i++) {
     my ($buildname) = $BUILD_NAMES[$i];
