@@ -1022,14 +1022,14 @@ $table{dependencies} =
 # http://bugzilla.mozilla.org/show_bug.cgi?id=75482
 
 $table{groups} =
-   'bit bigint not null,
+   'group_bit bigint not null,
     name varchar(255) not null,
     description text not null,
     isbuggroup tinyint not null,
     userregexp tinytext not null,
     isactive tinyint not null default 1,
 
-    unique(bit),
+    unique(group_bit),
     unique(name)';
 
 
@@ -1237,7 +1237,7 @@ sub AddGroup {
     return if GroupExists($name);
     
     # get highest bit number
-    my $sth = $dbh->prepare("SELECT bit FROM groups ORDER BY bit DESC");
+    my $sth = $dbh->prepare("SELECT group_bit FROM groups ORDER BY group_bit DESC");
     $sth->execute;
     my @row = $sth->fetchrow_array;
 
@@ -1252,7 +1252,7 @@ sub AddGroup {
    
     print "Adding group $name ...\n";
     $sth = $dbh->prepare('INSERT INTO groups
-                          (bit, name, description, userregexp, isbuggroup)
+                          (group_bit, name, description, userregexp, isbuggroup)
                           VALUES (?, ?, ?, ?, ?)');
     $sth->execute($bit, $name, $desc, $userregexp, 0);
     return $bit;

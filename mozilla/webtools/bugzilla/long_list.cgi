@@ -69,7 +69,13 @@ select
   bugs.status_whiteboard,
   bugs.keywords
 from bugs,profiles assign,profiles report
-where assign.userid = bugs.assigned_to and report.userid = bugs.reporter and";
+where assign.userid = bugs.assigned_to and report.userid = bugs.reporter";
+
+if ($::driver eq 'mysql') {
+	$generic_query .= " AND bugs.groupset & $::usergroupset = bugs.groupset AND ";
+} elsif ($::driver eq 'Pg') {
+	$generic_query .= " AND bugs.groupset & int8($::usergroupset) = bugs.groupset AND ";
+}
 
 $::FORM{'buglist'} = "" unless exists $::FORM{'buglist'};
 foreach my $bug (split(/:/, $::FORM{'buglist'})) {

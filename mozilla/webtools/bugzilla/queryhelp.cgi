@@ -508,7 +508,7 @@ my $max_table_size = 50;
 SendSQL("SELECT keyworddefs.name, keyworddefs.description, 
                 COUNT(keywords.bug_id), keywords.bug_id
          FROM keyworddefs LEFT JOIN keywords ON keyworddefs.id=keywords.keywordid
-         GROUP BY keyworddefs.id
+         GROUP BY keywords.bug_id, keyworddefs.name, keyworddefs.description
          ORDER BY keyworddefs.name");
 
 while (MoreSQLData()) {

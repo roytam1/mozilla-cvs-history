@@ -23,6 +23,7 @@
 
 use diagnostics;
 use strict;
+use MIME::Base64;
 
 require "CGI.pl";
 
@@ -88,13 +89,16 @@ What kind of file is this?
         PuntTryAgain("You must select a legal mime type.  '<tt>" .
         html_quote($mimetype) . "</tt>' simply will not do.");
     }
-    SendSQL("insert into attachments (bug_id, filename, description, mimetype, ispatch, submitter_id, thedata) values ($id," .
+	
+	my $data = encode_base64($::FORM{'data'});
+    SendSQL("insert into attachments (bug_id, filename, description, 
+			mimetype, ispatch, submitter_id, thedata) values ( $id," .
             SqlQuote($::FILENAME{'data'}) . ", " . SqlQuote($desc) . ", " .
             SqlQuote($mimetype) . ", $ispatch, " .
-            DBNameToIdAndCheck($::COOKIE{'Bugzilla_login'}) . ", " .
-            SqlQuote($::FORM{'data'}) . ")");
-    SendSQL("select LAST_INSERT_ID()");
-    my $attachid = FetchOneColumn();
+           	DBNameToIdAndCheck($::COOKIE{'Bugzilla_login'}) . ", " .
+#            SqlQuote($::FORM{'data'}) . ")");
+			SqlQuote($data) . ")");
+    my $attachid = CurrId("attachments_attach_id_seq");
     AppendComment($id, $::COOKIE{"Bugzilla_login"},
                   "Created an attachment (id=$attachid)\n$desc\n");
 

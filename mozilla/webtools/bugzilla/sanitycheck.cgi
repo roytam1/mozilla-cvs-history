@@ -23,6 +23,7 @@
 
 use diagnostics;
 use strict;
+use POSIX;
 
 require "CGI.pl";
 
@@ -47,7 +48,9 @@ UserInGroup("editbugs")
 print "Content-type: text/html\n";
 print "\n";
 
-SendSQL("set SQL_BIG_TABLES=1");
+if ($::driver eq 'mysql') {
+	SendSQL("set SQL_BIG_TABLES=1");
+}
 
 my $offervotecacherebuild = 0;
 
@@ -121,8 +124,10 @@ PutHeader("Bugzilla Sanity Check");
 
 if (exists $::FORM{'rebuildvotecache'}) {
     Status("OK, now rebuilding vote cache.");
-    SendSQL("lock tables bugs write, votes read");
-    SendSQL("update bugs set votes = 0, delta_ts=delta_ts");
+	if ($::driver eq 'mysql') {
+	    SendSQL("lock tables bugs write, votes read");
+	}	
+    SendSQL("update bugs set votes = 0, delta_ts=now()");
     SendSQL("select bug_id, sum(count) from votes group by bug_id");
     my %votes;
     while (@row = FetchSQLData()) {
@@ -130,9 +135,11 @@ if (exists $::FORM{'rebuildvotecache'}) {
         $votes{$id} = $v;
     }
     foreach my $id (keys %votes) {
-        SendSQL("update bugs set votes = $votes{$id}, delta_ts=delta_ts where bug_id = $id");
+        SendSQL("update bugs set votes = $votes{$id}, delta_ts=now() where bug_id = $id");
     }
-    SendSQL("unlock tables");
+	if ($::driver eq 'mysql') {
+	    SendSQL("unlock tables");
+	}
     Status("Vote cache has been rebuilt.");
 }
 
@@ -180,6 +187,24 @@ CrossCheck("profiles", "userid",
            ["components", "initialowner", "value"],
            ["components", "initialqacontact", "value", ["0"]]);
 
+#Status("Checking passwords");
+#SendSQL("SELECT COUNT(*) FROM profiles WHERE cryptpassword != ENCRYPT(password, left(cryptpassword, 2))");
+#my $count = FetchOneColumn();
+#if ($count) {
+#    Alert("$count entries have problems in their crypted password.");
+#    if ($::FORM{'rebuildpasswords'}) {
+#        Status("Rebuilding passwords");
+#        SendSQL("UPDATE profiles
+#                 SET cryptpassword = ENCRYPT(password,
+#                                            left(cryptpassword, 2))
+#                 WHERE cryptpassword != ENCRYPT(password,
+#                                                left(cryptpassword, 2))");
+#        Status("Passwords have been rebuilt.");
+#    } else {
+#        print qq{<a href="sanitycheck.cgi?rebuildpasswords=1">Click here to rebuild the crypted passwords</a><p>\n};
+#    }
+#}
+
 CrossCheck("products", "product",
            ["bugs", "product", "bug_id"],
            ["components", "program", "value"],
@@ -189,17 +214,23 @@ CrossCheck("products", "product",
 
 
 Status("Checking groups");
-SendSQL("select bit from groups where bit != pow(2, round(log(bit) / log(2)))");
+SendSQL("select group_bit from groups");
 while (my $bit = FetchOneColumn()) {
-    Alert("Illegal bit number found in group table: $bit");
+	if ( $bit != pow(2, int(log($bit) / log(2))) ) {
+	    Alert("Illegal bit number found in group table: $bit");
+	}
 }
     
-SendSQL("select sum(bit) from groups where isbuggroup != 0");
+SendSQL("select sum(group_bit) from groups where isbuggroup != 0");
 my $buggroupset = FetchOneColumn();
 if (!defined $buggroupset || $buggroupset eq "") {
     $buggroupset = 0;
 }
-SendSQL("select bug_id, groupset from bugs where groupset & $buggroupset != groupset");
+if ($::driver eq 'mysql') {
+	SendSQL("select bug_id, groupset from bugs where groupset & $buggroupset != groupset");
+} elsif ($::driver eq 'Pg') {
+    SendSQL("select bug_id, groupset from bugs where (groupset & int8($buggroupset)) != groupset");
+}
 while (@row = FetchSQLData()) {
     Alert("Bad groupset $row[1] found in bug " . BugLink($row[0]));
 }
@@ -285,8 +316,7 @@ Status("Checking profile logins");
 my $emailregexp = Param("emailregexp");
 $emailregexp =~ s/'/\\'/g;
 SendSQL("SELECT userid, login_name FROM profiles " .
-        "WHERE login_name NOT REGEXP '" . $emailregexp . "'");
-
+    	"WHERE " . SqlRegEx("login_name", SqlQuote($emailregexp), "not"));
 
 while (my ($id,$email) = (FetchSQLData())) {
     Alert "Bad profile email address, id=$id,  &lt;$email&gt;."
@@ -369,7 +399,9 @@ Status("Checking cached keywords");
 my %realk;
 
 if (exists $::FORM{'rebuildkeywordcache'}) {
-    SendSQL("LOCK TABLES bugs write, keywords read, keyworddefs read");
+	if ($::driver eq 'mysql') {
+	    SendSQL("LOCK TABLES bugs write, keywords read, keyworddefs read");
+	}
 }
 
 SendSQL("SELECT keywords.bug_id, keyworddefs.name " .
@@ -418,10 +450,13 @@ if (@badbugs) {
             if (exists($realk{$b})) {
                 $k = $realk{$b};
             }
-            SendSQL("UPDATE bugs SET delta_ts = delta_ts, keywords = " .
+            SendSQL("UPDATE bugs SET delta_ts = now(), keywords = " .
                     SqlQuote($k) .
                     " WHERE bug_id = $b");
         }
+		if ($::driver eq 'mysql') {
+	        SendSQL("UNLOCK TABLES");
+		}
         Status("Keyword cache fixed.");
     } else {
         print qq{<a href="sanitycheck.cgi?rebuildkeywordcache=1">Click here to rebuild the keyword cache</a><p>\n};
@@ -579,6 +614,32 @@ if (@badbugs > 0) {
     Alert("Bugs that have enough votes to be confirmed but haven't been: " .
           join (", ", @badbugs));
 }
+
+############################################################################
+# Check for missing values in enum tables that are present in bugs table
+############################################################################
+
+foreach my $enum ( "bug_status", "resolution", "bug_severity", "op_sys", "priority", "rep_platform" ) {
+   my %bug_values;
+   my %table_values;
+   Status("Checking for orphan $enum entries");
+   SendSQL("select distinct $enum from bugs");
+   while ( my @row = FetchSQLData() ) {
+       $bug_values{$row[0]} = 1;
+   }   
+   SendSQL("select value from $enum");
+   while ( my @row = FetchSQLData() ) {
+        $table_values{$row[0]} = 1;
+   }
+   foreach my $value ( keys %bug_values ) {
+       if ( !$table_values{$value} ) {
+           SendSQL("select count(bug_id) from bugs where $enum = " . SqlQuote($value));
+           my $count = FetchOneColumn();
+           Alert("There were $count bugs with a $enum value of $value which is not in the $enum enum table.");
+       }
+   }
+}
+
 
 ###########################################################################
 # End

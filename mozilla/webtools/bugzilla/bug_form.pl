@@ -49,7 +49,10 @@ my $loginok = quietly_check_login();
 
 my $id = $::FORM{'id'};
 
-my $query = "
+my $query = "";
+
+if ($::driver eq 'mysql') {
+	$query = "
 select
         bugs.bug_id,
         product,
@@ -75,6 +78,36 @@ select
 from bugs left join votes using(bug_id)
 where bugs.bug_id = $id
 group by bugs.bug_id";
+
+} elsif ($::driver eq 'Pg') {
+	$query = "
+SELECT
+    bugs.bug_id,
+    product,
+    version,
+    rep_platform,
+    op_sys,
+    bug_status,
+    resolution,
+    priority,
+    bug_severity,
+    component,
+    assigned_to,
+    reporter,
+    bug_file_loc,
+    short_desc,
+    target_milestone,
+    qa_contact,
+    status_whiteboard,
+    TO_CHAR(creation_ts, 'YYYY-MM-DD HH24:MI:SS'),
+    groupset,
+    TO_CHAR(delta_ts, 'YYYYMMDDHH24MISS')
+FROM
+	bugs
+WHERE 
+	bugs.bug_id = $id
+	AND (bugs.groupset & int8($::usergroupset)) = bugs.groupset";
+}
 
 SendSQL($query);
 my %bug;
@@ -150,7 +183,7 @@ if (defined $URL && $URL ne "none" && $URL ne "NULL" && $URL ne "") {
 }
 
 print "
-<INPUT TYPE=HIDDEN NAME=\"delta_ts\" VALUE=\"$bug{'delta_ts'}\">
+<INPUT TYPE=HIDDEN NAME=\"delta_ts\" VALUE=\"" . value_quote($bug{'delta_ts'}) . "\">
 <INPUT TYPE=HIDDEN NAME=\"longdesclength\" VALUE=\"$longdesclength\">
 <INPUT TYPE=HIDDEN NAME=\"id\" VALUE=$id>
   <TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0><TR>
@@ -359,14 +392,25 @@ print "
 
 
 if ($::usergroupset ne '0') {
-    SendSQL("select bit, name, description, (bit & $bug{'groupset'} != 0) " .
-            "from groups where bit & $::usergroupset != 0 " .
-            "and isbuggroup != 0 " . 
-            # Include active groups as well as inactive groups to which
-            # the bug already belongs.  This way the bug can be removed
-            # from an inactive group but can only be added to active ones.
-            "and (isactive = 1 or (bit & $bug{'groupset'} != 0)) " . 
-            "order by description");
+	if ($::driver eq 'mysql') {
+	    SendSQL("select bit, name, description, (bit & $bug{'groupset'} != 0) " . 
+    	        "from groups where (bit & $::usergroupset) != 0 " . 
+        	    "and isbuggroup != 0 " . 
+            	# Include active groups as well as inactive groups to which
+	            # the bug already belongs.  This way the bug can be removed
+    	        # from an inactive group but can only be added to active ones.
+        	    "and (isactive = 1 or (bit & $bug{'groupset'} != 0)) " . 
+            	"order by description");
+	} elsif ($::driver eq 'Pg') {
+        SendSQL("select group_bit, name, description, (group_bit & int8($bug{'groupset'})) != 0 " .
+                "from groups where (group_bit & int8($::usergroupset)) != 0 " .
+                "and isbuggroup != 0 " .
+                # Include active groups as well as inactive groups to which
+                # the bug already belongs.  This way the bug can be removed
+                # from an inactive group but can only be added to active ones.
+                "and (isactive = 1 or (group_bit & int8($bug{'groupset'}) != 0)) " .
+                "order by description");
+	}
     # We only print out a header bit for this section if there are any
     # results.
     my $groupFound = 0;
