@@ -298,12 +298,6 @@ $fullname{'93'} = 'Zlib';
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'HEAD') {
-if (m:^mozilla/modules/libimg/png/.*$:) {return '65';}
-if (m:^mozilla/layout/mathml/.*$:) {return '165';}
-if (m:^mozilla/intl/.*$:) {return '67';}
-if (m:^mozilla/browser/.*$:) {return '166';}
-if (m:^mozilla/chrome/.*$:) {return '166';}
-if (m:^mozilla/toolkit/.*$:) {return '166';}
 if (m:^mozilla/modules/oji/.*$:) {return '68';}
 if (m:^mozilla/nav-java/.*$:) {return '68';}
 if (m:^mozilla/sun-java/.*$:) {return '68';}
@@ -434,6 +428,12 @@ if (m:^mozilla/gfx/src/qt/.*$:) {return '161';}
 if (m:^mozilla/widget/src/qt/.*$:) {return '161';}
 if (m:^jpeg$:) {return '64';}
 if (m:^mozilla/extensions/p3p/.*$:) {return '162';}
+if (m:^mozilla/modules/libimg/png/.*$:) {return '65';}
+if (m:^mozilla/layout/mathml/.*$:) {return '165';}
+if (m:^mozilla/intl/.*$:) {return '67';}
+if (m:^mozilla/browser/.*$:) {return '166';}
+if (m:^mozilla/chrome/.*$:) {return '166';}
+if (m:^mozilla/toolkit/.*$:) {return '166';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
