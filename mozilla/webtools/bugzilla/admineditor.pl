@@ -264,9 +264,6 @@ sub AdminEditor() {
 
     confirm_login();
 
-    $::db->{Taint} = 1;
-    $::db->{Taint} = 1; # Silliness
-
     unless (UserInGroup($::grouprestrict)) {
         DisplayError("Sorry, you aren't a member of the $::grouprestrict group. " .
                      "And so, you aren't allowed to add, modify or delete $::valuetypeplural.",
