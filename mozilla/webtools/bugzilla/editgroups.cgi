@@ -203,10 +203,7 @@ if ($action eq 'changeform') {
            <INPUT SIZE=40 NAME=\"rexp\" VALUE=\"$rexp\"></TD></TR>";
     if ($isbuggroup == 1) {
         print "<TR><TH>Use For Bugs:</TH><TD>
-        <SELECT NAME=\"isactive\">
-          <OPTION VALUE=0 " . (($isactive == 0) ? "selected" : "") . ">no</OPTION>
-          <OPTION VALUE=1 " . (($isactive == 1) ? "selected" : "") . ">yes</OPTION>
-        </SELECT>
+        <INPUT TYPE=checkbox NAME =\"isactive\" VALUE=1 " . (($isactive == 1) ? "CHECKED" : "") . ">
         <INPUT TYPE=HIDDEN NAME=\"oldisactive\" VALUE=$isactive>
         </TD>
         </TR>";
