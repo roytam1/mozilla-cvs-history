@@ -377,15 +377,21 @@ sub is_break_cell {
     my ($tree,$time,$next_time,$last_treestate) = @_;
 
 
-    my $is_state1_same = (
-                          !(defined($DATABASE{$tree}{$next_time}{'treestate'})) ||
-                          ($last_treestate eq $DATABASE{$tree}{$next_time}{'treestate'})
-                          );
+    if (defined($DATABASE{$tree}{$time}{'treestate'})) {
+        $LAST_TREESTATE = $DATABASE{$tree}{$time}{'treestate'};
+    }
 
-    my $is_state2_same = (
-                          !(defined($DATABASE{$tree}{$time}{'treestate'})) ||
-                          ($last_treestate eq $DATABASE{$tree}{$time}{'treestate'})
-                          );
+    my $is_state1_same = (defined($LAST_TREESTATE)) &&
+        (
+         !(defined($DATABASE{$tree}{$next_time}{'treestate'})) ||
+         ($last_treestate eq $DATABASE{$tree}{$next_time}{'treestate'})
+         );
+
+    my $is_state2_same = (defined($LAST_TREESTATE)) &&
+        (
+         !(defined($DATABASE{$tree}{$time}{'treestate'})) ||
+         ($last_treestate eq $DATABASE{$tree}{$time}{'treestate'})
+         );
 
     $is_state_same = $is_state1_same && $is_state2_same;
     
@@ -417,33 +423,6 @@ sub status_table_row {
    return @outrow;
   }
     
-  my $time = $row_times->[$row_index];
-  if (defined($DATABASE{$tree}{$time}{'treestate'})) {
-      $LAST_TREESTATE = $DATABASE{$tree}{$time}{'treestate'};
-  }
-
-  # If there is no treestate, then the tree state has not changed
-  # since an early time.  The earliest time was assigned a state in
-  # apply_db_updates().  It is possible that there are no treestates at
-  # all this should not prevent the VC column from being rendered.
-
-  if (!($LAST_TREESTATE)) {
-      $LAST_TREESTATE = $TinderHeader::HEADER2DEFAULT_HTML{'TreeState'};
-  }
-
-  my ($cell_color) = TreeData::TreeState2color($LAST_TREESTATE);
-  my ($char) = TreeData::TreeState2char($LAST_TREESTATE);
-
-  my $cell_options;
-  my $text_browser_color_string;
-  
-  if ( ($LAST_TREESTATE) && ($cell_color) ) {
-      $cell_options = "bgcolor=$cell_color ";
-
-      $text_browser_color_string = 
-        HTMLPopUp::text_browser_color_string($cell_color, $char);
-  }
-
   # create a multi-row dummy cell for missing data?
   # cell stops if there is data or the treestate changes.
 
@@ -467,6 +446,28 @@ sub status_table_row {
   }
 
   $next_time = $DB_TIMES[$next_index];
+
+  # If there is no treestate, then the tree state has not changed
+  # since an early time.  The earliest time was assigned a state in
+  # apply_db_updates().  It is possible that there are no treestates at
+  # all this should not prevent the VC column from being rendered.
+
+  if (!($LAST_TREESTATE)) {
+      $LAST_TREESTATE = $TinderHeader::HEADER2DEFAULT_HTML{'TreeState'};
+  }
+
+  my ($cell_color) = TreeData::TreeState2color($LAST_TREESTATE);
+  my ($char) = TreeData::TreeState2char($LAST_TREESTATE);
+
+  my $cell_options;
+  my $text_browser_color_string;
+  
+  if ( ($LAST_TREESTATE) && ($cell_color) ) {
+      $cell_options = "bgcolor=$cell_color ";
+
+      $text_browser_color_string = 
+        HTMLPopUp::text_browser_color_string($cell_color, $char);
+  }
 
   # Do we need a multiline empty cell or do we have data?
 
