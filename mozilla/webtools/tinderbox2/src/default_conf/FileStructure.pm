@@ -89,8 +89,11 @@ $URL_HTML = ($TinderConfig::URL_HTML ||
          'gunzip' => "$URL_BIN/gunzip.cgi",
 
          'treepages' => "$URL_HTML",
+         
+         'regenerate' => "$URL_BIN/regenerate.cgi",  
 
 	);
+
 
 # the full path name tinderbox will use to access the tinderbox
 # servers root data directory
