@@ -756,10 +756,3 @@ SECKEY_PublicKeyStrengthInBits;
 ;+    local:
 ;+       *;
 ;+};
-;+NSS_3.9 { 	# NSS 3.9 release
-;+    global:
-PK11_FindSlotsByAliases;
-SEC_DupCrl;
-;+    local:
-;+       *;
-;+};

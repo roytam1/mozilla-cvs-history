@@ -3331,7 +3331,6 @@ pk11ListCertCallback(NSSCertificate *c, void *arg)
     PRBool isUnique = PR_FALSE;
     PRBool isCA = PR_FALSE;
     char *nickname = NULL;
-    char *tmpnickname = NULL;
     unsigned int certType;
 
     if ((type == PK11CertListUnique) || (type == PK11CertListRootUnique)) {
@@ -3368,51 +3367,15 @@ pk11ListCertCallback(NSSCertificate *c, void *arg)
     if( isCA  && (!CERT_IsCACert(newCert, &certType)) ) {
 	return PR_SUCCESS;
     }
-    if (isUnique) {
-	CERT_DupCertificate(newCert);
+    CERT_DupCertificate(newCert);
 
-        tmpnickname = STAN_GetCERTCertificateName(c);
-        if (tmpnickname) {
-            nickname = PORT_ArenaStrdup(certList->arena, tmpnickname);
-            PORT_Assert(nickname);
-            PORT_Free(tmpnickname);
-        }
+    nickname = STAN_GetCERTCertificateName(c);
 
-	/* put slot certs at the end */
-	if (newCert->slot && !PK11_IsInternal(newCert->slot)) {
-	    CERT_AddCertToListTailWithData(certList,newCert,nickname);
-	} else {
-	    CERT_AddCertToListHeadWithData(certList,newCert,nickname);
-	}
+    /* put slot certs at the end */
+    if (newCert->slot && !PK11_IsInternal(newCert->slot)) {
+    	CERT_AddCertToListTailWithData(certList,newCert,nickname);
     } else {
-	/* add multiple instances to the cert list */
-	nssCryptokiObject **ip;
-	nssCryptokiObject **instances = nssPKIObject_GetInstances(&c->object);
-	if (!instances) {
-	    return PR_SUCCESS;
-	}
-	for (ip = instances; *ip; ip++) {
-	    nssCryptokiObject *instance = *ip;
-	    PK11SlotInfo *slot = instance->token->pk11slot;
-
-	    /* put the same CERTCertificate in the list for all instances */
-	    CERT_DupCertificate(newCert);
-
-            tmpnickname = STAN_GetCERTCertificateNameForInstance(c, instance);
-            if (tmpnickname) {
-                nickname = PORT_ArenaStrdup(certList->arena, tmpnickname);
-                PORT_Assert(nickname);
-                PORT_Free(tmpnickname);
-            }
-
-	    /* put slot certs at the end */
-	    if (slot && !PK11_IsInternal(slot)) {
-		CERT_AddCertToListTailWithData(certList,newCert,nickname);
-	    } else {
-		CERT_AddCertToListHeadWithData(certList,newCert,nickname);
-	    }
-	}
-	nssCryptokiObjectArray_Destroy(instances);
+    	CERT_AddCertToListHeadWithData(certList,newCert,nickname);
     }
     return PR_SUCCESS;
 }

@@ -138,8 +138,6 @@ SECStatus PK11_TokenRefresh(PK11SlotInfo *slot);
  ******************************************************************/
 PK11SlotInfo *PK11_FindSlotByName(char *name);
 PK11SlotInfo *PK11_FindSlotBySerial(char *serial);
-PK11SlotList *PK11_FindSlotsByAliases(const char *dllName,
-        const char* slotName, const char* tokenName, PRBool presentOnly);
 PRBool PK11_IsReadOnly(PK11SlotInfo *slot);
 PRBool PK11_IsInternal(PK11SlotInfo *slot);
 char * PK11_GetTokenName(PK11SlotInfo *slot);
@@ -266,10 +264,6 @@ PK11SymKey *PK11_SymKeyFromHandle(PK11SlotInfo *slot, PK11SymKey *parent,
     PRBool owner, void *wincx);
 PK11SymKey *PK11_GetWrapKey(PK11SlotInfo *slot, int wrap,
 			      CK_MECHANISM_TYPE type,int series, void *wincx);
-/*
- * This function is not thread-safe.  It can only be called when only
- * one thread has a reference to wrapKey.
- */
 void PK11_SetWrapKey(PK11SlotInfo *slot, int wrap, PK11SymKey *wrapKey);
 CK_MECHANISM_TYPE PK11_GetMechanism(PK11SymKey *symKey);
 CK_OBJECT_HANDLE PK11_ImportPublicKey(PK11SlotInfo *slot, 
