@@ -71,7 +71,7 @@ sub _ask($$$) {
 }
 
 sub _holduntilkey() {
-	if (getParam('quiet') ne 1) { # if they want us to be quiet, don't pause
+	if (Conf::getParam('quiet') ne 1) { # if they want us to be quiet, don't pause
 		my $input = <STDIN>;
 	}
 }

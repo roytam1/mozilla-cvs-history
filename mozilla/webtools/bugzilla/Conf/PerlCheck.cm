@@ -15,7 +15,7 @@ END
 output "checking for perl: ";
 if (-e "/usr/bonsaitools/bin/perl") {
 	setConf("perl","/usr/bonsaitools/bin/perl");
-	output "FOUND: /usr/bonsaitools/bin/perl\n");
+	output("FOUND: /usr/bonsaitools/bin/perl\n");
 } else {
 	unless (searchpathforapp('perl')) { #search the path
 		#if we are here, we didn't find perl in the path, ask for it
@@ -27,7 +27,7 @@ if (-e "/usr/bonsaitools/bin/perl") {
 }
 
 # check to make sure we have a path set:
-if (getConf('perl') { # they have one set
+if (getConf('perl')) { # they have one set
 	
 	output <<EOF;
 
@@ -54,9 +54,9 @@ EOF
 sub searchpathforapp($) {
 	my $app = shift;
 	foreach $cur (@path) {
-		if (-e correctpath("$cur/$app") {
+		if (-e correctpath("$cur/$app")) {
 			output "FOUND: $cur/$app\n";
-			setconf($app,$cur."/"$app);
+			setconf($app,$cur."/".$app);
 			return "found";
 		}
 	}
