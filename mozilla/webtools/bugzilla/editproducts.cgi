@@ -73,6 +73,12 @@ sub CheckProduct ($)
         PutTrailer();
         exit;
     }
+
+    unless (CanSeeProduct($userid, $prod)) {
+        print "Sorry, You do not have permission to modify product '$prod'.";
+        PutTrailer();
+        exit;
+    }
 }
 
 
@@ -256,6 +262,10 @@ unless ($action) {
     while ( MoreSQLData() ) {
         my ($product, $description, $disallownew, $votesperuser,
             $maxvotesperbug, $votestoconfirm, $bugs) = FetchSQLData();
+
+        # Skip this product if user cannot see it
+        next if !CanSeeProduct($userid, $product);
+
         $description ||= "<FONT COLOR=\"red\">missing</FONT>";
         $disallownew = $disallownew ? 'closed' : 'open';
         $bugs        ||= 'none';

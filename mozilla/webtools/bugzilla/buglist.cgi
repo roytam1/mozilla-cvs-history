@@ -1434,9 +1434,7 @@ print "
 <CENTER>
 <B>" .  time2str("%a %b %e %T %Z %Y", time()) . "</B>";
 
-if (Param('usebuggroups')) {
-   print "<BR>* next to a bug number notes a bug not visible to everyone.<BR>";
-}
+print "<BR>* next to a bug number notes a bug not visible to everyone.<BR>";
 
 #if (defined $::FORM{'debug'}) {
 #    print "<P><CODE>" . value_quote($query) . "</CODE><P>\n";

@@ -166,10 +166,7 @@ foreach my $p (sort(keys %::versions)) {
         # to allow people to specify that product here.
         next;
     }
-    if(Param("usebuggroupsentry")
-        && GroupExists($p)
-        && !UserInGroup($p))
-    {
+    if (!CanSeeProduct($userid, $p)) {
         # If we're using bug groups to restrict entry on products, and
         # this product has a bug group, and the user is not in that
         # group, we don't want to include that product in this list.

@@ -236,7 +236,7 @@ if ($default{'chfieldto'}->[0] eq "") {
 
 GetVersionTable();
 
-# if using usebuggroups, then we don't want people to see products they don't
+# We don't want people to see products they don't
 # have access to. Remove them from the list.
 
 my @products = ();
@@ -247,7 +247,7 @@ foreach my $p (@::legal_product) {
     # If we're using bug groups to restrict entry on products, and
     # this product has a bug group, and the user is not in that
     # group, we don't want to include that product in this list.
-    next if (Param("usebuggroups") && GroupExists($p) && !UserInGroup($userid, $p));
+    next if (!CanSeeProduct($userid, $p));
 
     # We build up boolean hashes in the "-set" hashes for each of these things 
     # before making a list because there may be duplicates names across products.

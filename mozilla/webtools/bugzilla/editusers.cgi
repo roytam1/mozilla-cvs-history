@@ -808,20 +808,19 @@ if ($action eq 'update') {
     CheckUser($userold);
 
     SendSQL("SELECT userid, admin FROM profiles WHERE login_name = " . SqlQuote($userold));
-    my ($userid, $admin) = FetchSQLData();
+    my ($userid, $isadmin) = FetchSQLData();
 
     if ($editall) {
-        if (defined $::FORM{'admin'} && $::FORM{'admin'} == 1) {
+        if (defined $::FORM{'admin'} && $::FORM{'admin'} == 1 && !$isadmin) {
             SendSQL("UPDATE profiles SET admin = 1 WHERE login_name = " . SqlQuote($userold));
             print "Added administrator status.<br>\n";
-        } elsif (!defined $::FORM{'admin'} && $::FORM{'admin'} == 0) {
+        } elsif (!defined $::FORM{'admin'} && $::FORM{'admin'} == 0 && $isadmin) {
             SendSQL("UPDATE profiles SET admin = 0 WHERE login_name = " . SqlQuote($userold));
-            $admin = 0;
             print "Removed administrator status.<br>\n";
         }
     }
 
-    if (!$admin) {
+    if (!$isadmin || $editall) {
         my %groups = ();
         my %oldgroupset = ();
         my %oldblessgroupset = ();

@@ -793,6 +793,47 @@ sub CanSeeBug {
     }
 }
 
+sub CanSeeProduct {
+    my ($userid, $product) = (@_);
+    my $productid = 0;
+    my @groups = ();
+    if (!$userid) {
+        return 0;
+    }
+    ConnectToDatabase();
+    PushGlobalSQLState();
+    SendSQL("SELECT product_id FROM products WHERE product = " . SqlQuote($product));
+    $productid = FetchOneColumn();
+    if (!$productid) {
+        return 0;
+    }
+    SendSQL("SELECT groups.group_id FROM groups " . 
+            "LEFT JOIN user_group_map ON groups.group_id = user_group_map.group_id " .
+            "WHERE user_group_map.user_id = $userid");
+    while (MoreSQLData()) {
+        my ($groupid) = FetchSQLData();
+        push (@groups, $groupid);
+    }
+    
+    if (@groups < 1) {
+        @groups = (0);
+    }
+
+    SendSQL("
+    SELECT
+        products.product_id 
+    FROM
+        products
+        LEFT JOIN product_group_map ON products.product_id = product_group_map.product_id
+    WHERE 
+        products.product_id = $productid
+        AND (product_group_map.group_id IN (" . join(",", @groups) . ") OR product_group_map.group_id IS NULL)");
+    my $result = FetchOneColumn(); 
+    PopGlobalSQLState();
+    return 1 if $result;
+    return 0;
+}
+
 sub ValidatePassword {
     # Determines whether or not a password is valid (i.e. meets Bugzilla's
     # requirements for length and content).  If the password is valid, the

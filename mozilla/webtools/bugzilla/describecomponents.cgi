@@ -32,7 +32,7 @@ require "CGI.pl";
 ConnectToDatabase();
 GetVersionTable();
 
-quietly_check_login();
+my $userid = quietly_check_login();
 
 ######################################################################
 # Begin Data/Security Validation
@@ -43,11 +43,7 @@ quietly_check_login();
 # those whose bug group the user is a member of.  Otherwise, if this 
 # installation doesn't use bug groups, show the user all legal products.
 my @products;
-if ( Param("usebuggroups") ) {
-  @products = grep( !GroupExists($_) || UserInGroup($_) , @::legal_product );
-} else {
-  @products = @::legal_product;
-}
+@products = grep(CanSeeProduct($userid, $_), @::legal_product);
 
 if ( defined $::FORM{'product'} ) {
   # Make sure the user specified a valid product name.  Note that
@@ -61,11 +57,9 @@ if ( defined $::FORM{'product'} ) {
     && exit;
 
   # Make sure the user is authorized to access this product.
-  if ( Param("usebuggroups") && GroupExists($::FORM{'product'}) ) {
-    UserInGroup($::FORM{'product'})
-      || DisplayError("You are not authorized to access that product.")
+  !CanSeeProduct($userid, $::FORM{'product'})
+      && DisplayError("You are not authorized to access that product.")
       && exit;
-  }
 }
 
 ######################################################################

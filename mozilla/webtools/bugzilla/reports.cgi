@@ -25,9 +25,6 @@
 #    Added -All- report, change "nobanner" to "banner" (it is strange to have a
 #    list with 2 positive and 1 negative choice), default links on, add show
 #    sql comment.
-# Joe Robins <jmrobins@tgix.com>,
-#    If using the usebuggroups parameter, users shouldn't be able to see
-#    reports for products they don't have access to.
 # Gervase Markham <gerv@gerv.net> and Adam Spiers <adam@spiers.net>
 #    Added ability to chart any combination of resolutions/statuses.
 #    Derive the choice of resolutions/statuses from the -All- data file
@@ -78,20 +75,14 @@ my $userid = quietly_check_login();
 
 GetVersionTable();
 
-# If the usebuggroups parameter is set, we don't want to list all products.
-# We only want those products that the user has permissions for.
 my @myproducts;
-if(Param("usebuggroups")) {
-    push( @myproducts, "-All-");
-    foreach my $this_product (@legal_product) {
-        if(GroupExists($this_product) && !UserInGroup($userid, $this_product)) {
-            next;
-        } else {
-            push( @myproducts, $this_product )
-        }
+push(@myproducts, "-All-");
+foreach my $this_product (@legal_product) {
+    if (!CanSeeProduct($userid, $this_product)) {
+        next;
+    } else {
+        push(@myproducts, $this_product)
     }
-} else {
-    push( @myproducts, "-All-", @legal_product );
 }
 
 if (! defined $FORM{'product'}) {
@@ -109,14 +100,6 @@ if (! defined $FORM{'product'}) {
     grep($_ eq $FORM{'product'}, @myproducts)
       || DisplayError("You entered an invalid product name.") && exit;
 
-    # If usebuggroups is on, we don't want people to be able to view
-    # reports for products they don't have permissions for...
-    Param("usebuggroups") 
-      && GroupExists($FORM{'product'}) 
-      && !UserInGroup($userid, $FORM{'product'})
-      && DisplayError("You do not have the permissions necessary to view reports for this product.")
-      && exit;
-          
     # For security and correctness, validate the value of the "output" form variable.
     # Valid values are the keys from the %reports hash defined above which appear in
     # the "output" drop-down menu on the report generation form.
@@ -282,7 +265,13 @@ where  bugs.assigned_to = assign.userid
 FIN
 
     if ($FORM{'product'} ne "-All-" ) {
-        $query .= "and    bugs.product=".SqlQuote($FORM{'product'});
+        $query .= "and bugs.product=".SqlQuote($FORM{'product'});
+    } else {
+        my @sqlproducts = ();
+        foreach my $p (@myproducts) {
+            push (@sqlproducts, "product = " . SqlQuote($p));
+        }
+        $query .= " and (" . join (" or ", @sqlproducts) . ")";
     }
 
     $query .= "AND bugs.bug_status IN ('NEW', 'ASSIGNED', 'REOPENED')";
@@ -677,7 +666,13 @@ sub most_doomed_for_milestone {
     my $query;
     $query = "select distinct assigned_to from bugs where target_milestone=\"$ms\"";
     if ($FORM{'product'} ne "-All-" ) {
-        $query .= "and    bugs.product=".SqlQuote($FORM{'product'});
+        $query .= "and bugs.product=".SqlQuote($FORM{'product'});
+    } else {
+        my @sqlproducts = ();
+        foreach my $p (@myproducts) {
+            push (@sqlproducts, "product = " . SqlQuote($p));
+        }
+        $query .= " and (" . join (" or ", @sqlproducts) . ")";
     }
     $query .= <<FIN;
 and      
@@ -704,6 +699,12 @@ FIN
         my $query = "select count(bug_id) from bugs,profiles where target_milestone=\"$ms\" and userid=assigned_to and userid=\"$person\"";
         if( $FORM{'product'} ne "-All-" ) {
             $query .= "and    bugs.product=".SqlQuote($FORM{'product'});
+        } else {
+            my @sqlproducts = ();
+            foreach my $p (@myproducts) {
+                push (@sqlproducts, "product = " . SqlQuote($p));
+            }
+            $query .= " and (" . join (" or ", @sqlproducts) . ")";
         }
         $query .= <<FIN;
 and      
@@ -800,6 +801,12 @@ sub most_recently_doomed {
     my $query = "select distinct assigned_to from bugs where bugs.bug_status='NEW' and target_milestone='' and bug_severity!='enhancement' and status_whiteboard='' and (product='Browser' or product='MailNews')";
     if ($FORM{'product'} ne "-All-" ) {
         $query .= "and    bugs.product=".SqlQuote($FORM{'product'});
+    } else {
+        my @sqlproducts = ();
+        foreach my $p (@myproducts) {
+            push (@sqlproducts, "product = " . SqlQuote($p));
+        }
+        $query .= " and (" . join (" or ", @sqlproducts) . ")";
     }
 
 # End build up $query string

@@ -69,14 +69,10 @@ if (!defined $::FORM{'product'}) {
             # to allow people to specify that product here.
             next;
         }
-        if(Param("usebuggroupsentry")
-           && GroupExists($p)
-           && !UserInGroup($userid, $p)) {
-          # If we're using bug groups to restrict entry on products, and
-          # this product has a bug group, and the user is not in that
-          # group, we don't want to include that product in this list.
-          next;
-        }
+        # If we're using bug groups to restrict entry on products, and
+        # this product is private to one or more bug groups and the user is not
+        # in one of those groups group, we don't want to include that product in this list.
+        next if !CanSeeProduct($userid, $p);
         push(@prodlist, $p);
     }
     if (0 == @prodlist) {
@@ -308,43 +304,13 @@ my $component_popup = make_popup('component', $::components{$product},
 
 PutHeader ("Enter Bug","Enter Bug","This page lets you enter a new bug into Bugzilla.");
 
-# Modified, -JMR, 2/24,00
-# If the usebuggroupsentry parameter is set, we need to check and make sure
-# that the user has permission to enter a bug against this product.
-# Modified, -DDM, 3/11/00
-# added GroupExists check so we don't choke on a groupless product
-if(Param("usebuggroupsentry")
-   && GroupExists($product)
-   && !UserInGroup($userid, $product)) {
-  print "<H1>Permission denied.</H1>\n";
-  print "Sorry; you do not have the permissions necessary to enter\n";
-  print "a bug against this product.\n";
-  print "<P>\n";
-  PutFooter();
-  exit;
-}
-
-# Modified, -JMR, 2/18/00
-# I'm putting in a select box in order to select whether to restrict this bug to
-# the product's bug group or not, if the usebuggroups parameter is set, and if
-# this product has a bug group.  This box will default to selected, but can be
-# turned off if this bug should be world-viewable for some reason.
-#
-# To do this, I need to (1) get the bit and description for the bug group from
-# the database, (2) insert the select box in the giant print statements below,
-# and (3) update post_bug.cgi to process the additional input field.
-
-# Modified, -DDM, 3/11/00
-# Only need the bit here, and not the description.  Description is gotten
-# when the select boxes for all the groups this user has access to are read
-# in later on.
-# First we get the bit and description for the group.
-my $product_group_id = 0;
-if(Param("usebuggroups") && GroupExists($product)) {
-    SendSQL("SELECT group_id FROM groups ".
-            "WHERE name = " . SqlQuote($product) .
-            " AND isbuggroup != 0");
-    $product_group_id = FetchOneColumn();
+if (!CanSeeProduct($userid, $product)) {
+    print "<H1>Permission denied.</H1>\n";
+    print "Sorry; you do not have the permissions necessary to enter\n";
+    print "a bug against this product.\n";
+    print "<P>\n";
+    PutFooter();
+    exit;
 }
 
 print "
@@ -461,6 +427,16 @@ print "
    <td></td><td colspan=5>
 ";
 
+my %productgroups = ();
+SendSQL("SELECT product_group_map.group_id FROM products, product_group_map " .
+        "WHERE products.product_id = product_group_map.product_id " . 
+        "AND products.product = " . SqlQuote($product) . 
+        " ORDER BY products.product_id");
+while (MoreSQLData()) {
+    my ($prodid) = FetchSQLData();
+    $productgroups{$prodid} = 1;
+}
+
 SendSQL("SELECT groups.group_id, groups.name, groups.description " .
         "FROM groups, user_group_map " .
         "WHERE groups.group_id = user_group_map.group_id " . 
@@ -480,16 +456,15 @@ while (MoreSQLData()) {
         print "<font size=\"-1\">(Leave all boxes unchecked to make this a public bug.)</font><br><br>\n";
         $groupFound = 1;
     }
-    # Modifying this to use checkboxes instead of a select list.
-    # -JMR, 5/11/01
-    # If this is the group for this product, make it checked.
-    my $check = ($group_id == $product_group_id);
+    
+    # If this product is private, go ahead and precheck the proper groups
+    my $checked = $productgroups{$group_id} ? "CHECKED" : "";
+
     # If this is a bookmarked template, then we only want to set the bit
     # for those bits set in the template.
     if(formvalue("maketemplate","") eq "Remember values as bookmarkable template") {
-        $check = formvalue("group-$group_id",0);
+        $checked = formvalue("group-$group_id",0) ? "CHECKED" : "";
     }
-    my $checked = $check ? " CHECKED" : "";
     # indent these a bit
     print "&nbsp;&nbsp;&nbsp;&nbsp;";
     print "<input type=checkbox name=\"group-$group_id\" value=1 $checked>\n";

@@ -75,15 +75,13 @@ ConnectToDatabase();
 
 my $product = $::FORM{'product'};
 
-if(Param("usebuggroupsentry") && GroupExists($product)) {
-  if(!UserInGroup($userid, $product)) {
+if (!CanSeeProduct($userid, $product)) {
     print "<H1>Permission denied.</H1>\n";
     print "Sorry; you do not have the permissions necessary to enter\n";
     print "a bug against this product.\n";
     print "<P>\n";
     PutFooter();
     exit;
-  }
 }
 
 if (!defined $::FORM{'component'} || $::FORM{'component'} eq "") {

@@ -189,7 +189,7 @@ if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct)
     }
 
     # If anything needs to be verified, generate a form for verifying it.
-    if (!$vok || !$cok || !$mok || (Param('usebuggroups') && !defined($::FORM{'addtonewgroup'}))) {
+    if (!$vok || !$cok || !$mok) {
 
         # Start the form.
         print qq|<form action="process_bug.cgi" method="post">\n|;
@@ -256,25 +256,6 @@ if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct)
 
             print qq|
               </tr></table>
-            |;
-        }
-
-        # Display UI for determining whether or not to remove the bug from 
-        # its old product's group and/or add it to its new product's group.
-        if (Param('usebuggroups') && !defined($::FORM{'addtonewgroup'})) {
-            print qq|
-              <h3>Verify Bug Group</h3>
-
-              <p>
-                Do you want to add the bug to its new product's group (if any)?
-              </p>
-
-              <p>
-                <input type="radio" name="addtonewgroup" value="no"><b>no</b><br>
-                <input type="radio" name="addtonewgroup" value="yes"><b>yes</b><br>
-                <input type="radio" name="addtonewgroup" value="yesifinold" checked>
-                  <b>yes, but only if the bug was in its old product's group</b><br>
-              </p>
             |;
         }
 
@@ -480,6 +461,18 @@ if ($action eq Param("move-button-text")) {
 print "<TITLE>Update Bug " . join(" ", @idlist) . "</TITLE>\n";
 if (defined $::FORM{'id'}) {
     navigation_header();
+    if (defined $::next_bug) {
+        # If there is another bug, then we're going to display it,
+        # so check that its a legal bug
+        # We need to check that its a number first
+        if (!(detaint_natural($::next_bug) && CanSeeBug($::next_bug))) {
+            # This isn't OK
+            # Rather than error out (which could validly happen if there
+            # was a bug in the list whose group was changed in the meantime)
+            # just remove references to it
+            undef $::next_bug;
+        }
+    }
 }
 print "<HR>\n";
 $::query = "update bugs\nset";
@@ -989,6 +982,17 @@ The changes made were:
         PutFooter();
         exit;
     }
+
+    # Determine if we can place this bug into a private product
+    if (defined $::FORM{'product'} && $::FORM{'product'} ne $::dontchange 
+        && !CanSeeProduct($whoid, $::FORM{'product'})) {
+        print "<H1>Permission denied.</H1>\n";
+        print "Sorry; you do not have the permissions necessary to change\n";
+        print "this bug(s) to this private product.\n";
+        print "<P>\n";
+        PutFooter();
+        exit;
+    }
         
     my %deps;
     if (defined $::FORM{'dependson'}) {
@@ -1210,72 +1214,6 @@ The changes made were:
         }
     }
 
-    # When a bug changes products and the old or new product is associated
-    # with a bug group, it may be necessary to remove the bug from the old
-    # group or add it to the new one.  There are a very specific series of
-    # conditions under which these activities take place, more information
-    # about which can be found in comments within the conditionals below.
-    if ( 
-      # the "usebuggroups" parameter is on, indicating that products
-      # are associated with groups of the same name;
-      Param('usebuggroups')
-
-      # the user has changed the product to which the bug belongs;
-      && defined $::FORM{'product'} 
-        && $::FORM{'product'} ne $::dontchange 
-          && $::FORM{'product'} ne $oldhash{'product'} 
-    ) {
-        if (
-          # the user wants to add the bug to the new product's group;
-          ($::FORM{'addtonewgroup'} eq 'yes' || ($::FORM{'addtonewgroup'} eq 'yesifinold'))
-                  && GroupNameToId($oldhash{'product'})
-
-          # the new product is associated with a group;
-          && GroupExists($::FORM{'product'})
-
-          # the bug is not already in the group; (This can happen when the user
-          # goes to the "edit multiple bugs" form with a list of bugs at least
-          # one of which is in the new group.  In this situation, the user can
-          # simultaneously change the bugs to a new product and move the bugs
-          # into that product's group, which happens earlier in this script
-          # and thus is already done.  If we didn't check for this, then this
-          # situation would cause us to add the bug to the group twice, which
-          # would result in the bug being added to a totally different group.)
-          && !BugInGroup($id, $::FORM{'product'})
-
-          # the user is a member of the associated group, indicating they
-          # are authorized to add bugs to that group, *or* the "usebuggroupsentry"
-          # parameter is off, indicating that users can add bugs to a product 
-          # regardless of whether or not they belong to its associated group;
-          && (UserInGroup($::FORM{'product'}) || !Param('usebuggroupsentry'))
-
-          # the associated group is active, indicating it can accept new bugs;
-          && GroupIsActive(GroupNameToId($::FORM{'product'}))
-        ) { 
-            # Add the bug to the group associated with its new product.
-            my $groupid = GroupNameToId($::FORM{'product'});
-            my $query = "SELECT group_id FROM bug_group_map WHERE bug_id = $id AND group_id = $groupid";
-            SendSQL($query);
-            if (!FetchOneColumn()) {
-                SendSQL("INSERT INTO bug_group_map VALUES ($id, $groupid)");
-            } 
-       }
-
-        if ( 
-          # the old product is associated with a group;
-          GroupExists($oldhash{'product'})
-
-          # the bug is a member of that group;
-          && BugInGroup($id, $oldhash{'product'}) 
-        ) { 
-            # Remove the bug from the group associated with its old product.
-            my $groupid = GroupNameToId($oldhash{'product'});
-            SendSQL("DELETE FROM bug_group_map WHERE group_id = $groupid AND bug_id = $id");
-        }
-
-        print qq|</p>|;
-    }
-  
     # get a snapshot of the newly set values out of the database, 
     # and then generate any necessary bug activity entries by seeing 
     # what has changed since before we wrote out the new values.
