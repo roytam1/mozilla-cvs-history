@@ -552,6 +552,16 @@ sub render_authors {
 
             $link_choices .= "<br>\n";
 
+            foreach $bug_number (@bug_numbers) {
+                my $href = BTData::bug_id2bug_url($bug_number);
+                $link_choices .= 
+                    HTMLPopUp::Link(
+                                    "href" => $href,
+                                    "linktxt" => "\t\tBug: $bug_number",
+                                    );
+                $link_choices .= "<br>";
+            }
+
             $link_choices .= 
               VCDisplay::query(
                                'tree' => $tree,
@@ -604,16 +614,6 @@ sub render_authors {
 
             $link_choices .= "<br>";
 
-
-            foreach $bug_number (@bug_numbers) {
-                my $href = BTData::bug_id2bug_url($bug_number);
-                $link_choices .= 
-                    HTMLPopUp::Link(
-                                    "href" => $href,
-                                    "linktxt" => "\t\tBug: $bug_number",
-                                    );
-                $link_choices .= "<br>";
-            }
 
             # we display the list of names in 'teletype font' so that the
             # names do not bunch together. It seems to make a difference if
