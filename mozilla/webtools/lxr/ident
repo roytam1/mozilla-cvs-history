@@ -135,10 +135,10 @@ sub ident {
 			    print("<li>$fnam:\n<ul>\n");
 			    print(
 "View "
-."<a href=\"http://cvs1.mozilla.org/webtools/bonsai/cvslog.cgi?file=/mozilla/"
+."<a href=\"/webtools/bonsai/cvslog.cgi?file=/mozilla/"
 .$fnam
 ."&root=/cvsroot\">change log </a> or Blame"
-."<a href=\"http://cvs1.mozilla.org/webtools/bonsai/cvsblame.cgi?&file=/mozilla/"
+."<a href=\"/webtools/bonsai/cvsblame.cgi?&file=/mozilla/"
 .$fnam
 ."&root=/cvsroot\">"
 ." annotations</a>"
