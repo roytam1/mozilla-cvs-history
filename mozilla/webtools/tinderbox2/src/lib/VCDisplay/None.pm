@@ -55,7 +55,7 @@ use lib '#tinder_libdir#';
 
 use TreeData;
 use HTMLPopUp;
-
+use Utils;
 
 
 # create a Link to a VC file and its line number
@@ -135,11 +135,9 @@ sub query {
       die("function VCDisplay::query, tree: $args{'tree'} does not exist\n");
   }
 
-  my $output = '';
-
   my $checkin_page_reference = ($args{'maxdate'} || $args{'mindate'});
   
-  my ($href) = (FileStructure::get_filename($tree, 'tree_URL').
+  my ($href) = (FileStructure::get_filename($args{'tree'}, 'tree_URL').
                 "/all_vc.html");
 
   if ($checkin_page_reference) {
