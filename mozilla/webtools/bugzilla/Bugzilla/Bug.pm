@@ -106,6 +106,14 @@ sub initBug  {
   if (!$usergroupset) { $usergroupset = '0' }
   $self->{'usergroupset'} = $usergroupset;
 
+  # Check to see if we can see this bug
+  if (!&::CanSeeBug($bug_id, $user_id, $usergroupset)) {
+      # Permission denied to see bug 
+      $self->{'bug_id'} = $old_bug_id;
+      $self->{'error'} = "PermissionDenied";
+      return $self;
+  }
+
     my $query = "";
     if ($::driver eq 'mysql') {
         $query = "
@@ -135,7 +143,7 @@ sub initBug  {
          creation_ts, groupset, delta_ts";
     }
 
-  &::SendSQL(&::SelectVisible($query, $user_id, $usergroupset));
+  &::SendSQL($query);
   my @row;
 
   if (@row = &::FetchSQLData()) {
