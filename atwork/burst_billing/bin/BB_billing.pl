@@ -19,6 +19,7 @@ use strict;
 use MIME::Entity;
 use Time::Local;
 use DirHandle;
+use IO::File;
 
 use lib '/usr/local/nme/polling/lib';
 use RRDs;
