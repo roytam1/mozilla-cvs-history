@@ -39,7 +39,7 @@ to the Mozilla Update Staff.</P>
 <?php } else {} ?>
 
 <form name="login" method="post" action="login.php">
-<table cellpadding=1 cellspacing=1 style="margin: auto">
+<table cellpadding="1" cellspacing="1" style="margin: auto">
 <tr><td style="margin-top: 4px"></td></tr>
 <tr>
 <td><strong>E-Mail:</strong></td><td><input name="email" type="text" size="30"
@@ -50,7 +50,7 @@ to the Mozilla Update Staff.</P>
     size="30" maxlength="100"></td>
 </tr>
 <tr>
-<td align=center colspan=2><input name="submit" type="submit" value="Login">
+<td align="center" colspan="2"><input name="submit" type="submit" value="Login">
     <input type="reset" value="Reset"></td>
 </tr>
 </table>
