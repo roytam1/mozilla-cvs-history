@@ -21,6 +21,9 @@ $fullname{'12'} = 'jpeg';
 $mode{'18'} = 'Open';
 $branch{'18'} = 'HEAD';
 $fullname{'18'} = 'macfe';
+$mode{'19'} = 'Open';
+$branch{'19'} = 'HEAD';
+$fullname{'19'} = 'mozilla-toplevel';
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'ColorSync_19980824_BRANCH') {
