@@ -521,8 +521,6 @@ sub setup_script {
 
 $script_str =<<'ENDJS';
 <script>
-var event = 0;	// Nav3.0 compatibility
-
 function js_who_menu(n,extra,d) {
     if( parseInt(navigator.appVersion) < 4 ){
         return true;

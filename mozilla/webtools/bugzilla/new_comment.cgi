@@ -31,7 +31,7 @@ foreach $pair (@pairs)
     $value =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
     $FORM{$name} = $value;
 }
-open(COMMENTS, ">>data/comments");
+open(COMMENTS, ">>comments");
 $c=$FORM{"comment"};
 print COMMENTS $FORM{"comment"} . "\n";
 close(COMMENTS);

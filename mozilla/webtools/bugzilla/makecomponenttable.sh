@@ -60,14 +60,14 @@ insert into components (value, program, initialowner) values ("Java Stubs", "Moz
 insert into components (value, program, initialowner) values ("JavaScript", "Mozilla", "mccabe@netscape.com");
 insert into components (value, program, initialowner) values ("JavaScript Debugger", "Mozilla", "jband@netscape.com");
 insert into components (value, program, initialowner) values ("JavaScript/Java Reflection", "Mozilla", "fur@netscape.com");
-insert into components (value, program, initialowner) values ("Layout", "Mozilla", "toshok@netscape.com");
-insert into components (value, program, initialowner) values ("LibMocha", "Mozilla", "mlm@netscape.com");
+insert into components (value, program, initialowner) values ("Layout", "Mozilla", "djw@netscape.com");
+insert into components (value, program, initialowner) values ("LibMocha", "Mozilla", "chouck@netscape.com");
 insert into components (value, program, initialowner) values ("MIMELib", "Mozilla", "terry@mozilla.org");
 insert into components (value, program, initialowner) values ("NetLib", "Mozilla", "gagan@netscape.com");
 insert into components (value, program, initialowner) values ("NSPR", "Mozilla", "wtc@netscape.com");
 insert into components (value, program, initialowner) values ("Password Cache", "Mozilla", "montulli@netscape.com");
 insert into components (value, program, initialowner) values ("PICS", "Mozilla", "montulli@netscape.com");
-insert into components (value, program, initialowner) values ("Plugins", "Mozilla", "amusil@netscape.com");
+insert into components (value, program, initialowner) values ("Plugins", "Mozilla", "byrd@netscape.com");
 insert into components (value, program, initialowner) values ("Preferences", "Mozilla", "aoki@netscape.com");
 insert into components (value, program, initialowner) values ("Progress Window", "Mozilla", "atotic@netscape.com");
 insert into components (value, program, initialowner) values ("Registry", "Mozilla", "dveditz@netscape.com");
@@ -92,32 +92,6 @@ insert into components (value, program, initialowner) values ("Platform: MFC/Win
 
 insert into components (value, program, initialowner) values ("UI", "Bugzilla", "terry@mozilla.org");
 insert into components (value, program, initialowner) values ("Database", "Bugzilla", "terry@mozilla.org");
-
-
-insert into components (value, program, initialowner) values ("ActiveX Wrapper", "NGLayout", "locka@iol.ie");
-insert into components (value, program, initialowner) values ("Content Model", "NGLayout", "kipp@netscape.com");
-insert into components (value, program, initialowner) values ("Cookies", "NGLayout", "scullin@netscape.com");
-insert into components (value, program, initialowner) values ("DOM", "NGLayout", "vidur@netscape.com");
-insert into components (value, program, initialowner) values ("DOM", "NGLayout", "vidur@netscape.com");
-insert into components (value, program, initialowner) values ("Editing Interfaces", "NGLayout", "kostello@netscape.com");
-insert into components (value, program, initialowner) values ("Embedding APIs", "NGLayout", "jevering@netscape.com");
-insert into components (value, program, initialowner) values ("Event Handling", "NGLayout", "joki@netscape.com");
-insert into components (value, program, initialowner) values ("Event Handling", "NGLayout", "joki@netscape.com");
-insert into components (value, program, initialowner) values ("Form Submission", "NGLayout", "karnaze@netscape.com");
-insert into components (value, program, initialowner) values ("HTMLFrames", "NGLayout", "karnaze@netscape.com");
-insert into components (value, program, initialowner) values ("HTMLTables", "NGLayout", "buster@netscape.com");
-insert into components (value, program, initialowner) values ("Layout", "NGLayout", "kipp@netscape.com");
-insert into components (value, program, initialowner) values ("Networking Library", "NGLayout", "valeski@netscape.com");
-insert into components (value, program, initialowner) values ("Parser", "NGLayout", "rickg@netscape.com");
-insert into components (value, program, initialowner) values ("Plug-ins", "NGLayout", "michaelp@netscape.com");
-insert into components (value, program, initialowner) values ("Rendering", "NGLayout", "michaelp@netscape.com");
-insert into components (value, program, initialowner) values ("Selection and Search", "NGLayout", "rods@netscape.com");
-insert into components (value, program, initialowner) values ("Style System", "NGLayout", "peterl@netscape.com");
-insert into components (value, program, initialowner) values ("Threading", "NGLayout", "rpotts@netscape.com");
-insert into components (value, program, initialowner) values ("Viewer App", "NGLayout", "scullin@netscape.com");
-insert into components (value, program, initialowner) values ("Widget Set", "NGLayout", "kmcclusk@netscape.com");
-insert into components (value, program, initialowner) values ("XPCOM", "NGLayout", "scullin@netscape.com");
-
 
 
 select * from components;

@@ -1,5 +1,5 @@
-#!/usr/bonsaitools/bin/perl -w
-# -*- Mode: perl; indent-tabs-mode: nil -*-
+#! /usr/bonsaitools/bin/mysqltcl
+# -*- Mode: tcl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -20,104 +20,118 @@
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 
 
-use diagnostics;
-use strict;
+source "CGI.tcl"
+confirm_login
 
-require "CGI.pl";
+puts "Set-Cookie: PLATFORM=$FORM(product) ; path=/ ; expires=Sun, 30-Jun-99 00:00:00 GMT"
+puts "Set-Cookie: VERSION-$FORM(product)=$FORM(version) ; path=/ ; expires=Sun, 30-Jun-99 00:00:00 GMT"
+puts "Content-type: text/html\n"
 
-# Shut up misguided -w warnings about "used only once".  For some reason,
-# "use vars" chokes on me when I try it here.
-
-# use vars qw($::buffer);
-my $zz = $::buffer;
-$zz = $zz . $zz;
-
-confirm_login();
-
-print "Set-Cookie: PLATFORM=$::FORM{'product'} ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
-print "Set-Cookie: VERSION-$::FORM{'product'}=$::FORM{'version'} ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
-print "Content-type: text/html\n\n";
-
-if (defined $::FORM{'maketemplate'}) {
-    print "<TITLE>Bookmarks are your friend.</TITLE>\n";
-    print "<H1>Template constructed.</H1>\n";
+if {[info exists FORM(maketemplate)]} {
+    puts "<TITLE>Bookmarks are your friend.</TITLE>"
+    puts "<H1>Template constructed.</H1>"
     
-    my $url = "enter_bug.cgi?$::buffer";
+    set url "enter_bug.cgi?$buffer"
 
-    print "If you put a bookmark <a href=\"$url\">to this link</a>, it will\n";
-    print "bring up the submit-a-new-bug page with the fields initialized\n";
-    print "as you've requested.\n";
-    exit;
+    puts "If you put a bookmark <a href=\"$url\">to this link</a>, it will"
+    puts "bring up the submit-a-new-bug page with the fields initialized"
+    puts "as you've requested."
+    exit
 }
 
-PutHeader("Posting Bug -- Please wait", "Posting Bug", "One moment please...");
+PutHeader "Posting Bug -- Please wait" "Posting Bug" "One moment please..."
 
-umask 0;
-ConnectToDatabase();
+flush stdout
+umask 0
+ConnectToDatabase
 
-if (!defined $::FORM{'component'} || $::FORM{'component'} eq "") {
-    print "You must choose a component that corresponds to this bug.  If\n";
-    print "necessary, just guess.  But please hit the <B>Back</B> button\n";
-    print "and choose a component.\n";
+if {![info exists FORM(component)] || [cequal $FORM(component) ""]} {
+    puts "You must choose a component that corresponds to this bug.  If"
+    puts "necessary, just guess.  But please hit the <B>Back</B> button and"
+    puts "choose a component."
     exit 0
 }
     
 
-my $forceAssignedOK = 0;
-if ($::FORM{'assigned_to'} eq "") {
-    SendSQL("select initialowner from components where program=" .
-            SqlQuote($::FORM{'product'}) .
-            " and value=" . SqlQuote($::FORM{'component'}));
-    $::FORM{'assigned_to'} = FetchOneColumn();
-    $forceAssignedOK = 1;
+set forceAssignedOK 0
+if {[cequal "" $FORM(assigned_to)]} {
+    SendSQL "select initialowner from components
+where program='[SqlQuote $FORM(product)]'
+and value='[SqlQuote $FORM(component)]'"
+    set FORM(assigned_to) [lindex [FetchSQLData] 0]
+    set forceAssignedOK 1
 }
 
-$::FORM{'assigned_to'} = DBNameToIdAndCheck($::FORM{'assigned_to'}, $forceAssignedOK);
-$::FORM{'reporter'} = DBNameToIdAndCheck($::FORM{'reporter'});
+set FORM(assigned_to) [DBNameToIdAndCheck $FORM(assigned_to) $forceAssignedOK]
+set FORM(reporter) [DBNameToIdAndCheck $FORM(reporter)]
 
 
-my @bug_fields = ("reporter", "product", "version", "rep_platform",
-                  "bug_severity", "priority", "op_sys", "assigned_to",
-                  "bug_status", "bug_file_loc", "short_desc", "component");
-my $query = "insert into bugs (\n" . join(",\n", @bug_fields) . ",
-creation_ts, long_desc )
-values (
-";
+set bug_fields { reporter product version rep_platform bug_severity \
+                     priority op_sys assigned_to bug_status bug_file_loc \
+                     short_desc component }
+set query "insert into bugs (\n"
 
-
-foreach my $field (@bug_fields) {
-    $query .= SqlQuote($::FORM{$field}) . ",\n";
+foreach field $bug_fields {
+  append query "$field,\n"
 }
 
-$query .= "now(), " . SqlQuote($::FORM{'comment'}) . " )\n";
+append query "creation_ts, long_desc )\nvalues (\n"
 
 
-my %ccids;
+foreach field $bug_fields {
+    if {$field == "qa_assigned_to"} {
+
+        set valin [DBname_to_id $FORM($field)]
+        if {$valin == "__UNKNOWN__"} {
+            append query "null,\n"
+        } else {
+            append query "$valin,\n"
+        }
+
+    } else {
+        regsub -all "'" [FormData $field] "''" value
+        append query "'$value',\n"
+    }
+}
+
+append query "now(), "
+append query "'[SqlQuote [FormData comment]]' )\n"
 
 
-if (defined $::FORM{'cc'}) {
-    foreach my $person (split(/[ ,]/, $::FORM{'cc'})) {
-        if ($person ne "") {
-            $ccids{DBNameToIdAndCheck($person)} = 1;
+set ccids(zz) 1
+unset ccids(zz)
+
+
+if {[info exists FORM(cc)]} {
+    foreach person [split $FORM(cc) " ,"] {
+        if {![cequal $person ""]} {
+            set ccids([DBNameToIdAndCheck $person]) 1
         }
     }
 }
 
 
-# print "<PRE>$query</PRE>\n";
+# puts "<PRE>$query</PRE>"
 
-SendSQL($query);
+SendSQL $query
+while {[MoreSQLData]} { set ret [FetchSQLData] }
 
-SendSQL("select LAST_INSERT_ID()");
-my $id = FetchOneColumn();
+SendSQL "select LAST_INSERT_ID()"
+set id [FetchSQLData]
 
-foreach my $person (keys %ccids) {
-    SendSQL("insert into cc (bug_id, who) values ($id, $person)");
+foreach person [array names ccids] {
+    SendSQL "insert into cc (bug_id, who) values ($id, $person)"
+    while { [ MoreSQLData ] } { FetchSQLData }
 }
 
-print "<H2>Changes Submitted</H2>\n";
-print "<A HREF=\"show_bug.cgi?id=$id\">Show BUG# $id</A>\n";
-print "<BR><A HREF=\"query.cgi\">Back To Query Page</A>\n";
+# Now make sure changes are written before we run processmail...
+Disconnect
 
-system("./processmail $id < /dev/null > /dev/null 2> /dev/null &");
-exit;
+puts "<H2>Changes Submitted</H2>"
+puts "<A HREF=\"show_bug.cgi?id=$id\">Show BUG# $id</A>"
+puts "<BR><A HREF=\"query.cgi\">Back To Query Page</A>"
+
+flush stdout
+
+exec ./processmail $id < /dev/null > /dev/null 2> /dev/null &
+exit

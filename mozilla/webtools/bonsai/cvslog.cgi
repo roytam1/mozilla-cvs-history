@@ -337,7 +337,7 @@ sub print_top {
 <TITLE>CVS Log $title_text</TITLE>
 <SCRIPT>
 
-var event = 0;	// Nav3.0 compatibility
+var event = new Object;
 
 function who_menu(n,extra,d) {
     if( parseInt(navigator.appVersion) < 4 ){
