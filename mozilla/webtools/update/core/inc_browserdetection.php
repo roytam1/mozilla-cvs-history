@@ -84,6 +84,18 @@ if ( $moz_array[0] !== '' )
 $application = $moz_array[0];
 $app_version = $moz_array[1];
 
+// XXX hack for 10.1 security release -- we need to munge
+// versions to just check major.minor and ignore release/etc. bits
+if ($app_version == "0.10.1") {
+  $app_version = "0.10";
+}
+
+// XXX hack for 1.0RC1/1.0RC2 release. browser detection needs to be more customizeable per release. heh.
+// This changes the displayed UA, to the app.extensions.ver internal.
+if ($app_version == "1.0rc1" or $app_version == "1.0rc2") {
+  $app_version = "1.0";
+}
+
 } else {
 //If it's not a Mozilla product, then return nothing and let the default app code work..
 }
