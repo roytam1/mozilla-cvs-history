@@ -341,6 +341,10 @@ if (m:^modules/libimg/mngcom/.*$:) {return '155';}
 if (m:^mozilla/embedding/.*$:) {return '101';}
 if (m:^mozilla/webshell/.*$:) {return '101';}
 if (m:^mozilla/htmlparser/.*$:) {return '102';}
+if (m:^mozilla/content/base/.*$:) {return '103';}
+if (m:^mozilla/content/events/.*$:) {return '103';}
+if (m:^mozilla/content/html/content/.*$:) {return '103';}
+if (m:^mozilla/content/html/document/.*$:) {return '103';}
 if (m:^mozilla/dom/.*$:) {return '103';}
 if (m:^mozilla/js/rhino/.*$:) {return '138';}
 if (m:^mozilla/xpfe$:) {return '137';}
