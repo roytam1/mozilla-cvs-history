@@ -298,18 +298,6 @@ $fullname{'93'} = 'Zlib';
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'HEAD') {
-if (m:^mozilla/[^/]*$:) {return '19';}
-if (m:^xpcom/remote$:) {return '143';}
-if (m:^mozilla/gfx/src/xlib/.*$:) {return '121';}
-if (m:^mozilla/widget/src/xlib/.*$:) {return '121';}
-if (m:^embedding/browser/gtk$:) {return '144';}
-if (m:^mozilla/ef/.*$:) {return '46';}
-if (m:^mozilla/mstone/.*$:) {return '147';}
-if (m:^mozilla/gfx/src/gtk/.*$:) {return '49';}
-if (m:^mozilla/widget/src/gtk/.*$:) {return '49';}
-if (m:^mozilla/widget/src/gtk2/.*$:) {return '49';}
-if (m:^mozilla/widget/src/gtksuperwin/.*$:) {return '49';}
-if (m:^mozilla/xpinstall/.*$:) {return '150';}
 if (m:^mozilla/rdf/.*$:) {return '52';}
 if (m:^mozilla/security/manager/.*$:) {return '151';}
 if (m:^mozilla/dbm/.*$:) {return '53';}
@@ -423,6 +411,18 @@ if (m:^mozilla/security/jss/.*$:) {return '145';}
 if (m:^mozilla/security/nss/.*$:) {return '145';}
 if (m:^composer$:) {return '173';}
 if (m:^mozilla/extensions/xmlterm/.*$:) {return '141';}
+if (m:^mozilla/[^/]*$:) {return '19';}
+if (m:^xpcom/remote$:) {return '143';}
+if (m:^mozilla/gfx/src/xlib/.*$:) {return '121';}
+if (m:^mozilla/widget/src/xlib/.*$:) {return '121';}
+if (m:^embedding/browser/gtk$:) {return '144';}
+if (m:^mozilla/ef/.*$:) {return '46';}
+if (m:^mozilla/mstone/.*$:) {return '147';}
+if (m:^mozilla/gfx/src/gtk/.*$:) {return '49';}
+if (m:^mozilla/widget/src/gtk/.*$:) {return '49';}
+if (m:^mozilla/widget/src/gtk2/.*$:) {return '49';}
+if (m:^mozilla/widget/src/gtksuperwin/.*$:) {return '49';}
+if (m:^mozilla/xpinstall/.*$:) {return '150';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
