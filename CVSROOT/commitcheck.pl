@@ -307,6 +307,10 @@ $fullname{'93'} = 'Zlib';
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'HEAD') {
+if (m:^modules/libpr0n/decoders/mng/.*$:) {return '155';}
+if (m:^mozilla/modules/libimg/mng/.*$:) {return '155';}
+if (m:^mozilla/content/html/style/.*$:) {return '100';}
+if (m:^mozilla/content/shared/.*$:) {return '100';}
 if (m:^mozilla/embedding/.*$:) {return '101';}
 if (m:^mozilla/webshell/.*$:) {return '101';}
 if (m:^mozilla/htmlparser/.*$:) {return '102';}
@@ -442,10 +446,6 @@ if (m:^mozilla/layout/doc/.*$:) {return '98';}
 if (m:^mozilla/layout/html/.*$:) {return '98';}
 if (m:^mozilla/layout/macbuild/.*$:) {return '98';}
 if (m:^mozilla/layout/tools/.*$:) {return '98';}
-if (m:^modules/libpr0n/decoders/mng/.*$:) {return '155';}
-if (m:^mozilla/modules/libimg/mng/.*$:) {return '155';}
-if (m:^mozilla/content/html/style/.*$:) {return '100';}
-if (m:^mozilla/content/shared/.*$:) {return '100';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
