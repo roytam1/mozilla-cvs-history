@@ -416,9 +416,10 @@ sub HTML_status_page {
   $out .= "<!-- /Table Contents -->\n\n";
   $out .= "</table>\n\n";
   $out .= "<!-- Page Footer --><p>\n";
-  $out .= $previous_links;
   $out .= $links;
+  $out .= $previous_links;
   $out .= "<!-- Table Legend -->\n";
+  $out .= <FONT SIZE=\"+3\"><B><NOBR>Table Legend</NOBR></B></FONT>
   $out .= "<table width=\"100%\" cellpadding=0 cellspacing=0>\n";
   $out .= "	@legend\n\n";
   $out .= "</table>\n\n";
