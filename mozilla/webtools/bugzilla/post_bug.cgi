@@ -28,6 +28,7 @@ use strict;
 use lib qw(.);
 
 require "CGI.pl";
+require "bug_form.pl";
 
 # Shut up misguided -w warnings about "used only once". For some reason,
 # "use vars" chokes on me when I try it here.
@@ -58,7 +59,11 @@ my $comment;
 
 $vars->{'form'} = \%::FORM;
 
-$template->process("bug/create/initial-comment.txt.tmpl", $vars, \$comment)
+# We can't use ValidateOutputFormat here because it defaults to HTML.
+my $template_name = "bug/create/comment";
+$template_name .= ($::FORM{'format'} ? "-$::FORM{'format'}" : "");
+
+$template->process("$template_name.txt.tmpl", $vars, \$comment)
   || ThrowTemplateError($template->error());
 
 ValidateComment($comment);
@@ -289,8 +294,8 @@ if (@cc) {
 
 push (@ARGLIST, "-forceowner", DBID_to_name($::FORM{assigned_to}));
 
-if (defined $::FORM{qacontact}) {
-    push (@ARGLIST, "-forceqacontact", DBID_to_name($::FORM{qacontact}));
+if (defined $::FORM{'qa_contact'}) {
+    push (@ARGLIST, "-forceqacontact", DBID_to_name($::FORM{'qa_contact'}));
 }
 
 push (@ARGLIST, "-forcereporter", DBID_to_name($::userid));
@@ -305,9 +310,14 @@ $mailresults .= $_ while <PMAIL>;
 close(PMAIL);
 
 # Tell the user all about it
-$vars->{'bug_id'} = $id;
-$vars->{'mailresults'} = $mailresults;
+$vars->{'id'} = $id;
+$vars->{'mail'} = $mailresults;
+$vars->{'type'} = "created";
 
 print "Content-type: text/html\n\n";
 $template->process("bug/create/created.html.tmpl", $vars)
   || ThrowTemplateError($template->error());
+
+$::FORM{'id'} = $id;
+
+show_bug("header is already done");

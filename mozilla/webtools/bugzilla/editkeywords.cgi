@@ -22,6 +22,7 @@
 
 use diagnostics;
 use strict;
+use lib ".";
 
 require "CGI.pl";
 
@@ -404,7 +405,7 @@ sub RebuildCacheWarning {
 
     print "<BR><BR><B>You have deleted or modified a keyword. You must rebuild the keyword cache!<BR></B>";
     print "You can rebuild the cache using sanitycheck.cgi. On very large installations of Bugzilla,<BR>";
-    print "This can take several minutes.<BR><BR><B><A HREF=sanitycheck.cgi?rebuildkeywordcache=1>Rebuild cache</HREF><BR></B>";
+    print "This can take several minutes.<BR><BR><B><A HREF=\"sanitycheck.cgi?rebuildkeywordcache=1\">Rebuild cache</A><BR></B>";
 
 }
 

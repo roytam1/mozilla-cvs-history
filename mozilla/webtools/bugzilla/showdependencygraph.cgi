@@ -37,6 +37,26 @@ use vars qw($template $vars $userid $usergroupset);
 my %seen;
 my %edgesdone;
 
+sub CreateImagemap {
+    my $mapfilename = shift;
+    my $map = "<map name=\"imagemap\">\n";
+    my $default;
+
+    open MAP, "<$mapfilename";
+    while(my $line = <MAP>) {
+        if($line =~ /^default ([^ ]*)(.*)$/) {
+            $default = qq{<area shape="default" href="$1">\n};
+        }
+        if ($line =~ /^rectangle \((.*),(.*)\) \((.*),(.*)\) (http[^ ]*)(.*)?$/) {
+            $map .= qq{<area name="bug$6" shape="rect" href="$5" coords="$1,$4,$3,$2">\n};
+        }
+    }
+    close MAP;
+
+    $map .= "$default</map>";
+    return $map;
+}
+
 sub AddLink {
     my ($blocked, $dependson) = (@_);
     my $key = "$blocked,$dependson";
@@ -50,7 +70,7 @@ sub AddLink {
 
 $::FORM{'rankdir'} = "LR" if !defined $::FORM{'rankdir'};
 
-if (!defined($::FORM{'id'})) {
+if (!defined($::FORM{'id'}) && !defined($::FORM{'doall'})) {
     DisplayError("No bug numbers given.");
     exit;
 }    
@@ -69,12 +89,6 @@ node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
 
 my %baselist;
 
-foreach my $i (split('[\s,]+', $::FORM{'id'})) {
-    $i = trim($i);
-    ValidateBugID($i);
-    $baselist{$i} = 1;
-}
-
 if ($::FORM{'doall'}) {
     SendSQL("SELECT blocked, dependson FROM dependencies");
 
@@ -83,6 +97,12 @@ if ($::FORM{'doall'}) {
         AddLink($blocked, $dependson);
     }
 } else {
+    foreach my $i (split('[\s,]+', $::FORM{'id'})) {
+        $i = trim($i);
+        ValidateBugID($i);
+        $baselist{$i} = 1;
+    }
+
     my @stack = keys(%baselist);
     foreach my $id (@stack) {
         SendSQL("SELECT blocked, dependson 
@@ -101,10 +121,10 @@ if ($::FORM{'doall'}) {
             AddLink($blocked, $dependson);
         }
     }
-}
 
-foreach my $k (keys(%baselist)) {
-    $seen{$k} = 1;
+    foreach my $k (keys(%baselist)) {
+        $seen{$k} = 1;
+    }
 }
 
 foreach my $k (keys(%seen)) {
@@ -162,9 +182,9 @@ if ($webdotbase =~ /^https?:/) {
     my $pngfilename = "data/webdot/$$.png";
     my $mapfilename = "data/webdot/$$.map";
     system("$webdotbase","-Tpng","-o","$pngfilename","$filename");
-    system("$webdotbase","-Timap","-o","$mapfilename","$filename");
     $vars->{'image_url'} = $pngfilename;
-    $vars->{'map_url'} = $mapfilename;
+    system("$webdotbase","-Tismap","-o","$mapfilename","$filename");
+    $vars->{'image_map'} = CreateImagemap($mapfilename);
 }
 
 # Cleanup any old .dot files created from previous runs.

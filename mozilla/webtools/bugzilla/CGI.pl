@@ -242,11 +242,9 @@ sub CheckFormFieldDefined (\%$) {
         $fieldname,              # the fieldname to check
        ) = @_;
 
-    if ( !defined $formRef->{$fieldname} ) {
-        print "$fieldname was not defined; ";
-        print Param("browserbugmessage");
-        PutFooter();
-        exit 0;
+    if (!defined $formRef->{$fieldname}) {
+          ThrowCodeError("$fieldname was not defined; " . 
+                                                    Param("browserbugmessage"));
       }
 }
 
@@ -278,7 +276,8 @@ sub ValidateBugID {
       || DisplayError("Bug #$id does not exist.")
       && exit;
 
-    return if CanSeeBug($id, $::userid, $::usergroupset);
+    my $canseeref = CanSeeBug($id, $::userid, $::usergroupset);
+    return if $canseeref->{$id};
 
     # The user did not pass any of the authorization tests, which means they
     # are not authorized to see the bug.  Display an error and stop execution.
@@ -334,8 +333,8 @@ sub value_quote {
 }
 
 # Adds <link> elements for bug lists. These can be inserted into the header by
-# (ab)using the "jscript" parameter to PutHeader, which inserts an arbitrary
-# string into the header. This is currently used only in
+# using the "header_html" parameter to PutHeader, which inserts an arbitrary
+# string into the header. This function is currently used only in
 # template/en/default/bug/edit.html.tmpl.
 sub navigation_links($) {
     my ($buglist) = @_;
@@ -482,29 +481,66 @@ sub quietly_check_login() {
     if (!$loginok) {
         delete $::COOKIE{"Bugzilla_login"};
     }
+                    
+    $vars->{'user'} = GetUserInfo($::userid);
+    
     return $loginok;
+}
+
+# Populate a hash with information about this user. 
+sub GetUserInfo {
+    my ($userid) = (@_);
+    my %user;
+    my @queries;
+    my %groups;
+    
+    # No info if not logged in
+    return \%user if ($userid == 0);
+    
+    $user{'login'} = $::COOKIE{"Bugzilla_login"};
+    $user{'userid'} = $userid;
+    
+    SendSQL("SELECT mybugslink, realname, groupset FROM profiles " . 
+            "WHERE userid = $userid");
+    ($user{'showmybugslink'}, $user{'realname'}, $user{'groupset'}) =
+                                                                 FetchSQLData();
+
+    SendSQL("SELECT name, query, linkinfooter FROM namedqueries " .
+            "WHERE userid = $userid");
+    while (MoreSQLData()) {
+        my %query;
+        ($query{'name'}, $query{'query'}, $query{'linkinfooter'}) = 
+                                                                 FetchSQLData();
+        push(@queries, \%query);    
+    }
+
+    $user{'queries'} = \@queries;
+
+    if ($::driver eq 'mysql') {
+        SendSQL("select name, (bit & $user{'groupset'}) != 0 from groups");
+    } elsif ($::driver eq 'Pg') {
+        SendSQL("select name, (group_bit & int8($user{'groupset'})) != 0 from groups");
+    }
+    while (MoreSQLData()) {
+        my ($name, $bit) = FetchSQLData();    
+        $groups{$name} = $bit;
+    }
+
+    $user{'groups'} = \%groups;
+
+    return \%user;
 }
 
 sub CheckEmailSyntax {
     my ($addr) = (@_);
     my $match = Param('emailregexp');
     if ($addr !~ /$match/ || $addr =~ /[\\\(\)<>&,;:"\[\] \t\r\n]/) {
-        print "Content-type: text/html\n\n";
-
-        # For security, escape HTML special characters.
-        $addr = html_quote($addr);
-
-        PutHeader("Check e-mail syntax");
-        print "The e-mail address you entered\n";
-        print "(<b>$addr</b>) didn't match our minimal\n";
-        print "syntax checking for a legal email address.\n";
-        print Param('emailregexpdesc') . "\n";
-        print "It must also not contain any of these special characters: " .
-              "<tt>\\ ( ) &amp; &lt; &gt; , ; : \" [ ]</tt> " .
-              "or any whitespace.\n";
-        print "<p>Please click <b>Back</b> and try again.\n";
-        PutFooter();
-        exit;
+        ThrowUserError("The e-mail address you entered(<b>" .
+        html_quote($addr) . "</b>) didn't pass our syntax checking 
+        for a legal email address. " . Param('emailregexpdesc') .
+        ' It must also not contain any of these special characters:
+        <tt>\ ( ) &amp; &lt; &gt; , ; : " [ ]</tt>, or any whitespace.', 
+        "Check e-mail address syntax");
     }
 }
 
@@ -559,24 +595,17 @@ sub confirm_login {
         if ( defined $::FORM{"PleaseMailAPassword"} && !$userid ) {
             # Ensure the new login is valid
             if(!ValidateNewUser($enteredlogin)) {
-                DisplayError("Account Exists");
-                exit;
+                ThrowUserError("That account already exists.");
             }
 
             my $password = InsertNewUser($enteredlogin, "");
-            # There's a template for this - account_created.tmpl - but
-            # it's easier to wait to use it until templatisation has progressed
-            # further; we want to avoid sprinkling multiple copies of the
-            # template setup code everywhere - Gerv.
-            print "Content-Type: text/html\n\n";
-            PutHeader("Account Created");
             MailPassword($enteredlogin, $password);
-            print "The password for the e-mail address\n";
-            print "$enteredlogin has been e-mailed to that address.\n";
-            print "<p>When the e-mail arrives, you can click <b>Back</b>\n";
-            print "and enter your password in the form there.\n";
-            PutFooter();
-            exit;
+            
+            $vars->{'login'} = $enteredlogin;
+            
+            print "Content-Type: text/html\n\n";
+            $template->process("account/created.html.tmpl", $vars)
+              || ThrowTemplateError($template->error());                 
         }
 
         # Otherwise, authenticate the user.
@@ -754,14 +783,10 @@ Set-Cookie: Bugzilla_logincookie= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:
 Content-type: text/html
 
 ";
-            PutHeader("Your account has been disabled");
-            print $::disabledreason;
-            print "<HR>\n";
-            print "If you believe your account should be restored, please\n";
-            print "send email to " . Param("maintainer") . " explaining\n";
-            print "why.\n";
-            PutFooter();
-            exit();
+            ThrowUserError($::disabledreason . "<hr>" .
+            "If you believe your account should be restored, please " .
+            "send email to " . Param("maintainer") . " explaining why.",
+            "Your account has been disabled");
         }
         print "Content-type: text/html\n\n";
         PutHeader("Login");
@@ -875,72 +900,16 @@ Content-type: text/html
     return $::userid;
 }
 
-
 sub PutHeader {
-    my ($title, $h1, $h2, $extra, $jscript) = (@_);
-
-    if (!defined $h1) {
-        $h1 = $title;
-    }
-    if (!defined $h2) {
-        $h2 = "";
-    }
-    if (!defined $extra) {
-       $extra = "";
-    }
-    $jscript ||= "";
-
-    print qq|
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<HTML>
-<HEAD>
-<TITLE>$title</TITLE>
-| . Param("headerhtml") . qq|
-$jscript
-</HEAD>
-<BODY | . Param("bodyhtml") . qq| $extra>
-| . PerformSubsts(Param("bannerhtml"), undef) . qq|
-<TABLE BORDER="0" CELLSPACING="0">
-<TR>
-<TD VALIGN="TOP" ALIGN="LEFT">
-    <TABLE BORDER="0" CELLPADDING="0" CELLSPACING="2">
-    <TR><TD VALIGN="TOP" ALIGN="LEFT">
-        <FONT SIZE="+1">
-        <B>$h1</B>
-        </FONT>
-    </TD></TR>
-    </TABLE>
-</TD>
-<TD VALIGN="MIDDLE">&nbsp;</TD>
-<TD VALIGN="MIDDLE" ALIGN="LEFT">
-$h2
-</TD></TR></TABLE>
-    |;
-
-    if (Param("shutdownhtml")) {
-        # If we are dealing with the params page, we want
-        # to ignore shutdownhtml
-        if ($0 !~ m:[\\/](do)?editparams.cgi$:) {
-            print "<p>\n";
-            print Param("shutdownhtml");
-            exit;
-        }
-    }
+    ($vars->{'title'}, $vars->{'h1'}, $vars->{'h2'}) = (@_);
+     
+    $::template->process("global/header.html.tmpl", $::vars)
+      || ThrowTemplateError($::template->error());
 }
 
-# Putfooter echoes footerhtml and by default prints closing tags
-#
-# param
-#   dontclose (boolean): avoid sending </body></html>
-#
-# Example:
-# Putfooter(); # normal close
-# Putfooter(1); # don't send closing tags
 sub PutFooter {
-    my ( $dontclose ) = @_;
-    print PerformSubsts(Param("footerhtml"));
-    print "\n</body></html>\n" if ( ! $dontclose );
-    SyncAnyPendingShadowChanges();
+    $::template->process("global/footer.html.tmpl", $::vars)
+      || ThrowTemplateError($::template->error());
 }
 
 ###############################################################################
@@ -998,24 +967,33 @@ sub ThrowUserError {
 # This should only be called if a template->process() fails.
 # The Content-Type will already have been printed.
 sub ThrowTemplateError {
-    my ($error) = html_quote((@_));
-    my $maintainer = Param('maintainer');
+    ($vars->{'error'}) = (@_);
+    $vars->{'title'} = "Template Error";
     
-    print <<END;
-    <tt>
-      <p>
-        Bugzilla has suffered an internal error. Please save this page and send
-        it to $maintainer with details of what you were doing at the time this
-        message appeared.
-      </p>
-      <script> <!--
-        document.write("<p>URL: " + document.location + "</p>");
-      // -->
-      </script>
-      <p>Template->process() failed: $error</p>
-    </tt>
+    # Try a template first; but if this one fails too, fall back
+    # on plain old print statements.
+    if (!$template->process("global/code-error.html.tmpl", $vars)) {
+        my $maintainer = Param('maintainer');
+        my $error = html_quote($vars->{'error'});
+        my $error2 = html_quote($template->error());
+        print <<END;
+        <tt>
+          <p>
+            Bugzilla has suffered an internal error. Please save this page and 
+            send it to $maintainer with details of what you were doing at the 
+            time this message appeared.
+          </p>
+          <script> <!--
+            document.write("<p>URL: " + document.location + "</p>");
+          // -->
+          </script>
+          <p>Template->process() failed twice.<br>
+          First error: $error<br>
+          Second error: $error2</p>
+        </tt>
 END
-
+    }
+    
     exit;  
 }
 
@@ -1039,11 +1017,19 @@ sub CheckIfVotedConfirmed {
                     "(bug_id,who,bug_when,fieldid,removed,added) VALUES " .
                     "($id,$who,now(),$fieldid,'0','1')");
         }
+        
         AppendComment($id, DBID_to_name($who),
                       "*** This bug has been confirmed by popular vote. ***");
-        print "<TABLE BORDER=1><TD><H2>Bug $id has been confirmed by votes.</H2>\n";
-        system("./processmail", $id);
-        print "<TD><A HREF=\"show_bug.cgi?id=$id\">Go To BUG# $id</A></TABLE>\n";
+                      
+        $vars->{'type'} = "votes";
+        $vars->{'id'} = $id;
+        $vars->{'mail'} = "";
+        open(PMAIL, "-|") or exec('./processmail', $id);
+        $vars->{'mail'} .= $_ while <PMAIL>;
+        close(PMAIL);
+        
+        $template->process("bug/process/results.html.tmpl", $vars)
+          || ThrowTemplateError($template->error());
     }
 
 }
@@ -1136,109 +1122,6 @@ sub GetBugActivity {
     return(\@operations, $incomplete_data);
 }
 
-sub GetCommandMenu {
-    my $loggedin = quietly_check_login();
-    if (!defined $::anyvotesallowed) {
-        GetVersionTable();
-    }
-    my $html = qq {
-<FORM METHOD="GET" ACTION="show_bug.cgi">
-<TABLE width="100%"><TR><TD>
-Actions:
-</TD><TD VALIGN="middle" NOWRAP>
-<a href="enter_bug.cgi">New</a> | 
-<a href="query.cgi">Query</a> |
-};
-
-    if (-e "query2.cgi") {
-        $html .= "[<a href=\"query2.cgi\">beta</a>]";
-    }
-    
-    $html .= qq{ 
-<INPUT TYPE="SUBMIT" VALUE="Find"> bug \# 
-<INPUT NAME="id" SIZE="6">
-| <a href="reports.cgi">Reports</a> 
-};
-    if ($loggedin) {
-        if ($::anyvotesallowed) {
-            $html .= " | <A HREF=\"votes.cgi?action=show_user\">My votes</A>\n";
-        }
-    }
-    if ($loggedin) {
-        #a little mandatory SQL, used later on
-        SendSQL("SELECT mybugslink, userid, blessgroupset FROM profiles " .
-                "WHERE login_name = " . SqlQuote($::COOKIE{'Bugzilla_login'}));
-        my ($mybugslink, $userid, $blessgroupset) = (FetchSQLData());
-        
-        #Begin settings
-        $html .= qq{
-</TD><TD>
-    &nbsp;
-</TD><TD VALIGN="middle">
-Edit <a href="userprefs.cgi">prefs</a>
-};
-        if (UserInGroup("tweakparams")) {
-            $html .= ", <a href=\"editparams.cgi\">parameters</a>\n";
-        }
-        if (UserInGroup("editusers") || $blessgroupset) {
-            $html .= ", <a href=\"editusers.cgi\">users</a>\n";
-        }
-        if (UserInGroup("editcomponents")) {
-            $html .= ", <a href=\"editproducts.cgi\">products</a>\n";
-            $html .= ", <a href=\"editattachstatuses.cgi\">
-              attachment&nbsp;statuses</a>\n";
-        }
-        if (UserInGroup("creategroups")) {
-            $html .= ", <a href=\"editgroups.cgi\">groups</a>\n";
-        }
-        if (UserInGroup("editkeywords")) {
-            $html .= ", <a href=\"editkeywords.cgi\">keywords</a>\n";
-        }
-        if (UserInGroup("tweakparams")) {
-            $html .= "| <a href=\"sanitycheck.cgi\">Sanity&nbsp;check</a>\n";
-        }
-
-        $html .= qq{ 
-| <a href="relogin.cgi">Log&nbsp;out</a> $::COOKIE{'Bugzilla_login'}
-</TD></TR> 
-};
-        
-        #begin preset queries
-        my $mybugstemplate = Param("mybugstemplate");
-        my %substs;
-        $substs{'userid'} = url_quote($::COOKIE{"Bugzilla_login"});
-        $html .= "<TR>";
-        $html .= "<TD>Preset&nbsp;Queries: </TD>";
-        $html .= "<TD colspan=3>\n";
-        if ($mybugslink) {
-            my $mybugsurl = PerformSubsts($mybugstemplate, \%substs);
-            $html = $html . "<A HREF=\"$mybugsurl\">My&nbsp;bugs</A>\n";
-        }
-        SendSQL("SELECT name FROM namedqueries " .
-                "WHERE userid = $userid AND linkinfooter != 0");
-        my $anynamedqueries = 0;
-        while (MoreSQLData()) {
-            my ($name) = (FetchSQLData());
-            my $disp_name = $name;
-            $disp_name =~ s/ /&nbsp;/g;
-            if ($anynamedqueries || $mybugslink) { $html .= " | " }
-            $anynamedqueries = 1;
-            $html .= "<A HREF=\"buglist.cgi?cmdtype=runnamed&amp;namedcmd=" .
-                     url_quote($name) . "\">$disp_name</A>\n";
-        }
-        $html .= "</TD></TR>\n";
-    } else {
-        $html .= "</TD><TD>&nbsp;</TD><TD valign=\"middle\" align=\"right\">\n";
-        $html .=
-            " <a href=\"createaccount.cgi\">New&nbsp;account</a>\n";
-        $html .=
-            " | <a href=\"query.cgi?GoAheadAndLogIn=1\">Log&nbsp;in</a>";
-        $html .= "</TD></TR>";
-    }
-    $html .= "</TABLE>";                
-    $html .= "</FORM>\n";
-    return $html;
-}
 
 ############# Live code below here (that is, not subroutine defs) #############
 

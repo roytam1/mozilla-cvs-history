@@ -28,6 +28,7 @@
 # Make it harder for us to do dangerous things in Perl.
 use diagnostics;
 use strict;
+use lib ".";
 
 use vars qw(
   $template
@@ -241,7 +242,8 @@ sub insert
     SendSQL("LOCK TABLES attachstatusdefs WRITE");
   }
   SendSQL("SELECT MAX(id) FROM attachstatusdefs");
-  my $id = FetchSQLData() + 1;
+  my $id = FetchSQLData() || 0;
+  $id++;
   SendSQL("INSERT INTO attachstatusdefs (id, name, description, sortkey, product)
            VALUES ($id, $name, $desc, $::FORM{'sortkey'}, $product)");
   if ($::driver eq 'mysql') {

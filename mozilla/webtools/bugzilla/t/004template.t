@@ -18,40 +18,53 @@
 # Rights Reserved.
 #
 # Contributor(s): Jacob Steenhagen <jake@acutex.net>
-#                   Zach Lipton <zach@zachlipton.com>
+#                 Zach Lipton <zach@zachlipton.com>
+#                 David D. Kilzer <ddkilzer@kilzer.net>
 #
 
 #################
 #Bugzilla Test 4#
 ####Templates####
 
-BEGIN { use lib "t/"; }
-BEGIN { use Support::Templates; }
-BEGIN { $tests = @Support::Templates::testitems * 3; }
-BEGIN { use Test::More tests => $tests; }
-
 use strict;
-use Template;
+
+use lib 't';
+
+use Support::Templates;
 
 # Bug 137589 - Disable command-line input of CGI.pm when testing
 use CGI qw(-no_debug);
 
-my @testitems = @Support::Templates::testitems;
+use File::Spec 0.82;
+use Template;
+use Test::More tests => (  scalar(@Support::Templates::referenced_files)
+                         + scalar(@Support::Templates::actual_files) * 2);
+
+# Capture the TESTOUT from Test::More or Test::Builder for printing errors.
+# This will handle verbosity for us automatically.
+my $fh;
+{
+    local $^W = 0;  # Don't complain about non-existent filehandles
+    if (-e \*Test::More::TESTOUT) {
+        $fh = \*Test::More::TESTOUT;
+    } elsif (-e \*Test::Builder::TESTOUT) {
+        $fh = \*Test::Builder::TESTOUT;
+    } else {
+        $fh = \*STDOUT;
+    }
+}
+
 my $include_path = $Support::Templates::include_path;
-# Capture the TESTERR from Test::More for printing errors.
-# This will handle verbosity for us automatically
-*TESTOUT = \*Test::More::TESTOUT;
 
 # Check to make sure all templates that are referenced in
 # Bugzilla exist in the proper place.
 
-my %exists;
-foreach my $file(@testitems) {
-    if (-e $include_path . "/" . $file) {
-        ok(1, "$file exists");
-        $exists{$file} = 1;
+foreach my $file(@Support::Templates::referenced_files) {
+    my $path = File::Spec->catfile($include_path, $file);
+    if (-e $path) {
+        ok(1, "$path exists");
     } else {
-        ok(0, "$file does not exist --ERROR");
+        ok(0, "$path does not exist --ERROR");
     }
 }
 
@@ -61,11 +74,13 @@ my $template = Template->new(
     INCLUDE_PATH => $include_path ,
     # Need to define filters used in the codebase, they don't
     # actually have to function in this test, just be defined.
+    # See globals.pl for the actual codebase definitions.
     FILTERS =>
     {
         js        => sub { return $_ } ,
         strike    => sub { return $_ } ,
         url_quote => sub { return $_ } ,
+        no_break  => sub { return $_ } ,
     },
 }
 );
@@ -74,18 +89,19 @@ open SAVEOUT, ">&STDOUT";     # stash the original output stream
 open SAVEERR, ">&STDERR";
 open STDOUT, "> /dev/null";   # discard all output
 open STDERR, "> /dev/null";
-foreach my $file(@testitems) {
-    if ($exists{$file}) {
+foreach my $file(@Support::Templates::actual_files) {
+    my $path = File::Spec->catfile($include_path, $file);
+    if (-e $path) {
         if ($template->process($file)) {
             ok(1, "$file syntax ok");
         }
         else {
-            print TESTOUT $template->error() . "\n";
             ok(0, "$file has bad syntax --ERROR");
+            print $fh $template->error() . "\n";
         }
     }
     else {
-        ok(1, "$file doesn't exist, skipping test");
+        ok(1, "$path doesn't exist, skipping test");
     }
 }
 open STDOUT, ">&SAVEOUT";     # redirect back to original stream
@@ -95,8 +111,9 @@ close SAVEERR;
 
 # check to see that all templates have a version string:
 
-foreach my $file(@testitems) {
-    open(TMPL,"$include_path/$file");
+foreach my $file(@Support::Templates::actual_files) {
+    my $path = File::Spec->catfile($include_path, $file);
+    open(TMPL, $path);
     my $firstline = <TMPL>;
     if ($firstline =~ /\d+\.\d+\@[\w\.-]+/) {
         ok(1,"$file has a version string");
@@ -105,3 +122,5 @@ foreach my $file(@testitems) {
     }
     close(TMPL);
 }
+
+exit 0;

@@ -102,7 +102,7 @@ $::SIG{TERM} = 'IGNORE';
 $::SIG{PIPE} = 'IGNORE';
 
 # Contains the version string for the current running Bugzilla.
-$::param{'version'} = '2.15';
+$::param{'version'} = '2.17';
 
 $::dontchange = "--do_not_change--";
 $::chooseone = "--Choose_one:--";
@@ -569,7 +569,6 @@ sub GenerateVersionTable {
         }
     }
             
-
     my $cols = LearnAboutColumns("bugs");
     
     @::log_columns = @{$cols->{"-list-"}};
@@ -963,21 +962,20 @@ sub CanSeeBug {
     PushGlobalSQLState();
 
     if ($::driver eq 'mysql') {
-        SendSQL("SELECT bug_id, ((groupset & $usergroupset) = groupset) , reporter , assigned_to , qa_contact , 
-                        reporter_accessible , assignee_accessible , qacontact_accessible , cclist_accessible 
+        SendSQL("SELECT bug_id, ((groupset & $usergroupset) = groupset),
+                        reporter, reporter_accessible , cclist_accessible 
                 FROM   bugs 
                 WHERE  bug_id IN (" . join(',', @buglist) . ")");
     } elsif ($::driver eq 'Pg') {
         SendSQL("SELECT bug_id, CASE WHEN ((groupset & int8($usergroupset)) = groupset) 
                         THEN 1 ELSE 0 END as isauthorized, 
-                        reporter, assigned_to, qa_contact, reporter_accessible, cclist_accessible 
+                        reporter, reporter_accessible, cclist_accessible 
                 FROM   bugs 
                 WHERE  bug_id IN (" . join(',', @buglist) . ")");
     }
 
     while (my @row = FetchSQLData()) {
-        my ($bug_id, $isauthorized, $reporter, $assignee, $qacontact, $reporter_accessible,
-            $assignee_accessible, $qacontact_accessible, $cclist_accessible) = @row;
+        my ($bug_id, $isauthorized, $reporter, $reporter_accessible, $cclist_accessible) = @row;
         
         # Record bug number and continue if the user is a member of all groups to which the bug belongs.
         if ($isauthorized) {
@@ -986,17 +984,17 @@ sub CanSeeBug {
         }
 
         # Record bug number and continue if the user is in a role that has access to the bug. 
-        if (($reporter_accessible && $reporter == $userid)
-                || ($assignee_accessible && $assignee == $userid)
-                    || ($qacontact_accessible && $qacontact == $userid)) {
+        if ($reporter_accessible && $reporter == $userid) {
             $cansee{$bug_id} = 1;
             next;
         }
 
         # Try to authorize the user one more time by seeing if they are on 
         # the cc: list.  If so, finish validation and return.
-        if ( $cclist_accessible ) {
+        if ($cclist_accessible) {
             PushGlobalSQLState();
+            detaint_natural($bug_id) || die "CanSeeBug() called with non-integer bug number";
+            detaint_natural($userid) || die "CanSeeBug() called with non-integer bug number";
             SendSQL("SELECT who FROM cc WHERE  bug_id = $bug_id AND who = $userid");
             my $ccwho = FetchOneColumn();
             # more efficient to just check the var here instead of
@@ -1670,13 +1668,6 @@ sub Param ($) {
         return $::param{$value};
     }
 
-    # See if it is a dynamically-determined param (can't be changed by user).
-    if ($value eq "commandmenu") {
-        return GetCommandMenu();
-    }
-    if ($value eq "settingsmenu") {
-        return GetSettingsMenu();
-    }
     # Um, maybe we haven't sourced in the params at all yet.
     if (stat("data/params")) {
         # Write down and restore the version # here.  That way, we get around
@@ -1796,10 +1787,15 @@ use Template;
 
 # Create the global template object that processes templates and specify
 # configuration parameters that apply to all templates processed in this script.
+
+# IMPORTANT - If you make any configuration changes here, make sure to make
+# them in t/004.template.t and checksetup.pl. You may also need to change the
+# date settings were last changed - see the comments in checksetup.pl for
+# details
 $::template ||= Template->new(
   {
     # Colon-separated list of directories containing templates.
-    INCLUDE_PATH => "template/custom:template/default:template/en/custom:template/en/default" ,
+    INCLUDE_PATH => "template/en/custom:template/en/default" ,
 
     # Remove white-space before template directives (PRE_CHOMP) and at the
     # beginning and end of templates and template blocks (TRIM) for better 
@@ -1808,7 +1804,12 @@ $::template ||= Template->new(
     PRE_CHOMP => 1 ,
     TRIM => 1 , 
 
+    COMPILE_DIR => 'data/',
+
     # Functions for processing text within templates in various ways.
+    # IMPORTANT!  When adding a filter here that does not override a
+    # built-in filter, please also add a stub filter to checksetup.pl
+    # and t/004template.t.
     FILTERS =>
       {
         # Render text in strike-through style.
@@ -1833,6 +1834,15 @@ $::template ||= Template->new(
         # filter should be used for a full URL that may have
         # characters that need encoding.
         url_quote => \&url_quote ,
+        
+        # Returns the text with spaces converted to non-breaking space
+        # HTML entities.
+        no_break => sub
+        {
+            my ($var) = @_;            
+            $var =~ s/ /\&nbsp;/g;
+            return $var;
+       } ,
       } ,
   }
 ) || DisplayError("Template creation failed: " . Template->error())
@@ -1911,7 +1921,7 @@ sub GetOutputFormats {
         # Loop over each file in the sub-directory looking for format files
         # (files whose name looks like SCRIPT-FORMAT.EXT.tmpl).
         foreach my $file (@files) {
-            if ($file =~ /^$script-(.+)\.(.+)\.(tmpl)$/) {
+            if ($file =~ /^\Q$script\E-(.+)\.(.+)\.(tmpl)$/) {
                 $formats->{$1} = { 
                   'template'    => $file , 
                   'extension'   => $2 , 
@@ -2012,6 +2022,11 @@ $::vars =
 
     # SyncAnyPendingShadowChanges - called in the footer to sync the shadowdb
     'SyncAnyPendingShadowChanges' => \&SyncAnyPendingShadowChanges ,
+    
+    # User Agent - useful for detecting in templates
+    'user_agent' => $ENV{'HTTP_USER_AGENT'} ,
+    
+    'use_votes' => $::anyvotesallowed,
   };
 
 1;

@@ -331,6 +331,9 @@ sub SaveFooter {
     }
     SendSQL("UPDATE profiles SET mybugslink = " . 
             SqlQuote($::FORM{'mybugslink'}) . " WHERE userid = $userid");
+
+    # Regenerate cached info about queries in footer.            
+    $vars->{'user'} = GetUserInfo($::userid);
 }
     
 sub DoPermissions {

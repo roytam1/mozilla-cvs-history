@@ -51,6 +51,7 @@ use vars qw(%versions
           %target_milestone
           %legal_severity
           %superusergroupset
+          $userid
           $next_bug);
 
 my $whoid = confirm_login();
@@ -1271,11 +1272,8 @@ foreach my $id (@idlist) {
             SendSQL("UPDATE bugs SET delta_ts = TO_DATE(" . SqlQuote($timestamp) . 
                     ", 'YYYYMMDDHH24MISS') WHERE bug_id = $id");
         }
-    } 
-    print "<TABLE BORDER=1><TD><H2>Changes to bug $id submitted</H2>\n";
-    if ($::driver eq 'mysql') {
-        SendSQL("unlock tables");
     }
+ 
     SendSQL("UNLOCK TABLES") if $::driver eq 'mysql';
 
     my @ARGLIST = ();
@@ -1364,7 +1362,7 @@ if ($::COOKIE{"BUGLIST"} && $::FORM{'id'}) {
     my $cur = lsearch(\@bugs, $::FORM{"id"});
     if ($cur >= 0 && $cur < $#bugs) {
         my $next_bug = $bugs[$cur + 1];
-        if (detaint_natural($next_bug) && CanSeeBug($next_bug)) {
+        if (detaint_natural($next_bug) && CanSeeBug($next_bug, $userid, $::usergroupset)) {
             $::FORM{'id'} = $next_bug;
             
             $vars->{'next_id'} = $next_bug;

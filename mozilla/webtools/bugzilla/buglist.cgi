@@ -519,11 +519,9 @@ sub GenerateSQL {
          },
 
          "^cc," => sub {
-            push(@supptables, "cc cc_$chartid");
-            push(@wherepart, "bugs.bug_id = cc_$chartid.bug_id");
+            push(@supptables, "LEFT JOIN cc cc_$chartid ON bugs.bug_id = cc_$chartid.bug_id");
 
-            push(@supptables, "profiles map_cc_$chartid");
-            push(@wherepart, "cc_$chartid.who = map_cc_$chartid.userid");
+            push(@supptables, "LEFT JOIN profiles map_cc_$chartid ON cc_$chartid.who = map_cc_$chartid.userid");
             $f = "map_cc_$chartid.login_name";
          },
 
@@ -1059,6 +1057,7 @@ CMD: for ($::FORM{'cmdtype'}) {
         $::buffer = LookupNamedQuery($::FORM{"namedcmd"});
         $vars->{'title'} = "Bug List: $::FORM{'namedcmd'}";
         ProcessFormFields($::buffer);
+        $order = $::FORM{'order'} || $order;
         last CMD;
     };
 
@@ -1152,8 +1151,25 @@ CMD: for ($::FORM{'cmdtype'}) {
             SendSQL("INSERT INTO namedqueries (userid, name, query, linkinfooter)
                      VALUES ($userid, $qname, $qbuffer, $tofooter)");
         }
+        
+        my $new_in_footer = $tofooter;
+        
+        # Don't add it to the list if they are reusing an existing query name.
+        foreach my $query (@{$vars->{'user'}{'queries'}}) {
+            if ($query->{'name'} eq $name && $query->{'linkinfooter'} == 1) {
+                $new_in_footer = 0;
+            }
+        }        
+        
         print "Content-Type: text/html\n\n";
-        # Generate and return the UI (HTML page) from the appropriate template.
+        # Generate and return the UI (HTML page) from the appropriate template.        
+        if ($new_in_footer) {
+            my %query = (name => $name,
+                         query => $::buffer, 
+                         linkinfooter => $tofooter);
+            push(@{$vars->{'user'}{'queries'}}, \%query);
+        }
+        
         $vars->{'title'} = "OK, query saved.";
         $vars->{'message'} = "OK, you have a new query named <code>$name</code>";
         $vars->{'url'} = "query.cgi";
@@ -1269,6 +1285,7 @@ else {
 
 # Some versions of perl will taint 'votes' if this is done as a single
 # statement, because $::FORM{'votes'} is tainted at this point
+$::FORM{'votes'} ||= "";
 if (trim($::FORM{'votes'}) && !grep($_ eq 'votes', @displaycolumns)) {
     push(@displaycolumns, 'votes');
 }
@@ -1501,16 +1518,16 @@ $vars->{'urlquerypart'} =~ s/[&?](order|cmdtype)=[^&]*//g;
 $vars->{'order'} = $order;
 
 # The user's login account name (i.e. email address).
-$vars->{'user'} = $::COOKIE{'Bugzilla_login'};
+my $login = $::COOKIE{'Bugzilla_login'};
 
 $vars->{'caneditbugs'} = UserInGroup('editbugs');
-$vars->{'usebuggroups'} = UserInGroup('usebuggroups');
+$vars->{'usebuggroups'} = Param('usebuggroups');
 
 # Whether or not this user is authorized to move bugs to another installation.
 $vars->{'ismover'} = 1
   if Param('move-enabled')
-    && defined($vars->{'user'})
-      && Param('movers') =~ /^(\Q$vars->{'user'}\E[,\s])|([,\s]\Q$vars->{'user'}\E[,\s]+)/;
+    && defined($login)
+      && Param('movers') =~ /^(\Q$login\E[,\s])|([,\s]\Q$login\E[,\s]+)/;
 
 my @bugowners = keys %$bugowners;
 if (scalar(@bugowners) > 1 && UserInGroup('editbugs')) {

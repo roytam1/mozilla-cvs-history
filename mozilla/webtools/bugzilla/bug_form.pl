@@ -72,7 +72,7 @@ sub show_bug {
       exit;
     }
     
-    my %user;
+    my %user = %{$vars->{'user'}};
     my %bug;
 
     # Populate the bug hash with the info we get directly from the DB.
