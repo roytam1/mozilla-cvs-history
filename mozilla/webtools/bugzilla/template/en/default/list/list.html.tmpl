@@ -38,13 +38,14 @@
 %]
 
 <div align="center">
-  <b>[% currenttime %]</b><br>
+  <b>[% time2str("%a %b %e %T %Z %Y", currenttime) %]</b><br>
 
   [% IF debug %]
     <p>[% query FILTER html %]</p>
   [% END %]
 
-  [% IF quip %]
+  [% IF Param('usequip') %]
+    [% DEFAULT quip = "Bugzilla would like to put a random quip here, but no one has entered any." %]
     <a href="quips.cgi"><i>[% quip FILTER html %]</i></a>
   [% END %]
 
