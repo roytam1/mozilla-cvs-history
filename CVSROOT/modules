@@ -654,7 +654,8 @@ SeaMonkeyL10n -a \
 # 
 
 SeaMonkeyAll -a \
-	SeaMonkeyEditor
+	SeaMonkeyEditor \
+	SeaMonkeyL10n
 
 Blackwood -a \
 	mozilla/java
