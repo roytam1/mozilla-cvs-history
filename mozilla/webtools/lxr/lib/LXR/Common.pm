@@ -544,7 +544,7 @@ sub titleexpand {
 
     } elsif ($who eq 'ident') {
 	my $i = $HTTP->{'param'}->{'i'};
-	return($Conf->sourcerootname.' identfier search'.
+	return($Conf->sourcerootname.' identifier search'.
 	       ($i ? " \"$i\"" : ''));
 
     } elsif ($who eq 'search') {
