@@ -78,9 +78,7 @@ sub _holduntilkey() {
 
 sub _output($$) {
 	my ($output, $loud) = @_
-	unless (getParam("quiet") == 1 || undef && $loud == 0 || undef) {
-       print $output;
-    }
+    print $output;
 }
 
 1;
