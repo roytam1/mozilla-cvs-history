@@ -53,7 +53,7 @@ use FileStructure;
 
 #       Main        
 {
-    $tree = 'Project_A';
+    $tree = 'SeaMonkey';
     $url = FileStructure::get_filename($tree, 'tree_URL');
 
     HTMLPopUp::regenerate_HTML_pages();
