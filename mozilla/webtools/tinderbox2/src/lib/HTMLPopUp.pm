@@ -140,6 +140,9 @@ sub timeHTML {
 
 
 sub split_cgi_args {
+    my %args = @_;
+    my @cgi_remove_arg = @{ $args{'cgi_remove_args'} };
+
 
   my (%form) = ();
 
@@ -175,11 +178,14 @@ sub split_cgi_args {
       my ($key, $value) = split(/=/, $pair,2);
       $form{$key} = $value;
     }
-    
-    # if we are being run by a webserver we are not in daemon_mode.
-    
-    delete ($form{'daemon-mode'});
 
+    # if we are being run by a webserver some options are not allowed
+    # even if the user asks for them.
+
+    if (@cgi_remove_args) {
+        delete @form{@cgi_remove_args};
+    }
+    
   } else {
 
     # run with argv arguments
