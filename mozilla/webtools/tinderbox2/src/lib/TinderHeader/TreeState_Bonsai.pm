@@ -87,5 +87,12 @@ sub savetree_header {
   return ;
 }
 
+sub get_all_sorted_setable_tree_states {
+
+    my @valid_states = ('Open', 'Closed' );
+
+    return @valid_states;
+}
+
 1;
 

@@ -234,7 +234,9 @@ sub get_current_ignore_builds  {
 sub format_input_page {
   my ($tree)= @_;
   my (@build_names) = get_build_names($tree);
-  my (@tree_states) = TreeData::get_all_sorted_tree_states($tree);
+  my (@tree_states) = $TinderHeader::NAMES2OBJS{'TreeState'}->
+      get_all_sorted_setable_tree_states();
+
   my ($title) = "Tinderbox Adminstration for Tree: $tree";
   my (@out);
 

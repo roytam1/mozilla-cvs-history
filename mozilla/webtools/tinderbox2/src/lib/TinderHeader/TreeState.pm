@@ -66,4 +66,11 @@ $VERSION = ( qw $Revision$ )[1];
 $TinderHeader::NAMES2OBJS{ 'TreeState' } = 
   TinderHeader::TreeState->new();
 
+sub get_all_sorted_setable_tree_states {
+
+    my @valid_states = TreeData::get_all_sorted_tree_states();
+
+  return @valid_states;
+}
+
 1;
