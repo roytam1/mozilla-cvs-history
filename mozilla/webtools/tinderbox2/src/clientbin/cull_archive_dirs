@@ -1,3 +1,6 @@
+#!/usr/local/bin/perl
+
+
 #!#perl# -T --
 
 # This script does not need to run under taint perl.
@@ -81,7 +84,7 @@ EOF
 
     ;
 
-die $usage;
+print $usage;
 
 }
 
@@ -402,12 +405,12 @@ sub parse_args {
 	exit 1 ;
     }
 
-    if($version) {
+    if($Prog_Args{'version'}) {
 	print "Version: $VERSION\n";
 	exit 0;  
     }
     
-    if ($help) {
+    if ($Prog_Args{'help'}) {
 	usage();
     }
     
