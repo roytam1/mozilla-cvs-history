@@ -536,6 +536,8 @@ SeaMonkeyXPToolKit -a \
 SeaMonkeyBrowser -a \
 	mozilla/client.mk \
 	mozilla/modules/softupdt \
+	mozilla/editor/Makefile.in \
+	mozilla/editor/public \
 	SeaMonkeyXPToolKit
 
 # This needs work!
