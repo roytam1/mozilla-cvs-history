@@ -8,6 +8,9 @@ $fullname{'95'} = '2-D Graphics';
 $mode{'52'} = 'Open';
 $branch{'52'} = 'HEAD';
 $fullname{'52'} = 'Aurora/RDF BE';
+$mode{'172'} = 'Open';
+$branch{'172'} = 'HEAD';
+$fullname{'172'} = 'BeOS-based gfx and widget';
 $mode{'53'} = 'Open';
 $branch{'53'} = 'HEAD';
 $fullname{'53'} = 'Berkeley DB';
@@ -411,6 +414,8 @@ if (m:^mozilla/browser/.*$:) {return '166';}
 if (m:^mozilla/toolkit/.*$:) {return '166';}
 if (m:^mozilla/mail/.*$:) {return '170';}
 if (m:^mozilla/extensions/cookie$:) {return '171';}
+if (m:^mozilla/gfx/src/beos$:) {return '172';}
+if (m:^mozilla/widget/src/beos$:) {return '172';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
