@@ -100,7 +100,6 @@ MozillaSourceCommon -a \
 MozillaSourceWinOnly -a \
     mozilla/client.mak  \
     mozilla/cmd/makefile.win  \
-    mozilla/cmd/dialup  \
     mozilla/cmd/wincom  \
     mozilla/cmd/winfe  \
     mozilla/config  \
@@ -216,7 +215,6 @@ MozillaSourceMacOnly -a \
     mozilla/config/bdate.pl  \
     mozilla/config/aboutime.pl  \
     mozilla/config/mac-set-timebomb.pl  \
-    mozilla/cmd/dialup  \
     mozilla/cmd/macfe \
     mozilla/lib/mac/AutoAdmin  \
     mozilla/lib/mac/Includes  \
