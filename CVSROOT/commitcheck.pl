@@ -349,8 +349,8 @@ if (m:^mozilla/layout/build/.*$:) {return '98';}
 if (m:^mozilla/layout/html/.*$:) {return '98';}
 if (m:^mozilla/layout/macbuild/.*$:) {return '98';}
 if (m:^mozilla/layout/tools/.*$:) {return '98';}
-if (m:^modules/libimg/mng/.*$:) {return '155';}
 if (m:^modules/libpr0n/decoders/mng/.*$:) {return '155';}
+if (m:^mozilla/modules/libimg/mng/.*$:) {return '155';}
 if (m:^mozilla/content/html/style/.*$:) {return '100';}
 if (m:^mozilla/content/shared/.*$:) {return '100';}
 if (m:^mozilla/embedding/.*$:) {return '101';}
