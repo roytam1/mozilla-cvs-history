@@ -29,3 +29,4 @@ so_locations
 depend.mk
 _xpidlgen
 ti_files
+*.rpo
