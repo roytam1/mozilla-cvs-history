@@ -57,7 +57,7 @@ sub find {
 	$sourceroot = $Conf->sourceroot;
 	while($file = <FILELLISTING>) {
 	    $file =~ s/^$sourceroot//;
-	    if($file =~ /$searchtext/) {
+	    if($file =~ /$searchtext/i) {
 		print(&fileref("$file", "$file"),"<br>\n");
 	    }
 	}
