@@ -79,7 +79,7 @@ use lib '#tinder_libdir#';
 	 'bugid=186056 browser crashed on second call to applet using javascript
 r=brendan@mozilla.org sr=beard@netscape.com',
 	 'don\'t return a value from a |void| function. fixing ports bustage.',
-	 'Leak cleaning.',
+	 'Leak cleaning. bug: 12345',
 	 );
 
 sub pickone {
@@ -185,7 +185,7 @@ sub get_checkin_data {
         $time += $next_checkin;
     
         my (
-            $rectype, $time, $author,
+            $rectype, $author,
             $repository, $repository_dir, $file,
             $revision,
             $sticky, $branch,
@@ -194,6 +194,7 @@ sub get_checkin_data {
 
         # I do not use these Bonsai fields.
 
+        $repository= '<ignore>';
         $lines_added = '<ignore>';
         $lines_removed = '<ignore>';
         $sticky  = '<ignore>';
