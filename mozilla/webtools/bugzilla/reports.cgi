@@ -76,9 +76,8 @@ my %reports =
 # If we're using bug groups for products, we should apply those restrictions
 # to viewing reports, as well.  Time to check the login in that case.
 ConnectToDatabase(1);
-quietly_check_login();
 
-my $userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
+my $userid = quietly_check_login();
 
 GetVersionTable();
 

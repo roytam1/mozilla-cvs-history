@@ -32,7 +32,7 @@ sub bug_form_pl_sillyness {
     my $zz;
     $zz = %::FORM;
     $zz = %::components;
-    $zz = %::proddesc;
+#    $zz = %::proddesc;
     $zz = %::prodmaxvotes;
     $zz = %::versions;
     $zz = @::legal_keywords;
@@ -45,8 +45,7 @@ sub bug_form_pl_sillyness {
     $zz = %::target_milestone;
 }
 
-my $loginok = quietly_check_login();
-my $userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
+my $userid = quietly_check_login();
 
 my $id = $::FORM{'id'};
 
@@ -357,25 +356,26 @@ print "
 <BR>
 <TEXTAREA WRAP=HARD NAME=comment ROWS=10 COLS=80></TEXTAREA><BR>";
 
-if ( $userid ne 0 ) {
+if ($userid) {
     # Find out which groups we are a member of and form radio buttons
     SendSQL("SELECT groups.group_id, groups.name, groups.description " .
             "FROM user_group_map, groups " .
             "WHERE user_group_map.group_id = groups.group_id " .
             "AND user_group_map.user_id = $userid " .
             "AND groups.isbuggroup != 0 " .
+            "AND groups.isactive = 1 " . 
             "ORDER BY groups.group_id");
     my %usergroups;
     my %groupnames;
     my $groupFound = 0;
-    while ( MoreSQLData() ) {
+    while (MoreSQLData()) {
         my ($group_id, $name, $description) = FetchSQLData();
         $groupnames{$group_id} = $name;
         $usergroups{$group_id} = $description;
         $groupFound = 1;
     }
 
-    if ( $groupFound ) {
+    if ($groupFound) {
         print "<br><b>Only users in the selected groups can view this bug:</b><br>\n";
         print "<font size=\"-1\">(Leave all boxes unchecked to make this a public bug.)</font><br><br>\n";
 
@@ -393,12 +393,12 @@ if ( $userid ne 0 ) {
             print "$usergroups{$group_id}<br>\n";
         }
     }
-    
+
     # If the bug is restricted to a group, display checkboxes that allow
     # the user to set whether or not the reporter, assignee, QA contact, 
     # and cc list can see the bug even if they are not members of all 
     # groups to which the bug is restricted.
-    if ( $groupFound ) {
+    if ($groupFound) {
         # Determine whether or not the bug is always accessible by the reporter,
         # QA contact, and/or users on the cc: list.
         SendSQL("SELECT  reporter_accessible , assignee_accessible , 
@@ -567,7 +567,7 @@ if ( Param("move-enabled") && (defined $::COOKIE{"Bugzilla_login"}) && ($::COOKI
 print "<BR></FORM>";
 
 print qq|
-<table><tr><td align=left><B><a name="0" href="#c0">Description:</a></B></td>
+<table><tr><td align=left><B><a name="c0" href="#c0">Description:</a></B></td>
 <td align=right width=100%>Opened: $bug{'creation_ts'}</td></tr></table>
 <HR>
 |;

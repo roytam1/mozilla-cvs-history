@@ -770,14 +770,16 @@ if ($action eq 'update') {
       my @blessgroupset = ();
 
     foreach (keys %::FORM) {
-            next unless /^group_/;
-            #print "$_=$::FORM{$_}<br>\n";
-            push(@groupset, $::FORM{$_});
+        next unless /^group_/;
+        #print "$_=$::FORM{$_}<br>\n";
+        detaint_natural($::FORM{$_}) || die "Groupset field tampered with";
+        push(@groupset, $::FORM{$_});    
     }
     foreach (keys %::FORM) {
-            next unless /^bless_/;
-            #print "$_=$::FORM{$_}<br>\n";
-            push(@blessgroupset, $::FORM{$_});
+        next unless /^bless_/;
+        #print "$_=$::FORM{$_}<br>\n";
+        detaint_natural($::FORM{$_}) || die "Blessgroupset field tampered with";
+        push(@blessgroupset, $::FORM{$_});
     }
 
       # print "Groups: " . join(', ', @groupset) . "<br>\n";
@@ -785,8 +787,8 @@ if ($action eq 'update') {
 
     CheckUser($userold);
 
-      SendSQL("SELECT userid, admin FROM profiles WHERE login_name = " . SqlQuote($userold));
-      my ($userid, $admin) = FetchSQLData();
+    SendSQL("SELECT userid, admin FROM profiles WHERE login_name = " . SqlQuote($userold));
+    my ($userid, $admin) = FetchSQLData();
 #    if ($groupset ne $groupsetold) {
 #        SendSQL("SELECT groupset FROM profiles WHERE login_name=" .
 #                SqlQuote($userold));
@@ -820,25 +822,44 @@ if ($action eq 'update') {
 #       }
 #    }
 
-      if ( !$admin ) {
-            SendSQL("DELETE FROM user_group_map WHERE user_id = $userid");
-          foreach my $groupid ( @groupset ) {
-                  if ( $editall || (lsearch(\@opblessgroupset, $groupid) >= 0) ) {
+    if ( !$admin ) {
+        SendSQL("DELETE FROM user_group_map WHERE user_id = $userid");
+        foreach my $groupid ( @groupset ) {
+            if ( $editall || (lsearch(\@opblessgroupset, $groupid) >= 0) ) {
                 SendSQL("insert into user_group_map values ($userid, $groupid)");
-                  }
-            }    
-            print "Updated permissions<br>\n";
+            }
+        }    
+        print "Updated permissions<br>\n";
 
-            SendSQL("DELETE FROM bless_group_map WHERE user_id = $userid");
+        SendSQL("DELETE FROM bless_group_map WHERE user_id = $userid");
         foreach my $groupid ( @blessgroupset ) {
-                  if ( $editall || (lsearch(\@opblessgroupset, $groupid) >= 0) ) {
-                  SendSQL("INSERT INTO bless_group_map VALUES ($userid, $groupid)");
-                  }
+            if ( $editall || (lsearch(\@opblessgroupset, $groupid) >= 0) ) {
+                SendSQL("INSERT INTO bless_group_map VALUES ($userid, $groupid)");
+            }
         }
-            print "Updated ability to tweak permissions of other users.<br>\n";
-      } else {
-            print "Cannot change permissions of a superuser.<br>\n";
-      }
+        print "Updated ability to tweak permissions of other users.<br>\n";
+    } else {
+        print "Cannot change permissions of a superuser.<br>\n";
+    }
+
+    # FIXME to work with new group schema support
+    # I'm paranoid that someone who I give the ability to bless people
+    # will start misusing it.  Let's log who blesses who (even though
+    # nothing actually uses this log right now).
+    #my $fieldid = GetFieldID("groupset");
+    #SendSQL("SELECT userid, groupset FROM profiles WHERE login_name=" .
+    #        SqlQuote($userold));
+    #my $u;
+    #($u, $groupset) = (FetchSQLData());
+    #if ($groupset ne $groupsetold) {
+    #    SendSQL("INSERT INTO profiles_activity " .
+    #            "(userid,who,profiles_when,fieldid,oldvalue,newvalue) " .
+    #            "VALUES " .
+    #            "($u, $::userid, now(), $fieldid, " .
+    #            " $groupsetold, $groupset)");
+    #    }
+    #    print "Updated permissions.\n";
+    #}
 
     # Update the database with the user's new password if they changed it.
     if ( !Param('useLDAP') && $editall && $password ) {

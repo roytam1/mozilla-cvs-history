@@ -33,7 +33,6 @@ sub sillyness {
     my $zz;
     $zz = $::legal_keywords;
     $zz = %::FORM;
-    $zz = %::COOKIE;
 }
 
 print "Content-type: text/html\n";
@@ -43,9 +42,7 @@ print "Content-disposition: inline; filename=bugzilla_bug_list.html\n\n";
 PutHeader ("Full Text Bug Listing");
 
 ConnectToDatabase();
-my $userid = 0;
-quietly_check_login();
-$userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
+my $userid = quietly_check_login();
 
 GetVersionTable();
 

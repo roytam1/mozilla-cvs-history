@@ -652,10 +652,9 @@ sub PasswordForLogin {
 }
 
 
-sub quietly_check_login() {
-    my $loginok = 0;
+sub quietly_check_login {
+    my ($userid, $loginname, $ok, $disabledtext);
     $::disabledreason = '';
-    $::userid = 0;
     if (defined $::COOKIE{"Bugzilla_login"} &&
         defined $::COOKIE{"Bugzilla_logincookie"}) {
         ConnectToDatabase();
@@ -675,18 +674,19 @@ sub quietly_check_login() {
                 " AND profiles.userid = logincookies.userid");
         my @row;
         if (@row = FetchSQLData()) {
-            my ($userid, $loginname, $ok, $disabledtext) = (@row);
+            ($userid, $loginname, $ok, $disabledtext) = (@row);
             if ($ok) {
                 if ($disabledtext eq '') {
-                    $loginok = 1;
-                    $::userid = $userid;
                     $::COOKIE{"Bugzilla_login"} = $loginname; # Makes sure case
                                                               # is in
                                                               # canonical form.
                 } else {
+                    $userid = 0;
                     $::disabledreason = $disabledtext;
                 }
-            }
+            } else {
+                $userid = 0;
+            } 
         }
     }
     # if 'who' is passed in, verify that it's a good value
@@ -694,14 +694,11 @@ sub quietly_check_login() {
         my $whoid = DBname_to_id($::FORM{'who'});
         delete $::FORM{'who'} unless $whoid;
     }
-    if (!$loginok) {
+    if (!$userid) {
         delete $::COOKIE{"Bugzilla_login"};
     }
-    return $loginok;
+    return $userid;
 }
-
-
-
 
 sub CheckEmailSyntax {
     my ($addr) = (@_);
@@ -945,9 +942,9 @@ sub confirm_login {
        print "Set-Cookie: Bugzilla_logincookie=$logincookie ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
     }
 
-    my $loginok = quietly_check_login();
+    my $userid = quietly_check_login();
 
-    if ($loginok != 1) {
+    if (!$userid) {
         if ($::disabledreason) {
             my $cookiepath = Param("cookiepath");
             print "Set-Cookie: Bugzilla_login= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:00:00 GMT
@@ -1068,7 +1065,7 @@ Content-type: text/html
         SendSQL("UPDATE logincookies SET lastused = null " .
                 "WHERE cookie = $::COOKIE{'Bugzilla_logincookie'}");
     }
-    return $::userid;
+    return $userid;
 }
 
 

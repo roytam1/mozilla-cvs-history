@@ -26,8 +26,8 @@
 use diagnostics;
 use strict;
 
-my $UserInEditGroupSet = -1;
-my $UserInCanConfirmGroupSet = -1;
+my $hasEditGroup = -1;
+my $hasCanConfirmGroup = -1;
 
 require "CGI.pl";
 use RelationSet;
@@ -295,10 +295,10 @@ sub CheckCanChangeField {
     if ($f eq "resolution") { # always OK this.  if they really can't,
         return 1;             # it'll flag it when "status" is checked.
     }
-    if ($UserInEditGroupSet < 0) {
-        $UserInEditGroupSet = UserInGroup($whoid, "editbugs");
+    if ($hasEditGroup < 0) {
+        $hasEditGroup = UserInGroup($whoid, "editbugs");
     }
-    if ($UserInEditGroupSet) {
+    if ($hasEditGroup) {
         return 1;
     }
     if ($lastbugid != $bugid) {
@@ -320,10 +320,10 @@ sub CheckCanChangeField {
         # group?  Or, has it ever been confirmed?  If not, then this
         # isn't legal.
 
-        if ($UserInCanConfirmGroupSet < 0) {
-            $UserInCanConfirmGroupSet = UserInGroup($whoid, "canconfirm");
+        if ($hasCanConfirmGroup < 0) {
+            $hasCanConfirmGroup = UserInGroup($whoid, "canconfirm");
         }
-        if ($UserInCanConfirmGroupSet) {
+        if ($hasCanConfirmGroup) {
             return 1;
         }
         SendSQL("SELECT everconfirmed FROM bugs WHERE bug_id = $bugid");
@@ -462,13 +462,13 @@ sub DoComma {
 }
 
 sub DoConfirm {
-    if ($UserInEditGroupSet < 0) {
-        $UserInEditGroupSet = UserInGroup($whoid, "editbugs");
+    if ($hasEditGroup < 0) {
+        $hasEditGroup = UserInGroup($whoid, "editbugs");
     }
-    if ($UserInCanConfirmGroupSet < 0) {
-        $UserInCanConfirmGroupSet = UserInGroup($whoid, "canconfirm");
+    if ($hasCanConfirmGroup < 0) {
+        $hasCanConfirmGroup = UserInGroup($whoid, "canconfirm");
     }
-    if ($UserInEditGroupSet || $UserInCanConfirmGroupSet) {
+    if ($hasEditGroup || $hasCanConfirmGroup) {
         DoComma();
         $::query .= "everconfirmed = 1";
     }
@@ -881,6 +881,7 @@ sub SnapShotDeps {
 
 
 my $timestamp;
+my $bug_changed;
 
 sub FindWrapPoint {
     my ($string, $startpos) = @_;
@@ -930,7 +931,8 @@ sub LogActivityEntry {
         my $fieldid = GetFieldID($col);
         SendSQL("INSERT INTO bugs_activity " .
                 "(bug_id,who,bug_when,fieldid,removed,added) VALUES " .
-                "($i,$whoid,$timestamp,$fieldid,$removestr,$addstr)");
+                "($i,$whoid," . SqlQuote($timestamp) . ",$fieldid,$removestr,$addstr)");
+        $bug_changed = 1;
     }
 }
 
@@ -952,6 +954,7 @@ sub LogDependencyActivity {
 #
 foreach my $id (@idlist) {
     my %dependencychanged;
+    $bug_changed = 0;
     my $write = "WRITE";        # Might want to make a param to control
                                 # whether we do LOW_PRIORITY ...
     SendSQL("LOCK TABLES bugs $write, bugs_activity $write, cc $write, " .
@@ -1135,17 +1138,14 @@ The changes made were:
                     " WHERE bug_id = $id");
         }
     }
-
     my $query = "$basequery\nwhere bug_id = $id";
     
 # print "<PRE>$query</PRE>\n";
 
     if ($::comma ne "") {
         SendSQL($query);
-        SendSQL("select delta_ts from bugs where bug_id = $id");
-    } else {
-        SendSQL("select now()");
     }
+    SendSQL("select now()");
     $timestamp = FetchOneColumn();
     
     if (defined $::FORM{'comment'}) {
@@ -1361,7 +1361,9 @@ The changes made were:
             LogActivityEntry($id,$col,$old,$new);
         }
     }
-    
+    if ($bug_changed) {
+        SendSQL("UPDATE bugs SET delta_ts = " . SqlQuote($timestamp) . " WHERE bug_id = $id");
+    }
     print "<TABLE BORDER=1><TD><H2>Changes to bug $id submitted</H2>\n";
     SendSQL("unlock tables");
 

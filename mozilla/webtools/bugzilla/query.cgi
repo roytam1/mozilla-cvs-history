@@ -55,16 +55,13 @@ use vars
   %::FORM;
 
 
+my $userid = 0;
 if (defined $::FORM{"GoAheadAndLogIn"}) {
     # We got here from a login page, probably from relogin.cgi.  We better
     # make sure the password is legit.
-    confirm_login();
+    $userid = confirm_login();
 } else {
-    quietly_check_login();
-}
-my $userid = 0;
-if (defined $::COOKIE{"Bugzilla_login"}) {
-    $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
+    $userid = quietly_check_login();
 }
 
 # Backwards compatability hack -- if there are any of the old QUERY_*

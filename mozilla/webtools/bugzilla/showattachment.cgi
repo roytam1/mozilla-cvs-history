@@ -26,16 +26,9 @@ use strict;
 
 require "CGI.pl";
 
-sub globals_pl_sillyness {
-    my $zz;
-    $zz = %::COOKIE;
-}
-
 ConnectToDatabase();
 
-my $userid = 0;
-quietly_check_login();
-$userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
+my $userid = quietly_check_login();
 
 if ($::FORM{attach_id} !~ /^[1-9][0-9]*$/) {
     DisplayError("Attachment ID should be numeric.");

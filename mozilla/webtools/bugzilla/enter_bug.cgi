@@ -57,8 +57,7 @@ sub sillyness {
 # in an extra time.  Only do it here if we really need to.  -terry, 3/10/00
 my $userid = 0;
 if (Param("usebuggroupsentry")) {
-    confirm_login();
-    $userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
+    $userid = confirm_login();
 }
 
 if (!defined $::FORM{'product'}) {

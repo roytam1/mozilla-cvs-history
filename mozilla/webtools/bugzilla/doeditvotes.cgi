@@ -28,8 +28,7 @@ require "CGI.pl";
 
 ConnectToDatabase();
 
-my $userid = 0;
-$userid = confirm_login();
+my $userid = confirm_login();
 
 ######################################################################
 # Begin Data/Security Validation

@@ -211,7 +211,7 @@ SendSQL("select LAST_INSERT_ID()");
 my $id = FetchOneColumn();
 
 SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) VALUES " .
-        "($id, $::COOKIE{'Bugzilla_login'}, now(), " . SqlQuote($comment) . ")");
+        "($id, $userid, now(), " . SqlQuote($comment) . ")");
 
 if (defined $::FORM{'cc'}) {
     foreach my $person (split(/[ ,]/, $::FORM{'cc'})) {

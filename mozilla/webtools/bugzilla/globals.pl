@@ -715,12 +715,31 @@ sub SelectVisible {
     # additional tables), you will need to update anywhere which does a
     # LOCK TABLE, and then calls routines which call this
 
-    my @usergroupset = ();
+#    my @usergroupset = ();
+#    if ($userid) {
+#        PushGlobalSQLState();
+#        SendSQL("SELECT group_id FROM user_group_map WHERE user_id = $userid");
+#        while (my @row = FetchSQLData()) {
+#            push (@usergroupset, $row[0]);
+#        }
+#        PopGlobalSQLState();
+#    }
+
+    my @canseelist;
     if ($userid) {
         PushGlobalSQLState();
-        SendSQL("SELECT group_id FROM user_group_map WHERE user_id = $userid");
+        my $query = "
+        SELECT 
+            bugs.bug_id 
+        FROM 
+            bugs LEFT JOIN bug_group_map USING (bug_id) 
+            LEFT JOIN user_group_map ON bug_group_map.group_id = user_group_map.group_id 
+                AND user_group_map.user_id = $userid 
+        GROUP BY 
+            bugs.bug_id HAVING
+                (COUNT(user_group_map.group_id) = COUNT(bug_group_map.group_id))";
         while (my @row = FetchSQLData()) {
-            push (@usergroupset, $row[0]);
+            push(@canseelist, $row[0]);
         }
         PopGlobalSQLState();
     }
@@ -756,18 +775,24 @@ sub SelectVisible {
     $replace .= "LEFT JOIN bug_group_map selectVisible_bug_groups ON
                 bugs.bug_id = selectVisible_bug_groups.bug_id ";
 
-    if ($userid) {
-        $replace .= "LEFT JOIN user_group_map selectVisible_user_groups ON
-                    selectVisible_bug_groups.group_id = selectVisible_user_groups.group_id AND
-                    selectVisible_user_groups.user_id = $userid ";
-    }
+#    if ($userid) {
+#        $replace .= "LEFT JOIN user_group_map selectVisible_user_groups ON
+#                    selectVisible_bug_groups.group_id = selectVisible_user_groups.group_id AND
+#                    selectVisible_user_groups.user_id = $userid ";
+#    }
 
     # $replace .= "WHERE ((selectVisible_groups.group_id IN (" . join(',', @usergroupset) . ")) ";
     # $replace .= "WHERE ((isnull(selectVisible_user_groups.group_id)) ";
-    if (@usergroupset) {
-        $replace .= "WHERE ((selectVisible_bug_groups.group_id IN (" . join(',',@usergroupset) . ")) ";
+#    if (@usergroupset) {
+#        $replace .= "WHERE ((selectVisible_bug_groups.group_id IN (" . join(',',@usergroupset) . ")) ";
+#    } else {
+#        $replace .= "WHERE ((selectVisible_bug_groups.group_id IS NULL) ";    
+#    }
+
+    if (@canseelist) {
+        $replace .= "WHERE ((bugs.bug_id IN (" . join(',', @canseelist) . ")) ";
     } else {
-        $replace .= "WHERE ((selectVisible_bug_groups.group_id IS NULL) ";    
+        $replace .= "WHERE ((selectVisible_bug_groups.group_id IS NULL) ";
     }
 
     if ($userid) {
@@ -791,17 +816,53 @@ sub SelectVisible {
 
 sub CanSeeBug {
     my ($id, $userid) = @_;
+    my $query = "";
 
-    # Query the database for the bug, retrieving a boolean value that
-    # represents whether or not the user is authorized to access the bug.
+    # If this person is not logged in then let's check first to see if this
+    # bug is private
+    if (!$userid) {
+        PushGlobalSQLState();
+        $query = "SELECT COUNT(bug_id) FROM bug_group_map WHERE bug_id = $id";
+        SendSQL($query);
+        my $count = FetchOneColumn();
+        if ($count) {
+            return 0;
+        } else {
+            return 1;
+        }
+        PopGlobalSQLState();
+    }
 
+    # We have a userid so let's check to see if this person can see the bug or not.
+    
     PushGlobalSQLState();
-    SendSQL(SelectVisible("SELECT bugs.bug_id FROM bugs WHERE bugs.bug_id = $id", $userid));
-
+    # SendSQL(SelectVisible("SELECT bugs.bug_id FROM bugs WHERE bugs.bug_id = $id", $userid));
+    $query = "
+    SELECT 
+        bugs.bug_id 
+    FROM 
+        bugs LEFT JOIN cc ON bugs.bug_id = cc.bug_id AND cc.who = $userid 
+        LEFT JOIN bug_group_map ON bugs.bug_id=bug_group_map.bug_id 
+        LEFT JOIN user_group_map ON bug_group_map.group_id = user_group_map.group_id 
+            AND user_group_map.user_id = $userid 
+    WHERE 
+        bugs.bug_id = $id 
+        AND user_group_map.group_id IS NULL 
+        AND (bugs.reporter_accessible = 0 OR bugs.reporter != $userid) 
+        AND (bugs.qacontact_accessible = 0 OR bugs.qa_contact != $userid) 
+        AND (bugs.assignee_accessible = 0 OR bugs.assigned_to != $userid)
+        AND (bugs.cclist_accessible = 0 OR cc.who IS NULL) LIMIT 1 ";
+    SendSQL($query);
     my $ret = defined(FetchSQLData());
     PopGlobalSQLState();
+    
+    if ($ret) {
+        return 0;
+    } else {
+        return 1;
+    }
 
-    return $ret;
+    # return $ret;
 }
 
 sub ValidatePassword {
@@ -1243,7 +1304,7 @@ sub SqlQuote {
 
 sub UserInGroup {
     my ($userid, $groupname) = (@_);
-    if ($userid eq "0") {
+    if (!$userid) {
         return 0;
     }
     ConnectToDatabase();

@@ -25,16 +25,9 @@ use strict;
 
 require "CGI.pl";
 
-sub globals_pl_sillyness {
-    my $zz;
-    $zz = %::COOKIE;
-}
-
 ConnectToDatabase();
 
-my $userid = 0;
-quietly_check_login();
-$userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
+my $userid = quietly_check_login();
 
 ######################################################################
 # Begin Data/Security Validation
@@ -127,7 +120,7 @@ node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
         my $summary = "";
         my $stat;
         if ($::FORM{'showsummary'}) {
-            SendSQL(SelectVisible("select bug_status, short_desc from bugs where bug_id = $k",
+            SendSQL(SelectVisible("select bug_status, short_desc from bugs where bugs.bug_id = $k",
                                   $userid));
             ($stat, $summary) = (FetchSQLData());
             $stat = "NEW" if !defined $stat;

@@ -25,19 +25,13 @@ use strict;
 
 require "CGI.pl";
 
-sub globals_pl_sillyness {
-    my $zz;
-    $zz = %::COOKIE;
-}
-
 ConnectToDatabase();
 
 my $userid = 0;
 if ($::FORM{'GoAheadAndLogIn'}) {
     $userid = confirm_login();
 } else {
-    quietly_check_login();
-    $userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
+    $userid = quietly_check_login();
 }
 
 ######################################################################

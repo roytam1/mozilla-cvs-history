@@ -28,13 +28,11 @@ use strict;
 use lib qw(.);
 require "CGI.pl";
 
-use vars %::FORM, %::COOKIE;
+use vars %::FORM;
 
 ConnectToDatabase();
 
-my $userid = 0;
-quietly_check_login();
-$userid = DBname_to_id($::COOKIE{'Bugzilla_login'}); 
+my $userid = quietly_check_login();
 
 ######################################################################
 # Begin Data/Security Validation
@@ -110,8 +108,7 @@ sub DumpKids {
     my $fgcolor = "#000000";
     my $me;
     if (! defined $depth) { $depth = 1; }
-    if (exists $seen{$i}) { return; }
-    $seen{$i} = 1;
+
     if ($target eq "blocked") {
         $me = "dependson";
     } else {
@@ -152,7 +149,14 @@ sub DumpKids {
                     $html .= qq|<strike><span style="color: $fgcolor; background-color: $bgcolor;">
                     |;
                 }
-                $short_desc = html_quote($short_desc);
+
+                if (exists $seen{$kid}) {     
+                    $short_desc = "&lt;<em>This bug appears elsewhere in this tree</em>&gt;";
+                }
+                else {
+                    $short_desc = html_quote($short_desc);
+                }
+
                 SendSQL("select login_name from profiles where userid = $userid");
                 my ($owner) = (FetchSQLData());
                 if ((Param('usetargetmilestone')) && ($milestone)) {
@@ -172,7 +176,10 @@ sub DumpKids {
 
             # Store the maximum depth so far
             $realdepth = $realdepth < $depth ? $depth : $realdepth;
-            DumpKids($kid, $target, $depth + 1);
+            if (!(exists $seen{$kid})) { 
+                $seen{$kid} = 1;
+                DumpKids($kid, $target, $depth + 1);
+            }
         }
         if ($list_started) { $html .= "</ul>"; }
     }

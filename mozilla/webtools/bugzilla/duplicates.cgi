@@ -38,9 +38,7 @@ sub globals_pl_sillyness {
 ConnectToDatabase(1);
 GetVersionTable();
 
-my $userid = 0;
-quietly_check_login();
-$userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
+my $userid = quietly_check_login();
 
 my %dbmcount;
 my %count;

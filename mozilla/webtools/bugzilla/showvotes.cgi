@@ -36,8 +36,7 @@ if (defined $::FORM{'voteon'} || (!defined $::FORM{'bug_id'} &&
 } else {
     # Check whether or not the user is currently logged in without throwing
     # an error if the user is not logged in. 
-    quietly_check_login();
-    $userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
+    $userid = quietly_check_login();
 }
 
 ################################################################################
