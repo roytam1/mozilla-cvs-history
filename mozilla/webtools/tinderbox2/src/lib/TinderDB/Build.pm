@@ -1134,7 +1134,9 @@ sub status_table_row {
 
     # Error count (not a link, but hey)
 
-    if ($current_rec->{'errors'}) {
+    if ( (BuildStatus::get_display_number_errors) &&
+         ($current_rec->{'errors'}) 
+         ){
         $links .= (
                    "\t\t<br>errs: ". 
                    $current_rec->{'errors'}."\n".

@@ -469,7 +469,8 @@ sub status_table_row {
       }
       $table .= "</table>";
 
-      # Do not display the full mail address in the status column
+      # Do not display the full mail address in the status column, it
+      # takes up too much space.  Keep only the user name.
 
       my $display_author=$author;
       $display_author =~ s/\%.*//;
