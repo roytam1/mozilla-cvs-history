@@ -32,7 +32,7 @@ ask('inschoice','Please make a selection','1');
 
 unless (getConf('quiet')) {
 	my $option = getConf('inschoice');
-	output "\nJust to confirm since this part is important, you selected option $option, right?\n";
+	output "\nJust to confirm, you selected option $option, right?\n";
 	ask('insconfirm','Yes or no?','yes');
 	unless (getConf('insconfirm') =~ /y/i) {
 		ask('inschoice','Well, what do you want then?','1');
