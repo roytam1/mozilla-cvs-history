@@ -523,11 +523,11 @@ SeaMonkeyCore -a \
 	mozilla/nglayout.mk \
 	mozilla/rdf \
 	mozilla/sun-java \
-	mozilla/xpcom
+	mozilla/xpcom \
+	MozillaLicense
 
 SeaMonkeyLayout -a \
 	SeaMonkeyCore \
-	mozilla/nglayout.mk \
 	mozilla/dom \
 	mozilla/gfx \
 	mozilla/htmlparser \
@@ -542,6 +542,7 @@ SeaMonkeyXPToolKit -a \
 
 SeaMonkeyBrowser -a \
 	mozilla/client.mk \
+	mozilla/client.mak \
 	mozilla/modules/softupdt \
 	mozilla/editor/Makefile.in \
 	mozilla/editor/public \
@@ -567,7 +568,10 @@ SeaMonkeyEditor -a \
 # will contain SeaMonkeyUnix, SeaMonkeyMac, SeaMonkeyWin
 # et cetera, et cetera, et cetera. But that is in the 
 # future. --sarah
+# 
+# For windows builds, nspr is required. --leaf
 
 SeaMonkeyAll -a \
-	SeaMonkeyEditor
+	SeaMonkeyEditor \
+	NSPR
 
