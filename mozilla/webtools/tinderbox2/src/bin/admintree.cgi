@@ -409,7 +409,6 @@ sub change_tree_state {
 sub change_ignore_builds {
   my (@results) = ();
   my (@out);
-  my ($file) = FileStructure::get_filename($TREE, 'ignore_builds');
 
   ("@NEW_IGNORE_BUILDS" eq "@CURRENT_IGNORE_BUILDS") &&
     return ;
