@@ -432,7 +432,7 @@ sub status_table_row {
 
   # first find out what time the break will occur at.
 
-  my $next_index = $row_index;
+  my $next_index = $DB_TIMES[$NEXT_DB];
 
   while (!(
          is_break_cell(
@@ -442,12 +442,11 @@ sub status_table_row {
                        )
          )) {
 
-      $NEXT_DB++;
       $next_index++;
 
   }
 
-  $next_time = $DB_TIMES[$NEXT_DB];
+  $next_time = $DB_TIMES[$next_index];
 
 
   # If there is no treestate, then the tree state has not changed
