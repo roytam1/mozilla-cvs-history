@@ -310,21 +310,6 @@ $fullname{'93'} = 'Zlib';
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'HEAD') {
-if (m:^mozilla/nsprpub/.*$:) {return '78';}
-if (m:^mozilla/gfx/src/windows/.*$:) {return '175';}
-if (m:^mozilla/widget/src/windows/.*$:) {return '175';}
-if (m:^mozilla/modules/plugin/.*$:) {return '81';}
-if (m:^mozilla/gfx/public/.*$:) {return '177';}
-if (m:^mozilla/gfx/src/*\.cpp$:) {return '177';}
-if (m:^mozilla/gfx/src/*\.h$:) {return '177';}
-if (m:^mozilla/gfx/src/shared/.*$:) {return '177';}
-if (m:^mozilla/widget/public/.*$:) {return '177';}
-if (m:^mozilla/widget/src/xpwidgets/.*$:) {return '177';}
-if (m:^mozilla/modules/libpref/.*$:) {return '82';}
-if (m:^mozilla/gfx/src/mac/.*$:) {return '178';}
-if (m:^mozilla/widget/src/mac/.*$:) {return '178';}
-if (m:^mozilla/modules/progress/.*$:) {return '83';}
-if (m:^mozilla/accessibility/.*$:) {return '180';}
 if (m:^mozilla/modules/libreg/.*$:) {return '84';}
 if (m:^mozilla/extensions/typeaheadfind/.*$:) {return '181';}
 if (m:^mozilla/modules/security/.*$:) {return '86';}
@@ -451,6 +436,21 @@ if (m:^mozilla/gfx/src/beos$:) {return '172';}
 if (m:^mozilla/widget/src/beos$:) {return '172';}
 if (m:^mozilla/netwerk/.*$:) {return '77';}
 if (m:^mozilla/extensions/help$:) {return '174';}
+if (m:^mozilla/nsprpub/.*$:) {return '78';}
+if (m:^mozilla/gfx/src/windows/.*$:) {return '175';}
+if (m:^mozilla/widget/src/windows/.*$:) {return '175';}
+if (m:^mozilla/modules/plugin/.*$:) {return '81';}
+if (m:^mozilla/gfx/public/.*$:) {return '177';}
+if (m:^mozilla/gfx/src/*\.cpp$:) {return '177';}
+if (m:^mozilla/gfx/src/*\.h$:) {return '177';}
+if (m:^mozilla/gfx/src/shared/.*$:) {return '177';}
+if (m:^mozilla/widget/public/.*$:) {return '177';}
+if (m:^mozilla/widget/src/xpwidgets/.*$:) {return '177';}
+if (m:^mozilla/modules/libpref/.*$:) {return '82';}
+if (m:^mozilla/gfx/src/mac/.*$:) {return '178';}
+if (m:^mozilla/widget/src/mac/.*$:) {return '178';}
+if (m:^mozilla/modules/progress/.*$:) {return '83';}
+if (m:^mozilla/accessibility/.*$:) {return '180';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
