@@ -360,6 +360,8 @@ if (m:^mozilla/modules/libpref/.*$:) {return '82';}
 if (m:^mozilla/gfx/public/.*$:) {return '177';}
 if (m:^mozilla/widget/public/.*$:) {return '177';}
 if (m:^mozilla/modules/progress/.*$:) {return '83';}
+if (m:^mozilla/gfx/src/mac/.*$:) {return '178';}
+if (m:^mozilla/widget/src/mac/.*$:) {return '178';}
 if (m:^mozilla/modules/libreg/.*$:) {return '84';}
 if (m:^mozilla/modules/security/.*$:) {return '86';}
 if (m:^mozilla/modules/softupdt/.*$:) {return '87';}
