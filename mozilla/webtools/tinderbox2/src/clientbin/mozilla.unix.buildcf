@@ -78,9 +78,9 @@ sub GetSystemInfo {
     }
     
     if ($OS eq 'QNX') {
-        $os_ver = `uname -v`;
+        $OSVer = `uname -v`;
         chomp($os_ver);
-        $os_ver =~ s/^([0-9])([0-9]*)$/$1.$2/;
+        $OSVer =~ s/^([0-9])([0-9]*)$/$1.$2/;
     }
 
     if ( $OS eq 'SCO_SV' ) {
