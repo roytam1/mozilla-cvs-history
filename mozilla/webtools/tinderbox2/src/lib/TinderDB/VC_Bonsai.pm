@@ -252,7 +252,7 @@ sub apply_db_updates {
         $TinderDB::MAX_UPDATES_SINCE_TRIM)
      ) {
     $METADATA{$tree}{'updates_since_trim'}=0;
-    trim_db_history(@_);
+    $self->trim_db_history(@_);
   }
 
   $self->savetree_db($tree);
