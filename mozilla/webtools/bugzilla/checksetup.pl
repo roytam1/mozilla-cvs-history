@@ -190,7 +190,7 @@ unless (have_vers("Data::Dumper",0))      { push @missing,"Data::Dumper" }
 unless (have_vers("DBD::mysql","1.2209")) { push @missing,"DBD::mysql" }
 unless (have_vers("Date::Parse",0))       { push @missing,"Date::Parse" }
 unless (have_vers("AppConfig","1.52"))    { push @missing,"AppConfig" }
-unless (have_vers("Template","2.06"))     { push @missing,"Template" }
+unless (have_vers("Template","2.04"))     { push @missing,"Template" }
 unless (have_vers("Text::Wrap","2001.0131")) { push @missing,"Text::Wrap" }
 
 # If CGI::Carp was loaded successfully for version checking, it changes the
@@ -281,6 +281,21 @@ sub LocalVar ($$)
 #
 # Set up the defaults for the --LOCAL-- variables below:
 #
+
+LocalVar('index_html', <<'END');
+#
+# With the introduction of a configurable index page using the
+# template toolkit, Bugzilla's main index page is now index.cgi.
+# Most web servers will allow you to use index.cgi as a directory
+# index and many come preconfigured that way, however if yours
+# doesn't you'll need an index.html file that provides redirection
+# to index.cgi. Setting $index_html to 1 below will allow
+# checksetup.pl to create one for you if it doesn't exist.
+# NOTE: checksetup.pl will not replace an existing file, so if you
+#       wish to have checksetup.pl create one for you, you must
+#       make sure that there isn't already an index.html
+$index_html = 0;
+END
 
 my $mysql_binaries = `which mysql`;
 if ($mysql_binaries =~ /no mysql/) {
@@ -473,6 +488,7 @@ my $my_db_port = ${*{$main::{'db_port'}}{SCALAR}};
 my $my_db_name = ${*{$main::{'db_name'}}{SCALAR}};
 my $my_db_user = ${*{$main::{'db_user'}}{SCALAR}};
 my $my_db_pass = ${*{$main::{'db_pass'}}{SCALAR}};
+my $my_index_html = ${*{$main::{'index_html'}}{SCALAR}};
 my $my_create_htaccess = ${*{$main::{'create_htaccess'}}{SCALAR}};
 my $my_webservergroup = ${*{$main::{'webservergroup'}}{SCALAR}};
 my @my_severities = @{*{$main::{'severities'}}{ARRAY}};
@@ -637,6 +653,34 @@ END
 
 }
 
+if ($my_index_html) {
+    if (!-e "index.html") {
+        print "Creating index.html...\n";
+        open HTML, ">index.html";
+        print HTML <<'END';
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="REFRESH" CONTENT="0; URL=index.cgi">
+</HEAD>
+<BODY>
+<H1>I think you are looking for <a href="index.cgi">index.cgi</a></H1>
+</BODY>
+</HTML>
+END
+        close HTML;
+    }
+    else {
+        open HTML, "index.html";
+        if (! grep /index\.cgi/, <HTML>) {
+            print "\n\n";
+            print "*** It appears that you still have an old index.html hanging\n";
+            print "    around.  The contents of this file should be moved into a\n";
+            print "    template and placed in the 'template/custom' directory.\n\n";
+        }
+        close HTML;
+    }
+}
 
 # Just to be sure ...
 unlink "data/versioncache";
@@ -2608,6 +2652,67 @@ AddField("bugs", "cclist_accessible", "tinyint not null default 1");
 # Add a field for the attachment ID to the bugs_activity table, so installations
 # using the attachment manager can record changes to attachments.
 AddField("bugs_activity", "attach_id", "mediumint null");
+
+# 2002-01-20 dkl@redhat.com 68022
+# Drop bit, groupset, blessgroupset fields from certain tables after converting 
+# all users and bugs to new group schema
+if (GetFieldDef('groups', 'bit')) {
+    my $superusergroupset = '';
+    my %bit_groups = ();
+    my $currentgroupid = 1;
+    AddField('groups', 'group_id', 'mediumint auto_increment not null');
+    AddField('profiles', 'admin', 'smallint default(0)');
+    SendSQL("select bit from groups order by bit");
+    while (my ($bit) = FetchSQLData()) {
+        $bit_groups{$bit} = $currentgroupid++;
+    }
+
+    foreach my $bit (sort keys %bit_groups) {
+        # Fix profiles table first
+        SendSQL("select userid from profiles where groupset & $bit != 0 order by userid");
+        while (my ($userid) = FetchSQLData()) {
+            PushGlobalSQLState();
+            SendSQL("insert into user_group_map values ($userid, $bit_groups{$bit}, 0)");
+            PopGlobalSQLState();
+        }
+        SendSQL("select userid from profiles where blessgroupset & $bit != 0 order by userid");
+        while (my ($userid) = FetchSQLData()) {
+            PushGlobalSQLState();
+            SendSQL("select user_id from user_group_map where user_id = $userid " . 
+                    "and group_id = $bit_groups{$bit}");
+            if (MoreSQLdata()) {
+                SendSQL("update user_group_map set canbless = 1 where user_id = $userid " . 
+                        "and group_id = $bit_groups{$bit}");
+            } else {
+                SendSQL("insert into user_group_map values ($userid, $bit_groups{$bit}, 1)");
+            }
+            PopGlobalSQLState();
+        }
+    }
+    
+    # Fix super users
+    SendSQL("select userid from profiles where groupset = $superusergroupset order by userid");
+    while (my ($userid) = FetchSQLData()) {
+        PushGlobalSQLState();
+        SendSQL("update profiles set admin = 1 where userid = $userid");
+        PopGlobalSQLState();
+    }
+
+    # Fix bug groupsets   
+    foreach my $bit (sort keys %bit_groups) {
+        SendSQL("select bug_id from bugs where groupset & $bit != 0 order by bug_id");
+        while (my ($id) = FetchSQLData()) {
+            PushGlobalSQLState();
+            SendSQL("insert into bug_group_map values ($id, $bit_groups{$bit})");
+            PopGlobalSQLState();
+        }
+    }
+
+    DropField('bugs', 'groupset');
+    DropField('profiles', 'groupset');
+    DropField('profiles', 'blessgroupset');
+    DropField('groups', 'bit');
+}
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
