@@ -773,7 +773,10 @@ MozillaTinderboxAll -a \
         mozilla/ipc/ipcd \
         mozilla/security/manager \
         mozilla/tools/trace-malloc \
-        mozilla/modules/libpr0n
+        mozilla/modules/libpr0n \
+        mozilla/toolkit \
+        mozilla/storage \
+        mozilla/db/sqlite3
 
 # mozilla uses mozilla/security/manager from 
 # the tip, not the nss branch
@@ -801,20 +804,17 @@ AviaryBranchTinderbox -a \
 	MozillaBranchTinderboxAll \
 	mozilla/browser \
 	mozilla/chrome \
-	mozilla/mail \
-	mozilla/toolkit
+	mozilla/mail
 
 # thunderbird's tinderbox module
 ThunderbirdTinderbox -a \
 	MozillaTinderboxAll \
 	mozilla/mail \
-	mozilla/chrome \
-	mozilla/toolkit
+	mozilla/chrome
 
 # this is for the phoenix tinderbox
 
 PhoenixTinderbox -a \
 	MozillaTinderboxAll \
 	mozilla/browser \
-	mozilla/chrome \
-	mozilla/toolkit
+	mozilla/chrome
