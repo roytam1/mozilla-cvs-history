@@ -57,8 +57,8 @@ Build:
 &nbsp; On Solaris, SINIX, and UnixWare, <B>pre</B>pend /usr/ccs/bin to your PATH.
 
 &nbsp; Build it.&nbsp; Default target is "export libs install":
-&nbsp;&nbsp;&nbsp; cd ns
-&nbsp;&nbsp;&nbsp; gmake -k
+&nbsp;&nbsp;&nbsp; cd mozilla
+&nbsp;&nbsp;&nbsp; gmake
 
 NOTE:
 
@@ -66,7 +66,7 @@ If you haven't got perl:
 
 setenv PERL /bin/echo
 
-gmake -ek
+gmake -e
 
 Run the app:
 &nbsp; Executable lives in ns/cmd/xfe/{ARCHITECTURE}.{DBG|OPT}.OBJ
