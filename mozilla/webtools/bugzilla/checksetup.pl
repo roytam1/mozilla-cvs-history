@@ -1969,11 +1969,13 @@ if (GetFieldDef('profiles', 'groupset')) {
     my ($adminid) = $sth->fetchrow_array();
     # find existing admins
     # Don't lose admins from DBs where Bug 157704 applies
-    $sth = $dbh->prepare("SELECT userid FROM profiles 
+    $sth = $dbh->prepare("SELECT userid, (groupset & 65536), login_name FROM profiles 
                 WHERE (groupset | 65536) = 9223372036854775807");
     $sth->execute();
-    while ( my ($userid) = $sth->fetchrow_array() ) {
+    while ( my ($userid, $iscomplete, $login_name) = $sth->fetchrow_array() ) {
         # existing administrators are made members of group "admin"
+        print "\nWARNING - $login_name IS AN ADMIN IN SPITE OF BUG 157704\n\n"
+            if (!$iscomplete);
         $dbh->do("INSERT INTO user_group_map 
             (user_id, group_id, isbless, isderived) 
             VALUES ($userid, $adminid, 0, 0)");
