@@ -178,6 +178,16 @@ sub timeHTML {
   return $out;
 }
 
+# Turn a time in 'time() format' into a string suitable for html
+# printing using the GMT timezone. eg '05/31&nbsp;14:59'
+
+sub gmtimeHTML {
+  my ($t) = @_;
+  my ($sec,$minute,$hour,$mday,$mon,$ignore) = gmtime($t);
+  my ($out) = sprintf("%02d/%02d&nbsp;%02d:%02d",$mon+1,$mday,$hour,$minute);
+  return $out;
+}
+
 
 # primative parsing of CGI arguments into a hash.
 
