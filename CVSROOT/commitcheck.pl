@@ -335,7 +335,11 @@ if (m:^mozilla/modules/zlib/.*$:) {return '93';}
 if (m:^mozilla/gfx/public/.*$:) {return '95';}
 if (m:^mozilla/gfx/src/windows/.*$:) {return '95';}
 if (m:^mozilla/view/.*$:) {return '96';}
-if (m:^mozilla/layout/.*$:) {return '98';}
+if (m:^mozilla/layout/base/.*$:) {return '98';}
+if (m:^mozilla/layout/build/.*$:) {return '98';}
+if (m:^mozilla/layout/html/.*$:) {return '98';}
+if (m:^mozilla/layout/macbuild/.*$:) {return '98';}
+if (m:^mozilla/layout/tools/.*$:) {return '98';}
 if (m:^modules/libimg/mng/.*$:) {return '155';}
 if (m:^modules/libimg/mngcom/.*$:) {return '155';}
 if (m:^mozilla/content/html/style/.*$:) {return '100';}
