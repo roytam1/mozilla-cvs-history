@@ -44,34 +44,41 @@ unless ($] >= 5.006) {
 }
 
 # Insert lines in this space to run .cm files like:
-# runconf('Conf/Foo.cm'); 
+# runconf('Conf/Foo.cm',"Title of section"); 
 # runconf() will handle the path mapping for XP purposes
 # NOT SURE IF WE REALLY NEED TO ADJUST THE PATH
-runconf('Conf/Begin.cm');
+runconf('Conf/Begin.cm',"Welcome");
 
 if ($args =~ /--perl\=([\/A-Za-z0-9]+|[\/A-Za-z0-9]+ )/) { # they passed us a perl arg
 	setConf('perl',$1); # set the path to perl and move on...
 } else {
 	# they haven't run configure.pl before so run PerlCheck now...
-	runconf('Conf/PerlCheck.cm'); 
+	runconf('Conf/PerlCheck.cm',"Checking perl"); 
 }
-runconf('Conf/ModuleCheck.cm');
-runconf('Conf/UpgradeCheck.cm');
+runconf('Conf/ModuleCheck.cm',"Checking required modules");
+runconf('Conf/UpgradeCheck.cm',"Installation Type");
 
 # alas, a junction in our plans:
-if (getConf('installtype' eq 'convert')) {
-	runconf('Conf/UpgradeConvert.cm');
-	runconf('Conf/Upgrade.cm');
-} elsif (getConf('installtype' eq 'upgrade')) {
-	runconf('Conf/Upgrade.cm');
-} elsif (getConf('installtype' eq 'new')) {
-	runconf('Conf/Location.cm');
+if (getConf('installtype') eq 'convert') {
+	runconf('Conf/UpgradeConvert.cm',"checksetup conversion");
+	runconf('Conf/Upgrade.cm',"Upgrade");
+} elsif (getConf('installtype') eq 'upgrade') {
+	runconf('Conf/Upgrade.cm',"Upgrade");
+} elsif (getConf('installtype') eq 'new') {
+	runconf('Conf/Location.cm',"Installation Location");
 }
 
 
 sub runconf {
-    my ($path) = @_;
+    my ($path,$text) = @_;
     my @pathlist = split('/',$path);
+    print "\n";
+    # oh, isn't ascii art cute? ;)
+    for (split(//, $text)) { print "=" }
+    print "\n";
+    print $text."\n";
+    for (split(//, $text)) { print "=" }
+    print "\n";
     require File::Spec->catfile(@pathlist);
 }
 

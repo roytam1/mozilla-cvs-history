@@ -1,9 +1,10 @@
-classicinstall:This is the classic bugzilla installaton layout
-res|userdir
-cgi|userdir
-mod|userdir
-req|userdir
+@classicinstall:The classic Bugzilla install (everything is in one directory)
+^insdir:The location where you would like Bugzilla installed
+res|insdir
+cgi|insdir
+mod|insdir
+req|insdir
 null|/dev/null
-doc|userdir|all
-tst|userdir
-tem|userdir
+doc|insdir
+tst|insdir
+tem|insdir

@@ -18,7 +18,8 @@ be lost. Custom templates will be saved.
 
 1) Install a completely new installation
 2) Upgrade an existing installation
-3) Convert and upgrade an existing installation that was installed with checksetup.pl
+3) Convert and upgrade an existing installation that was installed with 
+    checksetup.pl
 EOF
 
 if ($upgrade) {
@@ -28,6 +29,15 @@ if ($upgrade) {
 }
 
 ask('inschoice','Please make a selection','1');
+
+unless (getConf('quiet')) {
+	my $option = getConf('inschoice');
+	output "\nJust to confirm since this part is important, you selected option $option, right?\n";
+	ask('insconfirm','Yes or no?','yes');
+	unless (getConf('insconfirm') =~ /y/i) {
+		ask('inschoice','Well, what do you want then?','1');
+	}
+}
 
 if (getConf('inschoice') eq 1) { # new installation
 	setConf('installtype','new');
@@ -39,7 +49,8 @@ if (getConf('inschoice') eq 1) { # new installation
 	# now we have to import the settings from that installation
 	
 	if (-e correctpath(getConf('upgrade_path').'/config.pl')) {
-		require correctpath(getConf('upgrade_path').'/config.pl');
+		my $path = correctpath(getConf('upgrade_path').'/config.pl');
+		require $path;
 	} else {
 		die "A valid Bugzilla installation was not found at that location\n";
 	}
@@ -49,7 +60,7 @@ if (getConf('inschoice') eq 1) { # new installation
 	ask('upgrade_path','Please enter the path to your Bugzilla installation','');
 } elsif (getConf('inschoice') eq 4) { # upgrade same source tree
 	setConf('installtype','upgrade');
-	setConf('upgrade_path',getConf('dir_cgi');
+	setConf('upgrade_path',getConf('dir_cgi'));
 } else {
 	die "invalid choice\n";
 }

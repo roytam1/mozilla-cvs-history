@@ -1,0 +1,40 @@
+package Conf::Location;
+use Conf;
+use File::Spec;
+no warnings;
+
+# Our job is to find out where they want to install bugzilla
+# we do this by preseting one or more 'installtypes.' These are basically 
+# mappings which assign each class of files to a directory. 
+# In turn, we consult the installtypes file, which gives us mappings from 
+# filenames to file classes. Once this whole mess is done, we write out a 
+# shell script that will go in the Makefile (built in Finish.cm from Makefile.in)
+
+# here we go...
+
+output <<EOF;
+
+Bugzilla (or this package containing Bugzilla) includes one or more installation 
+layouts that you can use. Please select the layout that you would like to use.
+For assistance, please consult the Bugzilla Guide or simply select the 
+default option if you are not sure.
+
+EOF
+
+my $count = 0;
+open(TYPES,"Conf/Supplies/installtypes") ||
+	die "couldn't open installtypes";
+while (<TYPES>) {
+	my $line = $_;
+	if ($line =~ /^\@(\w):(.+)$/) { 
+		output "$count) $1\n";
+		output "    $2\n";
+	} elsif ($line =~ /^\^(\w):(.+)$/) {
+		output "    Variable: $1: $2\n";
+	} elsif ($line =~ /(\w)|(.+)$/) {
+		output "    The following type of file goes to the following location\n";
+		output "    $1 -> $2\n";
+	}
+}
+
+close(TYPES);
