@@ -150,7 +150,8 @@ sub status_table_row {
 
   my(@outrow) = ("\t<!-- Time: $pretty_time -->\n".
                  "\t\t<td align=right $hour_color>".
-                 "$query_link</td>\n");
+                 "\t\t\t$query_link\n".
+                 "\t\t</td>\n");
 
   $self->last_hour($hour);
   return @outrow;

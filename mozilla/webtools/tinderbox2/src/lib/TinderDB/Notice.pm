@@ -376,7 +376,8 @@ sub status_table_row {
 
 
     @outrow =  (
-                "\t<td>".
+                "\t<td>\n".
+                "\t\t".
                 HTMLPopUp::Link(
 
                                 # if notice available is an image then
@@ -389,10 +390,13 @@ sub status_table_row {
                                 "windowtitle" => "Notice Board",
                                 "windowheight" => (175 * $num_notices)+100,
                                ).
-                "</td>\n");
+                "\n".
+                "\t</td>\n");
   } else {
-    @outrow = ("\t<!-- skipping: Notice: tree: $tree -->".
-               "<td>$HTMLPopUp::EMPTY_TABLE_CELL</td>\n");
+    @outrow = ("\t<!-- skipping: Notice: tree: $tree -->\n".
+               "\t\t<td>\n".
+               "\t\t\t$HTMLPopUp::EMPTY_TABLE_CELL\n".
+               "\t\t</td>\n");
 
   }
 
