@@ -342,7 +342,7 @@ sub cache_cmd {
   my ($join_char) = ',';
 
   ("@cmd" =~ m/$join_char/) &&
-    die("cmd '@cmd' can not containt character '$join_char'\n");
+    die("cmd '@cmd' can not contain character '$join_char'\n");
 
   my ($key) = join ($join_char, @cmd);
 
