@@ -24,7 +24,18 @@
 #
 
 #
-# ``sendmail'' handler to receive data on the server.
+# ``sendmail'' handler to receive data on the server. Cooperates with
+# ``make-data.pl'', the data collection script.
+#
+# To use, create an account on your server; e.g., "leak-o-matic", that
+# will receive mail from the data collector. In this account's home
+# directory, create a .forward file that containes the following
+#
+# "|handle-mail.pl --datadir=whatever"
+#
+# Yes, the quotes are important. Depending on your sendmail
+# configuration, you may need to place the ``handle-mail.pl'' script
+# in a special directory; e.g., /etc/smrsh on a vanilla RH6.0 system.
 #
 
 use 5.004;
