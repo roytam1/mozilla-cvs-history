@@ -166,7 +166,9 @@ sub get_build_names  {
 
   eval {
     local $SIG{'__DIE__'} = sub { };
-    
+
+    use TinderDB::Build;
+
     my ($build_obj) = TinderDB::Build->new();
     
     $build_obj->loadtree_db($tree);
