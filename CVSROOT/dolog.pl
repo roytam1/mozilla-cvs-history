@@ -143,6 +143,8 @@ sub process_cvs_info {
     while( <ENT> ){
         chop;
         ($d,$fn,$rev,$mod_time,$sticky,$tag) = split(/\//);
+        # hack to keep bonsai from dying during the force commit on the branch
+        exit if ($tag eq "MOZILLA_1_0_0_BRANCH");
         $stat = 'C';
         for $i (@changed_files, "BEATME.NOW", @added_files ) {
             if( $i eq "BEATME.NOW" ){ $stat = 'A'; }
