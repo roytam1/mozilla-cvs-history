@@ -173,7 +173,11 @@ $VC_BUGNUM_REGEXP = $TinderConfig::VC_BUGNUM_REGEXP ||
 $NOTICE= TinderDB::Notice->new();
 $DEBUG = 1;
 
-$ENV{'P4PORT'} = $TinderConfig::PERFORCE_PORT || 1666;
+$ENV{'P4PORT'} = (
+                  $TinderConfig::P4PORT || 
+                  $ENV{'P4PORT'} || 
+                  'perforce:1666'
+                  );
 
 
 # return a string of the whole Database in a visually useful form.
