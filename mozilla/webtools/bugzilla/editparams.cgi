@@ -31,11 +31,11 @@ require "defparams.pl";
 use vars @::param_desc,
     @::param_list;
 
-my $userid = confirm_login();
+confirm_login();
 
 print "Content-type: text/html\n\n";
 
-if (!UserInGroup($userid, "tweakparams")) {
+if (!UserInGroup("tweakparams")) {
     print "<H1>Sorry, you aren't a member of the 'tweakparams' group.</H1>\n";
     print "And so, you aren't allowed to edit the parameters.\n";
     PutFooter();

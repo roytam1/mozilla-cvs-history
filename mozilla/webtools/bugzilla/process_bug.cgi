@@ -26,8 +26,8 @@
 use diagnostics;
 use strict;
 
-my $hasEditGroup = -1;
-my $hasCanConfirmGroup = -1;
+my $UserInEditGroupSet = -1;
+my $UserInCanConfirmGroupSet = -1;
 
 require "CGI.pl";
 use RelationSet;
@@ -43,7 +43,8 @@ use vars %::versions,
     %::legal_platform,
     %::legal_priority,
     %::target_milestone,
-    %::legal_severity;
+    %::legal_severity,
+    %::superusergroupset;
 
 my $whoid = confirm_login();
 
@@ -76,13 +77,13 @@ scalar(@idlist)
 # For each bug being modified, make sure its ID is a valid bug number 
 # representing an existing bug that the user is authorized to access.
 foreach my $id (@idlist) {
-    ValidateBugID($id, $whoid);
+    ValidateBugID($id);
 }
 
 # If we are duping bugs, let's also make sure that we can change 
 # the original.  This takes care of issue A on bug 96085.
 if (defined $::FORM{'dup_id'} && $::FORM{'knob'} eq "duplicate") {
-    ValidateBugID($::FORM{'dup_id'}, $whoid);
+    ValidateBugID($::FORM{'dup_id'});
 
     # Also, let's see if the reporter has authorization to see the bug
     # to which we are duping.  If not we need to prompt.
@@ -99,7 +100,7 @@ if ( defined $::COOKIE{"BUGLIST"} && defined $::FORM{'id'} ) {
     my $idx = lsearch( \@buglist , $::FORM{"id"} );
     if ($idx < $#buglist) {
         my $nextbugid = $buglist[$idx + 1];
-        ValidateBugID($nextbugid, $whoid);
+        ValidateBugID($nextbugid);
     }
 }
 
@@ -126,6 +127,33 @@ if ( Param("strictvaluechecks") ) {
 
 ConnectToDatabase();
 
+#
+# This function checks if there is a comment required for a specific
+# function and tests, if the comment was given.
+# If comments are required for functions  is defined by params.
+#
+sub CheckonComment( $ ) {
+    my ($function) = (@_);
+    
+    # Param is 1 if comment should be added !
+    my $ret = Param( "commenton" . $function );
+
+    # Allow without comment in case of undefined Params.
+    $ret = 0 unless ( defined( $ret ));
+
+    if( $ret ) {
+        if (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/) {
+            # No comment - sorry, action not allowed !
+            PuntTryAgain("You have to specify a <b>comment</b> on this " .
+                         "change.  Please give some words " .
+                         "on the reason for your change.");
+        } else {
+            $ret = 0;
+        }
+    }
+    return( ! $ret ); # Return val has to be inverted
+}
+
 # Figure out whether or not the user is trying to change the product
 # (either the "product" variable is not set to "don't change" or the
 # user is changing a single bug and has changed the bug's product),
@@ -135,8 +163,10 @@ if ( $::FORM{'id'} ) {
     SendSQL("SELECT product FROM bugs WHERE bug_id = $::FORM{'id'}");
     $::oldproduct = FetchSQLData();
 }
-if ( ($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct) 
-       || (!$::FORM{'id'} && $::FORM{'product'} ne $::dontchange) ) {
+if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct) 
+     || (!$::FORM{'id'} && $::FORM{'product'} ne $::dontchange))
+    && CheckonComment( "reassignbycomponent" ))
+{
     if ( Param("strictvaluechecks") ) {
         CheckFormField(\%::FORM, 'product', \@::legal_product);
     }
@@ -295,10 +325,10 @@ sub CheckCanChangeField {
     if ($f eq "resolution") { # always OK this.  if they really can't,
         return 1;             # it'll flag it when "status" is checked.
     }
-    if ($hasEditGroup < 0) {
-        $hasEditGroup = UserInGroup($whoid, "editbugs");
+    if ($UserInEditGroupSet < 0) {
+        $UserInEditGroupSet = UserInGroup("editbugs");
     }
-    if ($hasEditGroup) {
+    if ($UserInEditGroupSet) {
         return 1;
     }
     if ($lastbugid != $bugid) {
@@ -320,10 +350,10 @@ sub CheckCanChangeField {
         # group?  Or, has it ever been confirmed?  If not, then this
         # isn't legal.
 
-        if ($hasCanConfirmGroup < 0) {
-            $hasCanConfirmGroup = UserInGroup($whoid, "canconfirm");
+        if ($UserInCanConfirmGroupSet < 0) {
+            $UserInCanConfirmGroupSet = UserInGroup("canconfirm");
         }
-        if ($hasCanConfirmGroup) {
+        if ($UserInCanConfirmGroupSet) {
             return 1;
         }
         SendSQL("SELECT everconfirmed FROM bugs WHERE bug_id = $bugid");
@@ -359,11 +389,13 @@ sub DuplicateUserConfirm {
 
     my $dupe = trim($::FORM{'id'});
     my $original = trim($::FORM{'dup_id'});
-
+    
     SendSQL("SELECT reporter FROM bugs WHERE bug_id = " . SqlQuote($dupe));
     my $reporter = FetchOneColumn();
+    SendSQL("SELECT profiles.groupset FROM profiles WHERE profiles.userid =".SqlQuote($reporter));
+    my $reportergroupset = FetchOneColumn();
 
-    if (CanSeeBug($original, $reporter)) {
+    if (CanSeeBug($original, $reporter, $reportergroupset)) {
         $::FORM{'confirm_add_duplicate'} = "1";
         return;
     }
@@ -462,13 +494,13 @@ sub DoComma {
 }
 
 sub DoConfirm {
-    if ($hasEditGroup < 0) {
-        $hasEditGroup = UserInGroup($whoid, "editbugs");
+    if ($UserInEditGroupSet < 0) {
+        $UserInEditGroupSet = UserInGroup("editbugs");
     }
-    if ($hasCanConfirmGroup < 0) {
-        $hasCanConfirmGroup = UserInGroup($whoid, "canconfirm");
+    if ($UserInCanConfirmGroupSet < 0) {
+        $UserInCanConfirmGroupSet = UserInGroup("canconfirm");
     }
-    if ($hasEditGroup || $hasCanConfirmGroup) {
+    if ($UserInEditGroupSet || $UserInCanConfirmGroupSet) {
         DoComma();
         $::query .= "everconfirmed = 1";
     }
@@ -510,31 +542,34 @@ sub ChangeResolution {
     }
 }
 
-#
-# This function checks if there is a comment required for a specific
-# function and tests, if the comment was given.
-# If comments are required for functions  is defined by params.
-#
-sub CheckonComment( $ ) {
-    my ($function) = (@_);
-    
-    # Param is 1 if comment should be added !
-    my $ret = Param( "commenton" . $function );
+# Changing this so that it will process groups from checkboxes instead of
+# select lists.  This means that instead of looking for the bit-X values in
+# the form, we need to loop through all the bug groups this user has access
+# to, and for each one, see if it's selected.
+# In order to make mass changes work correctly, keep a sum of bits for groups
+# added, and another one for groups removed, and then let mysql do the bit
+# operations
+# If the form element isn't present, or the user isn't in the group, leave
+# it as-is
+if($::usergroupset ne '0') {
+    my $groupAdd = "0";
+    my $groupDel = "0";
 
-    # Allow without comment in case of undefined Params.
-    $ret = 0 unless ( defined( $ret ));
-
-    if( $ret ) {
-        if (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/) {
-            # No comment - sorry, action not allowed !
-            PuntTryAgain("You have to specify a <b>comment</b> on this " .
-                         "change.  Please give some words " .
-                         "on the reason for your change.");
-        } else {
-            $ret = 0;
+    SendSQL("SELECT bit, isactive FROM groups WHERE " .
+            "isbuggroup != 0 AND bit & $::usergroupset != 0 ORDER BY bit");
+    while (my ($b, $isactive) = FetchSQLData()) {
+        if (!$::FORM{"bit-$b"}) {
+            $groupDel .= "+$b";
+        } elsif ($::FORM{"bit-$b"} == 1 && $isactive) {
+            $groupAdd .= "+$b";
         }
     }
-    return( ! $ret ); # Return val has to be inverted
+    if ($groupAdd ne "0" || $groupDel ne "0") {
+        DoComma();
+        # mysql < 3.23.5 doesn't support the ~ operator, even though
+        # the docs say that it does
+        $::query .= "groupset = ((groupset & ($::superusergroupset - ($groupDel))) | ($groupAdd))";
+    }
 }
 
 foreach my $field ("rep_platform", "priority", "bug_severity",          
@@ -569,8 +604,8 @@ if (defined $::FORM{'qa_contact'}) {
 # and cc list can see the bug even if they are not members of all groups 
 # to which the bug is restricted.
 if ( $::FORM{'id'} ) {
-    SendSQL("SELECT count(group_id) FROM bug_group_map WHERE bug_id = $::FORM{'id'}");
-    my $groupset = FetchOneColumn();
+    SendSQL("SELECT groupset FROM bugs WHERE bug_id = $::FORM{'id'}");
+    my ($groupset) = FetchSQLData();
     if ( $groupset ) {
         DoComma();
         $::FORM{'reporter_accessible'} = $::FORM{'reporter_accessible'} ? '1' : '0';
@@ -895,6 +930,8 @@ sub LogDependencyActivity {
         # Figure out what's really different...
         my ($removed, $added) = DiffStrings($oldstr, $newstr);
         LogActivityEntry($i,$target,$removed,$added);
+        # update timestamp on target bug so midairs will be triggered
+        SendSQL("UPDATE bugs SET delta_ts=NOW() WHERE bug_id=$i");
         return 1;
     }
     return 0;
@@ -910,10 +947,10 @@ foreach my $id (@idlist) {
     my $write = "WRITE";        # Might want to make a param to control
                                 # whether we do LOW_PRIORITY ...
     SendSQL("LOCK TABLES bugs $write, bugs_activity $write, cc $write, " .
+            "cc AS selectVisible_cc $write, " .
             "profiles $write, dependencies $write, votes $write, " .
             "keywords $write, longdescs $write, fielddefs $write, " .
-            "keyworddefs READ, groups READ, attachments READ, products READ, " .
-            "user_group_map READ, bug_group_map WRITE");
+            "keyworddefs READ, groups READ, attachments READ, products READ");
     my @oldvalues = SnapShotBug($id);
     my %oldhash;
     my $i = 0;
@@ -1209,8 +1246,9 @@ The changes made were:
     ) {
         if (
           # the user wants to add the bug to the new product's group;
-          ($::FORM{'addtonewgroup'} eq 'yes' || ($::FORM{'addtonewgroup'} eq 'yesifinold'))
-                  # && GroupNameToId($oldhash{'product'}) & $oldhash{'groupset'})) 
+          ($::FORM{'addtonewgroup'} eq 'yes' 
+            || ($::FORM{'addtonewgroup'} eq 'yesifinold' 
+                  && GroupNameToBit($oldhash{'product'}) & $oldhash{'groupset'})) 
 
           # the new product is associated with a group;
           && GroupExists($::FORM{'product'})
@@ -1232,16 +1270,12 @@ The changes made were:
           && (UserInGroup($::FORM{'product'}) || !Param('usebuggroupsentry'))
 
           # the associated group is active, indicating it can accept new bugs;
-          && GroupIsActive(GroupNameToId($::FORM{'product'}))
+          && GroupIsActive(GroupNameToBit($::FORM{'product'}))
         ) { 
             # Add the bug to the group associated with its new product.
-            my $groupid = GroupNameToId($::FORM{'product'});
-            my $query = "SELECT group_id FROM bug_group_map WHERE bug_id = $id AND group_id = $groupid";
-            SendSQL($query);
-            if (!FetchOneColumn()) {
-                SendSQL("INSERT INTO bug_group_map VALUES ($id, $groupid)");
-            } 
-       }
+            my $groupbit = GroupNameToBit($::FORM{'product'});
+            SendSQL("UPDATE bugs SET groupset = groupset + $groupbit WHERE bug_id = $id");
+        }
 
         if ( 
           # the old product is associated with a group;
@@ -1251,8 +1285,8 @@ The changes made were:
           && BugInGroup($id, $oldhash{'product'}) 
         ) { 
             # Remove the bug from the group associated with its old product.
-            my $groupid = GroupNameToId($oldhash{'product'});
-            SendSQL("DELETE FROM bug_group_map WHERE group_id = $groupid AND bug_id = $id");
+            my $groupbit = GroupNameToBit($oldhash{'product'});
+            SendSQL("UPDATE bugs SET groupset = groupset - $groupbit WHERE bug_id = $id");
         }
 
         print qq|</p>|;
@@ -1315,45 +1349,6 @@ The changes made were:
     if ($bug_changed) {
         SendSQL("UPDATE bugs SET delta_ts = " . SqlQuote($timestamp) . " WHERE bug_id = $id");
     }
-
-    # Make necessary group membership changes
-    # Changing this so that it will process groups from checkboxes instead of
-    # select lists.  This means that instead of looking for the group-X values in
-    # the form, we need to loop through all the bug groups this user has access
-    # to, and for each one, see if it's selected.
-    # In addition, adding a little extra work so that we don't clobber groupsets
-    # for bugs where the user doesn't have access to the group, but does to the
-    # bug (as with the proposed reporter access patch.)
-    if ($whoid) {
-        my %buggroups = ();
-
-        # First, find out what groups this bug is currently private to.
-        SendSQL("SELECT group_id FROM bug_group_map WHERE bug_id = $id");
-        while (my ($groupid) = FetchSQLData()) {
-            $buggroups{$groupid} = 1;
-        }
-
-        # Second, find out what groups this person is a member of and see if they made changes.
-        SendSQL("SELECT groups.group_id, groups.isactive FROM groups, user_group_map WHERE " . 
-                "groups.group_id = user_group_map.group_id AND user_group_map.user_id = $whoid");
-        while (my ($groupid, $isactive) = FetchSQLData()) {
-            # Box not checked so remove from group
-            if (!$::FORM{"group-$groupid"}) {  
-                $buggroups{$groupid} = 0;
-            # Box checked and is active so add to group
-            } elsif ($::FORM{"group-$groupid"} == 1 && $isactive) {
-                $buggroups{$groupid} = 1;
-            }  # Else leave alone
-        }
-
-        # Update the bug_group table with new group values.
-        SendSQL("DELETE FROM bug_group_map WHERE bug_id = $id");
-        foreach my $group (keys %buggroups) {
-            next if !$buggroups{$group};
-            SendSQL("INSERT INTO bug_group_map VALUES ($id, $group)");
-        }
-    }   
-
     print "<TABLE BORDER=1><TD><H2>Changes to bug $id submitted</H2>\n";
     SendSQL("unlock tables");
 

@@ -67,9 +67,8 @@ my $vars =
 # Make sure the user is logged in and is allowed to edit products
 # (i.e. the user has "editcomponents" privileges), since attachment
 # statuses are product-specific.
-my $userid = confirm_login();
-
-UserInGroup($userid, "editcomponents")
+confirm_login();
+UserInGroup("editcomponents")
   || DisplayError("You are not authorized to administer attachment statuses.")
   && exit;
 

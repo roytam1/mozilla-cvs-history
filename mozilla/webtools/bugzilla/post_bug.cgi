@@ -33,6 +33,7 @@ require "CGI.pl";
 sub sillyness {
     my $zz;
     $zz = $::buffer;
+    $zz = $::usergroupset;
     $zz = %::COOKIE;
     $zz = %::components;
     $zz = %::versions;
@@ -45,7 +46,7 @@ sub sillyness {
     $zz = %::target_milestone;
 }
 
-my $userid = confirm_login();
+confirm_login();
 
 my $cookiepath = Param("cookiepath");
 print "Set-Cookie: PLATFORM=$::FORM{'product'} ; path=$cookiepath ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n" if ( exists $::FORM{'product'} );
@@ -74,7 +75,7 @@ ConnectToDatabase();
 my $product = $::FORM{'product'};
 
 if(Param("usebuggroupsentry") && GroupExists($product)) {
-  if(!UserInGroup($userid, $product)) {
+  if(!UserInGroup($product)) {
     print "<H1>Permission denied.</H1>\n";
     print "Sorry; you do not have the permissions necessary to enter\n";
     print "a bug against this product.\n";
@@ -119,7 +120,7 @@ if (Param("useqacontact")) {
 }
 
 if (exists $::FORM{'bug_status'}) {
-    if (!UserInGroup($userid, "canedit") && !UserInGroup($userid, "canconfirm")) {
+    if (!UserInGroup("canedit") && !UserInGroup("canconfirm")) {
         delete $::FORM{'bug_status'};
     }
 }
@@ -169,7 +170,7 @@ if (exists $::FORM{'bug_status'} && $::FORM{'bug_status'} ne $::unconfirmedstate
 }
 
 my $query = "INSERT INTO bugs (\n" . join(",\n", @used_fields) . ",
-reporter, creation_ts)
+reporter, creation_ts, groupset)
 VALUES (
 ";
 
@@ -199,19 +200,35 @@ $comment = trim($comment);
 # OK except for the fact that it causes e-mail to be suppressed.
 $comment = $comment ? $comment : " ";
 
-$query .= "$userid, now())";
+$query .= "$::userid, now(), (0";
+
+foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
+    if ($::FORM{$b}) {
+        my $v = substr($b, 4);
+        $v =~ /^(\d+)$/
+          || PuntTryAgain("One of the group bits submitted was invalid.");
+        if (!GroupIsActive($v)) {
+            # Prevent the user from adding the bug to an inactive group.
+            # Should only happen if there is a bug in Bugzilla or the user
+            # hacked the "enter bug" form since otherwise the UI 
+            # for adding the bug to the group won't appear on that form.
+            PuntTryAgain("You can't add this bug to the inactive group " . 
+                         "identified by the bit '$v'. This shouldn't happen, " . 
+                         "so it may indicate a bug in Bugzilla.");
+        }
+        $query .= " + $v";    # Carefully written so that the math is
+                                # done by MySQL, which can handle 64-bit math,
+                                # and not by Perl, which I *think* can not.
+    }
+}
+
+
+
+$query .= ") & $::usergroupset)\n";
+
 
 my %ccids;
 
-# print "<PRE>$query</PRE>\n";
-
-SendSQL($query);
-
-SendSQL("select LAST_INSERT_ID()");
-my $id = FetchOneColumn();
-
-SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) VALUES " .
-        "($id, $userid, now(), " . SqlQuote($comment) . ")");
 
 if (defined $::FORM{'cc'}) {
     foreach my $person (split(/[ ,]/, $::FORM{'cc'})) {
@@ -221,26 +238,19 @@ if (defined $::FORM{'cc'}) {
     }
 }
 
+
+# print "<PRE>$query</PRE>\n";
+
+SendSQL($query);
+
+SendSQL("select LAST_INSERT_ID()");
+my $id = FetchOneColumn();
+
+SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) VALUES " .
+        "($id, $::userid, now(), " . SqlQuote($comment) . ")");
+
 foreach my $person (keys %ccids) {
     SendSQL("insert into cc (bug_id, who) values ($id, $person)");
-}
-
-foreach my $b (grep(/^group-\d*$/, keys %::FORM)) {
-    if ($::FORM{$b}) {
-        my $v = substr($b, 6);
-        $v =~ /^(\d+)$/
-          || PuntTryAgain("One of the group bits submitted was invalid.");
-        if (!GroupIsActive($v)) {
-            # Prevent the user from adding the bug to an inactive group.
-            # Should only happen if there is a bug in Bugzilla or the user
-            # hacked the "enter bug" form since otherwise the UI 
-            # for adding the bug to the group won't appear on that form.
-            PuntTryAgain("You can't add this bug to the inactive group " .
-                         "identified by the group_id '$v'. This shouldn't happen, " .
-                         "so it may indicate a bug in Bugzilla.");
-        }
-        SendSQL("insert into bug_group_map values ($id, $v)");
-    }
 }
 
 print "<TABLE BORDER=1><TD><H2>Bug $id posted</H2>\n";

@@ -187,11 +187,11 @@ sub PutTrailer (@)
 # Preliminary checks:
 #
 
-my $userid = confirm_login();
+confirm_login();
 
 print "Content-type: text/html\n\n";
 
-unless (UserInGroup($userid, "editcomponents")) {
+unless (UserInGroup("editcomponents")) {
     PutHeader("Not allowed");
     print "Sorry, you aren't a member of the 'editcomponents' group.\n";
     print "And so, you aren't allowed to add, modify or delete components.\n";

@@ -174,11 +174,11 @@ sub PutTrailer (@)
 # Preliminary checks:
 #
 
-my $userid = confirm_login();
+confirm_login();
 
 print "Content-type: text/html\n\n";
 
-unless (UserInGroup($userid, "editcomponents")) {
+unless (UserInGroup("editcomponents")) {
     PutHeader("Not allowed");
     print "Sorry, you aren't a member of the 'editcomponents' group.\n";
     print "And so, you aren't allowed to add, modify or delete products.\n";
@@ -349,10 +349,22 @@ if ($action eq 'new') {
     # If we're using bug groups, then we need to create a group for this
     # product as well.  -JMR, 2/16/00
     if(Param("usebuggroups")) {
+        # First we need to figure out the bit for this group.  We'll simply
+        # use the next highest bit available.  We'll use a minimum bit of 256,
+        # to leave room for a few more Bugzilla operation groups at the bottom.
+        SendSQL("SELECT MAX(bit) FROM groups");
+        my $bit = FetchOneColumn();
+        if($bit < 256) {
+            $bit = 256;
+        } else {
+            $bit = $bit * 2;
+        }
+        
         # Next we insert into the groups table
         SendSQL("INSERT INTO groups " .
-                "(name, description, isbuggroup, userregexp) " .
+                "(bit, name, description, isbuggroup, userregexp) " .
                 "VALUES (" .
+                $bit . ", " .
                 SqlQuote($product) . ", " .
                 SqlQuote($product . " Bugs Access") . ", " .
                 "1, " .
@@ -371,15 +383,13 @@ if ($action eq 'new') {
         # If the userregexp is left empty, then no users should be added to
         # the bug group.  As is, it was adding all users, since they all
         # matched the empty pattern.
+        # In addition, I've replaced the rigamarole I was going through to
+        # find matching users with a much simpler statement that lets the
+        # mySQL database do the work.
         unless($userregexp eq "") {
-            SendSQL("SELECT group_id FROM groups WHERE name = " . SqlQuote($product));
-            my $groupid = FetchOneColumn();
-            SendSQL("SELECT userid FROM profiles " . 
-                    "WHERE LOWER(login_name) REGEXP LOWER(" . SqlQuote($userregexp) . ")" . 
-                    " OR admin = 1");
-            while ( my @row = FetchSQLData() ) {
-                $::db->do("INSERT INTO user_group_map VALUES ($row[0], $groupid)");
-            }
+            SendSQL("UPDATE profiles ".
+                    "SET groupset = groupset | " . $bit . " " .
+                    "WHERE LOWER(login_name) REGEXP LOWER(" . SqlQuote($userregexp) . ")");
         }
     }
 
@@ -578,8 +588,7 @@ if ($action eq 'delete') {
                          products WRITE,
                          groups WRITE,
                          profiles WRITE,
-                         milestones WRITE,
-                         user_group_map WRITE");
+                         milestones WRITE");
 
     # According to MySQL doc I cannot do a DELETE x.* FROM x JOIN Y,
     # so I have to iterate over bugs and delete all the indivial entries
@@ -627,19 +636,25 @@ if ($action eq 'delete') {
 
     # Added -JMR, 2/16/00
     if (Param("usebuggroups")) {
-        # We need to get the id of the group from the table, then delete the
-        # members of that group and remove the group.
-        SendSQL("SELECT group_id, description FROM groups " . 
+        # We need to get the bit of the group from the table, then update the
+        # groupsets of members of that group and remove the group.
+        SendSQL("SELECT bit, description FROM groups " . 
                 "WHERE name = " . SqlQuote($product));
-        my ($groupid, $group_desc) = FetchSQLData();
+        my ($bit, $group_desc) = FetchSQLData();
 
         # Make sure there is a group before we try to do any deleting...
-        if ($groupid) {
-            SendSQL("DELETE FROM user_group_map WHERE group_id = $groupid");
+        if($bit) {
+            # I'm kludging a bit so that I don't break superuser access;
+            # I'm merely checking to make sure that the groupset is not
+            # the superuser groupset in doing this update...
+            SendSQL("UPDATE profiles " .
+                    "SET groupset = groupset - $bit " .
+                    "WHERE (groupset & $bit) " .
+                    "AND (groupset != 9223372036854710271)");
             print "Users dropped from group '$group_desc'.<BR>\n";
 
             SendSQL("DELETE FROM groups " .
-                    "WHERE group_id = $groupid");
+                    "WHERE bit = $bit");
             print "Group '$group_desc' deleted.<BR>\n";
         }
     }
@@ -836,8 +851,7 @@ if ($action eq 'update') {
                          versions WRITE,
                          groups WRITE,
                          profiles WRITE,
-                         milestones WRITE,
-                         user_group_map WRITE");
+                         milestones WRITE");
 
     if ($disallownew ne $disallownewold) {
         $disallownew ||= 0;
@@ -868,17 +882,17 @@ if ($action eq 'update') {
     }
 
     # Added -JMR, 2/16/00
-    if (Param("usebuggroups") && $userregexp ne "" && $userregexp ne $userregexpold) {
+    if (Param("usebuggroups") && $userregexp ne $userregexpold) {
         # This will take a little bit of work here, since there may not be
         # an existing bug group for this product, and we will also have to
-        # update users memberships.
+        # update users groupsets.
         # First we find out if there's an existing group for this product, and
-        # get its groupid if there is.
-        SendSQL("SELECT group_id " .
+        # get its bit if there is.
+        SendSQL("SELECT bit " .
                 "FROM groups " .
                 "WHERE name = " . SqlQuote($productold));
-        my $groupid = FetchOneColumn();
-        if( $groupid ) {
+        my $bit = FetchOneColumn();
+        if($bit) {
             # Group exists, so we do an update statement.
             SendSQL("UPDATE groups " .
                     "SET userregexp = " . SqlQuote($userregexp) . " " .
@@ -887,9 +901,16 @@ if ($action eq 'update') {
         } else {
             # Group doesn't exist.  Let's make it, the same way as we make a
             # group for a new product above.
+            SendSQL("SELECT MAX(bit) FROM groups");
+            my $tmp_bit = FetchOneColumn();
+            if($tmp_bit < 256) {
+                $bit = 256;
+            } else {
+                $bit = $tmp_bit * 2;
+            }
             SendSQL("INSERT INTO groups " .
-                    "(name, description, isbuggroup, userregexp) " .
-                    "values (" .
+                    "(bit, name, description, isbuggroup, userregexp) " .
+                    "values (" . $bit . ", " .
                     SqlQuote($productold) . ", " .
                     SqlQuote($productold . " Bugs Access") . ", " .
                     "1, " .
@@ -897,23 +918,26 @@ if ($action eq 'update') {
             print "Created bug group.<BR>\n";
         }
         
-        # And now we have to update the group table again to add any users who
+        # And now we have to update the profiles again to add any users who
         # match the new regexp to the group.  I'll do this the same way as
         # when I create a new group above.  Note that I'm not taking out
         # users who matched the old regexp and not the new one;  that would
         # be insanely messy.  Use the group administration page for that
         # instead.
-        if ( !$groupid ) {
-            SendSQL("SELECT group_id FROM groups WHERE name = " . SqlQuote($productold));
-            $groupid = FetchOneColumn();
+        SendSQL("SELECT login_name FROM profiles");
+        my @login_list = ();
+        my $this_login;
+        while($this_login = FetchOneColumn()) {
+            push @login_list, $this_login;
         }
-        SendSQL("SELECT userid FROM profiles " .
-                "WHERE LOWER(login_name) REGEXP LOWER(" . SqlQuote($userregexp) . ")" . 
-                " OR admin = 1");
         my $updated_profiles = 0;
-        while ( my @row = FetchSQLData() ) {
-            $::db->do("INSERT INTO user_group_map VALUES ($row[0], $groupid)");
-            $updated_profiles = 1;
+        foreach $this_login (@login_list) {
+            if($this_login =~ /$userregexp/) {
+                SendSQL("UPDATE profiles " .
+                        "SET groupset = groupset | " . $bit . " " .
+                        "WHERE login_name = " . SqlQuote($this_login));
+                $updated_profiles = 1;
+            }
         }
         if($updated_profiles) {
             print "Added users matching regexp to group.<BR>\n";

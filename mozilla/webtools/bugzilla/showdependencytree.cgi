@@ -32,15 +32,19 @@ use vars %::FORM;
 
 ConnectToDatabase();
 
-my $userid = quietly_check_login();
+quietly_check_login();
+
+# More warning suppression silliness.
+$::userid = $::userid;
+$::usergroupset = $::usergroupset;
 
 ######################################################################
 # Begin Data/Security Validation
 ######################################################################
 
 # Make sure the bug ID is a positive integer representing an existing
-# bug that the user is authorized to access.
-ValidateBugID($::FORM{'id'}, $userid);
+# bug that the user is authorized to access
+ValidateBugID($::FORM{'id'});
 
 my $id = $::FORM{'id'};
 my $hide_resolved = $::FORM{'hide_resolved'} || 0;
@@ -124,15 +128,13 @@ sub DumpKids {
         foreach my $kid (@list) {
             my ($bugid, $stat, $milestone) = ("", "", "");
             my ($userid, $short_desc) = ("", "");
-            if (CanSeeBug($kid, $userid)) {
-                if (Param('usetargetmilestone')) {
-                    SendSQL("select bugs.bug_id, bug_status, target_milestone, assigned_to, short_desc from bugs where bugs.bug_id = $kid", $userid);
-                    ($bugid, $stat, $milestone, $userid, $short_desc) = (FetchSQLData());
-                } else {
-                    SendSQL("select bugs.bug_id, bug_status, assigned_to, short_desc from bugs where bugs.bug_id = $kid", $userid);
-                    ($bugid, $stat, $userid, $short_desc) = (FetchSQLData());
+            if (Param('usetargetmilestone')) {
+                SendSQL(SelectVisible("select bugs.bug_id, bug_status, target_milestone, assigned_to, short_desc from bugs where bugs.bug_id = $kid", $::userid, $::usergroupset));
+                ($bugid, $stat, $milestone, $userid, $short_desc) = (FetchSQLData());
+            } else {
+                SendSQL(SelectVisible("select bugs.bug_id, bug_status, assigned_to, short_desc from bugs where bugs.bug_id = $kid", $::userid, $::usergroupset));
+                ($bugid, $stat, $userid, $short_desc) = (FetchSQLData());
 
-                }
             }
             if (! defined $bugid) { next; }
             my $opened = IsOpenedState($stat);

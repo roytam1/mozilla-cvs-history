@@ -29,15 +29,18 @@ require "CGI.pl";
 
 ConnectToDatabase();
 
-my $userid = 0;
 if (defined $::FORM{'voteon'} || (!defined $::FORM{'bug_id'} &&
                                   !defined $::FORM{'user'})) {
-    $userid = confirm_login();
+    confirm_login();
     $::FORM{'user'} = DBNameToIdAndCheck($::COOKIE{'Bugzilla_login'});
 } else {
-    # Check whether or not the user is currently logged in without throwing
-    # an error if the user is not logged in. 
-    $userid = quietly_check_login();
+  # Check whether or not the user is currently logged in without throwing
+  # an error if the user is not logged in. This function sets the value 
+  # of $::usergroupset, the binary number that records the set of groups 
+  # to which the user belongs and which gets used in ValidateBugID below
+  # to determine whether or not the user is authorized to access the bug
+  # whose votes are being shown or which is being voted on.
+  quietly_check_login();
 }
 
 ################################################################################
@@ -47,13 +50,13 @@ if (defined $::FORM{'voteon'} || (!defined $::FORM{'bug_id'} &&
 # Make sure the bug ID is a positive integer representing an existing
 # bug that the user is authorized to access.
 if (defined $::FORM{'bug_id'}) {
-  ValidateBugID($::FORM{'bug_id'}, $userid);
+  ValidateBugID($::FORM{'bug_id'});
 }
 
 # Make sure the bug ID being voted on is a positive integer representing 
 # an existing bug that the user is authorized to access.
 if (defined $::FORM{'voteon'}) {
-  ValidateBugID($::FORM{'voteon'}, $userid);
+  ValidateBugID($::FORM{'voteon'});
 }
 
 # Make sure the user ID is a positive integer representing an existing user.

@@ -32,6 +32,8 @@ require "CGI.pl";
 sub sillyness {
     my $zz;
     $zz = $::legal_keywords;
+    $zz = $::userid;
+    $zz = $::usergroupset;
     $zz = %::FORM;
 }
 
@@ -42,7 +44,7 @@ print "Content-disposition: inline; filename=bugzilla_bug_list.html\n\n";
 PutHeader ("Full Text Bug Listing");
 
 ConnectToDatabase();
-my $userid = quietly_check_login();
+quietly_check_login();
 
 GetVersionTable();
 
@@ -70,15 +72,10 @@ from bugs,profiles assign,profiles report
 where assign.userid = bugs.assigned_to and report.userid = bugs.reporter and";
 
 $::FORM{'buglist'} = "" unless exists $::FORM{'buglist'};
-my @buglist = split(/:/, $::FORM{'buglist'});
-
-my $canseeref = CanSeeBug(\@buglist, $userid);
-
-foreach my $bug (@buglist) {
+foreach my $bug (split(/:/, $::FORM{'buglist'})) {
     detaint_natural($bug) || next;
-    next if !$canseeref->{$bug};
-
-    SendSQL("$generic_query bugs.bug_id = $bug");
+    SendSQL(SelectVisible("$generic_query bugs.bug_id = $bug",
+                          $::userid, $::usergroupset));
 
     my @row;
     if (@row = FetchSQLData()) {
@@ -124,7 +121,7 @@ foreach my $bug (@buglist) {
                 html_quote($status_whiteboard) . "\n";
         }
         print "<TR><TD><B>Description:</B>\n</TABLE>\n";
-        print GetLongDescriptionAsHTML($bug, $userid);
+        print GetLongDescriptionAsHTML($bug);
         print "<HR>\n";
     }
 }

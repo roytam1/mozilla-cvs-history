@@ -37,8 +37,8 @@ my %ok_field;
 for my $key (qw (bug_id product version rep_platform op_sys bug_status 
                 resolution priority bug_severity component assigned_to
                 reporter bug_file_loc short_desc target_milestone 
-                qa_contact status_whiteboard creation_ts 
-                delta_ts votes whoid comment query error) ){
+                qa_contact status_whiteboard creation_ts groupset 
+                delta_ts votes whoid usergroupset comment query error) ){
     $ok_field{$key}++;
     }
 
@@ -100,10 +100,10 @@ sub initBug  {
 
 
   $self->{'whoid'} = $user_id;
-
-  if (!&::CanSeeBug($bug_id)) {
-    return {};
-  }
+  &::SendSQL("SELECT groupset FROM profiles WHERE userid=$self->{'whoid'}");
+  my $usergroupset = &::FetchOneColumn();
+  if (!$usergroupset) { $usergroupset = '0' }
+  $self->{'usergroupset'} = $usergroupset;
 
   my $query = "
     select
@@ -111,12 +111,12 @@ sub initBug  {
       resolution, priority, bug_severity, component, assigned_to, reporter,
       bug_file_loc, short_desc, target_milestone, qa_contact,
       status_whiteboard, date_format(creation_ts,'%Y-%m-%d %H:%i'),
-      delta_ts, sum(votes.count)
+      groupset, delta_ts, sum(votes.count)
     from bugs left join votes using(bug_id)
     where bugs.bug_id = $bug_id
     group by bugs.bug_id";
 
-  &::SendSQL($query);
+  &::SendSQL(&::SelectVisible($query, $user_id, $usergroupset));
   my @row;
 
   if (@row = &::FetchSQLData()) {
@@ -127,7 +127,7 @@ sub initBug  {
                        "bug_severity", "component", "assigned_to", "reporter",
                        "bug_file_loc", "short_desc", "target_milestone",
                        "qa_contact", "status_whiteboard", "creation_ts",
-                       "delta_ts", "votes") {
+                       "groupset", "delta_ts", "votes") {
         $fields{$field} = shift @row;
         if ($fields{$field}) {
             $self->{$field} = $fields{$field};
@@ -135,7 +135,7 @@ sub initBug  {
         $count++;
     }
   } else {
-    &::SendSQL("select bug_id from bug_group_map where bug_id = $bug_id");
+    &::SendSQL("select groupset from bugs where bug_id = $bug_id");
     if (@row = &::FetchSQLData()) {
       $self->{'bug_id'} = $bug_id;
       $self->{'error'} = "NotPermitted";

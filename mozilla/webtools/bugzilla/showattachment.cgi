@@ -28,7 +28,7 @@ require "CGI.pl";
 
 ConnectToDatabase();
 
-my $userid = quietly_check_login();
+quietly_check_login();
 
 if ($::FORM{attach_id} !~ /^[1-9][0-9]*$/) {
     DisplayError("Attachment ID should be numeric.");
@@ -44,7 +44,7 @@ if (!$bug_id) {
 }
 
 # Make sure the user can see the bug to which this file is attached
-ValidateBugID($bug_id, $userid);
+ValidateBugID($bug_id);
 
 print qq{Content-type: $mimetype\n\n$thedata};
 

@@ -39,7 +39,7 @@ if (!defined $::FORM{'id'} || $::FORM{'id'} !~ /^\s*\d+(,\d+)*\s*$/) {
   exit;
 }
 
-my $userid = quietly_check_login();
+quietly_check_login();
 my $exporter;
 if (defined $::COOKIE{"Bugzilla_login"}) {
   $exporter = $::COOKIE{"Bugzilla_login"};
@@ -51,7 +51,7 @@ print "Content-type: text/plain\n\n";
 print Bug::XML_Header( Param("urlbase"), $::param{'version'}, 
                         Param("maintainer"), $exporter );
 foreach my $id (@ids) {
-  my $bug = new Bug($id, $userid);
+  my $bug = new Bug($id, $::userid);
   print $bug->emitXML;
 }
 
