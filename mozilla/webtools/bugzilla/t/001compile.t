@@ -38,15 +38,16 @@
 ###Compilation###
 BEGIN { use lib 't/'; }
 BEGIN { use Support::Files; }
-BEGIN { $tests = @Support::Files::testitems + 4; }
+BEGIN { $tests = @Support::Files::testitems; }
 BEGIN { use Test::More tests => $tests; }
 
 use strict;
 
 # First now we test the scripts                                                   
 my @testitems = @Support::Files::testitems; 
-my %warnings;
-my $verbose = $::ENV{TEST_VERBOSE};
+# Capture the TESTERR from Test::More for printing errors.
+# This will handle verbosity for us automatically
+*TESTOUT = \*Test::More::TESTOUT;
 my $perlapp = $^X;
 
 foreach my $file (@testitems) {
@@ -63,24 +64,25 @@ foreach my $file (@testitems) {
         my $loginfo=`$command`;
         #print '@@'.$loginfo.'##';
         if ($loginfo =~ /syntax ok$/im) {
-                $warnings{$_} = 1 foreach ($loginfo =~ /\((W.*?)\)/mg);
-                if ($1) {
-                        if ($verbose) { print STDERR $loginfo; }
+                if ($loginfo ne "$file syntax OK\n") {
+                        print TESTOUT $loginfo;
                         ok(0,$file."--WARNING");
                 } else {
                         ok(1,$file);
                 }
         } else {
-                if ($verbose) { print STDERR $loginfo; }
+                print TESTOUT $loginfo;
                 ok(0,$file."--ERROR");
         }
 }      
 
-# and the libs:                                                                 
-use_ok('Token'); # 52                                                 
-use_ok('Attachment'); # 53                                            
-use_ok('Bug'); # 54                                            
-use_ok('RelationSet'); # 55                                           
+# Remove the lib testing from here since it is now done 
+# in Files.pm
+
+
+
+
+
 
 
 

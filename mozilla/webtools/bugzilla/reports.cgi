@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -40,6 +40,8 @@
 
 use diagnostics;
 use strict;
+
+use lib qw(.);
 
 eval "use GD";
 my $use_gd = $@ ? 0 : 1;
@@ -121,6 +123,10 @@ if (! defined $FORM{'product'}) {
     grep($_ eq $FORM{'output'}, keys %reports)
       || DisplayError("You entered an invalid output type.") 
       && exit;
+
+    # We've checked that the product exists, and that the user can see it
+    # This means that is OK to detaint
+    trick_taint($FORM{'product'});
 
     # Output appropriate HTTP response headers
     print "Content-type: text/html\n";
@@ -513,6 +519,19 @@ sub chart_image_type {
 
 sub chart_image_name {
     my ($data_file, $type) = @_;
+
+    # This routine generates a filename from the requested fields. The problem
+    # is that we have to check the safety of doing this. We can't just require
+    # that the fields exist, because what stats were collected could change
+    # over time (eg by changing the resolutions available)
+    # Instead, just require that each field name consists only of letters
+    # and number
+
+    if ($FORM{'datasets'} !~ m/[A-Za-z0-9:]/) {
+        die "Invalid datasets $FORM{'datasets'}";
+    }
+    # Since we pass the tests, consider it OK
+    trick_taint($FORM{'datasets'});
 
     # Cache charts by generating a unique filename based on what they
     # show. Charts should be deleted by collectstats.pl nightly.

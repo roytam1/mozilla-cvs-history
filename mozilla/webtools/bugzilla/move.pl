@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -23,6 +23,9 @@
 
 use diagnostics;
 use strict;
+
+use lib qw(.);
+
 use Bug;
 require "CGI.pl";
 $::lockcount = 0;
@@ -133,7 +136,11 @@ foreach my $id (split(/:/, $::FORM{'buglist'})) {
     SendSQL("UPDATE bugs SET bug_status = 'RESOLVED' WHERE bug_id = $id");
     SendSQL("UPDATE bugs SET resolution_id = $new_res_id_sql WHERE bug_id = $id");
 
-    my $comment = "Bug moved to " . Param("move-to-url") . ".\n\n";
+    my $comment = "";
+    if (defined $::FORM{'comment'} && $::FORM{'comment'} !~ /^\s*$/) {
+        $comment .= $::FORM{'comment'} . "\n\n";
+    }
+    $comment .= "Bug moved to " . Param("move-to-url") . ".\n\n";
     $comment .= "If the move succeeded, $exporter will receive a mail\n";
     $comment .= "containing the number of the new bug in the other database.\n";
     $comment .= "If all went well,  please mark this bug verified, and paste\n";
@@ -162,7 +169,7 @@ $msg .= "Subject: Moving bug(s) $buglist\n\n";
 $msg .= $xml . "\n";
 
 open(SENDMAIL,
-  "|/usr/lib/sendmail -ODeliveryMode=background -t") ||
+  "|/usr/lib/sendmail -ODeliveryMode=background -ti") ||
     die "Can't open sendmail";
 print SENDMAIL $msg;
 close SENDMAIL;

@@ -1,3 +1,23 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Myk Melez <myk@mozilla.org>
+  #%]
+
 [%# Define strings that will serve as the title and header of this page %]
 [% title = BLOCK %]Edit Attachment #[% attachid %] for Bug #[% bugid %][% END %]
 [% h1 = BLOCK %]Edit Attachment #[% attachid %] for <a href="show_bug.cgi?id=[% bugid %]">Bug #[% bugid %]</a>[% END %]
@@ -19,6 +39,7 @@
 <form method="post" action="attachment.cgi" onsubmit="normalizeComments();">
   <input type="hidden" name="id" value="[% attachid %]">
   <input type="hidden" name="action" value="update">
+  <input type="hidden" name="contenttypemethod" value="manual">
 
   <table width="100%">
 
@@ -29,7 +50,7 @@
           <textarea rows="3" cols="25" name="description" wrap="soft">[% description %]</textarea><br>
 
         <b>MIME Type:</b><br>
-          <input type="text" size="20" name="mimetype" value="[% mimetype %]"><br>
+          <input type="text" size="20" name="contenttypeentry" value="[% contenttype %]"><br>
 
         <b>Flags:</b><br>
           <input type="checkbox" name="ispatch" value="1"[% " checked" IF ispatch %]>patch
@@ -54,14 +75,20 @@
 
       [% IF isviewable %]
         <td width="75%">
-          <textarea id="editFrame" name="comment" style="height: 400px; width: 100%; display: none;"></textarea>
+          <textarea id="editFrame" name="comment" style="height: 400px; width: 100%; display: none;" cols="80" wrap="soft"></textarea>
           <iframe id="viewFrame" src="attachment.cgi?id=[% attachid %]&action=view" style="height: 400px; width: 100%;">
             <b>You cannot view the attachment while editing it because your browser does not support IFRAMEs.
             <a href="attachment.cgi?id=[% attachid %]&action=view">View the attachment on a separate page</a>.</b>
           </iframe>
-          <button id="editButton" onclick="editAsComment();">Edit Attachment As Comment</button>
-          <button id="undoEditButton" onclick="undoEditAsComment();" style="display: none;">Undo Edit As Comment</button>
-          <button id="redoEditButton" onclick="redoEditAsComment();" style="display: none;">Redo Edit As Comment</button>
+          <script type="application/x-javascript" language="JavaScript">
+            <!--
+            if (typeof document.getElementById == "function") {
+              document.write('<button id="editButton" onclick="editAsComment();">Edit Attachment As Comment</button>');
+              document.write('<button id="undoEditButton" onclick="undoEditAsComment();" style="display: none;">Undo Edit As Comment</button>');
+              document.write('<button id="redoEditButton" onclick="redoEditAsComment();" style="display: none;">Redo Edit As Comment</button>');
+            }
+            //-->
+          </script>
         </td>
       [% ELSE %]
         <td id="noview" width="50%">
@@ -89,6 +116,7 @@
 </form>
 
 <script type="application/x-javascript" language="JavaScript">
+  <!--
   function editAsComment()
     {
       // Get the content of the document as a string.
@@ -100,8 +128,8 @@
       // If this is a plaintext document, remove cruft that Mozilla adds
       // because it treats it as an HTML document with a big PRE section.
       // http://bugzilla.mozilla.org/show_bug.cgi?id=86012
-      var mimeType = '[% mimetype %]';
-      if ( mimeType == 'text/plain' )
+      var contentType = '[% contenttype %]';
+      if ( contentType == 'text/plain' )
         {
           theContent = theContent.replace( /^<html><head\/><body><pre>/ , "" );
           theContent = theContent.replace( /<\/pre><\/body><\/html>$/ , "" );
@@ -159,18 +187,18 @@
   function hideElementById(id)
   {
     var elm = document.getElementById(id);
-    if (!elm) return;
-
-    elm.style.setProperty('display', 'none', '');
+    if (elm) {
+      elm.style.display = 'none';
+    }
   }
 
   function showElementById(id, val)
   {
     var elm = document.getElementById(id);
-    if (!elm) return;
-
-    if (!val) val = 'inline';
-    elm.style.setProperty('display', val, '');
+    if (elm) {
+      if (!val) val = 'inline';
+      elm.style.display = val;
+    }
   }
 
   function normalizeComments()
@@ -180,16 +208,16 @@
 
     var small = document.getElementById('smallCommentFrame');
     var big = document.getElementById('editFrame');
-    if ( small.style.getProperty('display') == 'none' )
+    if ( small.style.display == 'none' )
     {
       small.parentNode.removeChild(small);
     }
-    if ( big.style.getProperty('display') == 'none' )
+    if ( big.style.display == 'none' )
     {
       big.parentNode.removeChild(big);
     }
-    
   }
+  //-->
 </script>
 
 <br>

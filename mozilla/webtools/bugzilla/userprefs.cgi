@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -21,6 +21,8 @@
 
 use diagnostics;
 use strict;
+
+use lib qw(.);
 
 require "CGI.pl";
 
@@ -169,6 +171,8 @@ sub SaveAccount {
         SendSQL("UPDATE  profiles 
                  SET     cryptpassword = $cryptedpassword 
                  WHERE   userid = $userid");
+        # Invalidate all logins except for the current one
+        InvalidateLogins($userid, $::COOKIE{"Bugzilla_logincookie"});
     }
     SendSQL("UPDATE profiles SET " .
             "realname = " . SqlQuote(trim($::FORM{'realname'})) .
@@ -495,8 +499,8 @@ sub SaveFooter {
             Error("Hmm, the $name query seems to have gone away.");
         }
     }
-    SendSQL("UPDATE profiles SET mybugslink = '" . $::FORM{'mybugslink'} .
-            "' WHERE userid = $userid");
+    SendSQL("UPDATE profiles SET mybugslink = " . SqlQuote($::FORM{'mybugslink'}) .
+            " WHERE userid = $userid");
 }
     
 

@@ -54,6 +54,16 @@ sub WriteParams {
             }
         }
     }
+    # If Bugzilla has been upgraded since the last time parameters were edited,
+    # and some parameters have been removed in the new version of Bugzilla,
+    # remove them from the parameters file.
+    foreach my $item (keys %::param) {
+        if (!grep($_ eq $item, @::param_list) && $item ne "version") {
+            print "The <em>$item</em> parameter is no longer used in Bugzilla
+              and has been removed from your parameters file.<br>";
+            delete $::param{$item};
+        }
+    }
     mkdir("data", 0777);
     chmod 0777, "data";
     my $tmpname = "data/params.$$";
@@ -588,15 +598,8 @@ DefParam("allowuserdeletion",
          "b",
          0);
 
-
-DefParam("strictvaluechecks",
-         "Do stricter integrity checking on both form submission values and values read in from the database.",
-         "b",
-         0);
-
-
 DefParam("browserbugmessage",
-         "If strictvaluechecks is on, and the bugzilla gets unexpected data from the browser, in addition to displaying the cause of the problem, it will output this HTML as well.",
+         "If bugzilla gets unexpected data from the browser, in addition to displaying the cause of the problem, it will output this HTML as well.",
          "l",
          "this may indicate a bug in your browser.\n");
 
@@ -674,9 +677,28 @@ DefParam("moved-default-component",
          "t",
          '');
 
-DefParam("useattachmenttracker",
-         "Whether or not to use the attachment tracker that adds additional features for tracking bug attachments.",
-         "b",
-         0);
+# The maximum size (in bytes) for patches and non-patch attachments.
+# The default limit is 1000KB, which is 24KB less than mysql's default
+# maximum packet size (which determines how much data can be sent in a
+# single mysql packet and thus how much data can be inserted into the
+# database) to provide breathing space for the data in other fields of
+# the attachment record as well as any mysql packet overhead (I don't
+# know of any, but I suspect there may be some.)
+
+DefParam("maxpatchsize",
+         "The maximum size (in kilobytes) of patches.  Bugzilla will not 
+          accept patches greater than this number of kilobytes in size.
+          To accept patches of any size (subject to the limitations of 
+          your server software), set this value to zero." ,
+         "t",
+         '1000');
+
+DefParam("maxattachmentsize" , 
+         "The maximum size (in kilobytes) of non-patch attachments.  Bugzilla 
+          will not accept attachments greater than this number of kilobytes 
+          in size.  To accept attachments of any size (subject to the
+          limitations of your server software), set this value to zero." , 
+         "t" , 
+         '1000');
 
 1;

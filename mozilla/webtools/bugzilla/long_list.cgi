@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -23,6 +23,8 @@
 
 use diagnostics;
 use strict;
+
+use lib qw(.);
 
 require "CGI.pl";
 
@@ -73,6 +75,7 @@ where assign.userid = bugs.assigned_to and report.userid = bugs.reporter and";
 
 $::FORM{'buglist'} = "" unless exists $::FORM{'buglist'};
 foreach my $bug (split(/:/, $::FORM{'buglist'})) {
+    detaint_natural($bug) || next;
     SendSQL(SelectVisible("$generic_query bugs.bug_id = $bug",
                           $::userid, $::usergroupset));
 

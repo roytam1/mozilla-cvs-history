@@ -81,7 +81,7 @@
 #     change table definitions                         --TABLE--
 #     add more groups                                  --GROUPS--
 #     add more resolutions                             --RESOLUTIONS--
-#     create initial administrator account            --ADMIN--
+#     create initial administrator account             --ADMIN--
 #
 # Note: sometimes those special comments occur more then once. For
 # example, --LOCAL-- is at least 3 times in this code!  --TABLE--
@@ -194,10 +194,10 @@ sub have_vers {
   $vnum = ${"${pkg}::VERSION"} || ${"${pkg}::Version"} || 0;
   $vnum = -1 if $@;
 
-  if ($vnum < 0) {
+  if ($vnum eq "-1") { # string compare just in case it's non-numeric
     $vstr = "not found";
   }
-  elsif ($vnum > 0) {
+  elsif (vers_cmp($vnum,"0") > -1) {
     $vstr = "found v$vnum";
   }
   else {
@@ -217,7 +217,8 @@ unless (have_vers("Data::Dumper",0))      { push @missing,"Data::Dumper" }
 unless (have_vers("DBD::mysql","1.2209")) { push @missing,"DBD::mysql" }
 unless (have_vers("Date::Parse",0))       { push @missing,"Date::Parse" }
 unless (have_vers("AppConfig","1.52"))    { push @missing,"AppConfig" }
-unless (have_vers("Template","2.01"))     { push @missing,"Template" }
+unless (have_vers("Template","2.06"))     { push @missing,"Template" }
+unless (have_vers("Text::Wrap","2001.0131")) { push @missing,"Text::Wrap" }
 
 # If CGI::Carp was loaded successfully for version checking, it changes the
 # die and warn handlers, we don't want them changed, so we need to stash the
@@ -308,6 +309,21 @@ sub LocalVar ($$)
 # Set up the defaults for the --LOCAL-- variables below:
 #
 
+LocalVar('index_html', <<'END');
+#
+# With the introduction of a configurable index page using the
+# template toolkit, Bugzilla's main index page is now index.cgi.
+# Most web servers will allow you to use index.cgi as a directory
+# index and many come preconfigured that way, however if yours
+# doesn't you'll need an index.html file that provides redirection
+# to index.cgi. Setting $index_html to 1 below will allow
+# checksetup.pl to create one for you if it doesn't exist.
+# NOTE: checksetup.pl will not replace an existing file, so if you
+#       wish to have checksetup.pl create one for you, you must
+#       make sure that there isn't already an index.html
+$index_html = 0;
+END
+
 my $mysql_binaries = `which mysql`;
 if ($mysql_binaries =~ /no mysql/) {
     # If which didn't find it, just provide a reasonable default
@@ -369,8 +385,10 @@ $db_user = "bugs";              # user to attach to the MySQL database
 LocalVar('db_pass', '
 #
 # Some people actually use passwords with their MySQL database ...
+# If you use apostrophe (\') or a backslash (\\) in your password, you\'ll
+# need to escape it by preceding it with a \\ character. (\\\') or (\\\\)
 #
-$db_pass = "";
+$db_pass = \'\';
 ');
 
 
@@ -497,6 +515,7 @@ my $my_db_port = ${*{$main::{'db_port'}}{SCALAR}};
 my $my_db_name = ${*{$main::{'db_name'}}{SCALAR}};
 my $my_db_user = ${*{$main::{'db_user'}}{SCALAR}};
 my $my_db_pass = ${*{$main::{'db_pass'}}{SCALAR}};
+my $my_index_html = ${*{$main::{'index_html'}}{SCALAR}};
 my $my_create_htaccess = ${*{$main::{'create_htaccess'}}{SCALAR}};
 my $my_webservergroup = ${*{$main::{'webservergroup'}}{SCALAR}};
 my @my_severities = @{*{$main::{'severities'}}{ARRAY}};
@@ -661,6 +680,35 @@ END
 
 }
 
+if ($my_index_html) {
+    if (!-e "index.html") {
+        print "Creating index.html...\n";
+        open HTML, ">index.html";
+        print HTML <<'END';
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="REFRESH" CONTENT="0; URL=index.cgi">
+</HEAD>
+<BODY>
+<H1>I think you are looking for <a href="index.cgi">index.cgi</a></H1>
+</BODY>
+</HTML>
+END
+        close HTML;
+    }
+    else {
+        open HTML, "index.html";
+        if (! grep /index\.cgi/, <HTML>) {
+            print "\n\n";
+            print "*** It appears that you still have an old index.html hanging\n";
+            print "    around.  The contents of this file should be moved into a\n";
+            print "    template and placed in the 'template/custom' directory.\n\n";
+        }
+        close HTML;
+    }
+}
+
 
 # Just to be sure ...
 unlink "data/versioncache";
@@ -750,6 +798,20 @@ sub fixPerms {
 }
 
 if ($my_webservergroup) {
+        unless ($< == 0) { # zach: if not root, yell at them, bug 87398 
+        print <<EOF;
+
+Warning: you have entered a value for the "webservergroup" parameter
+in localconfig, but you are not running this script as root.
+This can cause permissions problems and decreased security.  If you
+experience problems running Bugzilla scripts, log in as root and re-run
+this script, or remove the value of the "webservergroup" parameter.
+Note that any warnings about "uninitialized values" that you may
+see below are caused by this.
+
+EOF
+    }
+
     # Funny! getgrname returns the GID if fed with NAME ...
     my $webservergid = getgrnam($my_webservergroup);
     # chown needs to be called with a valid uid, not 0.  $< returns the
@@ -913,11 +975,9 @@ $table{attachments} =
     index(bug_id),
     index(creation_ts)';
 
-# 2001-05-05 myk@mozilla.org: Tables to support the attachment tracker.
+# 2001-05-05 myk@mozilla.org: Tables to support attachment statuses.
 # "attachstatuses" stores one record for each status on each attachment.
 # "attachstatusdefs" defines the statuses that can be set on attachments.
-# Note: These tables are only used if the parameter "useattachmenttracker"
-# is turned on via editparameters.cgi.
 
 $table{attachstatuses} =
    '
@@ -1065,7 +1125,6 @@ $table{groups} =
 $table{logincookies} =
    'cookie mediumint not null auto_increment primary key,
     userid mediumint not null,
-    cryptpassword varchar(34),
     hostname varchar(128),
     lastused timestamp,
 
@@ -1540,6 +1599,23 @@ if ($sth->rows == 0) {
   my $pass2 = "*";
   my $admin_ok = 0;
   my $admin_create = 1;
+  my $mailcheckexp = "";
+  my $mailcheck    = ""; 
+
+  # Here we look to see what the emailregexp is set to so we can 
+  # check the email addy they enter. Bug 96675. If they have no 
+  # params (likely but not always the case), we use the default.
+  if (-e "data/params") { 
+    require "data/params"; # if they have a params file, use that
+  }
+  if ($::params{emailregexp}) {
+    $mailcheckexp = $::params{emailregexp};
+    $mailcheck    = $::params{emailregexpdesc};
+  } else {
+    $mailcheckexp = '^[^@]+@[^@]+\\.[^@]+$';
+    $mailcheck    = 'A legal address must contain exactly one \'@\', 
+      and at least one \'.\' after the @.';
+  }
 
   print "\nLooks like we don't have an administrator set up yet.  Either this is your\n";
   print "first time using Bugzilla, or your administrator's privs might have accidently\n";
@@ -1551,6 +1627,11 @@ if ($sth->rows == 0) {
       chomp $login;
       if(! $login ) {
         print "\nYou DO want an administrator, don't you?\n";
+      }
+      unless ($login =~ /$mailcheckexp/) {
+        print "\nThe login address is invalid:\n";
+        print "$mailcheck\n";
+        die "Please try again\n";
       }
     }
     $login = $dbh->quote($login);
@@ -2719,6 +2800,29 @@ if ($resolutionfieldref) {
     }
     
     DropField('bugs', 'resolution');
+}
+
+# 2002-02-04 bbaetz@student.usyd.edu.au bug 95732
+# Remove logincookies.cryptpassword, and delete entries which become
+# invalid
+if (GetFieldDef("logincookies", "cryptpassword")) {
+    # We need to delete any cookies which are invalid, before dropping the
+    # column
+
+    print "Removing invalid login cookies...\n";
+
+    # mysql doesn't support DELETE with multi-table queries, so we have
+    # to iterate
+    my $sth = $dbh->prepare("SELECT cookie FROM logincookies, profiles " .
+                            "WHERE logincookies.cryptpassword != " .
+                            "profiles.cryptpassword AND " .
+                            "logincookies.userid = profiles.userid");
+    $sth->execute();
+    while (my ($cookie) = $sth->fetchrow_array()) {
+        $dbh->do("DELETE FROM logincookies WHERE cookie = $cookie");
+    }
+
+    DropField("logincookies", "cryptpassword");
 }
 
 # If you had to change the --TABLE-- definition in any way, then add your

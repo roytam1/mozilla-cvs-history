@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -22,6 +22,8 @@
 
 use diagnostics;
 use strict;
+
+use lib qw(.);
 
 require "CGI.pl";
 
@@ -70,7 +72,9 @@ while (MoreSQLData()) {
     $line_count++;
     print qq{
 <TR>
-<TH>$name</TH>
+<TH><a name="}
+.value_quote($name).
+qq{">$name</A></TH>
 <TD>$description</TD>
 <TD ALIGN="right">$bugs</TD>
 </TR>

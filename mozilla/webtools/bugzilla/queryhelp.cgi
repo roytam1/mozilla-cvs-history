@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -26,6 +26,8 @@ use vars %::FORM;
 
 use diagnostics;
 use strict;
+
+use lib qw(.);
 
 require "CGI.pl";
 
@@ -571,8 +573,8 @@ print qq{
 
 <br>
 
-<p>Module options are where you select what program, module and version the bugs you want to 
-find describe. Selecting one or more of the programs, versions, components, or milestones will limit your search.
+<p>Module options are where you select what product, module and version the bugs you want to 
+find describe. Selecting one or more of the products, versions, components, or milestones will limit your search.
 
 <p><a name="product"></a>
 <h4>Products</h4> 

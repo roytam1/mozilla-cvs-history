@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -24,6 +24,8 @@ use vars %::FORM;
 
 use diagnostics;
 use strict;
+
+use lib qw(.);
 
 require "CGI.pl";
 
@@ -131,7 +133,9 @@ foreach (@data) {
 
     print qq|
 <tr><td colspan=$cols><hr></td></tr>
-<tr><td rowspan=2>$component</td>
+<tr><td rowspan=2><a name="|
+.value_quote($component).
+qq|">$component</a></td>
 <td><a href="mailto:$initialowner$emailsuffix">$initialowner</a></td>
 |;
     if ($useqacontact) {

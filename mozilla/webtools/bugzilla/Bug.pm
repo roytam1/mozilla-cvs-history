@@ -1,4 +1,3 @@
-#!/usr/bonsaitools/bin/perl -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -27,6 +26,7 @@ use strict;
 
 use DBI;
 use RelationSet;
+use vars qw($unconfirmedstate $legal_keywords);
 require "globals.pl";
 require "CGI.pl";
 package Bug;
@@ -74,10 +74,12 @@ sub initBug  {
   my $self = shift();
   my ($bug_id, $user_id) = (@_);
 
-
-  if ( (! defined $bug_id) || (!$bug_id) ) {
-    # no bug number given
-    return {};
+  my $old_bug_id = $bug_id;
+  if ((! defined $bug_id) || (!$bug_id) || (!&::detaint_natural($bug_id))) {
+      # no bug number given
+      $self->{'bug_id'} = $old_bug_id;
+      $self->{'error'} = "InvalidBugId";
+      return $self;
   }
 
 # default userid 0, or get DBID if you used an email address
@@ -86,7 +88,7 @@ sub initBug  {
   }
   else {
      if ($user_id =~ /^\@/) {
-	$user_id = &::DBname_to_id($user_id); 
+        $user_id = &::DBname_to_id($user_id); 
      }
   }
      
@@ -127,11 +129,11 @@ sub initBug  {
                        "bug_file_loc", "short_desc", "target_milestone",
                        "qa_contact", "status_whiteboard", "creation_ts",
                        "groupset", "delta_ts", "votes") {
-	$fields{$field} = shift @row;
-	if ($fields{$field}) {
-	    $self->{$field} = $fields{$field};
-	}
-	$count++;
+        $fields{$field} = shift @row;
+        if ($fields{$field}) {
+            $self->{$field} = $fields{$field};
+        }
+        $count++;
     }
   } else {
     &::SendSQL("select groupset from bugs where bug_id = $bug_id");
@@ -144,14 +146,6 @@ sub initBug  {
       $self->{'error'} = "NotFound";
       return $self;
     }
-  }
-
-  if ($self->{'short_desc'}) {
-    $self->{'short_desc'} = QuoteXMLChars( $self->{'short_desc'} );
-  }
-
-  if (defined $self->{'status_whiteboard'}) {
-    $self->{'status_whiteboard'} = QuoteXMLChars($self->{'status_whiteboard'});
   }
 
   $self->{'assigned_to'} = &::DBID_to_name($self->{'assigned_to'});
@@ -182,7 +176,7 @@ sub initBug  {
         push(@list, &::FetchOneColumn());
     }
     if (@list) {
-      $self->{'keywords'} = &::html_quote(join(', ', @list));
+      $self->{'keywords'} = join(', ', @list);
     }
   }
 
@@ -197,7 +191,7 @@ sub initBug  {
       my %attach;
       $attach{'attachid'} = $attachid;
       $attach{'date'} = $date;
-      $attach{'desc'} = &::html_quote($desc);
+      $attach{'desc'} = $desc;
       push @attachments, \%attach;
     }
   }
@@ -214,7 +208,7 @@ sub initBug  {
     my %longdesc;
     $longdesc{'who'} = $who;
     $longdesc{'bug_when'} = $bug_when;
-    $longdesc{'thetext'} = &::html_quote($thetext);
+    $longdesc{'thetext'} = $thetext;
     push @longdescs, \%longdesc;
   }
   if (@longdescs) {
@@ -318,11 +312,11 @@ sub EmitDependList {
 }
 
 sub QuoteXMLChars {
+  $_[0] =~ s/&/&amp;/g;
   $_[0] =~ s/</&lt;/g;
   $_[0] =~ s/>/&gt;/g;
   $_[0] =~ s/'/&apos;/g;
   $_[0] =~ s/"/&quot;/g;
-  $_[0] =~ s/&/&amp;/g;
 # $_[0] =~ s/([\x80-\xFF])/&XmlUtf8Encode(ord($1))/ge;
   return($_[0]);
 }

@@ -29,9 +29,9 @@
 
 use diagnostics;
 use strict;
+use lib ".";
+
 # use Carp;                       # for confess
-# Shut up misguided -w warnings about "used only once".  For some reason,
-# "use vars" chokes on me when I try it here.
 
 # commented out the following snippet of code. this tosses errors into the
 # CGI if you are perl 5.6, and doesn't if you have perl 5.003. 
@@ -39,10 +39,11 @@ use strict;
 # eval "use Mozilla::LDAP::Conn";
 # my $have_ldap = $@ ? 0 : 1;
 
+# Shut up misguided -w warnings about "used only once".  For some reason,
+# "use vars" chokes on me when I try it here.
 
 sub CGI_pl_sillyness {
     my $zz;
-    $zz = %::FILENAME;
     $zz = %::MFORM;
     $zz = %::dontchange;
     $zz = @::settable_dupe_resolution;
@@ -51,6 +52,25 @@ sub CGI_pl_sillyness {
 use CGI::Carp qw(fatalsToBrowser);
 
 require 'globals.pl';
+
+# If Bugzilla is shut down, do not go any further, just display a message
+# to the user about the downtime.  (do)editparams.cgi is exempted from
+# this message, of course, since it needs to be available in order for
+# the administrator to open Bugzilla back up.
+if (Param("shutdownhtml") && $0 !~ m:[\\/](do)?editparams.cgi$:) {
+    # The shut down message we are going to display to the user.
+    $::vars->{'title'} = "Bugzilla is Down";
+    $::vars->{'h1'} = "Bugzilla is Down";
+    $::vars->{'message'} = Param("shutdownhtml");
+    
+    # Return the appropriate HTTP response headers.
+    print "Content-Type: text/html\n\n";
+    
+    # Generate and return an HTML message about the downtime.
+    $::template->process("global/message.html.tmpl", $::vars)
+      || DisplayError("Template process failed: " . $::template->error());
+    exit;
+}
 
 sub GeneratePersonInput {
     my ($field, $required, $def_value, $extraJavaScript) = (@_);
@@ -93,6 +113,9 @@ sub url_quote {
 
 
 sub ParseUrlString {
+    # We don't want to detaint the user supplied data...
+    use re 'taint';
+
     my ($buffer, $f, $m) = (@_);
     undef %$f;
     undef %$m;
@@ -118,6 +141,7 @@ sub ParseUrlString {
             $name = $item;
             $value = "";
         }
+
         if ($value ne "") {
             if (defined $f->{$name}) {
                 $f->{$name} .= $value;
@@ -141,7 +165,6 @@ sub ParseUrlString {
     }
 }
 
-
 sub ProcessFormFields {
     my ($buffer) = (@_);
     return ParseUrlString($buffer, \%::FORM, \%::MFORM);
@@ -149,46 +172,63 @@ sub ProcessFormFields {
 
 
 sub ProcessMultipartFormFields {
-    my ($boundary) = (@_);
-    $boundary =~ s/^-*//;
-    my $remaining = $ENV{"CONTENT_LENGTH"};
+    my ($boundary) = @_;
+
+    # Initialize variables that store whether or not we are parsing a header,
+    # the name of the part we are parsing, and its value (which is incomplete
+    # until we finish parsing the part).
     my $inheader = 1;
-    my $itemname = "";
-#    open(DEBUG, ">debug") || die "Can't open debugging thing";
-#    print DEBUG "Boundary is '$boundary'\n";
+    my $fieldname = "";
+    my $fieldvalue = "";
+
+    # Read the input stream line by line and parse it into a series of parts,
+    # each one containing a single form field and its value and each one
+    # separated from the next by the value of $boundary.
+    my $remaining = $ENV{"CONTENT_LENGTH"};
     while ($remaining > 0 && ($_ = <STDIN>)) {
         $remaining -= length($_);
-#        print DEBUG "< $_";
-        if ($_ =~ m/^-*$boundary/) {
-#            print DEBUG "Entered header\n";
-            $inheader = 1;
-            $itemname = "";
-            next;
-        }
 
-        if ($inheader) {
-            if (m/^\s*$/) {
-                $inheader = 0;
-#                print DEBUG "left header\n";
-                $::FORM{$itemname} = "";
-            }
-            if (m/^Content-Disposition:\s*form-data\s*;\s*name\s*=\s*"([^\"]+)"/i) {
-                $itemname = $1;
-#                print DEBUG "Found itemname $itemname\n";
-                if (m/;\s*filename\s*=\s*"([^\"]+)"/i) {
-                    $::FILENAME{$itemname} = $1;
+        # If the current input line is a boundary line, save the previous
+        # form value and reset the storage variables.
+        if ($_ =~ m/^-*$boundary/) {
+            if ( $fieldname ) {
+                chomp($fieldvalue);
+                $fieldvalue =~ s/\r$//;
+                if ( defined $::FORM{$fieldname} ) {
+                    $::FORM{$fieldname} .= $fieldvalue;
+                    push @{$::MFORM{$fieldname}}, $fieldvalue;
+                } else {
+                    $::FORM{$fieldname} = $fieldvalue;
+                    $::MFORM{$fieldname} = [$fieldvalue];
                 }
             }
-            
-            next;
+
+            $inheader = 1;
+            $fieldname = "";
+            $fieldvalue = "";
+
+        # If the current input line is a header line, look for a blank line
+        # (meaning the end of the headers), a Content-Disposition header
+        # (containing the field name and, for uploaded file parts, the file 
+        # name), or a Content-Type header (containing the content type for 
+        # file parts).
+        } elsif ( $inheader ) {
+            if (m/^\s*$/) {
+                $inheader = 0;
+            } elsif (m/^Content-Disposition:\s*form-data\s*;\s*name\s*=\s*"([^\"]+)"/i) {
+                $fieldname = $1;
+                if (m/;\s*filename\s*=\s*"([^\"]+)"/i) {
+                    $::FILE{$fieldname}->{'filename'} = $1;
+                }
+            } elsif ( m|^Content-Type:\s*([^/]+/[^\s;]+)|i ) {
+                $::FILE{$fieldname}->{'contenttype'} = $1;
+            }
+
+        # If the current input line is neither a boundary line nor a header,
+        # it must be part of the field value, so append it to the value.
+        } else {
+          $fieldvalue .= $_;
         }
-        $::FORM{$itemname} .= $_;
-    }
-    delete $::FORM{""};
-    # Get rid of trailing newlines.
-    foreach my $i (keys %::FORM) {
-        chomp($::FORM{$i});
-        $::FORM{$i} =~ s/\r$//;
     }
 }
 
@@ -242,17 +282,17 @@ sub ValidateBugID {
     # Validates and verifies a bug ID, making sure the number is a 
     # positive integer, that it represents an existing bug in the
     # database, and that the user is authorized to access that bug.
+    # We detaint the number here, too
 
-    my ($id) = @_;
-
-    # Make sure the bug number is a positive integer.
-    # Whitespace can be ignored because the SQL server will ignore it.
-    $id =~ /^\s*([1-9][0-9]*)\s*$/
+    $_[0] = trim($_[0]); # Allow whitespace arround the number
+    detaint_natural($_[0])
       || DisplayError("The bug number is invalid. If you are trying to use " .
                       "QuickSearch, you need to enable JavaScript in your " .
                       "browser. To help us fix this limitation, look " .
                       "<a href=\"http://bugzilla.mozilla.org/show_bug.cgi?id=70907\">here</a>.") 
       && exit;
+
+    my ($id) = @_;
 
     # Get the values of the usergroupset and userid global variables
     # and write them to local variables for use within this function,
@@ -558,7 +598,7 @@ sub make_options {
         }
     }
     if (!$found && $default ne "") {
-      if ( Param("strictvaluechecks") && $::CheckOptionValues &&
+      if ( $::CheckOptionValues &&
            ($default ne $::dontchange) && ($default ne "-All-") &&
            (lsearch(\@::settable_dupe_resolution, $default) == -1) ) {
         print "Possible bug database corruption has been detected.  " .
@@ -650,8 +690,7 @@ sub quietly_check_login() {
                 "profiles.login_name, " .
                 "profiles.login_name = " .
                 SqlQuote($::COOKIE{"Bugzilla_login"}) .
-                " AND profiles.cryptpassword = logincookies.cryptpassword " .
-                "AND logincookies.hostname = " .
+                " AND logincookies.hostname = " .
                 SqlQuote($ENV{"REMOTE_HOST"}) .
                 ", profiles.disabledtext " .
                 " FROM profiles, logincookies WHERE logincookies.cookie = " .
@@ -671,6 +710,8 @@ sub quietly_check_login() {
                     $::COOKIE{"Bugzilla_login"} = $loginname; # Makes sure case
                                                               # is in
                                                               # canonical form.
+                    # We've just verified that this is ok
+                    detaint_natural($::COOKIE{"Bugzilla_logincookie"});
                 } else {
                     $::disabledreason = $disabledtext;
                 }
@@ -725,14 +766,9 @@ sub MailPassword {
                              "login" => $login,
                              "password" => $password});
 
-    open SENDMAIL, "|/usr/lib/sendmail -t";
+    open SENDMAIL, "|/usr/lib/sendmail -ti";
     print SENDMAIL $msg;
     close SENDMAIL;
-
-    print "The password for the e-mail address\n";
-    print "$login has been e-mailed to that address.\n";
-    print "<p>When the e-mail arrives, you can click <b>Back</b>\n";
-    print "and enter your password in the form there.\n";
 }
 
 
@@ -772,9 +808,17 @@ sub confirm_login {
         # into the database, and email their password to them.
         if ( defined $::FORM{"PleaseMailAPassword"} && !$userid ) {
             my $password = InsertNewUser($enteredlogin, "");
+            # There's a template for this - account_created.tmpl - but
+            # it's easier to wait to use it until templatisation has progressed
+            # further; we want to avoid sprinkling multiple copies of the
+            # template setup code everywhere - Gerv.
             print "Content-Type: text/html\n\n";
             PutHeader("Account Created");
             MailPassword($enteredlogin, $password);
+            print "The password for the e-mail address\n";
+            print "$enteredlogin has been e-mailed to that address.\n";
+            print "<p>When the e-mail arrives, you can click <b>Back</b>\n";
+            print "and enter your password in the form there.\n";
             PutFooter();
             exit;
         }
@@ -854,6 +898,21 @@ sub confirm_login {
          exit;
        }
 
+       # if no password was provided, then fail the authentication
+       # while it may be valid to not have an LDAP password, when you
+       # bind without a password (regardless of the binddn value), you
+       # will get an anonymous bind.  I do not know of a way to determine
+       # whether a bind is anonymous or not without making changes to the
+       # LDAP access control settings
+       if ( ! $::FORM{"LDAP_password"} ) {
+         print "Content-type: text/html\n\n";
+         PutHeader("Login Failed");
+         print "You did not provide a password.\n";
+         print "Please click <b>Back</b> and try again.\n";
+         PutFooter();
+         exit;
+       }
+
        # We've got our anonymous bind;  let's look up this user.
        my $dnEntry = $LDAPconn->search(Param("LDAPBaseDN"),"subtree","uid=".$::FORM{"LDAP_login"});
        if(!$dnEntry) {
@@ -923,7 +982,7 @@ sub confirm_login {
        if (!defined $ENV{'REMOTE_HOST'}) {
          $ENV{'REMOTE_HOST'} = $ENV{'REMOTE_ADDR'};
        }
-       SendSQL("insert into logincookies (userid,cryptpassword,hostname) values (@{[DBNameToIdAndCheck($enteredlogin)]}, @{[SqlQuote($realcryptpwd)]}, @{[SqlQuote($ENV{'REMOTE_HOST'})]})");
+       SendSQL("insert into logincookies (userid,hostname) values (@{[DBNameToIdAndCheck($enteredlogin)]}, @{[SqlQuote($ENV{'REMOTE_HOST'})]})");
        SendSQL("select LAST_INSERT_ID()");
        my $logincookie = FetchOneColumn();
 
@@ -1003,7 +1062,7 @@ Content-type: text/html
         # (except for Bugzilla_login and Bugzilla_password which we
         # already added as text fields above).
         foreach my $i ( grep( $_ !~ /^Bugzilla_/ , keys %::FORM ) ) {
-          if (scalar(@{$::MFORM{$i}}) > 1) {
+          if (defined $::MFORM{$i} && scalar(@{$::MFORM{$i}}) > 1) {
             # This field has multiple values; add each one separately.
             foreach my $val (@{$::MFORM{$i}}) {
               print qq|<input type="hidden" name="$i" value="@{[value_quote($val)]}">\n|;
@@ -1073,16 +1132,6 @@ sub PutHeader {
        $extra = "";
     }
     $jscript ||= "";
-    # If we are shutdown, we want a very basic page to give that
-    # information.  Also, the page title should indicate that
-    # we are down.  
-    if (Param('shutdownhtml')) {
-        $title = "Bugzilla is Down";
-        $h1 = "Bugzilla is currently down";
-        $h2 = "";
-        $extra = "";
-        $jscript = "";
-    }
 
     print qq|
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
@@ -1208,7 +1257,7 @@ sub DumpBugActivity {
     die "Invalid id: $id" unless $id=~/^\s*\d+\s*$/;
 
     if (defined $starttime) {
-        $datepart = "and bugs_activity.bug_when >= $starttime";
+        $datepart = "and bugs_activity.bug_when > " . SqlQuote($starttime);
     }
     my $query = "
         SELECT IFNULL(fielddefs.description, bugs_activity.fieldid),
@@ -1239,7 +1288,7 @@ sub DumpBugActivity {
     while (@row = FetchSQLData()) {
         my ($field,$attachid,$when,$removed,$added,$who) = (@row);
         $field =~ s/^Attachment/<a href="attachment.cgi?id=$attachid&amp;action=view">Attachment #$attachid<\/a>/ 
-          if (Param('useattachmenttracker') && $attachid);
+          if $attachid;
         $removed = html_quote($removed);
         $added = html_quote($added);
         $removed = "&nbsp;" if $removed eq "";
@@ -1322,9 +1371,9 @@ Edit <a href="userprefs.cgi">prefs</a>
             $html .= ", <a href=\"editusers.cgi\">users</a>\n";
         }
         if (UserInGroup("editcomponents")) {
-            $html .= ", <a href=\"editproducts.cgi\">components</a>\n";
+            $html .= ", <a href=\"editproducts.cgi\">products</a>\n";
             $html .= ", <a href=\"editattachstatuses.cgi\">
-              attachment&nbsp;statuses</a>\n" if Param('useattachmenttracker');
+              attachment&nbsp;statuses</a>\n";
         }
         if (UserInGroup("creategroups")) {
             $html .= ", <a href=\"editgroups.cgi\">groups</a>\n";
@@ -1333,7 +1382,7 @@ Edit <a href="userprefs.cgi">prefs</a>
             $html .= ", <a href=\"editkeywords.cgi\">keywords</a>\n";
         }
         if (UserInGroup("tweakparams")) {
-            $html .= "| <a href=\"sanitycheck.cgi\">Sanity&nbsp;check</a> |\n";
+            $html .= "| <a href=\"sanitycheck.cgi\">Sanity&nbsp;check</a>\n";
         }
 
         $html .= qq{ 
@@ -1440,6 +1489,8 @@ if (defined $ENV{"REQUEST_METHOD"}) {
 
 
 if (defined $ENV{"HTTP_COOKIE"}) {
+    # Don't trust anything which came in as a cookie
+    use re 'taint';
     foreach my $pair (split(/;/, $ENV{"HTTP_COOKIE"})) {
         $pair = trim($pair);
         if ($pair =~ /^([^=]*)=(.*)$/) {

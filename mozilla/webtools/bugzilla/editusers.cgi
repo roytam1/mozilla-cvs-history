@@ -742,12 +742,14 @@ if ($action eq 'update') {
     foreach (keys %::FORM) {
         next unless /^bit_/;
         #print "$_=$::FORM{$_}<br>\n";
+        detaint_natural($::FORM{$_}) || die "Groupset field tampered with";
         $groupset .= " + $::FORM{$_}";
     }
     my $blessgroupset = "0";
     foreach (keys %::FORM) {
         next unless /^blbit_/;
         #print "$_=$::FORM{$_}<br>\n";
+        detaint_natural($::FORM{$_}) || die "Blessgroupset field tampered with";
         $blessgroupset .= " + $::FORM{$_}";
     }
 
@@ -767,7 +769,8 @@ if ($action eq 'update') {
         } else {
            SendSQL("UPDATE profiles
                     SET groupset =
-                         groupset - (groupset & $opblessgroupset) + $groupset
+                         groupset - (groupset & $opblessgroupset) + 
+                         (($groupset) & $opblessgroupset)
                     WHERE login_name=" . SqlQuote($userold));
 
            # I'm paranoid that someone who I give the ability to bless people
@@ -805,6 +808,11 @@ if ($action eq 'update') {
             SendSQL("UPDATE  profiles
                      SET     cryptpassword = $cryptpassword
                      WHERE   login_name = $loginname");
+            SendSQL("SELECT userid
+                     FROM profiles
+                     WHERE login_name=" . SqlQuote($userold));
+            my $userid = FetchOneColumn();
+            InvalidateLogins($userid);
             print "Updated password.<BR>\n";
         } else {
             print "Did not update password: $passworderror<br>\n";
@@ -822,10 +830,9 @@ if ($action eq 'update') {
                  WHERE login_name=" . SqlQuote($userold));
         SendSQL("SELECT userid
                  FROM profiles
-                 WHERE login_name=" . SqlQuote($user));
+                 WHERE login_name=" . SqlQuote($userold));
         my $userid = FetchOneColumn();
-        SendSQL("DELETE FROM logincookies
-                 WHERE userid=" . $userid);
+        InvalidateLogins($userid);
         print "Updated disabled text.<BR>\n";
     }
     if ($editall && $user ne $userold) {

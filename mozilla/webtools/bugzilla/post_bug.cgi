@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -24,6 +24,8 @@
 
 use diagnostics;
 use strict;
+
+use lib qw(.);
 
 require "CGI.pl";
 
@@ -103,10 +105,7 @@ if ($::FORM{'assigned_to'} eq "") {
     $::FORM{'assigned_to'} = DBNameToIdAndCheck($::FORM{'assigned_to'});
 }
 
-$::FORM{'reporter'} = DBNameToIdAndCheck($::FORM{'reporter'});
-
-
-my @bug_fields = ("reporter", "product", "version", "rep_platform",
+my @bug_fields = ("product", "version", "rep_platform",
                   "bug_severity", "priority", "op_sys", "assigned_to",
                   "bug_status", "bug_file_loc", "short_desc", "component",
                   "target_milestone");
@@ -143,24 +142,21 @@ if (!exists $::FORM{'target_milestone'}) {
     $::FORM{'target_milestone'} = FetchOneColumn();
 }
 
-if ( Param("strictvaluechecks") ) {
-    GetVersionTable();  
-    CheckFormField(\%::FORM, 'reporter');
-    CheckFormField(\%::FORM, 'product', \@::legal_product);
-    CheckFormField(\%::FORM, 'version', \@{$::versions{$::FORM{'product'}}});
-    CheckFormField(\%::FORM, 'target_milestone',
-                   \@{$::target_milestone{$::FORM{'product'}}});
-    CheckFormField(\%::FORM, 'rep_platform', \@::legal_platform);
-    CheckFormField(\%::FORM, 'bug_severity', \@::legal_severity);
-    CheckFormField(\%::FORM, 'priority', \@::legal_priority);
-    CheckFormField(\%::FORM, 'op_sys', \@::legal_opsys);
-    CheckFormFieldDefined(\%::FORM, 'assigned_to');
-    CheckFormField(\%::FORM, 'bug_status', \@::legal_bug_status);
-    CheckFormFieldDefined(\%::FORM, 'bug_file_loc');
-    CheckFormField(\%::FORM, 'component', 
-                   \@{$::components{$::FORM{'product'}}});
-    CheckFormFieldDefined(\%::FORM, 'comment');
-}
+GetVersionTable();
+CheckFormField(\%::FORM, 'product', \@::legal_product);
+CheckFormField(\%::FORM, 'version', \@{$::versions{$::FORM{'product'}}});
+CheckFormField(\%::FORM, 'target_milestone',
+               \@{$::target_milestone{$::FORM{'product'}}});
+CheckFormField(\%::FORM, 'rep_platform', \@::legal_platform);
+CheckFormField(\%::FORM, 'bug_severity', \@::legal_severity);
+CheckFormField(\%::FORM, 'priority', \@::legal_priority);
+CheckFormField(\%::FORM, 'op_sys', \@::legal_opsys);
+CheckFormFieldDefined(\%::FORM, 'assigned_to');
+CheckFormField(\%::FORM, 'bug_status', \@::legal_bug_status);
+CheckFormFieldDefined(\%::FORM, 'bug_file_loc');
+CheckFormField(\%::FORM, 'component', 
+               \@{$::components{$::FORM{'product'}}});
+CheckFormFieldDefined(\%::FORM, 'comment');
 
 my @used_fields;
 foreach my $f (@bug_fields) {
@@ -176,7 +172,7 @@ if (exists $::FORM{'bug_status'} && $::FORM{'bug_status'} ne $::unconfirmedstate
 
 
 my $query = "INSERT INTO bugs (\n" . join(",\n", @used_fields) . ",
-creation_ts, resolution_id, groupset)
+reporter, creation_ts, resolution_id, groupset)
 VALUES (
 ";
 
@@ -184,17 +180,17 @@ foreach my $field (@used_fields) {
 # fix for 42609. if there is a http:// only in bug_file_loc, strip
 # it out and send an empty value. 
     if ($field eq 'bug_file_loc') {
-       if ($::FORM{$field} eq 'http://') {
-           $::FORM{$field} = "";
-           $query .= SqlQuote($::FORM{$field}) . ",\n";
-           next;
-       } 
-       else {
-          $query .= SqlQuote($::FORM{$field}) . ",\n";
-       }
+        if ($::FORM{$field} eq 'http://') {
+            $::FORM{$field} = "";
+            $query .= SqlQuote($::FORM{$field}) . ",\n";
+            next;
+        }
+        else {
+            $query .= SqlQuote($::FORM{$field}) . ",\n";
+        }
     }
     else {
-       $query .= SqlQuote($::FORM{$field}) . ",\n";
+        $query .= SqlQuote($::FORM{$field}) . ",\n";
     }
 }
 
@@ -206,7 +202,7 @@ $comment = trim($comment);
 # OK except for the fact that it causes e-mail to be suppressed.
 $comment = $comment ? $comment : " ";
 
-$query .= "now(), NULL, (0";
+$query .= "$::userid, now(), NULL, (0";
 
 foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
     if ($::FORM{$b}) {
@@ -253,7 +249,7 @@ SendSQL("select LAST_INSERT_ID()");
 my $id = FetchOneColumn();
 
 SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) VALUES " .
-        "($id, $::FORM{'reporter'}, now(), " . SqlQuote($comment) . ")");
+        "($id, $::userid, now(), " . SqlQuote($comment) . ")");
 
 foreach my $person (keys %ccids) {
     SendSQL("insert into cc (bug_id, who) values ($id, $person)");
@@ -263,7 +259,7 @@ print "<TABLE BORDER=1><TD><H2>Bug $id posted</H2>\n";
 system("./processmail", $id, $::COOKIE{'Bugzilla_login'});
 print "<TD><A HREF=\"show_bug.cgi?id=$id\">Back To BUG# $id</A></TABLE>\n";
 
-print "<BR><A HREF=\"createattachment.cgi?id=$id\">Attach a file to this bug</a>\n";
+print "<BR><A HREF=\"attachment.cgi?bugid=$id&action=enter\">Attach a file to this bug</a>\n";
 
 navigation_header();
 

@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -22,6 +22,8 @@
 
 use diagnostics;
 use strict;
+
+use lib qw(.);
 
 require "CGI.pl";
 
@@ -124,7 +126,8 @@ node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
         my $summary = "";
         my $stat;
         if ($::FORM{'showsummary'}) {
-            SendSQL(SelectVisible("select bug_status, short_desc from bugs where bug_id = $k",
+            SendSQL(SelectVisible("SELECT bug_status, short_desc FROM bugs " .
+                                  "WHERE bugs.bug_id = $k",
                                   $::userid,
                                   $::usergroupset));
             ($stat, $summary) = (FetchSQLData());
@@ -167,6 +170,10 @@ node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
     # Cleanup any old .dot files created from previous runs.
     my $since = time() - 24 * 60 * 60;
     foreach my $f (glob("data/webdot/*.dot")) {
+        # Here we are deleting all old files. All entries are from the
+        # data/webdot/ directory. Since we're deleting the file (not following
+        # symlinks), this can't escape to delete anything it shouldn't
+        trick_taint($f);
         if (ModTime($f) < $since) {
             unlink $f;
         }

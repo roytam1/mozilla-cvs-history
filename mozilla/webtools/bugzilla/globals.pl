@@ -21,6 +21,7 @@
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Jake <jake@acutex.net>
 #                 Bradley Baetz <bbaetz@cs.mcgill.ca>
+#                 Christopher Aillon <christopher@aillon.com>
 
 # Contains some global variables and routines used throughout bugzilla.
 
@@ -59,6 +60,8 @@ sub globals_pl_sillyness {
     $zz = $main::settable_moved_resolution;
     $zz = $main::maxrestype;
     $zz = $main::userid;
+    $zz = $main::template;
+    $zz = $main::vars;
 }
 
 #
@@ -78,6 +81,7 @@ $::maxrestype = 3;
 # 
 
 $::db_host = "localhost";
+$::db_port = 3306;
 $::db_name = "bugs";
 $::db_user = "bugs";
 $::db_pass = "";
@@ -92,8 +96,7 @@ use Date::Parse;               # For str2time().
 use RelationSet;
 
 # Some environment variables are not taint safe
-delete $ENV{PATH};
-delete $ENV{BASH_ENV};
+delete @::ENV{'PATH', 'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
 
 # Contains the version string for the current running Bugzilla.
 $::param{'version'} = '2.15';
@@ -123,7 +126,7 @@ sub ConnectToDatabase {
             $name = Param("shadowdb");
             $::dbwritesallowed = 0;
         }
-        $::db = DBI->connect("DBI:mysql:host=$::db_host;database=$name", $::db_user, $::db_pass)
+        $::db = DBI->connect("DBI:mysql:host=$::db_host;database=$name;port=$::db_port", $::db_user, $::db_pass)
             || die "Bugzilla is currently broken. Please try again later. " . 
       "If the problem persists, please contact " . Param("maintainer") .
       ". The error you should quote is: " . $DBI::errstr;
@@ -212,8 +215,27 @@ sub SqlLog {
     }
 }
 
+# This is from the perlsec page, slightly modifed to remove a warning
+# From that page:
+#      This function makes use of the fact that the presence of
+#      tainted data anywhere within an expression renders the
+#      entire expression tainted.
+# Don't ask me how it works...
+sub is_tainted {
+    return not eval { my $foo = join('',@_), kill 0; 1; };
+}
+
 sub SendSQL {
     my ($str, $dontshadow) = (@_);
+
+    # Don't use DBI's taint stuff yet, because:
+    # a) We don't want out vars to be tainted (yet)
+    # b) We want to know who called SendSQL...
+    # Is there a better way to do b?
+    if (is_tainted($str)) {
+        die "Attempted to send tainted string '$str' to the database";
+    }
+
     my $iswrite =  ($str =~ /^(INSERT|REPLACE|UPDATE|DELETE)/i);
     if ($iswrite && !$::dbwritesallowed) {
         die "Evil code attempted to write stuff to the shadow database.";
@@ -709,6 +731,19 @@ sub InsertNewUser {
     return $password;
 }
 
+# Removes all entries from logincookies for $userid, except for the
+# optional $keep, which refers the logincookies.cookie primary key.
+# (This is useful so that a user changing their password stays logged in)
+sub InvalidateLogins {
+    my ($userid, $keep) = @_;
+
+    my $remove = "DELETE FROM logincookies WHERE userid = $userid";
+    if (defined $keep) {
+        $remove .= " AND cookie != " . SqlQuote($keep);
+    }
+    SendSQL($remove);
+}
+
 sub GenerateRandomPassword {
     my ($size) = @_;
 
@@ -1095,7 +1130,7 @@ sub quoteUrls {
         my $num = $2;
         $item = value_quote($item); # Not really necessary, since we know
                                     # there's no special chars in it.
-        $item = qq{<A HREF="showattachment.cgi?attach_id=$num">$item</A>};
+        $item = qq{<A HREF="attachment.cgi?id=$num&action=view">$item</A>};
         $things[$count++] = $item;
     }
     while ($text =~ s/\*\*\* This bug has been marked as a duplicate of (\d+) \*\*\*/"##$count##"/ei) {
@@ -1110,7 +1145,7 @@ sub quoteUrls {
         my $item = $&;
         my $num = $1;
         if ($knownattachments->{$num}) {
-            $item = qq{<A HREF="showattachment.cgi?attach_id=$num">$item</A>};
+            $item = qq{<A HREF="attachment.cgi?id=$num&action=view">$item</A>};
         }
         $things[$count++] = $item;
     }
@@ -1136,45 +1171,62 @@ sub quoteUrls {
 
 sub GetBugLink {
     my ($bug_num, $link_text) = (@_);
-    my ($link_return) = "";
+    detaint_natural($bug_num) || die "GetBugLink() called with non-integer bug number";
 
-    # TODO - Add caching capabilites... possibly use a global variable in the form
-    # of $buglink{$bug_num} that contains the text returned by this sub.  If that
-    # variable is defined, simply return it's value rather than running the SQL
-    # query.  This would cut down on the number of SQL calls when the same bug is
-    # referenced multiple times.
-    
-    # Make sure any unfetched data from a currently running query
-    # is saved off rather than overwritten
-    PushGlobalSQLState();
-    
-    # Get this bug's info from the SQL Database
-    SendSQL("select bugs.bug_status, resolutions.name, short_desc, groupset
-             from bugs, resolutions where bugs.bug_id = $bug_num and
-             bugs.resolution_id = resolutions.id");
-    my ($bug_stat, $bug_res, $bug_desc, $bug_grp) = (FetchSQLData());
-    
-    # Format the retrieved information into a link
-    if ($bug_stat eq "UNCONFIRMED") { $link_return .= "<i>" }
-    if ($bug_res ne '') { $link_return .= "<strike>" }
+    # If we've run GetBugLink() for this bug number before, %::buglink
+    # will contain an anonymous array ref of relevent values, if not
+    # we need to get the information from the database.
+    if (! defined $::buglink{$bug_num}) {
+        # Make sure any unfetched data from a currently running query
+        # is saved off rather than overwritten
+        PushGlobalSQLState();
 
-    $bug_desc = value_quote($bug_desc);
-    $link_text = value_quote($link_text);
-    $link_return .= qq{<a href="show_bug.cgi?id=$bug_num" title="$bug_stat};
-    if ($bug_res ne '') { $link_return .= " $bug_res" }
-    if ($bug_grp == 0 || CanSeeBug($bug_num, $::userid, $::usergroupset)) {
-        $link_return .= " - $bug_desc";
+        SendSQL("SELECT bugs.bug_status, resolutions.name, short_desc, groupset " .
+                "FROM bugs, resolutions " .
+                "WHERE bugs.bug_id = $bug_num AND bugs.resolution_id = resolutions.id");
+
+        # If the bug exists, save its data off for use later in the sub
+        if (MoreSQLData()) {
+            my ($bug_state, $bug_res, $bug_desc, $bug_grp) = FetchSQLData();
+            # Initialize these variables to be "" so that we don't get warnings
+            # if we don't change them below (which is highly likely).
+            my ($pre, $title, $post) = ("", "", "");
+
+            $title = $bug_state;
+            if ($bug_state eq $::unconfirmedstate) {
+                $pre = "<i>";
+                $post = "</i>";
+            }
+            elsif (! IsOpenedState($bug_state)) {
+                $pre = "<strike>";
+                $title .= " $bug_res";
+                $post = "</strike>";
+            }
+            if ($bug_grp == 0 || CanSeeBug($bug_num, $::userid, $::usergroupset)) {
+                $title .= " - $bug_desc";
+            }
+            $::buglink{$bug_num} = [$pre, value_quote($title), $post];
+        }
+        else {
+            # Even if there's nothing in the database, we want to save a blank
+            # anonymous array in the %::buglink hash so the query doesn't get
+            # run again next time we're called for this bug number.
+            $::buglink{$bug_num} = [];
+        }
+        # All done with this sidetrip
+        PopGlobalSQLState();
     }
-    $link_return .= qq{">$link_text</a>};
 
-    if ($bug_res ne '') { $link_return .= "</strike>" }
-    if ($bug_stat eq "UNCONFIRMED") { $link_return .= "</i>"}
-    
-    # Put back any query in progress
-    PopGlobalSQLState();
-
-    return $link_return; 
-
+    # Now that we know we've got all the information we're gonna get, let's
+    # return the link (which is the whole reason we were called :)
+    my ($pre, $title, $post) = @{$::buglink{$bug_num}};
+    # $title will be undefined if the bug didn't exist in the database.
+    if (defined $title) {
+        return qq{$pre<a href="show_bug.cgi?id=$bug_num" title="$title">$link_text</a>$post};
+    }
+    else {
+        return qq{$link_text};
+    }
 }
 
 sub GetLongDescriptionAsText {
@@ -1458,7 +1510,7 @@ sub RemoveVotes {
             if (Param('sendmailnow')) {
                $sendmailparm = '';
             }
-            if (open(SENDMAIL, "|/usr/lib/sendmail $sendmailparm -t")) {
+            if (open(SENDMAIL, "|/usr/lib/sendmail $sendmailparm -ti")) {
                 my %substs;
 
                 $substs{"to"} = $name;
@@ -1565,14 +1617,30 @@ sub PerformSubsts {
     return $str;
 }
 
+# Min and max routines.
+sub min {
+    my $min = shift(@_);
+    foreach my $val (@_) {
+        $min = $val if $val < $min;
+    }
+    return $min;
+}
+
+sub max {
+    my $max = shift(@_);
+    foreach my $val (@_) {
+        $max = $val if $val > $max;
+    }
+    return $max;
+}
 
 # Trim whitespace from front and back.
 
 sub trim {
-    ($_) = (@_);
-    s/^\s+//g;
-    s/\s+$//g;
-    return $_;
+    my ($str) = @_;
+    $str =~ s/^\s+//g;
+    $str =~ s/\s+$//g;
+    return $str;
 }
 
 # Easy ways to see how many records there are
@@ -1606,5 +1674,95 @@ sub GenerateUpdateSQL (%) {
 
     return join( ', ', @assignments);
 }
+
+###############################################################################
+# Global Templatization Code
+
+# Use the template toolkit (http://www.template-toolkit.org/) to generate
+# the user interface using templates in the "template/" subdirectory.
+use Template;
+
+# Create the global template object that processes templates and specify
+# configuration parameters that apply to all templates processed in this script.
+$::template = Template->new(
+  {
+    # Colon-separated list of directories containing templates.
+    INCLUDE_PATH => "template/custom:template/default" ,
+
+    # Allow templates to be specified with relative paths.
+    RELATIVE => 1 ,
+
+    # Remove white-space before template directives (PRE_CHOMP) and at the
+    # beginning and end of templates and template blocks (TRIM) for better 
+    # looking, more compact content.  Use the plus sign at the beginning 
+    # of directives to maintain white space (i.e. [%+ DIRECTIVE %]).
+    PRE_CHOMP => 1 ,
+    TRIM => 1 , 
+
+    # Functions for processing text within templates in various ways.
+    FILTERS =>
+      {
+        # Render text in strike-through style.
+        strike => sub { return "<strike>" . $_[0] . "</strike>" } ,
+      } ,
+  }
+);
+
+# Use the Toolkit Template's Stash module to add utility pseudo-methods
+# to template variables.
+use Template::Stash;
+
+# Add "contains***" methods to list variables that search for one or more 
+# items in a list and return boolean values representing whether or not 
+# one/all/any item(s) were found.
+$Template::Stash::LIST_OPS->{ contains } =
+  sub {
+      my ($list, $item) = @_;
+      return grep($_ eq $item, @$list);
+  };
+
+$Template::Stash::LIST_OPS->{ containsany } =
+  sub {
+      my ($list, $items) = @_;
+      foreach my $item (@$items) { 
+          return 1 if grep($_ eq $item, @$list);
+      }
+      return 0;
+  };
+
+# Add a "substr" method to the Template Toolkit's "scalar" object
+# that returns a substring of a string.
+$Template::Stash::SCALAR_OPS->{ substr } = 
+  sub {
+      my ($scalar, $offset, $length) = @_;
+      return substr($scalar, $offset, $length);
+  };
+    
+# Add a "truncate" method to the Template Toolkit's "scalar" object
+# that truncates a string to a certain length.
+$Template::Stash::SCALAR_OPS->{ truncate } = 
+  sub {
+      my ($string, $length, $ellipsis) = @_;
+      $ellipsis ||= "";
+      
+      return $string if !$length || length($string) <= $length;
+      
+      my $strlen = $length - length($ellipsis);
+      my $newstr = substr($string, 0, $strlen) . $ellipsis;
+      return $newstr;
+  };
+    
+# Define the global variables and functions that will be passed to the UI
+# template.  Additional values may be added to this hash before templates
+# are processed.
+$::vars =
+  {
+    # Function for retrieving global parameters.
+    'Param' => \&Param ,
+
+    # Function for processing global parameters that contain references
+    # to other global parameters.
+    'PerformSubsts' => \&PerformSubsts ,
+  };
 
 1;

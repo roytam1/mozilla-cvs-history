@@ -22,12 +22,14 @@
 
 package Support::Templates;
 
+use Support::Files;
+
 $include_path = "template/default";
 
 # Scan Bugzilla's code looking for templates used and put them
 # in the @testitems array to be used by the template.t test.
 
-my @files = glob('*');
+my @files = @Support::Files::testitems;
 my %t;
 
 foreach my $file (@files) {
@@ -37,21 +39,6 @@ foreach my $file (@files) {
     foreach my $line (@lines) {
         if ($line =~ m/template->process\(\"(.+?)\", .+?\)/) {
             $template = $1;
-            push (@testitems, $template) unless $t{$template};
-            $t{$template} = 1;
-        }
-    }
-}
-
-# Now let's look at the templates and find any other templates
-# that are INCLUDEd.
-foreach my $file(@testitems) {
-    open (FILE, $include_path . "/" . $file) || next;
-    my @lines = <FILE>;
-    close (FILE);
-    foreach my $line (@lines) {
-        if ($line =~ m/\[% (?:INCLUDE|PROCESS) (.+?) /) {
-            my $template = $1;
             push (@testitems, $template) unless $t{$template};
             $t{$template} = 1;
         }

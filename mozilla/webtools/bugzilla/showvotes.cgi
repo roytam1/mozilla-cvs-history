@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -20,9 +20,12 @@
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Stephan Niemz  <st.n@gmx.net>
+#                 Christopher Aillon <christopher@aillon.com>
 
 use diagnostics;
 use strict;
+
+use lib qw(.);
 
 require "CGI.pl";
 
@@ -60,7 +63,7 @@ if (defined $::FORM{'voteon'}) {
 
 # Make sure the user ID is a positive integer representing an existing user.
 if (defined $::FORM{'user'}) {
-  $::FORM{'user'} =~ /^([1-9][0-9]*)$/
+  detaint_natural($::FORM{'user'})
     || DisplayError("The user number is invalid.") 
     && exit;
   SendSQL("SELECT 1 FROM profiles WHERE userid = $::FORM{'user'}");
@@ -138,13 +141,14 @@ if (defined $::FORM{'bug_id'}) {
             $summary = html_quote($summary);
             $sum += $count;
             if ($canedit) {
-                my $min = $maxvotesperbug{$product}; # minimum of these two
-                $min = $::prodmaxvotes{$product} if $::prodmaxvotes{$product} < $min;
-                if( $min < 2 ) { # checkbox
-                    my $checked = $count ? ' checked' : '';
+                my $min = min($::prodmaxvotes{$product}, $maxvotesperbug{$product});
+                if ($min < 2) { # checkbox
+                    my $checked = $count ? ' checked="checked"' : '';
                     $count = qq{<input type="checkbox" name="$id" value="1"$checked>};
-                }else { # normal input
-                    $count = qq{<input name="$id" value="$count" size="5">};
+                }
+                else { # text input
+                    my $maxlength = length $min;
+                    $count = qq{<input name="$id" value="$count" size="$maxlength" maxlength="$maxlength">};
                 }
             }
             print qq{
