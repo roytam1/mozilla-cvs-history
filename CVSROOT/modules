@@ -420,6 +420,15 @@ RaptorAll -a \
 	RaptorUnix \
 	RaptorMac
 
+#####################
+# Transformiix module (xslt processor)
+#####################
+
+TransformiixStandalone -a \
+	mozilla/config \
+	mozilla/expat \
+	mozilla/extentions/transformiix
+
 #######################################################################
 # Modules for the Directory SDK.  There are two users of the libldap
 # Mozilla and the DirectorySDK. Maintained by Chuck Boatwright 
@@ -576,6 +585,7 @@ SeaMonkeyCore -a \
 	mozilla/string \
 	mozilla/sun-java \
 	mozilla/tools/leaky \
+	mozilla/tools/preloader \
 	mozilla/tools/elf-dynstr-gc \
 	mozilla/uriloader \
 	mozilla/xpcom \
