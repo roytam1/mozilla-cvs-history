@@ -290,7 +290,7 @@ RaptorDist -a \
 	mozilla/jpeg \
 	mozilla/js \
 	mozilla/lib/liblayer \
-	mozilla/lib/libpwc \
+	mozilla/lib/libpwcac \
 	mozilla/lib/xp \
 	mozilla/modules/libimg \
 	mozilla/modules/libpref \
