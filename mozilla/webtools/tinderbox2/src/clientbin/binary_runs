@@ -48,7 +48,6 @@ print "$0: Success! @Binary is still running. Killing.\n";
 
 
 # try to kill 3 times, then try a kill -9
-my ($status);
 for ($i=0 ; $i<3 ; $i++) {
   kill 'TERM',$pid;
 
