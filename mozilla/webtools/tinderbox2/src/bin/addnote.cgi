@@ -224,16 +224,16 @@ sub format_input_page {
   
   if (@ASSOCIATIONS) {
     
-    push @out, ( 
-                h3("Associated with"),
-                p(),
-                radio_group(
-                            -name=>'associations', 
-                            -value=>[@ASSOCIATIONS], 
-                            # -default=>,
-                            ),
-                p(),
-               )
+      push @out, ( 
+                   h3("Associated with"),
+                   p(),
+                   checkbox_group(
+                                  -name=>'associations', 
+                                  -value=>[@ASSOCIATIONS], 
+                                  # -default=>,
+                                  ),
+                   p(),
+                   );
   } # end if
   
   push @out, (
