@@ -278,7 +278,7 @@ sub format_input_page {
               password_field(-name=>'passwd', -size=>8,),
               p(),
               checkbox( -label=>("If correct, ".
-                                 "remember password and email field".
+                                 "remember password and email field ".
                                  "as a cookie"),
                         -name=>'use_cookie'),
               p(),
