@@ -305,6 +305,7 @@ if (m:^mozilla/mailnews/[^/]*$:) {return '123';}
 if (m:^mozilla/java/xpcom/.*$:) {return '128';}
 if (m:^mozilla/java/plugins/.*$:) {return '129';}
 if (m:^mozilla/hjava/webshell/.*$:) {return '127';}
+if (m:^mozilla/java/dom/.*$:) {return '130';}
 if (m:^mozilla/java/fe/.*$:) {return '131';}
 }
 return '';
