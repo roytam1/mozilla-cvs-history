@@ -214,7 +214,7 @@ for ( ; $curYear <= $lastYear ; $curYear++ ) {
 		if (! $::db->selectdb($::STATINFO[$_][1]) ) {
 			die "MySQL returned \"$Mysql::db_errstr\" while " .
 				"attempting to selectdb(\"$::STATINFO[$_][1]" .
-				"\")";
+				"\") for the report \"$::STATINFO[$_][0]\"";
 		}
 
 		if (! $F::debugHtml ) { 
