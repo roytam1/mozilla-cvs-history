@@ -2020,6 +2020,22 @@ pid-file=/home/foo/mymysql/the.pid
     </section>
         
     <section>
+      <title>The Apache webserver is not serving Bugzilla pages</title>
+      <para>
+        After you have run <command>checksetup.pl</command> twice,
+        run <command>testserver.pl http://yoursite.yourdomain/yoururl</command>
+        to confirm that your webserver is configured properly for
+        Bugzilla.
+      </para>
+<programlisting><![CDATA[./testserver.pl http://landfill.bugzilla.org/bugzilla-tip
+TEST-OK Webserver is running under group id in $webservergroup.
+TEST-OK Got ant picture.
+TEST-OK Webserver is executing CGIs.
+TEST-OK Webserver is preventing fetch of http://landfill.bugzilla.org/bugzilla-tip/localconfig.
+]]></programlisting>
+    </section>
+
+    <section>
       <title>I installed a Perl module, but 
       <filename>checksetup.pl</filename> claims it's not installed!</title>
       
