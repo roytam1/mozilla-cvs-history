@@ -148,10 +148,10 @@ to others in the same group.<p>";
 grant membership to this group to anyone creating a new account with an
 email address that matches this perl regular expression. Do not forget the trailing \'\$\'.  Example \'\@mycompany.com\$\'<p>";
     print "The <b>Use For Bugs</b> flag determines whether or not the group is eligable to be used for bugs.
-If you deactivate a group it will no longer be possible for users to add bugs
-to that group, although bugs already in the group will remain in the group.
-Deactivating a group is a much less drastic way to stop a group from growing
-than deleting the group would be as well as way to maintain lists of users without cluttering the lists of groups used for bug restrictions.<p>";
+If you remove this flag, it will no longer be possible for users to add bugs
+to this group, although bugs already in the group will remain in the group.
+Doing so is a much less drastic way to stop a group from growing
+than deleting the group as well as a way to maintain lists of users without cluttering the lists of groups used for bug restrictions.<p>";
     print "The <b>Type</b> field identifies system groups.<p>";  
 
     PutFooter();
@@ -301,11 +301,11 @@ may not contain any spaces.<p>";
 members of the group where they can choose whether the bug will be restricted
 to others in the same group.<p>";
     print "The <b>Use For Bugs</b> flag determines whether or not the group is eligable to be used for bugs.
-If you deactivate a group it will no longer be possible for users to add bugs
-to that group, although bugs already in the group will remain in the group.
-Deactivating a group is a much less drastic way to stop a group from growing
+If you clear this, it will no longer be possible for users to add bugs
+to this group, although bugs already in the group will remain in the group.
+Doing so is a much less drastic way to stop a group from growing
 than deleting the group would be.  <b>Note: If you are creating a group, you
-probably want it to be active, in which case you should leave this checked.</b><p>";
+probably want it to be usable for bugs, in which case you should leave this checked.</b><p>";
     print "<b>User RegExp</b> is optional, and if filled in, will automatically
 grant membership to this group to anyone creating a new account with an
 email address that matches this regular expression.<p>";
