@@ -404,7 +404,6 @@ sub fatal_error {
   # we have trouble removing the file we we will be exiting anyway.
 
   unlink ($LOCK_FILE);
-  unlink ($PID_FILE);
 
 
   print "Content-type: text/html\n\n";
