@@ -748,10 +748,8 @@ Webclient    -a \
 	mozilla/java/webclient/src_moz \
 	mozilla/java/webclient/src_share \
 	mozilla/java/webclient/test/automated \
-	mozilla/java/webclient/test/manual
-
-
-
+	mozilla/java/webclient/test/manual \
+	mozilla/java/dist
 
 #############################################################
 #
