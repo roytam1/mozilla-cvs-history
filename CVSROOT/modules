@@ -342,7 +342,6 @@ RaptorDist -a \
 	mozilla/caps \
 	mozilla/config \
 	mozilla/dbm \
-	mozilla/editor \
 	mozilla/include \
 	mozilla/intl \
 	mozilla/jpeg \
@@ -364,8 +363,7 @@ RaptorDist -a \
 	mozilla/rdf \
 	mozilla/silentdl \
 	mozilla/sun-java \
-	mozilla/xpcom \
-	mozilla/xpfe
+	mozilla/xpcom
 
 RaptorLayout -a \
 	mozilla/base \
