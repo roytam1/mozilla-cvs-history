@@ -12,9 +12,9 @@
 # users associated with the bug.  Replaces the old "processmail"
 # script.
 # 
-# Usage: bugmail.pl bug_id user_email
+# Usage: perl -T contrib/sendbugmail.pl bug_id user_email
 
-use lib qw(..);
+use lib qw(.);
 
 require "globals.pl";
 use Bugzilla::BugMail;
@@ -37,6 +37,8 @@ if (!($bugnum =~ /^(\d+)$/)) {
   print STDERR "Bug number \"$bugnum\" not numeric.\n";
   usage();
 }
+
+detaint_natural($bugnum);
 
 SendSQL("SELECT bug_id FROM bugs WHERE bug_id = $bugnum");
 
