@@ -109,9 +109,11 @@ $fullname{'114'} = 'js-tests';
 $mode{'72'} = 'Open';
 $branch{'72'} = 'HEAD';
 $fullname{'72'} = 'LiveConnect';
-$mode{'136'} = 'Open';
+$mode{'136'} = 'Closed';
 $branch{'136'} = 'HEAD';
 $fullname{'136'} = 'Locked-Content';
+$blessed{'136'} = [];
+$super{'136'} = ['hyatt%netscape.com',];
 $mode{'47'} = 'Open';
 $branch{'47'} = 'HEAD';
 $fullname{'47'} = 'Macintosh FE';
@@ -314,6 +316,7 @@ if (m:^mozilla/java/webclient/.*$:) {return '127';}
 if (m:^mozilla/java/dom/.*$:) {return '130';}
 if (m:^mozilla/java/fe/.*$:) {return '131';}
 if (m:^mozilla/java/util/.*$:) {return '133';}
+if (m:^mozilla/xpfe/global/resources/skin/xul\.css$:) {return '136';}
 }
 return '';
 }
