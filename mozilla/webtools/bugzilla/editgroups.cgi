@@ -409,8 +409,7 @@ if ($action eq 'del') {
        print "
 <B>One or more users belong to this group. You cannot delete this group while
 there are users in it.</B><BR>
-<A HREF=\"editusers.cgi?action=list&query=" .
-url_quote("(groupset & \$bit) OR (blessgroupset & \$bit)") . "\">Show me which users.</A> - <INPUT TYPE=CHECKBOX NAME=\"removeusers\">Remove all users from
+<A HREF=\"editusers.cgi?action=list&group=$gid\">Show me which users.</A> - <INPUT TYPE=CHECKBOX NAME=\"removeusers\">Remove all users from
 this group for me<P>
 ";
     }
@@ -480,13 +479,6 @@ if ($action eq 'delete') {
 
     my $cantdelete = 0;
 
-    #SendSQL("SELECT userid FROM profiles " .
-    #"WHERE (groupset & $opblessgroupset)=$opblessgroupset");
-    #my @opusers = ();
-    #while (MoreSQLData()) {
-        #my ($userid) = FetchSQLData();
-        #push @opusers, $userid; # cache a list of the users with admin powers
-        #}
     SendSQL("SELECT member_id FROM member_group_map 
              WHERE group_id = $gid");
     if (FetchOneColumn()) {

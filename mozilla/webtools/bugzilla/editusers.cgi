@@ -307,6 +307,10 @@ if ($action eq 'list') {
     } elsif (exists $::FORM{'query'}) {
       $query = "SELECT login_name,realname,disabledtext " .
           "FROM profiles WHERE " . $::FORM{'query'} . " ORDER BY login_name";
+    } elsif (exists $::FORM{'group'}) {
+      $query = "SELECT DISTINCTROW login_name,realname,disabledtext " .
+          "FROM profiles, member_group_map WHERE profiles.userid = member_id
+           AND maptype IN (0,1) AND group_id=" . $::FORM{'group'} . " ORDER BY login_name";
     } else {
       die "Missing parameters";
     }
