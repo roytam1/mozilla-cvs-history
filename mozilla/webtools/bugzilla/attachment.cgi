@@ -555,7 +555,7 @@ sub edit
   # Retrieve a list of status flags that have been set on the attachment.
   my %statuses;
   SendSQL("SELECT  id, name 
-           FROM    attachstatuses, attachstatusdefs 
+           FROM    attachstatuses JOIN attachstatusdefs 
            WHERE   attachstatuses.statusid = attachstatusdefs.id 
            AND     attach_id = $::FORM{'id'}");
   while ( my ($id, $name) = FetchSQLData() )
@@ -609,7 +609,7 @@ sub edit
 }
 
 
-sub update 
+sub update
 {
   # Update an attachment record.
 
@@ -620,10 +620,8 @@ sub update
     && exit;
 
   # Lock database tables in preparation for updating the attachment.
-  if ($::driver eq 'mysql') {
-    SendSQL("LOCK TABLES attachments WRITE , attachstatuses WRITE , 
-             attachstatusdefs READ , fielddefs READ , bugs_activity WRITE");
-  }
+  SendSQL("LOCK TABLES attachments WRITE , attachstatuses WRITE , 
+           attachstatusdefs READ , fielddefs READ , bugs_activity WRITE");
 
   # Get a copy of the attachment record before we make changes
   # so we can record those changes in the activity table.
@@ -714,9 +712,7 @@ sub update
   }
 
   # Unlock all database tables now that we are finished updating the database.
-  if ($::driver eq 'mysql') {
-    SendSQL("UNLOCK TABLES");
-  }
+  SendSQL("UNLOCK TABLES");
 
   # If this installation has enabled the request manager, let the manager know
   # an attachment was updated so it can check for requests on that attachment

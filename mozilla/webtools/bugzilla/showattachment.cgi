@@ -23,9 +23,21 @@
 
 use diagnostics;
 use strict;
-use MIME::Base64;
 
 require "CGI.pl";
+
+if (!defined $::FORM{'attach_id'}) {
+    print "Content-type: text/html\n";
+    print "\n";
+    PutHeader("Search by attachment number");  
+    print "<FORM METHOD=GET ACTION=\"showattachment.cgi\">\n";
+    print "You may view a single attachment by entering its id here: \n";
+    print "<INPUT NAME=attach_id>\n";   
+    print "<INPUT TYPE=\"submit\" VALUE=\"Show Me This Attachment\">\n";
+    print "</FORM>\n";
+    PutFooter();
+    exit;
+}
 
 ConnectToDatabase();
 
@@ -38,7 +50,6 @@ if ($::FORM{attach_id} !~ /^[1-9][0-9]*$/) {
 
 SendSQL("select bug_id, mimetype, thedata from attachments where attach_id = $::FORM{'attach_id'}");
 my ($bug_id, $mimetype, $thedata) = FetchSQLData();
-$thedata = decode_base64($thedata);
 
 if (!$bug_id) {
     DisplayError("Attachment $::FORM{attach_id} does not exist.");

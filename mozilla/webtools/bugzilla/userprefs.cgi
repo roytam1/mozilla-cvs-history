@@ -403,9 +403,8 @@ sub SaveEmailOptions () {
             # some small amount of contention could be gotten rid of by
             # using user-defined locks rather than table locking.
             #
-            if ($::driver eq 'mysql') {
-                SendSQL("LOCK TABLES watch WRITE, profiles READ");
-            }
+            SendSQL("LOCK TABLES watch WRITE, profiles READ");
+
             # what the db looks like now
             #
             my $origWatchedUsers = new RelationSet;
@@ -426,9 +425,8 @@ sub SaveEmailOptions () {
 
             # all done
             #
-            if ($::driver eq 'mysql') {
-                SendSQL("UNLOCK TABLES");
-            }
+            SendSQL("UNLOCK TABLES");
+        
         }
     }
 }
@@ -507,15 +505,9 @@ sub ShowPermissions {
     print "<TR><TD>You have the following permission bits set on your account:\n";
     print "<P><UL>\n";
     my $found = 0;
-    if ($::driver eq 'mysql') {
-        SendSQL("SELECT description FROM groups " .
-                "WHERE (group_bit & $::usergroupset) != 0 " .
-                "ORDER BY group_bit");
-    } elsif ($::driver eq 'Pg') {
-        SendSQL("SELECT description FROM groups " .
-                "WHERE (group_bit & int8($::usergroupset)) != 0 " .
-                "ORDER BY group_bit");
-    }
+    SendSQL("SELECT description FROM groups " .
+            "WHERE bit & $::usergroupset != 0 " .
+            "ORDER BY bit");
     while (MoreSQLData()) {
         my ($description) = (FetchSQLData());
         print "<LI>$description\n";
@@ -531,15 +523,9 @@ sub ShowPermissions {
         print "And you can turn on or off the following bits for\n";
         print qq{<A HREF="editusers.cgi">other users</A>:\n};
         print "<P><UL>\n";
-        if ($::driver eq 'mysql') {
-            SendSQL("SELECT description FROM groups " .
-                    "WHERE (group_bit & $blessgroupset) != 0 " .
-                    "ORDER BY group_bit");
-        } elsif ($::driver eq 'Pg') {
-            SendSQL("SELECT description FROM groups " .
-                    "WHERE (group_bit & int8($blessgroupset)) != 0 " .
-                    "ORDER BY group_bit");
-        }
+        SendSQL("SELECT description FROM groups " .
+                "WHERE bit & $blessgroupset != 0 " .
+                "ORDER BY bit");
         while (MoreSQLData()) {
             my ($description) = (FetchSQLData());
             print "<LI>$description\n";
@@ -585,13 +571,13 @@ my @banklist = (
 my $numbanks = @banklist;
 my $numcols = $numbanks + 2;
 
-my $headcol = '"#dedede"';
+my $headcol = '"lightblue"';
 
 print qq{
 <CENTER>
 <TABLE CELLSPACING="0" CELLPADDING="10" BORDER=0 WIDTH="100%">
 <TR>
-<TH COLSPAN="$numcols" BGCOLOR="#dedede">User preferences</TH>
+<TH COLSPAN="$numcols" BGCOLOR="lightblue">User preferences</TH>
 </TR>
 <TR><TD BGCOLOR=$headcol>&nbsp;</TD>
 };
@@ -609,7 +595,7 @@ foreach my $i (@banklist) {
         my $zz;
         ($zz, $bankdescription, $showfunc, $savefunc) = (@$i);
     } else {
-        print qq{<TD ALIGN="center" BGCOLOR="#ababab"><A HREF="userprefs.cgi?bank=$name">$description</A></TD>};
+        print qq{<TD ALIGN="center" BGCOLOR="lightblue"><A HREF="userprefs.cgi?bank=$name">$description</A></TD>};
     }
 }
 print qq{
