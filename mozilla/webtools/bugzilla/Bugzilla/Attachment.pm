@@ -43,7 +43,7 @@ sub query
   # "attachments" variable.
   my ($bugid) = @_;
 
-  my $in_editbugs = &::UserInGroup("editbugs");
+  my $in_editbugs = &::UserInGroup($::userid, "editbugs");
 
   # Retrieve a list of attachments for this bug and write them into an array
   # of hashes in which each hash represents a single attachment.
