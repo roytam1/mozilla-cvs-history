@@ -166,7 +166,7 @@ $DB_LEGEND_BORDER = "";
 # Should the vector of times, which represent the rows use a uniform
 # spacing or should we put one row for each time we have data for.
 
-$UNIFORM_ROW_SPACING = 1;
+$UNIFORM_ROW_SPACING = 0;
 
 # Spacing on html page (in minutes), this resticts the
 # minimum time between builds (to this value plus 5 minutes).
