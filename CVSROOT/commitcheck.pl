@@ -218,6 +218,9 @@ $fullname{'115'} = 'small-devices';
 $mode{'87'} = 'Open';
 $branch{'87'} = 'HEAD';
 $fullname{'87'} = 'SmartUpdate';
+$mode{'160'} = 'Open';
+$branch{'160'} = 'HEAD';
+$fullname{'160'} = 'String';
 $mode{'154'} = 'Open';
 $branch{'154'} = 'HEAD';
 $fullname{'154'} = 'tools';
@@ -369,6 +372,7 @@ if (m:^mozilla/extensions/psm-glue/.*$:) {return '151';}
 if (m:^mozilla/extensions/vixen/.*$:) {return '156';}
 if (m:^mozilla/mailnews/movemail$:) {return '157';}
 if (m:^mozilla/uriloader/.*$:) {return '158';}
+if (m:^mozilla/string/.*$:) {return '160';}
 }
 if ($b eq 'NSPRPUB_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
