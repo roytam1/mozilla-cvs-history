@@ -186,7 +186,7 @@ $fullname{'138'} = 'Rhino';
 $mode{'145'} = 'Restricted';
 $branch{'145'} = 'HEAD';
 $fullname{'145'} = 'security';
-$blessed{'145'} = ['cotter%netscape.com',];
+$blessed{'145'} = ['jgmyers%netscape.com','cotter%netscape.com',];
 $super{'145'} = ['wtc%netscape.com','sonmi%netscape.com','nicolson%netscape.com','nelsonb%netscape.com','mcgreer%netscape.com','larryh%netscape.com','kirke%netscape.com','javi%netscape.com','chrisk%netscape.com','thayes%netscape.com','relyea%netscape.com','ddrinan%netscape.com',];
 $mode{'151'} = 'Open';
 $branch{'151'} = 'HEAD';
@@ -264,6 +264,7 @@ if (m:^CVSROOT/commitcheck\.pl$:) {return '3';}
 if (m:^CVSROOT/passwd$:) {return '3';}
 if (m:^mozilla/security/coreconf/.*$:) {return '145';}
 if (m:^mozilla/security/jss/.*$:) {return '145';}
+if (m:^mozilla/security/manager/.*$:) {return '145';}
 if (m:^mozilla/security/nss/.*$:) {return '145';}
 if (m:^mozilla/[^/]*$:) {return '19';}
 if (m:^mozilla/gfx/src/xlib/.*$:) {return '121';}
