@@ -2972,11 +2972,13 @@ if (GetFieldDef("profiles", "groupset")) {
             push @logrem, ListBits($miss);
             print "\nWARNING - GROUPSET ACTIVITY ON BUG $bid CONTAINS DELETED GROUPS\n";
         }
-        push @logrem, '?' if @logrem;
-        push @logadd, '?' if @logadd;
+        my $logr = "";
+        my $loga = "";
+        $logr = join(", ", @logrem) . '?' if @logrem;
+        $loga = join(", ", @logadd) . '?' if @logadd;
         $dbh->do("UPDATE bugs_activity SET fieldid = $bgfid, added = " .
-                  $dbh->quote(join(", ", @logadd)) . ", removed = " . 
-                  $dbh->quote(join(", ", @logrem)) .
+                  $dbh->quote($loga) . ", removed = " . 
+                  $dbh->quote($logr) .
                   " WHERE bug_id = $bid AND bug_when = " . $dbh->quote($bwhen) .
                   " AND who = $bwho AND fieldid = $gsid");
 
