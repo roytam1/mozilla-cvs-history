@@ -11,7 +11,7 @@ $mode{'3'} = 'Closed';
 $branch{'3'} = 'HEAD';
 $fullname{'3'} = 'despotaccess';
 $blessed{'3'} = [];
-$super{'3'} = ['terry%netscape.com',];
+$super{'3'} = ['despotdaemon%netscape.com',];
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'HEAD') {
