@@ -233,7 +233,6 @@ CrossCheck("products", "id",
            ["attachstatusdefs", "product_id", "name"]);
 
 DateCheck("groups", "group_when");
-DateCheck("profiles", "profile_when");
 DateCheck("profiles", "refreshed_when");
 
 ###########################################################################
