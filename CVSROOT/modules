@@ -330,7 +330,13 @@ RaptorUnix -a \
 RaptorMac -a \
 	Raptor \
 	mozilla/build/mac \
-	mozilla/cmd/macfe \
+	mozilla/cmd/macfe/applevnt \
+	mozilla/cmd/macfe/central \
+	mozilla/cmd/macfe/gui \
+	mozilla/cmd/macfe/include \
+	mozilla/cmd/macfe/pch \
+	mozilla/cmd/macfe/projects \
+	mozilla/cmd/macfe/utility \
 	mozilla/lib/mac/MacMemoryAllocator \
 	mozilla/lib/mac/Misc \
 	mozilla/lib/mac/MoreFiles \
