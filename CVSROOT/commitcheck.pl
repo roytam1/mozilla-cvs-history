@@ -371,7 +371,7 @@ if (m:^mozilla/content/html/content/.*$:) {return '103';}
 if (m:^mozilla/content/html/document/.*$:) {return '103';}
 if (m:^mozilla/dom/.*$:) {return '103';}
 if (m:^mozilla/js/rhino/.*$:) {return '138';}
-if (m:^mozilla/xpfe$:) {return '137';}
+if (m:^mozilla/xpfe/.*$:) {return '137';}
 if (m:^mozilla/js/tests$:) {return '114';}
 if (m:^js/src/perlconnect$:) {return '111';}
 if (m:^mozilla/silentdl/.*$:) {return '110';}
