@@ -278,12 +278,12 @@ JavaStubWin -a \
 # until raptor is integrated into the mainline build.
 #
 
-RaptorDoc -a
+RaptorDoc -a \
 	mozilla/LICENSE \
 	mozilla/LEGAL \
 	mozilla/README/nglayout
 
-RaptorDist -a
+RaptorDist -a \
 	mozilla/base \
 	mozilla/config \
 	mozilla/dbm \
@@ -306,7 +306,7 @@ RaptorDist -a
 	mozilla/sun-java \
 	mozilla/xpcom
 
-RaptorLayout -a
+RaptorLayout -a \
 	mozilla/dom \
 	mozilla/gfx \
 	mozilla/htmlparser \
@@ -320,15 +320,15 @@ Raptor -a \
 	RaptorDist \
 	RaptorLayout
 
-RaptorWin -a
+RaptorWin -a \
 	Raptor \
 	mozilla/nglayout.mak \
 
-RaptorUnix -a
+RaptorUnix -a \
 	Raptor \
 	mozilla/nglayout.mk \
 
-RaptorMac -a
+RaptorMac -a \
 	Raptor \
 	mozilla/build/mac \
 	mozilla/cmd/macfe \
