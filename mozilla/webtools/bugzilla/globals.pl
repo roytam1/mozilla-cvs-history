@@ -870,6 +870,8 @@ sub CanSeeBug {
         while (my @row = FetchSQLData()) {
             push(@usergroupset, $row[0]);
         }
+    } else {
+        $userid = 0;
     }
 
     if (@usergroupset < 1) {

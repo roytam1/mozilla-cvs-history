@@ -70,9 +70,15 @@ from bugs,profiles assign,profiles report
 where assign.userid = bugs.assigned_to and report.userid = bugs.reporter and";
 
 $::FORM{'buglist'} = "" unless exists $::FORM{'buglist'};
-foreach my $bug (split(/:/, $::FORM{'buglist'})) {
+my @buglist = split(/:/, $::FORM{'buglist'});
+
+my $canseeref = CanSeeBug(\@buglist, $userid);
+
+foreach my $bug (@buglist) {
     detaint_natural($bug) || next;
-    SendSQL(SelectVisible("$generic_query bugs.bug_id = $bug", $userid));
+    next if !$canseeref->{$bug};
+
+    SendSQL("$generic_query bugs.bug_id = $bug");
 
     my @row;
     if (@row = FetchSQLData()) {

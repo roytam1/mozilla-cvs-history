@@ -1312,7 +1312,7 @@ Actions:
         SendSQL("SELECT mybugslink, userid FROM profiles " .
                 "WHERE login_name = " . SqlQuote($::COOKIE{'Bugzilla_login'}));
         my ($mybugslink, $userid) = (FetchSQLData());
-        SendSQL("SELECT COUNT(*) FROM bless_group_map WHERE user_id = $userid"); 
+        SendSQL("SELECT COUNT(*) FROM user_group_map WHERE user_id = $userid AND canbless = 1"); 
         my $blessgroupset = FetchOneColumn();
         
         #Begin settings

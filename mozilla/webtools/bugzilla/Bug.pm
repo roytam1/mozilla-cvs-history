@@ -37,8 +37,8 @@ my %ok_field;
 for my $key (qw (bug_id product version rep_platform op_sys bug_status 
                 resolution priority bug_severity component assigned_to
                 reporter bug_file_loc short_desc target_milestone 
-                qa_contact status_whiteboard creation_ts groupset 
-                delta_ts votes whoid usergroupset comment query error) ){
+                qa_contact status_whiteboard creation_ts 
+                delta_ts votes whoid comment query error) ){
     $ok_field{$key}++;
     }
 
@@ -101,18 +101,22 @@ sub initBug  {
 
   $self->{'whoid'} = $user_id;
 
+  if (!&::CanSeeBug($bug_id)) {
+    return {};
+  }
+
   my $query = "
     select
       bugs.bug_id, product, version, rep_platform, op_sys, bug_status,
       resolution, priority, bug_severity, component, assigned_to, reporter,
       bug_file_loc, short_desc, target_milestone, qa_contact,
       status_whiteboard, date_format(creation_ts,'%Y-%m-%d %H:%i'),
-      groupset, delta_ts, sum(votes.count)
+      delta_ts, sum(votes.count)
     from bugs left join votes using(bug_id)
     where bugs.bug_id = $bug_id
     group by bugs.bug_id";
 
-  &::SendSQL(&::SelectVisible($query, $user_id));
+  &::SendSQL($query);
   my @row;
 
   if (@row = &::FetchSQLData()) {
@@ -123,7 +127,7 @@ sub initBug  {
                        "bug_severity", "component", "assigned_to", "reporter",
                        "bug_file_loc", "short_desc", "target_milestone",
                        "qa_contact", "status_whiteboard", "creation_ts",
-                       "groupset", "delta_ts", "votes") {
+                       "delta_ts", "votes") {
         $fields{$field} = shift @row;
         if ($fields{$field}) {
             $self->{$field} = $fields{$field};

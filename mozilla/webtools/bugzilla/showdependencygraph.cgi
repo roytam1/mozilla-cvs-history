@@ -120,8 +120,7 @@ node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
         my $summary = "";
         my $stat;
         if ($::FORM{'showsummary'}) {
-            SendSQL(SelectVisible("select bug_status, short_desc from bugs where bugs.bug_id = $k",
-                                  $userid));
+            SendSQL("select bug_status, short_desc from bugs where bugs.bug_id = $k", $userid);
             ($stat, $summary) = (FetchSQLData());
             $stat = "NEW" if !defined $stat;
             $summary = "" if !defined $summary;
@@ -129,7 +128,7 @@ node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
             SendSQL("select bug_status from bugs where bug_id = $k");
             $stat = FetchOneColumn();
         }
-        if ( !ValidateBugID($k, $userid) ) {
+        if (!ValidateBugID($k, $userid) ) {
             next;
         }
         my @params;

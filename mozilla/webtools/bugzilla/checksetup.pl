@@ -1179,22 +1179,24 @@ $table{tokens} =
 # This table determines the groups that a user belongs to
 $table{user_group_map} = 
     'user_id mediumint not null,
-     group_id mediumint not null';
+     group_id mediumint not null,
+     canbless smallint default 0,
+
+     index(user_id)';
 
 # This table determines which groups have permission to see a bug
 $table{bug_group_map} =
     'bug_id mediumint not null,
-     group_id mediumint not null';
+     group_id mediumint not null,
+
+     index(bug_id)';
 
 # This table determines which groups may report bugs against a product
 $table{product_group_map} =
     'product_id mediumint not null,
-     group_id mediumint not null';
+     group_id mediumint not null,
 
-# This table determines which groups a user can put another user into
-$table{bless_group_map} = 
-    'user_id mediumint not null,
-     group_id mediumint not null';
+     index(product_id)';
 
 ###########################################################################
 # Create tables

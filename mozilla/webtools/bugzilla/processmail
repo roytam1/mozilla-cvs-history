@@ -644,10 +644,10 @@ sub NewProcessOnePerson ($$$$$$$$$$$) {
     if ($nomail{$person}) {
       return;
     }
-
-        
-    SendSQL("SELECT userid " .
-            "FROM profiles WHERE login_name = " . SqlQuote($person));
+       
+    detaint_natural($person);
+ 
+    SendSQL("SELECT userid FROM profiles WHERE login_name = " . SqlQuote($person));
     my ($userid) = FetchOneColumn();
 
     $seen{$person} = 1;

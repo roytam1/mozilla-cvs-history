@@ -194,11 +194,15 @@ print "
 
 $i = 0;
 
+my $canseeref = CanSeeBug(\@sortedcount, $userid);
+
 foreach (@sortedcount)
 {
   my $id = $_;
-  SendSQL(SelectVisible("SELECT component, bug_severity, op_sys, target_milestone, short_desc, bug_status, resolution" .
-                 " FROM bugs WHERE bugs.bug_id = $id", $userid));
+  next if !$canseeref->{$id};
+
+  SendSQL("SELECT component, bug_severity, op_sys, target_milestone, short_desc, bug_status, resolution" .
+                 " FROM bugs WHERE bugs.bug_id = $id");
   next unless MoreSQLData();
   my ($component, $severity, $op_sys, $milestone, $summary, $bug_status, $resolution) = FetchSQLData();
   $summary = html_quote($summary);

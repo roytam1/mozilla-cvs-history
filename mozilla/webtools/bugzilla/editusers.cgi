@@ -243,7 +243,7 @@ print "Content-type: text/html\n\n";
 $editall = UserInGroup($userid, "editusers");
 
 if (!$editall) {
-    SendSQL("SELECT group_id FROM bless_group_map WHERE user_id = $userid");
+    SendSQL("SELECT group_id FROM user_group_map WHERE user_id = $userid AND canbless = 1");
     while ( my @row = FetchSQLData() ) {
         push(@opblessgroupset, $row[0]);
     }
@@ -712,25 +712,25 @@ if ($action eq 'edit') {
          WHERE login_name = " . SqlQuote($user));
     my ($userid, $realname, $disabledtext) = FetchSQLData();
     
-      # find out which groups belong to
-      my $groups_belong = [];
-      SendSQL("select group_id from user_group_map where user_id = $userid");
-      while ( my @row = FetchSQLData() ) {
-            push (@{$groups_belong}, $row[0]);
-      }
+    # find out which groups belong to
+    my $groups_belong = [];
+    SendSQL("SELECT group_id FROM user_group_map WHERE user_id = $userid");
+    while ( my @row = FetchSQLData() ) {
+        push (@{$groups_belong}, $row[0]);
+    }
 
-      # find out when groups this person can bless others into
+    # find out when groups this person can bless others into
     my $bless_belong = [];
-    SendSQL("select group_id from bless_group_map where user_id = $userid");
+    SendSQL("SELECT group_id FROM user_group_map WHERE user_id = $userid AND canbless = 1");
     while ( my @row = FetchSQLData() ) {
         push (@{$bless_belong}, $row[0]);
     }
         
-      #print "Groups: " . join(', ', @{$groups_belong}) . "<br>\n";
-      #print "Bless: " . join(', ', @{$bless_belong}) . "<br>\n";
-      #print "OpBless: " . join(', ', @opblessgroupset) . "<br>\n";
+    #print "Groups: " . join(', ', @{$groups_belong}) . "<br>\n";
+    #print "Bless: " . join(', ', @{$bless_belong}) . "<br>\n";
+    #print "OpBless: " . join(', ', @opblessgroupset) . "<br>\n";
 
-      print "<FORM METHOD=POST ACTION=editusers.cgi>\n";
+    print "<FORM METHOD=POST ACTION=editusers.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
     EmitFormElements($user, $realname, $disabledtext, $groups_belong, $bless_belong);
@@ -826,15 +826,14 @@ if ($action eq 'update') {
         SendSQL("DELETE FROM user_group_map WHERE user_id = $userid");
         foreach my $groupid ( @groupset ) {
             if ( $editall || (lsearch(\@opblessgroupset, $groupid) >= 0) ) {
-                SendSQL("insert into user_group_map values ($userid, $groupid)");
+                SendSQL("INSERT INTO user_group_map (user_id, group_id) VALUES ($userid, $groupid)");
             }
         }    
         print "Updated permissions<br>\n";
 
-        SendSQL("DELETE FROM bless_group_map WHERE user_id = $userid");
         foreach my $groupid ( @blessgroupset ) {
             if ( $editall || (lsearch(\@opblessgroupset, $groupid) >= 0) ) {
-                SendSQL("INSERT INTO bless_group_map VALUES ($userid, $groupid)");
+                SendSQL("UPDATE user_group_map SET canbless = 1 WHERE user_id = $userid AND group_id = $groupid");
             }
         }
         print "Updated ability to tweak permissions of other users.<br>\n";
