@@ -143,7 +143,8 @@ The required tinderbox variable:
 				There can be several updates for a given build
 				as long as they return the status 'building'
 				it is legal to mail the log file at different 
-				stages of the build.}
+				stages of the build.  In each update the timenow
+				will be different but the starttime will be the same.}
 	tinderbox: tree : {the name of the tree this build was for.  Must be
 				a valid tree as termined by:
                                   TreeData::tree_exists();
@@ -402,7 +403,10 @@ sub backward_compatibility {
     $TINDERBOX{'status'} = 'build_failed';
   }
 
-  $TINDERBOX{'starttime'} = $TINDERBOX{'builddate'};
+  if ($TINDERBOX{'builddate'}) {
+    $TINDERBOX{'starttime'} = $TINDERBOX{'builddate'};
+    $TINDERBOX{'builddate'} = undef;
+  }
 
   return 1;
 }
