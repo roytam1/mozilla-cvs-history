@@ -285,10 +285,10 @@ sub getEnumList( $ )
 # Uses the global var. $Control{ 'priority' }
 sub CheckPriority
 {
-    my $prio = ($Control{'priority'} ||= "");
+    my $prio = $Control{'priority'};
     my @all_prios = getEnumList( "priority" );
 
-    if( (lsearch( \@all_prios, $prio ) == -1) || $prio eq "" ) {
+    if( $prio eq "" || (lsearch( \@all_prios, $prio ) == -1)  ) {
 	# OK, Prio was not defined - create Answer
 	my $Text = "You sent wrong priority-setting, valid values are:" .
 	    join( "\n\t", @all_prios ) . "\n\n";
