@@ -92,10 +92,6 @@ sub gettree_header {
 sub savetree_header {
   my ($self, $tree, $value) = @_;
 
-  # Don't save the Bonsai States
-
-  $value = grep { !/^((Open)|(Closed))$/ } $value;
-
   $self->SUPER::savetree_header($tree, $value);
 
   return ;
@@ -103,7 +99,7 @@ sub savetree_header {
 
 sub get_all_sorted_setable_tree_states {
 
-    my @valid_states =( '', (
+    my @valid_states =( 'Current_Bonsai_State', (
                              grep { !/^((Open)|(Closed))$/ } 
                            TreeData::get_all_sorted_tree_states()
                              )
