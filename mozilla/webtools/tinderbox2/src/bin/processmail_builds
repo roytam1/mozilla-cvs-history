@@ -423,6 +423,10 @@ sub backward_compatibility {
     $TINDERBOX{'status'} = 'test_failed';
   }
 
+  if ($TINDERBOX{'status'} eq 'buildstarted') {
+    $TINDERBOX{'status'} = 'building';
+  }
+
   if ($TINDERBOX{'builddate'}) {
     $TINDERBOX{'starttime'} = $TINDERBOX{'builddate'};
     $TINDERBOX{'builddate'} = undef;
