@@ -35,7 +35,7 @@ no warnings; # I DO NOT WANT YOU MR. WARNINGS!!!
 
 use Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(ask output setConf getConf getParam setParam);
+@EXPORT = qw(ask holduntilkey output setConf getConf getParam setParam);
 
 eval "use Conf::Supplies::Config";
 
@@ -52,6 +52,12 @@ sub ask {
     chomp($answer);
     $main::c{$name} = $answer;
 } 
+
+sub holduntilkey {
+	if (getParam('quiet') ne 1) { # if they want us to be quiet, don't pause
+		my $input = <STDIN>;
+	}
+}
 
 sub output {
     my ($output, $loud) = @_;

@@ -13,9 +13,12 @@ new bugzilla installation to be setup. If you have configured Bugzilla
 before, I will load defaults from that installation, otherwise, 
 I will display recomended values.
 
+Press any key to continue.
+
 Thanks for using Bugzilla,
 
 The Bugzilla Team
 
 END
+holduntilkey(); # give them some time
 1;

@@ -41,6 +41,7 @@ use Conf;
 # runconf() will handle the path mapping for XP purposes
 runconf('Conf/Begin.cm');
 runconf('Conf/ModuleCheck.cm');
+runconf('Conf/LocalConfig.cm');
 runconf('Conf/Finish.cm');
 
 sub runconf {

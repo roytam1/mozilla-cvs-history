@@ -1,0 +1,12 @@
+package Conf::LocalConfig;
+use Conf;
+no warnings;
+
+output <<"END";
+
+Now I am going to need to ask you a few questions about your installation. 
+Again, if you have configured this installation before, I will load defaults 
+from your past installation. Otherwise, I will recommend some values for you.
+
+END
+1;
