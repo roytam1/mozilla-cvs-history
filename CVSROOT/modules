@@ -37,6 +37,10 @@ MozillaLicense -a \
 	mozilla/LEGAL \
 	mozilla/LICENSE
 
+Grendel -a \
+	MozillaLicense \
+	mozilla/grendel
+
 ######################################################################
 #
 # Modules for the MozillaClassic Browser, based on the original 
