@@ -42,6 +42,16 @@
 
 package HTMLPopUp::OverLib;
 
+# Load standard perl libraries
+
+# Load Tinderbox libraries
+
+use lib '#tinder_libdir#';
+
+use FileStructure;
+use Utils;
+
+
 $VERSION = '#tinder_version#';
 
 # This PopUp window code was taken from the the
@@ -1355,6 +1365,24 @@ sub page_header {
   ($args{'refresh'}) &&
     ( $refresh =  "<META HTTP-EQUIV=\"Refresh\" CONTENT=\"$args{'refresh'}\">" );
 
+  my ($overlib_file) = "$FileStructure::TINDERBOX_HTML_DIR/OverLib.js";
+  my ($overlib_link) = "$FileStructure::URL_HTML/OverLib.js";
+
+  # The overlib code is 45K. Put it in its own file, which is not
+  # overwritten, so that status pages load faster. Hopefuly browsers
+  # will keep this file cached separately from the status page.
+
+  if ( !($WROTE_OVERLIB_JS) ) {
+      $WROTE_OVERLIB_JS = 1;
+
+      if ( !( -r $overlib_file) ) {
+          main::overwrite_file(
+                               $overlib_file, 
+                               $OVERLIB_JS
+                               );
+        }
+  }
+
 $header .=<<EOF;
 <HTML>
 <HEAD>
@@ -1377,11 +1405,13 @@ var ol_textsize = \"2\";
 var ol_vauto = 1;
 var ol_hauto = 1;
 
-$OVERLIB_JS
-
 </script>
 
-<div id=\"overDiv\" style=\"position:absolute; visibility:hidden; z-index:1000;\"></div>
+<div id=\"overDiv\" style=\"position:absolute; visibility:hidden; z-index:1000;\">
+</div>
+
+<script language=\"JavaScript\" src=\"$overlib_link\">
+</script>
 
 <TABLE BORDER=0 CELLPADDING=12 CELLSPACING=0 WIDTH=\"100%\">
 <TR><TD>
