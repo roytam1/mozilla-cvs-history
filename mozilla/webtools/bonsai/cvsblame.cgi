@@ -179,6 +179,7 @@ print "\n";
 #
 my $opt_line_nums = 1;
 if (defined $::COOKIE{line_nums}) {
+    $opt_line_nums = 0 if $::COOKIE{line_nums} eq 'off';
     $opt_line_nums = 1 if $::COOKIE{line_nums} eq 'on';
 }
 if (defined $::FORM{line_nums}) {
