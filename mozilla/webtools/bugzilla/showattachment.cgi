@@ -34,3 +34,4 @@ my $id = $::FORM{'attach_id'} || "";
 print "Status: 301 Permanent Redirect\n";
 print "Location: attachment.cgi?id=$id&action=view\n\n";
 exit;
+ 

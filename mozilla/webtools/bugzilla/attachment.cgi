@@ -31,43 +31,19 @@ use strict;
 
 use lib qw(.);
 
+use vars qw(
+  $template
+  $vars
+);
+
 # Include the Bugzilla CGI and general utility library.
 require "CGI.pl";
 
 # Establish a connection to the database backend.
 ConnectToDatabase();
 
-# Use the template toolkit (http://www.template-toolkit.org/) to generate
-# the user interface (HTML pages and mail messages) using templates in the
-# "template/" subdirectory.
-use Template;
-
-# Create the global template object that processes templates and specify
-# configuration parameters that apply to all templates processed in this script.
-my $template = Template->new(
-  {
-    # Colon-separated list of directories containing templates.
-    INCLUDE_PATH => "template/custom:template/default" ,
-    # Allow templates to be specified with relative paths.
-    RELATIVE => 1 
-  }
-);
-
-# Define the global variables and functions that will be passed to the UI 
-# template.  Individual functions add their own values to this hash before
-# sending them to the templates they process.
-my $vars = 
-  {
-    # Function for retrieving global parameters.
-    'Param' => \&Param , 
-
-    # Function for processing global parameters that contain references
-    # to other global parameters.
-    'PerformSubsts' => \&PerformSubsts
-  };
-
-# Check whether or not the user is logged in and, if so, set the $userid 
-my $userid = quietly_check_login();
+# Check whether or not the user is logged in and, if so, set the $::userid 
+$::userid = quietly_check_login();
 
 ################################################################################
 # Main Body Execution
@@ -87,19 +63,19 @@ if ($action eq "view")
 }
 elsif ($action eq "viewall") 
 { 
-  ValidateBugID($::FORM{'bugid'}, $userid);
+  ValidateBugID($::FORM{'bugid'}, $::userid);
   viewall(); 
 }
 elsif ($action eq "enter") 
 { 
   confirm_login();
-  ValidateBugID($::FORM{'bugid'}, $userid);
+  ValidateBugID($::FORM{'bugid'}, $::userid);
   enter(); 
 }
 elsif ($action eq "insert")
 {
   confirm_login();
-  ValidateBugID($::FORM{'bugid'}, $userid);
+  ValidateBugID($::FORM{'bugid'}, $::userid);
   validateFilename();
   validateData();
   validateDescription();
@@ -110,16 +86,19 @@ elsif ($action eq "insert")
 }
 elsif ($action eq "edit") 
 { 
+  quietly_check_login();
   validateID();
+  validateCanEdit($::FORM{'id'});
   edit(); 
 }
 elsif ($action eq "update") 
 { 
   confirm_login();
-  UserInGroup($userid, "editbugs")
+  UserInGroup($::userid, "editbugs")
     || DisplayError("You are not authorized to edit attachments.")
     && exit;
   validateID();
+  validateCanEdit($::FORM{'id'});
   validateDescription();
   validateIsPatch();
   validateContentType() unless $::FORM{'ispatch'};
@@ -155,7 +134,29 @@ sub validateID
 
   # Make sure the user is authorized to access this attachment's bug.
   my ($bugid) = FetchSQLData();
-  ValidateBugID($bugid, $userid);
+  ValidateBugID($bugid, $::userid);
+}
+
+sub validateCanEdit
+{
+    my ($attach_id) = (@_);
+
+    # If the user is not logged in, claim that they can edit. This allows
+    # the edit scrren to be displayed to people who aren't logged in.
+    # People not logged in can't actually commit changes, because that code
+    # calls confirm_login, not quietly_check_login, before calling this sub
+    return if $::userid == 0;
+
+    # People in editbugs can edit all attachments
+    return if UserInGroup("editbugs");
+
+    # Bug 97729 - the submitter can edit their attachments
+    SendSQL("SELECT attach_id FROM attachments WHERE " .
+            "attach_id = $attach_id AND submitter_id = $::userid");
+
+    FetchSQLData()
+      || DisplayError("You are not authorised to edit attachment #$attach_id")
+      && exit;
 }
 
 sub validateDescription
@@ -256,6 +257,8 @@ sub validateStatuses
       || DisplayError("One of the statuses you entered is not a valid status
                        for this attachment.")
         && exit;
+    # We have tested that the status is valid, so it can be detainted
+    detaint_natural($status);
   }
 }
 
@@ -299,19 +302,10 @@ sub validateFilename
 
 sub validateObsolete
 {
-  # When a user creates an attachment, they can request that one or more
-  # existing attachments be made obsolete.  This function makes sure they
-  # are authorized to make changes to attachments and that the IDs of the
-  # attachments they selected for obsoletion are all valid.
-  UserInGroup("editbugs")
-    || DisplayError("You must be authorized to make changes to attachments 
-         to make attachments obsolete when creating a new attachment.")
-      && exit;
-
   # Make sure the attachment id is valid and the user has permissions to view
   # the bug to which it is attached.
   foreach my $attachid (@{$::MFORM{'obsolete'}}) {
-    $attachid =~ /^[1-9][0-9]*$/
+    detaint_natural($attachid)
       || DisplayError("The attachment number of one of the attachments 
            you wanted to obsolete is invalid.") 
         && exit;
@@ -325,9 +319,6 @@ sub validateObsolete
         && exit;
 
     my ($bugid, $isobsolete, $description) = FetchSQLData();
-
-    # Make sure the user is authorized to access this attachment's bug.
-    ValidateBugID($bugid, $userid);
 
     if ($bugid != $::FORM{'bugid'})
     {
@@ -344,6 +335,9 @@ sub validateObsolete
       DisplayError("Attachment #$attachid ($description) is already obsolete.");
       exit;
     }
+
+    # Check that the user can modify this attachment
+    validateCanEdit($attachid);
   }
 
 }
@@ -432,12 +426,16 @@ sub enter
 {
   # Display a form for entering a new attachment.
 
-  # Retrieve the attachments from the database and write them into an array
-  # of hashes where each hash represents one attachment.
+  # Retrieve the attachments the user can edit from the database and write
+  # them into an array of hashes where each hash represents one attachment.
+  my $canEdit = "";
+  if (!UserInGroup("editbugs")) {
+      $canEdit = "AND submitter_id = $::userid";
+  }
   SendSQL("SELECT attach_id, description 
            FROM attachments
            WHERE bug_id = $::FORM{'bugid'}
-           AND isobsolete = 0
+           AND isobsolete = 0 $canEdit
            ORDER BY attach_id");
   my @attachments; # the attachments array
   while ( MoreSQLData() ) {
@@ -537,9 +535,10 @@ sub insert
 
 sub edit
 {
-  # Edit an attachment record.  Users with "editbugs" privileges can edit the 
-  # attachment's description, content type, ispatch and isobsolete flags, and 
-  # statuses, and they can also submit a comment that appears in the bug.  
+  # Edit an attachment record.  Users with "editbugs" privileges, (or the 
+  # original attachment's submitter) can edit the attachment's description,
+  # content type, ispatch and isobsolete flags, and statuses, and they can
+  # also submit a comment that appears in the bug.
   # Users cannot edit the content of the attachment itself.
 
   # Retrieve the attachment from the database.
@@ -685,23 +684,23 @@ sub update
     my $quotedolddescription = SqlQuote($olddescription);
     my $fieldid = GetFieldID('attachments.description');
     SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
-             VALUES ($bugid, $::FORM{'id'}, $userid, NOW(), $fieldid, $quotedolddescription, $quoteddescription)");
+             VALUES ($bugid, $::FORM{'id'}, $::userid, NOW(), $fieldid, $quotedolddescription, $quoteddescription)");
   }
   if ($oldcontenttype ne $::FORM{'contenttype'}) {
     my $quotedoldcontenttype = SqlQuote($oldcontenttype);
     my $fieldid = GetFieldID('attachments.mimetype');
     SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
-             VALUES ($bugid, $::FORM{'id'}, $userid, NOW(), $fieldid, $quotedoldcontenttype, $quotedcontenttype)");
+             VALUES ($bugid, $::FORM{'id'}, $::userid, NOW(), $fieldid, $quotedoldcontenttype, $quotedcontenttype)");
   }
   if ($oldispatch ne $::FORM{'ispatch'}) {
     my $fieldid = GetFieldID('attachments.ispatch');
     SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
-             VALUES ($bugid, $::FORM{'id'}, $userid, NOW(), $fieldid, $oldispatch, $::FORM{'ispatch'})");
+             VALUES ($bugid, $::FORM{'id'}, $::userid, NOW(), $fieldid, $oldispatch, $::FORM{'ispatch'})");
   }
   if ($oldisobsolete ne $::FORM{'isobsolete'}) {
     my $fieldid = GetFieldID('attachments.isobsolete');
     SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
-             VALUES ($bugid, $::FORM{'id'}, $userid, NOW(), $fieldid, $oldisobsolete, $::FORM{'isobsolete'})");
+             VALUES ($bugid, $::FORM{'id'}, $::userid, NOW(), $fieldid, $oldisobsolete, $::FORM{'isobsolete'})");
   }
   if ($oldstatuslist ne $newstatuslist) {
     my ($removed, $added) = DiffStrings($oldstatuslist, $newstatuslist);
@@ -709,7 +708,7 @@ sub update
     my $quotedadded = SqlQuote($added);
     my $fieldid = GetFieldID('attachstatusdefs.name');
     SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
-             VALUES ($bugid, $::FORM{'id'}, $userid, NOW(), $fieldid, $quotedremoved, $quotedadded)");
+             VALUES ($bugid, $::FORM{'id'}, $::userid, NOW(), $fieldid, $quotedremoved, $quotedadded)");
   }
 
   # Unlock all database tables now that we are finished updating the database.
@@ -759,7 +758,7 @@ sub update
     }
 
     # Get the user's login name since the AppendComment function needs it.
-    my $who = DBID_to_name($userid);
+    my $who = DBID_to_name($::userid);
 
     # Append the comment to the list of comments in the database.
     AppendComment($bugid, $who, $wrappedcomment);
@@ -770,10 +769,10 @@ sub update
   # of the "open" and "exec" commands to capture the output of "processmail",
   # which "system" doesn't allow, without running the command through a shell,
   # which backticks (``) do.
-  #system ("./processmail", $bugid , $userid);
-  #my $mailresults = `./processmail $bugid $userid`;
+  #system ("./processmail", $bugid , $::userid);
+  #my $mailresults = `./processmail $bugid $::userid`;
   my $mailresults = '';
-  open(PMAIL, "-|") or exec('./processmail', $bugid, DBID_to_name($userid));
+  open(PMAIL, "-|") or exec('./processmail', $bugid, DBID_to_name($::userid));
   $mailresults .= $_ while <PMAIL>;
   close(PMAIL);
  

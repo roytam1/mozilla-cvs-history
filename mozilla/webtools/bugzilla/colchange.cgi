@@ -25,10 +25,12 @@ use strict;
 
 use lib qw(.);
 
-sub sillyness { # shut up "used only once" warnings
-  my $zz = @::legal_keywords;
-  $zz = $::buffer;
-}
+use vars qw(
+  @legal_keywords
+  $buffer
+  $template
+  $vars
+);
 
 require "CGI.pl";
 

@@ -38,6 +38,7 @@ sub bug_form_pl_sillyness {
     $zz = %::proddesc;
     $zz = %::prodmaxvotes;
     $zz = %::versions;
+    $zz = @::enterable_products;
     $zz = @::legal_keywords;
     $zz = @::legal_opsys;
     $zz = @::legal_platform;
@@ -155,11 +156,14 @@ if (defined $URL && $URL ne "none" && $URL ne "NULL" && $URL ne "") {
 #
 
 my (@prodlist, $product_popup);
-foreach my $p (sort(keys %::versions)) {
+my $seen_currProd = 0;
+
+foreach my $p (@::enterable_products) {
     if ($p eq $bug{'product'}) {
         # if it's the product the bug is already in, it's ALWAYS in
         # the popup, period, whether the user can see it or not, and
         # regardless of the disallownew setting.
+        $seen_currProd = 1;
         push(@prodlist, $p);
         next;
     }
@@ -176,6 +180,13 @@ foreach my $p (sort(keys %::versions)) {
         next;
     }
     push(@prodlist, $p);
+}
+
+# The current product is part of the popup, even if new bugs are no longer
+# allowed for that product
+if (!$seen_currProd) {
+    push (@prodlist, $bug{'product'});
+    @prodlist = sort @prodlist;
 }
 
 # If the user has access to multiple products, display a popup, otherwise 
@@ -428,52 +439,63 @@ if ($#groups >= 0) {
             "WHERE group_id IN (" . join(',', @groups) . ") " .
             "ORDER BY description");
     my $inAllGroups = 1;
+    my $private = 0;
     while (MoreSQLData()) {
         my ($group_id, $name, $description) = FetchSQLData();
-        my $checked = $buggroups{$group_id} ? " CHECKED" : "";
-        my $disabled = $usergroups{$group_id} ? "" : " DISABLED=\"disabled\"";
+        my $checked = "";
+        if ($buggroups{$group_id}) {
+            $checked = "CHECKED";
+            $private = 1;
+        }
+        my $disabled = $usergroups{$group_id} ? "" : "DISABLED=\"disabled\"";
         if (!$usergroups{$group_id}) {
             # If we're not in the group, then we're not in all groups
             $inAllGroups = 0;
         }
         print "&nbsp;&nbsp;&nbsp;&nbsp;";
-        print "<input type=checkbox name=\"group-$group_id\" value=1$checked$disabled>\n";
+        print "<input type=checkbox name=\"group-$group_id\" value=1 $checked $disabled>\n";
         print "$description<br>\n";
     }
     if (!$inAllGroups) {
         print "<br><b>Only members of a group can change the visibility of a bug for that group</b><br>";
     }
 
-    # Determine whether or not the bug is always accessible by the reporter,
-    # QA contact, and/or users on the cc: list.
-    SendSQL("SELECT  reporter_accessible , assignee_accessible , 
-                     qacontact_accessible , cclist_accessible
-             FROM    bugs
-             WHERE   bug_id = $id");
+    # If the bug is restricted to a group, display checkboxes that allow
+    # the user to set whether or not the reporter
+    # and cc list can see the bug even if they are not members of all 
+    # groups to which the bug is restricted.
+    if ($private) {
+        # Determine whether or not the bug is always accessible by the reporter,
+        # QA contact, and/or users on the cc: list.
+        SendSQL("SELECT  reporter_accessible, cclist_accessible
+                 FROM    bugs
+                 WHERE   bug_id = $id");
+        my ($reporter_accessible, $cclist_accessible) = FetchSQLData();
 
-    my ($reporter_accessible, $assignee_accessible, $qacontact_accessible, $cclist_accessible) = FetchSQLData();
-    # Convert boolean data about which roles always have access to the bug
-    # into "checked" attributes for the HTML checkboxes by which users
-    # set and change these values.
-    my $reporter_checked = $reporter_accessible ? " checked" : "";
-    my $assignee_checked = $assignee_accessible ? " checked" : "";
-    my $qacontact_checked = $qacontact_accessible ? " checked" : "";
-    my $cclist_checked = $cclist_accessible ? " checked" : "";
+        # Convert boolean data about which roles always have access to the bug
+        # into "checked" attributes for the HTML checkboxes by which users
+        # set and change these values.
+        my $reporter_checked = $reporter_accessible ? " checked" : "";
+        my $cclist_checked = $cclist_accessible ? " checked" : "";
 
-    # Display interface for changing the values.
-    print qq{
-        <p>
-        <b>But users in the roles selected below can always view this bug:</b><br>
-        <small>(Does not take effect unless the bug is restricted to at least one group.)</small>
-        </p>
+        # Display interface for changing the values.
+        print qq|
+            <p>
+            <b>But users in the roles selected below can always view this bug:</b><br>
+            <small>(The assignee
+        |;
+        if (Param('useqacontact')) {
+            print " and qa contact";
+        }
+        print qq| can always see a bug, and this does not take effect unless the bug is restricted to at least one group.)</small>
+            </p>
 
-        <p>
-        <input type="checkbox" name="reporter_accessible" value="1" $reporter_checked>Reporter
-        <input type="checkbox" name="assignee_accessible" value="1" $assignee_checked>Assignee
-        <input type="checkbox" name="qacontact_accessible" value="1" $qacontact_checked>QA Contact
-        <input type="checkbox" name="cclist_accessible" value="1" $cclist_checked>CC List
-        </p>
-    };
+            <p>
+            <input type="checkbox" name="reporter_accessible" value="1" $reporter_checked>Reporter
+            <input type="checkbox" name="cclist_accessible" value="1" $cclist_checked>CC List
+            </p>
+        |;
+    }
 }
 
 print "<br>

@@ -22,6 +22,7 @@
 #                 Terry Weissman <terry@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Dave Miller <justdave@syndicomm.com>
+#                 Zach Lipton  <zach@zachlipton.com>
 #
 #
 # Direct any questions on this source code to
@@ -265,6 +266,24 @@ if (@missing > 0) {
 
 print "Checking user setup ...\n";
 do 'localconfig';
+if ($@ ne "") { # capture errors in localconfig, bug 97290
+   print STDERR <<EOT;
+An error has occurred while reading your 
+'localconfig' file.  The text of the error message is:
+
+$@
+
+Please fix the error in your 'localconfig' file.  
+Alternately rename your 'localconfig' file, rerun 
+checksetup.pl, and re-enter your answers.
+
+  \$ mv -f localconfig localconfig.old
+  \$ ./checksetup.pl
+
+
+EOT
+    die "Syntax error in localconfig";
+}
 my $newstuff = "";
 sub LocalVar ($$)
 {
@@ -357,7 +376,8 @@ $db_user = "bugs";              # user to attach to the MySQL database
 ');
 LocalVar('db_pass', '
 #
-# Some people actually use passwords with their MySQL database ...
+# Enter your database password here. It\'s normally advisable to specify
+# a password for your bugzilla database user.
 # If you use apostrophe (\') or a backslash (\\) in your password, you\'ll
 # need to escape it by preceding it with a \\ character. (\\\') or (\\\\)
 #
@@ -627,6 +647,17 @@ END
     close HTACCESS;
     chmod $fileperm, "data/.htaccess";
   }
+  if (!-e "template/.htaccess") {
+    print "Creating template/.htaccess...\n";
+    open HTACCESS, ">template/.htaccess";
+    print HTACCESS <<'END';
+# nothing in this directory is retrievable unless overriden by an .htaccess
+# in a subdirectory
+deny from all
+END
+    close HTACCESS;
+    chmod $fileperm, "template/.htaccess";
+  }
   if (!-e "data/webdot/.htaccess") {
     if (!-d "data/webdot") {
       mkdir "data/webdot", $dirperm;
@@ -750,22 +781,36 @@ sub isExecutableFile {
 
 # fix file (or files - wildcards ok) permissions 
 sub fixPerms {
-    my $file;
-    my @files = glob($_[0]);
-    my $exeperm = 0777 & ~ $_[1];
-    my $normperm = 0666 & ~ $_[1];
-    foreach $file (@files) {
-      # do not change permissions on directories here
-      if (!(-d $file)) {
-        # check if the file is executable.
-        if (isExecutableFile($file)) {
-          #printf ("Changing $file to %o",$exeperm);
-          chmod $exeperm, $file;
-        } else {
-          #print ("Changing $file to %o", $normperm);
-          chmod $normperm, $file;
+    my ($file_pattern, $owner, $group, $umask, $do_dirs) = @_;
+    my @files = glob($file_pattern);
+    my $execperm = 0777 & ~ $umask;
+    my $normperm = 0666 & ~ $umask;
+    foreach my $file (@files) {
+        next if (!-e $file);
+        # do not change permissions on directories here unless $do_dirs is set
+        if (!(-d $file)) {
+            chown $owner, $group, $file;
+            # check if the file is executable.
+            if (isExecutableFile($file)) {
+                #printf ("Changing $file to %o\n", $execperm);
+                chmod $execperm, $file;
+            } else {
+                #printf ("Changing $file to %o\n", $normperm);
+                chmod $normperm, $file;
+            }
         }
-      }
+        elsif ($do_dirs) {
+            chown $owner, $group, $file;
+            if ($file =~ /CVS$/) {
+                chmod 0700, $file;
+            }
+            else {
+                #printf ("Changing $file to %o\n", $execperm);
+                chmod $execperm, $file;
+                fixPerms("$file/.htaccess", $owner, $group, $umask, $do_dirs);
+                fixPerms("$file/*", $owner, $group, $umask, $do_dirs); # do the contents of the directory
+            }
+        }
     }
 }
 
@@ -789,11 +834,11 @@ EOF
     # chown needs to be called with a valid uid, not 0.  $< returns the
     # caller's uid.  Maybe there should be a $bugzillauid, and call with that
     # userid.
-    chown $<, $webservergid, glob('*');
-    if (-e ".htaccess") { chown $<, $webservergid, ".htaccess" } # glob('*') doesn't catch dotfiles
-    if (-e "data/.htaccess") { chown $<, $webservergid, "data/.htaccess" }
-    if (-e "data/webdot/.htaccess") { chown $<, $webservergid, "data/webdot/.htaccess" }
-    fixPerms('*',027);
+    fixPerms('.htaccess', $<, $webservergid, 027); # glob('*') doesn't catch dotfiles
+    fixPerms('data/.htaccess', $<, $webservergid, 027);
+    fixPerms('data/webdot/.htaccess', $<, $webservergid, 027);
+    fixPerms('*', $<, $webservergid, 027);
+    fixPerms('template', $<, $webservergid, 027, 1);
     chmod 0644, 'globals.pl';
     chmod 0644, 'RelationSet.pm';
     chmod 0771, 'data';
@@ -801,8 +846,11 @@ EOF
 } else {
     # get current gid from $( list
     my $gid = (split " ", $()[0];
-    chown $<, $gid, glob('*');
-    fixPerms('*',022);
+    fixPerms('.htaccess', $<, $gid, 022); # glob('*') doesn't catch dotfiles
+    fixPerms('data/.htaccess', $<, $gid, 022);
+    fixPerms('data/webdot/.htaccess', $<, $gid, 022);
+    fixPerms('*', $<, $gid, 022);
+    fixPerms('template', $<, $gid, 022, 1);
     chmod 01777, 'data', 'graphs';
 }
 
@@ -998,8 +1046,6 @@ $table{bugs} =
     lastdiffed datetime not null,
     everconfirmed tinyint not null,
     reporter_accessible tinyint not null default 1,
-    assignee_accessible tinyint not null default 1,
-    qacontact_accessible tinyint not null default 1,
     cclist_accessible tinyint not null default 1,
 
     index (assigned_to),
@@ -2676,9 +2722,10 @@ ChangeFieldType("profiles", "disabledtext", "mediumtext not null");
 # Add fields to the bugs table that record whether or not the reporter,
 # assignee, QA contact, and users on the cc: list can see bugs even when
 # they are not members of groups to which the bugs are restricted.
+# 2002-02-06 bbaetz@student.usyd.edu.au - assignee/qa can always see the bug
 AddField("bugs", "reporter_accessible", "tinyint not null default 1");
-AddField("bugs", "assignee_accessible", "tinyint not null default 1");
-AddField("bugs", "qacontact_accessible", "tinyint not null default 1");
+#AddField("bugs", "assignee_accessible", "tinyint not null default 1");
+#AddField("bugs", "qacontact_accessible", "tinyint not null default 1");
 AddField("bugs", "cclist_accessible", "tinyint not null default 1");
 
 # 2001-08-21 myk@mozilla.org bug84338:
@@ -2816,6 +2863,16 @@ if (GetFieldDef("logincookies", "cryptpassword")) {
     }
 
     DropField("logincookies", "cryptpassword");
+}
+
+# 2002-02-13 bbaetz@student.usyd.edu.au - bug 97471
+# qacontact/assignee should always be able to see bugs,
+# so remove their restriction column
+if (GetFieldDef("bugs","qacontact_accessible")) {
+    print "Removing restrictions on bugs for assignee and qacontact...\n";
+
+    DropField("bugs", "qacontact_accessible");
+    DropField("bugs", "assignee_accessible");
 }
 
 # If you had to change the --TABLE-- definition in any way, then add your
