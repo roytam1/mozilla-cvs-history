@@ -151,7 +151,7 @@ sub process_cvs_info {
                 if( ! -r $rcsfile ){
                     $rcsfile = "$envcvsroot/$repository/Attic/$fn,v";
                 }
-                open(LOG, "/tools/ns/bin/rlog -N -r$rev $rcsfile |") 
+                open(LOG, "/usr/bin/rlog -N -r$rev $rcsfile |") 
                         || print STDERR "dolog.pl: Couldn't run rlog\n";
                 while(<LOG>){
                     if (/^date:.* author: ([^;]*);.*/) {
