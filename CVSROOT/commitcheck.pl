@@ -327,7 +327,6 @@ if (m:^mozilla/modules/zlib/.*$:) {return '93';}
 if (m:^mozilla/gfx/public/.*$:) {return '95';}
 if (m:^mozilla/gfx/src/windows/.*$:) {return '95';}
 if (m:^mozilla/view/.*$:) {return '96';}
-if (m:^-mozilla/layout/mathml/.*$:) {return '98';}
 if (m:^mozilla/layout/.*$:) {return '98';}
 if (m:^modules/libimg/mng/.*$:) {return '155';}
 if (m:^modules/libimg/mngcom/.*$:) {return '155';}
