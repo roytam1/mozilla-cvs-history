@@ -18,24 +18,22 @@
 # Netscape Communications Corporation. All Rights Reserved.
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Andrew Anderson <andrew@redhat.com>
 
-if ($ENV{'REQUEST_METHOD'} eq "GET") { $buffer = $ENV{'QUERY_STRING'}; }
-else { read(STDIN, $buffer, $ENV{'CONTENT_LENGTH'}); }
-# Split the name-value pairs
-@pairs = split(/&/, $buffer);
-foreach $pair (@pairs)
-{
-    ($name, $value) = split(/=/, $pair);
+use strict;
+use diagnostics;
+use CGI;
 
-    $value =~ tr/+/ /;
-    $value =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
-    $FORM{$name} = $value;
-}
+my $cgi = new CGI;
+
+my $c=$cgi->param("comment");
+
 open(COMMENTS, ">>data/comments");
-$c=$FORM{"comment"};
-print COMMENTS $FORM{"comment"} . "\n";
+print COMMENTS "$c\n";
 close(COMMENTS);
-print "Content-type: text/html\n\n";
-print "<TITLE>The Word Of Confirmation</TITLE>";
-print "<H1>Done</H1>";
-print $c;
+
+print $cgi->header(-type=>'text/html'),
+      $cgi->start_html(-title=>"The Word Of Confirmation"),
+      $cgi->h1("Done"),
+      $c,
+      $cgi->end_html;

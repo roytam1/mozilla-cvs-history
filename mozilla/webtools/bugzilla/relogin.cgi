@@ -21,35 +21,34 @@
 
 use diagnostics;
 use strict;
+use CGI;
+
+$::cgi = new CGI;
 
 require "CGI.pl";
 
+# FIXME: make the path a config option
+my $login_cookie = $::cgi->cookie(-name=>'Bugzilla_login',
+                                -value=>'',
+                                -expires=>"now",
+                                -path=>"/bugzilla/");
+my $logincookie_cookie = $::cgi->cookie(-name=>'Bugzilla_logincookie',
+                                -value=>'',
+                                -expires=>"now",
+                                -path=>"/bugzilla/");
+my $password_cookie = $::cgi->cookie(-name=>'Bugzilla_password',
+                                -value=>'',
+                                -expires=>"now",
+                                -path=>"/bugzilla/");
 
-print "Set-Cookie: Bugzilla_login= ; path=/; expires=Sun, 30-Jun-80 00:00:00 GMT
-Set-Cookie: Bugzilla_logincookie= ; path=/; expires=Sun, 30-Jun-80 00:00:00 GMT
-Set-Cookie: Bugzilla_password= ; path=/; expires=Sun, 30-Jun-80 00:00:00 GMT
-Content-type: text/html
+print $::cgi->header(-type=>'text/html', 
+          -cookie=>[$login_cookie, $logincookie_cookie, $password_cookie]);
 
-";
-PutHeader("Your login has been forgotten", "Your login has been forgotten", "");
-print "
-The cookie that was remembering your login is now gone.  The next time you
-do an action that requires a login, you will be prompted for it.
-<p>
-<a href=\"query.cgi\">Back to the query page.</a>
-";
+PutHeader("Your login has been forgotten");
+
+print "The cookie that was remembering your login is now gone.  " .
+      "The next time you do an action that requires a login, you " .
+      "will be prompted for it.<P>" .
+      $::cgi->a({-href=>"query.cgi"}, "Back to the query page.");
 
 exit;
-
-# The below was a different way, that prompted you for a login right then.
-
-# catch {unset COOKIE(Bugzilla_login)}
-# catch {unset COOKIE(Bugzilla_password)}
-# confirm_login
-
-# puts "Content-type: text/html\n"
-# puts "<H1>OK, logged in.</H1>"
-# puts "You are now logged in as <b>$COOKIE(Bugzilla_login)</b>."
-# puts "<p>"
-# puts "<a href=\"query.cgi\">Back to the query page.</a>"
-

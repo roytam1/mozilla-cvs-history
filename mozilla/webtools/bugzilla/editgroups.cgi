@@ -24,16 +24,14 @@
 use diagnostics;
 use strict;
 
-require "CGI.pl";
+use CGI;
+$::cgi = new CGI;
 
-# Shut up misguided -w warnings about "used only once":
-use vars %::COOKIE;
+require "CGI.pl";
 
 confirm_login();
 
-print "Content-type: text/html\n\n";
-
-if (Param("maintainer") ne $::COOKIE{Bugzilla_login}) {
+if (Param("maintainer") ne $::cgi->cookie(-name=>'Bugzilla_login')) {
     PutHeader("Sorry, you aren't the maintainer of this system.\n");
     print "And so, you aren't allowed to edit the parameters of it.\n";
     exit;
@@ -42,13 +40,15 @@ if (Param("maintainer") ne $::COOKIE{Bugzilla_login}) {
 my @line;
 my $group;
 my $counter = 1;
-my $rowbreak = "</TR><TR><TD COLSPAN=\"5\"><HR></TD></TR>";
+my $rowbreak = "</TR>" . $::cgi->TR($::cgi->td({-colspan=>"5"}, "<HR>"));
 
 PutHeader("Edit Group Permissions");
 
 print "This lets you edit the group permissions of bugzilla.\n";
 
-print "<FORM METHOD=\"POST\" ACTION=\"doeditgroups.cgi\">\n<TABLE>\n";
+print $::cgi->startform(-method=>"POST", -action=>"doeditgroups.cgi");
+
+print "<TABLE BORDER=\"0\">\n";
 
 SendSQL("select groupid, groupname, flags from groups order by groupid asc");
 
@@ -68,31 +68,33 @@ while (@line = FetchSQLData()) {
 
 foreach $group (@groups) {
     (my $groupid, my $groupname, my $groupflag) = split(":", $group);
-    print "
-<TH>
-    <TD ALIGN=\"LEFT\" VALIGN=\"TOP\" COLSPAN=\"2\">\n";
-    my $fieldname = $groupid . "-groupid";
-    print "
-	<INPUT TYPE=\"HIDDEN\" NAME=\"$fieldname\" VALUE=\"$groupid\">$groupid:
-    </TD>
-    <TD VALIGN=\"TOP\" VALIGN\"TOP\" COLSPAN=\"4\">\n";
-    $fieldname = $groupid . "-groupname";
-    print "
-	<INPUT SIZE=\"20\" NAME=\"$fieldname\" VALUE=\"$groupname\">\n";
-    $fieldname = $groupid . "-groupflag";
-    print "
-	<INPUT TYPE=\"HIDDEN\" NAME=\"$fieldname\" VALUE=\"$groupflag\">
-    </TD>
-</TH>
-";
+
+    print $::cgi->TR(
+             $::cgi->td({-align=>"LEFT", -valign=>"TOP", -colspan=>"2"},
+                $::cgi->hidden(-name=>"${groupid}-groupid", 
+                             -value=>"$groupid"),
+                "$groupid:"
+             ),
+             $::cgi->td({-valign=>"TOP", -colspan=>"4"},
+                $::cgi->textfield(-name=>"${groupid}-groupname",
+                                -size=>"20",
+                                -value=>"$groupname"),
+                $::cgi->hidden(-name=>"${groupid}-groupflag",
+                                -value=>"$groupflag"),
+             )
+          );
+
     print "<TR>\n";
     foreach my $secline (@flags) {
 	(my $field, my $secflag) = split(":", $secline);
-	$fieldname = $groupid . "-" . $field;
+	my $fieldname = $groupid . "-" . $field;
+
+	# Alas, CGI.pm's checkbox support can't duplicate this
 	print "<TD ALIGN=\"RIGHT\">$field:<INPUT TYPE=\"CHECKBOX\" " .
-	      "NAME=\"$fieldname\" VALUE=\"$secflag\"";
-	print "CHECKED" if (int($secflag) & int($groupflag));
-	print "></TD>";
+              "NAME=\"$fieldname\" VALUE=\"$secflag\"";
+        print "CHECKED" if (int($secflag) & int($groupflag));
+        print "></TD>";
+
 	if ($counter > 4) {
 	    print "</TR>\n<TR>\n";
 	    $counter = 0;
@@ -103,10 +105,9 @@ foreach $group (@groups) {
     print $rowbreak;
 }
 
-print "
-</TABLE>
-<INPUT TYPE=\"submit\" VALUE=\"Submit changes\">
-</FORM>
-<P>
-<A HREF=\"query.cgi\">Skip all this, and go back to the query page</A>
-";
+print "</TABLE>\n" .
+      $::cgi->submit(-name=>"submit", -value=>"Submit changes") .
+      $::cgi->endform .
+      $::cgi->p;
+      $::cgi->a({-href=>"query.cgi"}, 
+              "Skip all this, and go back to the query page.");

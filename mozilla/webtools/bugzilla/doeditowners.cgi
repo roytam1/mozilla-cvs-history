@@ -18,55 +18,51 @@
 # Netscape Communications Corporation. All Rights Reserved.
 # 
 # Contributor(s): Sam Ziegler <sam@ziegler.org>
+#                 Andrew Anderson <andrew@redhat.com>
 
 use diagnostics;
 use strict;
+use CGI;
+
+$::cgi = new CGI;
 
 require "CGI.pl";
 
-# Shut up misguided -w warnings about "used only once":
-use vars %::COOKIE;
-
-
 confirm_login();
 
-print "Content-type: text/html\n\n";
-
-if (Param("maintainer") ne $::COOKIE{'Bugzilla_login'}) {
+if (Param("maintainer") ne $::cgi->cookie('Bugzilla_login')) {
     print "<H1>Sorry, you aren't the maintainer of this system.</H1>\n";
     print "And so, you aren't allowed to edit the parameters of it.\n";
     exit;
 }
-
 
 PutHeader("Saving new owners");
 
 SendSQL("select program, value, initialowner from components order by program, value");
 
 my @line;
-
-foreach my $key (keys(%::FORM)) {
-    $::FORM{url_decode($key)} = $::FORM{$key};
-}
-
 my @updates;
 my $curIndex = 0;
+my $cgiItem;
 
 while (@line = FetchSQLData()) {
     my $curItem = "$line[0]_$line[1]";
-    if (exists $::FORM{$curItem}) {
-        $::FORM{$curItem} =~ s/\r\n/\n/;
-        if ($::FORM{$curItem} ne $line[2]) {
-            print "$line[0] : $line[1] is now owned by $::FORM{$curItem}.<BR>\n";
-            $updates[$curIndex++] = "update components set initialowner = '$::FORM{$curItem}' where program = '$line[0]' and value = '$line[1]'";
+    my $cgiItem = $::cgi->param($curItem);
+    if ($cgiItem ne "") {
+        $cgiItem =~ s/\r\n/\n/;
+        if ($cgiItem ne "$line[2]") {
+            print "$line[0] : $line[1] is now owned by $cgiItem.<BR>\n";
+            $updates[$curIndex++] = "update components set initialowner = '$cgiItem' where program = '$line[0]' and value = '$line[1]'";
         }
     }
 }
 
 foreach my $update (@updates) {
+    #print $::cgi->pre($update);
     SendSQL($update);
 }
 
-print "OK, done.<p>\n";
-print "<a href=\"editowners.cgi\">Edit the owners some more.</a><p>\n";
-print "<a href=\"query.cgi\">Go back to the query page.</a>\n";
+print "OK, done.<P>\n",
+      $::cgi->a({-href=>"editowners.cgi"}, "Edit the owners some more."),
+      $::cgi->br,
+      $::cgi->a({-href=>"query.cgi"}, "Go back to the query page.");

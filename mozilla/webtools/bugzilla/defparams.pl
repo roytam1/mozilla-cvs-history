@@ -17,6 +17,7 @@
 # Netscape Communications Corporation. All Rights Reserved.
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Andrew Anderson <andrew@redhat.com>
 
 
 # This file defines all the parameters that we have a GUI to edit within
@@ -133,8 +134,15 @@ sub check_despotbaseurl {
     return "";
 }
 
+DefParam("authdomain",
+         "This defines a authorized domain.  If a user's email address is in this domain, they must be using a computer from <I>authnet</I> in order to use bugzilla.",
+	 "t",
+         "");
 
-
+DefParam("authnet",
+         "This defines a set of authorized networks.  If <I>authdomain</I> is defined, a user in that domain must be using a computer from these networks in order to use bugzilla.",
+         "t",
+         "");
 
 DefParam("bannerhtml",
          "The html that gets emitted at the head of every Bugzilla page. 
@@ -156,27 +164,51 @@ information about what Bugzilla is and what it can do, see
 <A HREF=http://www.mozilla.org/>mozilla.org</A>'s
 <A HREF=http://www.mozilla.org/bugs/><B>bug pages</B></A>.");
 
+DefParam("bugstatushtml",
+         "This is the filename for the help file on bug status",
+         "t",
+         "bug_status.html");
 
+DefParam("helphtml",
+         "This is the filename for the help file for the query page",
+         "t",
+         "help.html");
+
+DefParam("fromaddress",
+	 "This is the 'from' address used for all outgoing mail from bugzilla",
+	 "t",
+	 "bugzilla\@localhost");
+
+DefParam("changedto",
+	"This is the default 'to' list for changedbody",
+	"t",
+	"",);
 
     
-DefParam("changedmail",
-q{The email that gets sent to people when a bug changes.  Within this
-text, %to% gets replaced by the assigned-to and reported-by people,
-separated by a comma (with duplication removed, if they're the same
-person).  %cc% gets replaced by the list of people on the CC list,
-separated by commas.  %bugid% gets replaced by the bug number.
-%diffs% gets replaced by the diff text from the old version to the new
-version of this bug.  %neworchanged% is either "New" or "Changed",
-depending on whether this mail is reporting a new bug or changes made
-to an existing one.  %summary% gets replaced by the summary of this
-bug.  %<i>anythingelse</i>% gets replaced by the definition of that
-parameter (as defined on this page).},
-         "l",
-"From: bugzilla-daemon
-To: %to%
-Cc: %cc%
-Subject: [Bug %bugid%] %neworchanged% - %summary%
+DefParam("changedcc",
+	"This is the default 'cc' list for changedbody",
+	"t",
+	"",);
 
+DefParam("changedsubj",
+q{This is the default subject for changedbody, %bugid% gets replaced
+by the bug number, %neworchanged% is either "New" or "Changed",
+depending on whether this mail is reporting a new bug or changes
+made to an existing one.  %summary% gets replaced by the summary
+of this bug.},
+	"t",
+	'[Bug %bugid%] %neworchanged% - %summary%',);
+
+DefParam("changedbody",
+q{The email that gets sent to people when a bug changes.  %bugid% gets 
+replaced by the bug number.  %diffs% gets replaced by the diff text 
+from the old version to the new version of this bug.  %neworchanged% 
+is either "New" or "Changed", depending on whether this mail is 
+reporting a new bug or changes made to an existing one.  %summary% 
+gets replaced by the summary of this bug.  %<i>anythingelse</i>% gets 
+replaced by the definition of that parameter (as defined on this page).},
+         "l",
+"
 %urlbase%show_bug.cgi?id=%bugid%
 
 %diffs%");
@@ -190,13 +222,25 @@ DefParam("whinedays",
          \&check_numeric);
 
 
-DefParam("whinemail",
+DefParam("whineto",
+	 "The default to address for whinebody",
+	 "t",
+	 "");
+
+DefParam("whinecc",
+	 "The default cc address for whinebody",
+	 "t",
+	 "");
+
+DefParam("whinesubj",
+	 "The default subject for whinebody",
+	 "t",
+	 "");
+
+DefParam("whinebody",
          "The email that gets sent to anyone who has a NEW bug that hasn't been touched for more than <b>whinedays</b>.  Within this text, %email% gets replaced by the offender's email address.  %<i>anythingelse</i>% gets replaced by the definition of that parameter (as defined on this page).<p> It is a good idea to make sure this message has a valid From: address, so that if the mail bounces, a real person can know that there are bugs assigned to an invalid address.",
          "l",
-         q{From: %maintainer%
-To: %email%
-Subject: Your Bugzilla buglist needs attention.
-
+         q{
 [This e-mail has been automatically generated.]
 
 You have one or more bugs assigned to you in the Bugzilla 

@@ -29,7 +29,7 @@ OK_ALL_DONE
 mysql << OK_ALL_DONE
 use bugs;
 create table bugs (
-bug_id int8 not null auto_increment primary key,
+bug_id mediumint not null auto_increment primary key,
 group_id mediumint not null,
 assigned_to mediumint not null,
 bug_file_loc text,
@@ -44,7 +44,7 @@ long_desc mediumtext,
 op_sys tinytext,
 priority enum("high", "normal", "low") not null,
 product varchar(255) not null,
-rep_platform enum("All", "alpha", "m68k", "i386", "mips", "sparc", "sparc64", "ppc", "Other"),
+rep_platform enum("All", "alpha", "m68k", "i386", "mips", "sparc", "sparc64", "ppc", "arm", "Other"),
 reporter mediumint not null,
 version varchar(16) not null,
 release varchar(16) not null,

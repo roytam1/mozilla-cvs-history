@@ -28,7 +28,7 @@ OK_ALL_DONE
 mysql << OK_ALL_DONE
 use bugs;
 create table security (
-        action varchar(255) not null primary key,
+        field varchar(255) not null primary key,
 	flag mediumint not null
 );
 
@@ -48,6 +48,8 @@ insert into security values ('long_desc',    4096);
 insert into security values ('resolution',   8192);
 insert into security values ('internal',    16384);
 insert into security values ('accept',      32768);
+insert into security values ('class',       65536);
+insert into security values ('source',     131072);
 
 show columns from security;
 show index from security;

@@ -28,14 +28,13 @@ OK_ALL_DONE
 mysql << OK_ALL_DONE
 use bugs;
 create table products (
-product tinytext,
-description mediumtext
+	product tinytext not null,
+	description mediumtext not null
 );
 
 
-insert into products (product, description) values ("Calendar", 'For bugs about the <a href="http://www.mozilla.org/projects/calendar">Calendar</a> project');
-insert into products (product, description) values ("Directory", 'For bugs about the <a href="http://www.mozilla.org/directory">Directory (LDAP)</a> project');
-insert into products (product, description) values ("Mozilla", "For bugs about the Mozilla web browser");
-insert into products (product, description) values ("NGLayout", 'For bugs about the <a href="http://www.mozilla.org/newlayout/">New Layout</a> project');
-insert into products (product, description) values ("Webtools", 'For bugs about the web-based tools that mozilla.org uses.  This include Bugzilla (problems you are having with this bug system itself), <a href="http://www.mozilla.org/bonsai.html">Bonsai</a>, and <a href="http://www.mozilla.org/tinderbox.html">Tinderbox</a>.');
-
+insert into products (product, description) values ("Red Hat Linux", "For bugs about Red Hat Linux");
+insert into products (product, description) values ("Red Hat Powertools", "For bugs about Red Hat Powertools");
+insert into products (product, description) values ("Red Hat Secure Web Server", "For bugs about Red Hat Secure Web Server");
+insert into products (product, description) values ("Red Hat Contrib|Net", "For bugs about Red Hat Contrib|Net");
+insert into products (product, description) values ("bugzilla", "For bugs about bugzilla");

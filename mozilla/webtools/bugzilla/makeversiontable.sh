@@ -28,23 +28,20 @@ OK_ALL_DONE
 mysql << OK_ALL_DONE
 use bugs;
 create table versions (
-value tinytext,
-program tinytext
+	value tinytext not null,
+	program tinytext not null
 );
 
 
 
-insert into versions (value, program) values ("other", "Calendar");
-insert into versions (value, program) values ("other", "Directory");
-insert into versions (value, program) values ("other", "Mozilla");
-insert into versions (value, program) values ("1998-03-31", "Mozilla");
-insert into versions (value, program) values ("1998-04-08", "Mozilla");
-insert into versions (value, program) values ("1998-04-29", "Mozilla");
-insert into versions (value, program) values ("1998-06-03", "Mozilla");
-insert into versions (value, program) values ("1998-07-28", "Mozilla");
-insert into versions (value, program) values ("1998-09-04", "Mozilla");
-insert into versions (value, program) values ("other", "NGLayout");
-insert into versions (value, program) values ("other", "Webtools");
+insert into versions (value, program) values ("5.2", "Red Hat Linux");
+insert into versions (value, program) values ("5.1", "Red Hat Linux");
+insert into versions (value, program) values ("5.0", "Red Hat Linux");
+insert into versions (value, program) values ("4.2", "Red Hat Linux");
+insert into versions (value, program) values ("5.1", "Red Hat Powertools");
+insert into versions (value, program) values ("2.0", "Red Hat Secure Web Server");
+insert into versions (value, program) values ("1.0", "Red Hat Contrib|Net");
+insert into versions (value, program) values ("2.1r", "bugzilla");
 
 select * from versions;
 

@@ -18,89 +18,114 @@
 # Netscape Communications Corporation. All Rights Reserved.
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Andrew Anderson <andrew@redhat.com>
 
 
 use diagnostics;
 use strict;
+use CGI;
+
+$::cgi = new CGI;
 
 require "CGI.pl";
 require "defparams.pl";
 
 # Shut up misguided -w warnings about "used only once":
 use vars @::param_desc,
-    @::param_list,
-    %::COOKIE;
+    @::param_list;
 
 confirm_login();
 
-print "Content-type: text/html\n\n";
-
-if (Param("maintainer") ne $::COOKIE{Bugzilla_login}) {
-    print "<H1>Sorry, you aren't the maintainer of this system.</H1>\n";
+if (Param("maintainer") ne $::cgi->cookie('Bugzilla_login')) {
+    PutHeader("Denied!");
+    print $::cgi->h1("Sorry, you aren't the maintainer of this system.");
     print "And so, you aren't allowed to edit the parameters of it.\n";
+    print $::cgi->end_html;
     exit;
 }
-
 
 PutHeader("Edit parameters");
 
 print "This lets you edit the basic operating parameters of bugzilla.\n";
 print "Be careful!\n";
-print "<p>\n";
+print "<P>\n";
 print "Any item you check Reset on will get reset to its default value.\n";
 
-print "<form method=\"post\" action=\"doeditparams.cgi\"><table>\n";
+print $::cgi->start_form(-method=>"POST", -action=>"doeditparams.cgi");
 
-my $rowbreak = "<tr><td colspan=\"2\"><hr></td></tr>";
-print $rowbreak;
+my @table_array;
+my $table_row;
+
+my $rowbreak = $::cgi->TR($::cgi->td({-colspan=>"2"}, $::cgi->hr));
+push(@table_array, $rowbreak);
 
 foreach my $i (@::param_list) {
-    print "<tr><th align=\"right\" valign=\"top\">$i:</th><td>$::param_desc{$i}</td></tr>\n";
-    print "<tr><td valign=\"top\"><input type=\"checkbox\" name=\"reset-$i\">Reset</td><td>\n";
+    $table_row = $::cgi->TR(
+                      $::cgi->th({-align=>"RIGHT", -valign=>"TOP"}, "$i:"),
+		      $::cgi->td($::param_desc{$i}));
+    push(@table_array, $table_row);
+    $table_row = $::cgi->TR(
+                      $::cgi->td({-valign=>"TOP"}, 
+		         $::cgi->checkbox(-name=>"reset-$i", -label=>"Reset")));
+    push(@table_array, $table_row);
     my $value = Param($i);
     SWITCH: for ($::param_type{$i}) {
 	/^t$/ && do {
-            print "<input size=\"80\" name=\"$i\" value=\"" .
-                value_quote($value) . '">\n';
+	    $table_row = $::cgi->textfield(-name=>"$i",
+	                                   -size=>"80",
+					   '-value'=>"$value",
+					   -override=>"1");
+            push(@table_array, $table_row);
             last SWITCH;
 	};
 	/^l$/ && do {
-            print "<textarea wrap=\"hard\" name=\"$i\" rows=\"10\" cols=\"80\">" .
-                value_quote($value) . "</textarea>\n";
+	    $table_row = $::cgi->textarea({-wrap=>"HARD"},
+	                                 -name=>"$i",
+					 -rows=>"10",
+					 -cols=>"80",
+					 '-value'=>"$value");
+            push(@table_array, $table_row);
             last SWITCH;
 	};
         /^b$/ && do {
-            my $on;
-            my $off;
+	    my $default;
             if ($value) {
-                $on = "checked";
-                $off = "";
+	        $default = 'on';
             } else {
-                $on = "";
-                $off = "checked";
+	        $default = 'off';
             }
-            print "<input type=\"radio\" name=\"$i\" value=\"1\" $on>On\n";
-            print "<input type=\"radio\" name=\"$i\" value=\"0\" $off>Off\n";
+	    $table_row = $::cgi->radio_group(-name=>"$i",
+	                                     '-values'=>['on', 'off'],
+					     -default=>$default);
+            push(@table_array, $table_row);
             last SWITCH;
         };
         # DEFAULT
-        print "<font color=\"red\"><blink>Unknown param type $::param_type{$i}!!!</blink></font>\n";
+	$table_row = $::cgi->font({-color=>"RED"}, 
+	               $::cgi->blink("Unknown param type $::param_type{$i}!"));
+        push(@table_array, $table_row);
     }
-    print "</td></tr>\n";
-    print $rowbreak;
+    push(@table_array, $rowbreak);
 }
 
-print "<tr><th align=\"right\" valign=\"top\">version:</th><td>
-What version of Bugzilla this is.  This can't be modified here, but
-<tt>%version%</tt> can be used as a parameter in places that understand
-such parameters</td></tr>
-<tr><td></td><td>" . Param('version') . "</td></tr>";
+$table_row = $::cgi->TR(
+                $::cgi->th({-align=>"RIGHT", -valign=>"TOP"}, "version:"),
+		$::cgi->td("What version of Bugzilla this is.  This can't " .
+		           "be modified here, but " . $::cgi->tt("%version%") .
+			   " can be used as a parameter in places that " .
+			   "understand such parameters.")
+	     ),
+	     $::cgi->TR(
+	        $::cgi->td("&nbsp;"),
+	        $::cgi->td(Param('version'))
+	     );
+push(@table_array, $rowbreak);
 
-print "</table>\n";
-
-print "<input type=\"reset\" value=\"Reset form\"><br>\n";
-print "<input type=\"submit\" value=\"Submit changes\">\n";
-
-print "</form>\n";
-
-print "<p><a href=\"query.cgi\">Skip all this, and go back to the query page</a>\n";
+print 
+      $::cgi->table(@table_array),
+      $::cgi->reset,
+      $::cgi->submit(-name=>"submit", -value=>"Submit changes"),
+      $::cgi->endform;
+      $::cgi->p,
+      $::cgi->a({-href=>"query.cgi"}, 
+         "Skip all this, and go back to the query page.");

@@ -18,19 +18,18 @@
 # Netscape Communications Corporation. All Rights Reserved.
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
-
+#                 Andrew Anderson <andrew@redhat.com>
 
 use diagnostics;
 use strict;
+use CGI;
+
+$::cgi = new CGI;
 
 require "CGI.pl";
-my $pre = Param("prefix");
-require "$pre-security.pl";
+require "security.pl";
 
-# Shut up misguided -w warnings about "used only once":
-use vars %::FORM;
-
-print "Content-type: text/html\n\n";
+print $::cgi->header(-type=>'text/html');
 
 my $generic_query  = "
 select
@@ -57,15 +56,20 @@ and report.userid = bugs.reporter and
 
 ConnectToDatabase();
 
+my $view_html;
+my $class_html;
 my $view_query = "SELECT type_id, name FROM type WHERE name = 'public'";
 SendSQL($view_query);
 (my $type_id, my $type_name) = FetchSQLData();
 $view_query = "and bugs.view = " . $type_id . " ";
 if(CanIView("view")){
-	$view_query = "";
+    $view_query = "";
+    $view_html = $::cgi->td("<B>View:</B> $type_name");
+} else {
+    $view_html = $::cgi->td("&nbsp;");
 }
 
-foreach my $bug (split(/:/, $::FORM{'buglist'})) {
+foreach my $bug (split(/:/, $::cgi->param('buglist'))) {
     SendSQL("$generic_query bugs.bug_id = $bug $view_query");
 
     my @row;
@@ -73,51 +77,57 @@ foreach my $bug (split(/:/, $::FORM{'buglist'})) {
         my ($id, $product, $version, $platform, $opsys, $status, $severity,
             $priority, $resolution, $assigned, $reporter, $component, $url,
             $shortdesc, $class) = (@row);
-	PutHeader("Full Text Bug Listing", html_quote($shortdesc), $::FORM{'id'});
+	PutHeader("Full Text Bug Listing", 
+                  html_quote($shortdesc), 
+                  $::cgi->param('id'));
 
-        print "
-<IMG SRC=\"1x1.gif\" WIDTH=\"1\" HEIGHT=\"80\" ALIGN=\"LEFT\">
-<TABLE WIDTH=\"100%\">
-  <TR>
-    <TD><B>Bug#:</B> <A HREF=\"show_bug.cgi?id=$id\">$id</A>
-    <TD><B>Product:</B> $product
-    <TD><B>Version:</B> $version
-    <TD><B>Platform:</B> $platform
-  <TR>
-    <TD><B>OS/Version:</B> $opsys
-    <TD><B>Status:</B> $status
-    <TD><B>Severity:</B> $severity
-    <TD><B>Priority:</B> $priority
-  <TR>
-    <TD><B>Resolution:</B> $resolution</TD>
-    <TD><B>Assigned To:</B> $assigned
-    <TD COLSPAN=\"2\"><B>Reported By:</B> $reporter
-  <TR>
-    <TD COLSPAN=\"2\"><B>Component:</B> $component";
+    if(CanIView("class")){
+        $class_html = $::cgi->td("<B>Class:</B> $class");
+    } else {
+        $class_html = $::cgi->td("&nbsp;");
+    }
 
-if(CanIView("class")){
-    print "    <TD><B>Class:</B> $class\n";
-} else {
-    print "    <TD>&nbsp; </TD>\n";
-}
-
-if(CanIView("view")){
-    print "    <TD><B>View:</B> $type_name\n";
-} else {
-    print "    <TD>&nbsp; </TD>\n";
-}
-
-print "
-  <TR>
-    <TD COLSPAN=\"6\"><B>URL:</B> " . html_quote($url) . "
-  <TR>
-    <TD><B>Summary:</B>
-    <TD COLSPAN=\"5\"> " . html_quote($shortdesc) . "
-  <TR>
-    <TD COLSPAN=\"5\"><B>Description:</B>
-</TABLE>
-<PRE>" . html_quote(GetLongDescription($bug)) . "</PRE>
-<HR>
-";
+    print $::cgi->img({-src=>"1x1.gif", 
+                     -width=>"1", 
+                     -height=>"80", 
+                     -align=>"LEFT"}),
+          $::cgi->table({-width=>"100%"},
+             $::cgi->TR(
+                $::cgi->td("<B>Bug#:</B>", 
+                   $::cgi->a({-href=>"show_bug.cgi?id=$id"}, "$id")),
+                $::cgi->td("<B>Product:</B> $product"),
+                $::cgi->td("<B>Version:</B> $version"),
+                $::cgi->td("<B>Platform:</B> $platform")
+             ),
+             $::cgi->TR(
+                $::cgi->td("<B>OS/Version:</B> $opsys"),
+                $::cgi->td("<B>Status:</B> $status"),
+                $::cgi->td("<B>Severity:</B> $severity"),
+                $::cgi->td("<B>Priority:</B> $priority")
+             ),
+             $::cgi->TR(
+                $::cgi->td("<B>Resolution:</B> $resolution"),
+                $::cgi->td("<B>Assigned To:</B> $assigned"),
+                $::cgi->td({-colspan=>"2"}, "<B>Reported By:</B> $reporter")
+             ),
+             $::cgi->TR(
+                $::cgi->td("<B>Component:</B>"),
+		$::cgi->td("$component"),
+                $view_html,
+                $class_html,
+             ),
+             $::cgi->TR(
+                $::cgi->td({-colspan=>"6"}, "<B>URL:</B> $url"),
+             ),
+             $::cgi->TR(
+                $::cgi->td("<B>Summary:</B>"),
+                $::cgi->td({-colspan=>"5"}, $shortdesc)
+             ),
+             $::cgi->TR(
+                $::cgi->td({-colspan=>"5"}, "<B>Description:</B>")
+             )
+         ),
+         $::cgi->pre(GetLongDescription($bug)),
+         $::cgi->hr;
     }
 }

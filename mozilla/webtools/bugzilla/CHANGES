@@ -9,6 +9,12 @@ query the CVS tree.  For example,
 
 will tell you what has been changed in the last week.
 
+11/11/98 added Net::SMTP support, updated defparams.pl, and depricated
+changedmail in favor of changedto, changedcc, changedsubj, and
+changedbody, and whinemail in favor of whineto, whinecc, whinesubj, and
+whinebody, respectively.  Based on work by David Gardiner 
+<david.gardiner@unisa.edu.au>.
+
 10/27/98 security check for legal products in place. bug charts are not
 available as an option if collectstats.pl has never been run. all products 
 get daily stats collected now. README updated: Chart::Base is listed as
@@ -16,12 +22,10 @@ a requirement, instructions for using collectstats.pl included as
 an optional step. also got silly and added optional quips to bug
 reports. 
  
-10/17/98 modified README installation instructions slightly. 
+10/20/98 Moved to DBI/DBD setup.  This will require using the perl
+DBI module and the MySQL DBD driver.
 
-10/16/98 Updated all of the cgi programs to quote all HTML fields
-to prevent any "suprises" as fields are used for different things
-than they were originally.  (Like when the product field gained
-spaces in the product name.)
+10/17/98 modified README installation instructions slightly. 
 
 10/15/98 Added a security mechanism so that you can define groups of
 users, and what fields those users are allowed to edit.  Two new
@@ -30,11 +34,6 @@ extended to support this.  The security table is a list of "labels"
 and a number that maps to a bit.  The idea is that you query the
 label, get the bit field, and compare that to the permissions
 given to the user via the bitmap in the groups table.
-
-Also broke out the UI portion of the cgi scripts into seperate files 
-that will allow a site to customize the look and feel without mucking 
-with the code as much.  This also could allow for a seperate look and 
-feel for a set of users, if the site were so inclined.  
 
 Cleaned up some of the error forms to include the generic header.
 

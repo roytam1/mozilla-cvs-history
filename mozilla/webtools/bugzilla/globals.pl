@@ -25,6 +25,9 @@ use diagnostics;
 use strict;
 use DBI;
 
+use Net::SMTP;
+my $mailhost = 'localhost'; # change this to your SMTP server
+
 # Change this to your specific database
 $::driver = "mysql";
 my $database = "bugs";
@@ -36,7 +39,7 @@ my $pass = "";
 use Date::Format;               # For time2str().
 
 # Contains the version string for the current running Bugzilla.
-$::param{'version'} = '2.1r';
+$::param{'version'} = '2.1rC';
 
 $::dontchange = "--do_not_change--";
 $::chooseone = "--Choose_one:--";
@@ -44,13 +47,7 @@ $::chooseone = "--Choose_one:--";
 sub ConnectToDatabase {
     if (!defined $::db) {
 	$::db = DBI->connect($dsn, $user, $pass)
-            || die "Can't connect to database server.";
-    }
-}
-
-sub DisconnectFromDatabase {
-    if(defined $::db) {
-	DBI->disconnect;
+            || die "Can't connect to database server: " . $DBI::errstr;
     }
 }
 
@@ -59,7 +56,7 @@ sub SendSQL {
     my ($str) = (@_);
     $::currentquery = $::db->prepare($str);
     $::currentquery->execute
-        || die "$str: ", $::currentquery->errstr;
+        || die "$str: ", $DBI::errstr;
 }
 
 sub MoreSQLData {
@@ -100,10 +97,12 @@ sub FetchOneColumn {
 
 sub AppendComment {
     my ($bugid,$who,$comment) = (@_);
+#print $::cgi->h1("bugid: $bugid, who: $who, comment: $comment");
     $comment =~ s/\r\n/\n/;     # Get rid of windows-style line endings.
     if ($comment =~ /^\s*$/) {  # Nothin' but whitespace.
         return;
     }
+
     SendSQL("select long_desc from bugs where bug_id = $bugid");
     
     my $desc = FetchOneColumn();
@@ -314,7 +313,7 @@ sub GenerateVersionTable {
     mkdir("data", 0777);
     chmod 0777, "data";
     my $tmpname = "data/versioncache.$$";
-    open(FID, ">$tmpname") || die "Can't create $tmpname: $!";
+    open(FID, ">$tmpname") || die "Can't create $tmpname";
 
     print FID GenerateCode('@::log_columns');
     print FID GenerateCode('%::versions');
@@ -341,7 +340,7 @@ sub GenerateVersionTable {
 
     print FID "1;\n";
     close FID;
-    rename $tmpname, "data/versioncache" || die "Can't rename $tmpname to versioncache; $!";
+    rename $tmpname, "data/versioncache" || die "Can't rename $tmpname to versioncache";
     chmod 0666, "data/versioncache";
 }
 
@@ -409,6 +408,7 @@ sub DBID_to_name {
 
 sub DBname_to_id {
     my ($name) = (@_);
+    my $sqlname = SqlQuote($name);
     SendSQL("select userid from profiles where login_name = @{[SqlQuote($name)]}");
     my $r = FetchOneColumn();
     if (!defined $r || $r eq "") {
@@ -433,8 +433,9 @@ sub DBNameToIdAndCheck {
         print "Yikes; couldn't create user $name.  Please report problem to " .
             Param("maintainer") ."\n";
     } else {
-        print "The name <TT>$name</TT> is not a valid username.  Please hit\n";
-        print "the <B>Back</B> button and try again.\n";
+        PutHeader("Invalid Username");
+        print "The name '". $::cgi->tt($name) ."' is not a valid username.\n" .
+              "Please hit the <B>Back</B> button and try again.\n";
     }
     exit(0);
 }
@@ -551,6 +552,35 @@ sub PerformSubsts {
     return $str;
 }
 
+sub Mail {
+    my ($to, $cc, $subject, $msg) = (@_);
+
+    my $smtp;
+    my $fromaddr = "From: " . Param("fromaddress") . "\n";
+
+    $smtp = Net::SMTP->new($mailhost);
+    $smtp->mail(Param("fromaddress"));
+    if($to ne "") {
+        for my $i (split(",", $to)) {
+            $smtp->to($i);
+        }
+    }
+    if($cc ne "") {
+        for my $j (split(",", $cc)) {
+            $smtp->to("$j");
+       }
+    }
+    $smtp->data();
+    $smtp->datasend("$fromaddr");
+    $smtp->datasend("To: $to\n");
+    $smtp->datasend("Subject: $subject\n");
+    $smtp->datasend("X-Mailer: Perl SMTP Module\n");
+    $smtp->datasend("X-Loop: " . Param("fromaddress") . "\n");
+    $smtp->datasend("\n");
+    $smtp->datasend($msg);
+    $smtp->dataend();
+    $smtp->quit;
+}
 
 # Trim whitespace from front and back.
 

@@ -17,9 +17,21 @@
 # Netscape Communications Corporation. All Rights Reserved.
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Andrew Anderson <andrew@redhat.com>
 
 use diagnostics;
 use strict;
+
+#use vars '%::versions';
+#use vars '@::legal_priority';
+#use vars @::legal_severity;
+#use vars @::legal_sources;
+#use vars @::legal_components;
+#use vars @::legal_platforms;
+#use vars @::legal_resolution_no_dup;
+#use vars @::legal_classes;
+
+require "security.pl";
 
 my $query = "
 select
@@ -37,203 +49,426 @@ select
         reporter,
         bug_file_loc,
         short_desc,
+        class,
         date_format(creation_ts,'Y-m-d')
 from bugs
-where bug_id = '" . $::FORM{'id'} . "'";
+where bug_id = '" . $::bug_id . "'";
+
+my $view_query = "SELECT type_id FROM type where name = 'public' ";
+SendSQL($view_query);
+my $type = FetchOneColumn();
+$view_query = " and view = " . $type;
+if (CanIView("view")){
+        $view_query = "";
+}
+$query .= $view_query;
+
+#print $::cgi->pre("$query");
 
 SendSQL($query);
+
 my %bug;
-my @row;
+my @row = "";
 if (@row = FetchSQLData()) {
+    #print $::cgi->h1("@row");
     my $count = 0;
     foreach my $field ("bug_id", "product", "version", "rep_platform",
 		       "op_sys", "bug_status", "resolution", "priority",
 		       "bug_severity", "component", "assigned_to", "reporter",
-		       "bug_file_loc", "short_desc", "creation_ts") {
-	$bug{$field} = shift @row;
+		       "bug_file_loc", "short_desc", "class", "creation_ts") {
+	$bug{"$field"} = shift @row;
+        #print $::cgi->h2($field . " : " .  $bug{"$field"});
 	if (!defined $bug{$field}) {
 	    $bug{$field} = "";
 	}
 	$count++;
     }
+
+    print $::cgi->hr;
 } else {
-    my $maintainer = Param("maintainer");
-    print "<TITLE>Bug Splat Error</TITLE>\n";
-    print "<H1>Query Error</H1>Somehow something went wrong.  Possibly if\n";
-    print "you mail this page to $maintainer, he will be able to fix\n";
-    print "things.<HR>\n";
-    print "Bug $::FORM{'id'} not found<H2>Query Text</H2><PRE>$query<PRE>\n";
-    exit 0
+    PutHeader("Query Error");
+    print "Bug $::bug_id not found\n";
+    exit 0;
+}
+
+my $source;
+SendSQL("SELECT sources.source FROM sources WHERE sources.bug_id = '" . $::bug_id . "'");
+if ($source = FetchOneColumn()) {
+    $bug{'source'} = $source;
 }
 
 $bug{'assigned_to'} = DBID_to_name($bug{'assigned_to'});
 $bug{'reporter'} = DBID_to_name($bug{'reporter'});
-$bug{'long_desc'} = GetLongDescription($::FORM{'id'});
-
+$bug{'long_desc'} = GetLongDescription($::bug_id);
 
 GetVersionTable();
+
+my $bug_status_html = Param('bugstatushtml');
 
 #
 # These should be read from the database ...
 #
 
-my $resolution_popup = make_options(\@::legal_resolution_no_dup,
-				    $bug{'resolution'}, 0);
-my $platform_popup = make_options(\@::legal_platform, $bug{'rep_platform'}, 0);
-my $priority_popup = make_options(\@::legal_priority, $bug{'priority'}, 0);
-my $sev_popup = make_options(\@::legal_severity, $bug{'bug_severity'}, 0);
+my $resolution_popup = $::cgi->hidden(-name=>'resolution', 
+                                      -value=>"$bug{'resolution'}") . 
+                          $bug{'resolution'};
+my $version_popup    = $::cgi->hidden(-name=>"version", 
+                                      -value=>"$bug{'version'}") . 
+                          $bug{'version'};
+my $platform_popup   = $::cgi->hidden(-name=>"rep_platform", 
+                                      -value=>"$bug{'rep_platform'}") .
+                          $bug{'rep_platform'};
+my $priority_popup   = $::cgi->hidden(-name=>"priority", 
+                                      -value=>"$bug{'priority'}") . 
+                          $bug{'priority'};
+my $class_row        = "&nbsp;";
+my $source_popup     = $::cgi->hidden(-name=>"source", 
+                                      -value=>"$bug{'source'}");
+my $sev_popup        = $::cgi->hidden(-name=>"bug_severity", 
+                                      -value=>"$bug{'bug_severity'}") .
+                          $bug{'bug_severity'};
+my $component_popup  = $::cgi->hidden(-name=>"component", 
+                                      -value=>"$bug{'component'}") .
+                          $bug{'component'};
+my $cc_element       = $::cgi->td({-colspan=>"5"}, 
+                          "&nbsp;" . ShowCcList($::bug_id));
+my $URLBlock         = "";
+my $SummaryBlock     = $::cgi->td({-align=>"RIGHT"}, "<B>Summary:</B>");
+my $StatusBlock      = $::cgi->br;
 
+if (CanIEdit("bug_status", $bug{'reporter'}, $bug{'bug_id'})) {
+        my $resolution = lsearch(\@::legal_resolution_no_dup, "");
+        if ($resolution >= 0) {
+            splice(@::legal_resolution_no_dup, $resolution, 1);
+        }
 
-my $component_popup = make_options($::components{$bug{'product'}},
-				   $bug{'component'}, 0);
-
-my $cc_element = '<INPUT NAME=cc SIZE=30 VALUE="' .
-    ShowCcList($::FORM{'id'}) . '">';
-
-
-my $URL = $bug{'bug_file_loc'};
-
-if (defined $URL && $URL ne "none" && $URL ne "NULL" && $URL ne "") {
-    $URL = "<B><A HREF=\"$URL\">URL:</A></B>";
-} else {
-    $URL = "<B>URL:</B>";
+	$resolution_popup = $::cgi->popup_menu(-name=>'resolution',
+                                         '-values'=>\@::legal_resolution_no_dup,
+                                          -default=>$bug{'resolution'});
 }
 
-print "
-<HEAD><TITLE>Bug $::FORM{'id'} -- " . html_quote($bug{'short_desc'}) .
-    "</TITLE></HEAD><BODY>
-<FORM NAME=changeform METHOD=POST ACTION=\"process_bug.cgi\">
-<INPUT TYPE=HIDDEN NAME=\"id\" VALUE=$::FORM{'id'}>
-<INPUT TYPE=HIDDEN NAME=\"was_assigned_to\" VALUE=\"$bug{'assigned_to'}\">
-  <TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0><TR>
-    <TD ALIGN=RIGHT><B>Bug#:</B></TD><TD>$bug{'bug_id'}</TD>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.phtml#rep_platform\">Platform:</A></B></TD>
-    <TD><SELECT NAME=rep_platform>$platform_popup</SELECT></TD>
-    <TD ALIGN=RIGHT><B>Version:</B></TD>
-    <TD><SELECT NAME=version>" .
-    make_options($::versions{$bug{'product'}}, $bug{'version'}, 0) .
-    "</SELECT></TD>
-  </TR><TR>
-    <TD ALIGN=RIGHT><B>Product:</B></TD>
-    <TD><SELECT NAME=product>" .
-    make_options(\@::legal_product, $bug{'product'}, 0) .
-    "</SELECT></TD>
-    <TD ALIGN=RIGHT><B>OS:</B></TD><TD>$bug{'op_sys'}</TD>
-    <TD ALIGN=RIGHT><B>Reporter:</B></TD><TD>$bug{'reporter'}</TD>
-  </TR><TR>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.phtml\">Status:</A></B></TD>
-      <TD>$bug{'bug_status'}</TD>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.phtml#priority\">Priority:</A></B></TD>
-      <TD><SELECT NAME=priority>$priority_popup</SELECT></TD>
-    <TD ALIGN=RIGHT><B>Cc:</B></TD>
-      <TD> $cc_element </TD>
-  </TR><TR>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.phtml\">Resolution:</A></B></TD>
-      <TD>$bug{'resolution'}</TD>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.phtml#severity\">Severity:</A></B></TD>
-      <TD><SELECT NAME=bug_severity>$sev_popup</SELECT></TD>
-    <TD ALIGN=RIGHT><B>Component:</B></TD>
-      <TD><SELECT NAME=component>$component_popup</SELECT></TD>
-  </TR><TR>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.phtml#assigned_to\">Assigned&nbsp;To:
-        </A></B></TD>
-      <TD>$bug{'assigned_to'}</TD>
-  </TR><TR>
-    <TD ALIGN=\"RIGHT\">$URL
-    <TD COLSPAN=6>
-      <INPUT NAME=bug_file_loc VALUE=\"$bug{'bug_file_loc'}\" SIZE=60></TD>
-  </TR><TR>
-    <TD ALIGN=\"RIGHT\"><B>Summary:</B>
-    <TD COLSPAN=6>
-      <INPUT NAME=short_desc VALUE=\"" .
-    value_quote($bug{'short_desc'}) .
-    "\" SIZE=60></TD>
-  </TR>
-</TABLE>
-<br>
-<B>Additional Comments:</B>
-<BR>
-<TEXTAREA WRAP=HARD NAME=comment ROWS=5 COLS=80></TEXTAREA><BR>
-<br>
-<INPUT TYPE=radio NAME=knob VALUE=none CHECKED>
-        Leave as <b>$bug{'bug_status'} $bug{'resolution'}</b><br>";
+if (CanIEdit("version", $bug{'reporter'}, $bug{'bug_id'})) {
+	$version_popup = $::cgi->popup_menu(-name=>'version',
+                               '-values'=>$::versions{$bug{'product'}},
+                               -default=>$bug{'version'});
+}
 
-# knum is which knob number we're generating, in javascript terms.
+if (CanIEdit("rep_platform", $bug{'reporter'}, $bug{'bug_id'})) {
+	$platform_popup = $::cgi->popup_menu(-name=>'platform',
+                               '-values'=>$::legal_platforms{$bug{'product'}},
+                               -default=>$bug{'rep_platform'});
+}
 
-my $knum = 1;
+if (CanIEdit("priority", $bug{'reporter'}, $bug{'bug_id'})) {
+	$priority_popup = $::cgi->popup_menu(-name=>'priority',
+                               '-values'=>\@::legal_priority,
+                               -default=>$bug{'priority'});
+}
+
+
+my $class_popup = $::cgi->popup_menu(-name=>'class',
+                                    '-values'=>\@::legal_classes,
+                                     -default=>$bug{'class'});
+
+if ($bug{'bug_status'} ne "NEW") {
+    if (CanIEdit("class", $bug{'reporter'}, $bug{'bug_id'})) {
+	$class_row = $::cgi->td({-align=>"RIGHT"},
+                        $::cgi->a({-href=>"$bug_status_html#class"},
+                           $::cgi->b('Class:'))
+                     ) .
+	             $::cgi->td({-align=>"RIGHT"}, $class_popup);
+    } else {
+        $class_popup = $::cgi->hidden(-name=>"class", 
+                                      -value=>$bug{'class'}) . 
+                                      $bug{'class'};
+	$class_row = $::cgi->td({-align=>"RIGHT"}, "&nbsp;"),
+                     $::cgi->td($class_popup);
+    }
+}
+
+if (CanIEdit("source", $bug{'reporter'}, $bug{'bug_id'})) {
+	$source_popup = $::cgi->popup_menu(-name=>'source',
+                               '-values'=>\@::legal_sources,
+                               -default=>$bug{'source'});
+}
+
+if (CanIEdit("bug_severity", $bug{'reporter'}, $bug{'bug_id'})) {
+	$sev_popup = $::cgi->popup_menu(-name=>'bug_severity',
+                               '-values'=>\@::legal_severity,
+                               -default=>$bug{'bug_severity'});
+}
+
+if (CanIEdit("component", $bug{'reporter'}, $bug{'bug_id'})) {
+	my @components = @{$::components{$bug{"product"}}};
+	$component_popup = $::cgi->popup_menu(-name=>'component',
+                               '-values'=>\@components,
+                               -default=>$bug{'component'});
+}
+
+if (CanIEdit("cc", $bug{'reporter'}, $bug{'bug_id'})) {
+	$cc_element = $::cgi->td({-colspan=>"5"}, 
+                          $::cgi->textfield(-name=>"cc", 
+                                            -size=>"60",
+                                            -value=>ShowCcList($::bug_id)));
+}
+
+if (CanIEdit("bug_file_loc", $bug{'reporter'}, $bug{'bug_id'})) {
+	$URLBlock = $bug{'bug_file_loc'};
+	if (defined $URLBlock && $URLBlock ne "none" && 
+            $URLBlock ne "NULL" && $URLBlock ne "") {
+		$URLBlock = $::cgi->td({-align=>"RIGHT"}, 
+                               $::cgi->a({-href=>"$URLBlock"}, 
+                                  $::cgi->b("URL:"))) .
+                            $::cgi->td({-colspan=>"6"}, 
+                               $::cgi->textfield(-name=>"bug_file_loc",
+                                               -value=>"$bug{'bug_file_loc'}",
+                                               -size=>"60"));
+	} else {
+		$URLBlock = $::cgi->td({-align=>"RIGHT"}, $::cgi->b("URL:")) .
+                            $::cgi->td({-colspan=>"6"}, 
+                               $::cgi->textfield(-name=>"bug_file_loc",
+                                               -value=>'',
+                                               -size=>"60"));
+	}
+} else {
+	if (defined $URLBlock && $URLBlock ne "none" && 
+            $URLBlock ne "NULL" && $URLBlock ne "") {
+		$URLBlock = $::cgi->td({-align=>"RIGHT"}, $::cgi->b("URL:"),
+                               $::cgi->hidden(-name=>"bug_file_loc",
+                                              -value=>"$bug{'bug_file_loc'}")).
+                            $::cgi->td({-colspan=>"6"}, 
+                               $::cgi->a({-href=>"$bug{'bug_file_loc'}"}, 
+                                  "$bug{'bug_file_loc'}"));
+	}
+}
+
+if (CanIEdit("short_desc", $bug{'reporter'}, $bug{'bug_id'})) {
+	$SummaryBlock .= $::cgi->td({-colspan=>"6"}, 
+                            $::cgi->textfield(-name=>"short_desc", 
+                                              -value=>"$bug{'short_desc'}",
+                                              -size=>"60"));
+} else {
+	$SummaryBlock .= $::cgi->td({-colspan=>"6"}, "&nbsp;$bug{'short_desc'}",
+                         $::cgi->hidden(-name=>"short_desc", 
+                                        -value=>"$bug{'short_desc'}"));
+}
+
+my $AdditionalCommentsBlock = $::cgi->br .
+                              $::cgi->b("Additional Comments:") .
+                              $::cgi->br .
+                              $::cgi->textarea(-wrap=>"HARD", 
+                                               -name=>"comment", 
+                                               -rows=>"5", 
+                                               -cols=>"70",
+					       -value=>'',
+					       -override=>'1') .
+                              $::cgi->br;
+my $maildir;
+if ( -d "data/maildir/$bug{'bug_id'}" ) {
+    $maildir = $::cgi->td({-colspan=>"4"}, "&nbsp;$bug{'assigned_to'}") .
+               $::cgi->td(
+	          $::cgi->a({-href=>"data/maildir/$bug{'bug_id'}"}, 
+	             "Bug #${bug{'bug_id'}} email"));
+} else {
+    $maildir = $::cgi->td({-colspan=>"5"}, "&nbsp;$bug{'assigned_to'}");
+}
+
+print $::cgi->start_html(-title=>"Bug $::bug_id -- $bug{'short_desc'}"),
+      $::cgi->startform(-name=>"changeform",
+                      -method=>"POST",
+                      -action=>"process_bug.cgi"),
+      $::cgi->hidden(-name=>"id", -value=>"$::bug_id"),
+      $::cgi->hidden(-name=>"was_assigned_to", -value=>"$bug{'assigned_to'}"),
+      $::cgi->hidden(-name=>"product", -value=>"$bug{'product'}"),
+      $::cgi->table({-cellspacing=>"2", -cellpadding=>"2", -border=>"0"},
+        $::cgi->TR(
+           $::cgi->td({-align=>"RIGHT"}, $::cgi->b("Bug#:")),
+           $::cgi->td("&nbsp;$bug{'bug_id'}"),
+           $::cgi->td({-align=>"RIGHT"}, 
+              $::cgi->a({-href=>"$bug_status_html#rep_platform"}, 
+                 $::cgi->b("Architecture:"))
+           ),
+           $::cgi->td("&nbsp;$platform_popup"),
+           $::cgi->td({-align=>"RIGHT"}, $::cgi->b("Version:")),
+           $::cgi->td("&nbsp;$version_popup")
+        ),
+        $::cgi->TR(
+           $::cgi->td({-align=>"RIGHT"}, $::cgi->b("Product:")),
+           $::cgi->td({-colspan=>"2"}, "&nbsp;$bug{'product'}"),
+           $::cgi->td({-align=>"LEFT"}, $::cgi->b("Reporter:")),
+           $::cgi->td({-colspan=>"2"}, "&nbsp;$bug{'reporter'}")
+        ),
+        $::cgi->TR(
+           $::cgi->td({-align=>"RIGHT"}, 
+	      $::cgi->a({-href=>"$bug_status_html"}, 
+	         $::cgi->b("Status:"))
+	   ),
+	   $::cgi->td("&nbsp;$bug{'bug_status'}"),
+	   $::cgi->td({-align=>"RIGHT"}, 
+	      $::cgi->a({-href=>"$bug_status_html#priority"}, 
+	         $::cgi->b("Priority:"))
+	   ),
+	   $::cgi->td("&nbsp;$priority_popup"),
+           $class_row
+        ),
+        $::cgi->TR(
+           $::cgi->td({-align=>"RIGHT"}, 
+	      $::cgi->a({-href=>"$bug_status_html"},
+	         $::cgi->b("Resolution:"))
+	   ),
+           $::cgi->td("&nbsp;$bug{'resolution'}"),
+           $::cgi->td({-align=>"RIGHT"},
+	      $::cgi->a({-href=>"$bug_status_html#severity"},
+	         $::cgi->b("Severity:"))
+	   ),
+           $::cgi->td("&nbsp;$sev_popup"),
+           $::cgi->td({-align=>"RIGHT"}, $::cgi->b("Component:")),
+           $::cgi->td("&nbsp;$component_popup")
+        ),
+        $::cgi->TR(
+           $::cgi->td({-align=>"RIGHT"}, 
+	      $::cgi->a({-href=>"$bug_status_html#assigned_to"},
+	         $::cgi->b("Assigned&nbsp;To:"))),
+           $maildir 
+        ),
+        $::cgi->TR(
+           $::cgi->td({-align=>"RIGHT"}, $::cgi->b("Cc:&nbsp")),
+	   $cc_element
+        ),
+        $::cgi->TR($URLBlock),
+        $::cgi->TR($SummaryBlock)
+      ),
+      $AdditionalCommentsBlock;
 
 my $status = $bug{'bug_status'};
+my @trans;
+my $transition;
 
-if ($status eq "NEW" || $status eq "ASSIGNED" || $status eq "REOPENED") {
-    if ($status ne "ASSIGNED") {
-        print "<INPUT TYPE=radio NAME=knob VALUE=accept>";
-	print "Accept bug (change status to <b>ASSIGNED</b>)<br>";
-        $knum++;
-    }
-    if ($bug{'resolution'} ne "") {
-        print "<INPUT TYPE=radio NAME=knob VALUE=clearresolution>\n";
-        print "Clear the resolution (remove the current resolution of\n";
-        print "<b>$bug{'resolution'}</b>)<br>\n";
-        $knum++;
-    }
-    print "<INPUT TYPE=radio NAME=knob VALUE=resolve>
-        Resolve bug, changing <A HREF=\"bug_status.phtml\">resolution</A> to
-        <SELECT NAME=resolution
-          ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\">
-          $resolution_popup</SELECT><br>\n";
-    $knum++;
-    print "<INPUT TYPE=radio NAME=knob VALUE=duplicate>
-        Resolve bug, mark it as duplicate of bug # 
-        <INPUT NAME=dup_id SIZE=6 ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\"><br>\n";
-    $knum++;
-    my $assign_element = "<INPUT NAME=assigned_to SIZE=32 ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\" VALUE=$bug{'assigned_to'}>";
+SendSQL("select trans from states where state = '$status'");
 
-    print "<INPUT TYPE=radio NAME=knob VALUE=reassign> 
-          <A HREF=\"bug_status.phtml#assigned_to\">Reassign</A> bug to
-          $assign_element
-        <br>\n";
-    $knum++;
-    print "<INPUT TYPE=radio NAME=knob VALUE=reassignbycomponent>
-          Reassign bug to owner of selected component<br>\n";
-    $knum++;
-} else {
-    print "<INPUT TYPE=radio NAME=knob VALUE=reopen> Reopen bug<br>\n";
-    $knum++;
-    if ($status eq "RESOLVED") {
-        print "<INPUT TYPE=radio NAME=knob VALUE=verify>
-        Mark bug as <b>VERIFIED</b><br>\n";
-        $knum++;
-    }
-    if ($status ne "CLOSED") {
-        print "<INPUT TYPE=radio NAME=knob VALUE=close>
-        Mark bug as <b>CLOSED</b><br>\n";
-        $knum++;
-    }
+while (@row = FetchSQLData()) {
+    push(@trans, @row);
 }
- 
-print "
-<INPUT TYPE=\"submit\" VALUE=\"Commit\">
-<INPUT TYPE=\"reset\" VALUE=\"Reset\">
-<INPUT TYPE=hidden name=form_name VALUE=process_bug>
-<BR>
-<FONT size=\"+1\"><B>
- <A HREF=\"show_activity.cgi?id=$::FORM{'id'}\">View Bug Activity</A>
- <A HREF=\"long_list.cgi?buglist=$::FORM{'id'}\">Format For Printing</A>
-</B></FONT><BR>
-</FORM>
-<table><tr><td align=left><B>Description:</B></td><td width=100%>&nbsp;</td>
-<td align=right>Opened:&nbsp;$bug{'creation_ts'}</td></tr></table>
-<HR>
-<PRE>
-" . html_quote($bug{'long_desc'}) . "
-</PRE>
-<HR>\n";
+
+my @radio_values;
+my %radio_labels;
+my $default = "none";
+my $tablerow;
+my @tabledata;
+
+if(CanIEdit("bug_status", $bug{'reporter'}, $bug{'bug_id'})) {
+    foreach $transition (@trans) {
+        if ($transition eq $status) {
+	    push(@radio_values, "none");
+	    $radio_labels{"none"} = "Leave as " . 
+                                    $::cgi->b($status) . $::cgi->br;
+	}
+	if ($transition eq "VERIFIED" && $status ne "VERIFIED") {
+	    push(@radio_values, "verify");
+	    $radio_labels{"verify"} = $::cgi->b('VERIFY') . 
+                                      " bug as $class_popup" . $::cgi->br;
+	}
+	if ($transition eq "ASSIGNED") {
+            if (CanIEdit("assigned_to", $bug{'reporter'}, $bug{'bug_id'})) {
+		my $assign_element = $::cgi->textfield(-name=>"assigned_to",
+		                               -size=>"32",
+					       -value=>"$bug{'assigned_to'}");
+	        push(@radio_values, "reassign");
+	        $radio_labels{"reassign"} = 
+		    "Assign bug to $assign_element<BR>";
+	        push(@radio_values, "reassignbycomponent");
+	        $radio_labels{"reassignbycomponent"} = 
+		    "Assign bug to owner of selected component" . $::cgi->br;
+            }
+	}
+	if ($transition eq "RESOLVED") {
+            if (CanIEdit("resolution", $bug{'reporter'}, $bug{'bug_id'})) {
+               if ($bug{'resolution'} ne "") {
+	           push(@radio_values, "clearresolution");
+		   $radio_labels{"clearresolution"} =
+		       "Clear the resolution (remove the current " .
+		       "resolution of " . $::cgi->b($bug{'resolution'}) . 
+                       ")" . $::cgi->br;
+               }
+	       push (@radio_values, "resolve");
+	       $radio_labels{"resolve"} = "<B>RESOLVE</B> bug, changing " .
+	           $::cgi->a({-href=>"$bug_status_html"}, "resolution") .
+		   " to " .  $resolution_popup . $::cgi->br;
+	       push(@radio_values, "duplicate");
+	       $radio_labels{"duplicate"} = 
+	           "Resolve bug, mark it as duplicate of bug #" .
+		   $::cgi->textfield(-name=>"dup_id", -size=>"6") . $::cgi->br;
+            }
+	}
+	if ($transition eq "REOPENED" and $status ne "REOPENED") {
+	    push(@radio_values, "reopen");
+	    $radio_labels{"reopen"} = "Reopen bug" . $::cgi->br;
+	}
+	if ($transition eq "CLOSED" and $status ne "CLOSED") {
+	    push(@radio_values, "close");
+	    $radio_labels{"close"} = "Mark bug as " . 
+                                     $::cgi->b('CLOSED') . $::cgi->br;
+	}
+    }
+    if ($status ne "NEW" && 
+        CanIEdit("source", $bug{'reporter'}, $bug{'bug_id'})) {
+	push(@radio_values, "newsource");
+	$radio_labels{"newsource"} = 
+	    "Another report of this bug came from $source_popup" . $::cgi->br;
+    }
+    foreach my $radio (@radio_values) {
+        $tablerow = $::cgi->TR(
+                       $::cgi->td({-valign=>"CENTER", -align=>"CENTER"},
+                          $::cgi->radio_group(-name=>"knob", 
+                                             '-values'=>["$radio"],
+                                              -default=>$default,
+			                      -linebreak=>"true",
+                                              -labels=>{"$radio" => " "}),
+                          "&nbsp;"
+                         ),
+                         $::cgi->td({-valign=>"CENTER", -align=>"LEFT"},
+                            $radio_labels{$radio}
+                         )
+                       );
+        push(@tabledata, $tablerow);
+    }
+    print $::cgi->table({-border=>"0", 
+                         -cellpadding=>"0", 
+                         -cellspacing=>"0"}, 
+                         @tabledata
+                        );
+} else {
+    print $::cgi->hidden(-name=>"knob", -value=>"none");
+}
+
+print $::cgi->submit(-name=>"submit", -value=>"Commit"),
+      "&nbsp;",
+      $::cgi->reset,
+      $::cgi->hidden(-name=>"form_name", -value=>"process_bug"),
+      $::cgi->br,
+      $::cgi->font({-size=>"+1"}, 
+         $::cgi->a({-href=>"show_activity.cgi?id=$::bug_id"}, 
+	     $::cgi->b("View Bug Activity")),
+	 $::cgi->a({-href=>"long_list.cgi?buglist=$::bug_id"}, 
+	     $::cgi->b("Format For Printing"))
+      ),
+      $::cgi->br,
+      $::cgi->endform,
+      $::cgi->table(
+         $::cgi->TR(
+	    $::cgi->td({-align=>"LEFT"}, $::cgi->b('Description:')),
+	    $::cgi->td({-width=>"100%"}, "&nbsp;"),
+	    $::cgi->td({-align=>"RIGHT"}, "Opened:&nbsp;$bug{'creation_ts'}")
+	 )
+      ),
+      $::cgi->hr,
+      $::cgi->pre("$bug{'long_desc'}"),
+      $::cgi->hr;
 
 # To add back option of editing the long description, insert after the above
 # long_list.cgi line:
-#  <A HREF=\"edit_desc.cgi?id=$::FORM{'id'}\">Edit Long Description</A>
-
+#  %::cgi->a({-href=>"edit_desc.cgi?id=$::bug_id"}, "Edit Long Description")
 
 navigation_header();
 
-print "</BODY>\n";
+print $::cgi->end_html;

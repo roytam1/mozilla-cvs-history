@@ -18,9 +18,13 @@
 # Netscape Communications Corporation. All Rights Reserved.
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Andrew Anderson <andrew@redhat.com>
 
-use diagnostics;
 use strict;
+use diagnostics;
+
+use CGI;
+$::cgi = new CGI;
 
 require "CGI.pl";
 
@@ -34,34 +38,37 @@ my @masterlist = ("opendate", "changeddate", "severity", "priority",
 
 
 my @collist;
-if (defined $::FORM{'rememberedquery'}) {
-    if (defined $::FORM{'resetit'}) {
+if ($::cgi->param('rememberedquery') ne "") {
+    if ($::cgi->param('resetit') ne "") {
         @collist = @::default_column_list;
     } else {
         foreach my $i (@masterlist) {
-            if (defined $::FORM{"column_$i"}) {
+            if ($::cgi->param("column_$i") ne "") {
                 push @collist, $i;
             }
         }
     }
     my $list = join(" ", @collist);
-    print "Set-Cookie: COLUMNLIST=$list ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
-    print "Refresh: 0; URL=buglist.cgi?$::FORM{'rememberedquery'}\n";
-    print "Content-type: text/html\n\n";
-    PutHeader("What a hack");
-    print "Resubmitting your query with new columns...\n";
+    # FIXME: make path a config option
+    my $cookie = $::cgi->cookie(-name=>"COLUMNLIST",
+                     -value=>$list,
+                     -path=>'/bugzilla/',
+                     -expires=>"Sun, 30-Jun-2029 00:00:00 GMT");
+    my $rememberedquery = $::cgi->param('rememberedquery');
+    print $::cgi->redirect(-uri=>"buglist.cgi?$rememberedquery",
+                         -cookie=>$cookie);
     exit;
 }
 
-if (defined $::COOKIE{'COLUMNLIST'}) {
-    @collist = split(/ /, $::COOKIE{'COLUMNLIST'});
+if ($::cgi->cookie('COLUMNLIST') ne "") {
+    @collist = split(/ /, $::cgi->cookie('COLUMNLIST'));
 } else {
     @collist = @::default_column_list;
 }
 
-print "Content-type: text/html\n\n";
+print $::cgi->header('text/html');
 
-PutHeader("Column Change", "", "");
+PutHeader("Column Change");
 
 my %desc;
 foreach my $i (@masterlist) {
@@ -72,26 +79,32 @@ $desc{'summary'} = "Summary (first 60 characters)";
 $desc{'summaryfull'} = "Full Summary";
 
 
+my $query_string = $::cgi->query_string;
 print "Check which columns you wish to appear on the list, and then click\n";
-print "on submit.\n";
-print "<p>\n";
-print "<FORM ACTION=\"colchange.cgi\">\n";
-print "<INPUT TYPE=\"HIDDEN\" NAME=\"rememberedquery\" VALUE=\"$::buffer\">\n";
+print "on submit.\n<P>\n";
+print $::cgi->startform(-method=>"POST");
+print $::cgi->hidden(-name=>"rememberedquery", 
+                   -value=>$query_string) . "\n";
 
 foreach my $i (@masterlist) {
-    my $c;
     if (lsearch(\@collist, $i) >= 0) {
-        $c = 'CHECKED';
+        print $::cgi->checkbox(-name=>"column_$i", 
+                             -label=>"$desc{$i}",
+                             -checked=>'checked') . "<BR>\n";
     } else {
-        $c = '';
+        print $::cgi->checkbox(-name=>"column_$i",
+                             -label=>"$desc{$i}") . "<BR>\n";
     }
-    print "<INPUT TYPE=\"checkbox\" NAME=\"column_$i\" $c>$desc{$i}<br>\n";
 }
-print "<P>\n";
-print "<INPUT TYPE=\"submit\" VALUE=\"Submit\">\n";
-print "</FORM>\n";
-print "<FORM ACTION=\"colchange.cgi\">\n";
-print "<INPUT TYPE=\"HIDDEN\" NAME=\"rememberedquery\" VALUE=\"$::buffer\">\n";
-print "<INPUT TYPE=\"HIDDEN\" NAME=\"resetit\" VALUE=\"1\">\n";
-print "<INPUT TYPE=\"submit\" VALUE=\"Reset to Bugzilla default\">\n";
-print "</FORM>\n";
+print "<P>\n" . $::cgi->submit(-name=>"submit", -value=>"Submit") . "\n";
+print $::cgi->endform . "\n";
+
+print $::cgi->startform;
+print $::cgi->hidden(-name=>"rememberedquery", 
+                   -value=>"$query_string", 
+                   -override=>"1") . "\n";
+print $::cgi->hidden(-name=>"resetit", 
+                   -value=>"1", 
+                   -override=>"1") . "\n";
+print $::cgi->submit(-name=>"submit", -value=>"Reset to Bugzilla default") . "\n";
+print $::cgi->endform . "\n";

@@ -21,22 +21,21 @@
 
 use diagnostics;
 use strict;
+use CGI;
 
-use vars @::FORM;
+$::cgi = new CGI;
 
 require "CGI.pl";
 
 confirm_login();
 
-print "Content-type: text/html\n\n";
-
-if (!defined $::FORM{'id'} || $::FORM{'id'} eq "") {
-    PutHeader("Search By Bug Number", "Search By Bug Number", "");
-    print "<FORM METHOD=\"GET\" ACTION=\"show_bug.cgi\">\n";
-    print "You may find a single bug by entering its bug id here: \n";
-    print "<INPUT NAME=\"id\">\n";
-    print "<INPUT TYPE=\"submit\" VALUE=\"Show Me This Bug\">\n";
-    print "</FORM>\n";
+if ($::cgi->param('id') eq "") {
+    PutHeader("Search By Bug Number"); 
+    print $::cgi->startform .
+          "You may find a single bug by entering its bug id here: \n" .
+          $::cgi->textfield(-name=>"id", -default=>'') .
+          $::cgi->submit(-name=>"submit", -value=>"Show Me This Bug") .
+          $::cgi->endform;
     exit;
 }
 
@@ -44,5 +43,9 @@ ConnectToDatabase();
 
 GetVersionTable();
 
-my $body = Param("prefix") . "-bug_form.pl";
-do "$body";
+$::bug_id = $::cgi->param("id");
+
+PutHeader("Bugzilla bug $::bug_id", "Bugzilla Bug", $::bug_id);
+navigation_header();
+
+do "bug_form.pl";

@@ -82,8 +82,8 @@ After you enter a bug, mail is sent both to you and the QA department
 of Red Hat.  A member of the QA department will verify that they can
 reproduce your bug, and may contact you to get additional information.
 <P>
-After the bug has been verified, it will be assigned to a developer
-to look into a resolution for the bug.
+After the bug has been <A HREF="bug_status.phtml#verified">verified</A>, 
+it will be assigned to a developer to look into a resolution for the bug.
 <P>
 Once a resolution has been found, the bug will be marked 
 <A HREF="bug_status.phtml#resolved">RESOLVED</A> with a 
@@ -99,18 +99,28 @@ from the <A HREF="/bugzilla/">main bugzilla page</A>.
 <P>
 The bugzilla search uses an "OR" within each field, 
 with an "AND" between fields.   So, if you were to
-select <B>NEW</B> and <B>VERIFIED</B> from the 
-<I>Status</I> field and <B>normal</B> from the <I>Priority</I>
+select <A HREF="bug_status.phtml#new"><B>NEW</B></A> and 
+<A HREF="bug_status.phtml#verified"><B>VERIFIED</B></A> from the 
+<A HREF="bug_status.phtml#status"><I>Status</I></A> field and 
+<B>normal</B> from the <A HREF="bug_status.phtml#priority"><I>Priority</I></A>
 field, you would be asking for all normal priority bugs that are
 new or verified.
 
 <A NAME="#howdoipatch"><H2>How do I submit a patch?</H2></A>
 
-Send your patch to bugzilla@redhat.com with the subject line of
-"BUG ID #" followed by your bug number.  This will preserve the 
-format of your patch so that it does not get mangled by HTML or
-CGI parsing, and will make it easier for our developers to apply
-and test your patch.
+Send your patch to 
+<A HREF="mailto:bugzilla@redhat.com?subject=BUG%20ID%20%23">bugzilla@redhat.com</A> 
+with the subject line of "BUG ID #" followed by your bug number.  
+<P>
+This will preserve the format of your patch so that it does not 
+get mangled by HTML or CGI parsing, and will make it easier for 
+our developers to apply and test your patch.
+<P>
+<BLINK><B>PLEASE DO NOT SEND MAIL AS ROOT!</B></BLINK>
+<P>
+The mail filters that process patches are setup to avoid mail loops,
+and do not process mail that is sent from system accounts, such as
+root.  Please send mail from a normal user account.
 <P>
 
-<? include "../footer.html" ?>
+<? include "footer.html" ?>

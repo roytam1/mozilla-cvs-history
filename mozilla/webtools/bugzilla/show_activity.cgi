@@ -21,22 +21,26 @@
 
 use diagnostics;
 use strict;
+use CGI;
+
+$::cgi = new CGI;
 
 require "CGI.pl";
-my $pre = Param("prefix");
-require "$pre-security.pl";
+require "security.pl";
 
-print "Content-type: text/html\n\n";
+print $::cgi->header('text/html');
 
-PutHeader("Changes made to bug $::FORM{'id'}", "Activity log",
-          "Bug $::FORM{'id'}");
+my $bug_id = $::cgi->param("id");
+
+PutHeader("Changes made to bug $bug_id", "Activity log",
+          "Bug $bug_id");
 
 my $query = "
         select bugs_activity.field, bugs_activity.when,
                 bugs_activity.oldvalue, bugs_activity.newvalue,
                 profiles.login_name
         from bugs_activity,profiles
-        where bugs_activity.bug_id = '" . $::FORM{'id'} . "'
+        where bugs_activity.bug_id = '" . $bug_id . "'
         and profiles.userid = bugs_activity.who";
 
 ConnectToDatabase();
@@ -54,23 +58,24 @@ $query .= " order by bugs_activity.when";
 
 SendSQL($query);
 
-print "<TABLE BORDER CELLPADDING=\"4\">\n";
-print "<TR>\n";
-print "    <th>Who</th><th>What</th><th>Old value</th><th>New value</th><th>When</th>\n";
-print "</TR>\n";
-
 my @row;
+my @table_data;
 while (@row = FetchSQLData()) {
     my ($field,$when,$old,$new,$who) = (@row);
     $old = value_quote($old);
     $new = value_quote($new);
-    print "<TR>\n";
-    print "<TD>$who</TD>\n";
-    print "<TD>$field</TD>\n";
-    print "<TD>$old</TD>\n";
-    print "<TD>$new</TD>\n";
-    print "<TD>$when</TD>\n";
-    print "</TR>\n";
+    my $line = $::cgi->TR($::cgi->td($who), $::cgi->td($field), 
+               $::cgi->td($old), $::cgi->td($new), $::cgi->td($when));
+    push(@table_data, $line);
 }
-print "</TABLE>\n";
-print "<HR><A HREF=\"show_bug.cgi?id=$::FORM{'id'}\">Back to bug $::FORM{'id'}</a>\n";
+
+print $::cgi->table({-border=>"0", -cellpadding=>"4"},
+         $::cgi->TR(
+           $::cgi->th("Who"), $::cgi->th("What"), 
+           $::cgi->th("Old Value"), $::cgi->th("New Value"),
+           $::cgi->th("When")
+         ),
+         @table_data
+      ),
+      $::cgi->hr,
+      $::cgi->a({-href=>"show_bug.cgi?id=$bug_id"}, "Back to bug $bug_id")

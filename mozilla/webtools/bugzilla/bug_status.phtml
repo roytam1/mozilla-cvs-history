@@ -1,0 +1,180 @@
+<!--
+     The contents of this file are subject to the Mozilla Public License
+     Version 1.0 (the "License"); you may not use this file except in
+     compliance with the License. You may obtain a copy of the License at
+     http://www.mozilla.org/MPL/
+
+     Software distributed under the License is distributed on an "AS IS"
+     basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+     License for the specific language governing rights and limitations
+     under the License.
+
+     The Original Code is the Bugzilla Bug Tracking System.
+
+     The Initial Developer of the Original Code is Netscape Communications
+     Corporation. Portions created by Netscape are Copyright (C) 1998
+     Netscape Communications Corporation. All Rights Reserved.
+
+     Contributor(s): Terry Weissman <terry@mozilla.org>
+                     Andrew Anderson <andrew@redhat.com>
+-->
+
+<? include "header.html" ?>
+
+<H1 ALIGN="CENTER">A Bug's Life Cycle</H1>
+
+The <B>status</B> and <B>resolution</B> field define and track the
+life cycle of a bug.
+
+<P>
+<TABLE BORDER="1" CELLPADDING="4">
+  <TR ALIGN="CENTER" VALIGN="TOP">
+    <TD WIDTH="50%"><H1>STATUS</H1></TD>
+    <TD><H1>RESOLUTION</H1></TD>
+  </TR>
+  <TR VALIGN="TOP">
+    <TD>The <A NAME="status"><B>status</B></A> field indicates the general 
+        health of a bug.  Only certain status transitions are allowed.</TD>
+    <TD>The <A NAME="resolution"><B>resolution</B></A> field indicates what 
+        happened to this bug.</TD>
+  </TR>
+  <TR VALIGN="TOP">
+    <TD>
+      <DL>
+        <DT><A NAME="new"><B>NEW</B></A>
+          <DD> This bug has recently been added to the list of bugs and must 
+               be processed. Bugs in this state may be <B>VERIFIED</B>,
+               remain <B>NEW</B>, or resolved and marked <B>RESOLVED</B>.
+        <DT><A NAME="verified"><B>VERIFIED</B></A>
+          <DD> This bug has been verified as a bug.  Bugs in this state may
+               be <B>ASSIGNED</B>, or remain <B>VERIFIED</B>.
+        <DT><A NAME="assigned"><B>ASSIGNED</B></A>
+          <DD> This bug is not yet resolved, but is assigned to the proper
+               person. From here bugs can be given to another person, or 
+               resolved and become <B>RESOLVED</B>.
+        <DT><A NAME="reopened"><B>REOPENED</B></A>
+          <DD>This bug was once resolved, but the resolution was deemed
+              incorrect.  For example, a <B>WORKSFORME</B> bug is
+              <B>REOPENED</B> when more information shows up and the bug is now
+              reproducible.  From here bugs are either marked <B>ASSIGNED</B>
+              or <B>RESOLVED</B>.
+      </DL>
+    </TD>
+    <TD>
+      <DL>
+        <DD> No resolution yet. All bugs which are <B>NEW</B>, 
+             <B>VERIFIED</B>, <B>ASSIGNED</B>, or <B>REOPENED</B> have the 
+             resolution set to blank. All other bugs will be marked with 
+             one of the following resolutions.
+      </DL>
+    </TD>
+  </TR>
+  <TR VALIGN="TOP">
+    <TD>
+      <DL>
+        <DT><A NAME="resolved"><B>RESOLVED</B></A>
+          <DD> A resolution has been found.  From here bugs can be
+               <B>REOPENED</B>.
+      </DL>
+    </TD>
+    <TD>
+      <DL>
+        <DT><A NAME="fixed"><B>FIXED</B></A>
+          <DD> A fix for this bug has been found.
+        <DT><A NAME="discard"><B>DISCARD</B></A>
+          <DD> The problem described is not a bug. 
+        <DT><A NAME="wontfix"><B>WONTFIX</B></A>
+          <DD> The problem described is a bug which will never be fixed.
+        <DT><A NAME="later"><B>LATER</B></A>
+          <DD> The problem described is a bug which will not be fixed in this
+               version of the product.
+        <DT><A NAME="remind"><B>REMIND</B></A>
+          <DD> The problem described is a bug which will probably not be fixed 
+               in this version of the product, but might still be.
+        <DT><A NAME="duplicate"><B>DUPLICATE</B></A>
+          <DD> The problem is a duplicate of an existing bug. Marking a bug
+               duplicate requires the bug# of the duplicating bug and will at
+               least put that bug number in the description field.
+        <DT><A NAME="worksforme"><B>WORKSFORME</B></A>
+          <DD> All attempts at reproducing this bug were futile, reading the
+               code produces no clues as to why this behavior would occur. If
+               more information appears later, please re-assign the bug, for
+               now, file it.
+      </DL>
+    </TD>
+  </TR>
+</TABLE>
+
+<H1>Other Fields</H1>
+
+<TABLE BORDER="1" CELLPADDING="4">
+  <TR>
+    <TH COLSPAN="2"><A NAME="severity">
+      <H2>Severity</H2></A>
+    </TH>
+    <TH COLSPAN="2"><a name="priority">
+      <h2>Priority</h2></a>
+    </TH>
+  </TR>
+  <TR>
+    <TD COLSPAN="2">This field describes the impact of a bug.</TD>
+    <TD COLSPAN="2">This field describes the importance and order in which 
+        a bug should be fixed.  The available priorities are:
+    </TD>
+  </TR>
+  <TR>
+    <TD><B>Security</B></TD>
+    <TD>security issue</TD>
+    <TD COLSPAN="2">&nbsp; </TD>
+  </TR>
+  <TR>
+    <TD><B>High</B></TD>
+    <TD>crashes, loss of data, severe memory leak</TD>
+    <TD><B>High</B></TD>
+    <TD>Most important</TD>
+  </TR>
+  <TR>
+    <TD><B>Normal</B></TD>
+    <TD>major loss of function</TD>
+    <TD><B>Normal</B></TD>
+    <TD>&nbsp; </TD>
+  </TR>
+  <TR>
+    <TD><B>Low</B></TD>
+    <TD>minor loss of function, or other problem where 
+        easy workaround is present</TD>
+    <TD><B>low</B></TD>
+    <TD>Least important
+  </TR>
+</TABLE> 
+
+<A NAME="rep_platform"><H2>Platform</H2></a>
+This is the platform against which the bug was reported.
+Legal platforms include:
+
+<UL>
+  <LI> All (happens on all platforms; cross-platform bug)
+  <LI> i386 
+  <LI> sparc
+  <LI> alpha
+</UL>
+
+<B>Note:</B> Selecting the option "All" does not select bugs assigned 
+against all platforms.  It merely selects bugs that <B>occur</B> on 
+all platforms.
+
+<A NAME="assigned_to"><H2>Assigned To</H2></a>
+
+This is the person in charge of resolving the bug. 
+
+<A NAME="reporter"><H2>Reporter</H2></a>
+
+This is the person who reported the bug.
+
+<p>
+
+The default status for queries is set to NEW, ASSIGNED and REOPENED. When
+searching for bugs that have been resolved or verified, remember to set the
+status field appropriately. 
+
+<? include "footer.html" ?>

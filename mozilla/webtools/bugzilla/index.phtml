@@ -1,4 +1,3 @@
-<HTML>
 <!--
      The contents of this file are subject to the Mozilla Public License
      Version 1.0 (the "License"); you may not use this file except in
@@ -17,14 +16,10 @@
      Netscape Communications Corporation. All Rights Reserved.
 
      Contributor(s): Terry Weissman <terry@mozilla.org>
+                     Andrew Anderson <andrew@redhat.com>
 -->
-<HEAD><TITLE>Bugzilla Main Page</TITLE></HEAD>
-<BODY   BGCOLOR="#FFFFFF" TEXT="#000000"
-LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
-<TABLE BGCOLOR="#000000" WIDTH="100%" BORDER=0 CELLPADDING=0 CELLSPACING=0>
-<TR><TD><A HREF="http://www.mozilla.org/"><IMG
- SRC="http://www.mozilla.org/images/mozilla-banner.gif" ALT=""
- BORDER=0 WIDTH=600 HEIGHT=58></A></TD></TR></TABLE>
+<?include "header.html" ?>
+
 <TABLE BORDER=0 CELLPADDING=12 CELLSPACING=0 WIDTH="100%">
  <TR>
 
@@ -48,7 +43,7 @@ LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
 
   <TD>
 
-   This is <B>Bugzilla</B>: the Mozilla bug system.  For more 
+   This is <B>Bugzilla</B>: the Red Hat bug system.  For more 
    information about what Bugzilla is and what it can do, see 
    <A HREF="http://www.mozilla.org/">mozilla.org</A>'s
    <A HREF="http://www.mozilla.org/bugs/"><B>bug pages</B></A>.
@@ -57,21 +52,18 @@ LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
 
 <body>
 
-<img align=right width=329 height=220 src=ant.jpg border=2>
-
-
-This is where we put in lots of nifty words explaining all about
-bugzilla.
-
 <p>
 
-But it all boils down to a choice of:
-<br>
-<a href="query.cgi">Go to the query page to start.</a><br>
-<a href="enter_bug.cgi">Enter a new bug</a><br>
-<a href="reports.cgi">Bug reports</a>
-<FORM METHOD=GET ACTION=show_bug.cgi><INPUT TYPE=SUBMIT VALUE="Find"> bug
-# <INPUT NAME=id SIZE=6></FORM></TD>
+Go to the <A HREF="query.cgi">query page</A>.<BR>
+Enter a <A HREF="enter_bug.cgi">new bug</A>.<BR>
+Submit a <A HREF="redhat-faq.phtml#howdoipatch">patch</A>.<BR>
+Having problems using bugzilla? Look at the 
+  <A HREF="redhat-faq.phtml">FAQ</A>, 
+or email <A HREF="mailto:bugzilla-owner@redhat.com">bugzilla-owner@redhat.com</A><BR>
+<FORM METHOD="GET" ACTION="show_bug.cgi">
+<INPUT TYPE="SUBMIT" VALUE="Show"> bug # <INPUT NAME=id SIZE=6>
+</FORM>
+</TD>
+</TABLE>
 
-</BODY>
-</HTML>
+<?include "footer.html" ?>

@@ -23,31 +23,32 @@
 
 use diagnostics;
 use strict;
+use CGI;
+
+$::cgi = new CGI;
 
 require "CGI.pl";
 
-# Shut up misguided -w warnings about "used only once".  For some reason,
-# "use vars" chokes on me when I try it here.
-
-# use vars qw($::buffer);
-my $zz = $::buffer;
-$zz = $zz . $zz;
-
 confirm_login();
 
-my $platform = url_quote($::FORM{'product'});
-my $version = url_quote($::FORM{'version'});
+my $platform = $::cgi->param('product');
+my $version = $::cgi->param('version');
 
-print "Set-Cookie: PLATFORM=$platform ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
-print "Set-Cookie: VERSION-$platform=$version ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
-print "Content-type: text/html\n\n";
+my $platform_cookie = $::cgi->cookie(-name=>"PLATFORM",
+                                     -value=>"$platform",
+                                     #-path=>'/bugzilla/',
+                                     -expires=>"Sun, 30-Jun-2029 00:00:00 GMT");
+my $version_cookie = $::cgi->cookie(-name=>"VERSION-$platform",
+                                     -value=>"$version",
+                                     #-path=>'/bugzilla/',
+                                     -expires=>"Sun, 30-Jun-2029 00:00:00 GMT");
 
-if (defined $::FORM{'maketemplate'}) {
-    PutHeader("Bookmarks are your friend.", "Template constructed.", "");
+if ($::cgi->param('maketemplate') ne "") {
+    PutHeader("Bookmarks are your friend.", "Template constructed.");
     
-    my $url = "enter_bug.cgi?$::buffer";
+    my $url = "enter_bug.cgi?$::cgi->query_string";
 
-    print "If you put a bookmark <A HREF=\"$url\">to this link</a>, it will\n";
+    print "If you put a bookmark <A HREF=\"$url\">to this link</A>, it will\n";
     print "bring up the submit-a-new-bug page with the fields initialized\n";
     print "as you've requested.\n";
     exit;
@@ -58,28 +59,37 @@ PutHeader("Posting Bug -- Please wait", "Posting Bug", "One moment please...");
 umask 0;
 ConnectToDatabase();
 
-if (!defined $::FORM{'component'} || $::FORM{'component'} eq "") {
+if ($::cgi->param('component') eq "") {
     print "You must choose a component that corresponds to this bug.  If\n";
     print "necessary, just guess.  But please hit the <B>Back</B> button\n";
     print "and choose a component.\n";
+    print $::cgi->end_html;
     exit 0
 }
     
 
 my $forceAssignedOK = 0;
-if ($::FORM{'assigned_to'} eq "") {
+if ($::cgi->param('assigned_to') eq "") {
     SendSQL("select initialowner from components where program=" .
-            SqlQuote($::FORM{'product'}) .
-            " and value=" . SqlQuote($::FORM{'component'}));
-    $::FORM{'assigned_to'} = FetchOneColumn();
+            SqlQuote($::cgi->param('product')) .
+            " and value=" . SqlQuote($::cgi->param('component')));
+    my $data = FetchOneColumn();
+    $::cgi->param(-name=>'assigned_to', -value=>$data, -override=>"1");
     $forceAssignedOK = 1;
 }
 
-$::FORM{'assigned_to'} = DBNameToIdAndCheck($::FORM{'assigned_to'}, $forceAssignedOK);
-$::FORM{'reporter'} = DBNameToIdAndCheck($::FORM{'reporter'});
+my $assign = $::cgi->param('assigned_to');
+$::cgi->param(-name=>'assigned_to', 
+              -value=>DBNameToIdAndCheck($assign, $forceAssignedOK),
+              -override=>"1");
+my $report = ($::cgi->param('Bugzilla_login') ne "") ? $::cgi->param('Bugzilla_login') 
+                                                     : $::cgi->cookie('Bugzilla_login');;
+$::cgi->param(-name=>'reporter',
+              -value=>DBNameToIdAndCheck($report),
+              -override=>"1");
 
 
-my @bug_fields = ("reporter", "product", "version", "release", "rep_platform",
+my @bug_fields = ("reporter", "product", "version", "rep_platform",
                   "bug_severity", "priority", "op_sys", "assigned_to",
                   "bug_status", "short_desc", "component");
 my $query = "insert into bugs (\n" . join(",\n", @bug_fields) . ",
@@ -88,24 +98,24 @@ values (
 ";
 
 foreach my $field (@bug_fields) {
-    $query .= SqlQuote($::FORM{$field}) . ",\n";
+    $query .= SqlQuote($::cgi->param($field)) . ",\n";
 }
 
 my $gid_query = "SELECT groupid FROM profiles " . 
-	"WHERE userid = $::FORM{'reporter'}";
-#print "<PRE>$gid_query</PRE>";
+	"WHERE userid = '" . $::cgi->param('reporter') . "'";
+#print $::cgi->pre("$gid_query");
 SendSQL($gid_query);
 my $gid = FetchOneColumn();
-#print "<PRE>gid = $gid</PRE><BR>\n";
+#print $::cgi->pre("gid = $gid) . $cgi->br . "\n";
 $query .= "$gid, ";
 
 my $view_query;
 my $view_id;
 my $view_name;
 
-if (defined $::FORM{'view'}) {
+if ($::cgi->param('view') ne "") {
     $view_query = "SELECT type_id FROM type WHERE name = '" . 
-	$::FORM{'view'} . "'";
+	$::cgi->param('view') . "'";
     SendSQL($view_query);
     ($view_id, $view_name) = FetchSQLData();
     $query .= "'$view_id' ,";
@@ -116,22 +126,21 @@ if (defined $::FORM{'view'}) {
     $query .= "'$view_id', ";
 }
 
-$query .= "now(), " . SqlQuote($::FORM{'comment'}) . " )\n";
+$query .= "now(), " . SqlQuote($::cgi->param('comment')) . " )\n";
 
-#print "<PRE>$query</PRE>\n";
+#print $::cgi->param("$query") . "\n";
 
 my %ccids;
 
-if (defined $::FORM{'cc'}) {
-    foreach my $person (split(/[ ,]/, $::FORM{'cc'})) {
+if ($::cgi->param('cc') ne "") {
+    foreach my $person (split(/[ ,]/, $::cgi->param('cc'))) {
         if ($person ne "") {
             $ccids{DBNameToIdAndCheck($person)} = 1;
         }
     }
 }
 
-
-# print "<PRE>$query</PRE>\n";
+#print $::cgi->param("$query") . "\n";
 
 SendSQL($query);
 
@@ -142,11 +151,13 @@ foreach my $person (keys %ccids) {
     SendSQL("insert into cc (bug_id, who) values ($id, $person)");
 }
 
-print "<H2>Changes Submitted</H2>\n";
-print "<A HREF=\"show_bug.cgi?id=$id\">Show BUG# $id</A>\n";
-print "<BR><A HREF=\"query.cgi\">Back To Query Page</A>\n";
-print "<BR><A HREF=\"enter_bug.cgi?product=" . url_quote($::FORM{'product'}). "\">Enter a new bug</A>\n";
-
+print $::cgi->h2("Changes Submitted"),
+      $::cgi->a({-href=>"show_bug.cgi?id=$id"}, "Show BUG# $id"),
+      $::cgi->br,
+      $::cgi->a({-href=>"query.cgi"}, "Back To Query Page"),
+      $::cgi->br,
+      $::cgi->a({-href=>"enter_bug.cgi?product=$::cgi->param('product')"}, 
+           "Enter a new bug");
 
 system("./processmail $id < /dev/null > /dev/null 2> /dev/null &");
 exit;

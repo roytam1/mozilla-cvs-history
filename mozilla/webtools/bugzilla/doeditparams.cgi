@@ -18,9 +18,13 @@
 # Netscape Communications Corporation. All Rights Reserved.
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Andrew Anderson <andrew@redhat.com>
 
 use diagnostics;
 use strict;
+use CGI;
+
+$::cgi = new CGI;
 
 require "CGI.pl";
 require "defparams.pl";
@@ -28,48 +32,46 @@ require "defparams.pl";
 # Shut up misguided -w warnings about "used only once":
 use vars %::param,
     %::param_default,
-    @::param_list,
-    %::COOKIE;
-
+    @::param_list;
 
 confirm_login();
 
-print "Content-type: text/html\n\n";
-
-if (Param("maintainer") ne $::COOKIE{'Bugzilla_login'}) {
-    print "<H1>Sorry, you aren't the maintainer of this system.</H1>\n";
+if (Param("maintainer") ne $::cgi->cookie('Bugzilla_login')) {
+    PutHeader("Denied!");
+    print $::cgi->h1("Sorry, you aren't the maintainer of this system.");
     print "And so, you aren't allowed to edit the parameters of it.\n";
+    print $::cgi->end_html;
     exit;
 }
 
-
 PutHeader("Saving new parameters");
+
+my $cgiItem;
 
 foreach my $i (@::param_list) {
 #    print "Processing $i...<BR>\n";
-    if (exists $::FORM{"reset-$i"}) {
-        $::FORM{$i} = $::param_default{$i};
+    if ($::cgi->param("reset-$i") ne "") {
+        $::cgi->param(-name=>$i, -value=>$::param_default{$i}, -override=>"1");
     }
-    $::FORM{$i} =~ s/\r\n/\n/;     # Get rid of windows-style line endings.
-    if ($::FORM{$i} ne Param($i)) {
+    $cgiItem = $::cgi->param($i);
+    $cgiItem =~ s/\r\n/\n/;     # Get rid of windows-style line endings.
+    if ($cgiItem ne Param($i)) {
         if (defined $::param_checker{$i}) {
             my $ref = $::param_checker{$i};
-            my $ok = &$ref($::FORM{$i});
+            my $ok = &$ref($cgiItem);
             if ($ok ne "") {
                 print "New value for $i is invalid: $ok<p>\n";
                 print "Please hit <b>Back</b> and try again.\n";
                 exit;
             }
         }
-        print "Changed $i.<br>\n";
-        $::param{$i} = $::FORM{$i}
+        print "Changed $i.<BR>\n";
+        $::param{$i} = $::cgi->param($i);
     }
 }
 
-
 WriteParams();
 
-print "OK, done.<p>\n";
-print "<a href=\"editparams.cgi\">Edit the params some more.</a><p>\n";
-print "<a href=\"query.cgi\">Go back to the query page.</a>\n";
-    
+print "OK, done.<P>\n",
+      $::cgi->a({-href=>"editparams.cgi"}, "Edit the params some more.");
+      $::cgi->a({-href=>"query.cgi"}, "Go back to the query page.");

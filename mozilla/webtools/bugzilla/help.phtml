@@ -1,4 +1,3 @@
-<HTML>
 <!--
      The contents of this file are subject to the Mozilla Public License
      Version 1.0 (the "License"); you may not use this file except in
@@ -19,20 +18,25 @@
      Contributor(s): Terry Weissman <terry@mozilla.org>
 -->
 
-<TITLE>Clue</TITLE>
+<? include "header.html" ?>
+
 <H1>A Clue</H1>
+
 This form will allow you to call up a subset of the bug list.
 You should be able to add the URL of the resulting list to
 your bookmark file in order to preserve queries.
-<p>
+<P>
 The way the query works, if you have nothing checked in a box,
 then all values for that field are legal, for example if you checked nothing
 in any of the boxes, you would get the entire bug list.
-<p>
+<P>
 The default value of this form should correspond roughly to a "personal"
 bug list.
+
 <HR>
+
 <H2>Running queries not supported by the pretty boxes</H2>
+
 There is a hacky way to do some searches that aren't supported by the
 form.  The buglist script will build queries based on the URL, so
 you can add other criteria.
@@ -49,7 +53,8 @@ unsupported searches ...
 version
 rep_platform
 op_sys
-reporter area
 bug_file_loc
 short_desc
 </PRE>
+
+<? include "footer.html" ?>

@@ -21,23 +21,19 @@
 
 use diagnostics;
 use strict;
+use CGI;
+
+$::cgi = new CGI;
 
 require "CGI.pl";
 
-# Shut up misguided -w warnings about "used only once":
-use vars %::COOKIE;
-
-
 confirm_login();
 
-print "Content-type: text/html\n\n";
-
-if (Param("maintainer") ne $::COOKIE{'Bugzilla_login'}) {
+if (Param("maintainer") ne $::cgi->cookie(-name=>'Bugzilla_login')) {
     print "<H1>Sorry, you aren't the maintainer of this system.</H1>\n";
     print "And so, you aren't allowed to edit the parameters of it.\n";
     exit;
 }
-
 
 PutHeader("Saving groups");
 
@@ -45,8 +41,6 @@ SendSQL("select groupid, groupname, flags from groups order by groupid asc");
 
 my @line;
 my @groups;
-my @flags;
-my @fields;
 
 while (@line = FetchSQLData()) {
 	push(@groups, join(":", @line));
@@ -54,14 +48,12 @@ while (@line = FetchSQLData()) {
 
 SendSQL("select field, flag from security");
 
+my @flags;
+my @fields;
+
 while (@line = FetchSQLData()) {
         push(@flags, join(":", @line));
 	push(@fields, $line[0]);
-}
-
-foreach my $key (sort keys(%::FORM)) {
-    $::FORM{url_decode($key)} = $::FORM{$key};
-    #print "$key = $::FORM{$key}<BR>\n";
 }
 
 my @updates;
@@ -73,12 +65,12 @@ foreach my $group (@groups) {
     $newflags = $doupdate = 0;
     (my $groupid, my $groupname, my $flags) = split(":", $group);
     my $curItem = "$groupid" . "-groupid";
-    if (exists $::FORM{$curItem}) {
+    if ($::cgi->param($curItem) ne "") {
 	foreach my $field (@fields) {
 	    $curItem = $groupid . "-" . $field;
-	    if (exists $::FORM{$curItem}) {
-	        #print "$curItem: $::FORM{$curItem}<BR>";
-		$newflags += $::FORM{$curItem};
+	    if ($::cgi->param($curItem) ne "") {
+	        #print "$curItem: $::cgi->param($curItem)<BR>";
+		$newflags += $::cgi->param($curItem);
 	    }
 	}
         $updates[$curIndex] = "update groups set ";
@@ -86,11 +78,13 @@ foreach my $group (@groups) {
 	if (int($flags) != int($newflags)) {
 	    $updates[$curIndex] .= "flags = '$newflags' ";
 	    $doupdate = 1;
-	} elsif ($::FORM{$curItem} ne $groupname) {
-	    $updates[$curIndex] .= "groupname = '$::FORM{$curItem}' ";
+	} elsif ($::cgi->param($curItem) ne $groupname) {
+	    $updates[$curIndex] .= "groupname = '$::cgi->param($curItem)' ";
 	    $doupdate = 1;
-	} elsif ((int($flags) != ($newflags)) && ($::FORM{$curItem} ne $groupname)) {
-	    $updates[$curIndex] .= "flags = '$newflags', groupname = '$::FORM{$curItem}";
+	} elsif ((int($flags) != ($newflags)) && 
+                 ($::cgi->param($curItem) ne $groupname)) {
+	    $updates[$curIndex] .= "flags = '$newflags', ".
+                                   "groupname = '$::cgi->param($curItem)";
 	    $doupdate = 1;
 	}
 	$updates[$curIndex] .= "where groupid = '$groupid'";
@@ -107,12 +101,13 @@ foreach my $group (@groups) {
 if($#updates) {
     foreach my $update (@updates) {
         #print "<PRE>$update</PRE>\n";
-        SendSQL($update);
+        SendSQL($update) if ($update ne "");
     }
-    print "<P>OK, done.<p>\n";
+    print "<P>OK, done.<P>\n";
 } else {
-    print "<P>Nothing to update.<p>\n";
+    print "<P>Nothing to update.<P>\n";
 }
 
-print "<a href=\"editgroups.cgi\">Edit the groups some more.</a><p>\n";
-print "<a href=\"query.cgi\">Go back to the query page.</a>\n";
+print $::cgi->a({-href=>"editgroups.cgi"}, "Edit the groups some more.") .
+      "\n<BR>\n" .
+      $::cgi->a({-href=>"query.cgi"}, "Go back to the query page.");

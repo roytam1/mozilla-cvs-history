@@ -48,7 +48,7 @@ while (@row = FetchSQLData()) {
 }
 
 
-my $template = Param('whinemail');
+my $template = Param('whinebody');
 my $urlbase = Param('urlbase');
 
 foreach my $email (sort (keys %bugs)) {
@@ -59,9 +59,13 @@ foreach my $email (sort (keys %bugs)) {
     foreach my $i (@{$bugs{$email}}) {
         $msg .= "  ${urlbase}show_bug.cgi?id=$i\n"
     }
-    open(SENDMAIL, "|/usr/lib/sendmail -t -oi -f bugzilla\@redhat.com") 
-	|| die "Can't open sendmail";
-    print SENDMAIL $msg;
-    close SENDMAIL;
-    print "$email      " . join(" ", @{$bugs{$email}}) . "\n";
+
+    my $tolist = $email;
+    my $cclist = Param("whinecc");
+    if(Param("whineto") ne "") {
+        $tolist .= ", " . Param("whineto");
+    }
+    Mail($tolist, $cclist, Param("whinesubj"), $msg);
+
+    print "$tolist      " . join(" ", @{$bugs{$email}}) . "\n";
 }

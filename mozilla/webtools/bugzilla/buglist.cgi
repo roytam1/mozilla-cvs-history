@@ -18,118 +18,153 @@
 # Netscape Communications Corporation. All Rights Reserved.
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Andrew Anderson <andrew@redhat.com>
 
 use diagnostics;
 use strict;
+use CGI;
+
+$::cgi = new CGI;
 
 require "CGI.pl";
-my $pre = Param("prefix");
-require "$pre-security.pl";
+require "security.pl";
 
 my $serverpush = 0;
 
-for ($ENV{'HTTP_USER_AGENT'}) {
-    # Put browsers that can do serverpush here
-    # MSIE and Lynx cannot -- since Lynx will
-    # try to download this mime type we default
-    # to off
-    /Mozilla/    && do {$serverpush = 1;}
-}
+# Put browsers that can do serverpush here --  MSIE and Lynx cannot, 
+# since Lynx will try to download this mime type we default to off
+if ($::cgi->user_agent("Mozilla")) { $serverpush = 1; }
 
 if ($serverpush) {
-    print "Content-type: multipart/x-mixed-replace;boundary=thisrandomstring\n";
-    print "\n";
-    print "--thisrandomstring\n";
+    #print $::cgi->multipart_init(-boundary=>"thisrandomstring");
+    #print $::cgi->multipart_start(-type=>'text/html');
 }
 
 # Shut up misguided -w warnings about "used only once":
 
 use vars @::legal_platforms,
     @::versions,
+    @::legal_versions,
     @::legal_product,
-    %::MFORM,
     @::components,
     @::legal_severity,
     @::legal_priority,
     @::default_column_list,
     @::legal_resolution_no_dup;
 
-
-
 ConnectToDatabase();
 
-if (!defined $::FORM{'cmdtype'}) {
+if ($::cgi->param('cmdtype') eq "") {
     # This can happen if there's an old bookmark to a query...
-    $::FORM{'cmdtype'} = 'doit';
+    $::cgi->param(-name=>'cmdtype', -value=>'doit', -override=>"1");
 }
 
+my $namedcmd = $::cgi->param('namedcmd');
+my $newqueryname = $::cgi->param('newqueryname');
+my $cookie = "";
+my $query = "";
+my $id = DBNameToIdAndCheck($::cgi->cookie('Bugzilla_login'));
+my $needheader = 0;
 
-CMD: for ($::FORM{'cmdtype'}) {
+if (!$id) { 
+    confirm_login(); 
+} else { 
+    $needheader = 1;
+}
+
+my $command = $::cgi->param('cmdtype');
+CMD: for ($command) {
     /^runnamed$/ && do {
-        $::buffer = $::COOKIE{"QUERY_" . $::FORM{"namedcmd"}};
-        ProcessFormFields($::buffer);
+        my $query = "select query from queries where query_name = '" . 
+                    $namedcmd . "' and userid = $id";
+        SendSQL($query);
+        my $buffer = FetchOneColumn();
+        my $newcgi = new CGI($buffer);
+        $::cgi = $newcgi;
         last CMD;
     };
     /^editnamed$/ && do {
-	my $url = "query.cgi?" . $::COOKIE{"QUERY_" . $::FORM{"namedcmd"}};
-        print "Content-type: text/html
-Refresh: 0; URL=$url\n\n";
-
-PutHeader("What a hack.");
-print "
-Loading your query named <B>$::FORM{'namedcmd'}</B>...";
+        my $query = "select query from queries where query_name = '" . 
+                    $namedcmd . "' and userid = $id";
+        SendSQL($query);
+        my $buffer = FetchOneColumn();
+        my $url = "query.cgi?" . $buffer;
+        print $::cgi->redirect(-uri=>"$url");
         exit;
     };
     /^forgetnamed$/ && do {
-        print "Set-Cookie: QUERY_" . $::FORM{'namedcmd'} . "= ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT
-Content-type: text/html\n\n";
-
-PutHeader("Forget what?");
-print "
-OK, the <B>$::FORM{'namedcmd'}</B> query is gone.
-<P>
-<A HREF=\"query.cgi\">Go back to the query page.</A>
-";
+        $query = "delete from queries where query_name = '" .
+            $namedcmd . "' and userid = $id";
+        SendSQL($query);
+        print $::cgi->header(-type=>'text/html') if $needheader; 
+        PutHeader("Forget what?");
+        print "OK, the <B>$namedcmd</B> query is gone.<P>";
+        print $::cgi->a({-href=>"query.cgi"}, "Go back to the query page.");
+        print $::cgi->end_html;
         exit;
     };
     /^asnamed$/ && do {
-        if ($::FORM{'newqueryname'} =~ /^[a-zA-Z0-9_ ]+$/) {
-    print "Set-Cookie: QUERY_" . $::FORM{'newqueryname'} . "=$::buffer ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT
-Content-type: text/html\n\n";
-
-PutHeader("OK, done.");
-print "
-OK, you now have a new query named <B>$::FORM{'newqueryname'}</B>.
-<P>
-<A HREF=\"query.cgi\">Go back to the query page.</A>
-";
+        print $::cgi->header(-type=>'text/html') if $needheader; 
+        if ($::cgi->param('newqueryname') =~ /^[a-zA-Z0-9_ ]+$/) {
+           # make sure these don't get saved into the database
+	   $::cgi->delete('Bugzilla_login');
+	   $::cgi->delete('Bugzilla_password');
+	   my $cmd = $::cgi->query_string();
+	   $query = "select query from queries where userid = $id " .
+                    "and query_name = '" . $newqueryname . "'";
+	   SendSQL($query);
+	   my $temp = FetchOneColumn();
+           if ($temp ne "") {
+	       $query = "update queries set query = '" .  $cmd . 
+                        "' where userid = $id and query_name = '" .
+                        $newqueryname . "'";
+           } else {
+	       $query = "insert into queries values ($id, '" . 
+                        $newqueryname . "', '" .  $cmd . "')";
+           }
+	   SendSQL($query);
+	   PutHeader("OK, done.");
+	   print "OK, you now have a new query named <B>$newqueryname</B>.\n";
+           print "<P>\n";
+	   print $::cgi->a({-href=>"query.cgi"}, "Go back to the query page.");
+           print $::cgi->end_html;
         } else {
-            print "Content-type: text/html\n\n";
-
-PutHeader("Picky, picky.");
-print "
-Query names can only have letters, digits, spaces, or underbars.  You entered 
-\"<B>$::FORM{'newqueryname'}</B>\", which doesn't cut it.
-<P>
-Click the <B>Back</B> button and type in a valid name for this query.";
+	   PutHeader("Picky, picky.");
+           print "Query names can only have letters, digits, spaces, or ";
+	   print "underbars.  You entered \"<B>$newqueryname</B>\", which ";
+	   print "doesn't cut it.\n<P>\n";
+	   print "Click the <B>Back</B> button and type in a valid name ";
+	   print "for this query.";
+           print $::cgi->end_html;
         }
         exit;
     };
     /^asdefault$/ && do {
-        print "Set-Cookie: DEFAULTQUERY=$::buffer ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT
-Content-type: text/html\n\n";
-
-PutHeader("OK, default is set.");
-print "
-OK, you now have a new default query.
-
-<P>
-
-<A HREF=\"query.cgi\">Go back to the query page, using the new default.</A>";
-        exit;
+       print $::cgi->header(-type=>'text/html') if $needheader; 
+       # make sure these don't get saved into the database
+       $::cgi->delete('Bugzilla_login');
+       $::cgi->delete('Bugzilla_password');
+       my $cmd = $::cgi->query_string();
+       $query = "select query from queries where userid = $id " .
+                "and query_name = 'defaultquery'";
+       SendSQL($query);
+       my $temp = FetchOneColumn();
+       if ($temp ne "") {
+	   $query = "update queries set query = '" .  $cmd . 
+                    "' where userid = $id and " . 
+                    "query_name = 'defaultquery'";
+       } else {
+	   $query = "insert into queries values ($id, " .
+                    "'defaultquery', '" .  $cmd . "')";
+       }
+       SendSQL($query);
+       PutHeader("OK, default is set.");
+       print "OK, you now have a new default query.<P>";
+       print $::cgi->a({-href=>"query.cgi"}, 
+              "Go back to the query page, using the new default.");
+       exit;
     };
 }
-
 
 sub DefCol {
     my ($name, $k, $t, $s, $q) = (@_);
@@ -168,23 +203,19 @@ DefCol("version", "substring(bugs.version, 1, 5)", "Vers", "bugs.version");
 DefCol("os", "substring(bugs.op_sys, 1, 4)", "OS", "bugs.op_sys");
 
 my @collist;
-if (defined $::COOKIE{'COLUMNLIST'}) {
-    @collist = split(/ /, $::COOKIE{'COLUMNLIST'});
+if ($::cgi->cookie('COLUMNLIST') ne "") {
+    @collist = split(/ /, $::cgi->cookie('COLUMNLIST'));
 } else {
     @collist = @::default_column_list;
 }
 
-my $dotweak = defined $::FORM{'tweak'};
+my $dotweak = $::cgi->param('tweak');
 
 if ($dotweak) {
     confirm_login();
 }
 
-
-print "Content-type: text/html\n\n";
-
-my $query = "select bugs.bug_id";
-
+$query = "select bugs.bug_id";
 
 foreach my $c (@collist) {
     if (exists $::needquote{$c}) {
@@ -192,7 +223,6 @@ foreach my $c (@collist) {
 \t$::key{$c}";
     }
 }
-
 
 if ($dotweak) {
     $query .= ",
@@ -214,40 +244,40 @@ and    bugs.version = projector.value
 my $view_query = "SELECT type_id FROM type WHERE name = 'public'";
 SendSQL($view_query);
 my $type = FetchOneColumn();
-$view_query = "and bugs.view = " . $type . " ";
+$view_query = "and bugs.view = '" . $type . "' ";
 if (CanIView("view")){
 	$view_query = "";
 }
 $query .= $view_query;
 
-if (defined $::FORM{'sql'}) {
-  $query .= "and (\n$::FORM('sql')\n)"
+# FIXME: should this be protected by a config option?
+if ($::cgi->param('sql') ne "") {
+  $query .= "and (\n" . $::cgi->param('sql') . "\n)"
 } else {
   my @legal_fields = ("bug_id", "product", "version", "rep_platform", "op_sys",
                       "bug_status", "resolution", "priority", "bug_severity",
                       "assigned_to", "reporter", "bug_file_loc", "component");
-
-  foreach my $field (keys %::FORM) {
+  foreach my $field ($::cgi->param) {
       my $or = "";
-      if (lsearch(\@legal_fields, $field) != -1 && $::FORM{$field} ne "") {
+      if (lsearch(\@legal_fields, $field) != -1 && $::cgi->param($field) ne "") {
           $query .= "\tand (\n";
           if ($field eq "assigned_to" || $field eq "reporter") {
-              foreach my $p (split(/,/, $::FORM{$field})) {
+              foreach my $p (split(/,/, $::cgi->param($field))) {
                   my $whoid = DBNameToIdAndCheck($p);
                   $query .= "\t\t${or}bugs.$field = $whoid\n";
                   $or = "or ";
               }
           } else {
-              my $ref = $::MFORM{$field};
-              foreach my $v (url_decode(@$ref)) {
+              my @arr = $::cgi->param($field);
+	      foreach my $v (@arr) {
                   if ($v eq "(empty)") {
                       $query .= "\t\t${or}bugs.$field is null\n";
                   } else {
                       if ($v eq "---") {
                           $query .= "\t\t${or}bugs.$field = ''\n";
                       } else {
-                          $query .= "\t\t${or}bugs.$field = " . SqlQuote($v) .
-                              "\n";
+                          $query .= "\t\t${or}bugs.$field = " . 
+                                    SqlQuote($v) . "\n";
                       }
                   }
                   $or = "or ";
@@ -258,26 +288,26 @@ if (defined $::FORM{'sql'}) {
   }
 }
 
-if (defined $::FORM{'changedin'}) {
-    my $c = trim($::FORM{'changedin'});
+if ($::cgi->param('changedin') ne "") {
+    my $c = trim($::cgi->param('changedin'));
     if ($c ne "") {
         if ($c !~ /^[0-9]*$/) {
-            print "
-The 'changed in last ___ days' field must be a simple number.  You entered 
-\"$c\", which doesn't cut it.
-<P>
-Click the <B>Back</B> button and try again.";
-              exit;
+            PutHeader("Try Again");
+            print "The 'changed in last ___ days' field must be a simple ";
+	    print "number.  You entered \"$c\", which doesn't cut it.<P>";
+	    print "Click the <B>Back</B> button and try again.";
+	    print $::cgi->end_html;
+            exit;
         }
         $query .= "and to_days(now()) - to_days(bugs.delta_ts) <= $c ";
     }
 }
 
 foreach my $f ("short_desc", "long_desc") {
-    if (defined $::FORM{$f}) {
-        my $s = SqlQuote(trim($::FORM{$f}));
+    if ($::cgi->param($f) ne "") {
+        my $s = SqlQuote(trim($::cgi->param($f)));
         if ($s ne "") {
-            if ($::FORM{$f . "_type"} eq "regexp") {
+            if ($::cgi->param($f . "_type") eq "regexp") {
                 $query .= "and $f regexp $s ";
             } else {
                 $query .= "and instr($f, $s) ";
@@ -287,36 +317,44 @@ foreach my $f ("short_desc", "long_desc") {
 }
 
 
-if (defined $::FORM{'order'} && $::FORM{'order'} ne "") {
+if (($::cgi->param('order') ne "") && ($::cgi->param('order') ne "")) {
     $query .= "order by ";
-    ORDER: for ($::FORM{'order'}) {
+    ORDER: for ($::cgi->param('order')) {
         /\./ && do {
             # This (hopefully) already has fieldnames in it, so we're done.
             last ORDER;
         };
         /Number/ && do {
-            $::FORM{'order'} = "bugs.bug_id";
+            $::cgi->param(-name=>'order', 
+                          -value=>"bugs.bug_id", 
+                          -override=>"1");
             last ORDER;
         };
         /Import/ && do {
-            $::FORM{'order'} = "bugs.priority";
+            $::cgi->param(-name=>'order', 
+                          -value=>"bugs.priority", 
+                          -override=>"1");
             last ORDER;
         };
         /Assign/ && do {
-            $::FORM{'order'} = "assign.login_name, bugs.bug_status, priority, bugs.bug_id";
+            $::cgi->param(-name=>'order', 
+                          -value=>"assign.login_name, bugs.bug_status, priority, bugs.bug_id", 
+                          -override=>"1");
             last ORDER;
         };
         # DEFAULT
-        $::FORM{'order'} = "bugs.bug_status, priorities.rank, assign.login_name, bugs.bug_id";
+        $::cgi->param(-name=>'order',
+                      -value=>"bugs.bug_status, priorities.rank, assign.login_name, bugs.bug_id",
+                      -override=>"1");
     }
-    $query .= $::FORM{'order'};
+    $query .= $::cgi->param('order');
 }
 
 if ($serverpush) {
-    print "Please stand by ... <p>\n";
-    if (defined $::FORM{'debug'}) {
-        print "<pre>$query</pre>\n";
-    }
+    #print "Please stand by ... <p>\n";
+    #if ($::cgi->param('debug') ne "") {
+    #    print "<pre>$query</pre>\n";
+    #}
 }
 
 SendSQL($query);
@@ -328,45 +366,56 @@ sub pnl {
     $::bugl  .= $str;
 }
 
-my $fields = $::buffer;
+my $fields = $::cgi->query_string();
 $fields =~ s/[&?]order=[^&]*//g;
 $fields =~ s/[&?]cmdtype=[^&]*//g;
 
+my $oldorder;
 
-my $oldorder = "";
-
-if (defined $::FORM{'order'}) {
-    $oldorder = url_quote(", $::FORM{'order'}");
+if ($::cgi->param('order') ne "") {
+    $oldorder = "," .$::cgi->param('order');
 } else {
     $oldorder = "";
 }
 
 if ($dotweak) {
-    pnl "<FORM NAME=\"changeform\" METHOD=\"POST\" ACTION=\"process_bug.cgi\">";
+    pnl $::cgi->startform(-method=>'POST', 
+                          -action=>'process_bug.cgi',
+                          -name=>'changeform');
 }
 
-my $tablestart = "<TABLE CELLSPACING=\"0\" CELLPADDING=\"2\">
-<TR ALIGN=\"LEFT\"><TH>
-<A HREF=\"buglist.cgi?$fields&order=bugs.bug_id\">ID</A>";
+my @tabledata;
 
+push(@tabledata, $::cgi->TR({align=>"LEFT"}), 
+                 $::cgi->th(
+		     $::cgi->a({href=>"buglist.cgi?$fields&order=bugs.bug_id"},
+		     "ID")
+		 )
+    );
+
+my $tablestart = 
+    $::cgi->table({cellspacing=>"0", cellpadding=>"2"}) .
+    $::cgi->TR({align=>"LEFT"}) .
+    $::cgi->th .
+    $::cgi->a({href=>"buglist.cgi?$fields&order=bugs.bug_id"}, "ID");
 
 foreach my $c (@collist) {
     if (exists $::needquote{$c}) {
         if ($::needquote{$c}) {
-            $tablestart .= "<TH WIDTH=\"100%\" valigh=\"left\">";
+            $tablestart .= $::cgi->th({width=>"100%", valign=>"LEFT"});
         } else {
-            $tablestart .= "<TH valign=\"left\">";
+            $tablestart .= $::cgi->th({valign=>"LEFT"});
         }
         if (defined $::sortkey{$c}) {
-            $tablestart .= "<A HREF=\"buglist.cgi?$fields&order=$::sortkey{$c}$oldorder\">$::title{$c}</A>";
+            $tablestart .= $::cgi->a(
+                  {href=>"buglist.cgi?$fields&order=$::sortkey{$c}$oldorder"}, 
+                  "$::title{$c}"
+            );
         } else {
             $tablestart .= $::title{$c};
         }
     }
 }
-
-$tablestart .= "\n";
-
 
 my @row;
 my %seen;
@@ -416,29 +465,31 @@ my $buglist = join(":", @bugarray);
 
 
 if ($serverpush) {
-    print "\n";
-    print "--thisrandomstring\n";
+    #print $::cgi->multipart_end;
+    #print $::cgi->multipart_start(-type=>'text/plain');
 }
 
-
 my $toolong = 0;
-print "Content-type: text/html\n";
+
 if (length($buglist) < 4000) {
-    print "Set-Cookie: BUGLIST=$buglist\n";
+    # FIXME: make path configurable
+    $cookie = $::cgi->cookie(-name=>'BUGLIST',
+                       -path=>"/bugzilla/",
+                       -value=>$buglist);
 } else {
-    print "Set-Cookie: BUGLIST=\n";
+    # FIXME: make path configurable
+    $cookie = $::cgi->cookie(-name=>'BUGLIST',
+                       -path=>"/bugzilla/",
+                       -value=>'');
     $toolong = 1;
 }
 
-print "\n";
-
+print $::cgi->header(-cookie=>"$cookie");
 PutHeader("Bug List");
 
-print "
-<CENTER>
-<B>" .  time2str("%a %b %e %T %Z %Y", time()) . "</B>";
+print $::cgi->b(time2str("%a %b %e %T %Z %Y", time()));
 
-if (defined $::FORM{'debug'}) {
+if (defined $::cgi->param('debug')) {
     print "<PRE>$query</PRE>\n";
 }
 
@@ -449,9 +500,9 @@ if ($toolong) {
 
 # This is stupid.  We really really need to move the quip list into the DB!
 
-my $quip = "";
+my $quip;
 if (open (COMMENTS, "<data/comments")) {
-    my @cdata = "";
+    my @cdata;
     while (<COMMENTS>) {
         push @cdata, $_;
     }
@@ -462,9 +513,8 @@ if (open (COMMENTS, "<data/comments")) {
 }
         
 
-print "<HR><I><A HREF=\"newquip.html\">$quip\n";
-print "</I></A></CENTER>\n";
-print "<HR SIZE=\"10\">$tablestart\n";
+print $::cgi->hr . $::cgi->i($::cgi->a({href=>"newquip.html"}, "$quip"));
+print $::cgi->hr({size=>"10"}) . "$tablestart\n";
 print $::bugl;
 print "</TABLE>\n";
 
@@ -478,22 +528,23 @@ if ($count == 0) {
 
 if ($dotweak) {
     GetVersionTable();
-    print "
-<SCRIPT>
+my $JSCRIPT=<<END;
 numelements = document.changeform.elements.length;
 function SetCheckboxes(value) {
     for (var i=0 ; i<numelements ; i++) {
-        item = document.changeform.elements\[i\];
+        item = document.changeform.elements[i];
         item.checked = value;
     }
 }
-document.write(\" <input type=\\\"button\\\" value=\\\"Uncheck All\\\" onclick=\\\"SetCheckboxes(false);\\\"> <input type=\\\"button\\\" value=\\\"Check All\\\" onclick=\\\"SetCheckboxes(true);\\\">\");
-</SCRIPT>";
-    my $resolution_popup = make_options(\@::legal_resolution_no_dup, "FIXED");
+document.write("<input type="button" value="Uncheck All" onclick="SetCheckboxes(false);"><input type="button" value="Check All" onclick="SetCheckboxes(true);">");
+END
+    my $resolution_popup = $::cgi->popup_menu(-name=>"resolution",
+                              '-values'=>@::legal_resolution_no_dup,
+			      -defaults=>"FIXED");
     my @prod_list = keys %prodhash;
     my @list = @prod_list;
-    my @legal_versions = "";
-    my @legal_component = "";
+    my @legal_versions;
+    my @legal_component;
     if ($#prod_list == 1) {
         @legal_versions = @{$::versions{$prod_list[0]}};
         @legal_component = @{$::components{$prod_list[0]}};
@@ -503,37 +554,53 @@ document.write(\" <input type=\\\"button\\\" value=\\\"Uncheck All\\\" onclick=\
     my $platform_popup = make_options($::legal_platforms{$prod_list[0]}, $::dontchange);
     my $priority_popup = make_options(\@::legal_priority, $::dontchange);
     my $sev_popup = make_options(\@::legal_severity, $::dontchange);
-    my $component_popup = make_options($::components{$::FORM{'product'}}, $::FORM{'component'});
+    my $component_popup = make_options($::components{$::cgi->param('product')}, $::cgi->param('component'));
     my $product_popup = make_options(\@::legal_product, $::dontchange);
 
+    my $bug_status_html = Param("bugstatushtml");
 
-    print "
-<hr>
-<TABLE>
-<TR>
-    <TD ALIGN=\"RIGHT\"><B>Product:</B></TD>
-    <TD><SELECT NAME=\"product\">$product_popup</SELECT></TD>
-    <TD ALIGN=\"RIGHT\"><B>Version:</B></TD>
-    <TD><SELECT NAME=\"version\">$version_popup</SELECT></TD>
-<TR>
-    <TD ALIGN=\"RIGHT\"><B><A HREF=\"bug_status.html#rep_platform\">Platform:</A></B></TD>
-    <TD><SELECT NAME=\"rep_platform\">$platform_popup</SELECT></TD>
-    <TD ALIGN=\"RIGHT\"><B><A HREF=\"bug_status.html#priority\">Priority:</A></B></TD>
-    <TD><SELECT NAME=\"priority\">$priority_popup</SELECT></TD>
-</TR>
-<TR>
-    <TD ALIGN=\"RIGHT\"><B>Component:</B></TD>
-    <TD><SELECT NAME=\"component\">$component_popup</SELECT></TD>
-    <TD ALIGN=\"RIGHT\"><B><A HREF=\"bug_status.html#severity\">Severity:</A></B></TD>
-    <TD><SELECT NAME=\"bug_severity\">$sev_popup</SELECT></TD>
-</TR>
-</TABLE>
-
-<INPUT NAME=\"multiupdate\" value=\"Y\" TYPE=\"hidden\">
-
-<B>Additional Comments:</B>
-<BR>
-<TEXTAREA WRAP=\"HARD\" NAME=\"comment\" ROWS=\"5\" COLS=\"80\"></TEXTAREA><BR>";
+    print $::cgi->hr,
+	  $::cgi->table(
+             $::cgi->TR(
+	        $::cgi->td({-align=>"RIGHT"}, $::cgi->b("Product:")),
+		$::cgi->td($::cgi->popup_menu(-name=>"product",
+		                             '-values'=>@::legal_product)),
+	        $::cgi->td({-align=>"RIGHT"}, $::cgi->b("Version:")),
+		$::cgi->td($::cgi->popup_menu(-name=>"version",
+		                             '-values'=>@::legal_versions))
+	     ),
+             $::cgi->TR(
+	        $::cgi->td({-align=>"RIGHT"}, 
+		   $::cgi->a({-href=>"$bug_status_html#rep_platform"}, 
+		   $::cgi->b("Platform:"))),
+		$::cgi->td($::cgi->popup_menu(-name=>"rep_platform",
+		             '-values'=>@{$::legal_platforms{$prod_list[0]}})),
+	        $::cgi->td({-align=>"RIGHT"}, 
+		   $::cgi->a({-href=>"$bug_status_html#priority"}, 
+		   $::cgi->b("Priority:"))),
+		$::cgi->td($::cgi->popup_menu(-name=>"priority",
+		             '-values'=>$::legal_priority))
+	     ),
+             $::cgi->TR(
+	        $::cgi->td({-align=>"RIGHT"}, $::cgi->b("Component:")),
+		$::cgi->td($::cgi->popup_menu(-name=>"component",
+		              -default=>$::cgi->param('component'),
+		             '-values'=>@{$::components{$::cgi->param('product')}})),
+	        $::cgi->td({-align=>"RIGHT"}, 
+		   $::cgi->a({-href=>"$bug_status_html#severity"}, 
+		   $::cgi->b("Severity:"))),
+		$::cgi->td($::cgi->popup_menu(-name=>"severity",
+		             '-values'=>$::legal_severity))
+	     ),
+	  ),
+	  $::cgi->hidden(-name=>"multiupdate", -value=>"Y"),
+	  $::cgi->b("Additional Comments:"),
+	  $::cgi->br,
+	  $::cgi->textarea({-wrap=>"HARD"}, 
+	                    -name=>"comment",
+			    -rows=>"5",
+			    -cols=>"80"),
+	  $::cgi->br;
 
     # knum is which knob number we're generating, in javascript terms.
 
@@ -542,84 +609,121 @@ document.write(\" <input type=\\\"button\\\" value=\\\"Uncheck All\\\" onclick=\
 <INPUT TYPE=\"radio\" NAME=\"knob\" VALUE=\"none\" CHECKED>
         Do nothing else<br>";
     $knum++;
-    print "
-<INPUT TYPE=\"radio\" NAME=\"knob\" VALUE=\"verify\">
-        Verify bugs (change status to <b>VERIFIED</b>)<br>";
+    print $::cgi->radio_group(-name=>"knob", 
+             -value=>"verify", 
+	     -default=>"-",
+	     -linebreak=>'true',
+	     -labels=>{"Verify bugs (change status to $::cgi->b('VERIFIED')"});
     $knum++;
     if (!defined $statushash{'CLOSED'} &&
         !defined $statushash{'VERIFIED'} &&
         !defined $statushash{'RESOLVED'}) {
-        print "
-<INPUT TYPE=\"radio\" NAME=\"knob\" VALUE=\"clearresolution\">
-        Clear the resolution<br>";
+        print $::cgi->radio_group(-name=>"knob",
+	         -value=>"clearresolution",
+		 -default=>"-",
+		 -linebreak=>'true',
+		 -labels=>{"Clear the resolution"});
         $knum++;
-        print "
-<INPUT TYPE=\"radio\" NAME=\"knob\" VALUE=\"resolve\">
-        Resolve bugs, changing <A HREF=\"bug_status.html\">resolution</A> to
-        <SELECT NAME=\"resolution\"
-          ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\">
-          $resolution_popup</SELECT><br>";
+        print $::cgi->radio_group(-name=>"knob",
+	         -value=>"resolve",
+		 -default=>"-",
+		 -linebreak=>'true',
+		 -labels=>{"Resolve bugs, changing $::cgi->a{-href=>$bug_status_html#resolution}, 'resolution' to $resolution_popup"});
         $knum++;
     }
     if (!defined $statushash{'NEW'} &&
         !defined $statushash{'ASSIGNED'} &&
         !defined $statushash{'REOPENED'}) {
-        print "
-<INPUT TYPE=\"radio\" NAME=\"knob\" VALUE=\"reopen\"> Reopen bugs<br>";
+        print $::cgi->radio_group(-name=>"knob",
+	         -value=>"reopen",
+		 -default=>"-",
+		 -linebreak=>'true',
+		 -labels=>{"Reopen bugs"});
         $knum++;
     }
     my @statuskeys = keys %statushash;
     if ($#statuskeys == 1) {
         if (defined $statushash{'RESOLVED'}) {
-            print "
-<INPUT TYPE=\"radio\" NAME=\"knob\" VALUE=\"verify\">
-        Mark bugs as <b>VERIFIED</b><br>";
+            print $::cgi->radio_group(-name=>"knob",
+	             -value=>"verify",
+		     -default=>"-",
+		     -linebreak=>'true',
+		     -labels=>{"Mark bugs as $::cgi->b('VERIFIED')"});
             $knum++;
         }
         if (defined $statushash{'VERIFIED'}) {
-            print "
-<INPUT TYPE=\"radio\" NAME=\"knob\" VALUE=\"close\">
-        Mark bugs as <b>CLOSED</b><br>";
+            print $::cgi->radio_group(-name=>"knob",
+	             -value=>"close",
+		     -default=>"-",
+		     -linebreak=>'true',
+		     -labels=>{"Mark bugs as $::cgi->b('CLOSED')"});
             $knum++;
         }
     }
-    print "
-<INPUT TYPE=\"radio\" NAME=\"knob\" VALUE=\"reassign\"> 
-        <A HREF=\"bug_status.html#assigned_to\">Reassign</A> bugs to
-        <INPUT NAME=\"assigned_to\" SIZE=\"32\"
-          ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\"
-          VALUE=\"$::COOKIE{'Bugzilla_login'}\"><br>";
+    print $::cgi->radio_group(-name=>"knob",
+	     -value=>"reassign",
+	     -default=>"-",
+	     -linebreak=>'true',
+	     -labels=>{"$::cgi->a({-href=>$bug_status_html#assigned_to},
+	                'Reassign') bugs to 
+			$::cgi->textfield(-name=>'assigned_to',
+			   -size=>'32',
+			   -default=>$::cgi->cookie('Bugzilla_login'))"});
+
     $knum++;
-    print "<INPUT TYPE=\"radio\" NAME=\"knob\" VALUE=\"reassignbycomponent\">
-          Reassign bugs to owner of selected component<br>";
+    print $::cgi->radio_group(-name=>"knob",
+	     -value=>"reassignbycomponent",
+	     -default=>"-",
+	     -linebreak=>'true',
+	     -labels=>{"Reassign bugs to owner of selected component"});
     $knum++;
 
-    print "
-<p>
-<font size=\"-1\">
-To make changes to a bunch of bugs at once:
-<ol>
-<li> Put check boxes next to the bugs you want to change.
-<li> Adjust above form elements.  (It's <b>always</b> a good idea to add some
-     comment explaining what you're doing.)
-<li> Click the below \"Commit\" button.
-</ol></font>
-<INPUT TYPE=\"SUBMIT\" VALUE=\"Commit\">
-</FORM><hr>\n";
+    print $::cgi->p,
+          $::cgi->font({-size=>"-1"},
+	     "To make changes to a bunch of bugs at once:",
+	     $::cgi->ol(
+	        $::cgi->li("Put check boxes next to the " .
+		           "bugs you want to change."),
+		$::cgi->li("Adjust above form elements.  (It's " .
+		           $::cgi->b("always") . "a good idea to " .
+			   "add some comment explaining what you're doing.)"),
+		$::cgi->li("Click the below \"Commit\" button.")
+	     )
+	  ),
+          $::cgi->submit(-name=>"submit", -value=>"Commit"),
+          $::cgi->endform;
 }
 
 
 if ($count > 0) {
-    print "<FORM METHOD=\"POST\" ACTION=\"long_list.cgi\">
-<INPUT TYPE=\"HIDDEN\" NAME=\"buglist\" VALUE=\"$buglist\">
-<INPUT TYPE=\"SUBMIT\" VALUE=\"Long Format\">
-<A HREF=\"query.cgi\">Query Page</A>
-<A HREF=\"colchange.cgi?$::buffer\">Change columns</A>
-</FORM>";
+    print $::cgi->table(
+             $::cgi->TR(
+                $::cgi->td(
+                   $::cgi->startform(-method=>"POST", 
+                                     -action=>"long_list.cgi"),
+                   $::cgi->hidden(-name=>'buglist', -value=>$buglist),
+                   $::cgi->submit(-name=>"SUBMIT", -value=>"Long Format"),
+                   $::cgi->endform
+                ),
+                $::cgi->td(
+                   $::cgi->startform(-method=>"POST", -action=>"query.cgi"),
+	           $::cgi->submit(-name=>"QUERY", -value=>"Query Page"),
+                   $::cgi->endform
+                ),
+                $::cgi->td(
+                   $::cgi->startform(-method=>"POST", 
+                                     -action=>"colchange.cgi"),
+	           $::cgi->submit(-name=>"COLCHANGE", -value=>"Change Columns"),
+                   $::cgi->endform
+                )
+             )
+          );
+
     if (!$dotweak && $count > 1) {
-        print "<A HREF=\"buglist.cgi?$fields&tweak=1\">Make changes to several of these bugs at once.</A>\n";
+	print $::cgi->a({-href=>"buglist.cgi?$fields&tweak=1"}, 
+              "Make changes to several of these bugs at once.") . "\n";
     }
 }
 if ($serverpush) {
-    print "\n--thisrandomstring--\n";
+    #print $::cgi->multipart_end;
 }

@@ -18,14 +18,17 @@
 # Netscape Communications Corporation. All Rights Reserved.
 #
 # Contributor(s): Harrison Page <harrison@netscape.com>,
-# Terry Weissman <terry@mozilla.org>
+#                 Terry Weissman <terry@mozilla.org>,
+#                 Andrew Anderson <andrew@redhat.com>
 
 use diagnostics;
 use strict;
 use Chart::Lines;
+use CGI;
+
+$::cgi = new CGI;
 
 require "CGI.pl";
-require "globals.pl";
 
 use vars @::legal_product;
 
@@ -48,123 +51,125 @@ my %reports =
 # the header should be. This patch sets it to the 
 # system wide header." 
 
-print "Content-type: text/html\n\n";
+print $::cgi->header('text/html');
 
-if (defined $::FORM{'nobanner'})
-	{
-print <<FIN;
-<html>
-<head><title>Bug Reports</title></head>
-<body bgcolor="#FFFFFF">
-FIN
-	}
-else
-	{
-	PutHeader ("Bug Reports") unless (defined $::FORM{'nobanner'});
-	}
+if ($::cgi->param('nobanner') ne "") {
+	print $::cgi->start_html(-title=>"Bug Reports", -BGCOLOR=>"#FFFFFF");
+} else {
+	PutHeader ("Bug Reports");
+}
 
 ConnectToDatabase();
 GetVersionTable();
 
-$::FORM{'output'} = $::FORM{'output'} || "most_doomed"; # a reasonable default
+$::cgi->param(-name=>'output', 
+              # a reasonable default
+              -value=>$::cgi->param('output') || "most_doomed",
+              -override=>"1");
 
-if (! defined $::FORM{'product'})
-	{
+if ($::cgi->param('product') eq "") {
 	&choose_product;
-	}
-else
-	{
+} else {
 	# we want to be careful about what subroutines 
 	# can be called from outside. modify %reports
 	# accordingly when a new report type is added
 
-	if (! exists $reports{$::FORM{'output'}})
-		{
-		$::FORM{'output'} = "most_doomed"; # a reasonable default
-		}
+	if (! exists $reports{$::cgi->param('output')}) {
+		# a reasonable default
+		$::cgi->param(-name=>'output', 
+                              -value=>"most_doomed", 
+                              -override=>"1");
+	}
 	
-	my $f = $reports{$::FORM{'output'}};
+	my $f = $reports{$::cgi->param('output')};
 
-	if (! defined $f)
-		{
+	if (! defined $f) {
 		print "start over, your form data was all messed up.<p>\n";
-		foreach (keys %::FORM)
-			{
-			print "<font color=blue>$_</font> : " . 
-				($::FORM{$_} ? $::FORM{$_} : "undef") . "<br>\n";
-			}
-		exit;
+		foreach (%::cgi->param()) {
+			print $::cgi->font({-color=>"BLUE"}, "$_") .
+			      " : " . 
+			      ($::cgi->param($_) ? $::cgi->($_) : "undef") . 
+                              $::cgi->br;
 		}
-
-	&{$f};
+		print $::cgi->end_html;
+		exit;
 	}
 
-print <<FIN;
-<p>
-</body>
-</html>
-FIN
+	&{$f};
+}
+
+print $::cgi->p, $::cgi->end_html;
 
 ##################################
 # user came in with no form data #
 ##################################
 
-sub choose_product
-	{
-	my $product_popup = make_options (\@::legal_product, $::legal_product[0]);
-	my $charts = (-d $dir) ? "<option value=\"show_chart\">Bug Charts" : "";
+sub choose_product {
+	my $charts;
+	my @chart_values;
+        my %chart_labels;
+        $chart_labels{'most_doomed'} = "Bug Counts";
+        $chart_labels{'show_chart'} = "Bug Charts";
+	push(@chart_values, 'most_doomed');
+	push(@chart_values, 'show_chart') if (-d $dir);
+	$charts = $::cgi->popup_menu(-name=>'output',
+                                     '-values'=>\@chart_values,
+                                     -labels=>\%chart_labels); 
 
-	print <<FIN;
-<center>
-<h1>Welcome to the Bugzilla Query Kitchen</h1>
-<form method=get action=reports.cgi>
-<table border=1 cellpadding=5>
-<tr>
-<td align=center><b>Product:</b></td>
-<td align=center>
-<select name="product">
-$product_popup
-</select>
-</td>
-</tr>
-<tr>
-<td align=center><b>Output:</b></td>
-<td align=center>
-<select name="output">
-<option value="most_doomed">Bug Counts
-$charts
-</select>
-<tr>
-<td align=center><b>Switches:</b></td>
-<td align=left>
-<input type=checkbox name=links CHECKED value=1>&nbsp;Links to Bugs<br>
-<input type=checkbox name=nobanner value=1>&nbsp;No Banner<br>
-<input type=checkbox name=quip CHECKED value=1>&nbsp;Include Quip<br>
-</td>
-</tr>
-<tr>
-<td colspan=2 align=center>
-<input type=submit value=Continue>
-</td>
-</tr>
-</table>
-</form>
-<p>
-FIN
-	}
+	print $::cgi->center(
+                 $::cgi->h1("Welcome to the Bugzilla Query Kitchen"),
+                 $::cgi->startform,
+                 $::cgi->table({-border=>"1", -cellpadding=>"5"},
+                    $::cgi->TR(
+                       $::cgi->td({-align=>"CENTER"}, $::cgi->b("Product:")),
+		       $::cgi->td({-align=>"CENTER"}, 
+		          $::cgi->popup_menu(-name=>"product",
+			                   '-values'=>\@::legal_product,
+					   -default=>$::legal_product[0])
+                       ),
+                    ),
+		    $::cgi->TR(
+                       $::cgi->td({-align=>"CENTER"}, $::cgi->b("Output:")),
+		       $::cgi->td({-align=>"CENTER"}, "$charts")
+                    ),
+		    $::cgi->TR(
+                       $::cgi->td({-align=>"CENTER"}, $::cgi->b("Switches:")),
+                       $::cgi->td({-align=>"LEFT"}, 
+		           $::cgi->checkbox(-name=>"links",
+			                  -checked=>'checked',
+					  -label=>"Links to Bugs",
+			                  -value=>"1"),
+			   $::cgi->br,
+		           $::cgi->checkbox(-name=>"nobanner",
+					  -label=>"No Banner",
+					  -value=>"1"),
+			   $::cgi->br,
+		           $::cgi->checkbox(-name=>"quip",
+			                  -checked=>'checked',
+					  -label=>"Include Quip",
+					  -value=>")1"),
+			   $::cgi->br
+		        )
+                    ),
+		    $::cgi->TR(
+                       $::cgi->td({-align=>"CENTER", -colspan=>"2"}, 
+		           $::cgi->submit(-name=>"submit", -value=>"Continue"))
+		    )
+		 ),
+                 $::cgi->endform,
+                 $::cgi->p,
+	       );
+}
 
-sub most_doomed
-	{
+sub most_doomed {
 	my $when = localtime (time);
-	my $product = url_decode($::FORM{'product'});
+	my $product = $::cgi->param('product');
 
-	print <<FIN;
-<center>
-<h1>
-Bug Report for $product
-</h1>
-$when<p>
-FIN
+	print $::cgi->center(
+	         $::cgi->h1("Bug Report for $product"),
+		 $when,
+		 $::cgi->p
+	      );
 
 	my $query = <<FIN;
 select 
@@ -189,8 +194,8 @@ and
 	)
 FIN
 
-	print "<font color=purple><tt>$query</tt></font><p>\n" 
-		unless (! exists $::FORM{'showsql'});
+	print $::cgi->font({-color=>"PURPLE"}, $::cgi->tt($query)), $::cgi->p
+		unless ($::cgi->param('showsql') eq "");
 
 	SendSQL ($query);
 	
@@ -223,208 +228,201 @@ FIN
 		push @{$bugs_summary{$who}{$st}}, $bid;
 		
 		$bugs_totals{$who}{$st} ++;
-		}
+	}
 
-	if ($::FORM{'quip'})
-		{
-		if (open (COMMENTS, "<data/comments")) 
-			{
-    	my @cdata;
-			while (<COMMENTS>) 
-				{
+	if ($::cgi->param('quip')) {
+		if (open (COMMENTS, "<data/comments")) {
+    	                my @cdata;
+			while (<COMMENTS>) {
 				push @cdata, $_;
-				}
-			close COMMENTS;
-			$quip = "<i>" . $cdata[int(rand($#cdata + 1))] . "</i>";
 			}
-		} 
+			close COMMENTS;
+			$quip = $::cgi->i($cdata[int(rand($#cdata + 1))]);
+		}
+	} 
 
 	#########################
 	# start painting report #
 	#########################
 
-	print <<FIN;
-<h1>$quip</h1>
-<table border=1 cellpadding=5>
-<tr>
-<td align=right><b>New Bugs This Week</b></td>
-<td align=center>$bugs_new_this_week</td>
-</tr>
+	print $::cgi->center(
+                  $::cgi->h1("$quip"),
+	          $::cgi->table({-border=>"1", -cellpadding=>"5"},
+	             $::cgi->TR(
+		        $::cgi->td({-align=>"RIGHT"}, 
+		            $::cgi->b("New Bugs This Week")),
+		        $::cgi->td({-align=>"CENTER"}, 
+                            $bugs_new_this_week ? $bugs_new_this_week 
+                                                : "&nbsp;")
+		     ),
+		     $::cgi->TR(
+		        $::cgi->td({-align=>"RIGHT"}, 
+                            $::cgi->b("Bugs Marked New")),
+		        $::cgi->td({-align=>"CENTER"}, 
+                            $bugs_status{'NEW'} ? $bugs_status{'NEW'}
+                                                : "&nbsp;")
+		     ),
+		     $::cgi->TR(
+		        $::cgi->td({-align=>"RIGHT"}, 
+		            $::cgi->b("Bugs Marked Assigned")),
+		        $::cgi->td({-align=>"CENTER"}, 
+                            $bugs_status{'ASSIGNED'} ? $bugs_status{'ASSIGNED'}
+                                                     : "&nbsp;")
+		     ),
+		     $::cgi->TR(
+		        $::cgi->td({-align=>"RIGHT"}, 
+		            $::cgi->b("Bugs Marked Reopened")),
+		        $::cgi->td({-align=>"CENTER"}, 
+                            $bugs_status{'REOPENED'} ? $bugs_status{'REOPENED'}
+                                                     : "&nbsp;")
+		     ),
+		     $::cgi->TR(
+		        $::cgi->td({-align=>"RIGHT"}, $::cgi->b("Total Bugs")),
+		        $::cgi->td({-align=>"CENTER"}, 
+                            $bugs_count ? $bugs_count : "&nbsp;")
+		     )
+	          )
+	      ),
+	      $::cgi->p;
 
-<tr>
-<td align=right><b>Bugs Marked New</b></td>
-<td align=center>$bugs_status{'NEW'}</td>
-</tr>
 
-<tr>
-<td align=right><b>Bugs Marked Assigned</b></td>
-<td align=center>$bugs_status{'ASSIGNED'}</td>
-</tr>
-
-<tr>
-<td align=right><b>Bugs Marked Reopened</b></td>
-<td align=center>$bugs_status{'REOPENED'}</td>
-</tr>
-
-<tr>
-<td align=right><b>Total Bugs</b></td>
-<td align=center>$bugs_count</td>
-</tr>
-
-</table>
-<p>
-FIN
-
-	if ($bugs_count == 0)
-		{
+	if ($bugs_count == 0) {
 		print "No bugs found!\n";
+		print $::cgi->end_html;
 		exit;
-		}
-	
-	print <<FIN;
-<h1>Bug Count by Engineer</h1>
-<table border=3 cellpadding=5>
-<tr>
-<td align=center bgcolor="#DDDDDD"><b>Owner</b></td>
-<td align=center bgcolor="#DDDDDD"><b>New</b></td>
-<td align=center bgcolor="#DDDDDD"><b>Assigned</b></td>
-<td align=center bgcolor="#DDDDDD"><b>Reopened</b></td>
-<td align=center bgcolor="#DDDDDD"><b>Total</b></td>
-</tr>
-FIN
+	}
 
-	foreach my $who (sort keys %bugs_summary)
-		{
+	my $tablerow;
+	my @tabledata;
+
+	foreach my $who (sort keys %bugs_summary) {
 		my $bugz = 0;
-	 	print <<FIN;
-<tr>
-<td align=left><tt>$who</tt></td>
-FIN
-		
-		foreach my $st (@status)
-			{
+		my @totals;
+		foreach my $st (@status) {
 			$bugs_totals{$who}{$st} += 0;
-			print <<FIN;
-<td align=center>$bugs_totals{$who}{$st}
-FIN
+			push(@totals, $::cgi->td({-align=>"CENTER"}, 
+			     $bugs_totals{$who}{$st}));
 			$bugz += $#{$bugs_summary{$who}{$st}} + 1;
-			}
-		
-		print <<FIN;
-<td align=center>$bugz</td>
-</tr>
-FIN
 		}
+		$tablerow = $::cgi->TR(
+		               $::cgi->td({-align=>"LEFT"}, $::cgi->tt($who)),
+			       @totals,
+		               $::cgi->td({-align=>"LEFT"}, $bugz),
+			    );
+		push(@tabledata, $tablerow);
+	}
 	
-	print <<FIN;
-</table>
-<p>
-FIN
-
+	print $::cgi->center(
+	          $::cgi->h1("Bug Count by Engineer"),
+	          $::cgi->table({-border=>"3", -cellpadding=>"5"},
+	              $::cgi->TR(
+		          $::cgi->td({-align=>"CENTER", -BGCOLOR=>"#DDDDDD"},
+		              $::cgi->b("Owner")),
+		          $::cgi->td({-align=>"CENTER", -BGCOLOR=>"#DDDDDD"},
+		              $::cgi->b("New")),
+		          $::cgi->td({-align=>"CENTER", -BGCOLOR=>"#DDDDDD"},
+		              $::cgi->b("Assigned")),
+		          $::cgi->td({-align=>"CENTER", -BGCOLOR=>"#DDDDDD"},
+		              $::cgi->b("Reopened")),
+		          $::cgi->td({-align=>"CENTER", -BGCOLOR=>"#DDDDDD"},
+		              $::cgi->b("Total")),
+		      ),
+		      @tabledata
+	          )
+	      ),
+	      $::cgi->p;
+	
 	###############################
 	# individual bugs by engineer #
 	###############################
 
-	print <<FIN;
-<h1>Individual Bugs by Engineer</h1>
-<table border=1 cellpadding=5>
-<tr>
-<td align=center bgcolor="#DDDDDD"><b>Owner</b></td>
-<td align=center bgcolor="#DDDDDD"><b>New</b></td>
-<td align=center bgcolor="#DDDDDD"><b>Assigned</b></td>
-<td align=center bgcolor="#DDDDDD"><b>Reopened</b></td>
-</tr>
-FIN
-
-	foreach my $who (sort keys %bugs_summary)
-		{
-		print <<FIN;
-<tr>
-<td align=left><tt>$who</tt></td>
-FIN
-
-		foreach my $st (@status)
-			{
+	@tabledata = undef;
+	foreach my $who (sort keys %bugs_summary) {
+		my @temprow;
+		foreach my $st (@status) {
 			my @l;
-
-			foreach (sort { $a <=> $b } @{$bugs_summary{$who}{$st}})
-				{
-				if ($::FORM{'links'})
-					{
-					push @l, "<a href=\"show_bug.cgi?id=$_\">$_</a>\n"; 
-					}
-				else
-					{
+			foreach (sort {$a<=>$b} @{$bugs_summary{$who}{$st}}) {
+				if ($::cgi->param('links')) {
+					push @l, $::cgi->a({-href=>"show_bug.cgi?id=$_"}, "$_");
+				} else {
 					push @l, $_;
-					}
 				}
+			}
 				
 			my $bugz = join ' ', @l;
 			$bugz = "&nbsp;" unless ($bugz);
 			
-			print <<FIN
-<td align=left>$bugz</td>
-FIN
-			}
-
-		print <<FIN;
-</tr>
-FIN
+			push(@temprow, $::cgi->td({-align=>"LEFT"}, $bugz));
 		}
-
-	print <<FIN;
-</table>
-<p>
-FIN
+		$tablerow = $::cgi->TR(
+		            $::cgi->td({-align=>"LEFT"}, $::cgi->tt("$who")),
+			    @temprow
+		);
+		push(@tabledata, $tablerow);
 	}
+	print $::cgi->center(
+	          $::cgi->h1("Individual Bugs by Engineer"),
+	          $::cgi->table({-border=>"1", -cellpadding=>"5"},
+	              $::cgi->TR(
+		          $::cgi->td({-align=>"CENTER", -BGCOLOR=>"#DDDDDD"},
+		              $::cgi->b("Owner")),
+		          $::cgi->td({-align=>"CENTER", -BGCOLOR=>"#DDDDDD"},
+		              $::cgi->b("New")),
+		          $::cgi->td({-align=>"CENTER", -BGCOLOR=>"#DDDDDD"},
+		              $::cgi->b("Assigned")),
+		          $::cgi->td({-align=>"CENTER", -BGCOLOR=>"#DDDDDD"},
+		              $::cgi->b("Reopened"))
+		      ),
+		      @tabledata
+	          )
+	      ),
+	      $::cgi->p;
 
-sub is_legal_product
-	{
+}
+
+sub is_legal_product {
 	my $product = shift;
 	return grep { $_ eq $product} @::legal_product;
-	}
+}
 
-sub header
-	{
-	print <<FIN;
-<TABLE BGCOLOR="#000000" WIDTH="100%" BORDER=0 CELLPADDING=0 CELLSPACING=0>
-<TR><TD><A HREF="http://www.mozilla.org/"><IMG
- SRC="http://www.mozilla.org/images/mozilla-banner.gif" ALT=""
- BORDER=0 WIDTH=600 HEIGHT=58></A></TD></TR></TABLE>
-FIN
-	}
+sub header {
+	print $::cgi->table({-BGCOLOR=>"#000000", -width=>"100%", -border=>"0",
+	                   -cellpadding=>"0", -cellspacing=>"0"},
+	          $::cgi->TR(
+		      $::cgi->td(
+		          $::cgi->a({-href=>"http://www.mozilla.org/"}, 
+			      $::cgi->img({-src=>"http://www.mozilla.org/images/mozilla-banner.gif", -alt=>"", -border=>"0", -width=>"600", -height=>"58"})
+			  )
+		      )
+		  )
+	      )
+}
 
 sub show_chart {
     my $when = localtime (time);
-    my $product = url_decode($::FORM{'product'});
+    my $product = $::cgi->param('product');
 
-	if (! is_legal_product($product))
-		{
+	if (! is_legal_product($product)) {
 		&die_politely ("Unknown product: $product");
-		}
+	}
 
-  print <<FIN;
-<center>
-FIN
+    print "<CENTER>";
 	
 	my @dates;
-	my @open; my @assigned; my @reopened;
-
-        my $prodname = $::FORM{'product'};
+	my @open;
+	my @assigned;
+	my @reopened;
+        my $prodname = $product;
 
         $prodname =~ s/\//-/gs;
 
         my $file = join '/', $dir, $prodname;
-
-	my $image = "$file.gif";
-
-	if (! open FILE, $file)
-		{
+	if (! open FILE, $file) {
 		&die_politely ("The tool which gathers bug counts has not been run yet.");
-		}
+	}
 	
-	while (<FILE>)
-		{
+	my $image = "$file.gif";
+	while (<FILE>) {
 		chomp;
 		next if ($_ =~ /^#/ or ! $_);
 		my ($date, $open, $assigned, $reopened) = split /\|/, $_;
@@ -434,14 +432,13 @@ FIN
 		push @open, $open;
 		push @assigned, $assigned;
 		push @reopened, $reopened;
-		}
+	}
 	
 	close FILE;
 
-	if ($#dates < 1)
-		{
+	if ($#dates < 1) {
 		&die_politely ("We don't have enough data points to make a graph (yet)");
-		}
+	}
 	
 	my $img = Chart::Lines->new (800, 600);
 	my @labels = qw (New Assigned Reopened);
@@ -454,52 +451,46 @@ FIN
 	push @data, \@assigned;
 	push @data, \@reopened;
 
-	my %settings =
-		(
+	my %settings = (
 		"title" => "Bug Charts for $product",
 		"x_label" => "Dates",
 		"y_label" => "Bug Count",
 		"legend_labels" => \@labels,
-		);
+	);
 	
 	$img->set (%settings);
 	
-	open IMAGE, ">$image" or die "$image: $!";
-	$img->gif (*IMAGE, \@data);
-	close IMAGE;
+	$img->gif("$image", \@data);
 
-	print <<FIN;
-<img src="$image">
-<br clear=left>
-<br>
-FIN
-	}
+	# FIXME: get this hack fixed
+	$image =~ s/ /%20/g;
 
-sub die_politely
-	{
+	print $::cgi->img({-src=>$image}),
+	      $::cgi->br({-clear=>"LEFT"}),
+	      $::cgi->br;
+}
+
+sub die_politely {
 	my $msg = shift;
-	my $product = url_decode($::FORM{'product'});
+	my $product = $::cgi->param('product');
 
-	print <<FIN;
-<p>
-<table border=1 cellpadding=10>
-<tr>
-<td align=center>
-<font color=blue>Sorry, but ...</font>
-<p>
-There is no graph available for <b>$product</b><p>
-
-<font size=-1>
-$msg
-<p>
-</font>
-</td>
-</tr>
-</table>
-<p>
-FIN
-	
+	print $::cgi->p,
+	      $::cgi->table({-border=>"1", -cellpadding=>"10"},
+	          $::cgi->TR(
+		      $::cgi->td({-align=>"CENTER"},
+		          $::cgi->font({-color=>"BLUE"}, "Sorry, but ..."),
+			  $::cgi->p,
+			  "There is no graph available for ",
+			  $::cgi->b("$product"),
+			  $::cgi->p,
+			  $::cgi->font({-size=>"-1"}, "$msg"),
+			  $::cgi->p
+		      )
+		  )
+	      ),
+	      $::cgi->p,
+	      $::cgi->end_html;
 	exit;
-	}
+}
 
 

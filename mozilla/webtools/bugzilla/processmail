@@ -18,12 +18,16 @@
 # Netscape Communications Corporation. All Rights Reserved.
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#		  David Gardiner <david.gardiner@unisa.edu.au>
+#		  Andrew Anderson <andrew@redhat.com>
 
 
 # To recreate the shadow database,  run "processmail regenerate" .
 
 use diagnostics;
 use strict;
+use FileHandle;
+use IPC::Open2;
 
 require "globals.pl";
 
@@ -135,6 +139,9 @@ sub GetBugText {
 
     my @cclist;
     @cclist = split(/,/, ShowCcList($id));
+    if(Param("changedcc") ne "") {
+        push(@cclist,Param("changedcc"));
+    }
     $::bug{'cclist'} = \@cclist;
 
 
@@ -236,10 +243,22 @@ foreach my $i (@ARGV) {
     close FID;
     if (Different($old, $new)) {
 	my $diffcmd = Param("diffcmd");
-        system("$diffcmd $old $new > $diffs");
-        my $tolist = fixaddresses([$::bug{'assigned_to'}, $::bug{'reporter'}]);
+	my $diffopt = Param("diffopt");
+	my $pid = open2(\*Reader, \*Writer, "$diffcmd $diffopt $old $new");
+	open(DIFF, ">$diffs");
+	while(<Reader>) { print DIFF $_; }
+	close(DIFF);
+	close(Reader);
+	close(Writer);
+        my $tolist = "";
         my $cclist = fixaddresses($::bug{'cclist'});
         my $logstr = "Bug $i changed";
+        if(Param("changedto") ne "") {
+            $tolist = Param("changedto");
+            $tolist = fixaddresses([$tolist, $::bug{'assigned_to'}, $::bug{'reporter'}]);
+        } else {
+            $tolist = fixaddresses([$::bug{'assigned_to'}, $::bug{'reporter'}]);
+        }
         if ($tolist ne "" || $cclist ne "") {
             my %substs;
 
@@ -254,13 +273,12 @@ foreach my $i (@ARGV) {
             close DIFFS;
             $substs{"neworchanged"} = $verb;
             $substs{"summary"} = $::bug{'short_desc'};
-            my $msg = PerformSubsts(Param("changedmail"), \%substs);
+            my $subj = PerformSubsts(Param("changedsubj"), \%substs);
+            my $msg = PerformSubsts(Param("changedbody"), \%substs);
 
             if (!$regenerate) {
-                open(SENDMAIL, "|/usr/lib/sendmail -t -oi -f bugzilla\@redhat.com") ||
-                    die "Can't open sendmail";
-                print SENDMAIL $msg;
-                close SENDMAIL;
+		Mail($tolist, $cclist, $subj, $msg);
+
                 $logstr = "$logstr; mail sent to $tolist $cclist";
             }
         }

@@ -22,30 +22,30 @@
 
 use diagnostics;
 use strict;
+use CGI;
+
+$::cgi = new CGI;
 
 require "CGI.pl";
 
-print "Content-type: text/html\n";
-print "\n";
+print $::cgi->header('text/html');
 
 ConnectToDatabase();
 
-
 sub Status {
     my ($str) = (@_);
-    print "$str <P>\n";
+    print "$str<P>\n";
 }
 
 sub Alert {
     my ($str) = (@_);
-    Status("<font color=red>$str</font>");
+    Status("<FONT COLOR=\"red\">$str</FONT>");
 }
 
 sub BugLink {
     my ($id) = (@_);
-    return "<a href=\"show_bug.cgi?id=$id\">$id</a>";
+    return $::cgi->a({-href=>"show_bug.cgi?id=$id"}, "$id");
 }
-
 
 PutHeader("Bugzilla Sanity Check");
 
@@ -79,9 +79,7 @@ while (@row = FetchSQLData()) {
     }
 }
 
-
 undef $profid{0};
-
 
 Status("Checking reporter/assigned_to ids");
 SendSQL("select bug_id,reporter,assigned_to from bugs");

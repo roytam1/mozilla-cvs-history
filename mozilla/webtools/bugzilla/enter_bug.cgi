@@ -22,56 +22,80 @@
 
 use diagnostics;
 use strict;
+use CGI;
+
+$::cgi = new CGI;
 
 require "CGI.pl";
-require "globals.pl";
-
-my $body = Param("prefix") . "-enterform.pl";
-require "$body";
-$body = Param("prefix") . "-security.pl";
-require "$body";
+require "security.pl";
 
 # Shut up misguided -w warnings about "used only once":
-use vars @::buffer,
+use vars 
     @::legal_severity,
+    @::legal_sources,
     @::legal_opsys,
     @::legal_platforms,
     @::legal_priority;
 
+my $product = $::cgi->param('product');
+confirm_login();
 
-if (!defined $::FORM{'product'}) {
+if ($::cgi->param('product') eq "") {
     GetVersionTable();
     my @prodlist = keys %::versions;
     if ($#prodlist != 0) {
-        print "Content-type: text/html\n\n";
         PutHeader("Enter Bug");
         
-        print "<H2>First, you must pick a product on which to enter\n";
-        print "a bug.</H2>\n";
-        print "<table>";
+	my @tabledata;
+	my $tablerow;
         foreach my $p (sort (@prodlist)) {
-            print "<tr><th align=\"right\" valign=\"top\"><a href=\"enter_bug.cgi?product=" . url_quote($p) . "\"&$::buffer>$p</a>:</th>\n";
             if (defined $::proddesc{$p}) {
-                print "<td valign=\"top\">$::proddesc{$p}</td>\n";
+	        $tablerow = $::cgi->TR(
+                            $::cgi->td({-align=>"RIGHT", -valign=>"TOP"},
+                               $::cgi->startform(-name=>"$p",
+                                                 -action=>"enter_bug.cgi"),
+                               $::cgi->hidden(-name=>'product', 
+                                              -value=>"$p",
+                                              -override=>'1'),
+                               $::cgi->submit(-value=>"$p"),
+                               ":"
+                            ),
+                            $::cgi->td({-valign=>"CENTER"}, 
+                               $::proddesc{$p}),
+                               $::cgi->endform
+                            );
+            } else {
+	        $tablerow = $::cgi->TR(
+                            $::cgi->td({-align=>"RIGHT", -valign=>"TOP"},
+                               $::cgi->startform(-name=>"$p",
+                                                 -action=>"enter_bug.cgi"),
+                               $::cgi->hidden(-name=>'product', 
+                                              -value=>"$p",
+                                              -override=>'1'),
+                               $::cgi->submit(-value=>"$p"),
+                               ":"
+                            ),
+                            $::cgi->td({-valign=>"TOP"}, 
+                               "&nbsp;"),
+                               $::cgi->endform
+                            );
             }
-            print "</tr>";
+	    push(@tabledata, $tablerow);
+	    $tablerow = '';
         }
-        print "</table>\n";
+	print 
+          $::cgi->h2("First, you must pick a product on which to enter a bug"),
+	  $::cgi->table(@tabledata),
+	  $::cgi->end_html;
         exit;
     }
-    $::FORM{'product'} = $prodlist[0];
+    $::cgi->param(-name=>'product', -value=>"$prodlist[0]", -override=>"1");
 }
-
-my $product = url_decode($::FORM{'product'});
-
-confirm_login();
-
-print "Content-type: text/html\n\n";
 
 sub formvalue {
     my ($name, $default) = (@_);
-    if (exists $::FORM{$name}) {
-        return $::FORM{$name};
+    if ($::cgi->param($name) ne "") {
+        return $::cgi->param($name);
     }
     if (defined $default) {
         return $default;
@@ -80,11 +104,12 @@ sub formvalue {
 }
 
 sub pickplatform {
-    my $value = formvalue("rep_platform");
+    my $value = $::cgi->param("rep_platform");
     if ($value ne "") {
         return $value;
     }
-    for ($ENV{'HTTP_USER_AGENT'}) {
+    my $browser = $::cgi->user_agent();
+    for ($browser) {
         /Mozilla.*\(X11/ && do {return "X-Windows";};
         /Mozilla.*\(Windows/ && do {return "PC";};
         /Mozilla.*\(Macintosh/ && do {return "Macintosh";};
@@ -94,12 +119,11 @@ sub pickplatform {
     }
 }
 
-
-
 sub pickversion {
-    my $version = formvalue('version');
+    my $version = $::cgi->param('version');
+    my $browser = $::cgi->user_agent();
     if ($version eq "") {
-        if ($ENV{'HTTP_USER_AGENT'} =~ m@Mozilla[ /]([^ ]*)@) {
+        if ($browser =~ m@Mozilla[ /]([^ ]*)@) {
             $version = $1;
         }
     }
@@ -107,10 +131,10 @@ sub pickversion {
     if (lsearch($::versions{$product}, $version) >= 0) {
         return $version;
     } else {
-        if (defined $::COOKIE{"VERSION-$product"}) {
+        if ($::cgi->cookie("VERSION-$product") ne "") {
             if (lsearch($::versions{$product},
-                        $::COOKIE{"VERSION-$product"}) >= 0) {
-                return $::COOKIE{"VERSION-$product"};
+                        $::cgi->cookie("VERSION-$product")) >= 0) {
+                return $::cgi->cookie("VERSION-$product");
             }
         }
     }
@@ -118,9 +142,10 @@ sub pickversion {
 }
 
 sub pickarch {
-    my $arch = formvalue('arch');
+    my $arch = $::cgi->param('arch');
     if ($arch eq "") {
-        if ($ENV{'HTTP_USER_AGENT'} =~ m#Mozilla.*\(.*;.*;.* (.*)\)#) {
+        my $browser = $::cgi->user_agent();
+        if ($browser =~ m#Mozilla.*\(.*;.*;.* (.*)\)#) {
             $arch = $1;
         }
     }
@@ -134,7 +159,7 @@ sub pickarch {
 }
 
 sub pickcomponent {
-    my $result =formvalue('component');
+    my $result = $::cgi->param('component');
     if ($result ne "" && lsearch($::components{$product}, $result) < 0) {
         $result = "";
     }
@@ -143,10 +168,11 @@ sub pickcomponent {
 
 
 sub pickos {
-    if (formvalue('op_sys') ne "") {
-        return formvalue('op_sys');
+    if ($::cgi->param('op_sys') ne "") {
+        return $::cgi->param('op_sys');
     }
-    for ($ENV{'HTTP_USER_AGENT'}) {
+    my $browser = $::cgi->user_agent();
+    for ($browser) {
         /Mozilla.*\(.*;.*; IRIX.*\)/    && do {return "IRIX";};
         /Mozilla.*\(.*;.*; 32bit.*\)/   && do {return "Windows 95";};
         /Mozilla.*\(.*;.*; 16bit.*\)/   && do {return "Windows 3.1";};
@@ -166,27 +192,175 @@ sub pickos {
     }
 }
 
-
 GetVersionTable();
 
-my $assign_element = GeneratePersonInput('assigned_to', 1,
-                                         formvalue('assigned_to'));
-my $cc_element = GeneratePeopleInput('cc', 45, formvalue('cc'));
+my $assign_element = $::cgi->textfield(-name=>'assigned_to',
+                                       -value=>$::cgi->param('assigned_to'));
+my $cc_element = $::cgi->textfield(-name=>'cc', 
+                                   -size=>"45", 
+                                   -value=>$::cgi->param('cc'));
+my $priority_popup = $::cgi->popup_menu(-name=>'priority',
+                                       '-values'=>\@::legal_priority,
+                                        -default=>'normal');
+my $sev_popup = $::cgi->popup_menu(-name=>'bug_severity',
+                                  '-values'=>\@::legal_severity,
+                                   -default=>'normal');
+my $opsys_popup = $::cgi->popup_menu(-name=>'op_sys', 
+                                    '-values'=>\@::legal_opsys,
+                                     -default=>pickos());
 
+die "Product table empty" if ($::components{"$product"} eq "");
 
-my $priority_popup = make_popup('priority', \@::legal_priority,
-                                formvalue('priority', 'normal'), 0);
-my $sev_popup = make_popup('bug_severity', \@::legal_severity,
-                           formvalue('bug_severity', 'normal'), 0);
-my $opsys_popup = make_popup('op_sys', \@::legal_opsys, pickos(), 0);
+my @component_count = @{$::components{"$product"}};
+my $component_popup = "";
 
-my $component_popup = make_popup('component', $::components{$product},
-                                 formvalue('component'), 1);
-my $platforms_popup = make_popup('rep_platform', $::legal_platforms{$product},
-                                pickarch(), 0);
+if ($#component_count > 1) {
+    $component_popup = $::cgi->scrolling_list(-name=>'component', 
+                                          -size=>"5",
+                                         '-values'=>$::components{$product},
+                                          -default=>$::cgi->param('component'));
+} else {
+    $component_popup = $::cgi->scrolling_list(-name=>'component', 
+                                          -size=>"5",
+                                         '-values'=>$::components{$product},
+                                          -default=>$component_count[0]);
+}
+
+my $platforms_popup = $::cgi->popup_menu(-name=>'rep_platform', 
+                                '-values'=>$::legal_platforms{$product},
+                                 -default=>pickarch());
 
 PutHeader ("Enter Bug");
 
-PutBody($product, $component_popup, $platforms_popup, 
-            $opsys_popup, $priority_popup, $sev_popup, 
-            $assign_element, $cc_element);
+my $release_element = $::cgi->textfield(-name=>'release', 
+                                        -size=>"5", 
+                                        -value=>$::cgi->param('release'));
+
+my $source_value = "bug reporting address and mailing lists";
+my $source_cell;
+
+if(CanIView("source")) {
+    $source_cell = 
+        $::cgi->TR(
+           $::cgi->td({-align=>"RIGHT"}, $::cgi->b("Source:")),
+           $::cgi->td({-colspan=>"5"}, 
+              $::cgi->popup_menu(-name=>'source',
+                                '-values'=>\@::legal_sources,
+                                 -default=>'support mail')
+           )
+        );
+} else {
+    $source_cell = 
+        $::cgi->TR(
+           $::cgi->td({-colspan=>"6"}, 
+              $::cgi->hidden(-name=>"source", -value=>$source_value))
+        );
+}
+
+my $view_cell;
+if(CanIView("view")) {
+    $view_cell = $::cgi->td({-align=>"RIGHT"}, $::cgi->b("View:")),
+                 $::cgi->td($::cgi->popup_menu(-name=>'view',
+                                              '-values'=>['Public', 'Private'],
+                                               -default=>'Public'));
+} else {
+    $view_cell = $::cgi->td({-colspan=>"2"}, 
+                    $::cgi->hidden(-name=>'view', -value=>"Public"));
+}
+
+my $assigned_cell;
+my $bug_status_html = Param("bugstatushtml");
+if(CanIView("assigned_to")) {
+    $assigned_cell = $::cgi->TR(
+                        $::cgi->td({-align=>"RIGHT"},
+                           $::cgi->a({-href=>"$bug_status_html#assigned_to"},
+                              $::cgi->b("Assigned To:"))),
+                        $::cgi->td({-colspan=>"5"}, $assign_element, 
+                           "(Leave blank to assign to default owner)")
+                     );
+}
+
+print $::cgi->start_form(-name=>'enterForm', -action=>'post_bug.cgi'),
+      $::cgi->hidden(-name=>'bug_status', -value=>'NEW'),
+      $::cgi->hidden(-name=>'reporter', 
+                     -value=>$::cgi->cookie('Bugzilla_login')),
+      $::cgi->hidden(-name=>'product', -value=>$product),
+      $::cgi->table({-cellspacing=>"2", -cellpadding=>"0", -border=>"0"},
+         $::cgi->TR(
+            $::cgi->td({-align=>"RIGHT", -valign=>"TOP"}, 
+	       $::cgi->b("Product:")),
+            $::cgi->td({-valign=>"TOP", -colspan=>"5"}, 
+	       $product)
+         ),
+         $::cgi->TR(
+            $::cgi->td({-align=>"RIGHT", -valign=>"TOP"}, 
+	       $::cgi->b("Version:")),
+	    $::cgi->td(Version_element(pickversion(), $product)),
+            $::cgi->td({-align=>"RIGHT", -valign=>"TOP"}, 
+	       $::cgi->b("Component:")),
+	    $::cgi->td({-colspan=>"3"}, $component_popup)
+         ),
+         $::cgi->TR(
+            $::cgi->td({-align=>"RIGHT"}, 
+	       $::cgi->a({-href=>"$bug_status_html#priority"},
+	          $::cgi->b("Priority:"))),
+            $::cgi->td($priority_popup),
+            $::cgi->td({-align=>"RIGHT"}, 
+	       $::cgi->a({-href=>"$bug_status_html#severity"},
+	          $::cgi->b("Severity:"))),
+            $::cgi->td($sev_popup)
+         ),
+         $::cgi->TR(
+            $::cgi->td({-align=>"RIGHT"}, 
+	       $::cgi->a({-href=>"$bug_status_html#rep_platform"},
+	          $::cgi->b("Architecture:"))),
+            $::cgi->td($platforms_popup),
+            $source_cell,
+            $view_cell,
+            $assigned_cell
+         ),
+         $::cgi->TR(
+            $::cgi->td({-align=>"RIGHT"}, 
+	       $::cgi->b("Cc:")),
+            $::cgi->td({-colspan=>"5"}, $cc_element),
+         ),
+         $::cgi->TR(
+            $::cgi->td({-align=>"RIGHT"}, 
+	       $::cgi->b("URL:")),
+            $::cgi->td({-colspan=>"5"}, 
+	       $::cgi->textfield(-name=>'bug_file_loc', 
+	                         -size=>'60', 
+				 -value=>$::cgi->param('bug_file_loc')))
+         ),
+         $::cgi->TR(
+            $::cgi->td({-align=>"RIGHT"}, 
+	       $::cgi->b("Summary:")),
+            $::cgi->td({-colspan=>"5"}, 
+	       $::cgi->textfield(-name=>'short_desc', 
+	                         -size=>'60', 
+				 -value=>$::cgi->param('short_desc')))
+         ),
+         $::cgi->TR(
+            $::cgi->td({-align=>"RIGHT"}, 
+	       $::cgi->b("Description:")),
+            $::cgi->td({-colspan=>"5"}, 
+	       $::cgi->textarea(-wrap=>"HARD", 
+	                        -name=>'comment',
+				-rows=>'10',
+				-cols=>'60',
+				-default=>$::cgi->param('comment')))
+         ),
+         $::cgi->TR(
+	    $::cgi->td("&nbsp;"),
+            $::cgi->td({-colspan=>"5"}, 
+	       $::cgi->submit(-name=>'submit', -value=>"    Commit    "),
+	       "&nbsp;&nbsp;&nbsp;&nbsp;",
+	       $::cgi->reset(-name=>'reset'),
+	       "&nbsp;&nbsp;&nbsp;&nbsp;",
+	       $::cgi->submit(-name=>'maketemplate', 
+	          -value=>"Remember values as bookmarkable template"))
+         ),
+      ),
+      $::cgi->hidden(-name=>"form_name", -value=>"enter_bug"),
+      $::cgi->end_form,
+      $::cgi->end_html;

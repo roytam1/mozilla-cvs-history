@@ -31,27 +31,23 @@ require "globals.pl";
 ConnectToDatabase();
 GetVersionTable();
 
-foreach (@::legal_product)
-	{
+foreach (@::legal_product) {
 	my $dir = "data/mining";
 
 	&check_data_dir ($dir);
 	&collect_stats ($dir, $_);
-	}
+}
 
-sub check_data_dir
-	{
+sub check_data_dir {
 	my $dir = shift;
 
-	if (! -d)
-		{
+	if (! -d) {
 		mkdir $dir, 0777;
 		chmod 0777, $dir;
-		}
 	}
+}
 
-sub collect_stats
-	{
+sub collect_stats {
 	my $dir = shift;
 	my $product = shift;
 	my $when = localtime (time);
@@ -65,20 +61,17 @@ FIN
 	my $file = join '/', $dir, $product;
 	my $exists = -f $file;
 
-	if (open DATA, ">>$file")
-		{
+	if (open DATA, ">>$file") {
 		SendSQL ($query);
 
 		my %count;
 		push my @row, &today;
 		
-		while (my @n = FetchSQLData())
-			{
+		while (my @n = FetchSQLData()) {
 			push @row, @n;
-			}
+		}
 		
-		if (! $exists)
-			{
+		if (! $exists) {
 			print DATA <<FIN;
 # Bugzilla daily bug stats
 #
@@ -88,20 +81,16 @@ FIN
 # product: $product
 # created: $when
 FIN
-			}
+		}
 
 		print DATA (join '|', @row) . "\n";
 		close DATA;
-		}
-	else
-		{
+	} else {
 		print "$0: $file, $!";
-		}
 	}
+}
 
-sub today
-  {
+sub today {
   my ($dom, $mon, $year) = (localtime(time))[3, 4, 5];
   return sprintf "%04d%02d%02d", 1900 + $year, ++$mon, $dom;
-  }
-
+}

@@ -17,6 +17,8 @@
 # Netscape Communications Corporation. All Rights Reserved.
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Andrew Anderson <andrew@redhat.com>
+#                 <david.gardiner@unisa.edu.au>
 
 # Contains some global routines used throughout the CGI scripts of Bugzilla.
 
@@ -27,28 +29,8 @@ use CGI::Carp qw(fatalsToBrowser);
 
 require 'globals.pl';
 
-sub GeneratePersonInput {
-    my ($field, $required, $def_value, $extraJavaScript) = (@_);
-    if (!defined $extraJavaScript) {
-        $extraJavaScript = "";
-    }
-    if ($extraJavaScript ne "") {
-        $extraJavaScript = "onChange=\" $extraJavaScript \"";
-    }
-    return "<INPUT NAME=\"$field\" SIZE=32 $extraJavaScript VALUE=\"$def_value\">";
-}
-
-sub GeneratePeopleInput {
-    my ($field, $size, $def_value) = (@_);
-    return "<INPUT NAME=\"$field\" SIZE=\"$size\" VALUE=\"$def_value\">";
-}
-
-
-
-
 # Implementations of several of the below were blatently stolen from CGI.pm,
 # by Lincoln D. Stein.
-
 
 # Get rid of all the %xx encoding and the like from the given URL.
 
@@ -68,62 +50,6 @@ sub url_quote {
     return $toencode;
 }
 
-
-sub ProcessFormFields {
-    my ($buffer) = (@_);
-    undef %::FORM;
-    undef %::MFORM;
-
-    my %isnull;
-    my $remaining = $buffer;
-    while ($remaining ne "") {
-	my $item;
-	if ($remaining =~ /^([^&]*)&(.*)$/) {
-	    $item = $1;
-	    $remaining = $2;
-	} else {
-	    $item = $remaining;
-	    $remaining = "";
-	}
-
-	my $name;
-	my $value;
-	if ($item =~ /^([^=]*)=(.*)$/) {
-	    $name = $1;
-	    $value = url_decode($2);
-	} else {
-	    $name = $item;
-	    $value = "";
-	}
-	if ($value ne "") {
-	    if (defined $::FORM{$name}) {
-		$::FORM{$name} .= $value;
-		my $ref = $::MFORM{$name};
-		push @$ref, $value;
-	    } else {
-		$::FORM{$name} = $value;
-		$::MFORM{$name} = [$value];
-	    }
-        } else {
-            $isnull{$name} = 1;
-        }
-    }
-    if (defined %isnull) {
-        foreach my $name (keys(%isnull)) {
-            if (!defined $::FORM{$name}) {
-                $::FORM{$name} = "";
-                $::MFORM{$name} = [];
-            }
-        }
-    }
-}
-
-
-sub FormData {
-    my ($field) = (@_);
-    return $::FORM{$field};
-}
-
 sub html_quote {
     my ($var) = (@_);
     $var =~ s/\&/\&amp;/g;
@@ -141,37 +67,42 @@ sub value_quote {
     return $var;
 }
 
-sub value_unquote {
-    my ($var) = (@_);
-    $var =~ s/\&quot/\"/g;
-    $var =~ s/\&lt/</g;
-    $var =~ s/\&gt/>/g;
-    $var =~ s/\&amp/\&/g;
-    return $var;
-}
-
-
 sub navigation_header {
-    if (defined $::COOKIE{"BUGLIST"} && $::COOKIE{"BUGLIST"} ne "") {
-	my @bugs = split(/:/, $::COOKIE{"BUGLIST"});
-	my $cur = lsearch(\@bugs, $::FORM{"id"});
-	print "<B>Bug List:</B> (@{[$cur + 1]} of @{[$#bugs + 1]})\n";
-	print "<A HREF=\"show_bug.cgi?id=$bugs[0]\">First</A>\n";
-	print "<A HREF=\"show_bug.cgi?id=$bugs[$#bugs]\">Last</A>\n";
+    if ($::cgi->cookie('BUGLIST') ne "") {
+	my @bugs = split(/:/, $::cgi->cookie('BUGLIST'));
+	my $cur = lsearch(\@bugs, $::cgi->param('id'));
+	print $::cgi->b('Bug List:') . " (@{[$cur + 1]} of @{[$#bugs + 1]})\n",
+              $::cgi->a({-href=>"show_bug.cgi?id=$bugs[0]"}, 'First'),
+              $::cgi->a({-href=>"show_bug.cgi?id=$bugs[$#bugs]"}, 'Last'),
+	      "\n";
 	if ($cur > 0) {
-	    print "<A HREF=\"show_bug.cgi?id=$bugs[$cur - 1]\">Prev</A>\n";
+	    print $::cgi->a({-href=>"show_bug.cgi?id=$bugs[$cur - 1]"}, 'Prev');
 	} else {
-	    print "<I><FONT COLOR=\#777777>Prev</FONT></I>\n";
+	    print $::cgi->i($::cgi->font({-color=>"#777777"}, 'Prev'));
 	}
 	if ($cur < $#bugs) {
 	    $::next_bug = $bugs[$cur + 1];
-	    print "<A HREF=\"show_bug.cgi?id=$::next_bug\">Next</A>\n";
+	    print $::cgi->a({-href=>"show_bug.cgi?id=$::next_bug"}, 'Next');
 	} else {
-	    print "<I><FONT COLOR=\#777777>Next</FONT></I>\n";
+	    print $::cgi->i($::cgi->font({-color=>"#777777"}, 'Next'));
 	}
     }
-    print "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF=query.cgi>Query page</A>\n";
-    print "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF=enter_bug.cgi>Enter new bug</A>\n"
+    print $::cgi->table({-cellspacing=>'0', -cellpadding=>'0', -border=>'0'},
+             $::cgi->TR(
+                $::cgi->td({-width=>'150', -valign=>'CENTER'},
+                   $::cgi->a({-href=>"query.cgi"}, 'Query page')),
+                $::cgi->td({-width=>'150', -valign=>'CENTER'},
+                   $::cgi->a({-href=>"enter_bug.cgi"}, 'Enter new bug')),
+                $::cgi->td({-width=>'250', -valign=>'CENTER', -align=>'LEFT'},
+                   $::cgi->startform(-method=>'POST', -action=>"show_bug.cgi"),
+                   $::cgi->submit(-name=>'submit', -value=>"Show"),
+                   "&nbsp;bug #&nbsp;",
+                   $::cgi->textfield(-name=>'id', -size=>'6', 
+		                     -value=>'', -override=>"1"),
+                   $::cgi->endform,
+                )
+             )
+          );
 }
 
 
@@ -233,84 +164,79 @@ sub PasswordForLogin {
 
 sub confirm_login {
     my ($nexturl) = (@_);
+    my $printed_header = 0;
 
 # Uncommenting the following lines can help debugging...
-#    print "Content-type: text/plain\n\n";
-#    print "$::FORM{'Bugzilla_login'}\n$::FORM{'Bugzilla_password'}\n";
+#    print $::cgi->header(-type=>'text/html'),
+#          $::cgi->cookie('Bugzilla_login'),
+#          $::cgi->cookie('Bugzilla_password'),
+#          $::cgi->dump;
 
     ConnectToDatabase();
 
     my $authdomain = "";
-    my $count = 0;
     my $authorized = 0;
+    my $rem_host = $::cgi->remote_host();
+
     # Apache 1.3.x users: this requires "HostNameLookups on" to work
-    if (defined Param('authdomain') && defined($ENV{'REMOTE_HOST'})) {
+    if (defined Param('authdomain') && $rem_host) {
         $authdomain = Param('authdomain');
-        #print "Content-type: text/html\n\n";
-        #print "<PRE>authdomain: $authdomain</PRE><BR>\n";
-        if ($::COOKIE{"Bugzilla_login"} =~ /$authdomain$/) {
-	    #print "<PRE>check authdomain: $authdomain</PRE><BR>\n";
+        if ($::cgi->cookie("Bugzilla_login") =~ /$authdomain$/) {
             use Socket;
-            while (defined($::param{'authnet'}[$count]) ne "") {
-                #print "$::param{'authnet'}[$count]<BR>\n";
-		my $ip_addr = unpack("N4", inet_aton($ENV{'REMOTE_HOST'}));
-		my ($network, $netmask) = 
-		    split("/", $::param{'authnet'}[$count]);
-		#print "network: $network, netmask, $netmask<BR>\n";
+	    my @authnets = split (",", Param('authnet'));
+	    for my $authnet (@authnets) {
+		my $ip_addr = unpack("N4", inet_aton($rem_host));
+		my ($network, $netmask) = split("/", $authnet);
 		$network = unpack("N4", inet_aton($network));
 		$netmask = unpack("N4", inet_aton($netmask));
-		#printf ("ip_addr: %lx, network %lx, netmask: %lx<BR>\n",
-		#    $ip_addr, $network, $netmask);
 		my $net = $network & $netmask;
-		#printf ("net: %lx<BR>\n", $net);
 		my $xor = $ip_addr ^ $net;
-		#printf ("xor: %lx<BR>\n", $xor);
 		my $and = $ip_addr | $net;
-		#printf ("and: %lx<BR>\n", $and);
 		if ($and == $ip_addr) {
-			#print "TRUE<BR>\n";
 			$authorized = 1;
 		}
-		$count++;
             }
         } else {
 	    # We got here because we don't have a login cookie yet.
 	    $authorized = 1;
 	}
         if (!$authorized) {
-            print "Content-type: text/html\n\n";
+            print $::cgi->header(-type=>'text/html');
 	    PutHeader("Unauthorized host");
-	    print "You have connedted as a user from <I>$authdomain</I>, ";
-	    print "but you are not in <I>$authdomain</I>, currently.<P>";
-	    print "You must either create a new username to use ";
-	    print "from your current location, or you must connect ";
-	    print "from an authorized host.";
+	    print "You have connedted as a user from ",
+                  $::cgi->i($authdomain), ", but you are not in ",
+                  $::cgi->i($authdomain), ", currently.", $::cgi->p,
+	          "You must either create a new username to use ",
+	          "from your current location, or you must connect ",
+	          "from an authorized host.";
 	    exit;
         }
     }
 
-    if (defined $::FORM{"Bugzilla_login"} &&
-	defined $::FORM{"Bugzilla_password"}) {
+    my ($login_cookie, $logincookie_cookie, $password_cookie, $logincookie);
+    my $loginok = 0;
 
-	my $enteredlogin = $::FORM{"Bugzilla_login"};
-        my $enteredpwd = $::FORM{"Bugzilla_password"};
+    if ($::cgi->param('Bugzilla_login') ne "") {
+
+	my $enteredlogin = $::cgi->param('Bugzilla_login');
+        my $enteredpwd = $::cgi->param('Bugzilla_password');
+
 	if ($enteredlogin !~ /^[^@, ]*@[^@, ]*\.[^@, ]*$/) {
-            print "Content-type: text/html\n\n";
+            print $::cgi->header(-type=>'text/html');
 
 	    PutHeader("Invalid e-mail address entered");
 
-            print "The e-mail address you entered\n";
-            print "(<b>$enteredlogin</b>) didn't match our minimal\n";
-            print "syntax checking for a legal email address.  A legal\n";
-            print "address must contain exactly one '\@', and at least one\n";
-            print "'.' after the \@, and may not contain any commas or.\n";
-	    print "spaces.\n";
-            print "<p>Please click <b>back</b> and try again.\n";
+            print "The e-mail address you entered ($::cgi->b($enteredlogin)) ",
+                  "didn't match our minimal syntax checking for a legal email ",
+                  "address.  A legal address must contain exactly one '\@', ",
+                  "and at least one '.' after the \@, and may not contain any ",
+                  "commas or spaces.\n$::cgi->p\nPlease click ",
+                  "$::cgi->b('back') and try again.\n",
             exit;
         }
-        my $realcryptpwd  = PasswordForLogin($::FORM{"Bugzilla_login"});
+        my $realcryptpwd  = PasswordForLogin($enteredlogin);
         
-        if (defined $::FORM{"PleaseMailAPassword"}) {
+        if ($::cgi->param("PleaseMailAPassword") ne "") {
 	    my $realpwd;
             if ($realcryptpwd eq "") {
 		$realpwd = InsertNewUser($enteredlogin);
@@ -319,77 +245,101 @@ sub confirm_login {
 			SqlQuote($enteredlogin));
 		$realpwd = FetchOneColumn();
             }
-            my $urlbase = Param("urlbase");
-            my $template = "From: bugzilla-daemon
-To: %s
-Subject: Your bugzilla password.
-
+	    my $template = "
 To use the wonders of bugzilla, you can use the following:
 
  E-mail address: %s
        Password: %s
 
  To change your password, go to:
- ${urlbase}changepassword.cgi
+ %schangepassword.cgi
 
  (Your bugzilla and CVS password, if any, are not currently synchronized.
  Top hackers are working around the clock to fix this, as you read this.)
 ";
-            my $msg = sprintf($template, $enteredlogin, $enteredlogin,
-			      $realpwd);
+            my $msg = sprintf($template, $enteredlogin, 
+                              $realpwd, Param("urlbase"));
             
-	    open SENDMAIL, "|/usr/lib/sendmail -t -f bugzilla\@redhat.com";
-	    print SENDMAIL $msg;
-	    close SENDMAIL;
+	    Mail($enteredlogin, "", "Your bugzilla password", $msg);
 
-            print "Content-type: text/html\n\n";
+            print $::cgi->header(-type=>'text/html');
 	    PutHeader("Password has been emailed.");
-            print "The password for the e-mail address\n";
-            print "$enteredlogin has been e-mailed to that address.\n";
-            print "<p>When the e-mail arrives, you can click <b>Back</b>\n";
-            print "and enter your password in the form there.\n";
+            print "The password for the e-mail address\n",
+                  "$enteredlogin has been e-mailed to that address.\n",
+                  $::cgi->p,
+                  "When the e-mail arrives, you can click ",
+                  $::cgi->b('back'),
+                  "\nand enter your password in the form there.\n";
             exit;
         }
 
 	my $enteredcryptpwd = crypt($enteredpwd, substr($realcryptpwd, 0, 2));
         if ($realcryptpwd eq "" || $enteredcryptpwd ne $realcryptpwd) {
-            print "Content-type: text/html\n\n";
+            print $::cgi->header(-type=>'text/html');
 	    PutHeader("Login failed.");
             print "The username or password you entered is not valid.\n";
-            print "Please click <b>Back</b> and try again.\n";
+            print "Please click ", $::cgi->b('back'), " and try again.\n";
             exit;
         }
-        $::COOKIE{"Bugzilla_login"} = $enteredlogin;
-	SendSQL("insert into logincookies (userid,cryptpassword,hostname) values (@{[DBNameToIdAndCheck($enteredlogin)]}, @{[SqlQuote($realcryptpwd)]}, @{[SqlQuote($ENV{'REMOTE_HOST'})]})");
+	# FIXME: make path a config item
+	$login_cookie = $::cgi->cookie(-name=>'Bugzilla_login',
+                              -value=>$enteredlogin,
+                              -path=>"/bugzilla/",
+                              -expires=>"Sun, 30-Jun-2029 00:00:00 GMT");
+	my $query = "insert into logincookies " .
+                    "(userid,cryptpassword,hostname) " .
+                    "values (@{[DBNameToIdAndCheck($enteredlogin)]}, " .
+                    "@{[SqlQuote($realcryptpwd)]}, " .
+                    "@{[SqlQuote($rem_host)]})";
+	SendSQL($query);
         SendSQL("select LAST_INSERT_ID()");
-        my $logincookie = FetchOneColumn();
+        $logincookie = FetchOneColumn();
 
-        $::COOKIE{"Bugzilla_logincookie"} = $logincookie;
-        print "Set-Cookie: Bugzilla_login=$enteredlogin ; path=/; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
-        print "Set-Cookie: Bugzilla_logincookie=$logincookie ; path=/; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+	# FIXME: make path a config item
+	$logincookie_cookie = $::cgi->cookie(-name=>'Bugzilla_logincookie',
+                                    -value=>$logincookie,
+                                    -path=>"/bugzilla/",
+                                    -expires=>"Sun, 30-Jun-2029 00:00:00 GMT");
 
         # This next one just cleans out any old bugzilla passwords that may
         # be sitting around in the cookie files, from the bad old days when
         # we actually stored the password there.
-        print "Set-Cookie: Bugzilla_password= ; path=/; expires=Sun, 30-Jun-80 00:00:00 GMT\n";
-
+	$password_cookie = $::cgi->cookie(-name=>'Bugzilla_password',
+                                          -value=>'',
+                                          -path=>'/',
+                                          -expires=>'now');
+	my $oldlogin_cookie = $::cgi->cookie(-name=>'Bugzilla_login',
+                                             -value=>'',
+                                             -path=>'/',
+                                             -expires=>'now');
+	my $oldlogincookie_cookie=$::cgi->cookie(-name=>'Bugzilla_logincookie',
+                                                 -value=>'',
+                                                 -path=>'/',
+                                                 -expires=>'now');
+        # I sincerely hope that the order that the cookies gets processed is
+        # deterministic in the future, or this may break
+        print $::cgi->header(
+               -cookie=>[$oldlogin_cookie, $oldlogincookie_cookie, 
+                         $login_cookie, $logincookie_cookie, $password_cookie]);
+	$printed_header = 1;
+	$loginok = 1;
     }
 
-    my $loginok = 0;
+    if (!$loginok &&
+        ($::cgi->cookie('Bugzilla_login') ne "") &&
+	($::cgi->cookie('Bugzilla_logincookie') ne "")) {
 
-#    print "Content-type: text/plain\n\n";
-#    print "$::FORM{'Bugzilla_login'}\n$::FORM{'Bugzilla_password'}\n";
-    if (defined $::COOKIE{"Bugzilla_login"} &&
-	defined $::COOKIE{"Bugzilla_logincookie"}) {
+	my $login = $::cgi->cookie('Bugzilla_login');
+	$logincookie = $::cgi->cookie('Bugzilla_logincookie');
 
         SendSQL("select profiles.login_name = " .
-		SqlQuote($::COOKIE{"Bugzilla_login"}) .
+		SqlQuote($login) .
 		" and profiles.cryptpassword = logincookies.cryptpassword " .
 		"and logincookies.hostname = " .
-		SqlQuote($ENV{"REMOTE_HOST"}) .
-		" from profiles,logincookies where logincookies.cookie = " .
-		$::COOKIE{"Bugzilla_logincookie"} .
-		" and profiles.userid = logincookies.userid");
+		SqlQuote($rem_host) .
+		" from profiles,logincookies where logincookies.cookie = '" .
+		$logincookie .
+		"' and profiles.userid = logincookies.userid");
         $loginok = FetchOneColumn();
         if (!defined $loginok) {
             $loginok = 0;
@@ -397,8 +347,10 @@ To use the wonders of bugzilla, you can use the following:
     }
 
     if ($loginok ne "1") {
-        print "Content-type: text/html\n\n";
+        print $::cgi->header(-type=>'text/html');
         PutHeader("Please log in.");
+        #print $::cgi->cookie('Bugzilla_login') . $::cgi->br . "\n";
+        #print $::cgi->cookie('Bugzilla_logincookie') . $::cgi->br . "\n";
         print "I need a legitimate e-mail address and password to continue.\n";
         if (!defined $nexturl || $nexturl eq "") {
 	    # Sets nexturl to be argv0, stripping everything up to and
@@ -406,50 +358,50 @@ To use the wonders of bugzilla, you can use the following:
 	    $0 =~ m:[^/]*$:;
 	    $nexturl = $&;
         }
-        my $method = "POST";
-        if (defined $ENV{"REQUEST_METHOD"}) {
-            $method = $ENV{"REQUEST_METHOD"};
-        }
-        print "
-<FORM action=$nexturl method=$method>
-<table>
-<tr>
-<td align=right><b>E-mail address:</b></td>
-<td><input size=35 name=Bugzilla_login></td>
-</tr>
-<tr>
-<td align=right><b>Password:</b></td>
-<td><input type=password size=35 name=Bugzilla_password></td>
-</tr>
-</table>
-";
-        foreach my $i (keys %::FORM) {
-            if ($i =~ /^Bugzilla_/) {
-                next;
-            }
-            print "<input type=hidden name=$i value=\"@{[value_quote($::FORM{$i})]}\">\n";
-        }
-        print "
-<input type=submit value=Login name=GoAheadAndLogIn><hr>
-If you don't have a password, or have forgotten it, then please fill in the
-e-mail address above and click
- here:<input type=submit value=\"E-mail me a password\"
-name=PleaseMailAPassword>
-</form>\n";
+        print $::cgi->startform(-method=>'POST', -action=>"$nexturl"),
+              $::cgi->table(
+	         $::cgi->TR(
+		    $::cgi->td({-align=>'RIGHT'},
+		       $::cgi->b('E-mail address:')),
+		    $::cgi->td(
+		       $::cgi->textfield(-name=>'Bugzilla_login',
+		                          -size=>"35"))
+                 ),
+	         $::cgi->TR(
+		    $::cgi->td({-align=>'RIGHT'},
+		       $::cgi->b('Password:')),
+		    $::cgi->td(
+		       $::cgi->password_field(-name=>'Bugzilla_password',
+		                          -size=>"35"))
+                 )
+              );
+
+	foreach my $param ($::cgi->param) {
+		print $::cgi->hidden(-name=>$param, 
+                                     -value=>$::cgi->param("$param"),
+                                     -override=>"1");
+	}
+        print $::cgi->submit(-name=>'GoAheadAndLogIn', -value=>'Login'),
+	      $::cgi->hr,
+              "If you don't have a password, or have forgotten it, ",
+	      "then please fill in the e-mail address above and click here: ",
+	      $::cgi->submit(-name=>'PleaseMailAPassword', 
+	                     -value=>'E-mail me a password'),
+              $::cgi->endform,
+              $::cgi->end_html;
 
         # This seems like as good as time as any to get rid of old
         # crufty junk in the logincookies table.  Get rid of any entry
-        # that hasn't been used in a day.
+        # that hasn't been used in a month.
         SendSQL("delete from logincookies where to_days(now()) - to_days(lastused) > 30");
 
-        
         exit;
+    } else {
+	print $::cgi->header('text/html') unless $printed_header;
     }
-
-    # Update the timestamp on our logincookie, so it'll keep on working.
-    SendSQL("update logincookies set lastused = null where cookie = $::COOKIE{'Bugzilla_logincookie'}");
+# Update the timestamp on our logincookie, so it'll keep on working.
+    SendSQL("update logincookies set lastused = null where cookie = $logincookie");
 }
-
 
 sub PutHeader {
     my ($title, $h1, $h2) = (@_);
@@ -461,33 +413,41 @@ sub PutHeader {
 	$h2 = "";
     }
 
-    print "<HTML><HEAD><TITLE>$title</TITLE></HEAD>\n";
-    print "<BODY   BGCOLOR=\"#FFFFFF\" TEXT=\"#000000\"\n";
-    print "LINK=\"#0000EE\" VLINK=\"#551A8B\" ALINK=\"#FF0000\">\n";
-
+    print $::cgi->start_html(-title=>$title,
+                             -BGCOLOR=>"#FFFFFF",
+                             -TEXT=>"#000000",
+			     -LINK=>"#0000EE",
+			     -VLINK=>#551A8B",
+			     -ALINK=>"#FF0000");
     print PerformSubsts(Param("bannerhtml"), undef);
 
-    print "<TABLE BORDER=0 CELLPADDING=12 CELLSPACING=0 WIDTH=\"100%\">\n";
-    print " <TR>\n";
-    print "  <TD>\n";
-    print "   <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=2>\n";
-    print "    <TR><TD VALIGN=TOP ALIGN=CENTER NOWRAP>\n";
-    print "     <FONT SIZE=\"+3\"><B><NOBR>$h1</NOBR></B></FONT>\n";
-    print "    </TD></TR><TR><TD VALIGN=TOP ALIGN=CENTER>\n";
-    print "     <B>$h2</B>\n";
-    print "    </TD></TR>\n";
-    print "   </TABLE>\n";
-    print "  </TD>\n";
-    print "  <TD>\n";
-
-    print Param("blurbhtml");
-
-    print "</TD></TR></TABLE>\n";
+    print $::cgi->table({-border=>"0", 
+                         -cellpadding=>"12", 
+			 -cellspacing=>"0",
+                         -width=>"100%"},
+	     $::cgi->TR(
+	        $::cgi->td(
+		   $::cgi->table({-border=>"0", 
+		                  -cellpadding=>"0", 
+				  -cellspacing=>"2"},
+		      $::cgi->TR(
+		         $::cgi->td({-valign=>"TOP", 
+			             -align=>"DENTER", 
+				     -nowrap},
+		            $::cgi->font({-size=>"+3"},
+			       $::cgi->b($h1))
+			 )
+		      ),
+		      $::cgi->TR(
+		         $::cgi->td({-valign=>"TOP", -align=>"CENTER"},
+			    $::cgi->b($h2))
+		      )
+		   )
+		),
+	        $::cgi->td(Param("blurbhtml"))
+	     )
+	  );
 }
-
-
-
-
 
 ############# Live code below here (that is, not subroutine defs) #############
 
@@ -495,35 +455,7 @@ sub PutHeader {
 $| = 1;
 
 # Uncommenting this next line can help debugging.
-# print "Content-type: text/html\n\nHello mom\n";
-
-# foreach my $k (sort(keys %ENV)) {
-#     print "$k $ENV{$k}<br>\n";
-# }
-
-if (defined $ENV{"REQUEST_METHOD"}) {
-    if ($ENV{"REQUEST_METHOD"} eq "GET") {
-        if (defined $ENV{"QUERY_STRING"}) {
-            $::buffer = $ENV{"QUERY_STRING"};
-        } else {
-            $::buffer = "";
-        }
-    } else {
-	read STDIN, $::buffer, $ENV{"CONTENT_LENGTH"} || die "Couldn't get form data";
-    }
-    ProcessFormFields $::buffer;
-}
-
-
-if (defined $ENV{"HTTP_COOKIE"}) {
-    foreach my $pair (split(/;/, $ENV{"HTTP_COOKIE"})) {
-	$pair = trim($pair);
-	if ($pair =~ /^([^=]*)=(.*)$/) {
-	    $::COOKIE{$1} = $2;
-	} else {
-	    $::COOKIE{$pair} = "";
-	}
-    }
-}
+# print $::cgi->header('text/html'), "Hi mom";
+# print $::cgi->dump;
 
 1;
