@@ -370,7 +370,10 @@ MessagingSDK -a \
 #
 
 CalendarClient -a \
-	RaptorAll \
+	mozilla/calendar \
+	mozilla/modules/calendar \
+	mozilla/htmlparser \
 	mozilla/gconfig \
-	mozilla/modules/calendar  \
-	mozilla/calendar
+	mozilla/gfx \
+	mozilla/widget \
+	mozilla/view
