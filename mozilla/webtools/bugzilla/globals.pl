@@ -1203,6 +1203,67 @@ sub UserInGroup {
     return 0;
 }
 
+sub UserCanBlessGroup {
+    my ($groupname) = (@_);
+    PushGlobalSQLState();
+    # check if user explicitly can bless group
+    SendSQL("SELECT groups.group_id FROM groups, member_group_map 
+        WHERE groups.group_id = member_group_map.group_id 
+        AND member_group_map.member_id = $::userid
+        AND maptype = 1
+        AND groups.name = " . SqlQuote($groupname));
+    my $rslt = FetchOneColumn();
+    PopGlobalSQLState();
+    if ($rslt) {
+        return 1;
+    }
+    PushGlobalSQLState();
+    # check if user is a member of a group that can bless this group
+    SendSQL("SELECT groups.group_id FROM groups, member_group_map, 
+        member_group_map AS G
+        WHERE groups.group_id = G.group_id 
+        AND member_group_map.member_id = $::userid
+        AND member_group_map.maptype = 0
+        AND G.maptype = 3
+        AND member_group_map.group_id = G.member_id
+        AND groups.name = " . SqlQuote($groupname));
+    $rslt = FetchOneColumn();
+    PopGlobalSQLState();
+    if ($rslt) {
+        return 1;
+    }
+    return 0;
+}
+
+sub UserCanBlessAnything {
+    PushGlobalSQLState();
+    # check if user explicitly can bless a group
+    SendSQL("SELECT groups.group_id FROM groups, member_group_map 
+        WHERE groups.group_id = member_group_map.group_id 
+        AND member_group_map.member_id = $::userid
+        AND maptype = 1");
+    my $rslt = FetchOneColumn();
+    PopGlobalSQLState();
+    if ($rslt) {
+        return 1;
+    }
+    PushGlobalSQLState();
+    # check if user is a member of a group that can bless this group
+    SendSQL("SELECT groups.group_id FROM groups, member_group_map, 
+        member_group_map AS G
+        WHERE groups.group_id = G.group_id 
+        AND member_group_map.member_id = $::userid
+        AND member_group_map.maptype = 0
+        AND G.maptype = 3
+        AND member_group_map.group_id = G.member_id");
+    $rslt = FetchOneColumn();
+    PopGlobalSQLState();
+    if ($rslt) {
+        return 1;
+    }
+    return 0;
+}
+
 sub BugInGroup {
     my ($bugid, $groupname) = (@_);
     PushGlobalSQLState();
