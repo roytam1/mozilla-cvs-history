@@ -368,15 +368,13 @@ RaptorDist -a \
 RaptorLayout -a \
 	mozilla/base \
 	mozilla/dom \
-	mozilla/editor \
 	mozilla/gfx \
 	mozilla/expat \
 	mozilla/htmlparser \
 	mozilla/layout \
 	mozilla/view \
 	mozilla/webshell \
-	mozilla/widget \
-	mozilla/xpfe
+	mozilla/widget
 
 Raptor -a \
 	RaptorDoc \
