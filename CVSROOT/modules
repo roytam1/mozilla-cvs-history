@@ -178,6 +178,7 @@ MozillaSourceUnixOnly -a \
 	mozilla/.cvsignore \
 	mozilla/Makefile \
 	mozilla/Makefile.in \
+	mozilla/configure \
 	mozilla/configure.in \
 	mozilla/cmd/Makefile \
 	mozilla/cmd/Makefile.in \
@@ -500,6 +501,7 @@ SeaMonkeyCore -a \
 	mozilla/README \
 	mozilla/client.mk \
 	mozilla/client.mak \
+	mozilla/configure \
 	mozilla/configure.in \
 	mozilla/Makefile.in \
 	mozilla/aclocal.m4 \
