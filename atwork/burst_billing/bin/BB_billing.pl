@@ -20,8 +20,8 @@ use MIME::Entity;
 use Time::Local;
 use DirHandle;
 
-# use lib '/usr/local/nme/polling/lib';
-# use RRDs;
+use lib '/usr/local/nme/polling/lib';
+use RRDs;
 
 BEGIN {require '../inc/BB_include.pl';}
 require "$INC_DIR/BB_lib.pl";
