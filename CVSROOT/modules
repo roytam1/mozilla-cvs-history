@@ -362,6 +362,7 @@ RaptorDist -a \
 	mozilla/network \
 	mozilla/nsprpub \
 	mozilla/rdf \
+	mozilla/silentdl \
 	mozilla/sun-java \
 	mozilla/xpcom \
 	mozilla/xpfe
