@@ -27,7 +27,7 @@ require 'imagelog.pl';
 require 'header.pl';
 
 # Hack this until I can figure out how to do get default root. -slamm
-$default_root = '/cvsroot';
+$default_root = '/m/src';
 
 # Show 12 hours by default
 #

@@ -47,6 +47,6 @@ close(DF);
 $err = system("./processbuild.pl", "data/tbx.$$");
 
 if( $err ) {
-    die "processbuild.pl returned an error\n";
+    warn "processbuild.pl returned an error\n";
 }
 

@@ -57,8 +57,8 @@ if ($cvs_root eq '') {
 $CVS_REPOS_SUFIX = $CVS_ROOT;
 $CVS_REPOS_SUFIX =~ s/\//_/g;
     
-$CHECKIN_DATA_FILE = "/d/webdocs/projects/bonsai/data/checkinlog${CVS_REPOS_SUFIX}";
-$CHECKIN_INDEX_FILE = "/d/webdocs/projects/bonsai/data/index${CVS_REPOS_SUFIX}";
+$CHECKIN_DATA_FILE = "/warp3/bonsai/data/checkinlog${CVS_REPOS_SUFIX}";
+$CHECKIN_INDEX_FILE = "/warp3/bonsai/data/index${CVS_REPOS_SUFIX}";
 
 require 'cvsquery.pl';
 

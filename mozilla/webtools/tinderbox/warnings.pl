@@ -100,7 +100,7 @@ $form{tree} = $tree;
 require 'tbglobals.pl';
 require "$tree/treedata.pl";
 
-$source_root = 'mozilla';
+$source_root = '.';
 
 # ===================================================================
 # Warnings to ignore
@@ -830,10 +830,24 @@ sub build_url {
 
 sub file_url {
   my ($file, $linenum) = @_;
-
-  return "http://bonsai.mozilla.org/cvsblame.cgi"
-        ."?file=mozilla/$file&mark=$linenum#".($linenum-10);
-
+  my ($bfile);
+  my ($rev);
+  $bfile = substr($file, 7+index($file,"\/m\/src\/"));
+  if ($bfile eq '')
+  {
+      $bfile = $file;
+  }
+  $rev = $cvs_branch;
+  if ($rev eq "HEAD")
+  {   
+      return "http://warp/webtools/bonsai/cvsblame.cgi"
+          ."?file=$bfile&mark=$linenum#".($linenum-10);
+  }
+  else
+  {
+      return "http://warp/webtools/bonsai/cvsblame.cgi"
+          ."?file=$bfile&rev=$rev&mark=$linenum#".($linenum-10);
+  }
 }
 
 sub trim_common_leading_whitespace {
