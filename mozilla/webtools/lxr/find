@@ -42,6 +42,8 @@ sub find {
 	}
     }			       
     
+    $searchtext =~ s/\+/ /g;
+    $searchtext =~ s/%2b/+/ig;
     print("<B>Find file: </B><input type=text name=\"string\" ",
 	  "value=\"",$searchtext,"\" size=50>\n",
 	  "<input type=submit value=\"search\">\n",
