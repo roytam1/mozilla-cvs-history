@@ -414,6 +414,7 @@ if (m:^mozilla/browser/.*$:) {return '166';}
 if (m:^mozilla/chrome/.*$:) {return '166';}
 if (m:^mozilla/other-licenses/branding/firefox/.*$:) {return '166';}
 if (m:^mozilla/caps/.*$:) {return '69';}
+if (m:^mozilla/toolkit/.*$:) {return '169';}
 if (m:^js/src/*\.c$:) {return '70';}
 if (m:^js/src/*\.def$:) {return '70';}
 if (m:^js/src/*\.h$:) {return '70';}
