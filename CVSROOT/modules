@@ -552,7 +552,7 @@ SeaMonkeyLayout -a \
 
 SeaMonkeyXPToolKit -a \
 	SeaMonkeyLayout \
-	mozilla/cmd/macfe/applevnt
+	mozilla/cmd/macfe/applevnt \
 	mozilla/cmd/macfe/central \
 	mozilla/cmd/macfe/gui \
 	mozilla/cmd/macfe/include \
