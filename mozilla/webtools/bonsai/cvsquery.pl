@@ -191,10 +191,10 @@ sub query_checkins {
         }
     }
 
-    if (defined($::query_logexpr) && $::query_logexpr ne '') {
-        my $q = SqlQuote($::query_logexpr);
-        $qstring .= " and descs.description regexp $q";
-    }
+#    if (defined($::query_logexpr) && $::query_logexpr ne '') {
+#        my $q = SqlQuote($::query_logexpr);
+#        $qstring .= " and descs.description regexp $q";
+#    }
     
     if ($::query_debug) {
         print "<pre wrap> Query: $qstring\nTreeID is $::TreeID\n";
@@ -252,11 +252,11 @@ sub query_checkins {
             }
         }
 
-        if (defined($::query_logexpr) && 
-            $::query_logexpr ne '' &&
-            !($ci->[$::CI_LOG] =~ /$::query_logexpr/i) ){
-            next;
-        }
+#        if (defined($::query_logexpr) && 
+#            $::query_logexpr ne '' &&
+#            !($ci->[$::CI_LOG] =~ /$::query_logexpr/i) ){
+#            next;
+#        }
 
         push( @$result, $ci );
     }

@@ -37,7 +37,7 @@ sub sillyness {
     $zz = $::query_debug;
     $zz = $::query_end_tag;
     $zz = $::query_filetype;
-    $zz = $::query_logexpr;
+#    $zz = $::query_logexpr;
     $zz = $::query_whotype;
     $zz = $::script_type;
 }
@@ -122,7 +122,7 @@ unless ($::FORM{'dir'}) {
 
 $::query_file = $::FORM{'file'};
 $::query_filetype = $::FORM{'filetype'};
-$::query_logexpr = $::FORM{'logexpr'};
+#$::query_logexpr = $::FORM{'logexpr'};
 
 #
 # date
