@@ -735,3 +735,10 @@ MozillaTinderboxAll -a \
 # same with ldap
 #	mozilla/directory/c-sdk
 
+# This module will let us track branches where all the subcomponents
+# are on the same tag
+MozillaBranchTinderboxAll -a \
+	SeaMonkeyAll \
+	NSS \
+	NSPR \
+	mozilla/directory/c-sdk
