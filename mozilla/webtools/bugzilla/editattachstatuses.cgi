@@ -28,6 +28,7 @@
 # Make it harder for us to do dangerous things in Perl.
 use diagnostics;
 use strict;
+use lib ".";
 
 use vars qw(
   $template
@@ -202,9 +203,8 @@ sub list
   print "Content-type: text/html\n\n";
 
   # Generate and return the UI (HTML page) from the appropriate template.
-  $template->process("attachstatus/list.atml", $vars)
-    || DisplayError("Template process failed: " . $template->error())
-    && exit;
+  $template->process("admin/attachstatus/list.html.tmpl", $vars)
+    || ThrowTemplateError($template->error());
 }
 
 
@@ -224,9 +224,8 @@ sub create
   print "Content-type: text/html\n\n";
 
   # Generate and return the UI (HTML page) from the appropriate template.
-  $template->process("attachstatus/create.atml", $vars)
-    || DisplayError("Template process failed: " . $template->error())
-    && exit;
+  $template->process("admin/attachstatus/create.html.tmpl", $vars)
+    || ThrowTemplateError($template->error());
 }
 
 
@@ -242,7 +241,8 @@ sub insert
 
   SendSQL("LOCK TABLES attachstatusdefs WRITE");
   SendSQL("SELECT MAX(id) FROM attachstatusdefs");
-  my $id = FetchSQLData() + 1;
+  my $id = FetchSQLData() || 0;
+  $id++;
   SendSQL("INSERT INTO attachstatusdefs (id, name, description, sortkey, product)
            VALUES ($id, $name, $desc, $::FORM{'sortkey'}, $product)");
   SendSQL("UNLOCK TABLES");
@@ -273,9 +273,8 @@ sub edit
   print "Content-type: text/html\n\n";
 
   # Generate and return the UI (HTML page) from the appropriate template.
-  $template->process("attachstatus/edit.atml", $vars)
-    || DisplayError("Template process failed: " . $template->error())
-    && exit;
+  $template->process("admin/attachstatus/edit.html.tmpl", $vars)
+    || ThrowTemplateError($template->error());
 }
 
 
@@ -323,9 +322,8 @@ sub confirmDelete
 
     print "Content-type: text/html\n\n";
     
-    $template->process("attachstatus/delete.atml", $vars)
-      || DisplayError("Template process failed: " . & $template->error())
-      && exit;
+    $template->process("admin/attachstatus/delete.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
   } 
   else {
     deleteStatus();

@@ -29,6 +29,7 @@
 
 use diagnostics;
 use strict;
+use lib ".";
 
 require "CGI.pl";
 require "globals.pl";
@@ -675,6 +676,14 @@ if ($action eq 'edit') {
     my ($description, $milestoneurl, $disallownew,
         $votesperuser, $maxvotesperbug, $votestoconfirm, $defaultmilestone) =
         FetchSQLData();
+
+    my $userregexp = '';
+    if(Param("usebuggroups")) {
+        SendSQL("SELECT userregexp
+                 FROM groups
+                 WHERE name=" . SqlQuote($product));
+        $userregexp = FetchOneColumn() || "";
+    }
 
     print "<FORM METHOD=POST ACTION=editproducts.cgi>\n";
     print "<TABLE  BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";

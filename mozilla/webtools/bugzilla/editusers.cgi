@@ -29,6 +29,7 @@
 
 use diagnostics;
 use strict;
+use lib ".";
 
 require "CGI.pl";
 require "globals.pl";
@@ -204,12 +205,21 @@ sub EmitFormElements ($$$$$$)
                 print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"group_$name\" $group_checked VALUE=\"$groupid\"></TD>";
                 $canedit = 1;
             }
-            if ($canedit) {
+            print "<TD COLSPAN=2 ALIGN=LEFT><B>User has these privileges</B></TD>\n";
+            while (MoreSQLData()) {
+                my ($bit,$name,$description,$checked,$blchecked) = FetchSQLData();
+                print "</TR><TR>\n";
+                if ($editall) {
+                    $blchecked = ($blchecked) ? "CHECKED" : "";
+                    print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"blbit_$name\" $blchecked VALUE=\"$bit\"></TD>";
+                }
+                $checked = ($checked) ? "CHECKED" : "";
+                print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"bit_$name\" $checked VALUE=\"$bit\"></TD>";
                 print "<TD><B>" . ucfirst($name) . "</B>: $description</TD>\n";
             }
         }
     } else {
-        print "</TR><TR><TH ALIGN=RIGHT>Groups and<br>Priveleges:</TH><TD><TABLE><TR>";        
+        print "</TR><TR><TH ALIGN=RIGHT>Groups and<br>Privileges:</TH><TD><TABLE><TR>";        
         print "<TD COLSPAN=3>The new user will be inserted into groups " .
           "based on their userregexps.<BR>To change the group " .
           "permissions for this user, you must edit the account after ".
@@ -485,7 +495,7 @@ if ($action eq 'new') {
         PutTrailer($localtrailer);
         exit;
     }
-    if (TestUser($user)) {
+    if (!ValidateNewUser($user)) {
         print "The user '$user' does already exist. Please press\n";
         print "<b>Back</b> and try again.\n";
         PutTrailer($localtrailer);
@@ -563,6 +573,7 @@ if ($action eq 'del') {
     if (!$candelete) {
         print "Sorry, deleting users isn't allowed.";
         PutTrailer();
+        exit;
     }
     if (!$editall) {
         print "Sorry, you don't have permissions to delete users.";
@@ -692,6 +703,7 @@ if ($action eq 'delete') {
     if (!$candelete) {
         print "Sorry, deleting users isn't allowed.";
         PutTrailer();
+        exit;
     }
     if (!$editall) {
         print "Sorry, you don't have permissions to delete users.";

@@ -192,7 +192,7 @@
       <!-- Checkboxes -->
       [% FOREACH g = group %]
         &nbsp;&nbsp;&nbsp;&nbsp;
-        <input type="checkbox" name="bit-[% g.bit %]" value="1"
+        <input type="checkbox" name="group-[% g.bit %]" value="1"
           [% " checked=\"checked\"" IF g.checked %] />[% g.description %]<br />
       [% END %]
       <br />

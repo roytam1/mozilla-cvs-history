@@ -47,13 +47,14 @@ ConnectToDatabase();
 my $action = $::FORM{'action'} || 
                                  ($::FORM{'bug_id'} ? "show_bug" : "show_user");
 
+my $userid = 0;
 if ($action eq "show_bug" ||
     ($action eq "show_user" && defined($::FORM{'user'}))) 
 {
-    quietly_check_login();
+    $userid = quietly_check_login();
 }
 else {
-    confirm_login();
+    $userid = confirm_login();
 }
 
 ################################################################################
@@ -63,7 +64,7 @@ else {
 # Make sure the bug ID is a positive integer representing an existing
 # bug that the user is authorized to access.
 if (defined $::FORM{'bug_id'}) {
-  ValidateBugID($::FORM{'bug_id'});
+  ValidateBugID($::FORM{'bug_id'}, $userid);
 }
 
 ################################################################################
@@ -213,7 +214,7 @@ sub show_user {
     SendSQL("DELETE FROM votes WHERE count <= 0");
     SendSQL("UNLOCK TABLES");
     
-    $vars->{'voting_user'} = { "login" => $name };
+    $vars->{'user'} = { canedit => $canedit, name => $name, id => $who };
     $vars->{'products'} = \@products;
 
     print "Content-type: text/html\n\n";
@@ -253,7 +254,7 @@ sub record_votes {
     # a non-negative integer (a series of digits not preceded by a
     # minus sign).
     foreach my $id (@buglist) {
-      ValidateBugID($id);
+      ValidateBugID($id, $userid);
       detaint_natural($::FORM{$id})
         || DisplayError("Only use non-negative numbers for your bug votes.")
         && exit;

@@ -4,7 +4,7 @@
 >Installation General Notes</TITLE
 ><META
 NAME="GENERATOR"
-CONTENT="Modular DocBook HTML Stylesheet Version 1.61
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
 "><LINK
 REL="HOME"
 TITLE="The Bugzilla Guide"
@@ -28,6 +28,7 @@ ALINK="#0000FF"
 ><DIV
 CLASS="NAVHEADER"
 ><TABLE
+SUMMARY="Header navigation table"
 WIDTH="100%"
 BORDER="0"
 CELLPADDING="0"
@@ -45,6 +46,7 @@ ALIGN="left"
 VALIGN="bottom"
 ><A
 HREF="bsdinstall.html"
+ACCESSKEY="P"
 >Prev</A
 ></TD
 ><TD
@@ -58,6 +60,7 @@ ALIGN="right"
 VALIGN="bottom"
 ><A
 HREF="win32.html"
+ACCESSKEY="N"
 >Next</A
 ></TD
 ></TR
@@ -70,17 +73,13 @@ CLASS="section"
 ><H1
 CLASS="section"
 ><A
-NAME="geninstall"
->3.5. Installation General Notes</A
-></H1
+NAME="geninstall">3.5. Installation General Notes</H1
 ><DIV
 CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN941"
->3.5.1. Modifying Your Running System</A
-></H2
+NAME="AEN874">3.5.1. Modifying Your Running System</H2
 ><P
 >&#13;	Bugzilla optimizes database lookups by storing all relatively static
 	information in the versioncache file, located in the data/ subdirectory
@@ -111,15 +110,26 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN948"
->3.5.2. Upgrading From Previous Versions</A
-></H2
+NAME="AEN881">3.5.2. Upgrading From Previous Versions</H2
 ><P
->&#13;	The developers of Bugzilla are constantly adding new tables, columns and
-	fields.  You'll get SQL errors if you just update the code.  The strategy
-	to update is to simply always run the checksetup.pl script whenever
-	you upgrade your installation of Bugzilla.  If you want to see what has
-	changed, you can read the comments in that file, starting from the end.
+>&#13;  A plain Bugzilla is fairly easy to upgrade from one version to a newer one.
+  However, things get a bit more complicated if you've made changes to 
+  Bugzilla's code. In this case, you may have to re-make or reapply those
+  changes.
+  It is recommended that you take a backup of your database and your entire
+  Bugzilla installation before attempting an upgrade. You can upgrade a 'clean'
+  installation by untarring a new tarball over the old installation. If you
+  are upgrading from 2.12 or later, you can type <TT
+CLASS="filename"
+>cvs -z3 
+  update</TT
+>, and resolve conflicts if there are any.   
+      </P
+><P
+>&#13;	Because the developers of Bugzilla are constantly adding new tables, columns
+  and fields, you'll probably get SQL errors if you just update the code and
+  attempt to use Bugzilla. Always run the checksetup.pl script whenever
+	you upgrade your installation. 
       </P
 ><P
 >&#13;	If you are running Bugzilla version 2.8 or lower, and wish to upgrade to
@@ -132,12 +142,10 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="htaccess"
->3.5.3. <TT
+NAME="htaccess">3.5.3. <TT
 CLASS="filename"
 >.htaccess</TT
-> files and security</A
-></H2
+> files and security</H2
 ><P
 >&#13;	To enhance the security of your Bugzilla installation,
 	Bugzilla  will generate
@@ -153,7 +161,9 @@ CLASS="filename"
 	generate the <TT
 CLASS="filename"
 >.htaccess</TT
-> files.
+> files. These .htaccess files
+  will not work with Apache 1.2.x - but this has security holes, so you
+  shouldn't be using it anyway.
 	
 	<DIV
 CLASS="note"
@@ -287,12 +297,10 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="mod-throttle"
->3.5.4. <TT
+NAME="mod-throttle">3.5.4. <TT
 CLASS="filename"
 >mod_throttle</TT
-> and Security</A
-></H2
+> and Security</H2
 ><P
 >&#13;	It is possible for a user, by mistake or on purpose, to access
 	the database many times in a row which can result in very slow
@@ -323,9 +331,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="content-type"
->3.5.5. Preventing untrusted Bugzilla content from executing malicious Javascript code</A
-></H2
+NAME="content-type">3.5.5. Preventing untrusted Bugzilla content from executing malicious Javascript code</H2
 ><P
 >It is possible for a Bugzilla to execute malicious
 	Javascript code.  Due to internationalization concerns, we are
@@ -382,9 +388,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="unixhistory"
->3.5.6. UNIX Installation Instructions History</A
-></H2
+NAME="unixhistory">3.5.6. UNIX Installation Instructions History</H2
 ><P
 >&#13;	This document was originally adapted from the Bonsai
 	installation instructions by Terry Weissman
@@ -423,6 +427,7 @@ CLASS="NAVFOOTER"
 ><HR
 ALIGN="LEFT"
 WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
 WIDTH="100%"
 BORDER="0"
 CELLPADDING="0"
@@ -434,6 +439,7 @@ ALIGN="left"
 VALIGN="top"
 ><A
 HREF="bsdinstall.html"
+ACCESSKEY="P"
 >Prev</A
 ></TD
 ><TD
@@ -442,6 +448,7 @@ ALIGN="center"
 VALIGN="top"
 ><A
 HREF="index.html"
+ACCESSKEY="H"
 >Home</A
 ></TD
 ><TD
@@ -450,6 +457,7 @@ ALIGN="right"
 VALIGN="top"
 ><A
 HREF="win32.html"
+ACCESSKEY="N"
 >Next</A
 ></TD
 ></TR
@@ -465,6 +473,7 @@ ALIGN="center"
 VALIGN="top"
 ><A
 HREF="installation.html"
+ACCESSKEY="U"
 >Up</A
 ></TD
 ><TD

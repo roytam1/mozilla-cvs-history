@@ -55,8 +55,6 @@ print "Set-Cookie: Bugzilla_login= ; path=$cookiepath; expires=Sun, 30-Jun-80 00
 Set-Cookie: Bugzilla_logincookie= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:00:00 GMT
 ";
 
-# delete the cookie before dumping the header so that it shows the user
-# as logged out if %commandmenu% is in the header
 delete $::COOKIE{"Bugzilla_login"};
 
     $vars->{'title'} = "Logged Out";
@@ -66,11 +64,11 @@ delete $::COOKIE{"Bugzilla_login"};
                           next time it is required.";
     $vars->{'url'} = "query.cgi?GoAheadAndLogIn=1";
     $vars->{'link'} = "Log in again here";
+    $vars->{'user'} = {};
     
     print "Content-Type: text/html\n\n";
     $template->process("global/message.html.tmpl", $vars)
-      || DisplayError("Template process failed: " . $template->error())
-      && exit;
+      || ThrowTemplateError($template->error());
 
 exit;
 

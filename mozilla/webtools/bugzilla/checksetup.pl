@@ -101,16 +101,6 @@ use strict;
 # this way we can look in the symbol table to see if they've been declared
 # yet or not.
 
-# Trim whitespace from front and back.
-
-sub trim {
-    ($_) = (@_);
-    s/^\s+//g;
-    s/\s+$//g;
-    return $_;
-}
-
-
 
 ###########################################################################
 # Check required module
@@ -184,23 +174,28 @@ sub have_vers {
 }
 
 # Check versions of dependencies.  0 for version = any version acceptible
+my %modules = (
+    "DBI"          => "1.13",
+    "Data::Dumper" => "0",
+    "DBD::mysql"   => "1.2209",
+    "Date::Parse"  => "0",
+    "AppConfig"    => "1.52",
+    "Template"     => "2.07",
+    "Text::Wrap"   => "2001.0131",
+    "File::Spec"   => "0.82"
+);
 
-my @missing = ();
-unless (have_vers("DBI","1.13"))          { push @missing,"DBI" }
-unless (have_vers("Data::Dumper",0))      { push @missing,"Data::Dumper" }
-unless (have_vers("DBD::mysql","1.2209")) { push @missing,"DBD::mysql" }
-unless (have_vers("Date::Parse",0))       { push @missing,"Date::Parse" }
-unless (have_vers("AppConfig","1.52"))    { push @missing,"AppConfig" }
-unless (have_vers("Template","2.06"))     { push @missing,"Template" }
-unless (have_vers("Text::Wrap","2001.0131")) { push @missing,"Text::Wrap" }
-unless (have_vers("File::Spec", "0.82"))  { push @missing,"File::Spec" }
+my %missing = ();
+foreach my $module (keys %modules) {
+    unless (have_vers($module, $modules{$module})) { $missing{$module} = $modules{$module} }
+}
 
 # If CGI::Carp was loaded successfully for version checking, it changes the
 # die and warn handlers, we don't want them changed, so we need to stash the
 # original ones and set them back afterwards -- justdave@syndicomm.com
 my $saved_die_handler = $::SIG{__DIE__};
 my $saved_warn_handler = $::SIG{__WARN__};
-unless (have_vers("CGI::Carp",0))    { push @missing,"CGI::Carp" }
+unless (have_vers("CGI::Carp",0))    { $missing{'CGI::Carp'} = 0 }
 $::SIG{__DIE__} = $saved_die_handler;
 $::SIG{__WARN__} = $saved_warn_handler;
 
@@ -224,13 +219,16 @@ if (!$xmlparser) {
     "running (as root)\n\n",
     "   perl -MCPAN -e'install \"XML::Parser\"'\n\n";
 }
-if (@missing > 0) {
+if (%missing) {
     print "\n\n";
     print "Bugzilla requires some Perl modules which are either missing from your\n",
     "system, or the version on your system is too old.\n",
     "They can be installed by running (as root) the following:\n";
-    foreach my $module (@missing) {
+    foreach my $module (keys %missing) {
         print "   perl -MCPAN -e 'install \"$module\"'\n";
+        if ($missing{$module} > 0) {
+            print "   Minimum version required: $missing{$module}\n";
+        }
     }
     print "\n";
     exit;
@@ -360,9 +358,13 @@ LocalVar('webservergroup', '
 # This is the group your web server runs on.
 # If you have a windows box, ignore this setting.
 # If you do not wish for checksetup to adjust the permissions of anything,
-# set this to "".
+# set this to "". If you do set this to "", then your Bugzilla installation
+# will be _VERY_ insecure, because some files will be world readable/writable,
+# and so anyone who can get local access to your machine can do whatever they
+# want. You should only have this set to "" if this is a testing installation
+# and you cannot set this up any other way. YOU HAVE BEEN WARNED.
 # If you set this to anything besides "", you will need to run checksetup.pl
-# as root.
+# as root, or as a user who is a member of the specified group.
 $webservergroup = "nobody";
 ');
 
@@ -442,6 +444,7 @@ LocalVar('opsys', '
         "Windows ME",  # Millenium Edition (upgrade of 98)
         "Windows 2000",
         "Windows NT",
+        "Windows XP",
         "Mac System 7",
         "Mac System 7.5",
         "Mac System 7.6.1",
@@ -534,6 +537,66 @@ my @my_priorities = @{*{$main::{'priorities'}}{ARRAY}};
 my @my_platforms = @{*{$main::{'platforms'}}{ARRAY}};
 my @my_opsys = @{*{$main::{'opsys'}}{ARRAY}};
 
+if ($my_webservergroup) {
+    if ($< != 0) { # zach: if not root, yell at them, bug 87398 
+        print <<EOF;
+
+Warning: you have entered a value for the "webservergroup" parameter
+in localconfig, but you are not running this script as root.
+This can cause permissions problems and decreased security.  If you
+experience problems running Bugzilla scripts, log in as root and re-run
+this script, or remove the value of the "webservergroup" parameter.
+Note that any warnings about "uninitialized values" that you may
+see below are caused by this.
+
+EOF
+    }
+} else {
+    # Theres no webservergroup, this is very very very very bad.
+    # However, if we're being run on windows, then this option doesn't
+    # really make sense. Doesn't make it any more secure either, though,
+    # but don't print the message, since they can't do anything about it.
+    if ($^O !~ /MSWin32/i) {
+        print <<EOF;
+
+********************************************************************************
+WARNING! You have not entered a value for the "webservergroup" parameter
+in localconfig. This means that certain files and directories which need
+to be editable by both you and the webserver must be world writable, and
+other files (including the localconfig file which stores your database
+password) must be world readable. This means that _anyone_ who can obtain
+local access to this machine can do whatever they want to your Bugzilla
+installation, and is probably also able to run arbitrary Perl code as the
+user that the webserver runs as.
+
+You really, really, really need to change this setting.
+********************************************************************************
+
+EOF
+    }
+}
+
+###########################################################################
+# Global Utility Library
+###########################################################################
+
+# globals.pl clears the PATH, but File::Find uses Cwd::cwd() instead of
+# Cwd::getcwd(), which we need to do because `pwd` isn't in the path - see
+# http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-09/msg00115.html
+# As a workaround, since we only use File::Find in checksetup, which doesn't
+# run in taint mode anyway, preserve the path...
+my $origPath = $::ENV{'PATH'};
+
+# Use the Bugzilla utility library for various functions.  We do this
+# here rather than at the top of the file so globals.pl doesn't define
+# localconfig variables for us before we get a chance to check for
+# their existence and create them if they don't exist.  Also, globals.pl
+# removes $ENV{'path'}, which we need in order to run `which mysql` above.
+require "globals.pl";
+
+# ...and restore it. This doesn't change tainting, so this will still cause
+# errors if this script ever does run with -T.
+$::ENV{'PATH'} = $origPath;
 
 ###########################################################################
 # Check data directory
@@ -684,13 +747,18 @@ END
     print "Creating data/webdot/.htaccess...\n";
     open HTACCESS, ">data/webdot/.htaccess";
     print HTACCESS <<'END';
-# Allow access to nothing in this directory except for .dot files
-# and don't allow access to those to anyone except research.att.com
+# Restrict access to .dot files to the public webdot server at research.att.com 
 # if research.att.com ever changed their IP, or if you use a different
 # webdot server, you'll need to edit this
 <FilesMatch ^[0-9]+\.dot$>
   Allow from 192.20.225.10
   Deny from all
+</FilesMatch>
+
+# Allow access by a local copy of 'dot' to .png, .gif, .jpg, and
+# .map files
+<FilesMatch ^[0-9]+\.(png|gif|jpg|map)$>
+  Allow from all
 </FilesMatch>
 
 # And no directory listings, either.
@@ -725,17 +793,148 @@ END
             print "\n\n";
             print "*** It appears that you still have an old index.html hanging\n";
             print "    around.  The contents of this file should be moved into a\n";
-            print "    template and placed in the 'template/custom' directory.\n\n";
+            print "    template and placed in the 'template/en/custom' directory.\n\n";
         }
         close HTML;
     }
 }
 
+{
+    eval("use Date::Parse");
+    # Templates will be recompiled if the source changes, but not if the
+    # settings in globals.pl change, so we need to be able to force a rebuild
+    # if that happens
+
+    # The last time the global template params were changed. Keep in UTC,
+    # YYYY-MM-DD
+    my $lastTemplateParamChange = str2time("2002-04-27", "UTC");
+    if (-e 'data/template') {
+        unless (-d 'data/template' && -e 'data/template/.lastRebuild' &&
+                (stat('data/template/.lastRebuild'))[9] >= $lastTemplateParamChange) {
+            # If File::Path::rmtree reported errors, then I'd use that
+            use File::Find;
+            sub remove {
+                return if $_ eq ".";
+                if (-d $_) {
+                    rmdir $_ || die "Couldn't rmdir $_: $!\n";
+                } else {
+                    unlink $_ || die "Couldn't unlink $_: $!\n";
+                }
+            }
+            finddepth(\&remove, 'data/template');
+        }
+    }
+
+    # Precompile stuff. This speeds up initial access (so the template isn't
+    # compiled multiple times simulataneously by different servers), and helps
+    # to get the permissions right.
+    eval("use Template");
+    my $redir = ($^O =~ /MSWin32/i) ? "NUL" : "/dev/null";
+    my $template = Template->new(
+      {
+        # Output to /dev/null here
+        OUTPUT => $redir,
+
+        # Colon-separated list of directories containing templates.
+        INCLUDE_PATH => "template/en/custom:template/en/default",
+
+        PRE_CHOMP => 1 ,
+        TRIM => 1 ,
+
+        COMPILE_DIR => 'data/', # becomes data/template/en/{custom,default}
+
+        # These don't actually need to do anything here, just exist
+        FILTERS =>
+        {
+         strike => sub { return $_; } ,
+         js => sub { return $_; },
+         html => sub { return $_; },
+         url_quote => sub { return $_; },
+         no_break => sub { return $_; }
+        },
+      }) || die ("Could not create Template: " . Template->error() . "\n");
+
+    sub compile {
+        # no_chdir doesn't work on perl 5.005
+
+        my $origDir = $File::Find::dir;
+        my $name = $File::Find::name;
+
+        return if (-d $name);
+        return if ($name =~ /\/CVS\//);
+        return if ($name !~ /\.tmpl$/);
+        $name =~ s!template/en/default/!!; # trim the bit we don't pass to TT
+
+        chdir($::baseDir);
+
+        $template->process($name, {})
+          || die "Could not compile $name:" . $template->error() . "\n";
+
+        chdir($origDir);
+    }
+
+    {
+        use File::Find;
+
+        use Cwd;
+
+        $::baseDir = getcwd();
+
+        # Don't hang on templates which use the CGI library
+        eval("use CGI qw(-no_debug)");
+
+        # Disable warnings which come from running the compiled templates
+        # This way is OK, because they're all runtime warnings.
+        # The reason we get these warnings here is that none of the required
+        # vars will be present.
+        local ($^W) = 0;
+
+        # Traverse the default hierachy. Custom templates will be picked up
+        # via the INCLUDE_PATH, but we know that bugzilla will only be
+        # calling stuff which exists in en/default
+        # FIXME - if we start doing dynamic INCLUDE_PATH we may have to
+        # recurse all of template/, changing the INCLUDE_PATH each time
+
+        find(\&compile, "template/en/default");
+    }
+
+    # update the time on the stamp file
+    open FILE, '>data/template/.lastRebuild'; close FILE;
+    utime $lastTemplateParamChange, $lastTemplateParamChange, ('data/template/.lastRebuild');
+}
+
 # Just to be sure ...
 unlink "data/versioncache";
 
-
-
+# Remove parameters from the data/params file that no longer exist in Bugzilla.
+if (-e "data/params") {
+    require "data/params";
+    require "defparams.pl";
+    use vars @::param_list;
+    my @oldparams;
+    
+    open(PARAMFILE, ">>old-params.txt") 
+      || die "$0: Can't open old-params.txt for writing: $!\n";
+      
+    foreach my $item (keys %::param) {
+        if (!grep($_ eq $item, @::param_list) && $item ne "version") {
+            push (@oldparams, $item);
+            print PARAMFILE "\n\n$item:\n$::param{$item}\n";
+                
+            delete $::param{$item};
+        }
+    }
+    
+    if (@oldparams) {
+        print "The following parameters are no longer used in Bugzilla, " .
+              "and so have been\nremoved from your parameters file and " .
+              "appended to old-params.txt:\n";
+        print join(", ", @oldparams) . "\n\n";               
+    }
+    
+    close PARAMFILE;
+    WriteParams();
+}
 
 
 ###########################################################################
@@ -833,20 +1032,6 @@ sub fixPerms {
 }
 
 if ($my_webservergroup) {
-        unless ($< == 0) { # zach: if not root, yell at them, bug 87398 
-        print <<EOF;
-
-Warning: you have entered a value for the "webservergroup" parameter
-in localconfig, but you are not running this script as root.
-This can cause permissions problems and decreased security.  If you
-experience problems running Bugzilla scripts, log in as root and re-run
-this script, or remove the value of the "webservergroup" parameter.
-Note that any warnings about "uninitialized values" that you may
-see below are caused by this.
-
-EOF
-    }
-
     # Funny! getgrname returns the GID if fed with NAME ...
     my $webservergid = getgrnam($my_webservergroup);
     # chown needs to be called with a valid uid, not 0.  $< returns the
@@ -854,9 +1039,12 @@ EOF
     # userid.
     fixPerms('.htaccess', $<, $webservergid, 027); # glob('*') doesn't catch dotfiles
     fixPerms('data/.htaccess', $<, $webservergid, 027);
+    fixPerms('data/template', $<, $webservergid, 007, 1); # webserver will write to these
     fixPerms('data/webdot/.htaccess', $<, $webservergid, 027);
+    fixPerms('data/params', $<, $webservergid, 017);
     fixPerms('*', $<, $webservergid, 027);
     fixPerms('template', $<, $webservergid, 027, 1);
+    fixPerms('css', $<, $webservergid, 027, 1);
     chmod 0644, 'globals.pl';
     chmod 0644, 'RelationSet.pm';
     chmod 0771, 'data';
@@ -866,10 +1054,14 @@ EOF
     my $gid = (split " ", $()[0];
     fixPerms('.htaccess', $<, $gid, 022); # glob('*') doesn't catch dotfiles
     fixPerms('data/.htaccess', $<, $gid, 022);
+    fixPerms('data/template', $<, $gid, 022, 1);
     fixPerms('data/webdot/.htaccess', $<, $gid, 022);
+    fixPerms('data/params', $<, $gid, 011);
     fixPerms('*', $<, $gid, 022);
     fixPerms('template', $<, $gid, 022, 1);
-    chmod 01777, 'data', 'graphs';
+    fixPerms('css', $<, $gid, 022, 1);
+    chmod 0777, 'data';
+    chmod 01777, 'graphs';
 }
 
 
@@ -919,7 +1111,7 @@ if ($my_db_check) {
     # Check what version of MySQL is installed and let the user know
     # if the version is too old to be used with Bugzilla.
     if ( vers_cmp($sql_vers,$sql_want) > -1 ) {
-        print "ok: found v$sql_vers\n\n";
+        print "ok: found v$sql_vers\n";
     } else {
         die "Your MySQL server v$sql_vers is too old./n" . 
             "   Bugzilla requires version $sql_want or later of MySQL.\n" . 
@@ -955,7 +1147,38 @@ my $dbh = DBI->connect($connectstring, $my_db_user, $my_db_pass)
 END { $dbh->disconnect if $dbh }
 
 
+###########################################################################
+# Check GraphViz setup
+###########################################################################
 
+#
+# If we are using a local 'dot' binary, verify the specified binary exists
+# and that the generated images are accessible.
+#
+
+if(-e "data/params") {
+  require "data/params";
+  if( $::param{'webdotbase'} && $::param{'webdotbase'} !~ /^https?:/ ) {
+    printf("Checking for %15s %-9s ", "GraphViz", "(any)");
+    if(-x $::param{'webdotbase'}) {
+      print "ok: found\n";
+    } else {
+      print "not a valid executable: $::param{'webdotbase'}\n";
+    }
+
+    # Check .htaccess allows access to generated images
+    if(-e "data/webdot/.htaccess") {
+      open HTACCESS, "data/webdot/.htaccess";
+      if(! grep(/png/,<HTACCESS>)) {
+        print "Dependency graph images are not accessible.\n";
+        print "Delete data/webdot/.htaccess and re-run checksetup.pl to rectify.\n";
+      }
+      close HTACCESS;
+    }
+  }
+}
+
+print "\n";
 
 
 ###########################################################################
@@ -1375,7 +1598,7 @@ if (&GetFieldDef('groups', 'bit')) {
     }
 }
 
-sub GroupExists ($)
+sub GroupDoesExist ($)
 {
     my ($name) = @_;
     my $sth = $dbh->prepare("SELECT name FROM groups WHERE name='$name'");
@@ -1396,7 +1619,7 @@ sub AddGroup {
     my ($name, $desc, $userregexp) = @_;
     $userregexp ||= "";
 
-    return if GroupExists($name);
+    return if GroupDoesExist($name);
     
     print "Adding group $name ...\n";
     my $sth = $dbh->prepare('INSERT INTO groups
@@ -1422,7 +1645,7 @@ AddGroup 'creategroups',     'Can create and destroy groups.';
 AddGroup 'editcomponents',   'Can create, destroy, and edit components.';
 AddGroup 'editkeywords',   'Can create, destroy, and edit keywords.';
 
-if (!GroupExists("editbugs")) {
+if (!GroupDoesExist("editbugs")) {
     my $id = AddGroup('editbugs',  'Can edit all aspects of any bug.', ".*");
     my $sth = $dbh->prepare("SELECT userid FROM profiles ORDER BY userid");
     $sth->execute();
@@ -1431,7 +1654,7 @@ if (!GroupExists("editbugs")) {
     }
 }
 
-if (!GroupExists("canconfirm")) {
+if (!GroupDoesExist("canconfirm")) {
     my $id = AddGroup('canconfirm',  'Can confirm a bug.', ".*");
     my $sth = $dbh->prepare("SELECT userid FROM profiles ORDER BY userid");
     $sth->execute();
@@ -1661,9 +1884,9 @@ if ($sth->rows == 0) {
   if (-e "data/params") { 
     require "data/params"; # if they have a params file, use that
   }
-  if ($::params{emailregexp}) {
-    $mailcheckexp = $::params{emailregexp};
-    $mailcheck    = $::params{emailregexpdesc};
+  if ($::param{emailregexp}) {
+    $mailcheckexp = $::param{emailregexp};
+    $mailcheck    = $::param{emailregexpdesc};
   } else {
     $mailcheckexp = '^[^@]+@[^@]+\\.[^@]+$';
     $mailcheck    = 'A legal address must contain exactly one \'@\', 
@@ -1684,7 +1907,10 @@ if ($sth->rows == 0) {
       unless ($login =~ /$mailcheckexp/) {
         print "\nThe login address is invalid:\n";
         print "$mailcheck\n";
-        die "Please try again\n";
+        print "You can change this test on the params page once checksetup has successfully\n";
+        print "completed.\n\n";
+        # Go round, and ask them again
+        $login = "";
       }
     }
     $login = $dbh->quote($login);
@@ -1821,39 +2047,6 @@ _End_Of_SQL_
     }
   }
   print "\n$login is now set up as the administrator account.\n";
-}
-
-
-sub Crypt {
-    # Crypts a password, generating a random salt to do it.
-    # Random salts are generated because the alternative is usually
-    # to use the first two characters of the password itself, and since
-    # the salt appears in plaintext at the beginning of the crypted
-    # password string this has the effect of revealing the first two
-    # characters of the password to anyone who views the crypted version.
-
-    my ($password) = @_;
-
-    # The list of characters that can appear in a salt.  Salts and hashes
-    # are both encoded as a sequence of characters from a set containing
-    # 64 characters, each one of which represents 6 bits of the salt/hash.
-    # The encoding is similar to BASE64, the difference being that the
-    # BASE64 plus sign (+) is replaced with a forward slash (/).
-    my @saltchars = (0..9, 'A'..'Z', 'a'..'z', '.', '/');
-
-    # Generate the salt.  We use an 8 character (48 bit) salt for maximum
-    # security on systems whose crypt uses MD5.  Systems with older
-    # versions of crypt will just use the first two characters of the salt.
-    my $salt = '';
-    for ( my $i=0 ; $i < 8 ; ++$i ) {
-        $salt .= $saltchars[rand(64)];
-    }
-
-    # Crypt the password.
-    my $cryptedpassword = crypt($password, $salt);
-
-    # Return the crypted password.
-    return $cryptedpassword;
 }
 
 
@@ -2893,6 +3086,9 @@ if (GetFieldDef("bugs","qacontact_accessible")) {
 }
 
 # 2002-03-15 bbaetz@student.usyd.edu.au - bug 129466
+# 2002-05-13 preed@sigkill.com - bug 129446 patch backported to the 
+#  BUGZILLA-2_14_1-BRANCH as a security blocker for the 2.14.2 release
+# 
 # Use the ip, not the hostname, in the logincookies table
 if (GetFieldDef("logincookies", "hostname")) {
     # We've changed what we match against, so all entries are now invalid
@@ -2916,4 +3112,5 @@ if (GetFieldDef("logincookies", "hostname")) {
 # Final checks...
 
 unlink "data/versioncache";
+
 print "Reminder: Bugzilla now requires version 8.7 or later of sendmail.\n";

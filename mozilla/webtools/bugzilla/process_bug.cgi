@@ -22,6 +22,7 @@
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Dave Miller <justdave@syndicomm.com>
 #                 Christopher Aillon <christopher@aillon.com>
+#                 Myk Melez <myk@mozilla.org>
 
 use diagnostics;
 use strict;
@@ -32,25 +33,31 @@ my $hasCanConfirmGroup = -1;
 use lib qw(.);
 
 require "CGI.pl";
+require "bug_form.pl";
+
 use RelationSet;
 
 # Shut up misguided -w warnings about "used only once":
 
-use vars %::versions,
-    %::components,
-    %::COOKIE,
-    %::MFORM,
-    %::legal_keywords,
-    %::legal_opsys,
-    %::legal_platform,
-    %::legal_priority,
-    %::settable_resolution,
-    %::target_milestone,
-    %::legal_severity;
+use vars qw(%versions
+          %components
+          %COOKIE
+          %MFORM
+          %legal_keywords
+          %legal_opsys
+          %legal_platform
+          %legal_priority
+          %settable_resolution
+          %target_milestone
+          %legal_severity
+          %superusergroupset
+          $next_bug);
 
 my $whoid = confirm_login();
 
 my $requiremilestone = 0;
+
+use vars qw($template $vars);
 
 ######################################################################
 # Begin Data/Security Validation
@@ -99,7 +106,12 @@ ValidateComment($::FORM{'comment'});
 
 print "Content-type: text/html\n\n";
 
-PutHeader ("Bug processed");
+# Start displaying the response page.
+$vars->{'title'} = "Bug processed";
+$template->process("global/header.html.tmpl", $vars)
+  || ThrowTemplateError($template->error());
+
+$vars->{'header_done'} = 1;
 
 GetVersionTable();
 
@@ -131,9 +143,8 @@ sub CheckonComment( $ ) {
     if( $ret ) {
         if (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/) {
             # No comment - sorry, action not allowed !
-            PuntTryAgain("You have to specify a <b>comment</b> on this " .
-                         "change.  Please give some words " .
-                         "on the reason for your change.");
+            ThrowUserError("You have to specify a <b>comment</b> on this change.  
+                            Please give some words on the reason for your change.");
         } else {
             $ret = 0;
         }
@@ -173,87 +184,34 @@ if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct)
        $mok = lsearch($::target_milestone{$prod}, $::FORM{'target_milestone'}) >= 0;
     }
 
-    # If anything needs to be verified, generate a form for verifying it.
-    if (!$vok || !$cok || !$mok) {
-
-        # Start the form.
-        print qq|<form action="process_bug.cgi" method="post">\n|;
-
-        # Add all form fields to the form as hidden fields (except those 
-        # being verified), so the user's changes are preserved.
-        foreach my $i (keys %::FORM) {
-            if ($i ne 'version' && $i ne 'component' && $i ne 'target_milestone') {
-                print qq|<input type="hidden" name="$i" value="| . value_quote($::FORM{$i}) . qq|">\n|;
-            }
-        }
-
-        # Display UI for verifying the version, component, and target milestone fields.
+    # If the product-specific fields need to be verified, or we need to verify
+    # whether or not to add the bugs to their new product's group, display
+    # a verification form.
+    if (!$vok || !$cok || !$mok || (Param('usebuggroups') && !defined($::FORM{'addtonewgroup'}))) {
+        $vars->{'form'} = \%::FORM;
+        
         if (!$vok || !$cok || !$mok) {
-            my ($sectiontitle, $sectiondescription);
-            if ( Param('usetargetmilestone') ) {
-                $sectiontitle = "Verify Version, Component, Target Milestone";
-                $sectiondescription = qq|
-                  You are moving the bug(s) to the product <b>$prod</b>, and now the 
-                  version, component, and/or target milestone fields are not correct 
-                  (or perhaps they were not correct in the first place).  In any case, 
-                  please set the correct version, component, and target milestone now:
-                |;
-            } else {
-                $sectiontitle = "Verify Version, Component";
-                $sectiondescription = qq|
-                  You are moving the bug(s) to the product <b>$prod</b>, and now the 
-                  version, and component fields are not correct (or perhaps they were 
-                  not correct in the first place).  In any case, please set the correct 
-                  version and component now:
-                |;
+            $vars->{'verify_fields'} = 1;
+            $vars->{'versions'} = $::versions{$prod};
+            $vars->{'components'} = $::components{$prod};
+        
+            if (Param("usetargetmilestone")) {
+                $vars->{'use_target_milestone'} = 1;
+                $vars->{'milestones'} = $::target_milestone{$prod};
             }
-
-            my $versionmenu = Version_element($::FORM{'version'}, $prod);
-            my $componentmenu = Component_element($::FORM{'component'}, $prod);
-
-            print qq|
-              <h3>$sectiontitle</h3>
-
-              <p>
-                $sectiondescription
-              <p>
-
-              <table><tr>
-              <td>
-                <b>Version:</b><br>
-                $versionmenu
-              </td>
-              <td>
-                <b>Component:</b><br>
-                $componentmenu
-              </td>
-            |;
-
-            if ( Param("usetargetmilestone") ) {
-                my $milestonemenu = Milestone_element($::FORM{'target_milestone'}, $prod);
-                print qq|
-                  <td>
-                    <b>Target Milestone:</b><br>
-                    $milestonemenu
-                  </td>
-                |;
+            else {
+                $vars->{'use_target_milestone'} = 0;
             }
-
-            print qq|
-              </tr></table>
-            |;
         }
-
-        # End the form.
-        print qq|
-          <input type="submit" value="Commit">
-          </form>
-          <hr>
-          <a href="query.cgi">Cancel and Return to the Query Page</a>
-        |;
-
-        # End the page and stop processing.
-        PutFooter();
+        else {
+            $vars->{"verify_fields"} = 0;
+        }
+        
+        $vars->{'verify_bug_group'} = (Param('usebuggroups') 
+                                       && !defined($::FORM{'addtonewgroup'}));
+        
+        $template->process("bug/process/verify-new-product.html.tmpl", $vars)
+          || ThrowTemplateError($template->error());
         exit;
     }
 }
@@ -332,18 +290,12 @@ sub CheckCanChangeField {
         return 1;
     }
     SendSQL("UNLOCK TABLES");
-    $oldvalue = value_quote($oldvalue);
-    $newvalue = value_quote($newvalue);
-    print PuntTryAgain(qq{
-Only the owner or submitter of the bug, or a sufficiently
-empowered user, may make that change to the $f field.
-<TABLE>
-<TR><TH ALIGN="right">Old value:</TH><TD>$oldvalue</TD></TR>
-<TR><TH ALIGN="right">New value:</TH><TD>$newvalue</TD></TR>
-</TABLE>
-});
-    PutFooter();
-    exit();
+    $oldvalue = html_quote($oldvalue);
+    $newvalue = html_quote($newvalue);
+    ThrowUserError("You tried to change the <strong>$f</strong> field 
+                    from <em>$oldvalue</em> to <em>$newvalue</em>, 
+                    but only the owner or submitter of the bug, or a 
+                    sufficiently empowered user, may change that field.");
 }
 
 # Confirm that the reporter of the current bug can access the bug we are duping to.
@@ -365,45 +317,21 @@ sub DuplicateUserConfirm {
     }
 
     SendSQL("SELECT cclist_accessible FROM bugs WHERE bug_id = $original");
-    my $cclist_accessible = FetchOneColumn();
+    $vars->{'cclist_accessible'} = FetchOneColumn();
     
     # Once in this part of the subroutine, the user has not been auto-validated
     # and the duper has not chosen whether or not to add to CC list, so let's
     # ask the duper what he/she wants to do.
     
-    # First, will the user gain access to this bug immediately by being CC'd?
-    my $reporter_access = $cclist_accessible ? "will immediately" : "might, in the future,";
-
+    $vars->{'form'} = \%::FORM;
+    $vars->{'original_bug_id'} = $original;
+    $vars->{'duplicate_bug_id'} = $dupe;
+    
+    # Confirm whether or not to add the reporter to the cc: list
+    # of the original bug (the one this bug is being duped against).
     print "Content-type: text/html\n\n";
-    PutHeader("Duplicate Warning");
-    print "<P>
-When marking a bug as a duplicate, the reporter of the 
-duplicate is normally added to the CC list of the original. 
-The permissions on bug #$original (the original) are currently set 
-such that the reporter would not normally be able to see it. 
-<P><B>Adding the reporter to the CC list of bug #$original 
-$reporter_access allow him/her access to view this bug.</B>
-Do you wish to do this?</P>
-</P>
-";
-    print "<form method=post>\n\n";
-
-    foreach my $i (keys %::FORM) {
-        # Make sure we don't include the username/password fields in the
-        # HTML.  If cookies are off, they'll have to reauthenticate after
-        # hitting "submit changes anyway".
-        # see http://bugzilla.mozilla.org/show_bug.cgi?id=15980
-        if ($i !~ /^(Bugzilla|LDAP)_(login|password)$/) {
-            my $value = value_quote($::FORM{$i});
-            print qq{<input type=hidden name="$i" value="$value">\n};
-        }
-    }
-
-    print qq{<p><input type=radio name="confirm_add_duplicate" value="1"> Yes, add the reporter to CC list on bug $original</p>\n};
-    print qq{<p><input type=radio name="confirm_add_duplicate" value="0" checked="checked"> No, do not add the reporter to CC list on bug $original</p>\n};
-    print qq{\n<p><a href="show_bug.cgi?id=$dupe">Throw away my changes, and go revisit bug $dupe</a>\n};
-    print qq{\n<p><input type="submit" value="Submit"></p></form>\n};
-    PutFooter();
+    $template->process("bug/process/confirm-duplicate.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
     exit;
 } # end DuplicateUserConfirm()
 
@@ -433,7 +361,7 @@ my $action  = '';
 if (defined $::FORM{action}) {
   $action  = trim($::FORM{action});
 }
-if ($action eq Param("move-button-text")) {
+if (Param("move-enabled") && $action eq Param("move-button-text")) {
   $::FORM{'buglist'} = join (":", @idlist);
   do "move.pl" || die "Error executing move.cgi: $!";
   PutFooter();
@@ -441,25 +369,6 @@ if ($action eq Param("move-button-text")) {
 }
 
 
-# the common updates to all bugs in @idlist start here
-#
-print "<TITLE>Update Bug " . join(" ", @idlist) . "</TITLE>\n";
-if (defined $::FORM{'id'}) {
-    navigation_header();
-    if (defined $::next_bug) {
-        # If there is another bug, then we're going to display it,
-        # so check that its a legal bug
-        # We need to check that its a number first
-        if (!(detaint_natural($::next_bug) && CanSeeBug($::next_bug))) {
-            # This isn't OK
-            # Rather than error out (which could validly happen if there
-            # was a bug in the list whose group was changed in the meantime)
-            # just remove references to it
-            undef $::next_bug;
-        }
-    }
-}
-print "<HR>\n";
 $::query = "update bugs\nset";
 $::comma = "";
 umask(0);
@@ -619,7 +528,8 @@ SWITCH: for ($::FORM{'knob'}) {
     /^accept$/ && CheckonComment( "accept" ) && do {
         DoConfirm();
         ChangeStatus('ASSIGNED');
-        if (Param("musthavemilestoneonaccept")) {
+        if (Param("musthavemilestoneonaccept") &&
+                scalar(@{$::target_milestone{$::FORM{'product'}}}) > 1) {
             if (Param("usetargetmilestone")) {
                 $requiremilestone = 1;
             }
@@ -645,10 +555,9 @@ SWITCH: for ($::FORM{'knob'}) {
         DoComma();
         if ( !defined$::FORM{'assigned_to'} ||
              trim($::FORM{'assigned_to'}) eq "") {
-          PuntTryAgain("You cannot reassign to a bug to nobody.  Unless " .
-                       "you intentionally cleared out the " .
-                       "\"Reassign bug to\" field, " .
-                       Param("browserbugmessage"));
+          ThrowUserError("You cannot reassign to a bug to nobody.  Unless you
+                          intentionally cleared out the \"Reassign bug to\" 
+                          field, " . Param("browserbugmessage"));
         }
         my $newid = DBNameToIdAndCheck($::FORM{'assigned_to'});
         $::query .= "assigned_to = $newid";
@@ -656,12 +565,12 @@ SWITCH: for ($::FORM{'knob'}) {
     };
     /^reassignbycomponent$/  && CheckonComment( "reassignbycomponent" ) && do {
         if ($::FORM{'product'} eq $::dontchange) {
-            PuntTryAgain("You must specify a product to help determine the " .
-                         "new owner of these bugs.");
+            ThrowUserError("You must specify a product to help determine 
+                            the new owner of these bugs.");
         }
         if ($::FORM{'component'} eq $::dontchange) {
-            PuntTryAgain("You must specify a component whose owner should " .
-                         "get assigned these bugs.");
+            ThrowUserError("You must specify a component whose owner 
+                            should get assigned these bugs.");
         }
         if ($::FORM{'compconfirm'}) {
             DoConfirm();
@@ -711,20 +620,19 @@ SWITCH: for ($::FORM{'knob'}) {
         SendSQL("SELECT bug_id FROM bugs WHERE bug_id = " . SqlQuote($num));
         $num = FetchOneColumn();
         if (!$num) {
-            PuntTryAgain("You must specify a valid bug number of which this bug " .
-                         "is a duplicate.  The bug has not been changed.")
+            ThrowUserError("You must specify a valid bug number of which this bug
+                            is a duplicate.  The bug has not been changed.")
         }
         if (!defined($::FORM{'id'}) || $num == $::FORM{'id'}) {
-            PuntTryAgain("Nice try, $::COOKIE{'Bugzilla_login'}.  But it doesn't really ".
-                         "make sense to mark a bug as a duplicate of " .
-                         "itself, does it?");
+            ThrowUserError("Nice try, $::COOKIE{'Bugzilla_login'}, but it doesn't 
+                            really make sense to mark a bug as a duplicate of itself, 
+                            does it?");
         }
         my $checkid = trim($::FORM{'id'});
         SendSQL("SELECT bug_id FROM bugs where bug_id = " .  SqlQuote($checkid));
         $checkid = FetchOneColumn();
         if (!$checkid) {
-            PuntTryAgain("The bug id $::FORM{'id'} is invalid. Please reload this bug ".
-                         "and try again.");
+            ThrowUserError("The bug id $::FORM{'id'} is invalid.");
         }
         $::FORM{'comment'} .= "\n\n*** This bug has been marked as a duplicate of $num ***";
         $duplicate = $num;
@@ -732,14 +640,13 @@ SWITCH: for ($::FORM{'knob'}) {
         last SWITCH;
     };
     # default
-    print "Unknown action $::FORM{'knob'}!\n";
-    PutFooter();
-    exit;
+    my $escaped_knob = html_quote($::FORM{'knob'});
+    ThrowCodeError("Unknown action $escaped_knob!\n");
 }
 
 
 if ($#idlist < 0) {
-    PuntTryAgain("You apparently didn't choose any bugs to modify.");
+    ThrowUserError("You apparently didn't choose any bugs to modify.");
 }
 
 
@@ -753,11 +660,9 @@ if ($::FORM{'keywords'}) {
         }
         my $i = GetKeywordIdFromName($keyword);
         if (!$i) {
-            PuntTryAgain("Unknown keyword named <code>" .
-                         html_quote($keyword) . "</code>. " .
-                         "<P>The legal keyword names are " .
-                         "<A HREF=describekeywords.cgi>" .
-                         "listed here</A>.");
+            ThrowUserError("Unknown keyword named <code>" . html_quote($keyword) . 
+                           "</code>. <p>The legal keyword names are 
+                            <a href=\"describekeywords.cgi\">listed here</a></p>.");
         }
         if (!$keywordseen{$i}) {
             push(@keywordlist, $i);
@@ -773,8 +678,8 @@ if ($::comma eq ""
     && defined $::FORM{'masscc'} && ! $::FORM{'masscc'}
     ) {
     if (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/) {
-        PuntTryAgain("Um, you apparently did not change anything on the " .
-                     "selected bugs.");
+        ThrowUserError("Um, you apparently did not change anything 
+                        on the selected bugs.");
     }
 }
 
@@ -887,7 +792,7 @@ foreach my $id (@idlist) {
             "profiles $write, dependencies $write, votes $write, " .
             "keywords $write, longdescs $write, fielddefs $write, " .
             "keyworddefs READ, groups READ, attachments READ, products READ, " .
-            "user_group_map READ, bug_group_map WRITE");
+            "user_group_map READ, bug_group_map WRITE, product_group_map READ");
     my @oldvalues = SnapShotBug($id);
     my %oldhash;
     my $i = 0;
@@ -907,61 +812,30 @@ foreach my $id (@idlist) {
                 SqlQuote($oldhash{'product'}));
         if ($value eq FetchOneColumn()) {
             SendSQL("UNLOCK TABLES");
-            PuntTryAgain("You must determine a target milestone for bug $id " .
-                         "if you are going to accept it.  (Part of " .
-                         "accepting a bug is giving an estimate of when it " .
-                         "will be fixed.)");
+            ThrowUserError("You must determine a target milestone for bug $id
+                            if you are going to accept it.  Part of accepting 
+                            a bug is giving an estimate of when it will be fixed.", 
+                           undef, 
+                           "abort");
         }
     }   
     if (defined $::FORM{'delta_ts'} && $::FORM{'delta_ts'} ne $delta_ts) {
-        print "
-<H1>Mid-air collision detected!</H1>
-Someone else has made changes to this bug at the same time you were trying to.
-The changes made were:
-<p>
-";
-        DumpBugActivity($id, $::FORM{'delta_ts'});
-        my $longdesc = GetLongDescriptionAsHTML($id);
-        my $longchanged = 0;
+        ($vars->{'operations'}) = GetBugActivity($::FORM{'id'}, $::FORM{'delta_ts'});
 
-        if (length($longdesc) > $::FORM{'longdesclength'}) {
-            $longchanged = 1;
-            print "<P>Added text to the long description:<blockquote>";
-            print substr($longdesc, $::FORM{'longdesclength'});
-            print "</blockquote>\n";
-        }
-        SendSQL("unlock tables");
-        print "You have the following choices: <ul>\n";
+        $vars->{'start_at'} = $::FORM{'longdesclength'};
+        $vars->{'comments'} = GetComments($id);
+        
         $::FORM{'delta_ts'} = $delta_ts;
-        print "<li><form method=post>";
-        foreach my $i (keys %::FORM) {
-            # Make sure we don't include the username/password fields in the
-            # HTML.  If cookies are off, they'll have to reauthenticate after
-            # hitting "submit changes anyway".
-            # see http://bugzilla.mozilla.org/show_bug.cgi?id=15980
-            if ($i !~ /^(Bugzilla|LDAP)_(login|password)$/) {
-              my $value = value_quote($::FORM{$i});
-              print qq{<input type=hidden name="$i" value="$value">\n};
-            }
-        }
-        print qq{<input type=submit value="Submit my changes anyway">\n};
-        print " This will cause all of the above changes to be overwritten";
-        if ($longchanged) {
-            print ", except for the changes to the description";
-        }
-        print qq{.</form>\n<li><a href="show_bug.cgi?id=$id">Throw away my changes, and go revisit bug $id</a></ul>\n};
-        PutFooter();
-        exit;
-    }
-
-    # Determine if we can place this bug into a private product
-    if (defined $::FORM{'product'} && $::FORM{'product'} ne $::dontchange 
-        && !CanSeeProduct($whoid, $::FORM{'product'})) {
-        print "<H1>Permission denied.</H1>\n";
-        print "Sorry; you do not have the permissions necessary to change\n";
-        print "this bug(s) to this private product.\n";
-        print "<P>\n";
-        PutFooter();
+        $vars->{'form'} = \%::FORM;
+        
+        $vars->{'bug_id'} = $id;
+        $vars->{'quoteUrls'} = \&quoteUrls;
+        
+        SendSQL("UNLOCK TABLES");
+        
+        # Warn the user about the mid-air collision and ask them what to do.
+        $template->process("bug/process/midair.html.tmpl", $vars)
+          || ThrowTemplateError($template->error());
         exit;
     }
         
@@ -969,8 +843,9 @@ The changes made were:
     if (defined $::FORM{'dependson'}) {
         my $me = "blocked";
         my $target = "dependson";
+        my %deptree;
         for (1..2) {
-            $deps{$target} = [];
+            $deptree{$target} = [];
             my %seen;
             foreach my $i (split('[\s,]+', $::FORM{$target})) {
                 if ($i eq "") {
@@ -979,7 +854,7 @@ The changes made were:
 
                 my $orig = $i;
                 if (!detaint_natural($i)) {
-                    PuntTryAgain("$orig is not a legal bug number");
+                    ThrowUserError("$orig is not a legal bug number", undef, "abort");
                 }
 
                 # Don't use CanSeeBug, since we want to keep deps to bugs a
@@ -988,16 +863,21 @@ The changes made were:
                         SqlQuote($i));
                 my $comp = FetchOneColumn();
                 if ($comp ne $i) {
-                    PuntTryAgain("$i is not a legal bug number");
+                    ThrowUserError("$i is not a legal bug number", undef, "abort");
                 }
                 if ($id eq $i) {
-                    PuntTryAgain("You can't make a bug blocked or dependent on itself.");
+                    ThrowUserError("You can't make a bug blocked or dependent on itself.",
+                                   undef,
+                                   "abort");
                 }
                 if (!exists $seen{$i}) {
-                    push(@{$deps{$target}}, $i);
+                    push(@{$deptree{$target}}, $i);
                     $seen{$i} = 1;
                 }
             }
+            # populate $deps{$target} as first-level deps only.
+            # and find remainder of dependency tree in $deptree{$target}
+            @{$deps{$target}} = @{$deptree{$target}};
             my @stack = @{$deps{$target}};
             while (@stack) {
                 my $i = shift @stack;
@@ -1005,13 +885,10 @@ The changes made were:
                         SqlQuote($i));
                 while (MoreSQLData()) {
                     my $t = FetchOneColumn();
-                    if ($t == $id) {
-                        PuntTryAgain("Dependency loop detected!<P>" .
-                                     "The change you are making to " .
-                                     "dependencies has caused a circular " .
-                                     "dependency chain.");
-                    }
-                    if (!exists $seen{$t}) {
+                    # ignore any _current_ dependencies involving this bug,
+                    # as they will be overwritten with data from the form.
+                    if ($t != $id && !exists $seen{$t}) {
+                        push(@{$deptree{$target}}, $t);
                         push @stack, $t;
                         $seen{$t} = 1;
                     }
@@ -1019,8 +896,8 @@ The changes made were:
             }
 
             if ($me eq 'dependson') {
-                my @deps   =  @{$deps{'dependson'}};
-                my @blocks =  @{$deps{'blocked'}};
+                my @deps   =  @{$deptree{'dependson'}};
+                my @blocks =  @{$deptree{'blocked'}};
                 my @union = ();
                 my @isect = ();
                 my %union = ();
@@ -1031,11 +908,15 @@ The changes made were:
                 if (@isect > 0) {
                     my $both;
                     foreach my $i (@isect) {
-                       $both = $both . "#" . $i . " ";
+                       $both = $both . GetBugLink($i, "#" . $i) . " ";
                     }
-                    PuntTryAgain("Dependency loop detected!<P>" .
-                                 "This bug can't be both blocked and dependent " .
-                                 "on bug "  . $both . "!");
+                    ThrowUserError(qq|Dependency loop detected!<p>
+                      The following bug(s) would appear on both the "depends on"
+                      and "blocks" parts of the dependency tree if these changes
+                      are committed: $both<br>This would create a circular 
+                      dependency, which is not allowed.</p>|,
+                      undef,
+                      "abort");
                 }
             }
             my $tmp = $me;
@@ -1084,8 +965,6 @@ The changes made were:
     }
     my $query = "$basequery\nwhere bug_id = $id";
     
-# print "<PRE>$query</PRE>\n";
-
     if ($::comma ne "") {
         SendSQL($query);
     }
@@ -1279,8 +1158,7 @@ The changes made were:
         }
     }   
 
-    print "<TABLE BORDER=1><TD><H2>Changes to bug $id submitted</H2>\n";
-    SendSQL("unlock tables");
+    SendSQL("UNLOCK TABLES");
 
     my @ARGLIST = ();
     if ( $removedCcString ne "" ) {
@@ -1293,10 +1171,25 @@ The changes made were:
         push @ARGLIST, ( "-forceqacontact", $origQaContact);
     }
     push @ARGLIST, ($id, $::COOKIE{'Bugzilla_login'});
-    system ("./processmail",@ARGLIST);
+  
+    # Send mail to let people know the bug has been changed.  Uses 
+    # a special syntax of the "open" and "exec" commands to capture 
+    # the output "processmail", which "system" doesn't allow 
+    # (i.e. "system ('./processmail', $bugid , $::userid);"), without 
+    # the insecurity of running the command through a shell via backticks
+    # (i.e. "my $mailresults = `./processmail $bugid $::userid`;").
+    $vars->{'mail'} = "";
+    open(PMAIL, "-|") or exec('./processmail', @ARGLIST);
+    $vars->{'mail'} .= $_ while <PMAIL>;
+    close(PMAIL);
 
-    print "<TD><A HREF=\"show_bug.cgi?id=$id\">Back To BUG# $id</A></TABLE>\n";
-
+    $vars->{'id'} = $id;
+    
+    # Let the user know the bug was changed and who did and didn't
+    # receive email about the change.
+    $template->process("bug/process/results.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
+    
     if ($duplicate) {
         # Check to see if Reporter of this bug is reporter of Dupe 
         SendSQL("SELECT reporter FROM bugs WHERE bug_id = " . SqlQuote($::FORM{'id'}));
@@ -1314,27 +1207,63 @@ The changes made were:
         AppendComment($duplicate, $::COOKIE{'Bugzilla_login'}, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***");
         CheckFormFieldDefined(\%::FORM,'comment');
         SendSQL("INSERT INTO duplicates VALUES ($duplicate, $::FORM{'id'})");
-        print "<TABLE BORDER=1><TD><H2>Duplicate notation added to bug $duplicate</H2>\n";
-        system("./processmail", $duplicate, $::COOKIE{'Bugzilla_login'});
-        print "<TD><A HREF=\"show_bug.cgi?id=$duplicate\">Go To BUG# $duplicate</A></TABLE>\n";
+        
+        $vars->{'mail'} = "";
+        open(PMAIL, "-|") or exec('./processmail', $duplicate, $::COOKIE{'Bugzilla_login'});
+        $vars->{'mail'} .= $_ while <PMAIL>;
+        close(PMAIL);
+        
+        $vars->{'id'} = $duplicate;
+        $vars->{'type'} = "dupe";
+        
+        # Let the user know a duplication notation was added to the original bug.
+        $template->process("bug/process/results.html.tmpl", $vars)
+          || ThrowTemplateError($template->error());
     }
 
     foreach my $k (keys(%dependencychanged)) {
-        print "<TABLE BORDER=1><TD><H2>Checking for dependency changes on bug $k</H2>\n";
-        system("./processmail", $k, $::COOKIE{'Bugzilla_login'});
-        print "<TD><A HREF=\"show_bug.cgi?id=$k\">Go To BUG# $k</A></TABLE>\n";
+        $vars->{'mail'} = "";
+        open(PMAIL, "-|") or exec('./processmail', $k, $::COOKIE{'Bugzilla_login'});
+        $vars->{'mail'} .= $_ while <PMAIL>;
+        close(PMAIL);
+        
+        $vars->{'id'} = $k;
+        $vars->{'type'} = "dep";
+        
+        # Let the user know we checked to see if we should email notice
+        # of this change to users with a relationship to the dependent
+        # bug and who did and didn't receive email about it.
+        $template->process("bug/process/results.html.tmpl", $vars)
+          || ThrowTemplateError($template->error());
     }
 
 }
 
-if (defined $::next_bug) {
-    print("<P>The next bug in your list is:\n");
-    $::FORM{'id'} = $::next_bug;
-    print "<HR>\n";
+# Show next bug, if it exists.
+if ($::COOKIE{"BUGLIST"} && $::FORM{'id'}) {
+    my @bugs = split(/:/, $::COOKIE{"BUGLIST"});
+    $vars->{'bug_list'} = \@bugs;
+    my $cur = lsearch(\@bugs, $::FORM{"id"});
+    if ($cur >= 0 && $cur < $#bugs) {
+        my $next_bug = $bugs[$cur + 1];
+        if (detaint_natural($next_bug) && CanSeeBug($next_bug)) {
+            $::FORM{'id'} = $next_bug;
+            
+            $vars->{'next_id'} = $next_bug;
+            
+            # Let the user know we are about to display the next bug in their list.
+            $template->process("bug/process/next.html.tmpl", $vars)
+              || ThrowTemplateError($template->error());
 
-    navigation_header();
-    do "bug_form.pl";
-} else {
-    navigation_header();
-    PutFooter();
+            show_bug("header is already done");
+
+            exit;
+        }
+    }
 }
+
+# End the response page.
+$template->process("bug/navigate.html.tmpl", $vars)
+  || ThrowTemplateError($template->error());
+$template->process("global/footer.html.tmpl", $vars)
+  || ThrowTemplateError($template->error());

@@ -52,13 +52,13 @@ use vars qw(
   @legal_severity
   %MFORM
   %versions
+  %proddesc
 );
 
-# Suppress silly used once warnings
-sub sillyness {
-    my $zz;
-    $zz = %::proddesc;
-}
+# We have to connect to the database, even though we don't use it in this code,
+# because we might occasionally rebuild the version cache, which causes tokens
+# to get deleted from the database, which needs a database connection.
+ConnectToDatabase();
 
 # If we're using bug groups to restrict bug entry, we need to know who the 
 # user is right from the start.
@@ -66,6 +66,7 @@ my $userid = confirm_login();
 
 if (!defined $::FORM{'product'}) {
     GetVersionTable();
+    quietly_check_login();
 
     my %products;
 
@@ -74,7 +75,7 @@ if (!defined $::FORM{'product'}) {
         # this product is private to one or more bug groups and the user is not
         # in one of those groups group, we don't want to include that product in this list.
         next if !CanSeeProduct($userid, $p);
-        $products{$p} = $::proddesc{$p};
+        $products{$p} = $proddesc{$p};
     }
  
     my $prodsize = scalar(keys %products);
@@ -87,13 +88,14 @@ if (!defined $::FORM{'product'}) {
         $vars->{'proddesc'} = \%products;
 
         $vars->{'target'} = "enter_bug.cgi";
+        $vars->{'format'} = $::FORM{'format'};
         $vars->{'title'} = "Enter Bug";
         $vars->{'h2'} = 
                     "First, you must pick a product on which to enter a bug.";
         
         print "Content-type: text/html\n\n";
-        $template->process("global/choose_product.tmpl", $vars)
-          || DisplayError("Template process failed: " . $template->error());
+        $template->process("global/choose-product.html.tmpl", $vars)
+          || ThrowTemplateError($template->error());
         exit;        
     }
 
@@ -179,11 +181,11 @@ sub pickos {
             /\(.*IBM.*\)/ && do {return "OS/2";};
             /\(.*QNX.*\)/ && do {return "Neutrino";};
             /\(.*VMS.*\)/ && do {return "OpenVMS";};
-#            /\(.*Windows XP.*\)/ && do {return "Windows XP";};
-#            /\(.*Windows NT 5\.1.*\)/ && do {return "Windows XP";};
+            /\(.*Windows XP.*\)/ && do {return "Windows XP";};
+            /\(.*Windows NT 5\.1.*\)/ && do {return "Windows XP";};
             /\(.*Windows 2000.*\)/ && do {return "Windows 2000";};
-            /Windows NT 5.*\)/ && do {return "Windows 2000";};
-            /\(Windows.*NT/ && do {return "Windows NT";};
+            /\(.*Windows NT 5.*\)/ && do {return "Windows 2000";};
+            /\(.*Windows.*NT.*\)/ && do {return "Windows NT";};
             /\(.*Win.*98.*4\.9.*\)/ && do {return "Windows ME";};
             /\(.*Win98.*\)/ && do {return "Windows 98";};
             /\(.*Win95.*\)/ && do {return "Windows 95";};
@@ -255,9 +257,23 @@ if (0 == @{$::components{$product}}) {
     $::FORM{'component'} = $::components{$product}->[0];
 }
 
+my @components;
+SendSQL("SELECT value, description FROM components " . 
+        "WHERE program = " . SqlQuote($product) . " ORDER BY value");
+while (MoreSQLData()) {
+    my ($name, $description) = FetchSQLData();
+
+    my %component;
+
+    $component{'name'} = $name;
+    $component{'description'} = $description;
+
+    push @components, \%component;
+}
+
 my %default;
 
-$vars->{'component_'} = $::components{$product};
+$vars->{'component_'} = \@components;
 $default{'component_'} = formvalue('component');
 
 $vars->{'assigned_to'} = formvalue('assigned_to');
@@ -324,7 +340,7 @@ while (MoreSQLData()) {
     if (formvalue("maketemplate") eq "Remember values as bookmarkable template") {
         # If this is a bookmarked template, then we only want to set the
         # bit for those bits set in the template.        
-        $check = formvalue("bit-$group_id", 0);
+        $check = formvalue("group-$group_id", 0);
     } elsif ($productgroups{$group_id}) {
         $check = 1;
     }
@@ -342,7 +358,8 @@ while (MoreSQLData()) {
 $vars->{'group'} = \@groups;
 $vars->{'default'} = \%default;
 
-print "Content-type: text/html\n\n";
-$template->process("entry/enter_bug.tmpl", $vars)
-  || DisplayError("Template process failed: " . $template->error());          
-exit;
+my $format = ValidateOutputFormat($::FORM{'format'}, "create", "bug/create");
+
+print "Content-type: $format->{'contenttype'}\n\n";
+$template->process("bug/create/$format->{'template'}", $vars)
+  || ThrowTemplateError($template->error());          

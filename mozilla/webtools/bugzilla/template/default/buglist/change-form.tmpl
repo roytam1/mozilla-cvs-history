@@ -202,14 +202,14 @@
     [% FOREACH group = groups %]
     <tr>
       <td align="center">
-        <input type="radio" name="bit-[% group.bit %]" value="-1" checked>
+        <input type="radio" name="group-[% group.bit %]" value="-1" checked>
       </td>
       <td align="center">
-        <input type="radio" name="bit-[% group.bit %]" value="0">
+        <input type="radio" name="group-[% group.bit %]" value="0">
       </td>
       [% IF group.isactive %]
         <td align="center">
-          <input type="radio" name="bit-[% group.bit %]" value="1">
+          <input type="radio" name="group-[% group.bit %]" value="1">
         </td>
       [% ELSE %]
         <td>&nbsp;</td>

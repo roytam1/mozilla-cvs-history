@@ -68,7 +68,7 @@ ConnectToDatabase();
 # Determine the format in which the user would like to receive the output.
 # Uses the default format if the user did not specify an output format;
 # otherwise validates the user's choice against the list of available formats.
-my $format = ValidateOutputFormat($::FORM{'format'});
+my $format = ValidateOutputFormat($::FORM{'format'}, "list");
 
 # Whether or not the user wants to change multiple bugs.
 my $dotweak = $::FORM{'tweak'} ? 1 : 0;
@@ -91,6 +91,7 @@ my $serverpush =
             || $::FORM{'serverpush'};
 
 my $order = $::FORM{'order'} || "";
+my $order_from_cookie = 0;  # True if $order set using $::COOKIE{'LASTORDER'}
 
 # If the user is retrieving the last bug list they looked at, hack the buffer
 # storing the query string so that it looks like a query retrieving those bugs.
@@ -115,7 +116,7 @@ if ($::buffer =~ /&cmd-/) {
     $vars->{'url'} = $url;
     $vars->{'link'} = "Click here if the page does not redisplay automatically.";
     $template->process("global/message.html.tmpl", $vars)
-      || DisplayError("Template process failed: " . $template->error());
+      || ThrowTemplateError($template->error());
     exit;
 }
 
@@ -138,7 +139,7 @@ if ($::FORM{'cmdtype'} eq 'runnamed') {
 my $userid = 0;
 if ($dotweak) {
     $userid = confirm_login();
-    if (!UserInGroup("editbugs")) {
+    if (!UserInGroup($userid, "editbugs")) {
         DisplayError("Sorry, you do not have sufficient privileges to edit
                       multiple bugs.");
         exit;
@@ -250,15 +251,16 @@ sub GetQuip {
 }
 
 sub GetGroupsByGroupSet {
-    my ($groupset) = @_;
+    my ($userid) = @_;
 
-    return if !$groupset;
+    return if !$userid;
 
     SendSQL("
-        SELECT  bit, name, description, isactive
+        SELECT  groups.group_id, groups.name, groups.description, groups.isactive
           FROM  groups
-         WHERE  (bit & $groupset) != 0
-           AND  isbuggroup != 0
+                LEFT JOIN user_group_map ON groups.group_id = user_group_map.group_id
+         WHERE  groups.isbuggroup != 0
+                AND user_group_map.user_id = $userid
       ORDER BY  description ");
 
     my @groups;
@@ -504,9 +506,10 @@ sub GenerateSQL {
          },
 
          "^cc," => sub {
-            push(@supptables,                                                  
-              ("LEFT JOIN cc cc_$chartid ON bugs.bug_id = cc_$chartid.bug_id LEFT JOIN profiles map_cc_$chartid ON cc_$chartid.who = map_cc_$chartid.userid"));
-            $f = "map_cc_$chartid.login_name";  
+            push(@supptables, "LEFT JOIN cc cc_$chartid ON bugs.bug_id = cc_$chartid.bug_id");
+
+            push(@supptables, "LEFT JOIN profiles map_cc_$chartid ON cc_$chartid.who = map_cc_$chartid.userid");
+            $f = "map_cc_$chartid.login_name";
          },
 
          "^long_?desc,changedby" => sub {
@@ -569,34 +572,67 @@ sub GenerateSQL {
              $f = "$table.$field";
          },
          "^attachstatusdefs.name," => sub {
+             # The below has Fun with the names for attachment statuses. This
+             # isn't needed for changed* queries, so exclude those - the
+             # generic stuff will cope
+             return if ($t =~ m/^changed/);
+
+             # Searching for "status != 'bar'" wants us to look for an
+             # attachment without the 'bar' status, not for an attachment with
+             # a status not equal to 'bar' (Which would pick up an attachment
+             # with more than one status). We do this by LEFT JOINS, after
+             # grabbing the matching attachment status ids.
+             # Note that this still won't find bugs with no attachments, since
+             # that isn't really what people would expect.
+
+             # First, get the attachment status ids, using the other funcs
+             # to match the WHERE term.
+             # Note that we need to reverse the negated bits for this to work
+             # This somewhat abuses the definitions of the various terms -
+             # eg, does 'contains all' mean that the status has to contain all
+             # those words, or that all those words must be exact matches to
+             # statuses, which must all be on a single attachment, or should
+             # the match on the status descriptions be a contains match, too?
+
+             my $inverted = 0;
+             if ($t =~ m/not(.*)/) {
+                 $t = $1;
+                 $inverted = 1;
+             }
+
+             $ref = $funcsbykey{",$t"};
+             &$ref;
+             SendSQL("SELECT id FROM attachstatusdefs WHERE $term");
+
+             my @as_ids;
+             while (MoreSQLData()) {
+                 push @as_ids, FetchOneColumn();
+             }
+
              # When searching for multiple statuses within a single boolean chart,
              # we want to match each status record separately.  In other words,
              # "status = 'foo' AND status = 'bar'" should match attachments with
              # one status record equal to "foo" and another one equal to "bar",
              # not attachments where the same status record equals both "foo" and
              # "bar" (which is nonsensical).  In order to do this we must add an
-             # additional counter to the end of the "attachstatuses" and 
-             # "attachstatusdefs" table references.
+             # additional counter to the end of the "attachstatuses" table
+             # reference.
              ++$statusid;
 
              my $attachtable = "attachments_$chartid";
              my $statustable = "attachstatuses_${chartid}_$statusid";
-             my $statusdefstable = "attachstatusdefs_${chartid}_$statusid";
-             push(@supptables, "attachments $attachtable");
-             push(@supptables, "attachstatuses $statustable");
-             push(@supptables, "attachstatusdefs $statusdefstable");
-             push(@wherepart, "bugs.bug_id = $attachtable.bug_id");
-             push(@wherepart, "$attachtable.attach_id = $statustable.attach_id");
-             push(@wherepart, "$statustable.statusid = $statusdefstable.id");
 
-             # When the operator is changedbefore, changedafter, changedto, 
-             # or changedby, $f appears in the query as "fielddefs.name = '$f'",
-             # so it must be the exact name of the table/field as they appear
-             # in the fielddefs table (i.e. attachstatusdefs.name).  For all 
-             # other operators, $f appears in the query as "$f = value", so it
-             # should be the name of the table/field with the correct table
-             # alias for this chart entry (f.e. attachstatusdefs_0.name).
-             $f = ($t =~ /^changed/) ? "attachstatusdefs.name" : "$statusdefstable.name";
+             push(@supptables, "attachments $attachtable");
+             my $join = "LEFT JOIN attachstatuses $statustable ON ".
+               "($attachtable.attach_id = $statustable.attach_id AND " .
+                "$statustable.statusid IN (" . join(",", @as_ids) . "))";
+             push(@supptables, $join);
+             push(@wherepart, "bugs.bug_id = $attachtable.bug_id");
+             if ($inverted) {
+                 $term = "$statustable.statusid IS NULL";
+             } else {
+                 $term = "$statustable.statusid IS NOT NULL";
+             }
          },
          "^changedin," => sub {
              $f = "(to_days(now()) - to_days(bugs.delta_ts))";
@@ -1004,6 +1040,7 @@ CMD: for ($::FORM{'cmdtype'}) {
         $::buffer = LookupNamedQuery($::FORM{"namedcmd"});
         $vars->{'title'} = "Bug List: $::FORM{'namedcmd'}";
         ProcessFormFields($::buffer);
+        $order = $::FORM{'order'} || $order;
         last CMD;
     };
 
@@ -1016,7 +1053,7 @@ CMD: for ($::FORM{'cmdtype'}) {
         $vars->{'url'} = $url;
         $vars->{'link'} = "Click here if the page does not redisplay automatically.";
         $template->process("global/message.html.tmpl", $vars)
-          || DisplayError("Template process failed: " . $template->error());
+          || ThrowTemplateError($template->error());
         exit;
     };
 
@@ -1032,7 +1069,7 @@ CMD: for ($::FORM{'cmdtype'}) {
         $vars->{'url'} = "query.cgi";
         $vars->{'link'} = "Go back to the query page.";
         $template->process("global/message.html.tmpl", $vars)
-          || DisplayError("Template process failed: " . $template->error());
+          || ThrowTemplateError($template->error());
         exit;
     };
 
@@ -1051,7 +1088,7 @@ CMD: for ($::FORM{'cmdtype'}) {
         $vars->{'url'} = "query.cgi";
         $vars->{'link'} = "Go back to the query page, using the new default.";
         $template->process("global/message.html.tmpl", $vars)
-          || DisplayError("Template process failed: " . $template->error());
+          || ThrowTemplateError($template->error());
         exit;
     };
 
@@ -1084,14 +1121,31 @@ CMD: for ($::FORM{'cmdtype'}) {
             SendSQL("REPLACE INTO namedqueries (userid, name, query, linkinfooter)
                      VALUES ($userid, $qname, $qbuffer, $tofooter)");
         }
+        
+        my $new_in_footer = $tofooter;
+        
+        # Don't add it to the list if they are reusing an existing query name.
+        foreach my $query (@{$vars->{'user'}{'queries'}}) {
+            if ($query->{'name'} eq $name && $query->{'linkinfooter'} == 1) {
+                $new_in_footer = 0;
+            }
+        }        
+        
         print "Content-Type: text/html\n\n";
-        # Generate and return the UI (HTML page) from the appropriate template.
+        # Generate and return the UI (HTML page) from the appropriate template.        
+        if ($new_in_footer) {
+            my %query = (name => $name,
+                         query => $::buffer, 
+                         linkinfooter => $tofooter);
+            push(@{$vars->{'user'}{'queries'}}, \%query);
+        }
+        
         $vars->{'title'} = "OK, query saved.";
         $vars->{'message'} = "OK, you have a new query named <code>$name</code>";
         $vars->{'url'} = "query.cgi";
         $vars->{'link'} = "Go back to the query page.";
         $template->process("global/message.html.tmpl", $vars)
-          || DisplayError("Template process failed: " . $template->error());
+          || ThrowTemplateError($template->error());
         exit;
     };
 }
@@ -1125,7 +1179,6 @@ sub DefineColumn {
 
 # Column:     ID                    Name                           Title
 DefineColumn("id"                , "bugs.bug_id"                , "ID"               );
-DefineColumn("groupset"          , "bugs.groupset"              , "Groupset"         );
 DefineColumn("opendate"          , "bugs.creation_ts"           , "Opened"           );
 DefineColumn("changeddate"       , "bugs.delta_ts"              , "Changed"          );
 DefineColumn("severity"          , "bugs.bug_severity"          , "Severity"         );
@@ -1183,14 +1236,16 @@ else {
 # and are hard-coded into the display templates.
 @displaycolumns = grep($_ ne 'id', @displaycolumns);
 
-# IMPORTANT! Never allow the groupset column to be displayed!
-@displaycolumns = grep($_ ne 'groupset', @displaycolumns);
-
 # Add the votes column to the list of columns to be displayed
 # in the bug list if the user is searching for bugs with a certain
 # number of votes and the votes column is not already on the list.
-push(@displaycolumns, 'votes') 
-  if $::FORM{'votes'} && !grep($_ eq 'votes', @displaycolumns);
+
+# Some versions of perl will taint 'votes' if this is done as a single
+# statement, because $::FORM{'votes'} is tainted at this point
+$::FORM{'votes'} ||= "";
+if (trim($::FORM{'votes'}) && !grep($_ eq 'votes', @displaycolumns)) {
+    push(@displaycolumns, 'votes');
+}
 
 
 ################################################################################
@@ -1199,10 +1254,8 @@ push(@displaycolumns, 'votes')
 
 # Generate the list of columns that will be selected in the SQL query.
 
-# The bug ID and groupset are always selected because bug IDs are always
-# displayed and we need the groupset to determine whether or not the bug
-# is visible to the user.
-my @selectcolumns = ("id", "groupset");
+# The bug IDs are always selected because bug IDs are always displayed
+my @selectcolumns = ("id");
 
 # Display columns are selected because otherwise we could not display them.
 push (@selectcolumns, @displaycolumns);
@@ -1234,9 +1287,12 @@ my $query = GenerateSQL(\@selectnames, $::buffer);
 # Add to the query some instructions for sorting the bug list.
 if ($::COOKIE{'LASTORDER'} && !$order || $order =~ /^reuse/i) {
     $order = url_decode($::COOKIE{'LASTORDER'});
+    $order_from_cookie = 1;
 }
 
 if ($order) {
+    my $db_order;  # Modified version of $order for use with SQL query
+
     # Convert the value of the "order" form field into a list of columns
     # by which to sort the results.
     ORDER: for ($order) {
@@ -1247,9 +1303,16 @@ if ($order) {
                 my @columnnames = map($columns->{lc($_)}->{'name'}, keys(%$columns));
                 if (!grep($_ eq $fragment, @columnnames)) {
                     my $qfragment = html_quote($fragment);
-                    DisplayError("The custom sort order you specified in your
-                                  form submission or cookie contains an invalid
-                                  column name <em>$qfragment</em>.");
+                    my $error = "The custom sort order you specified in your "
+                              . "form submission contains an invalid column "
+                              . "name <em>$qfragment</em>.";
+                    if ($order_from_cookie) {
+                        my $cookiepath = Param("cookiepath");
+                        print "Set-Cookie: LASTORDER= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:00:00 GMT\n";
+                        $error =~ s/form submission/cookie/;
+                        $error .= "  The cookie has been cleared.";
+                    }
+                    DisplayError($error);
                     exit;
                 }
             }
@@ -1278,19 +1341,21 @@ if ($order) {
         $order = "bugs.bug_status, bugs.priority, map_assigned_to.login_name, bugs.bug_id";
     }
 
+    $db_order = $order;  # Copy $order into $db_order for use with SQL query
+
     # Extra special disgusting hack: if we are ordering by target_milestone,
     # change it to order by the sortkey of the target_milestone first.
-    if ($order =~ /bugs.target_milestone/) {
-        $order =~ s/bugs.target_milestone/ms_order.sortkey,ms_order.value/;
+    if ($db_order =~ /bugs.target_milestone/) {
+        $db_order =~ s/bugs.target_milestone/ms_order.sortkey,ms_order.value/;
         $query =~ s/\sWHERE\s/ LEFT JOIN milestones ms_order ON ms_order.value = bugs.target_milestone AND ms_order.product = bugs.product WHERE /;
     }
 
     # If we are sorting by votes, sort in descending order.
-    if ($order =~ /bugs.votes\s+(asc|desc){0}/i) {
-        $order =~ s/bugs.votes/bugs.votes desc/i;
+    if ($db_order =~ /bugs.votes\s+(asc|desc){0}/i) {
+        $db_order =~ s/bugs.votes/bugs.votes desc/i;
     }
 
-    $query .= " ORDER BY $order ";
+    $query .= " ORDER BY $db_order ";
 }
 
 
@@ -1308,9 +1373,8 @@ if ($serverpush) {
     print "Content-Type: text/html\n\n";
 
     # Generate and return the UI (HTML page) from the appropriate template.
-    $template->process("buglist/server-push.html.tmpl", $vars)
-      || DisplayError("Template process failed: " . $template->error())
-      && exit;
+    $template->process("list/server-push.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
 }
 
 # Connect to the shadow database if this installation is using one to improve
@@ -1320,6 +1384,12 @@ ReconnectToShadowDatabase();
 # Tell MySQL to store temporary tables on the hard drive instead of memory
 # to avoid "table out of space" errors on MySQL versions less than 3.23.2.
 SendSQL("SET OPTION SQL_BIG_TABLES=1") if Param('expectbigqueries');
+
+# Normally, we ignore SIGTERM and SIGPIPE (see globals.pl) but we need to
+# respond to them here to prevent someone DOSing us by reloading a query
+# a large number of times.
+$::SIG{TERM} = 'DEFAULT';
+$::SIG{PIPE} = 'DEFAULT';
 
 # Execute the query.
 SendSQL($query);
@@ -1335,6 +1405,8 @@ SendSQL($query);
 my $bugowners = {};
 my $bugproducts = {};
 my $bugstatuses = {};
+my @buglist = ();
+my @canseebugs = ();
 
 my @bugs; # the list of records
 
@@ -1359,8 +1431,18 @@ while (my @row = FetchSQLData()) {
     $bugproducts->{$bug->{'product'}} = 1 if $bug->{'product'};
     $bugstatuses->{$bug->{'status'}} = 1 if $bug->{'status'};
 
+    # Keep list of bugs so we can check them later for permission
+    push(@buglist, $bug->{id});
+
     # Add the record to the list.
     push(@bugs, $bug);
+}
+
+# Check to see which bugs we have permission to see
+my $canseeref = CanSeeBug(\@buglist, $userid);
+foreach my $bug (@bugs) {
+#    next if !$canseeref->{$bug->{id}};
+    push(@canseebugs, $bug);
 }
 
 # Switch back from the shadow database to the regular database so PutFooter()
@@ -1375,6 +1457,7 @@ SendSQL("USE $::db_name");
 # Define the variables and functions that will be passed to the UI template.
 
 $vars->{'bugs'} = \@bugs;
+$vars->{'buglist'} = join(',', map($_->{id}, @bugs));
 $vars->{'columns'} = $columns;
 $vars->{'displaycolumns'} = \@displaycolumns;
 
@@ -1394,19 +1477,19 @@ $vars->{'urlquerypart'} =~ s/[&?](order|cmdtype)=[^&]*//g;
 $vars->{'order'} = $order;
 
 # The user's login account name (i.e. email address).
-$vars->{'user'} = $::COOKIE{'Bugzilla_login'};
+my $login = $::COOKIE{'Bugzilla_login'};
 
-$vars->{'caneditbugs'} = UserInGroup('editbugs');
-$vars->{'usebuggroups'} = UserInGroup('usebuggroups');
+$vars->{'caneditbugs'} = UserInGroup($userid, 'editbugs');
+$vars->{'usebuggroups'} = Param('usebuggroups');
 
 # Whether or not this user is authorized to move bugs to another installation.
 $vars->{'ismover'} = 1
   if Param('move-enabled')
-    && defined($vars->{'user'})
-      && Param('movers') =~ /^(\Q$vars->{'user'}\E[,\s])|([,\s]\Q$vars->{'user'}\E[,\s]+)/;
+    && defined($login)
+      && Param('movers') =~ /^(\Q$login\E[,\s])|([,\s]\Q$login\E[,\s]+)/;
 
 my @bugowners = keys %$bugowners;
-if (scalar(@bugowners) > 1 && UserInGroup('editbugs')) {
+if (scalar(@bugowners) > 1 && UserInGroup($userid, 'editbugs')) {
     my $suffix = Param('emailsuffix');
     map(s/$/$suffix/, @bugowners) if $suffix;
     my $bugowners = join(",", @bugowners);
@@ -1444,7 +1527,7 @@ if ($dotweak) {
     $vars->{'bugstatuses'} = [ keys %$bugstatuses ];
 
     # The groups to which the user belongs.
-    $vars->{'groups'} = GetGroupsByGroupSet($::usergroupset) if $::usergroupset ne '0';
+    $vars->{'groups'} = GetGroupsByGroupSet($userid) if $userid ne '0';
 
     # If all bugs being changed are in the same product, the user can change
     # their version and component, so generate a list of products, a list of
@@ -1474,18 +1557,20 @@ print "\n--thisrandomstring\n" if $serverpush;
 print "Content-Disposition: inline; filename=$filename\n" unless $serverpush;
 
 if ($format->{'extension'} eq "html") {
+    my $cookiepath = Param("cookiepath");
     print "Content-Type: text/html\n";
 
     if ($order) {
         my $qorder = url_quote($order);
-        print "Set-Cookie: LASTORDER=$qorder ; path=/; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+        print "Set-Cookie: LASTORDER=$qorder ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
     }
     my $bugids = join(":", map( $_->{'id'}, @bugs));
+    # See also Bug 111999
     if (length($bugids) < 4000) {
-        print "Set-Cookie: BUGLIST=$bugids\n";
+        print "Set-Cookie: BUGLIST=$bugids ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
     }
     else {
-        print "Set-Cookie: BUGLIST=\n";
+        print "Set-Cookie: BUGLIST= ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
         $vars->{'toolong'} = 1;
     }
 }
@@ -1501,9 +1586,8 @@ print "\n"; # end HTTP headers
 ################################################################################
 
 # Generate and return the UI (HTML page) from the appropriate template.
-$template->process("buglist/$format->{'template'}", $vars)
-  || DisplayError("Template process failed: " . $template->error())
-  && exit;
+$template->process("list/$format->{'template'}", $vars)
+  || ThrowTemplateError($template->error());
 
 
 ################################################################################

@@ -58,18 +58,26 @@ select
   bugs.status_whiteboard,
   bugs.keywords
 from bugs,profiles assign,profiles report
-where assign.userid = bugs.assigned_to and report.userid = bugs.reporter and";
+where assign.userid = bugs.assigned_to and report.userid = bugs.reporter";
 
-$::FORM{'buglist'} = "" unless exists $::FORM{'buglist'};
-my @buglist = split(/:/, $::FORM{'buglist'});
+my $buglist = $::FORM{'buglist'} || 
+              $::FORM{'bug_id'}  || 
+              $::FORM{'id'}      || "";
+
+my @buglist = ();
+foreach my $bug (split(/[:,]/, $buglist)) {
+    detaint_natural($bug) || next;
+    push(@buglist, $bug);
+}
 
 my $canseeref = CanSeeBug(\@buglist, $userid);
 
 my @bugs;
 
-foreach my $bug (@buglist) {
-    detaint_natural($bug) || next;
-    next if !$canseeref->{$bug};
+foreach my $bug_id (@buglist) {
+    next if !$canseeref->{$bug_id};
+
+    SendSQL("$generic_query AND bugs.bug_id = $bug_id");
 
     my %bug;
     my @row = FetchSQLData();
@@ -111,6 +119,5 @@ print "Content-Type: text/html\n";
 print "Content-Disposition: inline; filename=$filename\n\n";
 
 # Generate and return the UI (HTML page) from the appropriate template.
-$template->process("show/multiple.tmpl", $vars)
-  || DisplayError("Template process failed: " . $template->error())
-  && exit;
+$template->process("bug/show-multiple.html.tmpl", $vars)
+  || ThrowTemplateError($template->error());

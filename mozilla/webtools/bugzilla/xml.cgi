@@ -34,10 +34,9 @@ use vars qw($template $vars);
 
 if (!defined $::FORM{'id'} || !$::FORM{'id'}) {
     print "Content-Type: text/html\n\n";
-    $template->process("show/choose_xml.html.tmpl", $vars)
-      || DisplayError("Template process failed: " . $template->error())
-      && exit;
-  exit;
+    $template->process("bug/choose-xml.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
+    exit;
 }
 
 my $userid = quietly_check_login();
@@ -46,7 +45,7 @@ my $exporter = $::COOKIE{"Bugzilla_login"} || undef;
 
 my @ids = split (/[, ]+/, $::FORM{'id'});
 
-print "Content-type: text/plain\n\n";
+print "Content-type: text/xml\n\n";
 print Bug::XML_Header(Param("urlbase"), $::param{'version'}, 
                       Param("maintainer"), $exporter);
 foreach my $id (@ids) {
