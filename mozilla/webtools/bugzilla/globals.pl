@@ -72,16 +72,16 @@ if ($::driver eq "mysql") {
 	$dbhost = "localhost";
 	$dbname = "bugs";
 	$dbuser = "bugs";
-	$dbpass = "bugsPWD";
+	$dbpass = "";
 	do 'localconfig';
 
 } else {
 	$ENV{'ORACLE_HOME'} = "/opt/apps/oracle/product/8.0.5/";
-	$ENV{'ORACLE_SID'} = "rheng";
-	$ENV{'TWO_TASK'} = "rheng";
-	$ENV{'ORACLE_USERID'} = "bugzilla/bugzilla";
-	$dbname = "rheng";
-	$dbuser = "bugzilla/bugzilla";
+	$ENV{'ORACLE_SID'} = "";
+	$ENV{'TWO_TASK'} = "";
+	$ENV{'ORACLE_USERID'} = "";
+	$dbname = "";
+	$dbuser = "";
 	$dbhost = "";
 	$dbpass = "";
 	$::date_string = "SYSDATE";
@@ -1346,7 +1346,7 @@ sub SqlQuote {
     	$str =~ s/([\\\'])/\\$1/g;
 		return "'$str'";
 	} else {
-		$str =~ s/([\\\'])/\'$1/g;
+#		$str =~ s/([\\\'])/\'$1/g;
 		return $::db->quote($str);
 	}
 }
