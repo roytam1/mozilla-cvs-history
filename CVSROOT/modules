@@ -86,6 +86,7 @@ MozillaSourceCommon -a \
     mozilla/nav-java/stubs  \
     mozilla/network \
     mozilla/nsprpub  \
+    mozilla/privacy  \
     mozilla/xpcom \
     mozilla/l10n \
     mozilla/dbm  \
