@@ -2860,6 +2860,160 @@ if (!GetFieldDef("bugs", "alias")) {
     $dbh->do("ALTER TABLE bugs ADD UNIQUE (alias)");
 }
 
+# 2002-07-15 davef@tetsubo.com - bug 67950
+# Move quips to the db.
+if (-r 'data/comments' && -s 'data/comments'
+    && open (COMMENTS, "<data/comments")) {
+    print "Populating quips table from data/comments...\n\n";
+    while (<COMMENTS>) {
+        chomp;
+        $dbh->do("INSERT INTO quips (quip) VALUES ("
+                 . $dbh->quote($_) . ")");
+    }
+    print "The data/comments file (used to store quips) has been copied into\n" .
+      "the database, and the data/comments file moved to data/comments.bak - \n" .
+      "you can delete this fileonce you're satisfied the migration worked\n" .
+      "correctly.\n\n";
+    close COMMENTS;
+    rename("data/comments", "data/comments.bak");
+}
+
+# 2002-07-31 bbaetz@student.usyd.edu.au bug 158236
+# Remove unused column
+if (GetFieldDef("namedqueries", "watchfordiffs")) {
+    DropField("namedqueries", "watchfordiffs");
+}
+
+# 2002-08-12 jake@bugzilla.org/bbaetz@student.usyd.edu.au - bug 43600
+# Use integer IDs for products and components.
+if (GetFieldDef("products", "product")) {
+    print "Updating database to use product IDs.\n";
+
+    # First, we need to remove possible NULL entries
+    # NULLs may exist, but won't have been used, since all the uses of them
+    # are in NOT NULL fields in other tables
+    $dbh->do("DELETE FROM products WHERE product IS NULL");
+    $dbh->do("DELETE FROM components WHERE value IS NULL");
+
+    AddField("products", "id", "smallint not null auto_increment primary key");
+    AddField("components", "product_id", "smallint not null");
+    AddField("versions", "product_id", "smallint not null");
+    AddField("milestones", "product_id", "smallint not null");
+    AddField("bugs", "product_id", "smallint not null");
+    AddField("attachstatusdefs", "product_id", "smallint not null");
+    my %products;
+    my $sth = $dbh->prepare("SELECT id, product FROM products");
+    $sth->execute;
+    while (my ($product_id, $product) = $sth->fetchrow_array()) {
+        if (exists $products{$product}) {
+            print "Ignoring duplicate product $product\n";
+            $dbh->do("DELETE FROM products WHERE id = $product_id");
+            next;
+        }
+        $products{$product} = 1;
+        $dbh->do("UPDATE components SET product_id = $product_id " .
+                 "WHERE program = " . $dbh->quote($product));
+        $dbh->do("UPDATE versions SET product_id = $product_id " .
+                 "WHERE program = " . $dbh->quote($product));
+        $dbh->do("UPDATE milestones SET product_id = $product_id " .
+                 "WHERE product = " . $dbh->quote($product));
+        $dbh->do("UPDATE bugs SET product_id = $product_id, delta_ts=delta_ts " .
+                 "WHERE product = " . $dbh->quote($product));
+        $dbh->do("UPDATE attachstatusdefs SET product_id = $product_id " .
+                 "WHERE product = " . $dbh->quote($product));
+    }
+
+    print "Updating the database to use component IDs.\n";
+    AddField("components", "id", "smallint not null auto_increment primary key");
+    AddField("bugs", "component_id", "smallint not null");
+    my %components;
+    $sth = $dbh->prepare("SELECT id, value, product_id FROM components");
+    $sth->execute;
+    while (my ($component_id, $component, $product_id) = $sth->fetchrow_array()) {
+        if (exists $components{$component}) {
+            if (exists $components{$component}{$product_id}) {
+                print "Ignoring duplicate component $component for product $product_id\n";
+                $dbh->do("DELETE FROM components WHERE id = $component_id");
+                next;
+            }
+        } else {
+            $components{$component} = {};
+        }
+        $components{$component}{$product_id} = 1;
+        $dbh->do("UPDATE bugs SET component_id = $component_id, delta_ts=delta_ts " .
+                 "WHERE component = " . $dbh->quote($component) .
+                 " AND product_id = $product_id");
+    }
+    print "Fixing Indexes and Uniqueness.\n";
+    $dbh->do("ALTER TABLE milestones DROP INDEX product");
+    $dbh->do("ALTER TABLE milestones ADD UNIQUE (product_id, value)");
+    $dbh->do("ALTER TABLE bugs DROP INDEX product");
+    $dbh->do("ALTER TABLE bugs ADD INDEX (product_id)");
+    $dbh->do("ALTER TABLE bugs DROP INDEX component");
+    $dbh->do("ALTER TABLE bugs ADD INDEX (component_id)");
+
+    print "Removing, renaming, and retyping old product and component fields.\n";
+    DropField("components", "program");
+    DropField("versions", "program");
+    DropField("milestones", "product");
+    DropField("bugs", "product");
+    DropField("bugs", "component");
+    DropField("attachstatusdefs", "product");
+    RenameField("products", "product", "name");
+    ChangeFieldType("products", "name", "varchar(64) not null");
+    RenameField("components", "value", "name");
+    ChangeFieldType("components", "name", "varchar(64) not null");
+
+    print "Adding indexes for products and components tables.\n";
+    $dbh->do("ALTER TABLE products ADD UNIQUE (name)");
+    $dbh->do("ALTER TABLE components ADD UNIQUE (product_id, name)");
+    $dbh->do("ALTER TABLE components ADD INDEX (name)");
+}
+
+# 2002-08-XX - bbaetz@student.usyd.edu.au - bug 153578
+# attachments creation time needs to be a datetime, not a timestamp
+my $fielddef;
+if (($fielddef = GetFieldDef("attachments", "creation_ts")) &&
+    $fielddef->[1] =~ /^timestamp/) {
+    print "Fixing creation time on attachments...\n";
+
+    my $sth = $dbh->prepare("SELECT COUNT(attach_id) FROM attachments");
+    $sth->execute();
+    my ($attach_count) = $sth->fetchrow_array();
+
+    if ($attach_count > 1000) {
+        print "This may take a while...\n";
+    }
+    my $i = 0;
+
+    # This isn't just as simple as changing the field type, because
+    # the creation_ts was previously updated when an attachment was made
+    # obsolete from the attachment creation screen. So we have to go
+    # and recreate these times from the comments..
+    $sth = $dbh->prepare("SELECT bug_id, attach_id, submitter_id " .
+                         "FROM attachments");
+    $sth->execute();
+
+    # Restrict this as much as possible in order to avoid false positives, and
+    # keep the db search time down
+    my $sth2 = $dbh->prepare("SELECT bug_when FROM longdescs WHERE bug_id=? AND who=? AND thetext LIKE ? ORDER BY bug_when LIMIT 1");
+    while (my ($bug_id, $attach_id, $submitter_id) = $sth->fetchrow_array()) {
+        $sth2->execute($bug_id, $submitter_id, "Created an attachment (id=$attach_id)%");
+        my ($when) = $sth2->fetchrow_array();
+        if ($when) {
+            $dbh->do("UPDATE attachments SET creation_ts='$when' WHERE attach_id=$attach_id");
+        } else {
+            print "Warning - could not determine correct creation time for attachment $attach_id on bug $bug_id\n";
+        }
+        ++$i;
+        print "Converted $i of $attach_count attachments\n" if !($i % 1000);
+    }
+    print "Done - converted $i attachments\n";
+
+    ChangeFieldType("attachments", "creation_ts", "datetime NOT NULL");
+}
+
+# 2002-08-XX - bugreport@peshkin.net - bug 157756
 #
 # If the whole groups system is new, but the installation isn't, 
 # convert all the old groupset groups, etc...
@@ -3031,159 +3185,6 @@ if (GetFieldDef("profiles", "groupset")) {
     DropField('bugs','groupset');
     DropField('groups','bit');
     $dbh->do("DELETE FROM fielddefs WHERE name = " . $dbh->quote('groupset'));
-}
-
-# 2002-07-15 davef@tetsubo.com - bug 67950
-# Move quips to the db.
-if (-r 'data/comments' && -s 'data/comments'
-    && open (COMMENTS, "<data/comments")) {
-    print "Populating quips table from data/comments...\n\n";
-    while (<COMMENTS>) {
-        chomp;
-        $dbh->do("INSERT INTO quips (quip) VALUES ("
-                 . $dbh->quote($_) . ")");
-    }
-    print "The data/comments file (used to store quips) has been copied into\n" .
-      "the database, and the data/comments file moved to data/comments.bak - \n" .
-      "you can delete this fileonce you're satisfied the migration worked\n" .
-      "correctly.\n\n";
-    close COMMENTS;
-    rename("data/comments", "data/comments.bak");
-}
-
-# 2002-07-31 bbaetz@student.usyd.edu.au bug 158236
-# Remove unused column
-if (GetFieldDef("namedqueries", "watchfordiffs")) {
-    DropField("namedqueries", "watchfordiffs");
-}
-
-# 2002-08-12 jake@bugzilla.org/bbaetz@student.usyd.edu.au - bug 43600
-# Use integer IDs for products and components.
-if (GetFieldDef("products", "product")) {
-    print "Updating database to use product IDs.\n";
-
-    # First, we need to remove possible NULL entries
-    # NULLs may exist, but won't have been used, since all the uses of them
-    # are in NOT NULL fields in other tables
-    $dbh->do("DELETE FROM products WHERE product IS NULL");
-    $dbh->do("DELETE FROM components WHERE value IS NULL");
-
-    AddField("products", "id", "smallint not null auto_increment primary key");
-    AddField("components", "product_id", "smallint not null");
-    AddField("versions", "product_id", "smallint not null");
-    AddField("milestones", "product_id", "smallint not null");
-    AddField("bugs", "product_id", "smallint not null");
-    AddField("attachstatusdefs", "product_id", "smallint not null");
-    my %products;
-    my $sth = $dbh->prepare("SELECT id, product FROM products");
-    $sth->execute;
-    while (my ($product_id, $product) = $sth->fetchrow_array()) {
-        if (exists $products{$product}) {
-            print "Ignoring duplicate product $product\n";
-            $dbh->do("DELETE FROM products WHERE id = $product_id");
-            next;
-        }
-        $products{$product} = 1;
-        $dbh->do("UPDATE components SET product_id = $product_id " .
-                 "WHERE program = " . $dbh->quote($product));
-        $dbh->do("UPDATE versions SET product_id = $product_id " .
-                 "WHERE program = " . $dbh->quote($product));
-        $dbh->do("UPDATE milestones SET product_id = $product_id " .
-                 "WHERE product = " . $dbh->quote($product));
-        $dbh->do("UPDATE bugs SET product_id = $product_id, delta_ts=delta_ts " .
-                 "WHERE product = " . $dbh->quote($product));
-        $dbh->do("UPDATE attachstatusdefs SET product_id = $product_id " .
-                 "WHERE product = " . $dbh->quote($product));
-    }
-
-    print "Updating the database to use component IDs.\n";
-    AddField("components", "id", "smallint not null auto_increment primary key");
-    AddField("bugs", "component_id", "smallint not null");
-    my %components;
-    $sth = $dbh->prepare("SELECT id, value, product_id FROM components");
-    $sth->execute;
-    while (my ($component_id, $component, $product_id) = $sth->fetchrow_array()) {
-        if (exists $components{$component}) {
-            if (exists $components{$component}{$product_id}) {
-                print "Ignoring duplicate component $component for product $product_id\n";
-                $dbh->do("DELETE FROM components WHERE id = $component_id");
-                next;
-            }
-        } else {
-            $components{$component} = {};
-        }
-        $components{$component}{$product_id} = 1;
-        $dbh->do("UPDATE bugs SET component_id = $component_id, delta_ts=delta_ts " .
-                 "WHERE component = " . $dbh->quote($component) .
-                 " AND product_id = $product_id");
-    }
-    print "Fixing Indexes and Uniqueness.\n";
-    $dbh->do("ALTER TABLE milestones DROP INDEX product");
-    $dbh->do("ALTER TABLE milestones ADD UNIQUE (product_id, value)");
-    $dbh->do("ALTER TABLE bugs DROP INDEX product");
-    $dbh->do("ALTER TABLE bugs ADD INDEX (product_id)");
-    $dbh->do("ALTER TABLE bugs DROP INDEX component");
-    $dbh->do("ALTER TABLE bugs ADD INDEX (component_id)");
-
-    print "Removing, renaming, and retyping old product and component fields.\n";
-    DropField("components", "program");
-    DropField("versions", "program");
-    DropField("milestones", "product");
-    DropField("bugs", "product");
-    DropField("bugs", "component");
-    DropField("attachstatusdefs", "product");
-    RenameField("products", "product", "name");
-    ChangeFieldType("products", "name", "varchar(64) not null");
-    RenameField("components", "value", "name");
-    ChangeFieldType("components", "name", "varchar(64) not null");
-
-    print "Adding indexes for products and components tables.\n";
-    $dbh->do("ALTER TABLE products ADD UNIQUE (name)");
-    $dbh->do("ALTER TABLE components ADD UNIQUE (product_id, name)");
-    $dbh->do("ALTER TABLE components ADD INDEX (name)");
-}
-
-# 2002-08-XX - bbaetz@student.usyd.edu.au - bug 153578
-# attachments creation time needs to be a datetime, not a timestamp
-my $fielddef;
-if (($fielddef = GetFieldDef("attachments", "creation_ts")) &&
-    $fielddef->[1] =~ /^timestamp/) {
-    print "Fixing creation time on attachments...\n";
-
-    my $sth = $dbh->prepare("SELECT COUNT(attach_id) FROM attachments");
-    $sth->execute();
-    my ($attach_count) = $sth->fetchrow_array();
-
-    if ($attach_count > 1000) {
-        print "This may take a while...\n";
-    }
-    my $i = 0;
-
-    # This isn't just as simple as changing the field type, because
-    # the creation_ts was previously updated when an attachment was made
-    # obsolete from the attachment creation screen. So we have to go
-    # and recreate these times from the comments..
-    $sth = $dbh->prepare("SELECT bug_id, attach_id, submitter_id " .
-                         "FROM attachments");
-    $sth->execute();
-
-    # Restrict this as much as possible in order to avoid false positives, and
-    # keep the db search time down
-    my $sth2 = $dbh->prepare("SELECT bug_when FROM longdescs WHERE bug_id=? AND who=? AND thetext LIKE ? ORDER BY bug_when LIMIT 1");
-    while (my ($bug_id, $attach_id, $submitter_id) = $sth->fetchrow_array()) {
-        $sth2->execute($bug_id, $submitter_id, "Created an attachment (id=$attach_id)%");
-        my ($when) = $sth2->fetchrow_array();
-        if ($when) {
-            $dbh->do("UPDATE attachments SET creation_ts='$when' WHERE attach_id=$attach_id");
-        } else {
-            print "Warning - could not determine correct creation time for attachment $attach_id on bug $bug_id\n";
-        }
-        ++$i;
-        print "Converted $i of $attach_count attachments\n" if !($i % 1000);
-    }
-    print "Done - converted $i attachments\n";
-
-    ChangeFieldType("attachments", "creation_ts", "datetime NOT NULL");
 }
 
 # If you had to change the --TABLE-- definition in any way, then add your
