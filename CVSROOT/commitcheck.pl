@@ -305,7 +305,7 @@ if (m:^xpcom/reflect/xptcall$:) {return '118';}
 if (m:^xpcom/reflect/xptinfo$:) {return '118';}
 if (m:^mozilla/mailnews/news/.*$:) {return '122';}
 if (m:^mozilla/mailnews/[^/]*$:) {return '123';}
-if (m:^java/webshell/.*$:) {return '127';}
+if (m:^mozilla/hjava/webshell/.*$:) {return '127';}
 if (m:^java/fe$:) {return '131';}
 }
 return '';
