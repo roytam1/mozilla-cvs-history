@@ -100,6 +100,11 @@ $fullname{'47'} = 'Macintosh FE';
 $mode{'76'} = 'Open';
 $branch{'76'} = 'HEAD';
 $fullname{'76'} = 'MIMELib';
+$mode{'112'} = 'Restricted';
+$branch{'112'} = 'HEAD';
+$fullname{'112'} = 'Mozilla Tools';
+$blessed{'112'} = ['sar%netscape.com','donm%netscape.com','friedman%netscape.com','briano%netscape.com','jj%netscape.com','petitta%netscape.com','braddr%puremagic.com',];
+$super{'112'} = ['cyeh%netscape.com','leaf%mozilla.org',];
 $mode{'19'} = 'Open';
 $branch{'19'} = 'HEAD';
 $fullname{'19'} = 'mozilla-toplevel';
@@ -250,6 +255,7 @@ if (m:^mozilla/dom/.*$:) {return '103';}
 if (m:^js/src/perlconnect$:) {return '111';}
 if (m:^mozilla/silentdl/.*$:) {return '110';}
 if (m:^mozilla/xpfe$:) {return '105';}
+if (m:^mozilla/tools/.*$:) {return '112';}
 }
 return '';
 }
