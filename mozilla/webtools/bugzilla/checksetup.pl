@@ -1750,7 +1750,7 @@ sub AddResolution ($) {
         $restype = 1;
     }
 
-    my %descriptions = {
+    my %descriptions = (
         'FIXED'          => 'A fix for this bug is checked into the tree and tested.',
         'DUPLICATE'      => 'The problem is a duplicate of an existing bug. Marking a bug duplicate requires the bug number of the duplicate.',
         'MOVED'          => 'The bug has been moved to another Bugzilla installation.',
@@ -1764,7 +1764,7 @@ sub AddResolution ($) {
             'If more information appears later, please reopen the bug.',
         'NOTWORTHIT'     => 'The problem should be fixed in a perfect world, but this isn\'t a perfect world, so it won\'t be.',
         'MISSING'        => 'When a bug report can\'t be dealt with because an external resource (eg a page at a URL) is missing.'
-    };
+    );
 
     $description = $descriptions{$name};
 
