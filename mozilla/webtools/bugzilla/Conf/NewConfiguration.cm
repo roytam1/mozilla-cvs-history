@@ -73,6 +73,8 @@ output "Now configuring database options\n";
 output "Remember you can answer 'stop' for any question to save your settings and exit\n\n";
 ask('db_sock',"Please select the database socket you wish to use. Leaving this option blank is almost always the right choice:",'');
 
+storeData();
+
 if (getConf('databasetype') eq 'mysql') {
 	# If we are using mysql, we need the path to the binaries
 	# Code snipped from checksetup to find a default
@@ -88,5 +90,27 @@ if (getConf('databasetype') eq 'mysql') {
 
 	ask ('mysqlpath',"Please specify only the directory name, with no trailing slash to the MySQL binaries on your system.$defaulttext",$mysql_binaries);
 }
+
+
+output "Server configuration questions\n\n";
+
+output <<EOF;
+If you are using Apache for your web server, Bugzilla can create .htaccess
+files for you that will instruct Apache not to serve files that shouldn't
+be accessed from the web (like your local configuration data and non-cgi
+executable files).  For this to work, the directory your Bugzilla
+installation is in must be within the jurisdiction of a <Directory> block
+in the httpd.conf file that has 'AllowOverride Limit' in it.  If it has
+'AllowOverride All' or other options with Limit, that's fine.
+(Older Apache installations may use an access.conf file to store these
+<Directory> blocks.) See the Bugzilla Guide for more information
+EOF
+
+ask('create_htaccess','Create .htaccess files?','y');
+
+# normalize the input so we don't have to do this later in the makefile
+if (getConf('create_htaccess') =~ /(y|yes|1)/i) {
+	setConf('create_htaccess','y');
+} else { setConf('create_htaccess','n') }
 
 1;
