@@ -45,6 +45,7 @@
 
 use lib '#tinder_libdir#';
 
+use TreeData;
 use HTMLPopUp;
 use FileStructure;
 
@@ -52,14 +53,14 @@ use FileStructure;
 
 #       Main        
 {
-    $tree = '';
-    $url = FileStructure::get_filename($tree, 'tree_URL').
-        
+    $tree = 'Project_A';
+    $url = FileStructure::get_filename($tree, 'tree_URL');
 
-  HTMLPopUp::regenerate_HTML_pages();
+    HTMLPopUp::regenerate_HTML_pages();
 
     $out = <<EOF;
 Content-type: text/html
+
 <TITLE>tinderbox</TITLE>
 <META HTTP-EQUIV="Refresh" CONTENT="0; URL=$url">
 <BODY   BGCOLOR="#FFFFFF" TEXT="#000000"
