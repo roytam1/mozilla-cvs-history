@@ -176,7 +176,7 @@ sub construct_times_vec {
   # the first entry is rounded down to nearest 5 minutes 
 
   my $remainder = $min % 5;
-  my ($time) = $start_time - ($remainder*$main::SECONDS_PER_MINUTE);
+  my ($time) = $start_time - ($remainder*$main::SECONDS_PER_MINUTE) - $sec;
 
   while ($time > $end_time) {
     push @out, $time;
@@ -293,7 +293,8 @@ sub HTML_status_page {
   my ($break_times) = TinderHeader::gettree_header('Build', $tree);
   my ($ignore_builds) = TinderHeader::gettree_header('IgnoreBuilds', $tree);
 
-  my ($html_tree_state, $html_ignore_builds);
+  my ($html_tree_state) = '';
+  my ($html_ignore_builds) = '';
 
   ($tree_state) &&
     ($html_tree_state .= (
