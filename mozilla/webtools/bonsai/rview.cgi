@@ -42,6 +42,7 @@ $|=1;
 
 my $CVS_ROOT = $::FORM{"cvsroot"};
 $CVS_ROOT = pickDefaultRepository() unless $CVS_ROOT;
+&validateRepository($CVS_ROOT);
 
 LoadTreeConfig();
 $::TreeID = $::FORM{'module'} 
@@ -75,13 +76,6 @@ my $script_str;
 
 &setup_script;
 $::Setup_String = $script_str;
-
-
-if( $CVS_ROOT eq ""  ){
-    $CVS_ROOT = pickDefaultRepository();
-}
-
-validateRepository($CVS_ROOT);
 
 my $s = "";
 
