@@ -689,3 +689,16 @@ NSS -a \
 	mozilla/security/nss \
 	mozilla/security/coreconf
 
+
+#############################################################
+#
+# Module for Mozilla Tinderbox
+#
+#############################################################
+MozillaTinderboxAll -a \
+	SeaMonkeyAll \
+        mozilla/security/psm \
+        mozilla/modules/libpr0n \
+	NSS \
+	NSPR
+
