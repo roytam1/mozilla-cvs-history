@@ -187,7 +187,7 @@ $mode{'163'} = 'Restricted';
 $branch{'163'} = 'NSS_3_3_BRANCH';
 $fullname{'163'} = 'NSS Stable Release Branch';
 $blessed{'163'} = [];
-$super{'163'} = ['tfox%netscape.com','nicolson%netscape.com','nelsonb%netscape.com','julien.pierre.bugs%sun.com','ian.mcgreer%sun.com','glen.beasley%sun.com','bishakhabanerjee%netscape.com','wtchang%redhat.com','relyea%netscape.com',];
+$super{'163'} = ['tfox%netscape.com','jamie-bugzilla%jampee.com','nelsonb%netscape.com','julien.pierre.bugs%sun.com','ian.mcgreer%sun.com','glen.beasley%sun.com','bishakhabanerjee%netscape.com','wtchang%redhat.com','relyea%netscape.com',];
 $mode{'159'} = 'Open';
 $branch{'159'} = 'HEAD';
 $fullname{'159'} = 'NSS Trunk';
@@ -228,7 +228,7 @@ $mode{'145'} = 'Restricted';
 $branch{'145'} = 'HEAD';
 $fullname{'145'} = 'security';
 $blessed{'145'} = ['jgmyers%speakeasy.net','gerv%gerv.net','cls%seawood.org','bryner%brianryner.com',];
-$super{'145'} = ['alexei.volkov.bugs%sun.com','thayes%netscape.com','tfox%netscape.com','saul.edwards%sun.com','nicolson%netscape.com','kaie%kuix.de','ian.mcgreer%sun.com','glen.beasley%sun.com','ddrinan%netscape.com','christophe.ravel.bugs%sun.com','bishakhabanerjee%netscape.com','wtchang%redhat.com','relyea%netscape.com','nelsonb%netscape.com','julien.pierre.bugs%sun.com',];
+$super{'145'} = ['alexei.volkov.bugs%sun.com','thayes%netscape.com','tfox%netscape.com','saul.edwards%sun.com','jamie-bugzilla%jampee.com','kaie%kuix.de','ian.mcgreer%sun.com','glen.beasley%sun.com','ddrinan%netscape.com','christophe.ravel.bugs%sun.com','bishakhabanerjee%netscape.com','wtchang%redhat.com','relyea%netscape.com','nelsonb%netscape.com','julien.pierre.bugs%sun.com',];
 $mode{'151'} = 'Open';
 $branch{'151'} = 'HEAD';
 $fullname{'151'} = 'Security - Mozilla PSM Glue';
@@ -313,27 +313,6 @@ $fullname{'93'} = 'Zlib';
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'HEAD') {
-if (m:^js/src/perlconnect$:) {return '111';}
-if (m:^mozilla/silentdl/.*$:) {return '110';}
-if (m:^mozilla/content/xsl/.*$:) {return '140';}
-if (m:^mozilla/extensions/transformiix/.*$:) {return '140';}
-if (m:^mozilla/calendar/.*$:) {return '183';}
-if (m:^mozilla/other-licenses/libical/.*$:) {return '183';}
-if (m:^gfx/src/photon/.*$:) {return '113';}
-if (m:^widget/src/photon/.*$:) {return '113';}
-if (m:^mozilla/content/xul/.*$:) {return '106';}
-if (m:^mozilla/layout/xul/.*$:) {return '106';}
-if (m:^mozilla/profile$:) {return '120';}
-if (m:^mozilla/tools/.*$:) {return '112';}
-if (m:^xpcom/typelib$:) {return '117';}
-if (m:^js/src/xpconnect$:) {return '118';}
-if (m:^xpcom/reflect/xptcall$:) {return '118';}
-if (m:^xpcom/reflect/xptinfo$:) {return '118';}
-if (m:^mozilla/mailnews/news/.*$:) {return '122';}
-if (m:^mozilla/mailnews/[^/]*$:) {return '123';}
-if (m:^mozilla/mailnews/mime/[^/]*$:) {return '124';}
-if (m:^mozilla/java/xpcom/.*$:) {return '128';}
-if (m:^mozilla/java/plugins/.*$:) {return '129';}
 if (m:^mozilla/java/webclient/.*$:) {return '127';}
 if (m:^mozilla/java/dom/.*$:) {return '130';}
 if (m:^CVSROOT/commitcheck\.pl$:) {return '3';}
@@ -460,6 +439,27 @@ if (m:^mozilla/dom/.*$:) {return '103';}
 if (m:^mozilla/js/rhino/.*$:) {return '138';}
 if (m:^mozilla/xpfe/.*$:) {return '137';}
 if (m:^mozilla/js/tests$:) {return '114';}
+if (m:^js/src/perlconnect$:) {return '111';}
+if (m:^mozilla/silentdl/.*$:) {return '110';}
+if (m:^mozilla/content/xsl/.*$:) {return '140';}
+if (m:^mozilla/extensions/transformiix/.*$:) {return '140';}
+if (m:^mozilla/calendar/.*$:) {return '183';}
+if (m:^mozilla/other-licenses/libical/.*$:) {return '183';}
+if (m:^gfx/src/photon/.*$:) {return '113';}
+if (m:^widget/src/photon/.*$:) {return '113';}
+if (m:^mozilla/content/xul/.*$:) {return '106';}
+if (m:^mozilla/layout/xul/.*$:) {return '106';}
+if (m:^mozilla/profile$:) {return '120';}
+if (m:^mozilla/tools/.*$:) {return '112';}
+if (m:^xpcom/typelib$:) {return '117';}
+if (m:^js/src/xpconnect$:) {return '118';}
+if (m:^xpcom/reflect/xptcall$:) {return '118';}
+if (m:^xpcom/reflect/xptinfo$:) {return '118';}
+if (m:^mozilla/mailnews/news/.*$:) {return '122';}
+if (m:^mozilla/mailnews/[^/]*$:) {return '123';}
+if (m:^mozilla/mailnews/mime/[^/]*$:) {return '124';}
+if (m:^mozilla/java/xpcom/.*$:) {return '128';}
+if (m:^mozilla/java/plugins/.*$:) {return '129';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
