@@ -2,7 +2,7 @@
 
 use Socket;
 
-$username = getlogin || (getpwuid($<))[0] || "nobody";
+$username = $ENV{"CVS_USER"} || getlogin || (getpwuid($<))[0] || "nobody";
 $envcvsroot = $ENV{'CVSROOT'};
 $cvsroot = $envcvsroot;
 $flag_debug = 0;
