@@ -310,13 +310,6 @@ $fullname{'93'} = 'Zlib';
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'HEAD') {
-if (m:^xpcom/typelib$:) {return '117';}
-if (m:^js/src/xpconnect$:) {return '118';}
-if (m:^xpcom/reflect/xptcall$:) {return '118';}
-if (m:^xpcom/reflect/xptinfo$:) {return '118';}
-if (m:^mozilla/mailnews/news/.*$:) {return '122';}
-if (m:^mozilla/mailnews/[^/]*$:) {return '123';}
-if (m:^mozilla/mailnews/mime/[^/]*$:) {return '124';}
 if (m:^mozilla/java/xpcom/.*$:) {return '128';}
 if (m:^mozilla/java/plugins/.*$:) {return '129';}
 if (m:^mozilla/java/webclient/.*$:) {return '127';}
@@ -401,15 +394,15 @@ if (m:^mozilla/gfx/src/*\.h$:) {return '177';}
 if (m:^mozilla/gfx/src/shared/.*$:) {return '177';}
 if (m:^mozilla/widget/public/.*$:) {return '177';}
 if (m:^mozilla/widget/src/xpwidgets/.*$:) {return '177';}
-if (m:^mozilla/modules/libpref/.*$:) {return '82';}
 if (m:^mozilla/gfx/src/mac/.*$:) {return '178';}
 if (m:^mozilla/widget/src/mac/.*$:) {return '178';}
-if (m:^mozilla/modules/progress/.*$:) {return '83';}
+if (m:^mozilla/modules/libpref/.*$:) {return '82';}
 if (m:^mozilla/accessibility/.*$:) {return '180';}
-if (m:^mozilla/modules/libreg/.*$:) {return '84';}
+if (m:^mozilla/modules/progress/.*$:) {return '83';}
 if (m:^mozilla/extensions/typeaheadfind/.*$:) {return '181';}
-if (m:^mozilla/modules/security/.*$:) {return '86';}
+if (m:^mozilla/modules/libreg/.*$:) {return '84';}
 if (m:^mozilla/content/xbl/builtin/.*$:) {return '182';}
+if (m:^mozilla/modules/security/.*$:) {return '86';}
 if (m:^mozilla/modules/softupdt/.*$:) {return '87';}
 if (m:^mozilla/content/xml/.*$:) {return '88';}
 if (m:^mozilla/expat/.*$:) {return '88';}
@@ -452,6 +445,13 @@ if (m:^mozilla/content/xul/.*$:) {return '106';}
 if (m:^mozilla/layout/xul/.*$:) {return '106';}
 if (m:^mozilla/profile$:) {return '120';}
 if (m:^mozilla/tools/.*$:) {return '112';}
+if (m:^xpcom/typelib$:) {return '117';}
+if (m:^js/src/xpconnect$:) {return '118';}
+if (m:^xpcom/reflect/xptcall$:) {return '118';}
+if (m:^xpcom/reflect/xptinfo$:) {return '118';}
+if (m:^mozilla/mailnews/news/.*$:) {return '122';}
+if (m:^mozilla/mailnews/[^/]*$:) {return '123';}
+if (m:^mozilla/mailnews/mime/[^/]*$:) {return '124';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
