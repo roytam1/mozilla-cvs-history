@@ -1,4 +1,4 @@
-#!#perl# -T --
+#!#perl# #perlflags# --
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
@@ -188,6 +188,9 @@ sub save_note {
 
   my ($update_file) = (FileStructure::get_filename($TREE, 'TinderDB_Dir').
                        "/Notice\.Update\.$time\.$MAILADDR"); 
+
+  $update_file =~ s/\@/\./g;
+  $update_file = main::extract_filename_chars($update_file);
   
   Persistence::save_structure( 
                              $record,

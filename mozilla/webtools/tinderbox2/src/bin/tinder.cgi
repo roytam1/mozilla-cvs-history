@@ -1,4 +1,4 @@
-#!#perl# --
+#!#perl# #perlflags# --
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
@@ -437,7 +437,7 @@ sub daemon_main {
   # If the daemon is still running from last call do not bother
   # running now. This could cause conflicts on the database.
   
-  symlink ($UID, $LOCK_FILE) ||
+  symlink ($UID, $FileStructure::LOCK_FILE) ||
     return ;
   
   my ($summary_data);
@@ -483,8 +483,8 @@ sub daemon_main {
   
   Summaries::create_global_index($summary_data);
 
-  unlink ($LOCK_FILE) ||
-    die ("Could not remove lockfile: $LOCK_FILE\n");
+  unlink ($FileStructure::LOCK_FILE) ||
+    die ("Could not remove lockfile: $FileStructure::LOCK_FILE\n");
   
   return ;
 }

@@ -1,4 +1,4 @@
-#!#perl# -T --
+#!#perl# #perlflags# --
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
