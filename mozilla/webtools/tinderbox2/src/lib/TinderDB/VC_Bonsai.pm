@@ -403,7 +403,7 @@ sub status_table_row {
                      "Next_End: $lc_time, ".
                      "-->\n".
                      
-                     "\t\t<td align=center $cell_options>".
+                     "\t\t<td rowspan=$rowspan align=center $cell_options>".
                      "$EMPTY_TABLE_CELL</td>\n");
 
       $NEXT_ROW{$tree} =  $row_index + $rowspan;
