@@ -252,13 +252,10 @@ sub chk_security {
   my (@trees) = TreeData::get_all_trees();
   foreach $tree (@trees) {
 
-    my ($dir);
-
-    $dir = FileStructure::get_filename($tree, 'TinderDB_Dir');
-    security_check_data_dir($dir);
-
-    $dir = FileStructure::get_filename($tree, 'TinderHeader_Dir');
-    security_check_data_dir($dir);
+      for my $dir_key (qw(TinderDB_Dir TinderHeader_Dir full-log brief-log)) {
+          my $dir = FileStructure::get_filename($tree, $dir_key);
+          security_check_data_dir($dir);
+      }
 
   }
 
