@@ -538,7 +538,7 @@ sub GetUserInfo {
     SendSQL("SELECT name FROM groups, member_group_map " .
             "WHERE groups.group_id = member_group_map.group_id " .
             "AND member_group_map.member_id = $userid " .
-            "AND member_group_map.maptype = 0");
+            "AND member_group_map.maptype = $::Tmaptype->{'u2gm'}");
     while (MoreSQLData()) {
         my ($name) = FetchSQLData();    
         $groups{$name} = 1;

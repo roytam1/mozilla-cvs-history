@@ -129,21 +129,21 @@ unless ($action) {
         print "<td><input type=\"checkbox\" name=\"isactive-$groupid\" value=\"1\"" . ($isactive ? " checked" : "") . ">\n";
         print "<input type=hidden name=\"oldisactive-$groupid\" value=\"$isactive\"></td>\n";
         print "<td>";
-        if ($group_type == 0) {
+        if ($group_type == $::Tgroup_type->{'system'} ) {
             print "system";
         } else {
             print "<select name=\"group_type-$groupid\" value=\"$group_type\" >\n";
-            print "<option value=1";
-            print " selected" if ($group_type == 1);
-            print ">buggoup</option><option value=2";
-            print " selected" if ($group_type == 2);
+            print "<option value=$::Tgroup_type->{'buggroup'}";
+            print " selected" if ($group_type == $::Tgroup_type->{'buggroup'});
+            print ">buggoup</option><option value=$::Tgroup_type->{'user'}";
+            print " selected" if ($group_type == $::Tgroup_type->{'user'});
             print ">user</option></select>\n";
         }
         print "</td>\n";
         print "<input type=hidden name=\"oldgroup_type-$groupid\" value=\"$group_type\"></td>\n";
         print "<td align=center valign=middle>
                <a href=\"editgroups.cgi?action=changeform&group=$groupid\">Edit</a>";
-        print " | <a href=\"editgroups.cgi?action=del&group=$groupid\">Delete</a>" if ($group_type != 0);
+        print " | <a href=\"editgroups.cgi?action=del&group=$groupid\">Delete</a>" if ($group_type != $::Tgroup_type->{'system'} );
         print "</td></tr>\n";
     }
 
@@ -225,11 +225,11 @@ if ($action eq 'changeform') {
              LEFT JOIN member_group_map 
              ON member_group_map.member_id = groups.group_id
              AND member_group_map.group_id = $group_id
-             AND member_group_map.maptype = 2
+             AND member_group_map.maptype = $::Tmaptype->{'g2gm'}
              LEFT JOIN member_group_map as B
              ON B.member_id = groups.group_id
              AND B.group_id = $group_id
-             AND B.maptype = 3
+             AND B.maptype = $::Tmaptype->{'gBg'}
              WHERE groups.group_id != $group_id ORDER by name");
 
     while (MoreSQLData()) {
@@ -279,9 +279,9 @@ if ($action eq 'add') {
     print "<td><input size=40 name=\"desc\"></td>\n";
     print "<td><input size=30 name=\"regexp\"></td>\n";
     print "<td><input type=\"checkbox\" name=\"isactive\" value=\"1\" checked></td>\n";
-    print "<td><select name=\"group_type\" value=\"1\" >\n";
-    print "<option value=1>buggoup</option>\n";
-    print "<option value=2>user</option>\n";
+    print "<td><select name=\"group_type\" value=\"$::Tgroup_type->{'buggroup'}\" >\n";
+    print "<option value=$::Tgroup_type->{'buggroup'}>buggoup</option>\n";
+    print "<option value=$::Tgroup_type->{'user'}>user</option>\n";
     print "</select></td>\n";
     print "</TR></TABLE>\n<HR>\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Add\">\n";
@@ -327,7 +327,7 @@ if ($action eq 'new') {
     # (this occurs when the inactive checkbox is not checked
     # and the browser does not send the field to the server)
     my $isactive = $::FORM{isactive} || 0;
-    my $group_type = $::FORM{group_type} || 1;
+    my $group_type = $::FORM{group_type} || $::Tgroup_type->{'buggroup'};
 
     unless ($name) {
         ShowError("You must enter a name for the new group.<BR>" .
@@ -369,7 +369,7 @@ if ($action eq 'new') {
     my $gid = FetchOneColumn();
     my $admin = GroupNameToId('admin');
     SendSQL("INSERT INTO member_group_map (member_id, group_id, maptype)
-             VALUES ($admin, $gid, 3)");
+             VALUES ($admin, $gid, $::Tmaptype->{'gBg'})");
     print "OK, done.<p>\n";
     PutTrailer("<a href=\"editgroups.cgi?action=add\">Add another group</a>",
                "<a href=\"editgroups.cgi\">Back to the group list</a>");
@@ -564,12 +564,12 @@ if ($action eq 'postchanges') {
                     print " set ";
                     SendSQL("INSERT INTO member_group_map 
                              (member_id, group_id, maptype, isderived)
-                             VALUES ($v, $gid, 2, 0)");
+                             VALUES ($v, $gid, $::Tmaptype->{'g2gm'}, 0)");
                 } else {
                     print " cleared ";
                     SendSQL("DELETE FROM member_group_map
                              WHERE member_id = $v AND group_id = $gid
-                             AND maptype = 2");
+                             AND maptype = $::Tmaptype->{'g2gm'}");
                 }
             }
 
@@ -581,12 +581,12 @@ if ($action eq 'postchanges') {
                     print " set ";
                     SendSQL("INSERT INTO member_group_map 
                              (member_id, group_id, maptype, isderived)
-                             VALUES ($v, $gid, 3, 0)");
+                             VALUES ($v, $gid, $::Tmaptype->{'gBg'}, 0)");
                 } else {
                     print " cleared ";
                     SendSQL("DELETE FROM member_group_map
                              WHERE member_id = $v AND group_id = $gid
-                             AND maptype = 3");
+                             AND maptype = $::Tmaptype->{'gBg'}");
                 }
             }
 
@@ -628,7 +628,7 @@ if ($action eq 'update') {
                 if (!FetchOneColumn()) {
                     SendSQL("SELECT name FROM groups WHERE name=" .
                              SqlQuote($::FORM{"oldname-$v"}) .
-                             " && group_type = 0");
+                             " && group_type = $::Tgroup_type->{'system'}");
                     if (FetchOneColumn()) {
                         ShowError("You cannot update the name of a " .
                                   "system group. Skipping $v");
@@ -691,7 +691,7 @@ if ($action eq 'update') {
             my $group_type = $::FORM{"group_type-$v"} || 0;
             if ($::FORM{"oldgroup_type-$v"} != $group_type) {
                 $chgs = 1;
-                if ($group_type == 0 || $group_type == 1 || $group_type == 2) {
+                if (GetTypeNameByVal($group_type)) {
                     SendSQL("UPDATE groups SET group_type=$group_type, " .
                             " group_when = NOW() " .
                             " WHERE group_id=" . SqlQuote($v));

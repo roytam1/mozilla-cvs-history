@@ -334,19 +334,19 @@ sub DoPermissions {
     SendSQL("SELECT description FROM groups, member_group_map " .
             "WHERE member_group_map.group_id = groups.group_id " .
             "AND member_group_map.member_id = $::userid " .
-            "AND member_group_map.maptype = 0 " .
+            "AND member_group_map.maptype = $::Tmaptype->{'u2gm'} " .
             "ORDER BY groups.group_id");
     while (MoreSQLData()) {
         push(@has_bits, FetchSQLData());
     }
-    
-    SendSQL("SELECT description FROM groups, member_group_map " .
-            "WHERE member_group_map.group_id = groups.group_id " .
-            "AND member_group_map.member_id = $::userid " .
-            "AND member_group_map.maptype = 1 " .
-            "ORDER BY groups.group_id");
+    my @set_ids = ();
+    SendSQL("SELECT name, description FROM groups " .
+            "ORDER BY group_id");
     while (MoreSQLData()) {
-        push(@set_bits, FetchSQLData());
+        my ($nam, $desc) = FetchSQLData();
+        if (UserCanBlessGroup($nam)) {
+            push(@set_bits, $desc);
+        }
     }
     
     $vars->{'has_bits'} = \@has_bits;

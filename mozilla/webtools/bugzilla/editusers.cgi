@@ -139,7 +139,7 @@ sub EmitFormElements ($$$$)
                 "ON groups.group_id = G.group_id " .
                 "LEFT JOIN member_group_map " .
                 "ON member_group_map.group_id = G.group_id " .
-                "AND member_group_map.maptype = 0 " .
+                "AND member_group_map.maptype = $::Tmaptype->{'u2gm'} " .
                 "AND member_group_map.isderived = 0 " .
                 "AND member_group_map.member_id = $user_id " .
                 "ORDER BY groups.name");
@@ -155,13 +155,13 @@ sub EmitFormElements ($$$$)
                 PushGlobalSQLState();
                 SendSQL("SELECT member_id " .
                         "FROM member_group_map " .
-                        "WHERE maptype = 1 " .
+                        "WHERE maptype = $::Tmaptype->{'uBg'} " .
                         "AND member_id = $user_id " .
                         "AND group_id = $groupid");
                 my ($blchecked) = FetchSQLData() ? 1 : 0;
                 SendSQL("SELECT member_id " .
                         "FROM member_group_map " .
-                        "WHERE maptype = 0 " .
+                        "WHERE maptype = $::Tmaptype->{'u2gm'} " .
                         "AND member_id = $user_id " .
                         "AND isderived = 1 " .
                         "AND group_id = $groupid");
@@ -312,7 +312,7 @@ if ($action eq 'list') {
     } elsif (exists $::FORM{'group'}) {
       $query = "SELECT DISTINCTROW login_name,realname,disabledtext " .
           "FROM profiles, member_group_map WHERE profiles.userid = member_id
-           AND maptype IN (0,1) AND group_id=" . $::FORM{'group'} . " ORDER BY login_name";
+           AND maptype IN ($::Tmaptype->{'u2gm'},$::Tmaptype->{'uBg'}) AND group_id=" . $::FORM{'group'} . " ORDER BY login_name";
     } else {
       die "Missing parameters";
     }
@@ -535,7 +535,7 @@ if ($action eq 'del') {
              FROM groups, member_group_map
              WHERE groups.group_id = member_group_map.group_id
              AND member_group_map.member_id = $thisuserid
-             AND member_group_map.maptype = 0
+             AND member_group_map.maptype = $::Tmaptype->{'u2gm'}
              ORDER BY name");
     my $found = 0;
     while ( MoreSQLData() ) {
@@ -728,32 +728,32 @@ if ($action eq 'update') {
             if ($::FORM{"group_$groupid"}) {
                 SendSQL("INSERT IGNORE INTO member_group_map 
                          (member_id, group_id, maptype, isderived)
-                         VALUES ($thisuserid, $groupid, 0, 0)");
+                         VALUES ($thisuserid, $groupid, $::Tmaptype->{'u2gm'}, 0)");
                 print "Added user to group $name<BR>\n";
             } else {
                 SendSQL("DELETE FROM member_group_map 
                          WHERE member_id = $thisuserid
                          AND group_id = $groupid
-                         AND maptype = 0 
+                         AND maptype = $::Tmaptype->{'u2gm'} 
                          AND isderived = 0");
                 print "Dropped user from group $name<BR>\n";
             }
             PopGlobalSQLState();
             
         }
-        if ($::FORM{"oldbless_$groupid"} != ($::FORM{"bless_$groupid"} ? 1 : 0)) {
+        if ($editall && ($::FORM{"oldbless_$groupid"} != ($::FORM{"bless_$groupid"} ? 1 : 0))) {
             # group membership changed
             PushGlobalSQLState();
             if ($::FORM{"bless_$groupid"}) {
                 SendSQL("INSERT IGNORE INTO member_group_map 
                          (member_id, group_id, maptype, isderived)
-                         VALUES ($thisuserid, $groupid, 1, 0)");
+                         VALUES ($thisuserid, $groupid, $::Tmaptype->{'uBg'}, 0)");
                 print "Granted user permission to bless group $name<BR>\n";
             } else {
                 SendSQL("DELETE FROM member_group_map 
                          WHERE member_id = $thisuserid
                          AND group_id = $groupid
-                         AND maptype = 1 
+                         AND maptype = $::Tmaptype->{'uBg'}
                          AND isderived = 0");
                 print "Revoked user's permission to bless group $name<BR>\n";
             }

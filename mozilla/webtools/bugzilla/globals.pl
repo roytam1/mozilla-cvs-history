@@ -728,7 +728,7 @@ sub CanSeeBug {
         LEFT JOIN bug_group_map ON bugs.bug_id = bug_group_map.bug_id 
         LEFT JOIN member_group_map ON 
         member_group_map.group_id = bug_group_map.group_id  
-        AND member_group_map.maptype = 0 
+        AND member_group_map.maptype = $::Tmaptype->{'u2gm'} 
         AND member_group_map.member_id = $userid  
         WHERE bugs.bug_id = $id ORDER BY member_group_map.member_id";
     PushGlobalSQLState();
@@ -811,7 +811,7 @@ sub DeriveGroup {
     my ($login, $starttime) = FetchSQLData();
     
     SendSQL("DELETE FROM member_group_map WHERE member_id = $user " .
-            "AND maptype = 0 AND isderived = 1");
+            "AND maptype = $::Tmaptype->{'u2gm'} AND isderived = 1");
 
     SendSQL("SELECT group_id, userregexp FROM groups WHERE userregexp != ''");
     while (MoreSQLData()) {
@@ -820,7 +820,7 @@ sub DeriveGroup {
             PushGlobalSQLState();
             SendSQL("INSERT IGNORE INTO member_group_map " .
                     "(member_id, group_id, maptype, isderived) " .
-                    "VALUES ($user, $groupid, 0, 1)");
+                    "VALUES ($user, $groupid, $::Tmaptype->{'u2gm'}, 1)");
             PopGlobalSQLState();
 
         }
@@ -829,7 +829,7 @@ sub DeriveGroup {
     my %groupschecked;
     my @groupstocheck = ();
     SendSQL("SELECT group_id FROM member_group_map WHERE member_id = $user
-             AND maptype = 0");
+             AND maptype = $::Tmaptype->{'u2gm'}");
     while (MoreSQLData()) {
         my ($groupid) = FetchSQLData();
         push(@groupstocheck,$groupid);
@@ -839,7 +839,7 @@ sub DeriveGroup {
         if (!defined($groupschecked{"$group"})) {
             $groupschecked{"$group"} = 1;
             SendSQL("SELECT group_id FROM member_group_map WHERE
-                     member_id = $group AND maptype = 2");
+                     member_id = $group AND maptype = $::Tmaptype->{'g2gm'}");
             while (MoreSQLData()) {
                 my ($groupid) = FetchSQLData();
                 if (!defined($groupschecked{"$groupid"})) {
@@ -847,7 +847,7 @@ sub DeriveGroup {
                     PushGlobalSQLState();
                     SendSQL("INSERT IGNORE INTO member_group_map 
                              (member_id, group_id, maptype, isderived)
-                             VALUES ($user, $groupid, 0, 1)");
+                             VALUES ($user, $groupid, $::Tmaptype->{'u2gm'}, 1)");
                     PopGlobalSQLState();
                 }
             }
@@ -1203,6 +1203,24 @@ sub SplitEnumType {
 }
 
 
+# Get a type name from the type value hash, creating the inverse hash
+# if not already done.  
+sub GetTypeNameByVal {
+    my ($typ, $val) = (@_);
+    my $r = $::vars->{'R'}->{$typ}->{$val};
+    return $r if $r;
+    local %::w = reverse %{$::vars->{'T'}->{$typ}};
+    $::vars->{'R'}->{$typ} = \%::w;
+    return $::vars->{'R'}->{$typ}->{$val};
+}
+
+sub GetTypeValByName {
+    my ($typ, $nam) = (@_);
+    my $r = $::vars->{'T'}->{$typ}->{$nam};
+    return $r; 
+}
+
+
 # This routine is largely copied from Mysql.pm.
 
 sub SqlQuote {
@@ -1225,7 +1243,7 @@ sub UserInGroup {
     SendSQL("SELECT groups.group_id FROM groups, member_group_map 
         WHERE groups.group_id = member_group_map.group_id 
         AND member_group_map.member_id = $::userid
-        AND maptype = 0
+        AND maptype = $::Tmaptype->{'u2gm'}
         AND groups.name = " . SqlQuote($groupname));
     my $rslt = FetchOneColumn();
     PopGlobalSQLState();
@@ -1242,7 +1260,7 @@ sub UserCanBlessGroup {
     SendSQL("SELECT groups.group_id FROM groups, member_group_map 
         WHERE groups.group_id = member_group_map.group_id 
         AND member_group_map.member_id = $::userid
-        AND maptype = 1
+        AND maptype = $::Tmaptype->{'uBg'}
         AND groups.name = " . SqlQuote($groupname));
     my $rslt = FetchOneColumn();
     PopGlobalSQLState();
@@ -1256,8 +1274,8 @@ sub UserCanBlessGroup {
         member_group_map AS G
         WHERE groups.group_id = G.group_id 
         AND member_group_map.member_id = $::userid
-        AND member_group_map.maptype = 0
-        AND G.maptype = 3
+        AND member_group_map.maptype = $::Tmaptype->{'u2gm'}
+        AND G.maptype = $::Tmaptype->{'gBg'}
         AND G.group_id != G.member_id
         AND member_group_map.group_id = G.member_id
         AND groups.name = " . SqlQuote($groupname));
@@ -1275,7 +1293,7 @@ sub UserCanBlessAnything {
     SendSQL("SELECT groups.group_id FROM groups, member_group_map 
         WHERE groups.group_id = member_group_map.group_id 
         AND member_group_map.member_id = $::userid
-        AND maptype = 1");
+        AND maptype = $::Tmaptype->{'uBg'}");
     my $rslt = FetchOneColumn();
     PopGlobalSQLState();
     if ($rslt) {
@@ -1287,8 +1305,8 @@ sub UserCanBlessAnything {
         member_group_map AS G
         WHERE groups.group_id = G.group_id 
         AND member_group_map.member_id = $::userid
-        AND member_group_map.maptype = 0
-        AND G.maptype = 3
+        AND member_group_map.maptype = $::Tmaptype->{'u2gm'}
+        AND G.maptype = $::Tmaptype->{'gBg'}
         AND member_group_map.group_id = G.member_id");
     $rslt = FetchOneColumn();
     PopGlobalSQLState();
@@ -1827,6 +1845,15 @@ $::vars =
     
     # User Agent - useful for detecting in templates
     'user_agent' => $ENV{'HTTP_USER_AGENT'} ,
+
+    'T' => {
+        'group_type' => {'system' => 0, 'buggroup' => 1, 'user' => 2},
+        'maptype' => {'u2gm' => 0, 'uBg' => 1, 'g2gm' => 2, 'gBg' => 3},
+    }
+
   };
+
+  $::Tgroup_type = $::vars->{'T'}{'group_type'};
+  $::Tmaptype = $::vars->{'T'}{'maptype'};
 
 1;

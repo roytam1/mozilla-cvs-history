@@ -253,7 +253,7 @@ foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
         SendSQL("SELECT member_id FROM member_group_map 
                  WHERE member_id = $::userid
                  AND group_id = $v
-                 AND maptype = 0");
+                 AND maptype = $::Tmaptype->{'u2gm'}");
         my ($member) = FetchSQLData();
         if ($member) {
             push(@groupstoadd,$v)

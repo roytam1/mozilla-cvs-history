@@ -369,7 +369,7 @@ if ($action eq 'new') {
                 $bit . ", " .
                 SqlQuote($product) . ", " .
                 SqlQuote($product . " Bugs Access") . ", " .
-                "1, " .
+                "$::Tgroup_type->{'buggroup'}, " .
                 SqlQuote($userregexp) . ")");
         
         # And last, we need to add any existing users that match the regexp
@@ -915,7 +915,7 @@ if ($action eq 'update') {
                     "values (" . $bit . ", " .
                     SqlQuote($productold) . ", " .
                     SqlQuote($productold . " Bugs Access") . ", " .
-                    "1, " .
+                    "$::Tgroup_type->{'buggroup'}, " .
                     SqlQuote($userregexp) . ")");
             print "Created bug group.<BR>\n";
         }

@@ -215,8 +215,8 @@ sub show_bug {
              LEFT JOIN member_group_map 
              ON member_group_map.group_id = groups.group_id
              AND member_group_map.member_id = $::userid
-             AND member_group_map.maptype = 0
-             WHERE group_type = 1 ");
+             AND member_group_map.maptype = $::Tmaptype->{'u2gm'}
+             WHERE group_type = $::Tgroup_type->{'buggroup'}");
 
     $user{'inallgroups'} = 1;
 

@@ -280,9 +280,9 @@ sub GetGroupsByUserId {
     SendSQL("
         SELECT  groups.group_id, name, description, isactive
           FROM  groups, member_group_map
-         WHERE  member_id = $userid AND maptype = 0 
+         WHERE  member_id = $userid AND maptype = $::Tmaptype->{'u2gm'} 
            AND  member_group_map.group_id = groups.group_id
-           AND  group_type = 1
+           AND  group_type = $::Tgroup_type->{'buggroup'}
       ORDER BY  description ");
 
     my @groups;
