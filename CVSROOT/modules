@@ -486,9 +486,7 @@ JSRef -a \
 # Can't pull all of js, because the server-style config stuff
 # is illegal on some operating systems.
 #
-JSClient -l \
-	mozilla \
-	mozilla/js \
+JSClient -a \
 	mozilla/js/macbuild \
 	mozilla/js/src \
 	mozilla/js/src/fdlibm \
@@ -498,14 +496,7 @@ JSClient -l \
 	mozilla/js/src/liveconnect/classes/netscape \
 	mozilla/js/src/liveconnect/classes/netscape/javascript \
 	mozilla/js/src/macbuild \
-	mozilla/js/src/xpconnect \
-	mozilla/js/src/xpconnect/idl \
-	mozilla/js/src/xpconnect/public \
-	mozilla/js/src/xpconnect/shell \
-	mozilla/js/src/xpconnect/src \
-	mozilla/js/src/xpconnect/tests \
-	mozilla/js/src/xpconnect/tests/components \
-	mozilla/js/src/xpconnect/typelib
+	mozilla/js/src/xpconnect
 
 #######################################################################
 # Modules for SeaMonkey 
