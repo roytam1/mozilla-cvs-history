@@ -62,6 +62,7 @@ sub searchpathforapp($) {
 	}
 }
 
+
 sub correctpath($) { # fix the dir seperator, do we really need this?
 	my ($path) = @_;
     my @pathlist = split('/',$path);

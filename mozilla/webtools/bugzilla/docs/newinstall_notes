@@ -35,3 +35,4 @@ copied into the installed dist. The tests will check for this.
 Do _not_ include any documentation or templates in the filemappings
 list, the makefile has special rules written in to accomidate these.
 
+

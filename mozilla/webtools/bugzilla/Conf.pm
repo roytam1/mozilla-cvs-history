@@ -83,6 +83,7 @@ sub setConf($$) {
     $main::c{$name} = $value; # and set it
 }
 
+
 sub getConf($) { 
     my $name = @_;
     return $main::c{$name}; # return the value
