@@ -727,17 +727,29 @@ Webtools -a \
 
 Webclient    -a \
 	mozilla/java/Makefile.in \
-	mozilla/java/Makefile.win \
 	mozilla/java/build.xml \
 	mozilla/java/README \
-	mozilla/java/README.commercial \
-	mozilla/java/build \
 	mozilla/java/config \
-	mozilla/java/dom \
+	mozilla/java/dom/README \
+	mozilla/java/dom/build.xml \
+	mozilla/java/dom/classes \
+	mozilla/java/dom/jni \
+	mozilla/java/dom/src \
 	mozilla/java/external \
 	mozilla/java/makefiles \
 	mozilla/java/util \
-	mozilla/java/webclient
+	mozilla/java/webclient \
+	mozilla/java/webclient/README  \
+	mozilla/java/webclient/build-tests.xml \
+	mozilla/java/webclient/build.xml \
+	mozilla/java/webclient/classes_spec \
+	mozilla/java/webclient/config \
+	mozilla/java/webclient/src_ie \
+	mozilla/java/webclient/src_moz \
+	mozilla/java/webclient/src_share \
+	mozilla/java/webclient/automated \
+	mozilla/java/webclient/manual \
+
 
 
 
