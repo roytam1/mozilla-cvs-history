@@ -248,8 +248,10 @@ JavaStubMac -a \
 JavaStubUnix -a \
 	JavaStubCore \
 	mozilla/sun-java/Makefile \
+	mozilla/sun-java/Makefile.in \
 	mozilla/sun-java/stubs/jri \
-	mozilla/sun-java/stubs/Makefile
+	mozilla/sun-java/stubs/Makefile \
+	mozilla/sun-java/stubs/Makefile.in
 
 JavaStubWin -a \
 	JavaStubCore \
