@@ -195,6 +195,9 @@ $fullname{'138'} = 'Rhino';
 $mode{'145'} = 'Open';
 $branch{'145'} = 'HEAD';
 $fullname{'145'} = 'security';
+$mode{'151'} = 'Open';
+$branch{'151'} = 'HEAD';
+$fullname{'151'} = 'Security - Mozilla PSM Glue';
 $mode{'86'} = 'Open';
 $branch{'86'} = 'HEAD';
 $fullname{'86'} = 'Security Stubs';
@@ -346,6 +349,7 @@ if (m:^mozilla/extensions/xmlterm/.*$:) {return '141';}
 if (m:^xpcom/remote$:) {return '143';}
 if (m:^mozilla/mstone/.*$:) {return '147';}
 if (m:^mozilla/xpinstall/.*$:) {return '150';}
+if (m:^mozilla/extensions/psm-glue/.*$:) {return '151';}
 }
 if ($b eq 'NSPRPUB_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
