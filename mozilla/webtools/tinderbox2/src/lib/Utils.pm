@@ -61,10 +61,14 @@ sub security_check_data_dir {
     die("Security Error. dir: $dir is a symbolic link\n");
   
   mkdir_R($dir);
-  
+
+  # Must use 'CORE::stat' as some versions of perl have a 'stat' which
+  # gives an object and others return a list.
+  # (stat fix for perl 5.6 from "John Turner" <jdturner@nc.rr.com>)
+
   ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
    $atime,$mtime,$ctime,$blksize,$blocks) =
-     stat ($dir);
+     CORE::stat($dir);
 
   my $tinderbox_uid = $<;
 
