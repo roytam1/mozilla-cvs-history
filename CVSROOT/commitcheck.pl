@@ -236,9 +236,6 @@ $fullname{'156'} = 'ViXEn';
 $mode{'134'} = 'Open';
 $branch{'134'} = 'HEAD';
 $fullname{'134'} = 'Widgets';
-$mode{'48'} = 'Open';
-$branch{'48'} = 'HEAD';
-$fullname{'48'} = 'Windows FE';
 $mode{'121'} = 'Open';
 $branch{'121'} = 'HEAD';
 $fullname{'121'} = 'Xlib-based gfx + widget';
@@ -291,8 +288,6 @@ if (m:^mozilla/cmd/macfe/.*$:) {return '47';}
 if (m:^mozilla/gfx/src/xlib/.*$:) {return '121';}
 if (m:^mozilla/widget/src/xlib/.*$:) {return '121';}
 if (m:^mozilla/ef/.*$:) {return '46';}
-if (m:^mozilla/cmd/wincom/.*$:) {return '48';}
-if (m:^mozilla/cmd/winfe/.*$:) {return '48';}
 if (m:^mozilla/gfx/src/gtk/.*$:) {return '49';}
 if (m:^mozilla/widget/src/gtk/.*$:) {return '49';}
 if (m:^mozilla/widget/timer/src/unix/gtk$:) {return '49';}
