@@ -48,18 +48,6 @@ package FileStructure;
 
 $VERSION = '#tinder_version#';
 
-
-
-# I wish to do away with images.  They do not add much to the display
-# and they make a bunch of clutter.
-
-%IMAGES = (
-  'flames'    => '1afi003r.gif',
-  'star'      => 'star.gif',
-);
-
-
-
 # the url to the tinderbox server binary directory
 
 $URL_BIN = ($TinderConfig::URL_BIN ||
@@ -104,6 +92,9 @@ $TINDERBOX_HTML_DIR = ($TinderConfig::TINDERBOX_HTML_DIR ||
 $TINDERBOX_DATA_DIR = ($TinderConfig::TINDERBOX_DATA_DIR || 
                   "/usr/apache/cgibin/webtools/tinderbox");
 
+$TINDERBOX_GZLOG_DIR = ($TinderConfig::TINDERBOX_GZLOG_DIR || 
+                  "/usr/apache/cgibin/webtools/tinderbox");
+
 $GLOBAL_INDEX_FILE = ($TinderConfig::GLOBAL_INDEX_FILE ||
 		      "index.html");
 
@@ -112,6 +103,10 @@ $LOCK_FILE = ($TinderConfig::LOCK_FILE ||
 
 $CGIBIN_DIR = ($TinderConfig::TINDERBOX_CGIBIN_DIR ||
                "/usr/apache/cgibin/webtools/tinderbox");
+
+$GIF_URL = ($TinderConfig::GIF_URL ||
+            "http://tinderbox.mozilla.org/gif");
+
 
 # the default page for a tree
 $DEFAULT_HTML_PAGE = $TinderConfig::DEFAULT_HTML_PAGE || 'index.html';
@@ -163,9 +158,9 @@ sub get_filename {
      # all the trees this will make cleanup easier and no one
      # goes browsing through the tree specific log dir anyway.
      
-     'full-log' => "$TINDERBOX_HTML_DIR/full",
+     'full-log' => "$TINDERBOX_GZLOG_DIR/full",
      
-     'brief-log' => "$TINDERBOX_HTML_DIR/brief",
+     'brief-log' => "$TINDERBOX_GZLOG_DIR/brief",
      
      # where the binary files mailed inside the build log files will
      # be placed.
