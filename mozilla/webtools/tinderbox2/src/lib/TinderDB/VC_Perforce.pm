@@ -22,12 +22,12 @@
 # The only perforce commands this module runs are:
 #
 #		 'p4 describe -s $num'
-#		 'p4 changes  -s submitted \@$date_str\@now $filespec'
+#		 'p4 changes -s submitted $filespec\@$date_str\@now '
 
 # 			which looks like this 
 
 #		 'p4 describe -s 75437'
-# 		 'p4 changes -s submitted @2003/05/10,@now //...'
+# 		 'p4 changes -s submitted //...@2003/05/10,@now '
 #
 # This means that tinderbox needs to run as a user which has Perforce
 # 'list' privileges.
@@ -904,15 +904,15 @@ sub get_new_change_sets {
 
   my @date_time_str = time2perforceFormat($date);
   my $date_str = $date_time_str[0];
+  my $date_spec = '@'.$date_str.',@now';
 
   # use this command to pick a starting changeset
-  # p4 changes -s submitted @2003/05/10,@now //...
+  # p4 changes -s submitted //...@2003/05/10,@now 
 
   $filespec = TreeData::Tree2Filespec($tree);
   my (@cmd) = (
                'p4', 'changes', '-s', 'submitted',
-               '@'.$date_str.',@now', 
-               $filespec,
+               $filespec.$date_spec
                );
   
   my (@p4_output) = main::cache_cmd(@cmd);
