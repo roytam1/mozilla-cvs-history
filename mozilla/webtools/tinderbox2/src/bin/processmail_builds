@@ -63,6 +63,9 @@ use Persistence;
 use TinderDB::Build;
 use MailProcess;
 
+# name of the version control system
+$REGENERATE_AFTER_MAIL = $TinderConfig::REGENERATE_AFTER_MAIL || "0";
+
 
 
 sub usage {
@@ -1257,6 +1260,10 @@ sub assemble_files {
       unlink($tmpfile) ||
         die("Could not unlink: '$tmpfile'. $!\n");    
 
+  }
+
+  if ($REGENERATE_AFTER_MAIL) {
+      HTMLPopUp::regenerate_HTML_pages();
   }
 
   print $OUT;

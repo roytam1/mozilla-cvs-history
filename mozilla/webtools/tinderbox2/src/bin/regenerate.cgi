@@ -103,7 +103,7 @@ EOF
 
 ;
 
-    } else {
+    } elsif ( $ENV{"REQUEST_METHOD"} ) {
         # called via HTTPPost
         # Tell the webserver that everythings fine.
 
@@ -112,11 +112,13 @@ Content-type: text/html
 
 <HTML></HTML>
 EOF
-
 ;
+    } else {
+        # called from a log processing program.
 
+        $out = '';
     }
-        
+
     print $out;
 
     HTMLPopUp::regenerate_HTML_pages();
