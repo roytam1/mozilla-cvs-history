@@ -550,7 +550,8 @@ SeaMonkeyBrowser -a \
 
 # This needs work!
 SeaMonkeyMailNews -a \
-	SeaMonkeyLayout
+	SeaMonkeyLayout \
+	mozilla/mailnews
 
 SeaMonkeyEditor -a \
 	SeaMonkeyBrowser \
