@@ -92,7 +92,7 @@ WHERE  `Type`  =  'E' AND `AppName` = '$application' AND `minAppVer_int`<='$curr
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $numextensions = mysql_num_rows($sql_result);
 ?>
-     <a href="/extensions/">Browse extensions</a> (<?php echo"$numextensions"; ?> available)<BR> 
+     <a href="/extensions/?application=<?php echo"$application"; ?>">Browse extensions</a> (<?php echo"$numextensions"; ?> available)<BR> 
 <BR>
 <?php
 $sql = "SELECT TR.ID, `Title`, TR.DateAdded, `Body`, `Type`, `pick` FROM `t_reviews`  TR
@@ -110,7 +110,7 @@ WHERE `Type` = 'E' AND `AppName` = '$application' AND `pick`='YES' ORDER BY `rID
     $bodylength = strlen($body);
 if ($bodylength>"250") {
  $body = substr($body,0,250);
- $body .= " <a href=\"/extensions/moreinfo.php?id=$id&page=staffreview\">[More...]</a>";
+ $body .= " <a href=\"/extensions/moreinfo.php?id=$id&application=$application&page=staffreview\">[More...]</a>";
  
  }
 
@@ -144,7 +144,7 @@ WHERE  `Type`  =  'T' AND `AppName` = '$application' AND `minAppVer_int` <='$cur
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $numthemes = mysql_num_rows($sql_result);
 ?>
-     <a href="/themes/">Browse themes</a> (<?php echo"$numthemes"; ?> available)<BR>
+     <a href="/themes/?application=<?php echo"$application"; ?>">Browse themes</a> (<?php echo"$numthemes"; ?> available)<BR>
 <BR>
 <?php
 $sql = "SELECT TR.ID, `Title`, TR.DateAdded, `Body`, `Type`, `pick` FROM `t_reviews`  TR
@@ -162,7 +162,7 @@ WHERE `Type` = 'T' AND `AppName` = '$application' AND `pick`='YES' ORDER BY `rID
     $bodylength = strlen($body);
 if ($bodylength>"250") {
  $body = substr($body,0,250);
- $body .= " <a href=\"/moreinfo.php?id=$id&page=staffreview\">[More...]</a>";
+ $body .= " <a href=\"/moreinfo.php?id=$id&application=$application&page=staffreview\">[More...]</a>";
  
  }
 

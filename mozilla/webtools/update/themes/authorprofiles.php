@@ -143,7 +143,7 @@ $v++;
     $dateupdated = gmdate("F d, Y g:i:sa", $timestamp); //gmdate("F d, Y", $dutimestamp);
 
 echo"<DIV CLASS=\"item\">";
-echo"<SPAN class=\"title itemtitle\" style=\"margin-left: 0px\"><A HREF=\"moreinfo.php?id=$id\">$name</A></SPAN><BR>";
+echo"<SPAN class=\"title itemtitle\" style=\"margin-left: 0px\"><A HREF=\"moreinfo.php?application=$application&id=$id\">$name</A></SPAN><BR>";
 echo"<DIV class=\"profileitemdesc\">$description</DIV>\n";
 echo"<DIV class=\"baseline\">Updated: $dateupdated | Downloads: $downloadcount</DIV>\n";
 

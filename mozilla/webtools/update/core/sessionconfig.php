@@ -37,8 +37,8 @@
 // ***** END LICENSE BLOCK *****
 
 //session_name('sid');
-session_name();
-session_start();
+//session_name();
+//session_start();
 
 if ($_GET["version"]=="auto-detect") {$_GET["version"]=""; unset($_SESSION["app_version"]);}//Clear Versioning in Session For AutoDetect 
 if ($_GET["application"] AND $_GET["application"] != $_SESSION["application"]) {

@@ -44,7 +44,7 @@ $typename = $types["$type"];
 echo"<DIV CLASS=\"sidebartitle\">Categories:</DIV>\n";
 echo"<DIV class=\"sidebartext\">";
 if (!$category AND $index !="yes") {echo"<SPAN CLASS=\"title\">"; }
-  echo"<SPAN class=\"sidebartitle\"><A HREF=\"showlist.php?category=All\" TITLE=\"Show All ".ucwords($typename)." Alphabetically\">All</A></SPAN><BR>\n";
+  echo"<SPAN class=\"sidebartitle\"><A HREF=\"showlist.php?application=$application&category=All\" TITLE=\"Show All ".ucwords($typename)." Alphabetically\">All</A></SPAN><BR>\n";
 if (!$category AND $index !="yes") {echo"</SPAN>"; }
 
 // Object Categories
@@ -54,7 +54,7 @@ $sql = "SELECT `CatName`,`CatDesc` FROM `t_categories` WHERE `CatType` = '$type'
   $catname = $row["CatName"];
   $catdesc = $row["CatDesc"];
   if (strtolower($category) == strtolower($catname)) {echo"<SPAN CLASS=\"title\">"; }
-  echo"<A HREF=\"showlist.php?category=$catname\" TITLE=\"$catdesc\">$catname</A><BR>\n";
+  echo"<A HREF=\"showlist.php?application=$application&category=$catname\" TITLE=\"$catdesc\">$catname</A><BR>\n";
   if (strtolower($category) == strtolower($catname)) {echo"</SPAN>"; }
   }
 ?>
@@ -63,25 +63,25 @@ $sql = "SELECT `CatName`,`CatDesc` FROM `t_categories` WHERE `CatType` = '$type'
 $catname = "Editors Pick";
 $catdesc = ucwords($typename)." picked by the Mozilla Update Editors";
 if (strtolower($category) == strtolower($catname)) {echo"<SPAN CLASS=\"title\">"; }
-  echo"<A HREF=\"showlist.php?category=$catname\" TITLE=\"$catdesc\">Editor's Pick</A><BR>\n";
+  echo"<A HREF=\"showlist.php?application=$application&category=$catname\" TITLE=\"$catdesc\">Editor's Pick</A><BR>\n";
 if (strtolower($category) == strtolower($catname)) {echo"</SPAN>"; }
 
 $catname = "Popular";
 $catdesc = ucwords($typename)." downloaded the most";
 if (strtolower($category) == strtolower($catname)) {echo"<SPAN CLASS=\"title\">"; }
-  echo"<A HREF=\"showlist.php?category=$catname\" TITLE=\"$catdesc\">$catname</A><BR>\n";
+  echo"<A HREF=\"showlist.php?application=$application&category=$catname\" TITLE=\"$catdesc\">$catname</A><BR>\n";
 if (strtolower($category) == strtolower($catname)) {echo"</SPAN>"; }
 
 $catname = "Top Rated";
 $catdesc = ucwords($typename)." rated the highest";
 if (strtolower($category) == strtolower($catname)) {echo"<SPAN CLASS=\"title\">"; }
-  echo"<A HREF=\"showlist.php?category=$catname\" TITLE=\"$catdesc\">$catname</A><BR>\n";
+  echo"<A HREF=\"showlist.php?application=$application&category=$catname\" TITLE=\"$catdesc\">$catname</A><BR>\n";
 if (strtolower($category) == strtolower($catname)) {echo"</SPAN>"; }
 
 $catname = "Newest";
 $catdesc = "Most recent ".ucwords($typename);
 if (strtolower($category) == strtolower($catname)) {echo"<SPAN CLASS=\"title\">"; }
-  echo"<A HREF=\"showlist.php?category=$catname\" TITLE=\"$catdesc\">$catname</A><BR>\n";
+  echo"<A HREF=\"showlist.php?application=$application&category=$catname\" TITLE=\"$catdesc\">$catname</A><BR>\n";
 if (strtolower($category) == strtolower($catname)) {echo"</SPAN>"; }
 ?>
 </DIV>

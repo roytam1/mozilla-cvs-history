@@ -86,7 +86,7 @@ WHERE `Type` = '$type' AND `AppName` = '$application' AND `featured`='YES' ORDER
     $bodylength = strlen($body);
 if ($bodylength>"250") {
  $body = substr($body,0,250);
- $body .= " <a href=\"moreinfo.php?id=$id&page=staffreview\">[More...]</a>";
+ $body .= " <a href=\"moreinfo.php?id=$id&application=$application&page=staffreview\">[More...]</a>";
  
  }
 
@@ -116,7 +116,7 @@ $currentver_display = $currentver_display_array[$application];
 ?>
 <DIV class="box" style="width: 80%; min-height: 200px; border: 0px">
 <DIV class="boxcolumns">
-<DIV class="boxheader"><A HREF="showlist.php?category=Popular">Most Popular</A>:</DIV>
+<DIV class="boxheader"><A HREF="showlist.php?application=<?php echo"$application"; ?>&category=Popular">Most Popular</A>:</DIV>
 <?php
 $i=0;
 $sql = "SELECT TM.ID, TV.vID,TM.Name, TV.Version, TM.TotalDownloads, TM.downloadcount
@@ -134,7 +134,7 @@ WHERE  `Type`  =  '$type' AND `AppName` = '$application' AND `minAppVer_int` <='
    $downloadcount = $row["downloadcount"];
    $totaldownloads = $row["TotalDownloads"];
 if ($lastname == $name) {$i--; continue; }
-  echo"$i - <a href=\"moreinfo.php?id=$id\">$name</a><br>\n";
+  echo"$i - <a href=\"moreinfo.php?application=$application&id=$id\">$name</a><br>\n";
   echo"<SPAN class=\"smallfont nocomment\">($downloadcount downloads)</SPAN><BR>\n";
 
 $lastname = $name;
@@ -165,7 +165,7 @@ WHERE  `Type`  =  '$type' AND `AppName` = '$application' AND `minAppVer_int` <='
    $rating = $row["Rating"];
   $arraysearch = array_search("$name", $usednames);
   if ($arraysearch !== false AND $usedversions[$arraysearch]['version']<$version) {$r--; continue; } //
-  echo"$r - <a href=\"moreinfo.php?id=$id\">$name</a>&nbsp;";
+  echo"$r - <a href=\"moreinfo.php?application=$application&id=$id\">$name</a>&nbsp;";
 
   //$rating = round($rating);
 echo"<SPAN title=\"Rated: $rating of 5\" style=\"font-size: 8pt\">";
@@ -212,7 +212,7 @@ WHERE  `Type`  =  '$type' AND `AppName` = '$application' AND `minAppVer_int` <='
     $dateadded = gmdate("F d, Y g:i:sa", $timestamp); //    $dateupdated = gmdate("F d, Y g:i:sa T", $timestamp);
 
 if ($lastname == $name) {$i--; continue; }
-  echo"$i - <a href=\"moreinfo.php?id=$id&vid=$vid\">$name $version</a><BR>\n";
+  echo"$i - <a href=\"moreinfo.php?application=$application&id=$id&vid=$vid\">$name $version</a><BR>\n";
   echo"<SPAN class=\"smallfont nocomment\">($dateadded)</SPAN><BR>\n";
 
 $lastname = $name;

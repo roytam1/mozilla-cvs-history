@@ -53,13 +53,13 @@ $application="login";
 <DIV class="bar"></DIV>
 <DIV class="nav">
 <?php if ($application !=="login") { ?>
-<A HREF="/">Home</A>
- | <A HREF="/faq/">FAQ</A>
+<A HREF="/?application=<?php echo"$application"; ?>">Home</A>
+ | <A HREF="/faq/?application=<?php echo"$application"; ?>">FAQ</A>
 <?php
 // Types
 $types = array("E"=>"Extensions","T"=>"Themes");
 foreach($types as $typeid => $typename) {
-echo" | <A HREF=\"/".strtolower($typename)."/\">$typename</A>";
+echo" | <A HREF=\"/".strtolower($typename)."/?application=$application\">$typename</A>";
 }
 //echo"<BR>\n";
 

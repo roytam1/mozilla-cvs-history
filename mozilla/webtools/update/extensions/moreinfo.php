@@ -139,7 +139,7 @@ $authorcount = count($authors);
 foreach ($authors as $author) {
 $userid = $authorids[$author];
 $n++;
-$authorstring .= "<A HREF=\"authorprofiles.php?id=$userid\">$author</A>";
+$authorstring .= "<A HREF=\"authorprofiles.php?application=$application&id=$userid\">$author</A>";
 if ($authorcount != $n) {$authorstring .=", "; }
 
 }
@@ -172,11 +172,11 @@ if (!$rating) { $rating="0"; }
 
 
 <DIV class="tabbar">
-<DIV class="tab"><A HREF="?<?php echo"id=$id&vid=$vid"; ?>">More Info</A></DIV>
-<DIV class="tab"><A HREF="?<?php echo"id=$id&vid=$vid&page=releases"; ?>">All Releases</A></DIV>
-<DIV class="tab"><A HREF="?<?php echo"id=$id&vid=$vid&page=comments"; ?>">Comments</A></DIV>
-<DIV class="tab"><A HREF="?<?php echo"id=$id&vid=$vid&page=staffreview"; ?>">Editor Review</A></DIV>
-<DIV class="tab"><A HREF="?<?php echo"id=$id&vid=$vid&page=opinion"; ?>">My Opinion</A></DIV>
+<DIV class="tab"><A HREF="?<?php echo"application=$application&id=$id&vid=$vid"; ?>">More Info</A></DIV>
+<DIV class="tab"><A HREF="?<?php echo"application=$application&id=$id&vid=$vid&page=releases"; ?>">All Releases</A></DIV>
+<DIV class="tab"><A HREF="?<?php echo"application=$application&id=$id&vid=$vid&page=comments"; ?>">Comments</A></DIV>
+<DIV class="tab"><A HREF="?<?php echo"application=$application&id=$id&vid=$vid&page=staffreview"; ?>">Editor Review</A></DIV>
+<DIV class="tab"><A HREF="?<?php echo"application=$application&id=$id&vid=$vid&page=opinion"; ?>">My Opinion</A></DIV>
 </DIV>
 <?php
 echo"<DIV class=\"item\">\n";
@@ -188,7 +188,7 @@ echo"<IMG SRC=\"$previewuri\" BORDER=0 HEIGHT=$height WIDTH=$width STYLE=\"float
 }
 
 //Upper-Right Side Box
-echo"<DIV class=\"liststars\" title=\"$rating of 5 stars\" style=\"font-size: 8pt\"><A HREF=\"moreinfo.php?id=$id&page=comments\">";
+echo"<DIV class=\"liststars\" title=\"$rating of 5 stars\" style=\"font-size: 8pt\"><A HREF=\"moreinfo.php?application=$application&id=$id&page=comments\">";
 for ($i = 1; $i <= floor($rating); $i++) {
 echo"<IMG SRC=\"/images/stars/star_icon.png\" BORDER=0 ALT=\""; if ($i==1) {echo"$rating of 5 stars";} echo"\">";
 }
@@ -203,7 +203,7 @@ echo"<IMG SRC=\"/images/stars/graystar_icon.png\" BORDER=0 ALT=\""; if ($i==1) {
 echo"</A></DIV>\n";
 
 echo"<DIV class=\"itemtitle\">";
-echo"<SPAN class=\"title\"><A HREF=\"moreinfo.php?id=$id&vid=$vid\">$name $version</A></SPAN><BR>";
+echo"<SPAN class=\"title\"><A HREF=\"moreinfo.php?application=$application&id=$id&vid=$vid\">$name $version</A></SPAN><BR>";
 echo"<SPAN class=\"authorline\">By $authors</SPAN><br>";
 echo"</DIV>";
 
@@ -273,7 +273,7 @@ if ($homepage) {echo"<SPAN style=\"font-size:10pt\">Having a problem with this E
 echo"<UL style=\"font-size:10pt\">";
 if ($homepage) {echo"<LI> <A HREF=\"$homepage\">Extension Home Page</A>"; }
 if ($appname !="Thunderbird") {echo"<LI> <a href=\"install.php/$filename?id=$id&vid=$vid\" TITLE=\"Right-click to Save\">Download Extension</A>"; }
-echo"<LI> <A HREF=\"moreinfo.php?id=$id&vid=$vid&page=releases\">Other Versions</A>";
+echo"<LI> <A HREF=\"moreinfo.php?application=$application&id=$id&vid=$vid&page=releases\">Other Versions</A>";
 ?>
 </UL>
 </DIV>
@@ -319,14 +319,14 @@ echo"&nbsp;<BR>\n";
 echo"$commentnotes<BR>\n\n";
 echo"&nbsp;<BR>\n";
 echo"<DIV class=\"commentfooter\">\n";
-echo"$commentdate | <A HREF=\"moreinfo.php?id=$id&vid=$vid&page=comments\">More Comments...</A> | <A HREF=\"moreinfo.php?id=$id&vid=$vid&category=$category&vid=$vid&page=opinion\">Rate It!</A>\n";
+echo"$commentdate | <A HREF=\"moreinfo.php?application=$application&id=$id&vid=$vid&page=comments\">More Comments...</A> | <A HREF=\"moreinfo.php?id=$id&vid=$vid&category=$category&vid=$vid&page=opinion\">Rate It!</A>\n";
 echo"</DIV>\n";
 }
 
 if ($num_results=="0") {
 echo"<DIV class=\"nocomment\">";
 echo"Nobody's Commented on this Extension Yet<BR>";
-echo"Be the First! <A HREF=\"moreinfo.php?id=$id&vid=$vid&page=opinion\">Rate It!</A>";
+echo"Be the First! <A HREF=\"moreinfo.php?application=$application&id=$id&vid=$vid&page=opinion\">Rate It!</A>";
 echo"</DIV>";
 }
 
@@ -366,7 +366,7 @@ echo"<DIV>"; //Open Version DIV
 
 //Description & Version Notes
 echo"<SPAN class=\"itemdescription\">";
-echo"<SPAN class=\"listtitle\"><A HREF=\"moreinfo.php?id=$id&vid=$vid\">Version $version</A></SPAN><br>\n";
+echo"<SPAN class=\"listtitle\"><A HREF=\"moreinfo.php?application=$application&id=$id&vid=$vid\">Version $version</A></SPAN><br>\n";
 if ($notes) {echo"$notes"; }
 echo"</SPAN>\n";
 
@@ -420,7 +420,7 @@ if ($num_results=="0") {
 echo"<DIV class=\"nocomment\">";
 echo"Nobody has commented on this extension yet...<BR>
 Be the First!
-<A HREF=\"moreinfo.php?id=$id&vid=$vid&page=opinion\">Leave your comments</A>...";
+<A HREF=\"moreinfo.php?application=$application&id=$id&vid=$vid&page=opinion\">Leave your comments</A>...";
 echo"</DIV>\n";
 }
 
@@ -473,7 +473,7 @@ echo"
 <SPAN style=\"font-weight: bold\">
 This $typename has not yet been reviewed.<BR><BR>
 
-To see what other users think of this extension, view the <A HREF=\"moreinfo.php?id=$id&page=comments\">User Comments...</A>
+To see what other users think of this extension, view the <A HREF=\"moreinfo.php?application=$application&id=$id&page=comments\">User Comments...</A>
 </SPAN>
 ";
 

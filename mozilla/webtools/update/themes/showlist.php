@@ -185,14 +185,14 @@ if (!$category) {$categoryname="All"; } else {$categoryname = $category;}
 echo"<DIV class=\"pagenum\" "; if ($application!="mozilla") {echo" style=\"margin-right: 58%;\""; } echo">";
 $previd=$pageid-1;
 if ($previd >"0") {
-echo"<a href=\"?pageid=$previd\">&#171; Previous</A> &bull; ";
+echo"<a href=\"?application=$application&category=$category&numpg=$numpg&pageid=$previd\">&#171; Previous</A> &bull; ";
 }
 echo"Page $pageid of $num_pages";
 
 
 $nextid=$pageid+1;
 if ($pageid <$num_pages) {
-echo" &bull; <a href=\"?pageid=$nextid\">Next &#187;</a>";
+echo" &bull; <a href=\"?application=$application&category=$category&numpg=$numpg&pageid=$nextid\">Next &#187;</a>";
 }
 
 echo"</DIV>\n";
@@ -206,7 +206,7 @@ echo"".ucwords("$typename")." $startitem - $enditem of $totalresults";
 
 echo"<DIV class=\"listform\">";
 echo"<FORM NAME=\"listviews\" METHOD=\"GET\" ACTION=\"showlist.php\">\n";
-
+echo"<input name=\"application\" type=\"hidden\" value=\"$application\">\n";
 //Items-Per-Page
 echo"Show/Page: ";
 $perpage = array("5","10","20","50");
@@ -343,7 +343,7 @@ $authorcount = count($authors);
 foreach ($authors as $author) {
 $userid = $authorids[$author];
 $n++;
-$authorstring .= "<A HREF=\"authorprofiles.php?id=$userid\">$author</A>";
+$authorstring .= "<A HREF=\"authorprofiles.php?application=$application&id=$userid\">$author</A>";
 if ($authorcount != $n) {$authorstring .=", "; }
 
 }
@@ -371,7 +371,7 @@ echo"<IMG SRC=\"$previewuri\" BORDER=0 HEIGHT=$height WIDTH=$width STYLE=\"float
 }
 
 //Upper-Right Side Box
-echo"<DIV class=\"liststars\" title=\"$rating of 5 stars\" style=\"font-size: 8pt\"><A HREF=\"moreinfo.php?id=$id&page=comments\">";
+echo"<DIV class=\"liststars\" title=\"$rating of 5 stars\" style=\"font-size: 8pt\"><A HREF=\"moreinfo.php?application=$application&id=$id&page=comments\">";
 for ($i = 1; $i <= floor($rating); $i++) {
 echo"<IMG SRC=\"/images/stars/star_icon.png\" BORDER=0 ALT=\""; if ($i==1) {echo"$rating of 5 stars";} echo"\">";
 }
@@ -387,7 +387,7 @@ echo"</A></DIV>\n";
 
 
 echo"<DIV class=\"itemtitle\">";
-echo"<SPAN class=\"title\"><A HREF=\"moreinfo.php?id=$id&vid=$vid\">$name $version</A></SPAN><BR>";
+echo"<SPAN class=\"title\"><A HREF=\"moreinfo.php?application=$application&id=$id&vid=$vid\">$name $version</A></SPAN><BR>";
 echo"<SPAN class=\"authorline\">By $authors</SPAN><br>";
 echo"</DIV>";
 
@@ -404,7 +404,7 @@ echo"<DIV style=\"height: 34px\">";
 echo"<DIV class=\"iconbar\" style=\"width: 104px;\">";
 
 if ($appname=="Thunderbird") {
-echo"<A HREF=\"moreinfo.php?id=$id&vid=$vid\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" TITLE=\"More Info about $name\" ALT=\"\">More Info</A>";
+echo"<A HREF=\"moreinfo.php?application=$application&id=$id&vid=$vid\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" TITLE=\"More Info about $name\" ALT=\"\">More Info</A>";
 } else {
 //Make Theme Install work again, Bug 246754
 //echo"<A HREF=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'install.php?id=$id&vid=$vid','$name'))\">";
@@ -445,14 +445,14 @@ echo"<DIV id=\"listnav\">";
 echo"<DIV class=\"pagenum\">";
 $previd=$pageid-1;
 if ($previd >"0") {
-echo"<a href=\"?pageid=$previd\">&#171; Previous</A> &bull; ";
+echo"<a href=\"?application=$application&category=$category&numpg=$numpg&pageid=$previd\">&#171; Previous</A> &bull; ";
 }
 echo"Page $pageid of $num_pages";
 
 
 $nextid=$pageid+1;
 if ($pageid <$num_pages) {
-echo" &bull; <a href=\"?pageid=$nextid\">Next &#187;</a>";
+echo" &bull; <a href=\"?application=$application&category=$category&numpg=$numpg&pageid=$nextid\">Next &#187;</a>";
 }
 echo"<BR>\n";
 
@@ -476,7 +476,7 @@ while ($i <= $maxpagesonpage && $i <= $num_pages) {
 if ($i==$pageid) { 
     echo"<SPAN style=\"color: #FF0000\">$i</SPAN>&nbsp;";
   } else {
-    echo"<A HREF=\"?pageid=$i\">$i</A>&nbsp;";
+    echo"<A HREF=\"?application=$application&category=$category&numpg=$numpg&pageid=$i\">$i</A>&nbsp;";
 
 }
 

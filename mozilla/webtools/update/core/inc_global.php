@@ -38,6 +38,11 @@
 
 //inc_global.php -- Stuff that needs to be done globally to all of Mozilla Update
 
+//Cache Control Headers
+header("Cache-Control: public, pre-check=0, post-check=0, max-age=900\n\r");
+header("Expires: 900\n\r");
+
+
 //Attempt to fix Bug 246743 (strip_tags) and Bug 248242 (htmlentities)
 foreach ($_GET as $key => $val) {
 $_GET["$key"] = htmlentities(str_replace("\\","",strip_tags($_GET["$key"])));

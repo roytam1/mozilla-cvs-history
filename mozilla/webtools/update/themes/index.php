@@ -85,7 +85,7 @@ WHERE `Type` = '$type' AND `AppName` = '$application' AND `featured`='YES' ORDER
     $bodylength = strlen($body);
 if ($bodylength>"250") {
  $body = substr($body,0,250);
- $body .= " <a href=\"moreinfo.php?id=$id&page=staffreview\">[More...]</a>";
+ $body .= " <a href=\"moreinfo.php?application=$application&id=$id&page=staffreview\">[More...]</a>";
  
  }
 
@@ -99,7 +99,7 @@ if ($bodylength>"250") {
     $timestamp = strtotime("$year-$month-$day $hour:$minute:$second");
     $date = gmdate("F, Y", $timestamp);
 
-echo"<a href=\"moreinfo.php?id=$id\">$name</A> -- $title";
+echo"<a href=\"moreinfo.php?application=$application&id=$id\">$name</A> -- $title";
 if ($pick=="YES") {echo" - $date Editors Pick"; }
 echo"<BR>\n";
 echo"<SPAN class=\"itemdescription\">$body</SPAN><BR>\n";
@@ -115,7 +115,7 @@ $currentver_display = $currentver_display_array[$application];
 ?>
 <DIV class="box" style="width: 80%; min-height: 200px; border: 0px">
 <DIV class="boxcolumns">
-<DIV class="boxheader"><A HREF="showlist.php?category=Popular">Most Popular</A>:</DIV>
+<DIV class="boxheader"><A HREF="showlist.php?application=<?php echo"$application"; ?>&category=Popular">Most Popular</A>:</DIV>
 <?php
 $i=0;
 $sql = "SELECT TM.ID, TV.vID,TM.Name, TV.Version, TM.TotalDownloads, TM.downloadcount
@@ -133,7 +133,7 @@ WHERE  `Type`  =  '$type' AND `AppName` = '$application' AND `minAppVer_int` <='
    $downloadcount = $row["downloadcount"];
    $totaldownloads = $row["TotalDownloads"];
 if ($lastname == $name) {$i--; continue; }
-  echo"$i - <a href=\"moreinfo.php?id=$id\">$name</a><br>\n";
+  echo"$i - <a href=\"moreinfo.php?application=$application&id=$id\">$name</a><br>\n";
   echo"<SPAN class=\"smallfont nocomment\">($downloadcount downloads)</SPAN><BR>\n";
 
 $lastname = $name;
@@ -143,7 +143,7 @@ if ($i >= "5") {break;}
 <BR>
 </DIV>
 <DIV class="boxcolumns">
-<DIV class="boxheader"><A HREF="showlist.php?category=Top Rated">Top Rated</A>:</DIV>
+<DIV class="boxheader"><A HREF="showlist.php?application=<?php echo"$application"; ?>&category=Top Rated">Top Rated</A>:</DIV>
 <?php
 $r=0;
 $usednames = array();
@@ -164,7 +164,7 @@ WHERE  `Type`  =  '$type' AND `AppName` = '$application' AND `minAppVer_int` <='
    $rating = $row["Rating"];
   $arraysearch = array_search("$name", $usednames);
   if ($arraysearch !== false AND $usedversions[$arraysearch]['version']<$version) {$r--; continue; } //
-  echo"$r - <a href=\"moreinfo.php?id=$id&vid=$vid\">$name</a>&nbsp;";
+  echo"$r - <a href=\"moreinfo.php?application=$application&id=$id&vid=$vid\">$name</a>&nbsp;";
 
   //$rating = round($rating);
 
@@ -190,7 +190,7 @@ unset($usednames, $usedversions, $r, $s, $i);
 ?>
 </DIV>
 <DIV class="boxcolumns">
-<DIV class="boxheader"><A HREF="showlist.php?category=Newest">Most Recent</A>:</DIV>
+<DIV class="boxheader"><A HREF="showlist.php?application=<?php echo"$application"; ?>&category=Newest">Most Recent</A>:</DIV>
 <?php
 $i=0;
 //MacOSX Specific override for All+Mac themes. Bug 252294
@@ -215,7 +215,7 @@ WHERE `Type`  =  '$type' AND `AppName` = '$application' AND `minAppVer_int` <='$
     $dateadded = gmdate("F d, Y g:i:sa", $timestamp); //    $dateupdated = gmdate("F d, Y g:i:sa T", $timestamp);
 
 if ($lastname == $name) {$i--; continue; }
-  echo"$i - <a href=\"moreinfo.php?id=$id&vid=$vid\">$name $version</a><BR>\n";
+  echo"$i - <a href=\"moreinfo.php?application=$application&id=$id&vid=$vid\">$name $version</a><BR>\n";
   echo"<SPAN class=\"smallfont nocomment\">($dateadded)</SPAN><BR>\n";
 
 $lastname = $name;
