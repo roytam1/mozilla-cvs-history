@@ -298,6 +298,7 @@ if (m:^mozilla/layout/.*$:) {return '98';}
 if (m:^mozilla/webshell/.*$:) {return '101';}
 if (m:^mozilla/htmlparser/.*$:) {return '102';}
 if (m:^mozilla/dom/.*$:) {return '103';}
+if (m:^mozilla/xpfe$:) {return '137';}
 if (m:^mozilla/js/tests$:) {return '114';}
 if (m:^js/src/perlconnect$:) {return '111';}
 if (m:^mozilla/silentdl/.*$:) {return '110';}
