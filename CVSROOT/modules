@@ -541,7 +541,6 @@ SeaMonkeyCore -a \
 	mozilla/intl \
 	mozilla/jpeg \
 	JSClient \
-	mozilla/lib/libpwcac \
 	mozilla/lib/mac/MacMemoryAllocator \
 	mozilla/lib/mac/Misc \
 	mozilla/lib/mac/MoreFiles \
@@ -549,7 +548,6 @@ SeaMonkeyCore -a \
 	mozilla/lib/mac/NSStdLib \
 	mozilla/lib/mac/PowerPlant \
 	mozilla/lib/mac/InterfaceLib \
-	mozilla/lib/xp \
 	mozilla/modules/libimg \
 	mozilla/modules/libjar \
 	mozilla/modules/libpref \
