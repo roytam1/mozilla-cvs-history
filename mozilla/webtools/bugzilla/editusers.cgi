@@ -142,6 +142,7 @@ sub EmitFormElements ($$$$)
                 "LEFT JOIN member_group_map " .
                 "ON member_group_map.group_id = G.group_id " .
                 "AND member_group_map.maptype = 0 " .
+                "AND member_group_map.isderived = 0 " .
                 "AND member_group_map.member_id = $user_id " .
                 "ORDER BY groups.name");
         if (MoreSQLData()) {
@@ -153,18 +154,25 @@ sub EmitFormElements ($$$$)
             while (MoreSQLData()) {
                 my ($bit, $name, $description, $checked) = FetchSQLData();
                 PushGlobalSQLState();
-                SendSQL("SELECT ISNULL(member_group_map.member_id) = 0 " .
-                        "FROM groups " .
-                        "LEFT JOIN member_group_map " .
-                        "ON member_group_map.group_id = groups.group_id " .
-                        "AND member_group_map.maptype = 1 " .
-                        "AND member_group_map.member_id = $user_id " .
-                        "WHERE groups.group_id = $bit");
-                my ($blchecked) = FetchSQLData();
+                SendSQL("SELECT member_id " .
+                        "FROM member_group_map " .
+                        "WHERE maptype = 1 " .
+                        "AND member_id = $user_id " .
+                        "AND group_id = $bit");
+                my ($blchecked) = FetchSQLData() ? 1 : 0;
+                SendSQL("SELECT member_id " .
+                        "FROM member_group_map " .
+                        "WHERE maptype = 0 " .
+                        "AND member_id = $user_id " .
+                        "AND isderived = 1 " .
+                        "AND group_id = $bit");
+                my ($isderived) = FetchSQLData() ? 1 : 0; 
                 PopGlobalSQLState();
                 print "<INPUT TYPE=HIDDEN NAME=\"oldbit_$name\" VALUE=\"$checked\">\n";
                 print "<INPUT TYPE=HIDDEN NAME=\"oldblbit_$name\" VALUE=\"$blchecked\">\n";
-                print "</TR><TR>\n";
+                print "</TR><TR";
+                print ' bgcolor=#cccccc' if ($isderived);
+                print ">\n";
                 if ($editall) {
                     $blchecked = ($blchecked) ? "CHECKED" : "";
                     print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"blbit_$name\" $blchecked VALUE=\"$bit\"></TD>";
@@ -451,24 +459,6 @@ if ($action eq 'new') {
         exit;
     }
 
-    # For new users, we use the regexps from the groups table to determine
-    # their initial group membership.
-    # We also keep a list of groups the user was added to for display on the
-    # confirmation page.
-    my $bits = "0";
-    my @grouplist = ();
-    SendSQL("select bit, name, userregexp from groups where userregexp != ''");
-    while (MoreSQLData()) {
-        my @row = FetchSQLData();
-        if ($user =~ m/$row[2]/i) {
-            $bits .= "+ $row[0]"; # Silly hack to let MySQL do the math,
-                                  # not Perl, since we're dealing with 64
-                                  # bit ints here, and I don't *think* Perl
-                                  # does that.
-            push(@grouplist, $row[1]);
-        }
-    }
-
     # Add the new user
     SendSQL("INSERT INTO profiles ( " .
             "login_name, cryptpassword, realname,  " .
@@ -482,16 +472,20 @@ if ($action eq 'new') {
     #+++ send e-mail away
 
     print "OK, done.<br>\n";
-    if($#grouplist > -1) {
-        print "New user added to these groups based on group regexps:\n";
-        print "<ul>\n";
-        foreach (@grouplist) {
-            print "<li>$_</li>\n";
-        }
-        print "</ul>\n";
-    } else {
-        print "New user not added to any groups.<br><br>\n";
-    }
+    SendSQL("SELECT last_insert_id()");
+    my ($newuserid) = FetchSQLData();
+    DeriveGroup($newuserid);
+    # FIXME Add user to derived groups
+    #if($#grouplist > -1) {
+        #print "New user added to these groups based on group regexps:\n";
+        #print "<ul>\n";
+        #foreach (@grouplist) {
+            #print "<li>$_</li>\n";
+            #}
+            #print "</ul>\n";
+            #} else {
+                #print "New user not added to any groups.<br><br>\n";
+                #}
     print "To change ${user}'s permissions, go back and <a href=\"editusers.cgi?action=edit&user=" . url_quote($user)."\">edit this user</A>";
     print "<p>\n";
     PutTrailer($localtrailer,
@@ -685,6 +679,9 @@ if ($action eq 'edit') {
              WHERE login_name=" . SqlQuote($user));
     my ($thisuserid, $realname, $disabledtext) = FetchSQLData();
 
+    if ($thisuserid > 0) {
+        DeriveGroup($thisuserid);
+    }
     print "<FORM METHOD=POST ACTION=editusers.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 

@@ -889,6 +889,30 @@ sub Crypt {
     return $cryptedpassword;
 }
 
+sub DeriveGroup {
+    my ($user) = (@_);
+    PushGlobalSQLState();
+    SendSQL("SELECT login_name, NOW() FROM profiles WHERE userid = $user");
+    my ($login, $starttime) = FetchSQLData();
+    SendSQL("DELETE FROM member_group_map WHERE member_id = $user " .
+            "AND maptype = 0 AND isderived = 1");
+    SendSQL("SELECT group_id, userregexp FROM groups WHERE userregexp != ''");
+    while (MoreSQLData()) {
+        my ($groupid, $rexp) = FetchSQLData();
+        if ($login =~ m/$rexp/i) {        
+            PushGlobalSQLState();
+            SendSQL("INSERT INTO member_group_map " .
+                    "(member_id, group_id, maptype, isderived) " .
+                    "VALUES ($user, $groupid, 0, 1)");
+            PopGlobalSQLState();
+
+        }
+    }
+    SendSQL("UPDATE profiles SET refreshed_when = " .
+            SqlQuote($starttime) . "WHERE userid = $user");
+    PopGlobalSQLState();
+};
+
 
 sub DBID_to_real_or_loginname {
     my ($id) = (@_);

@@ -34,7 +34,6 @@ use RelationSet;
 sub sillyness {
     my $zz;
     $zz = $::defaultqueryname;
-    $zz = $::usergroupset;
 }
 
 # Use global template variables.
