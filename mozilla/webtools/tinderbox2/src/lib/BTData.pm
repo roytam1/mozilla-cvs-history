@@ -189,7 +189,8 @@ sub update2bug_url {
   my ($tinderbox_ref) = @_;
 
   # AIM can not accept bug numbers as URLS without encoding lots of
-  # other junk. Just give a mailto:
+  # other junk (logged in user name, session id info). Just give a
+  # 'mailto: ' for the link instead.
 
   #  $out = (
   #	  'mailto: '.
