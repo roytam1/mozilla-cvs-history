@@ -260,7 +260,7 @@ foreach $tree (keys %VC_TREE) {
 
 		     'Metered' => {
                          "html_color" => '#eeff00', # a yellow
-                         "hdml_char" => "R",
+                         "hdml_char" => "M",
                          "order" => 4,
                          "description" => "Require Current Sherriff approval",
                      },
@@ -321,7 +321,7 @@ sub get_all_sorted_tree_states {
   @tree_states = (
                   map { $_->[0] }
                   sort{ $a->[1] <=> $b->[1] }	
-                  map { [ $_, $STATUS{$_}{'order'} ] }
+                  map { [ $_, $TREE_STATES{$_}{'order'} ] }
                   (keys %TREE_STATES)
                   );
   
