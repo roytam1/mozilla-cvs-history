@@ -27,19 +27,15 @@
 
 ######################################################################
 #
-# Modules for Browser50, which includes nglayout engine. PLACEHOLDER
+# Module that contains the LEGAL and the LICENSE file. This should be
+# a part of every logical source pull for a component. Care should
+# be given so that this module is not specified twice for a given
+# source pull.
 #
 
-Browser50All -a \
-	Raptor
-
-######################################################################
-#
-# Modules for MailClient50, which includes nglayout engine. PLACEHOLDER
-#
-
-MailClient50All -a \
-	Raptor
+MozillaLicense -a \
+	mozilla/LEGAL \
+	mozilla/LICENSE
 
 ######################################################################
 #
@@ -471,3 +467,59 @@ JSClient -a \
         mozilla/js/src \
         mozilla/js/macbuild \
         mozilla/js/jsd
+
+#######################################################################
+# Modules for SeaMonkey 
+# (5.0 Browser and 5.0 Mail/News based on nglayout)
+#
+# Initial wild ass guess: cyeh@netscape.com
+#
+
+SeaMonkeyCore -a \
+	mozilla/configure.in \
+	mozilla/Makefile.in \
+	mozilla/aclocal.m4 \
+	mozilla/base \
+	mozilla/build \
+	mozilla/caps \
+	mozilla/config \
+	mozilla/dbm \
+	mozilla/jpeg \
+	mozilla/js \
+	mozilla/lib/liblayer \
+	mozilla/lib/libpwcac \
+	mozilla/lib/xp \
+	mozilla/modules/libimg \
+	mozilla/modules/libpref \
+	mozilla/modules/libreg \
+	mozilla/modules/libutil \
+	mozilla/modules/oji \
+	mozilla/modules/plugin \
+	mozilla/modules/security/freenav \
+	mozilla/modules/zlib \
+	mozilla/nav-java \
+	mozilla/network \
+	mozilla/rdf \
+	mozilla/sun-java \
+	mozilla/xpcom
+
+SeaMonkeyLayout -a \
+	SeaMonkeyCore \
+	mozilla/nglayout \
+	mozilla/htmlparser \
+	mozilla/widget
+
+SeaMonkeyXPToolKit -a \
+	SeaMonkeyLayout \
+	mozilla/xpfe
+
+SeaMonkeyBrowser -a \
+	SeaMonkeyXPToolKit
+
+######################
+# These are poorly defined right now.
+#SeaMonkeyMailNews -a \
+#
+#SeaMonkeyEditor -a \
+	
+
