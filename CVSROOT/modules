@@ -637,6 +637,7 @@ SeaMonkeyL10n -a \
 	mozilla/l10n/Makefile.in \
 	mozilla/l10n/langpacks/makefile.win \
 	mozilla/l10n/langpacks/Makefile.in \
+	mozilla/l10n/langpacks/en-DE \
 	mozilla/l10n/langpacks/en-GB
 
 #############################################################
