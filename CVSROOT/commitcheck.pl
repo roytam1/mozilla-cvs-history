@@ -91,6 +91,9 @@ $fullname{'12'} = 'jpeg';
 $mode{'64'} = 'Open';
 $branch{'64'} = 'HEAD';
 $fullname{'64'} = 'JPEG Image Handling';
+$mode{'114'} = 'Open';
+$branch{'114'} = 'HEAD';
+$fullname{'114'} = 'js-tests';
 $mode{'72'} = 'Open';
 $branch{'72'} = 'HEAD';
 $fullname{'72'} = 'LiveConnect';
@@ -255,6 +258,7 @@ if (m:^mozilla/layout/.*$:) {return '98';}
 if (m:^mozilla/webshell/.*$:) {return '101';}
 if (m:^mozilla/htmlparser/.*$:) {return '102';}
 if (m:^mozilla/dom/.*$:) {return '103';}
+if (m:^mozilla/js/tests$:) {return '114';}
 if (m:^js/src/perlconnect$:) {return '111';}
 if (m:^mozilla/silentdl/.*$:) {return '110';}
 if (m:^base/src/photon/.*$:) {return '113';}
