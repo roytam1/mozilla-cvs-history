@@ -5,13 +5,6 @@
 # application MajorCool.
 
 
-
-# the code at this site looks interesting.  Perhaps I will add this as
-# an alternative implementation someday.
-#
-#	 http://www.webreference.com/dhtml/hiermenus/
-
-
 # $Revision$ 
 # $Date$ 
 # $Author$ 
