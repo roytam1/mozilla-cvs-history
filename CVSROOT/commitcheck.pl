@@ -21,9 +21,11 @@ $fullname{'12'} = 'jpeg';
 $mode{'18'} = 'Open';
 $branch{'18'} = 'HEAD';
 $fullname{'18'} = 'macfe';
-$mode{'19'} = 'Open';
+$mode{'19'} = 'Closed';
 $branch{'19'} = 'HEAD';
 $fullname{'19'} = 'mozilla-toplevel';
+$blessed{'19'} = [];
+$super{'19'} = ['cyeh%netscape.com','brendan%netscape.com',];
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'ColorSync_19980824_BRANCH') {
@@ -31,6 +33,7 @@ if ($b eq 'ColorSync_19980824_BRANCH') {
 if ($b eq 'HEAD') {
 if (m:CVSROOT/commitcheck\.pl:) {return '3';}
 if (m:CVSROOT/passwd:) {return '3';}
+if (m:mozilla/:) {return '19';}
 }
 return '';
 }
