@@ -35,12 +35,10 @@ my %ok_fields;
 
 # ok_fields is a quick hash of all the fields that can be touched by outsiders.
 # 
-for my $key (qw (product version rep_platform op_sys bug_status 
-                resolution priority bug_severity component assigned_to
-                reporter short_desc target_milestone 
-                qa_contact status_whiteboard 
-                dependson blocking attachments keywords
-                comment) ){
+for my $key (qw (product version rep_platform op_sys bug_status resolution
+                priority bug_serverity component assigned_to reporter short_desc
+                target_milestone qa_contact status_whiteboard dependson blocking
+                attachments keywords comment bug_file_loc) ) {
     $ok_fields{$key}++;
     }
 
@@ -358,6 +356,10 @@ sub CheckCanChangeField {
    my $ownerid;
    my $reporterid;
    my $qacontactid;
+
+   if (!defined($oldvalue)) {
+      $oldvalue = '';
+   }
 
    print "$f old=$oldvalue new=$newvalue\n";
     if ($f eq "assigned_to" || $f eq "reporter" || $f eq "qa_contact") {
@@ -984,8 +986,20 @@ sub ListDiff {
 sub ChangedFields {
     my $self = shift;
     my (%snapshot) = @_;
-    my @changed;
+    my @changed = ();
 
+# first we find if any new hash key/values have been added to
+# $self. if we do, we push them onto the changed list...
+
+    foreach (keys %{$self}) {
+       unless (exists $snapshot{$_}) {
+           if ($ok_fields{$_}) {
+               push(@changed, $_);
+           } 
+       }
+    }
+
+# next, we see if any of the common fields have changed...
     foreach my $field (keys(%snapshot)) {
         # we just punt for longdescs and attachments, since if a user
         # we currently don't allow for new attachments, and we use
@@ -1043,6 +1057,7 @@ sub Collision {
 
 }
 
+
 sub WriteChanges {
    my $self = shift;
    my (@fields) = @_;
@@ -1055,6 +1070,14 @@ sub WriteChanges {
    foreach my $field (@fields) {
        if (($field eq 'dependson') || ($field eq 'blocks')) {
             #go into dependency hell
+       }
+       elsif ($field eq 'comment') {
+         &::AppendComment($self->{'bug_id'}, $self->{'whoid'}, $self->{'comment'});
+       }
+       elsif ($field eq 'keywords') {
+
+
+
        }
        else {
           $sql .= "$comma $field=\'$self->{$field}\'";
@@ -1081,6 +1104,7 @@ sub Commit {
            %snapshot = SnapShotBugInDB($self);
            @changed = ChangedFields($self, %snapshot); 
            if (@changed > 0) {
+               print "changed fields\n";
                WriteChanges($self, @changed);
                UnlockDatabase();
 #           DoMailNotification();
