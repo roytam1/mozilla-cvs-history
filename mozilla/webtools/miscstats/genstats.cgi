@@ -45,13 +45,24 @@ use Date::Format;
 		"people.id=checkins.whoid"
 	],
 
-	["New checkers-in (source or docs)",
+	["New checkers-in (source)",
 						# statistic title
 	 "mozusers",				# database
 	 "changes.when",			# timestamp field
 	 "changes.email",			# email addr field
-	 "select distinct id from changes,users where changes.field in " .
-		"('cvs_group','gila_group') and changes.email=users.email"
+	 "select distinct id from changes,users where changes.field=" .
+		"'cvs_group' and changes.email=users.email ".
+	        "and changes.oldvalue='None'"
+	],
+
+	["New checkers-in (docs)",
+						# statistic title
+	 "mozusers",				# database
+	 "changes.when",			# timestamp field
+	 "changes.email",			# email addr field
+	 "select distinct id from changes,users where changes.field=" .
+		"'gila_group' and changes.email=users.email ".
+	        "and changes.oldvalue='None'"
 	],
 
 	["Useful browser 5.0 bugs (includes NEW; excludes WORKSFORME)",
