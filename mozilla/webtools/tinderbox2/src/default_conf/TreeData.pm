@@ -177,7 +177,7 @@ $VERSION = '#tinder_version#';
  
 	    'SeaMonkey' =>  {
                    root => '/cvsroot',
-                   module => '',
+                   module => 'MozillaTinderboxAll',
                    branch => 'HEAD',
                   },
 
