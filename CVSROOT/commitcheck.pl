@@ -319,7 +319,7 @@ if (m:^mozilla/directory/ldapsdk\.mk$:) {return '59';}
 if (m:^mozilla/directory/Makefile$:) {return '59';}
 if (m:^gfx/src/ps/.*$:) {return '62';}
 if (m:^mozilla/modules/libpr0n/.*$:) {return '63';}
-if (m:^mozilla/jpeg$:) {return '64';}
+if (m:^jpeg$:) {return '64';}
 if (m:^mozilla/modules/libimg/png/.*$:) {return '65';}
 if (m:^mozilla/intl/.*$:) {return '67';}
 if (m:^mozilla/modules/oji/.*$:) {return '68';}
