@@ -291,7 +291,7 @@ sub parse_errorline {
 
 =head1 NAME
 
-Error_Parser - methods used by showlogs.cgi
+Error_Parse - methods used by showlogs.cgi
 
 =head1 SYNOPSIS
 
