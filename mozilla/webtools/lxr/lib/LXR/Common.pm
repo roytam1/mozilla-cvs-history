@@ -43,8 +43,7 @@ sub fatal {
 
 sub abortall {
     print(STDERR "[",scalar(localtime),"] abortall: $_[0]\n");
-    print("Content-Type: text/html; charset=iso-8859-1\n\n",
-	  "<html>\n<head>\n<title>Abort</title>\n</head>\n",
+    print("<html>\n<head>\n<title>Abort</title>\n</head>\n",
 	  "<body><h1>Abort!</h1>\n",
 	  "<b><i>** Aborting: $_[0]</i></b>\n",
 	  "</body>\n</html>\n") if $wwwdebug;
@@ -464,9 +463,6 @@ sub init_all {
     if (defined($readraw)) {
 	print("\n");
     } else {
-        print("Content-Type: text/html; charset=iso-8859-1\n");
-
-	#
 	# Print out a Last-Modified date that is the larger of: the
 	# underlying file that we are presenting; and the "source" script
 	# itself (passed in as an argument to this function.)  If we can't
