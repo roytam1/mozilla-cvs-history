@@ -1,10 +1,10 @@
 @classicinstall:The classic Bugzilla install (everything is in one directory)
-^insdir:The location where you would like Bugzilla installed
-res|insdir
-cgi|insdir
-mod|insdir
-req|insdir
+^insdir:The location where you would like Bugzilla installed|/var/www/html/bugzilla
+res|$insdir
+cgi|$insdir
+mod|$insdir
+req|$insdir
 null|/dev/null
-doc|insdir
-tst|insdir
-tem|insdir
+doc|$insdir
+tst|$insdir
+tem|$insdir

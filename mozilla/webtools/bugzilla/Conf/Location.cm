@@ -33,31 +33,68 @@ EOF
 
 my $count = 1;
 my $told;
+my $installtypes;
 open(TYPES,"Conf/Supplies/installtypes") ||
 	die "couldn't open installtypes";
 while (<TYPES>) {
 	my $line = $_;
 	chomp($line);
 	if ($line =~ /^\@(\w+):(.+)$/) { # begining of a entry
+		if ($count ne 1) {
+			$count++;
+		}
 		output "$count) $1\n";
 		output "    $2\n";
-		$count++;
+		push @{$installtypes[$count-1]},$1;
 		next;
-	} elsif ($line =~ /^\^(\w+):(.+)$/) { # begining of a var def
+	} elsif ($line =~ /^\^(\w+):(.+)\|(.+)$/) { # begining of a var def
 		output "    Variable: $1: $2\n";
+		push @{$installtypes[$count-1]},'$'.$1.'|'.$2.'|'.$3;
 		next;
 	} elsif ($line =~ /^(\w+)\|(.+)$/) { # begining of a mapping
 		output "    The following type of file goes to the following location:\n" unless $told;
 		$told = 1;
 		output "    $1 -> $2\n";
+		push @{$installtypes[$count-1]},'!'.$1.'|'.$2;
 		next;
 	}
 }
 
 print "\n";
-ask('installtype','Please select an installation layout','1');
-if (getConf('installtype') > $count-1) {
+ask('layoutchoice','Please select an installation layout','1');
+if (getConf('layoutchoice') > $count) {
 	die "invalid option\n";
 }
 
 close(TYPES);
+
+# yes, that is is a rather nasty data structure we made in $installtyples
+# for the record, it looks like this:
+#
+# installtype1 $var1 $a{b} etc...
+# installtype2 $var1 $a{b} etc...
+# etc...
+
+# that probably didn't make it any more clear, but anyway
+# now we get to go construct a shell script to handle the installation
+
+# but first, we need to know about any variables to define
+
+my $count = 0;
+my $layoutchoice = getConf('layoutchoice');
+while ($count-1 ne $#{$installtypes[$layoutchoice-1]}) {
+	my $line = $installtypes[layoutchoice][$count];
+	if ($line =~ /^\$(\w+)\|(.+)\|(.+)$/) {
+		output "You will need to choose a location for the following variable:\n";
+		output "A directory will be created if it does not already exist\n";
+		output "$1: $2\n";
+		ask("locvar_$1","Please specify a full path (begining with a /):",$3);
+	}
+	$count++;
+}
+
+# time for the real fun to begin, generating the shell script
+
+output "generating installation script\n";
+
+1;
