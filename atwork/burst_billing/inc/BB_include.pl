@@ -132,9 +132,8 @@ $MAIL_HOSTS = ['localhost',
                'mail.excitehome.net'];
 $MAIL_FROM = 'burstbilling@excitehome.net';
 $ERROR_MAIL_TO = ['mccarthy@excitehome.net',
-            'tunacat@yahoo.com',
-#            'michael@excitehome.net',
-           ];
+                  'michael@excitehome.net',
+                 ];
 
 # $REPORT_MAIL_TO = 'burstbilling@excitehome.net';
 $REPORT_MAIL_TO = 'mccarthy@excitehome.net';
@@ -154,7 +153,7 @@ $MAX_ZERO_DATA_PERCENT = 50;
 # Maximum percentage of NaN's to put up with in the data before I log an error
 # Use values from 0 - 100
 #
-$MAX_NAN_DATA_PERCENT = 0;
+$MAX_NAN_DATA_PERCENT = 20;
 
 #
 # This is the smallest step size returned by the RRDs - equal to a 5 minute
