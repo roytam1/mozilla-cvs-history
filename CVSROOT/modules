@@ -530,6 +530,7 @@ SeaMonkeyXPToolKit -a \
 
 SeaMonkeyBrowser -a \
 	mozilla/client.mk \
+	mozilla/modules/softupdt \
 	SeaMonkeyXPToolKit
 
 # This needs work!
