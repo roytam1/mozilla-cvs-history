@@ -35,6 +35,9 @@ $fullname{'96'} = 'Clipping and Compositing';
 $mode{'56'} = 'Open';
 $branch{'56'} = 'HEAD';
 $fullname{'56'} = 'Composer';
+$mode{'171'} = 'Open';
+$branch{'171'} = 'HEAD';
+$fullname{'171'} = 'Cookies and Permissions';
 $mode{'4'} = 'Open';
 $branch{'4'} = 'HEAD';
 $fullname{'4'} = 'default';
@@ -408,6 +411,7 @@ if (m:^mozilla/layout/mathml/.*$:) {return '165';}
 if (m:^mozilla/browser/.*$:) {return '166';}
 if (m:^mozilla/toolkit/.*$:) {return '166';}
 if (m:^mozilla/mail/.*$:) {return '170';}
+if (m:^mozilla/extensions/cookie$:) {return '171';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
