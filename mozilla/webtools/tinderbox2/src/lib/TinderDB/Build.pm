@@ -1164,7 +1164,7 @@ sub status_table_row {
       my ($mindate) = $current_rec->{'previousbuildtime'};
 
       $links .= (
-                 "\n". 
+                 "\t\t". 
                  VCDisplay::query(
                                    'linktxt'=> "C",
                                    'tree' => $tree,
