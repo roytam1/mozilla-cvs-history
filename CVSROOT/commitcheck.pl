@@ -295,6 +295,10 @@ $fullname{'93'} = 'Zlib';
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'HEAD') {
+if (m:^gfx/src/photon/.*$:) {return '113';}
+if (m:^widget/src/photon/.*$:) {return '113';}
+if (m:^mozilla/content/xul/.*$:) {return '106';}
+if (m:^mozilla/layout/xul/.*$:) {return '106';}
 if (m:^mozilla/profile$:) {return '120';}
 if (m:^mozilla/tools/.*$:) {return '112';}
 if (m:^xpcom/typelib$:) {return '117';}
@@ -385,9 +389,9 @@ if (m:^mozilla/gfx/src/shared/.*$:) {return '177';}
 if (m:^mozilla/widget/public/.*$:) {return '177';}
 if (m:^mozilla/widget/src/xpwidgets/.*$:) {return '177';}
 if (m:^mozilla/netwerk/.*$:) {return '77';}
+if (m:^mozilla/nsprpub/.*$:) {return '78';}
 if (m:^mozilla/gfx/src/mac/.*$:) {return '178';}
 if (m:^mozilla/widget/src/mac/.*$:) {return '178';}
-if (m:^mozilla/nsprpub/.*$:) {return '78';}
 if (m:^mozilla/modules/plugin/.*$:) {return '81';}
 if (m:^mozilla/modules/libpref/.*$:) {return '82';}
 if (m:^mozilla/modules/progress/.*$:) {return '83';}
@@ -426,10 +430,6 @@ if (m:^js/src/perlconnect$:) {return '111';}
 if (m:^mozilla/silentdl/.*$:) {return '110';}
 if (m:^mozilla/content/xsl/.*$:) {return '140';}
 if (m:^mozilla/extensions/transformiix/.*$:) {return '140';}
-if (m:^gfx/src/photon/.*$:) {return '113';}
-if (m:^widget/src/photon/.*$:) {return '113';}
-if (m:^mozilla/content/xul/.*$:) {return '106';}
-if (m:^mozilla/layout/xul/.*$:) {return '106';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
