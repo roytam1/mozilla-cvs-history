@@ -43,6 +43,7 @@
 # Load the tinderbox specific libraries
 use lib '#tinder_libdir#';
 
+use TinderConfig;
 use Utils;
 use HTMLPopUp;
 
@@ -81,7 +82,7 @@ foreach $i (0 .. 45) {
       if ( $random_status > 2 ) {
 	$status = 'success'; 
       } else {
-	$status = ( 'success', 'test_failed', 'busted', ) [$random_status];
+	$status = ( 'success', 'test_failed', 'build_failed', ) [$random_status];
       }
       $runtime = (rand 25) + 10;
       # convert minutes to seconds, and remove fractions.
@@ -99,7 +100,7 @@ foreach $i (0 .. 45) {
       
 $out = <<EOF;
 
-\$record = {
+\$r = {
               'tree' => '$tree',
               'buildname' => '$build',
               'buildfamily' => 'unix',
