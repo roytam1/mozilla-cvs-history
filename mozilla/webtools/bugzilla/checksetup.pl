@@ -2764,6 +2764,23 @@ if (GetFieldDef('groups', 'bit')) {
     DropField('groups', 'bit');
 }
 
+# Added product_group_map table for product privacy
+# Adding product_id column to products table to allow this to work
+# 2002/01/24 dkl@redhat.com
+if (!GetFieldDef('products', 'product_id')) {
+    AddField('products', 'product_id', 'mediumint primary key auto_increment not null');
+    my $sth = $dbh->prepare('select product from products');
+    $sth->execute();
+    my $currproductid = 1;
+    while (my ($name) = $sth->fetchrow_array()) {
+        my $sth2 = $dbh->prepare("update products set product_id = $currproductid where product = " . 
+                                 $dbh->quote($name));
+        $sth2->execute();
+        $sth2->finish;
+    }
+    $sth->finish;
+}
+
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
 #

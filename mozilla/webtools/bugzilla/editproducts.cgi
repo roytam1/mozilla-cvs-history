@@ -41,6 +41,7 @@ sub sillyness {
     $zz = $::unconfirmedstate;
 }
 
+my $userid = 0;
 
 # TestProduct:  just returns if the specified product does exists
 # CheckProduct: same check, optionally  emit an error text
@@ -79,9 +80,9 @@ sub CheckProduct ($)
 # Displays the form to edit a products parameters
 #
 
-sub EmitFormElements ($$$$$$$$$)
+sub EmitFormElements ($$$$$$$$)
 {
-    my ($product, $description, $milestoneurl, $userregexp, $disallownew,
+    my ($product, $description, $milestoneurl, $disallownew,
         $votesperuser, $maxvotesperbug, $votestoconfirm, $defaultmilestone)
         = @_;
 
@@ -110,14 +111,6 @@ sub EmitFormElements ($$$$$$$$$)
         print qq{<INPUT TYPE=HIDDEN NAME="defaultmilestone" VALUE="$defaultmilestone">\n};
     }
 
-    # Added -JMR, 2/16/00
-    if (Param("usebuggroups")) {
-        $userregexp = value_quote($userregexp);
-        print "</TR><TR>\n";
-        print "  <TH ALIGN=\"right\">User Regexp for Bug Group:</TH>\n";
-        print "  <TD><INPUT TYPE=TEXT SIZE=64 MAXLENGTH=255 NAME=\"userregexp\" VALUE=\"$userregexp\"></TD>\n";
-    }
-
     print "</TR><TR>\n";
     print "  <TH ALIGN=\"right\">Closed for bug entry:</TH>\n";
     my $closed = $disallownew ? "CHECKED" : "";
@@ -134,6 +127,46 @@ sub EmitFormElements ($$$$$$$$$)
     print "</TR><TR>\n";
     print "  <TH ALIGN=\"right\">Number of votes a bug in this product needs to automatically get out of the <A HREF=\"bug_status.html#status\">UNCONFIRMED</A> state:</TH>\n";
     print "  <TD><INPUT SIZE=5 MAXLENGTH=5 NAME=\"votestoconfirm\" VALUE=\"$votestoconfirm\"></TD>\n";
+
+    # Find list of groups that this product can be marked private to
+    print "</TR><TR>\n";
+    print "  <TH ALIGN=\"right\">Group Access:</TH>\n";
+    print "  <TD><TABLE>\n";
+    my $productid = 0;
+    my %productbelongs = ();
+    if ($product) {
+        SendSQL("select product_id from products where product = " . SqlQuote($product));
+        $productid = FetchOneColumn();
+        SendSQL("select groups.group_id from groups, product_group_map " . 
+                "where groups.group_id = product_group_map.group_id ". 
+                "and product_group_map.product_id = $productid");
+        while (my ($groupid) = FetchSQLData()) {
+            $productbelongs{$groupid} = 1;
+        }
+    }
+
+    my %groupsbelong = ();
+    my %groupsbelongname = ();
+    my %groupsbelongdesc = (); 
+    SendSQL("select groups.group_id, groups.name, groups.description " .
+            "from groups, user_group_map " .
+            "where groups.group_id = user_group_map.group_id " .
+            "and groups.isbuggroup = 1 " .
+            "and user_group_map.user_id = $userid");
+    while (my ($groupid, $name, $desc) = FetchSQLData()) {
+        $groupsbelong{$groupid} = 1;
+        $groupsbelongname{$groupid} = $name;
+        $groupsbelongdesc{$groupid} = $desc;
+    }
+
+    foreach my $groupid (keys %groupsbelong) {
+        my $checked = defined ($productbelongs{$groupid}) ? "CHECKED" : "";
+        print "<TR>\n<TD><INPUT TYPE=\"checkbox\" NAME=\"group_$groupid\" VALUE=\"$groupid\" $checked></TD>\n";
+        print "<TD><B>" . ucfirst($groupsbelongname{$groupid}) . ":</B> ";
+        print "$groupsbelongdesc{$groupid}</TD>\n</TR>\n";
+    }
+    print "</TABLE>\n</TD>\n";
+    print "<INPUT TYPE=\"hidden\" NAME=\"productid\" VALUE=\"$productid\">\n";
 }
 
 
@@ -174,7 +207,7 @@ sub PutTrailer (@)
 # Preliminary checks:
 #
 
-my $userid = confirm_login();
+$userid = confirm_login();
 
 print "Content-type: text/html\n\n";
 
@@ -263,7 +296,7 @@ if ($action eq 'add') {
     print "<FORM METHOD=POST ACTION=editproducts.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
-    EmitFormElements('', '', '', '', 0, 0, 10000, 0, "---");
+    EmitFormElements('', '', '', 0, 0, 10000, 0, "---");
 
     print "</TR><TR>\n";
     print "  <TH ALIGN=\"right\">Version:</TH>\n";
@@ -315,7 +348,6 @@ if ($action eq 'new') {
 
     my $description  = trim($::FORM{description}  || '');
     my $milestoneurl = trim($::FORM{milestoneurl} || '');
-    my $userregexp = trim($::FORM{userregexp} || '');
     my $disallownew = 0;
     $disallownew = 1 if $::FORM{disallownew};
     my $votesperuser = $::FORM{votesperuser};
@@ -337,6 +369,10 @@ if ($action eq 'new') {
             $disallownew . "," .
             "$votesperuser, $maxvotesperbug, $votestoconfirm, " .
             SqlQuote($defaultmilestone) . ")");
+
+    SendSQL("SELECT LAST_INSERT_ID()");
+    my $productid = FetchOneColumn();
+
     SendSQL("INSERT INTO versions ( " .
           "value, program" .
           " ) VALUES ( " .
@@ -346,40 +382,27 @@ if ($action eq 'new') {
     SendSQL("INSERT INTO milestones (product, value) VALUES (" .
             SqlQuote($product) . ", " . SqlQuote($defaultmilestone) . ")");
 
-    # If we're using bug groups, then we need to create a group for this
-    # product as well.  -JMR, 2/16/00
-    if(Param("usebuggroups")) {
-        # Next we insert into the groups table
-        SendSQL("INSERT INTO groups " .
-                "(name, description, isbuggroup, userregexp) " .
-                "VALUES (" .
-                SqlQuote($product) . ", " .
-                SqlQuote($product . " Bugs Access") . ", " .
-                "1, " .
-                SqlQuote($userregexp) . ")");
-        
-        # And last, we need to add any existing users that match the regexp
-        # to the group.
-        # There may be a better way to do this in MySql, but I need to compare
-        # the login_names to this regexp, and the only way I can think of to
-        # do that is to get the list of login_names, and then update them
-        # one by one if they match.  Furthermore, I need to do it with two
-        # separate loops, since opening a new SQL statement to do the update
-        # seems to clobber the previous one.
+    # Update group permissions for this product
+    
+    my %newgroups = ();
+    foreach (keys %::FORM) {
+        next unless /^group_/;
+        detaint_natural($::FORM{$_});
+        $newgroups{$::FORM{$_}} = 1;
+    }
 
-        # Modified, 7/17/00, Joe Robins
-        # If the userregexp is left empty, then no users should be added to
-        # the bug group.  As is, it was adding all users, since they all
-        # matched the empty pattern.
-        unless($userregexp eq "") {
-            SendSQL("SELECT group_id FROM groups WHERE name = " . SqlQuote($product));
-            my $groupid = FetchOneColumn();
-            SendSQL("SELECT userid FROM profiles " . 
-                    "WHERE LOWER(login_name) REGEXP LOWER(" . SqlQuote($userregexp) . ")" . 
-                    " OR admin = 1");
-            while ( my @row = FetchSQLData() ) {
-                $::db->do("INSERT INTO user_group_map VALUES ($row[0], $groupid)");
-            }
+    my %groupsbelong = ();
+    SendSQL("select groups.group_id from groups, user_group_map " .
+            "where groups.group_id = user_group_map.group_id " .
+            "and groups.isbuggroup = 1 " .
+            "and user_group_map.user_id = $userid");
+    while (my ($groupid) = FetchSQLData()) {
+        $groupsbelong{$groupid} = 1;
+    }
+
+    foreach my $groupid (keys %groupsbelong) {
+        if ($newgroups{$groupid}) {
+            SendSQL("INSERT INTO product_group_map (product_id, group_id) VALUES ($productid, $groupid)");
         }
     }
 
@@ -430,23 +453,6 @@ if ($action eq 'del') {
         print "</TR><TR>\n";
         print "  <TD VALIGN=\"top\">Milestone URL:</TD>\n";
         print "  <TD VALIGN=\"top\">$milestonelink</TD>\n";
-    }
-
-    # Added -JMR, 2/16/00
-    if(Param('usebuggroups')) {
-        # Get the regexp for this product.
-        SendSQL("SELECT userregexp
-                 FROM groups
-                 WHERE name=" . SqlQuote($product));
-        my $userregexp = FetchOneColumn();
-        if(!defined $userregexp) {
-            $userregexp = "<FONT COLOR=\"red\">undefined</FONT>";
-        } elsif ($userregexp eq "") {
-            $userregexp = "<FONT COLOR=\"blue\">blank</FONT>";
-        }
-        print "</TR><TR>\n";
-        print "  <TD VALIGN=\"top\">User Regexp for Bug Group:</TD>\n";
-        print "  <TD VALIGN=\"top\">$userregexp</TD>\n";
     }
 
     print "</TR><TR>\n";
@@ -566,7 +572,7 @@ one.";
 if ($action eq 'delete') {
     PutHeader("Deleting product");
     CheckProduct($product);
-
+    
     # lock the tables before we start to change everything:
 
     SendSQL("LOCK TABLES attachments WRITE,
@@ -579,7 +585,10 @@ if ($action eq 'delete') {
                          groups WRITE,
                          profiles WRITE,
                          milestones WRITE,
-                         user_group_map WRITE");
+                         product_group_map WRITE");
+
+    SendSQL("SELECT product_id FROM products WHERE product = " . SqlQuote($product));
+    my $productid = FetchOneColumn();
 
     # According to MySQL doc I cannot do a DELETE x.* FROM x JOIN Y,
     # so I have to iterate over bugs and delete all the indivial entries
@@ -621,28 +630,13 @@ if ($action eq 'delete') {
              WHERE product=" . SqlQuote($product));
     print "Milestones deleted.<BR>\n";
 
+    # Deleting any product groups
+    SendSQL("DELETE FROM product_group_map WHERE product_id = $productid");
+    print "Product groups deleted.<BR>\n";
+
     SendSQL("DELETE FROM products
              WHERE product=" . SqlQuote($product));
     print "Product '$product' deleted.<BR>\n";
-
-    # Added -JMR, 2/16/00
-    if (Param("usebuggroups")) {
-        # We need to get the id of the group from the table, then delete the
-        # members of that group and remove the group.
-        SendSQL("SELECT group_id, description FROM groups " . 
-                "WHERE name = " . SqlQuote($product));
-        my ($groupid, $group_desc) = FetchSQLData();
-
-        # Make sure there is a group before we try to do any deleting...
-        if ($groupid) {
-            SendSQL("DELETE FROM user_group_map WHERE group_id = $groupid");
-            print "Users dropped from group '$group_desc'.<BR>\n";
-
-            SendSQL("DELETE FROM groups " .
-                    "WHERE group_id = $groupid");
-            print "Group '$group_desc' deleted.<BR>\n";
-        }
-    }
 
     SendSQL("UNLOCK TABLES");
 
@@ -672,18 +666,10 @@ if ($action eq 'edit') {
         $votesperuser, $maxvotesperbug, $votestoconfirm, $defaultmilestone) =
         FetchSQLData();
 
-    my $userregexp = '';
-    if(Param("usebuggroups")) {
-        SendSQL("SELECT userregexp
-                 FROM groups
-                 WHERE name=" . SqlQuote($product));
-        $userregexp = FetchOneColumn();
-    }
-
     print "<FORM METHOD=POST ACTION=editproducts.cgi>\n";
     print "<TABLE  BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
-    EmitFormElements($product, $description, $milestoneurl, $userregexp,
+    EmitFormElements($product, $description, $milestoneurl, 
                      $disallownew, $votesperuser, $maxvotesperbug,
                      $votestoconfirm, $defaultmilestone);
     
@@ -769,10 +755,6 @@ if ($action eq 'edit') {
         value_quote($description) . "\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"milestoneurlold\" VALUE=\"" .
         value_quote($milestoneurl) . "\">\n";
-    if(Param("usebuggroups")) {
-        print "<INPUT TYPE=HIDDEN NAME=\"userregexpold\" VALUE=\"" .
-            value_quote($userregexp) . "\">\n";
-    }
     print "<INPUT TYPE=HIDDEN NAME=\"disallownewold\" VALUE=\"$disallownew\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"votesperuserold\" VALUE=\"$votesperuser\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"maxvotesperbugold\" VALUE=\"$maxvotesperbug\">\n";
@@ -798,7 +780,8 @@ if ($action eq 'edit') {
 
 if ($action eq 'update') {
     PutHeader("Update product");
-
+    
+    my $productid           = trim($::FORM{productid}           || 0);
     my $productold          = trim($::FORM{productold}          || '');
     my $description         = trim($::FORM{description}         || '');
     my $descriptionold      = trim($::FORM{descriptionold}      || '');
@@ -808,8 +791,6 @@ if ($action eq 'update') {
     my $milestoneurlold     = trim($::FORM{milestoneurlold}     || '');
     my $votesperuser        = trim($::FORM{votesperuser}        || 0);
     my $votesperuserold     = trim($::FORM{votesperuserold}     || 0);
-    my $userregexp          = trim($::FORM{userregexp}          || '');
-    my $userregexpold       = trim($::FORM{userregexpold}       || '');
     my $maxvotesperbug      = trim($::FORM{maxvotesperbug}      || 0);
     my $maxvotesperbugold   = trim($::FORM{maxvotesperbugold}   || 0);
     my $votestoconfirm      = trim($::FORM{votestoconfirm}      || 0);
@@ -837,7 +818,8 @@ if ($action eq 'update') {
                          groups WRITE,
                          profiles WRITE,
                          milestones WRITE,
-                         user_group_map WRITE");
+                         user_group_map WRITE,
+                         product_group_map WRITE");
 
     if ($disallownew ne $disallownewold) {
         $disallownew ||= 0;
@@ -865,59 +847,6 @@ if ($action eq 'update') {
                  SET milestoneurl=" . SqlQuote($milestoneurl) . "
                  WHERE product=" . SqlQuote($productold));
         print "Updated mile stone URL.<BR>\n";
-    }
-
-    # Added -JMR, 2/16/00
-    if (Param("usebuggroups") && $userregexp ne "" && $userregexp ne $userregexpold) {
-        # This will take a little bit of work here, since there may not be
-        # an existing bug group for this product, and we will also have to
-        # update users memberships.
-        # First we find out if there's an existing group for this product, and
-        # get its groupid if there is.
-        SendSQL("SELECT group_id " .
-                "FROM groups " .
-                "WHERE name = " . SqlQuote($productold));
-        my $groupid = FetchOneColumn();
-        if( $groupid ) {
-            # Group exists, so we do an update statement.
-            SendSQL("UPDATE groups " .
-                    "SET userregexp = " . SqlQuote($userregexp) . " " .
-                    "WHERE name = " . SqlQuote($productold));
-            print "Updated user regexp for bug group.<BR>\n";
-        } else {
-            # Group doesn't exist.  Let's make it, the same way as we make a
-            # group for a new product above.
-            SendSQL("INSERT INTO groups " .
-                    "(name, description, isbuggroup, userregexp) " .
-                    "values (" .
-                    SqlQuote($productold) . ", " .
-                    SqlQuote($productold . " Bugs Access") . ", " .
-                    "1, " .
-                    SqlQuote($userregexp) . ")");
-            print "Created bug group.<BR>\n";
-        }
-        
-        # And now we have to update the group table again to add any users who
-        # match the new regexp to the group.  I'll do this the same way as
-        # when I create a new group above.  Note that I'm not taking out
-        # users who matched the old regexp and not the new one;  that would
-        # be insanely messy.  Use the group administration page for that
-        # instead.
-        if ( !$groupid ) {
-            SendSQL("SELECT group_id FROM groups WHERE name = " . SqlQuote($productold));
-            $groupid = FetchOneColumn();
-        }
-        SendSQL("SELECT userid FROM profiles " .
-                "WHERE LOWER(login_name) REGEXP LOWER(" . SqlQuote($userregexp) . ")" . 
-                " OR admin = 1");
-        my $updated_profiles = 0;
-        while ( my @row = FetchSQLData() ) {
-            $::db->do("INSERT INTO user_group_map VALUES ($row[0], $groupid)");
-            $updated_profiles = 1;
-        }
-        if($updated_profiles) {
-            print "Added users matching regexp to group.<BR>\n";
-        }
     }
 
     if ($votesperuser ne $votesperuserold) {
@@ -985,17 +914,45 @@ if ($action eq 'update') {
         SendSQL("UPDATE products SET product=$qp WHERE product=$qpold");
         SendSQL("UPDATE versions SET program=$qp WHERE program=$qpold");
         SendSQL("UPDATE milestones SET product=$qp WHERE product=$qpold");
-        # Need to do an update to groups as well.  If there is a corresponding
-        # bug group, whether usebuggroups is currently set or not, we want to
-        # update it so it will match in the future.  If there is no group, this
-        # update statement will do nothing, so no harm done.  -JMR, 3/8/00
-        SendSQL("UPDATE groups " .
-                "SET name=$qp, " .
-                "description=".SqlQuote($product." Bugs Access")." ".
-                "WHERE name=$qpold");
         
         print "Updated product name.<BR>\n";
     }
+
+    # Update group permissions for this product
+    my %newgroups = ();
+    foreach (keys %::FORM) {
+        next unless /^group_/;
+        detaint_natural($::FORM{$_});
+        $newgroups{$::FORM{$_}} = 1;
+    }
+
+    my %groupsbelong = ();
+    SendSQL("select groups.group_id from groups, user_group_map " .
+            "where groups.group_id = user_group_map.group_id " .
+            "and groups.isbuggroup = 1 " .
+            "and user_group_map.user_id = $userid");
+    while (my ($groupid) = FetchSQLData()) {
+        $groupsbelong{$groupid} = 1;
+    }
+
+    my %oldgroups = ();
+    SendSQL("select groups.group_id from groups, product_group_map " .
+            "where groups.group_id = product_group_map.group_id " .
+            "and product_group_map.product_id = $productid");
+    while (my ($groupid) = FetchSQLData()) {
+        $oldgroups{$groupid} = 1;
+    }
+
+    foreach my $groupid (keys %groupsbelong) {
+        if (!$oldgroups{$groupid} && $newgroups{$groupid}) {
+            SendSQL("INSERT INTO product_group_map (product_id, group_id) VALUES ($productid, $groupid)");
+        }
+        if ($oldgroups{$groupid} && !$newgroups{$groupid}) {
+            SendSQL("DELETE FROM product_group_map WHERE product_id = $productid AND group_id = $groupid");
+        }
+    }
+    print "Updated product permissions<br>\n";
+
     unlink "data/versioncache";
     SendSQL("UNLOCK TABLES");
 
