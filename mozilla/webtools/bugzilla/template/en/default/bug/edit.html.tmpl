@@ -324,7 +324,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;
       <input type="checkbox" name="bit-[% group.bit %]" value="1" 
         [% " checked=\"checked\"" IF group.ison %]
-        [% " disabled=\"disabled\"" IF NOT group.ingroup %]>
+        [% " disabled=\"disabled\"" IF NOT group.ingroup || group.disable %]>
       [% group.description %]
       <br>
     [% END %]

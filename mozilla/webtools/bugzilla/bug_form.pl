@@ -245,6 +245,7 @@ sub show_bug {
             push (@groups, { "bit" => $groupid,
                              "ison" => $bflag,
                              "ingroup" => $uflag,
+                             "disable" => !$pflag,
                              "description" => $description });            
         }
     }
