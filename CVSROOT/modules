@@ -131,6 +131,7 @@ MozillaSourceUnixOnly -a \
     mozilla/config/.cvsignore  \
     mozilla/config/AIX.mk  \
     mozilla/config/BSD_OS.mk  \
+    mozilla/config/bdate.c \
     mozilla/config/bsdecho.c  \
     mozilla/config/clobber_miss.pl  \
     mozilla/config/common.mk  \
