@@ -107,6 +107,9 @@ $GLOBAL_INDEX_FILE = ($TinderConfig::GLOBAL_INDEX_FILE ||
 $LOCK_FILE = ($TinderConfig::LOCK_FILE ||
               "/usr/apache/cgibin/webtools/tinderbox/tinderd.lock");
 
+$CGIBIN_DIR = ($TINDERBOX_CGIBIN_DIR ||
+               "/usr/apache/cgibin/webtools/tinderbox");
+
 # the default page for a tree
 $DEFAULT_HTML_PAGE = $TinderConfig::DEFAULT_HTML_PAGE || 'index.html';
 

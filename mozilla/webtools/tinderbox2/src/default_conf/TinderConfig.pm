@@ -94,6 +94,11 @@ $TINDERBOX_HTML_DIR = "/opt/apache/htdocs/tinderbox2";
 #$TINDERBOX_DATA_DIR = "/var/spool/tinderbox";
 $TINDERBOX_DATA_DIR = "/export2/tbox2-data";
 
+# The full path name tinderbox will use to access the tinderbox
+# cgi scripts.
+
+$TINDERBOX_CGIBIN_DIR = "/opt/tbox/public_html/cgi-bin/";
+
 # The top level tinderbox index file. Change this if you wish to
 # provide your own index file for tinderboxs web pages.
 
@@ -258,7 +263,7 @@ $BONSAI_URL = "http://bonsai.mozilla.org/";
 # is installed in.
 
 #$BONSAI_DIR = "/home/httpd/cgi-bin/bonsai";
-$BONSAI_DIR = "/opt/apache/htdocs/webtools/bonsai/";
+$BONSAI_DIR = "/opt/apache/htdocs/webtools/bonsai";
 
 
 # If you your using BT_Generic we need to know how to make HTML

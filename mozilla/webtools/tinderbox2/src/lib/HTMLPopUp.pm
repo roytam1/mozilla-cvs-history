@@ -240,7 +240,7 @@ sub regenerate_HTML_pages {
     local $ENV{"QUERY_STRING"} = '';
 
     system(
-           $FileStructure::URLS{'tinderd'}, 
+           $FileStructure::CGIBIN_DIR.'tinder.cgi', 
            '--daemon-mode',
            );
 
