@@ -376,6 +376,10 @@ sub status_table_start {
 sub is_break_cell {
     my ($tree,$time,$next_time) = @_;
 
+    # When building the first row of the status table LAST_TREESTATE
+    # is not defined.  If we can find a treestate in the data
+    # structure use it.
+
     if (defined($DATABASE{$tree}{$time}{'treestate'})) {
         $LAST_TREESTATE = $DATABASE{$tree}{$time}{'treestate'};
     }
@@ -394,7 +398,7 @@ sub is_break_cell {
          ($LAST_TREESTATE ne $DATABASE{$tree}{$time}{'treestate'}) &&
          1);
 
-    $is_state_different = $is_state1_different || $is_state2_different;    
+    my $is_state_different = $is_state1_different || $is_state2_different;    
     my $is_author_data = defined($DATABASE{$tree}{$time}{'author'});
     
     my $is_break_cell = ( ($is_state_different) || ($is_author_data) );
@@ -428,10 +432,7 @@ sub status_table_row {
 
   # first find out what time the break will occur at.
 
-  my $next_time;
-  my $next_index = $NEXT_DB;
-  $next_time = $DB_TIMES[$next_index];
-
+  my $next_index = $row_index;
 
   while (!(
          is_break_cell(
@@ -441,9 +442,12 @@ sub status_table_row {
                        )
          )) {
 
+      $NEXT_DB++;
       $next_index++;
 
   }
+
+  $next_time = $DB_TIMES[$next_index];
 
   # If there is no treestate, then the tree state has not changed
   # since an early time.  The earliest time was assigned a state in
