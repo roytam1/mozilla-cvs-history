@@ -424,6 +424,11 @@ sub backward_compatibility {
     $TINDERBOX{'builddate'} = undef;
   }
 
+  if ($TINDERBOX{'build'}) {
+    $TINDERBOX{'buildname'} = $TINDERBOX{'build'};
+    $TINDERBOX{'buildname'} = undef;
+  }
+
   return 1;
 }
 
@@ -506,7 +511,6 @@ sub check_required_vars {
 
   my ($func) = "Error_Parse::$TINDERBOX{'errorparser'}::line_type";
   my ($ignore) = eval &$func(@_);    
-  
   ($@) &&
     ($err_string .= "Errorparser: '$TINDERBOX{'errorparser'}::line_type'".
      " does not exist.\n");
