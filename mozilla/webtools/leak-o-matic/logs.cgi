@@ -20,7 +20,9 @@
 # 
 # Contributor(s):
 # Chris Waterson <waterson@netscape.com>
-# 
+#
+# $Id$
+#
 
 #
 # ``Front door'' script that shows all of the logs that are
@@ -64,10 +66,10 @@ that are currently available for your perusal.
 
 };
 
-# ``ls'' the directory, ``-1Sr'' returns it sorted by name, reversed, so
+# ``ls'' the directory, ``-1r'' returns it sorted by name, reversed, so
 # the most recent logs will be at the top.
 
-ZIP: foreach (qx/ls -1Sr $::logdir\/*.zip/) {
+ZIP: foreach (qx/ls -1r $::logdir\/*.zip/) {
     chomp;
 
     next ZIP unless (/(\d\d\d\d)(\d\d)(\d\d)/);
