@@ -1,14 +1,12 @@
 <HTML>
 <HEAD>
-   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=x-mac-roman">
-   <META NAME="GENERATOR" CONTENT="Mozilla/4.04 (Macintosh; I; PPC) [Netscape]">
-   <TITLE>Unix Build Instructions</TITLE>
+<TITLE>Unix Build Instructions</TITLE>
 </HEAD>
 <BODY BGCOLOR="#FFFFFF">
 
 <H2>
 <FONT FACE="Arial,Helvetica">Unix Build Instructions</FONT></H2>
-This document explains how to build Mozilla for the Unix platform.
+This document explains how to build Mozilla for Unix.
 <BR>
 <HR WIDTH="100%">
 <PRE>Requirements:
@@ -19,7 +17,7 @@ This document explains how to build Mozilla for the Unix platform.
 &nbsp; Tools:
 &nbsp;&nbsp;&nbsp; GNU C/C++ compiler 2.7.2 or better
 &nbsp;&nbsp;&nbsp; GNU make 3.74 or better
-&nbsp;&nbsp;&nbsp; Motif 1.2 (Lestif has been used with limited success)
+&nbsp;&nbsp;&nbsp; Motif 1.2 (Lesstif has been used with limited success)
 
 &nbsp; Tools that will be helpful later:
 &nbsp;&nbsp;&nbsp; Perl 5.0
@@ -54,6 +52,9 @@ Build:
 &nbsp; Debug build is default; optimized build:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; setenv BUILD_OPT 1
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (BUILD_OPT=1; export BUILD_OPT)
+
+&nbsp; On AIX, <B>ap</B>pend /usr/lpp/xlC/bin to your PATH.
+&nbsp; On Solaris, SINIX, and UnixWare, <B>pre</B>pend /usr/ccs/bin to your PATH.
 
 &nbsp; Build it.&nbsp; Default target is "export libs install":
 &nbsp;&nbsp;&nbsp; cd ns
