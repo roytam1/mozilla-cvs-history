@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -23,6 +23,8 @@
 use diagnostics;
 use strict;
 
+use lib qw(.);
+
 require "CGI.pl";
 require "defparams.pl";
 
@@ -31,7 +33,7 @@ use vars %::param,
     %::param_default,
     @::param_list;
 
-
+ConnectToDatabase();
 confirm_login();
 
 print "Content-type: text/html\n\n";
@@ -51,7 +53,7 @@ foreach my $i (@::param_list) {
     if (exists $::FORM{"reset-$i"}) {
         $::FORM{$i} = $::param_default{$i};
     }
-    $::FORM{$i} =~ s/\r\n/\n/g;   # Get rid of windows-style line endings.
+    $::FORM{$i} =~ s/\r\n?/\n/g;   # Get rid of windows/mac-style line endings.
     $::FORM{$i} =~ s/^\n$//;      # assume single linefeed is an empty string
     if ($::FORM{$i} ne Param($i)) {
         if (defined $::param_checker{$i}) {
