@@ -29,6 +29,7 @@
 
 use diagnostics;
 use strict;
+use lib ".";
 
 require "CGI.pl";
 require "globals.pl";
@@ -145,17 +146,17 @@ sub EmitFormElements ($$$$$)
                 print "</TR><TR>\n<TD ALIGN=CENTER><B>|</B></TD>\n";
             }
             print "<TD COLSPAN=2 ALIGN=LEFT><B>User is a member of these groups</B></TD>\n";
-        }
-        while (MoreSQLData()) {
-            my ($bit,$name,$description,$checked,$blchecked) = FetchSQLData();
-            print "</TR><TR>\n";
-            if ($editall) {
-                $blchecked = ($blchecked) ? "CHECKED" : "";
-                print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"blbit_$name\" $blchecked VALUE=\"$bit\"></TD>";
+            while (MoreSQLData()) {
+                my ($bit,$name,$description,$checked,$blchecked) = FetchSQLData();
+                print "</TR><TR>\n";
+                if ($editall) {
+                    $blchecked = ($blchecked) ? "CHECKED" : "";
+                    print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"blbit_$name\" $blchecked VALUE=\"$bit\"></TD>";
+                }
+                $checked = ($checked) ? "CHECKED" : "";
+                print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"bit_$name\" $checked VALUE=\"$bit\"></TD>";
+                print "<TD><B>" . ucfirst($name) . "</B>: $description</TD>\n";
             }
-            $checked = ($checked) ? "CHECKED" : "";
-            print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"bit_$name\" $checked VALUE=\"$bit\"></TD>";
-            print "<TD><B>" . ucfirst($name) . "</B>: $description</TD>\n";
         }
         print "</TR></TABLE></TD>\n";
     
@@ -170,21 +171,21 @@ sub EmitFormElements ($$$$$)
                 print "<TD COLSPAN=3 ALIGN=LEFT><B>Can turn this bit on for other users</B></TD>\n";
                 print "</TR><TR>\n<TD ALIGN=CENTER><B>|</B></TD>\n";
             }
-            print "<TD COLSPAN=2 ALIGN=LEFT><B>User has these priveleges</B></TD>\n";
-        }
-        while (MoreSQLData()) {
-            my ($bit,$name,$description,$checked,$blchecked) = FetchSQLData();
-            print "</TR><TR>\n";
-            if ($editall) {
-                $blchecked = ($blchecked) ? "CHECKED" : "";
-                print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"blbit_$name\" $blchecked VALUE=\"$bit\"></TD>";
+            print "<TD COLSPAN=2 ALIGN=LEFT><B>User has these privileges</B></TD>\n";
+            while (MoreSQLData()) {
+                my ($bit,$name,$description,$checked,$blchecked) = FetchSQLData();
+                print "</TR><TR>\n";
+                if ($editall) {
+                    $blchecked = ($blchecked) ? "CHECKED" : "";
+                    print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"blbit_$name\" $blchecked VALUE=\"$bit\"></TD>";
+                }
+                $checked = ($checked) ? "CHECKED" : "";
+                print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"bit_$name\" $checked VALUE=\"$bit\"></TD>";
+                print "<TD><B>" . ucfirst($name) . "</B>: $description</TD>\n";
             }
-            $checked = ($checked) ? "CHECKED" : "";
-            print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"bit_$name\" $checked VALUE=\"$bit\"></TD>";
-            print "<TD><B>" . ucfirst($name) . "</B>: $description</TD>\n";
         }
     } else {
-        print "</TR><TR><TH ALIGN=RIGHT>Groups and<br>Priveleges:</TH><TD><TABLE><TR>";        
+        print "</TR><TR><TH ALIGN=RIGHT>Groups and<br>Privileges:</TH><TD><TABLE><TR>";        
         print "<TD COLSPAN=3>The new user will be inserted into groups " .
           "based on their userregexps.<BR>To change the group " .
           "permissions for this user, you must edit the account after ".
@@ -230,6 +231,7 @@ sub PutTrailer (@)
 # Preliminary checks:
 #
 
+ConnectToDatabase();
 confirm_login();
 
 print "Content-type: text/html\n\n";
@@ -342,7 +344,7 @@ if ($action eq 'list') {
             $s = "<STRIKE>";
             $e = "</STRIKE>";
         }
-        $realname ||= "<FONT COLOR=\"red\">missing</FONT>";
+        $realname = ($realname ? html_quote($realname) : "<FONT COLOR=\"red\">missing</FONT>");
         print "<TR>\n";
         print "  <TD VALIGN=\"top\"><A HREF=\"editusers.cgi?action=edit&user=", url_quote($user), "\"><B>$s$user$e</B></A></TD>\n";
         print "  <TD VALIGN=\"top\">$s$realname$e</TD>\n";
@@ -451,7 +453,7 @@ if ($action eq 'new') {
         PutTrailer($localtrailer);
         exit;
     }
-    if (TestUser($user)) {
+    if (!ValidateNewUser($user)) {
         print "The user '$user' does already exist. Please press\n";
         print "<b>Back</b> and try again.\n";
         PutTrailer($localtrailer);
@@ -527,6 +529,7 @@ if ($action eq 'del') {
     if (!$candelete) {
         print "Sorry, deleting users isn't allowed.";
         PutTrailer();
+        exit;
     }
     if (!$editall) {
         print "Sorry, you don't have permissions to delete users.";
@@ -540,7 +543,7 @@ if ($action eq 'del') {
              WHERE login_name=" . SqlQuote($user));
     my ($realname, $groupset) = 
       FetchSQLData();
-    $realname ||= "<FONT COLOR=\"red\">missing</FONT>";
+    $realname = ($realname ? html_quote($realname) : "<FONT COLOR=\"red\">missing</FONT>");
     
     print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0>\n";
     print "<TR BGCOLOR=\"#6666FF\">\n";
@@ -656,6 +659,7 @@ if ($action eq 'delete') {
     if (!$candelete) {
         print "Sorry, deleting users isn't allowed.";
         PutTrailer();
+        exit;
     }
     if (!$editall) {
         print "Sorry, you don't have permissions to delete users.";
@@ -742,12 +746,14 @@ if ($action eq 'update') {
     foreach (keys %::FORM) {
         next unless /^bit_/;
         #print "$_=$::FORM{$_}<br>\n";
+        detaint_natural($::FORM{$_}) || die "Groupset field tampered with";
         $groupset .= " + $::FORM{$_}";
     }
     my $blessgroupset = "0";
     foreach (keys %::FORM) {
         next unless /^blbit_/;
         #print "$_=$::FORM{$_}<br>\n";
+        detaint_natural($::FORM{$_}) || die "Blessgroupset field tampered with";
         $blessgroupset .= " + $::FORM{$_}";
     }
 
@@ -767,7 +773,8 @@ if ($action eq 'update') {
         } else {
            SendSQL("UPDATE profiles
                     SET groupset =
-                         groupset - (groupset & $opblessgroupset) + $groupset
+                         groupset - (groupset & $opblessgroupset) + 
+                         (($groupset) & $opblessgroupset)
                     WHERE login_name=" . SqlQuote($userold));
 
            # I'm paranoid that someone who I give the ability to bless people
@@ -805,6 +812,11 @@ if ($action eq 'update') {
             SendSQL("UPDATE  profiles
                      SET     cryptpassword = $cryptpassword
                      WHERE   login_name = $loginname");
+            SendSQL("SELECT userid
+                     FROM profiles
+                     WHERE login_name=" . SqlQuote($userold));
+            my $userid = FetchOneColumn();
+            InvalidateLogins($userid);
             print "Updated password.<BR>\n";
         } else {
             print "Did not update password: $passworderror<br>\n";
@@ -822,10 +834,9 @@ if ($action eq 'update') {
                  WHERE login_name=" . SqlQuote($userold));
         SendSQL("SELECT userid
                  FROM profiles
-                 WHERE login_name=" . SqlQuote($user));
+                 WHERE login_name=" . SqlQuote($userold));
         my $userid = FetchOneColumn();
-        SendSQL("DELETE FROM logincookies
-                 WHERE userid=" . $userid);
+        InvalidateLogins($userid);
         print "Updated disabled text.<BR>\n";
     }
     if ($editall && $user ne $userold) {
