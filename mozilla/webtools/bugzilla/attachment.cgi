@@ -424,7 +424,6 @@ sub viewall
     && exit;
 }
 
-
 sub enter
 {
   # Display a form for entering a new attachment.
@@ -480,7 +479,8 @@ sub insert
            VALUES ($::FORM{'bugid'}, $filename, $description, $contenttype, $::FORM{'ispatch'}, $submitterid, $thedata)");
 
   # Retrieve the ID of the newly created attachment record.
-  my $attachid = CurrId('attachments_attach_id_seq');
+  SendSQL("SELECT LAST_INSERT_ID()");
+  my $attachid = FetchOneColumn();
 
   # Insert a comment about the new attachment into the database.
   my $comment = "Created an attachment (id=$attachid): $::FORM{'description'}\n";

@@ -103,10 +103,7 @@ if ($::FORM{'assigned_to'} eq "") {
     $::FORM{'assigned_to'} = DBNameToIdAndCheck($::FORM{'assigned_to'});
 }
 
-$::FORM{'reporter'} = DBNameToIdAndCheck($::FORM{'reporter'});
-
-
-my @bug_fields = ("reporter", "product", "version", "rep_platform",
+my @bug_fields = ("product", "version", "rep_platform",
                   "bug_severity", "priority", "op_sys", "assigned_to",
                   "bug_status", "bug_file_loc", "short_desc", "component",
                   "target_milestone", "resolution");
@@ -147,7 +144,6 @@ if (!exists $::FORM{'target_milestone'}) {
 
 if ( Param("strictvaluechecks") ) {
     GetVersionTable();  
-    CheckFormField(\%::FORM, 'reporter');
     CheckFormField(\%::FORM, 'product', \@::legal_product);
     CheckFormField(\%::FORM, 'version', \@{$::versions{$::FORM{'product'}}});
     CheckFormField(\%::FORM, 'target_milestone',
@@ -176,7 +172,7 @@ if (exists $::FORM{'bug_status'} && $::FORM{'bug_status'} ne $::unconfirmedstate
 }
 
 my $query = "INSERT INTO bugs (\n" . join(",\n", @used_fields) . ",
-creation_ts, groupset)
+reporter, creation_ts, groupset)
 VALUES (
 ";
 
@@ -184,17 +180,17 @@ foreach my $field (@used_fields) {
 # fix for 42609. if there is a http:// only in bug_file_loc, strip
 # it out and send an empty value. 
     if ($field eq 'bug_file_loc') {
-       if ($::FORM{$field} eq 'http://') {
-           $::FORM{$field} = "";
-           $query .= SqlQuote($::FORM{$field}) . ",\n";
-           next;
-       } 
-       else {
-          $query .= SqlQuote($::FORM{$field}) . ",\n";
-       }
+        if ($::FORM{$field} eq 'http://') {
+            $::FORM{$field} = "";
+            $query .= SqlQuote($::FORM{$field}) . ",\n";
+            next;
+        }
+        else {
+            $query .= SqlQuote($::FORM{$field}) . ",\n";
+        }
     }
     else {
-       $query .= SqlQuote($::FORM{$field}) . ",\n";
+        $query .= SqlQuote($::FORM{$field}) . ",\n";
     }
 }
 
@@ -207,9 +203,9 @@ $comment = trim($comment);
 $comment = $comment ? $comment : " ";
 
 if ($::driver eq 'mysql') {
-    $query .= "now(), (0";
+    $query .= "$::userid, now(), (0";
 } elsif ($::driver eq 'Pg') {
-    $query .= "now(), (int8(0)";
+    $query .= "$::userid, now(), (int8(0)";
 }
 
 foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
@@ -259,7 +255,7 @@ SendSQL($query);
 my $id = CurrId("bugs_bug_id_seq");
 
 SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) VALUES " .
-        "($id, $::FORM{'reporter'}, now(), " . SqlQuote($comment) . ")");
+        "($id, $::userid, now(), " . SqlQuote($comment) . ")");
 
 foreach my $person (keys %ccids) {
     SendSQL("insert into cc (bug_id, who) values ($id, $person)");

@@ -449,10 +449,6 @@ if ($action eq Param("move-button-text")) {
 }
 
 
-if (!defined $::FORM{'who'}) {
-    $::FORM{'who'} = $::COOKIE{'Bugzilla_login'};
-}
-
 # the common updates to all bugs in @idlist start here
 #
 print "<TITLE>Update Bug " . join(" ", @idlist) . "</TITLE>\n";
@@ -565,52 +561,6 @@ sub CheckonComment( $ ) {
 # If the form element isn't present, or the user isn't in the group, leave
 # it as-is
 if($::usergroupset ne '0') {
-
-#  # We want to start from zero and build up, since if all boxes have been
-#  # unchecked, we want to revert to 0.
-#  DoComma();
-#  $::query .= "groupset = 0";
-#  my ($id) = (@idlist);
-#    if ($::driver eq 'mysql') {
-#      SendSQL(<<_EOQ_);
-#    SELECT bit, bit & $::usergroupset != 0, bit & bugs.groupset != 0
-#    FROM groups, bugs
-#    WHERE isbuggroup != 0 AND bug_id = $id
-#    ORDER BY bit
-#_EOQ_
-#    } elsif ($::driver eq 'Pg') {
-#      SendSQL(<<_EOQ_);
-#    SELECT group_bit, (group_bit & int8($::usergroupset)) != 0, (group_bit & bugs.groupset) != 0
-#    FROM groups, bugs
-#    WHERE isbuggroup != 0 AND bug_id = $id
-#    ORDER BY group_bit
-#_EOQ_
-#    }
-#  while (my ($b, $userhasgroup, $bughasgroup) = FetchSQLData()) {
-#    if (!$::FORM{"bit-$b"}) {
-#      # If we make it here, the item didn't exist on the form or the user
-#      # said to clear it.  The only time we add this group back in is if
-#      # the bug already has this group on it and the user can't access it.
-#      if ($bughasgroup && !$userhasgroup) {
-#        $::query .= " + $b";
-#      }
-#    } elsif ($::FORM{"bit-$b"} == -1) {
-#      # If we get here, the user came from the change several bugs form, and
-#      # said not to change this group restriction.  So we'll add this group
-#      # back in only if the bug already has it.
-#      if ($bughasgroup) {
-#        $::query .= " + $b";
-#      }
-#    } else {
-#      # If we get here, the user said to set this group.  If they don't have
-#      # access to it, we'll use what's already on the bug, otherwise we'll
-#      # add this one in.
-#      if ($userhasgroup || $bughasgroup) {
-#        $::query .= " + $b";
-#      }
-#    }
-#  }
-
     my $groupAdd = "0";
     my $groupDel = "0";
     
@@ -854,7 +804,7 @@ SWITCH: for ($::FORM{'knob'}) {
                          "is a duplicate.  The bug has not been changed.")
         }
         if (!defined($::FORM{'id'}) || $num == $::FORM{'id'}) {
-            PuntTryAgain("Nice try, $::FORM{'who'}.  But it doesn't really ".
+            PuntTryAgain("Nice try, $::COOKIE{'Bugzilla_login'}.  But it doesn't really ".
                          "make sense to mark a bug as a duplicate of " .
                          "itself, does it?");
         }
@@ -946,6 +896,7 @@ sub SnapShotDeps {
 
 
 my $timestamp;
+my $bug_changed;
 
 sub FindWrapPoint {
     my ($string, $startpos) = @_;
@@ -995,7 +946,8 @@ sub LogActivityEntry {
         my $fieldid = GetFieldID($col);
         SendSQL("INSERT INTO bugs_activity " .
                 "(bug_id,who,bug_when,fieldid,removed,added) VALUES " .
-                "($i,$whoid,'$timestamp',$fieldid,$removestr,$addstr)");
+                "($i,$whoid," . SqlQuote($timestamp) . ",$fieldid,$removestr,$addstr)");
+        $bug_changed = 1;
     }
 }
 
@@ -1017,6 +969,7 @@ sub LogDependencyActivity {
 #
 foreach my $id (@idlist) {
     my %dependencychanged;
+    $bug_changed = 0;
     my $write = "WRITE";        # Might want to make a param to control
                                 # whether we do LOW_PRIORITY ...
     if ($::driver eq 'mysql') {
@@ -1205,21 +1158,18 @@ The changes made were:
                     " WHERE bug_id = $id");
         }
     }
-
     my $query = "$basequery\nwhere bug_id = $id";
     
 # print "<PRE>$query</PRE>\n";
 
     if ($::comma ne "") {
         SendSQL($query);
-        SendSQL("select delta_ts from bugs where bug_id = $id");
-    } else {
-        SendSQL("select now()");
     }
+    SendSQL("select now()");
     $timestamp = FetchOneColumn();
     
     if (defined $::FORM{'comment'}) {
-        AppendComment($id, $::FORM{'who'}, $::FORM{'comment'});
+        AppendComment($id, $::COOKIE{'Bugzilla_login'}, $::FORM{'comment'});
     }
     
     my $removedCcString = "";
@@ -1436,7 +1386,14 @@ The changes made were:
             LogActivityEntry($id,$col,$old,$new);
         }
     }
-    
+    if ($bug_changed) {
+        if ($::driver eq 'mysql') {
+            SendSQL("UPDATE bugs SET delta_ts = " . SqlQuote($timestamp) . " WHERE bug_id = $id");
+        } elsif ($::driver eq 'Pg') {
+            SendSQL("UPDATE bugs SET delta_ts = TO_DATE(" . SqlQuote($timestamp) . 
+                    ", 'YYYYMMDDHH24MISS') WHERE bug_id = $id");
+        }
+    } 
     print "<TABLE BORDER=1><TD><H2>Changes to bug $id submitted</H2>\n";
     if ($::driver eq 'mysql') {
         SendSQL("unlock tables");
@@ -1452,7 +1409,7 @@ The changes made were:
     if ( $origQaContact ne "") { 
         push @ARGLIST, ( "-forceqacontact", $origQaContact);
     }
-    push @ARGLIST, ($id, $::FORM{'who'});
+    push @ARGLIST, ($id, $::COOKIE{'Bugzilla_login'});
     system ("./processmail",@ARGLIST);
 
     print "<TD><A HREF=\"show_bug.cgi?id=$id\">Back To BUG# $id</A></TABLE>\n";
@@ -1471,19 +1428,19 @@ The changes made were:
             LogActivityEntry($duplicate,"cc","",DBID_to_name($reporter));
             SendSQL("INSERT INTO cc (who, bug_id) VALUES ($reporter, " . SqlQuote($duplicate) . ")");
         }
-        AppendComment($duplicate, $::FORM{'who'}, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***");
+        AppendComment($duplicate, $::COOKIE{'Bugzilla_login'}, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***");
         if ( Param('strictvaluechecks') ) {
           CheckFormFieldDefined(\%::FORM,'comment');
         }
         SendSQL("INSERT INTO duplicates VALUES ($duplicate, $::FORM{'id'})");
         print "<TABLE BORDER=1><TD><H2>Duplicate notation added to bug $duplicate</H2>\n";
-        system("./processmail", $duplicate, $::FORM{'who'});
+        system("./processmail", $duplicate, $::COOKIE{'Bugzilla_login'});
         print "<TD><A HREF=\"show_bug.cgi?id=$duplicate\">Go To BUG# $duplicate</A></TABLE>\n";
     }
 
     foreach my $k (keys(%dependencychanged)) {
         print "<TABLE BORDER=1><TD><H2>Checking for dependency changes on bug $k</H2>\n";
-        system("./processmail", $k, $::FORM{'who'});
+        system("./processmail", $k, $::COOKIE{'Bugzilla_login'});
         print "<TD><A HREF=\"show_bug.cgi?id=$k\">Go To BUG# $k</A></TABLE>\n";
     }
 
