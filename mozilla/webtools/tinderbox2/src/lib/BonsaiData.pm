@@ -67,7 +67,7 @@ sub load_bonsai_libs {
   
   $LIBS_LOADED = 1;
   
-  $::CVS_ROOT = $TreeData::VC_TREE{$bonsai_tree}{'root'};;
+  $::CVS_ROOT = $TreeData::VC_TREE{$bonsai_tree}{'root'};
 
   $BONSAI_DIR = ($TinderConfig::BONSAI_DIR ||
                  "/home/httpd/cgi-bin/bonsai");
@@ -261,6 +261,8 @@ sub get_checkin_data {
         ($cvs_module = 'all');
 
     # Set global variables to pass data to query_checkins.
+
+    $::CVS_ROOT = $TreeData::VC_TREE{$bonsai_tree}{'root'};
 
     $::query_module = $cvs_module;
     $::query_branch = $cvs_branch;
