@@ -89,7 +89,7 @@ MozillaSourceCommon -a \
     mozilla/xpcom \
     mozilla/l10n \
     mozilla/dbm  \
-    README 
+    mozilla/README 
 
 MozillaSourceWinOnly -a \
     mozilla/client.mak  \
