@@ -590,9 +590,6 @@ SeaMonkeyEditor -a \
 # et cetera, et cetera, et cetera. But that is in the 
 # future. --sarah
 # 
-# For windows builds, nspr is required. --leaf
 
 SeaMonkeyAll -a \
-	SeaMonkeyEditor \
-	NSPR
-
+	SeaMonkeyEditor
