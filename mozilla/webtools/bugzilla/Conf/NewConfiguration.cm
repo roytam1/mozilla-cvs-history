@@ -1,0 +1,57 @@
+package Conf::NewConfiguration;
+use Conf;
+no warnings;
+
+# Here is where we ask localconfig-like questions
+# it's called "NewConfiguration" because it's only for new installations
+
+output <<EOF;
+
+Now, I have a series of questions to ask about how you would like 
+your Bugzilla installation configured. In some cases, 
+you may need to ask your system administrator about certain 
+questions or consult some documentation. If this is the case, 
+you can just answer 'stop' to any of the questions and I will 
+save your settings so you can come back where you were next time.
+
+First of all, what is your prefered text editor of choice?
+I will use this editor to allow you to easially give answers 
+to some of the longer configuration questions. 
+
+EOF
+
+ask('editor','Favorite text editor?',$ENV{'EDITOR'});
+
+
+my @databases = qw(mysql);
+
+output "\nI need to know what type of database you would like to use.\n";
+output "Your choices are:\n";
+foreach $cur (@databases) { output $cur."\n" }
+output "\n";
+
+storeData(); 
+
+my $found;
+
+{ # bare blocks are really annoying but it works, thanks to
+  # Randle L Schwartz in http://perlmonks.org/index.pl?node_id=239614
+	ask('databasetype','Database type?','mysql');
+	
+
+	foreach $cur (@databases) {
+		if (getConf('databasetype') eq $cur) {
+			$found = 1;
+			last;
+		}
+	}
+
+	unless ($found) {
+		output "Sorry, invalid option\n\n";
+		redo;
+	}
+}
+
+
+
+1;
