@@ -767,7 +767,9 @@ $table{shadowlog} =
 
      index(reflected)';
 
-
+$table{product_group} = 
+	'productid	int not null,
+	 userid		int not null
 
 ###########################################################################
 # Create tables

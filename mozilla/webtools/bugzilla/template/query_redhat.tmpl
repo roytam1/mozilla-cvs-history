@@ -1,0 +1,322 @@
+<!-- start javascript -->
+
+[+ $query_form{'javascript'} +]
+
+<!-- end javascript -->
+
+[+
+	if (!defined($::COOKIE{'Bugzilla_login'})) {
+		$OUT = "<CENTER><B>You are currently not logged in. You may want to " .
+			   "<A HREF=query.cgi?GoAheadAndLogIn=1>login</A> to use more " . 
+			   "options such as stored queries or to make changes.</B></CENTER>";
+	}
++]
+
+<FORM METHOD=GET ACTION="buglist.cgi">
+<TABLE WIDTH=700 BORDER=1 CELLSPACING=0 CELLPADDING=3 ALIGN=center>
+<TR BGCOLOR="#CFCFCF">
+    <TD ALIGN=left><B>Product Information</B></TD>
+</TR><TR BGCOLOR="#ECECEC">
+    <TD ALIGN=left>
+    <TABLE CELLSPACING=4 CELLPADDING=0> 
+    <TR>
+        <TH ALIGN=left VALIGN=bottom>Program</TH>
+        <TH ALIGN=left VALIGN=bottom>Version</TH>
+        <TH ALIGN=left VALIGN=bottom><A HREF="describecomponents.cgi">Component</A></TH>
+    </TR><TR>
+        <TD ALIGN=left VALIGN=top>
+<!-- start product selection -->
+
+[+ $query_form{'product_popup'} +]
+
+<!-- end product selection -->
+        </TD>
+        <TD ALIGN=left VALIGN=top>
+<!-- start version selection -->
+
+[+ $query_form{'version_popup'} +]
+
+<!-- end version selection -->
+        </TD>
+        <TD ALIGN=left VALIGN=top>
+<!-- start component selection -->
+
+[+ $query_form{'component_popup'} +]
+
+<!-- end component selection -->
+        </TD>
+    </TR><TR>
+    <TD></TD><TD></TD>
+    <TD ALIGN=left VALIGN=top><INPUT TYPE=checkbox NAME=allexcept VALUE=1 >All Components <B>Except</B> Selected</TD>
+    </TR>
+    </TABLE>
+</TR>
+</TABLE>
+
+<P>
+<TABLE WIDTH=700 BORDER=1 CELLSPACING=0 CELLPADDING=3 ALIGN=center>
+<TR BGCOLOR="#CFCFCF">
+        <TD ALIGN=left><B>Bug State, Class, and Platform Information</B></TD>
+</TR><TR BGCOLOR="#ECECEC">
+        <TD ALIGN=left>
+        <TABLE CELLPADDING=0 CELLSPACING=4>
+        <TR> 
+                <TH ALIGN=left><A HREF="bug_status.cgi">Status</A></TH>
+                <TH ALIGN=left><A HREF="bug_status.cgi">Resolution</A></TH>
+                <TH ALIGN=left><A HREF="bug_status.cgi#rep_platform">Platform</A></TH>
+                <TH ALIGN=left><A HREF="bug_status.cgi#priority">Priority</A></TH>
+                <TH ALIGN=left><A HREF="bug_status.cgi#severity">Severity</A></TH>
+				[+ $query_form{'targetmilestone_header'} +]
+        </TR><TR>
+                <TD ALIGN=left VALIGN=top>
+<!-- begin bugs status selection -->
+
+[+ $query_form{'status_popup'} +]
+
+<!-- end bug status selection -->
+                </TD>
+                <TD ALIGN=left VALIGN=top>
+<!-- start resolution selection -->
+
+[+ $query_form{'resolution_popup'} +]
+
+<!-- end resolution selection -->
+                </TD>
+                <TD ALIGN=left VALIGN=top>
+<!-- start platform selection -->
+
+[+ $query_form{'platform_popup'} +]
+
+<!-- end platform selection -->
+                </TD>
+                <TD ALIGN=left VALIGN=top>
+<!-- start priority selection -->
+
+[+ $query_form{'priority_popup'} +]
+
+<!-- end priority selection -->
+                </TD>
+                <TD ALIGN=left VALIGN=top>
+<!-- start severity selection -->
+
+[+ $query_form{'severity_popup'} +]
+
+<!-- end severity selection -->
+        		</TD>
+				<TD ALIGN=left VALIGN=top>
+<!-- start targetmilestone selection -->
+
+[+ $query_form{'targetmilestone_popup'} +]
+
+<!-- end targetmilestone selection -->
+				</TD>
+		</TR>
+        </TABLE>
+        </TD>
+</TR>
+</TABLE>
+
+<P>
+<TABLE WIDTH=700 BORDER=1 CELLSPACING=0 CELLPADDING=3 ALIGN=center>
+<TR BGCOLOR="#CFCFCF">
+        <TD ALIGN=left><B>Email Information</B></TD>
+</TR><TR BGCOLOR="#ECECEC">
+        <TD ALIGN=left>
+        <TABLE>
+        <TR>
+                <TD COLSPAN=2>
+                
+<TABLE BORDER=1 CELLSPACING=0 CELLPADDING=0 ALIGN=center>
+<TR>
+        <TD>
+        <TABLE CELLSPACING=0 CELLPADDING=0>
+        <TR>
+                <TD ROWSPAN=2 VALIGN=top><A HREF="helpemailquery.cgi">Email:</A>
+                <INPUT NAME="email1" SIZE="35" VALUE="dkl@redhat.com">&nbsp;matching as
+                <SELECT NAME=emailtype1>
+
+                <OPTION SELECTED VALUE="substring">substring
+                <OPTION VALUE="exact">exact
+                </SELECT>
+                </TD>
+                <TD>
+                <INPUT TYPE="checkbox" NAME="emailassigned_to1" VALUE=1 checked>Assigned To
+                </TD>
+        </TR><TR>
+                <TD>
+                <INPUT TYPE="checkbox" NAME="emailreporter1" VALUE=1 >Reporter
+                </TD>
+        </TR><TR>
+                <TD ALIGN=right>(Will match any of the selected fields)</TD>
+                <TD>
+                <INPUT TYPE="checkbox" NAME="emailcc1" VALUE=1 >CC &nbsp;&nbsp;
+                </TD>
+        </TR>
+        </TABLE>
+</TABLE>
+<p>
+                </TD></TR><TR><TD COLSPAN=2>
+                
+<TABLE BORDER=1 CELLSPACING=0 CELLPADDING=0 ALIGN=center>
+<TR>
+        <TD>
+        <TABLE CELLSPACING=0 CELLPADDING=0>
+        <TR>
+                <TD ROWSPAN=2 VALIGN=top><A HREF="helpemailquery.cgi">Email:</A>
+                <INPUT NAME="email2" SIZE="35" VALUE="">&nbsp;matching as
+                <SELECT NAME=emailtype2>
+
+                <OPTION SELECTED VALUE="substring">substring
+                <OPTION VALUE="exact">exact
+                </SELECT>
+                </TD>
+                <TD>
+                <INPUT TYPE="checkbox" NAME="emailassigned_to2" VALUE=1 >Assigned To
+                </TD>
+        </TR><TR>
+                <TD>
+                <INPUT TYPE="checkbox" NAME="emailreporter2" VALUE=1 checked>Reporter
+                </TD>
+        </TR><TR>
+                <TD ALIGN=right>(Will match any of the selected fields)</TD>
+                <TD>
+                <INPUT TYPE="checkbox" NAME="emailcc2" VALUE=1 >CC &nbsp;&nbsp;
+                </TD>
+        </TR>
+        </TABLE>
+</TABLE>
+<p>
+                </TD>
+        </TR>
+        </TABLE>
+        </TD>
+</TR>
+</TABLE>
+
+<P>
+<TABLE WIDTH=700 BORDER=1 CELLSPACING=0 CELLPADDING=3 ALIGN=center>
+<TR BGCOLOR="#CFCFCF">
+    <TD ALIGN=left><B>Time Information</B></TD>
+</TR><TR BGCOLOR="#ECECEC">
+    <TD ALIGN=left>
+    <TABLE>
+    <TR>
+		<TD>
+		Changed in the <NOBR>last <INPUT NAME=changedin SIZE=2 VALUE=""> days.</NOBR>
+		</TD>
+    </TR>
+    </TABLE>
+    <TABLE>
+    <TR>
+        <TD ROWSPAN=2 ALIGN=right>Where the field(s)</TD>
+        <TD ROWSPAN=2>
+
+<!-- start chfield selection -->
+[+ $query_form{'chfield_popup'} +]
+<!--end chfield selection -->
+
+		</TD>
+		<TD ROWSPAN=2>changed.</TD>
+		<TD>
+		<NOBR>dates <INPUT NAME=chfieldfrom SIZE=10 VALUE=""></NOBR>
+		<NOBR>to <INPUT NAME=chfieldto SIZE=10 VALUE="Now"></NOBR>
+		</TD>
+	</TR><TR>
+		<TD>changed to value <nobr><INPUT NAME=chfieldvalue SIZE=10> (optional)</NOBR>
+		</TD>
+    </TR>
+    </TABLE>
+    </TD>
+</TR>
+</TABLE>
+
+<P>
+<TABLE WIDTH=700 BORDER=1 CELLSPACING=0 CELLPADDING=3 ALIGN=center>
+<TR BGCOLOR="#CFCFCF">
+    <TD ALIGN=left><B>Text Information</B></TD>
+</TR><TR BGCOLOR="#ECECEC">
+    <TD ALIGN=left>
+    <TABLE BORDER=0>
+	<TR>
+
+<!-- start short description selection -->
+[+ $query_form{'summary_element'} +]
+<!-- end short description selection -->
+
+	</TR><TR>
+
+<!-- start description selection -->
+[+ $query_form{'longdesc_element'} +]
+<!-- end description selection -->
+
+	</TR><TR>
+
+<!-- start bug file selection -->
+[+ $query_form{'bugfile_element'} +]
+<!-- end bug file selection -->
+
+	</TR><TR>
+
+<!-- start whiteboard selection -->
+[+ $query_form{'whiteboard_element'} +]
+<!-- end whiteboard selection -->
+
+    </TABLE>
+    </TD>
+</TR>
+</TABLE>
+
+<P>
+<TABLE WIDTH=700 BORDER=1 CELLSPACING=0 CELLPADDING=3 ALIGN=center>
+<TR BGCOLOR="#CFCFCF">
+        <TD ALIGN=left><B>Query Actions</B></TD>
+</TR><TR BGCOLOR="#ECECEC">
+		<TD ALIGN=left>
+
+<!-- begin query selection -->
+[+ $query_form{'query_element'} +]
+<!-- end query selection -->
+
+        <NOBR>Sort By:
+
+<!-- begin order selection -->
+[+ $query_form{'order_popup'} +]
+<!-- end order selection -->
+		
+		</NOBR>
+        <INPUT TYPE="submit" VALUE="Submit query">
+        <INPUT TYPE="reset" VALUE="Reset back to the default query">
+        <INPUT TYPE=hidden name=form_name VALUE=query>
+        </FORM>
+        </TD>
+</TR>
+</TABLE>
+
+<P>
+<TABLE BORDER=1 WIDTH=700 CELLSPACING=0 CELLPADDING=3 ALIGN=center>
+<TR BGCOLOR="#CFCFCF">
+        <TD ALIGN=left><B>Bugzilla Options</B></TD>
+</TR><TR BGCOLOR="#ECECEC">
+        <TD ALIGN=left>
+        Give me a <A HREF="help.cgi">clue</A> about how to use this form.<P>
+
+<!-- start admin menu selection -->
+[+ $query_form{'admin_menu'} +]
+<!-- end admin menu selection -->
+
+<P>
+
+[+ 
+	if (defined($::COOKIE{'Bugzilla_login'})) {
+		$OUT = "<a href=relogin.cgi>Log in as someone besides <b>$::COOKIE{'Bugzilla_login'}</b> or log out.</a><br>";
+		$OUT = "<a href=changepassword.cgi>Change your password or preferences.</a><br>";
+	}
++]
+
+		<a href="createaccount.cgi">Open a new Bugzilla account</a><br>
+		<a href="reports.cgi">Bug reports</a><br>
+        </TD>
+</TR>
+</TABLE>
+<P>
+

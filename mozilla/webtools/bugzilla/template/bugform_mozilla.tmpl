@@ -1,0 +1,104 @@
+<FORM NAME=changeform METHOD=POST ACTION="process_bug.cgi">
+<INPUT TYPE=HIDDEN NAME="delta_ts" VALUE="[+ $bugform{'delta_ts'} +]">
+<INPUT TYPE=HIDDEN NAME="longdesclength" VALUE="[+ $bugform{'longdesclength'} +]">
+<INPUT TYPE=HIDDEN NAME="id" VALUE="[+ $bugform{'id'} +]">
+<INPUT TYPE=HIDDEN NAME="was_assigned_to" VALUE="[+ $bugform{'assigned_to'} +]">
+
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0><TR>
+	<TD ALIGN=RIGHT><B>Bug#:</B></TD><TD><A HREF="show_bug.cgi?id=[+ $bugform{'id'} +]">[+ $bugform{'id'} +]</A></TD>
+	<TD ALIGN=RIGHT><B><A HREF="bug_status.html#rep_platform">Platform:</A></B></TD>
+	<TD>
+
+<!-- start platform selection -->
+[+ $bugform{'platform_popup'} +]
+<!-- end platform selection -->
+
+	</TD>
+    <TD ALIGN=RIGHT><B>Version:</B></TD>
+    <TD>
+
+<!-- start version selection -->
+[+ $bugform{'version_popup'} +]
+<!-- end version selection -->
+
+	</TD>
+</TR><TR>
+    <TD ALIGN=RIGHT><B>Product:</B></TD>
+    <TD>
+
+<!-- start product selection -->
+[+ $bugform{'product_popup'} +]
+<!-- end product selection -->
+
+	</TD>
+    <TD ALIGN=RIGHT><B>OS:</B></TD>
+    <TD>
+
+<!-- start opsys selection -->
+[+ $bugform{'opsys_popup'} +]
+<!-- end opsys selection -->
+
+	</TD>
+</TR><TR>
+    <TD ALIGN=RIGHT><B><A HREF="bug_status.html">Status:</A></B></TD>
+    <TD>[+ $bug_form{'bug_status'} +]</TD>
+    <TD ALIGN=RIGHT><B><A HREF="bug_status.html#priority">Priority:</A></B></TD>
+    <TD>
+
+<!-- start priority selection -->
+[+ $bugform{'priority_popup'} +]
+<!-- end priority selection -->
+
+    </TD>
+	<TD ALIGN=RIGHT><B>Cc:</B></TD>
+    <TD>[+ $bug_form{'cc_element'} +]</TD>
+</TR><TR>
+    <TD ALIGN=RIGHT><B><A HREF="bug_status.html">Resolution:</A></B></TD>
+    <TD>[+ $bugform{'resolution'} +]</TD>
+    <TD ALIGN=RIGHT><B><A HREF="bug_status.html#severity">Severity:</A></B></TD>
+    <TD>
+
+<!-- start severity selection -->
+[+ $bugform{'severity_popup'} +]
+<!-- end severity selection -->
+
+	</TD>
+    <TD ALIGN=RIGHT><B><A HREF="describecomponents.cgi?product=Red%20Hat%20Linux">Component:</A></B></TD>
+    <TD>
+
+<!-- start component selection -->
+[+ $bugform{'component_popup'} +]
+<!-- end component selection -->
+
+	</TD>
+</TR><TR>
+    <TD ALIGN=RIGHT><B><A HREF="bug_status.html#assigned_to">Assigned&nbsp;To:
+    </A></B></TD>
+    <TD>[+ $bugform{'assigned_to'} +]</TD>
+</TR><TR>
+    <TD ALIGN="RIGHT"><B>URL:</B>
+    <TD COLSPAN=6>[+ $bugform{'bugfile_element'} +]</TD>
+</TR><TR>
+    <TD ALIGN="RIGHT"><B>Summary:</B>
+    <TD COLSPAN=6>[+ $bugform{'summary_element'} +]</TD>
+</TR><TR>
+	<TD ALIGN=right><B>Attachments:</B></TD>
+	<TD COLSPAN=6>[+ bugform{'attach_element'} +]</TD>
+</TR>
+</TABLE>	
+
+<TABLE>
+<TR>
+
+<!-- start depends selection -->
+[+ $bugform{'depends_element'} +]
+<!-- end depends selection -->
+
+</TR>
+</TABLE>
+
+<BR>
+<B>Additional Comments:</B>
+<BR>
+<TEXTAREA WRAP=HARD NAME=comment ROWS=5 COLS=80></TEXTAREA><BR>
+

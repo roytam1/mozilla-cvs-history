@@ -1,0 +1,216 @@
+<!-- start javascript -->
+[+ $query_form{'javascript'} +]
+<!-- end javascript -->
+
+<FORM METHOD=GET ACTION="buglist.cgi">
+
+<table>
+<tr>
+	<th align=left><A HREF="bug_status.html">Status</a>:</th>
+	<th align=left><A HREF="bug_status.html">Resolution</a>:</th>
+	<th align=left><A HREF="bug_status.html#rep_platform">Platform</a>:</th>
+	<th align=left><A HREF="bug_status.html#op_sys">OpSys</a>:</th>
+	<th align=left><A HREF="bug_status.html#priority">Priority</a>:</th>
+	<th align=left><A HREF="bug_status.html#severity">Severity</a>:</th>
+</tr>
+<tr>
+	<td align=left valign=top>
+
+<!-- start status selection -->
+[+ $query_form{'status_popup'} +]
+<!-- end status selection -->
+
+	</td>
+	<td align=left valign=top>
+
+<!-- start resolution selection -->
+[+ $query_form{'resolution_popup'} +]
+<!-- end resolution selection -->
+
+	</td>
+	<td align=left valign=top>
+
+<!-- start platform selection -->
+[+ $query_form{'platform_popup'} +]
+<!-- end platform selection -->
+
+	</td>
+	<td align=left valign=top>
+
+<!-- start opsys selection -->
+[+ $query_form{'opsys_popup'} +]
+<!-- end opsys selection -->
+
+	</td>
+	<td align=left valign=top>
+
+<!-- start priority selection -->
+[+ $query_form{'priority_popup'} +]
+<!-- end priority selection -->
+
+	</td>
+	<td align=left valign=top>
+
+<!-- start severity selection -->
+[+ $query_form{'severity_popup'} +]
+<!-- end severity selection -->
+	
+	</td>
+</tr>
+</table>
+
+<p>
+
+<table>
+<tr>
+	<td colspan=2>
+
+<!-- start email selection and search -->
+[+ $query_form{'emailinput1'} +]
+<P>
+[+ $query_form{'emailinput2'} +]
+<!-- end email selection and search -->
+
+	</TD>
+</TR>
+<TR>
+	<TD COLSPAN="3">
+
+<!-- start bugidtype selection -->
+[+ $query_form{'bugidtype_popup'} +]
+bugs numbered:
+[+ $query_form{'bugidtype_element'} +]
+<!-- end bugidtype selection -->
+
+	</TD>
+</TR>
+<tr>
+	<td>
+	Changed in the <NOBR>last <INPUT NAME=changedin SIZE=2 VALUE=""> days.</NOBR>
+	</td>
+	<td align=right>
+	At <NOBR>least <INPUT NAME=votes SIZE=3 VALUE=""> votes.</NOBR>
+	</td>
+</tr>
+</table>
+
+
+<table>
+<tr>
+	<td rowspan=2 align=right>Where the field(s)
+	</td><td rowspan=2>
+
+<!-- start chfield selection -->
+[+ $query_form{'chfield_popup'} +]
+<!-- end chfield selection -->
+
+	</td>
+	<td rowspan=2>
+	changed.
+	</td>
+	<td>
+	<nobr>dates <INPUT NAME=chfieldfrom SIZE=10 VALUE=""></nobr>
+	<nobr>to <INPUT NAME=chfieldto SIZE=10 VALUE="Now"></nobr>
+	</td>
+</tr>
+<tr>
+	<td>changed to value <nobr><INPUT NAME=chfieldvalue SIZE=10> (optional)</nobr>
+	</td>
+</tr>
+</table>
+
+<P>
+
+<table>
+<tr>
+	<TH ALIGN=LEFT VALIGN=BOTTOM>Program:</th>
+	<TH ALIGN=LEFT VALIGN=BOTTOM>Version:</th>
+	<TH ALIGN=LEFT VALIGN=BOTTOM><A HREF=describecomponents.cgi>Component:</a></th>
+</tr>
+<tr>
+	<td align=left valign=top>
+
+<!-- start product selection -->
+[+ $query_form{'product_popup'} +]
+<!-- end product selection -->
+	
+	</td>
+	<td align=left valign=top>
+
+<!-- start version selection -->
+[+ $query_form{'version_popup'} +]
+<!-- end versions selection -->
+
+	</td>
+	<td align=left valign=top>
+
+<!-- start component selection -->
+[+ $query_form{'component_popup'} +]
+<!-- end component selection -->
+
+	</td>
+</tr>
+</table>
+
+<table border=0>
+
+<!-- start summary type selection -->
+[+ $query_form{'summary_popup'} +]
+<!-- end summary type selection -->
+
+<!-- start lonc desc type selection -->
+[+ $query_form{'description_popup'} +]
+<!-- end long desc type selection -->
+
+<!-- start bugfile type selection -->
+[+ $query_form{'bugfile_popup'} +]
+<!-- end bugfile type selection -->
+
+</table>
+
+<p>
+<A NAME="chart"> </A>
+<HR>
+<TABLE>
+<TR>
+	<TD>
+
+<!-- start boolean chart selection -->
+[+ $query_form{'chart_popup'} +]
+<!-- end boolean chart selection -->
+
+	</TD>
+</TR>
+</TABLE>
+<HR>
+
+<!-- start query selection -->
+[+ $query_form{'query_popup'} +]
+<!-- end query selection -->
+
+<NOBR><B>Sort By:</B>
+
+<!-- start order by selection -->
+[+ $query_form{'order_popup'} +]
+<!-- end order by selection -->
+
+</NOBR>
+<INPUT TYPE="submit" VALUE="Submit query">
+<INPUT TYPE="reset" VALUE="Reset back to the default query">
+
+</FORM>
+<P>Give me a <A HREF="help.html">clue</A> about how to use this form.
+<P>
+
+<!-- start command selection -->
+[+ $query_form{'admin_menu'} +]
+<!-- end command selection -->
+
+<a href=userprefs.cgi>Change your password or preferences.</a><br>
+<a href="enter_bug.cgi">Create a new bug.</a><br>
+<a href="createaccount.cgi">Open a new Bugzilla account</a><br>
+<a href="reports.cgi">Bug reports</a><br>
+
+
+
+

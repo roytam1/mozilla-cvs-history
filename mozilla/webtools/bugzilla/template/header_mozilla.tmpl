@@ -1,0 +1,45 @@
+<HEAD>
+<TITLE>[+ $title +]</TITLE>
+</HEAD>
+
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000"
+LINK="#DD0000" VLINK="#880000" ALINK="#FF0000" >
+<TABLE WIDTH=800 BORDER=0 CELLSPACING=0 CELLPADDING=0>
+<TR BGCOLOR="#CC0000">
+    <TD WIDTH=75 HEIGHT="69">
+    <A HREF="http://www.redhat.com">
+	<IMG SRC="images/logo_big2.gif" WIDTH="81" HEIGHT="69" ALT="logo" BORDER="0"></A></TD>
+    <TD WIDTH=150 VALIGN="TOP">
+	<A HREF="http://www.redhat.com">
+    <IMG SRC="images/redhat.gif" WIDTH="142" HEIGHT="41" ALT="redhat.com" BORDER="0">
+    <IMG SRC="images/redhat_tag.gif" WIDTH="244" HEIGHT="15" ALT="logo" BORDER="0"></A></TD>
+    <TD WIDTH=300 VALIGN=center ALIGN=center>
+<!--    <IMG SRC="images/bugzilla_logo.png"></TD> -->
+        <FONT COLOR=white SIZE=+4>Develzilla</FONT>
+    <TD ALIGN=center VALIGN=bottom><FONT COLOR=white>
+    <FORM METHOD=GET ACTION="/myzilla/show_bug.cgi">
+    <INPUT TYPE=SUBMIT VALUE="Show"> bug &#035; <INPUT NAME=id SIZE=6></FORM></FONT></TD>
+</TR><TR BGCOLOR="#8F8F8F">
+    <TD COLSPAN=2 HEIGHT=30 ALIGN=left VALIGN=center>
+    <B><FONT SIZE=+1 COLOR="#FFFFFF">&nbsp;[+ $header +]
+	</FONT></B></TD>
+    <TD COLSPAN=2 ALIGN=right VALIGN=center>
+    <TABLE WIDTH="100%" VALIGN=center>
+    <TR>
+        <TD ALIGN=left>
+        <FONT COLOR="#FFFFFF">
+		[+ $login +]
+        </FONT>
+        </TD>
+        <TD ALIGN=right>
+        <FONT COLOR="#FFFFFF">
+		[+ $navigation +]
+        </FONT>
+        </TD>
+    </TR>
+    </TABLE>
+    </TD>
+</TR>
+</TABLE>
+<P>
+

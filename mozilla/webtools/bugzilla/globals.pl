@@ -755,6 +755,7 @@ sub GetLongDescriptionAsHTML {
     return $result;
 }
 
+
 sub ShowCcList {
     my ($num) = (@_);
     my @ccids;

@@ -1,0 +1,190 @@
+<FORM NAME=changeform METHOD=POST ACTION="process_bug.cgi">
+<INPUT TYPE=HIDDEN NAME="delta_ts" VALUE="[+ $::bug_form{'delta_ts'} +]">
+<INPUT TYPE=HIDDEN NAME="longdesclength" VALUE="[+ $::bug_form{'longdesclength'} +]">
+<INPUT TYPE=HIDDEN NAME="id" VALUE="[+ $::bug_form{'id'} +]">
+<INPUT TYPE=HIDDEN NAME="was_assigned_to" VALUE="[+ $::bug_form{'was_assigned_to'} +]">
+
+<TABLE CELLPADDING=3 CELLSPACING=0 BORDER=1 WIDTH=800 ALIGN=center>
+<TR BGCOLOR="#CFCFCF">
+        <TH ALIGN=left>Product - Version</TH>
+        <TH ALIGN=left>Component</TH>
+        <TH ALIGN=left>Status</TH>
+        <TH ALIGN=left>Short Summary</TH>
+</TR><TR BGCOLOR="ECECEC">
+        <TD ALIGN=left>[+ $::bug_form{'product'} +] - [+ $::bug_form{'version'} +]</TD>
+        <TD ALIGN=left>[+ $::bug_form{'component'} +]</TD>
+        <TD ALIGN=left>[+ $::bug_form{'bug_status'} +]</TD>
+        <TD ALIGN=left>[+ $::bug_form{'short_desc'} +]</TD>
+</TR>
+</TABLE>
+
+<P>
+<TABLE WIDTH=800 CELLSPACING=0 CELLPADDING=3 BORDER=1 ALIGN=center>
+<TR BGCOLOR="CFCFCF">
+        <TD ALIGN=left><B>Opened by</B> <A HREF="mailto:[+ $::bug_form{'reporter'} +]">[+ $::bug_form{'reporter'} +]</A> 
+        <B>on</B> &nbsp;[+ $::bug_form{'creation_ts'} +]&nbsp;&nbsp; <B>Long Description</B></TD>
+<TR BGCOLOR="#ECECEC">
+        <TD ALIGN=left><PRE>
+<!-- start long description -->
+
+[+ $::bug_form{'description'} +]
+
+<!-- end long description -->
+        </PRE></TD>
+</TR>
+</TABLE>
+
+<P>
+<TABLE WIDTH=800 CELLSPACING=0 CELLPADDING=4 BORDER=1 ALIGN=center>
+<TR BGCOLOR="#CFCFCF">
+        <TH ALIGN=left><B>Additional Information</B></TH>
+</TR><TR BGCOLOR="#ECECEC">
+        <TD>
+        <TABLE WIDTH="100%">
+        <TR>
+                <TD ALIGN=right><B>Bug#:</B></TD><TD><A HREF="show_bug.cgi?id=[+ $::bug_form{'bug_id'} +]">[+ $::bug_form{'bug_id'} +]</A></TD>
+                <TD ALIGN=right><B>Product:</B></TD>
+                <TD>
+<!-- start product selection -->
+
+[+ $::bug_form{'product_popup'} +]
+
+<!-- end product selction -->
+</TD>
+                <TD ALIGN=right><B>Version:</B></TD>
+                <TD>
+<!-- start version selection -->
+
+[+ $::bug_form{'version_popup'} +]
+
+<!-- end version selection -->
+</TD>
+        </TR><TR>
+                <TD ALIGN=right><B><A HREF="bug_status.cgi#rep_platform">Platform:</A></B></TD>
+                <TD>
+<!-- start platform selection -->
+
+[+ $::bug_form{'platform_popup'} +]
+
+<!-- end platform selection -->
+</TD>
+                <TD ALIGN=right><B>Reporter:</B></TD><TD>[+ $::bug_form{'reporter'} +]</TD>
+                <TD ALIGN=right>
+<!-- start component selection -->
+
+[+ $::bug_form{'component_popup'} +]
+
+<!-- end component selection -->
+				</TD>
+        </TR><TR>
+                <TD ALIGN=right><B><A HREF="bug_status.cgi">Status:</A></B></TD>
+                <TD>[+ $::bug_form{'bug_status'} +]</TD>
+                <TD ALIGN=right><B><A HREF="bug_status.cgi#priority">Priority:</A></B></TD>
+                <TD>
+<!-- start priority selection -->
+
+[+ $::bug_form{'priority_popup'} +]
+
+<!-- end priority selection -->
+				</TD>
+        </TR><TR>
+                <TD ALIGN=right><B><A HREF="bug_status.cgi">Resolution:</A></B></TD>
+                <TD>[+ $::bug_form{'resolution'} +]</TD>
+                <TD ALIGN=right><B><A HREF="bug_status.cgi#severity">Severity:</A></B></TD>
+                <TD>
+<!-- start severity selection -->
+
+[+ $::bug_form{'sev_popup'} +]
+
+<!-- end severity selection -->
+</TD>
+        </TR><TR>
+                <TD ALIGN=right><B><A HREF="bug_status.cgi#assigned_to">Assigned To:</A></B></TD>
+                <TD>[+ $::bug_form{'assigned_to'} +]</TD>
+                <TD ALIGN=center>&nbsp;</TD>
+                <TD ALIGN=right COLSPAN=2><B><A HREF="bug_status.cgi#component">Component Text:</A></B></TD>
+                <TD>[+ $::bug_form{'component_text'} +]</TD>
+        </TR>
+        </TABLE>
+        <P>
+        <TABLE BORDER=0 CELLSPACING=0 CELLPADDING=3> 
+        <TR>
+                <TH ALIGN=right><B>Cc:</B></TH>
+                <TD ALIGN=left>[+ $::bug_form{'cc_element'} +]</TD>
+        </TR>
+		[+ $::bug_form{'qacontact_element'} +]
+		[+ $::bug_form{'url_element'} +]
+		[+ $::bug_form{'summary_element'} +]
+		[+ $::bug_form{'status_whiteboard'} +]
+        <TR>
+                <TD ALIGN=right VALIGN=top><B>Attachments:</B></TD>
+                <TD ALIGN=left>
+                <TABLE BORDER=0 CELLSPACING=0 CELLPADDING=3>
+                <TR>
+                        <TD COLSPAN=3>[+ $::bug_form{'attachment_element'} +]</TD>
+                </TR>
+                </TABLE>
+                </TD>
+        </TR>
+        </TABLE>
+
+        <P>
+<!-- start dependency selection -->
+
+[+ $::bug_form{'depends_element'} +]
+
+<!-- end dependency selection -->
+        </TD>
+</TR><TR BGCOLOR="#CFCFCF">
+        <TH ALIGN=left><B><A HREF=bug_status.cgi#description>Additional Comments</A></B></TH>
+</TR><TR BGCOLOR="#ECECEC">
+        <TD ALIGN=center><TEXTAREA WRAP=HARD NAME=comment ROWS=10 COLS=80></TEXTAREA></TD>
+</TR>
+</TABLE>
+
+<P>
+<TABLE CELLPADDING=3 WIDTH=800 CELLSPACING=0 ALIGN=center>
+<TR>
+    <TD ALIGN=left VALIGN=top>
+<!-- start resolution selection -->
+
+[+ $::bug_form{'resolution_change'} +]
+
+<!-- end resolution selection -->
+        </TD>
+        <TD ALIGN=right VALIGN=top>
+<!-- start group selection -->
+
+[+ $::bug_form{'group_change'} +]
+
+<!-- end group selection -->
+        </TD>
+</TR>
+</TABLE>
+
+<P>
+<TABLE WIDTH=800 CELLPADDING=3  CELLSPACING=0 ALIGN=center>
+<TR>
+	<TD ALIGN=left VALIGN=top>
+<!-- start commit selection -->
+
+[+ $::bug_form{'commit_change'} +]
+	
+<!-- end commit selection -->
+	</TD>
+</TR>
+</TABLE>
+</TD>
+</TR>
+</TABLE>
+
+<P>
+<TABLE ALIGN=center WIDTH=800><TR><TD ALIGN=left>
+<B>
+<A HREF="show_activity.cgi?id=[+ $::bug_form{'id'} +]">[View Bug Activity]</A>&nbsp;&nbsp;
+<A HREF="long_list.cgi?buglist=[+ $::bug_form{'id'} +]">[Format For Printing]</A>
+</B>
+</TD></TR></TABLE>
+<P>
+<HR ALIGN=center WIDTH=800>
+<P>
