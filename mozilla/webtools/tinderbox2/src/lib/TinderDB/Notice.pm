@@ -69,6 +69,9 @@ use File::Basename;
 
 
 # Load Tinderbox libraries
+
+use lib '#tinder_libdir#';
+
 use Utils;
 use HTMLPopUp;
 use TinderDB::BasicTxtDB;

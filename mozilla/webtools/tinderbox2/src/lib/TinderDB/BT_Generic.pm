@@ -57,6 +57,9 @@ use File::Basename;
 use Time::Local;
 
 # Load Tinderbox libraries
+
+use lib '#tinder_libdir#';
+
 use TinderDB::BasicTxtDB;
 use Utils;
 use HTMLPopUp;
