@@ -1,3 +1,25 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Terry Weissman <terry@mozilla.org>
+  #                 Myk Melez <myk@mozilla.org>
+  #                 Matthew Tuck <matty@chariot.net.au>
+  #%]
+
 [% valuetype = valuetype FILTER html %]
 [% valuetypeicap = valuetypeicap FILTER html %]
 [% name = name FILTER html %]
@@ -8,16 +30,16 @@
   h1 = "Edit $valuetypeicap $name"
 %]
 
-<form method=post action=[% thiscgi %]>
-  <table border=0 cellpadding=4 cellspacing=0>
+<form method="post" action="[% thiscgi %]">
+  <table border="0" cellpadding="4" cellspacing="0">
 
-    <input type=hidden name=id value=[% id %]>
+    <input type="hidden" name="id" value="[% id %]">
 
     [% INCLUDE admin/common/nameanddesc %]
 
     <tr>
       <th align="right">Is Active?</th>
-      <td><input type="checkbox" name="isactive" value="1" [% isactive ? 'checked' : '' %]>
+      <td><input type="checkbox" name="isactive" value="1"[% isactive ? ' checked' : '' %]>
     </tr>
 
     [% IF resttemplate != '' %] [% INCLUDE $resttemplate %] [% END %]
@@ -31,8 +53,8 @@
 
   <hr>
 
-  <input type=submit value="Update">
-  <input type=hidden name="action" value="update">
+  <input type="submit" value="Update">
+  <input type="hidden" name="action" value="update">
 
 </form>
 
