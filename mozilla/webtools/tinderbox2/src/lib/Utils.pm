@@ -68,13 +68,13 @@ sub security_check_data_dir {
 
   my $tinderbox_uid = $<;
 
-#  ( $uid == $tinderbox_uid ) ||
-#    die("Security Error. dir: $dir is not owned by ".
-#        "the tinderbox id: $tinderbox_uid\n");
-  
-#  ( $mode & 02) &&
-#    die("Security Error. dir: $dir is writable by other\n");
-  
+  ( $uid == $tinderbox_uid ) ||
+    die("Security Error. dir: $dir is not owned by ".
+        "the tinderbox id: $tinderbox_uid\n");
+
+  ( $mode & 02) &&
+    die("Security Error. dir: $dir is writable by other\n");
+
   return 1;
 }
 
