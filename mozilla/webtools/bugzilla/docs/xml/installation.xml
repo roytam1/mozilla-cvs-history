@@ -1495,7 +1495,8 @@ $smtp->quit;
         <filename class="directory">/sw/include</filename> instead of
         <filename class="directory">/usr/lib</filename> and
         <filename class="directory">/usr/include</filename>. When the
-        Perl module config script asks where your libgd is, be sure to tell it
+        Perl module config script asks where your <filename>libgdi</filename>
+        is, be sure to tell it
         <filename class="directory">/sw/lib</filename>.
         </para>
       </note>
