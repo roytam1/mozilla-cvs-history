@@ -170,12 +170,8 @@ email address that matches this regular expression.<p>";
 If you deactivate a group it will no longer be possible for users to add bugs
 to that group, although bugs already in the group will remain in the group.
 Deactivating a group is a much less drastic way to stop a group from growing
-than deleting the group would be.<p>";
-    print "The <b>Type</b> field identifies system groups and determines 
-          whether or not the group should generate a checkbox on bug 
-          entry/edit pages for group restrictions.  If type is 'buggroup,' 
-          the checkbox will be offerred. If type is 'user,' the group 
-          is not used for bugs but can be used to organize groups of users<p>";  
+than deleting the group would be as well as way to maintain lists of users without cluttering the lists of groups used for bug restrictions.<p>";
+    print "The <b>Type</b> field identifies system groups.<p>";  
     print "</form>\n";
 
     PutFooter();
