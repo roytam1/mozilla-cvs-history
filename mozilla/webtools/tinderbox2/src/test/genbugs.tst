@@ -158,6 +158,7 @@ foreach $tree (@TREES) {
 		    'QAContact' => "matty\@box.net.au",
 		    
 		    'tinderbox_timenow' => $timenow,
+		    'tinderbox_localtime_timenow' => $localtimenow,
 		    'tinderbox_status' => $status,
 		    'tinderbox_bug_id' => $bug_id,
 		    'tinderbox_bug_url' => "http://bugzilla.mozilla.org/show_bug.cgi?id=$bug_id",
