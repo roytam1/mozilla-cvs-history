@@ -787,6 +787,13 @@ MozillaBranchTinderboxAll -a \
 	NSPR \
 	mozilla/directory/c-sdk
 
+AviaryBranchTinderbox -a \
+	MozillaBranchTinderboxAll \
+	mozilla/browser \
+	mozilla/chrome \
+	mozilla/mail \
+	mozilla/toolkit
+
 # thunderbird's tinderbox module
 ThunderbirdTinderbox -a \
 	MozillaTinderboxAll \
