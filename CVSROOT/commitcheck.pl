@@ -301,7 +301,6 @@ if (m:^mozilla/widget/src/gtk/.*$:) {return '49';}
 if (m:^mozilla/widget/timer/src/unix/gtk$:) {return '49';}
 if (m:^mozilla/rdf/.*$:) {return '52';}
 if (m:^mozilla/dbm/.*$:) {return '53';}
-if (m:^buildtools/.*$:) {return '55';}
 if (m:^mozilla/build/.*$:) {return '55';}
 if (m:^mozilla/config/.*$:) {return '55';}
 if (m:^mozilla/l10n/.*$:) {return '55';}
