@@ -751,14 +751,18 @@ sub SelectVisible {
                      selectVisible_cc.who = $userid "
     }
 
-    $replace .= "LEFT JOIN bug_group_map selectVisible_bug_groups ON
+    $replace .= "\nLEFT JOIN bug_group_map selectVisible_bug_groups ON
                 bugs.bug_id = selectVisible_bug_groups.bug_id ";
-    $replace .= "LEFT JOIN user_group_map selectVisible_user_groups ON
+    $replace .= "\nLEFT JOIN user_group_map selectVisible_user_groups ON
                 selectVisible_bug_groups.group_id = selectVisible_user_groups.group_id AND
                 selectVisible_user_groups.user_id ";
 
-    # $replace .= "WHERE ((selectVisible_groups.group_id IN (" . join(',', @usergroupset) . ")) ";
-    $replace .= "WHERE ((isnull(selectVisible_user_groups.group_id)) ";
+    if (@usergroupset) {
+        $replace .= "\nWHERE ((selectVisible_user_groups.group_id IN (" . join(',', @usergroupset) . ")
+                    OR isnull(selectVisible_bug_groups.group_id)) ";
+    } else {
+        $replace .= "\nWHERE (isnull(selectVisible_bug_groups.group_id)) ";
+    }
 
     if ($userid) {
         # There is a mysql bug affecting v3.22 and 3.23 (at least), where this will
@@ -768,7 +772,8 @@ sub SelectVisible {
         $replace .= "OR (bugs.reporter_accessible = 1 AND bugs.reporter = $userid) 
                     OR (bugs.assignee_accessible = 1 AND bugs.assigned_to = $userid) 
                     OR (bugs.qacontact_accessible = 1 AND bugs.qa_contact = $userid) 
-                    OR (bugs.cclist_accessible = 1 AND selectVisible_cc.who = $userid AND not isnull(selectVisible_cc.who))";
+                    OR (bugs.cclist_accessible = 1 AND selectVisible_cc.who = $userid 
+                    AND not isnull(selectVisible_cc.who))";
     }
 
     $replace .= ") AND ";
