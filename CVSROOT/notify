@@ -10,3 +10,5 @@
 #
 # For example:
 #ALL mail %s -s "CVS notification"
+
+ALL	$CVSROOT/CVSROOT/sendnotification.pl %s
