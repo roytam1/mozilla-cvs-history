@@ -22,6 +22,7 @@
 #                 Terry Weissman <terry@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Dave Miller <justdave@syndicomm.com>
+#                 Zach Lipton  <zach@zachlipton.com>
 #
 #
 # Direct any questions on this source code to
@@ -79,7 +80,7 @@
 #     add more MySQL-related checks                    --MYSQL--
 #     change table definitions                         --TABLE--
 #     add more groups                                  --GROUPS--
-#     create initial administrator account            --ADMIN--
+#     create initial administrator account             --ADMIN--
 #
 # Note: sometimes those special comments occur more then once. For
 # example, --LOCAL-- is at least 3 times in this code!  --TABLE--
@@ -100,16 +101,7 @@ use strict;
 # this way we can look in the symbol table to see if they've been declared
 # yet or not.
 
-# Trim whitespace from front and back.
-
-sub trim {
-    ($_) = (@_);
-    s/^\s+//g;
-    s/\s+$//g;
-    return $_;
-}
-
-
+use vars qw( $db_name );
 
 ###########################################################################
 # Check required module
@@ -167,10 +159,10 @@ sub have_vers {
   $vnum = ${"${pkg}::VERSION"} || ${"${pkg}::Version"} || 0;
   $vnum = -1 if $@;
 
-  if ($vnum < 0) {
+  if ($vnum eq "-1") { # string compare just in case it's non-numeric
     $vstr = "not found";
   }
-  elsif ($vnum > 0) {
+  elsif (vers_cmp($vnum,"0") > -1) {
     $vstr = "found v$vnum";
   }
   else {
@@ -183,21 +175,58 @@ sub have_vers {
 }
 
 # Check versions of dependencies.  0 for version = any version acceptible
+my $modules = [ 
+    { 
+        name => 'AppConfig',  
+        version => '1.52' 
+    }, 
+    { 
+        name => 'CGI::Carp', 
+        version => '0' 
+    }, 
+    {
+        name => 'Data::Dumper', 
+        version => '0' 
+    }, 
+    {        
+        name => 'Date::Parse', 
+        version => '0' 
+    }, 
+    { 
+        name => 'DBI', 
+        version => '1.13' 
+    }, 
+    { 
+        name => 'DBD::mysql', 
+        version => '1.2209' 
+    }, 
+    { 
+        name => 'File::Spec', 
+        version => '0.82' 
+    }, 
+    { 
+        name => 'Template', 
+        version => '2.07' 
+    }, 
+    { 
+        name => 'Text::Wrap', 
+        version => '2001.0131' 
+    } 
+];
 
-my @missing = ();
-unless (have_vers("DBI","1.13"))          { push @missing,"DBI" }
-unless (have_vers("Data::Dumper",0))      { push @missing,"Data::Dumper" }
-unless (have_vers("DBD::mysql","1.2209")) { push @missing,"DBD::mysql" }
-unless (have_vers("Date::Parse",0))       { push @missing,"Date::Parse" }
-unless (have_vers("AppConfig","1.52"))    { push @missing,"AppConfig" }
-unless (have_vers("Template","2.01"))     { push @missing,"Template" }
+my %missing = ();
+foreach my $module (@{$modules}) {
+    unless (have_vers($module->{name}, $module->{version})) { 
+        $missing{$module->{name}} = $module->{version};
+    }
+}
 
 # If CGI::Carp was loaded successfully for version checking, it changes the
 # die and warn handlers, we don't want them changed, so we need to stash the
 # original ones and set them back afterwards -- justdave@syndicomm.com
 my $saved_die_handler = $::SIG{__DIE__};
 my $saved_warn_handler = $::SIG{__WARN__};
-unless (have_vers("CGI::Carp",0))    { push @missing,"CGI::Carp" }
+unless (have_vers("CGI::Carp",0))    { $missing{'CGI::Carp'} = 0 }
 $::SIG{__DIE__} = $saved_die_handler;
 $::SIG{__WARN__} = $saved_warn_handler;
 
@@ -221,12 +250,16 @@ if (!$xmlparser) {
     "running (as root)\n\n",
     "   perl -MCPAN -e'install \"XML::Parser\"'\n\n";
 }
-if (@missing > 0) {
+if (%missing) {
     print "\n\n";
-    print "You are missing some Perl modules which are required by Bugzilla.\n";
-    print "They can be installed by running (as root) the following:\n";
-    foreach my $module (@missing) {
+    print "Bugzilla requires some Perl modules which are either missing from your\n",
+    "system, or the version on your system is too old.\n",
+    "They can be installed by running (as root) the following:\n";
+    foreach my $module (keys %missing) {
         print "   perl -MCPAN -e 'install \"$module\"'\n";
+        if ($missing{$module} > 0) {
+            print "   Minimum version required: $missing{$module}\n";
+        }
     }
     print "\n";
     exit;
@@ -263,7 +296,26 @@ if (@missing > 0) {
 #
 
 print "Checking user setup ...\n";
+$@ = undef;
 do 'localconfig';
+if ($@) { # capture errors in localconfig, bug 97290
+   print STDERR <<EOT;
+An error has occurred while reading your 
+'localconfig' file.  The text of the error message is:
+
+$@
+
+Please fix the error in your 'localconfig' file.  
+Alternately rename your 'localconfig' file, rerun 
+checksetup.pl, and re-enter your answers.
+
+  \$ mv -f localconfig localconfig.old
+  \$ ./checksetup.pl
+
+
+EOT
+    die "Syntax error in localconfig";
+}
 my $newstuff = "";
 sub LocalVar ($$)
 {
@@ -280,6 +332,21 @@ sub LocalVar ($$)
 #
 # Set up the defaults for the --LOCAL-- variables below:
 #
+
+LocalVar('index_html', <<'END');
+#
+# With the introduction of a configurable index page using the
+# template toolkit, Bugzilla's main index page is now index.cgi.
+# Most web servers will allow you to use index.cgi as a directory
+# index and many come preconfigured that way, however if yours
+# doesn't you'll need an index.html file that provides redirection
+# to index.cgi. Setting $index_html to 1 below will allow
+# checksetup.pl to create one for you if it doesn't exist.
+# NOTE: checksetup.pl will not replace an existing file, so if you
+#       wish to have checksetup.pl create one for you, you must
+#       make sure that there isn't already an index.html
+$index_html = 0;
+END
 
 my $mysql_binaries = `which mysql`;
 if ($mysql_binaries =~ /no mysql/) {
@@ -321,10 +388,14 @@ LocalVar('webservergroup', '
 #
 # This is the group your web server runs on.
 # If you have a windows box, ignore this setting.
-# If you do not wish for checksetup to adjust the permissions of anything,
-# set this to "".
+# If you do not have access to the group your web server runs under,
+# set this to "". If you do set this to "", then your Bugzilla installation
+# will be _VERY_ insecure, because some files will be world readable/writable,
+# and so anyone who can get local access to your machine can do whatever they
+# want. You should only have this set to "" if this is a testing installation
+# and you cannot set this up any other way. YOU HAVE BEEN WARNED.
 # If you set this to anything besides "", you will need to run checksetup.pl
-# as root.
+# as root, or as a user who is a member of the specified group.
 $webservergroup = "nobody";
 ');
 
@@ -341,9 +412,12 @@ $db_user = "bugs";              # user to attach to the MySQL database
 ');
 LocalVar('db_pass', '
 #
-# Some people actually use passwords with their MySQL database ...
+# Enter your database password here. It\'s normally advisable to specify
+# a password for your bugzilla database user.
+# If you use apostrophe (\') or a backslash (\\) in your password, you\'ll
+# need to escape it by preceding it with a \\ character. (\\\') or (\\\\)
 #
-$db_pass = "";
+$db_pass = \'\';
 ');
 
 
@@ -401,6 +475,7 @@ LocalVar('opsys', '
         "Windows ME",  # Millenium Edition (upgrade of 98)
         "Windows 2000",
         "Windows NT",
+        "Windows XP",
         "Mac System 7",
         "Mac System 7.5",
         "Mac System 7.6.1",
@@ -448,6 +523,30 @@ LocalVar('platforms', '
 
 
 
+LocalVar('contenttypes', '
+#
+# The types of content that template files can generate, indexed by file extension.
+#
+$contenttypes = {
+  "html" => "text/html" , 
+   "rdf" => "application/xml" , 
+   "xml" => "text/xml" , 
+    "js" => "application/x-javascript" , 
+};
+');
+
+
+
+LocalVar('pages', '
+#
+# A mapping from tags to template names for the general page display system,
+# page.cgi.
+#
+%pages = (
+);
+');
+
+
 
 if ($newstuff ne "") {
     print "\nThis version of Bugzilla contains some variables that you may want\n",
@@ -470,6 +569,7 @@ my $my_db_port = ${*{$main::{'db_port'}}{SCALAR}};
 my $my_db_name = ${*{$main::{'db_name'}}{SCALAR}};
 my $my_db_user = ${*{$main::{'db_user'}}{SCALAR}};
 my $my_db_pass = ${*{$main::{'db_pass'}}{SCALAR}};
+my $my_index_html = ${*{$main::{'index_html'}}{SCALAR}};
 my $my_create_htaccess = ${*{$main::{'create_htaccess'}}{SCALAR}};
 my $my_webservergroup = ${*{$main::{'webservergroup'}}{SCALAR}};
 my @my_severities = @{*{$main::{'severities'}}{ARRAY}};
@@ -477,6 +577,66 @@ my @my_priorities = @{*{$main::{'priorities'}}{ARRAY}};
 my @my_platforms = @{*{$main::{'platforms'}}{ARRAY}};
 my @my_opsys = @{*{$main::{'opsys'}}{ARRAY}};
 
+if ($my_webservergroup) {
+    if ($< != 0) { # zach: if not root, yell at them, bug 87398 
+        print <<EOF;
+
+Warning: you have entered a value for the "webservergroup" parameter
+in localconfig, but you are not running this script as root.
+This can cause permissions problems and decreased security.  If you
+experience problems running Bugzilla scripts, log in as root and re-run
+this script, or remove the value of the "webservergroup" parameter.
+Note that any warnings about "uninitialized values" that you may
+see below are caused by this.
+
+EOF
+    }
+} else {
+    # Theres no webservergroup, this is very very very very bad.
+    # However, if we're being run on windows, then this option doesn't
+    # really make sense. Doesn't make it any more secure either, though,
+    # but don't print the message, since they can't do anything about it.
+    if ($^O !~ /MSWin32/i) {
+        print <<EOF;
+
+********************************************************************************
+WARNING! You have not entered a value for the "webservergroup" parameter
+in localconfig. This means that certain files and directories which need
+to be editable by both you and the webserver must be world writable, and
+other files (including the localconfig file which stores your database
+password) must be world readable. This means that _anyone_ who can obtain
+local access to this machine can do whatever they want to your Bugzilla
+installation, and is probably also able to run arbitrary Perl code as the
+user that the webserver runs as.
+
+You really, really, really need to change this setting.
+********************************************************************************
+
+EOF
+    }
+}
+
+###########################################################################
+# Global Utility Library
+###########################################################################
+
+# globals.pl clears the PATH, but File::Find uses Cwd::cwd() instead of
+# Cwd::getcwd(), which we need to do because `pwd` isn't in the path - see
+# http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-09/msg00115.html
+# As a workaround, since we only use File::Find in checksetup, which doesn't
+# run in taint mode anyway, preserve the path...
+my $origPath = $::ENV{'PATH'};
+
+# Use the Bugzilla utility library for various functions.  We do this
+# here rather than at the top of the file so globals.pl doesn't define
+# localconfig variables for us before we get a chance to check for
+# their existence and create them if they don't exist.  Also, globals.pl
+# removes $ENV{'path'}, which we need in order to run `which mysql` above.
+require "globals.pl";
+
+# ...and restore it. This doesn't change tainting, so this will still cause
+# errors if this script ever does run with -T.
+$::ENV{'PATH'} = $origPath;
 
 ###########################################################################
 # Check data directory
@@ -486,11 +646,16 @@ my @my_opsys = @{*{$main::{'opsys'}}{ARRAY}};
 # Create initial --DATA-- directory and make the initial empty files there:
 #
 
-unless (-d 'data') {
+# The |require "globals.pl"| above ends up creating a template object with
+# a COMPILE_DIR of 'data'. This means that TT creates the directory for us,
+# so this code wouldn't run if we just checked for the existance of the
+# directory. Instead, check for the existance of 'data/nomail', which is
+# created in this block
+unless (-d 'data' && -e 'data/nomail') {
     print "Creating data directory ...\n";
     # permissions for non-webservergroup are fixed later on
-    mkdir 'data', 0770; 
-    mkdir 'data/mimedump-tmp', 01777; 
+    mkdir 'data', 0770;
+    mkdir 'data/mimedump-tmp', 01777;
     open FILE, '>>data/comments'; close FILE;
     open FILE, '>>data/nomail'; close FILE;
     open FILE, '>>data/mail'; close FILE;
@@ -575,7 +740,16 @@ unless (-d 'graphs') {
 
         close(IN);
         close(OUT);
-    }    
+    }
+}
+
+unless (-d 'data/mining') {
+    mkdir 'data/mining', 0700;
+}
+
+unless (-d 'data/webdot') {
+    # perms/ownership are fixed up later
+    mkdir 'data/webdot', 0700;
 }
 
 if ($my_create_htaccess) {
@@ -608,21 +782,33 @@ END
     close HTACCESS;
     chmod $fileperm, "data/.htaccess";
   }
+  if (!-e "template/.htaccess") {
+    print "Creating template/.htaccess...\n";
+    open HTACCESS, ">template/.htaccess";
+    print HTACCESS <<'END';
+# nothing in this directory is retrievable unless overriden by an .htaccess
+# in a subdirectory
+deny from all
+END
+    close HTACCESS;
+    chmod $fileperm, "template/.htaccess";
+  }
   if (!-e "data/webdot/.htaccess") {
-    if (!-d "data/webdot") {
-      mkdir "data/webdot", $dirperm;
-      chmod $dirperm, "data/webdot"; # the perms on mkdir don't seem to apply for some reason...
-    }
     print "Creating data/webdot/.htaccess...\n";
     open HTACCESS, ">data/webdot/.htaccess";
     print HTACCESS <<'END';
-# Allow access to nothing in this directory except for .dot files
-# and don't allow access to those to anyone except research.att.com
+# Restrict access to .dot files to the public webdot server at research.att.com 
 # if research.att.com ever changed their IP, or if you use a different
 # webdot server, you'll need to edit this
 <FilesMatch ^[0-9]+\.dot$>
   Allow from 192.20.225.10
   Deny from all
+</FilesMatch>
+
+# Allow access by a local copy of 'dot' to .png, .gif, .jpg, and
+# .map files
+<FilesMatch ^[0-9]+\.(png|gif|jpg|map)$>
+  Allow from all
 </FilesMatch>
 
 # And no directory listings, either.
@@ -634,12 +820,175 @@ END
 
 }
 
+if ($my_index_html) {
+    if (!-e "index.html") {
+        print "Creating index.html...\n";
+        open HTML, ">index.html";
+        print HTML <<'END';
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Refresh" content="0; URL=index.cgi">
+</head>
+<body>
+<h1>I think you are looking for <a href="index.cgi">index.cgi</a></h1>
+</body>
+</html>
+END
+        close HTML;
+    }
+    else {
+        open HTML, "index.html";
+        if (! grep /index\.cgi/, <HTML>) {
+            print "\n\n";
+            print "*** It appears that you still have an old index.html hanging\n";
+            print "    around.  The contents of this file should be moved into a\n";
+            print "    template and placed in the 'template/en/custom' directory.\n\n";
+        }
+        close HTML;
+    }
+}
+
+{
+    eval("use Date::Parse");
+    # Templates will be recompiled if the source changes, but not if the
+    # settings in globals.pl change, so we need to be able to force a rebuild
+    # if that happens
+
+    # The last time the global template params were changed. Keep in UTC,
+    # YYYY-MM-DD
+    my $lastTemplateParamChange = str2time("2002-04-27", "UTC");
+    if (-e 'data/template') {
+        unless (-d 'data/template' && -e 'data/template/.lastRebuild' &&
+                (stat('data/template/.lastRebuild'))[9] >= $lastTemplateParamChange) {
+            print "Removing existing compiled templates ...\n";
+
+            # If File::Path::rmtree reported errors, then I'd use that
+            use File::Find;
+            sub remove {
+                return if $_ eq ".";
+                if (-d $_) {
+                    rmdir $_ || die "Couldn't rmdir $_: $!\n";
+                } else {
+                    unlink $_ || die "Couldn't unlink $_: $!\n";
+                }
+            }
+            finddepth(\&remove, 'data/template');
+        }
+    }
+
+    # Precompile stuff. This speeds up initial access (so the template isn't
+    # compiled multiple times simulataneously by different servers), and helps
+    # to get the permissions right.
+    eval("use Template");
+    my $redir = ($^O =~ /MSWin32/i) ? "NUL" : "/dev/null";
+    my $template = Template->new(
+      {
+        # Output to /dev/null here
+        OUTPUT => $redir,
+
+        # Colon-separated list of directories containing templates.
+        INCLUDE_PATH => "template/en/custom:template/en/default",
+
+        PRE_CHOMP => 1 ,
+        TRIM => 1 ,
+
+        COMPILE_DIR => 'data/', # becomes data/template/en/{custom,default}
+
+        # These don't actually need to do anything here, just exist
+        FILTERS =>
+        {
+         strike => sub { return $_; } ,
+         js => sub { return $_; },
+         html => sub { return $_; },
+         html_linebreak => sub { return $_; },
+         url_quote => sub { return $_; },
+        },
+      }) || die ("Could not create Template: " . Template->error() . "\n");
+
+    sub compile {
+        # no_chdir doesn't work on perl 5.005
+
+        my $origDir = $File::Find::dir;
+        my $name = $File::Find::name;
+
+        return if (-d $name);
+        return if ($name =~ /\/CVS\//);
+        return if ($name !~ /\.tmpl$/);
+        $name =~ s!template/en/default/!!; # trim the bit we don't pass to TT
+
+        chdir($::baseDir);
+
+        $template->process($name, {})
+          || die "Could not compile $name:" . $template->error() . "\n";
+
+        chdir($origDir);
+    }
+
+    {
+        print "Precompiling templates ...\n";
+
+        use File::Find;
+
+        use Cwd;
+
+        $::baseDir = getcwd();
+
+        # Don't hang on templates which use the CGI library
+        eval("use CGI qw(-no_debug)");
+
+        # Disable warnings which come from running the compiled templates
+        # This way is OK, because they're all runtime warnings.
+        # The reason we get these warnings here is that none of the required
+        # vars will be present.
+        local ($^W) = 0;
+
+        # Traverse the default hierachy. Custom templates will be picked up
+        # via the INCLUDE_PATH, but we know that bugzilla will only be
+        # calling stuff which exists in en/default
+        # FIXME - if we start doing dynamic INCLUDE_PATH we may have to
+        # recurse all of template/, changing the INCLUDE_PATH each time
+
+        find(\&compile, "template/en/default");
+    }
+
+    # update the time on the stamp file
+    open FILE, '>data/template/.lastRebuild'; close FILE;
+    utime $lastTemplateParamChange, $lastTemplateParamChange, ('data/template/.lastRebuild');
+}
 
 # Just to be sure ...
 unlink "data/versioncache";
 
-
-
+# Remove parameters from the data/params file that no longer exist in Bugzilla.
+if (-e "data/params") {
+    require "data/params";
+    require "defparams.pl";
+    use vars @::param_list;
+    my @oldparams;
+    
+    open(PARAMFILE, ">>old-params.txt") 
+      || die "$0: Can't open old-params.txt for writing: $!\n";
+      
+    foreach my $item (keys %::param) {
+        if (!grep($_ eq $item, @::param_list) && $item ne "version") {
+            push (@oldparams, $item);
+            print PARAMFILE "\n\n$item:\n$::param{$item}\n";
+                
+            delete $::param{$item};
+        }
+    }
+    
+    if (@oldparams) {
+        print "The following parameters are no longer used in Bugzilla, " .
+              "and so have been\nremoved from your parameters file and " .
+              "appended to old-params.txt:\n";
+        print join(", ", @oldparams) . "\n\n";               
+    }
+    
+    close PARAMFILE;
+    WriteParams();
+}
 
 
 ###########################################################################
@@ -703,22 +1052,36 @@ sub isExecutableFile {
 
 # fix file (or files - wildcards ok) permissions 
 sub fixPerms {
-    my $file;
-    my @files = glob($_[0]);
-    my $exeperm = 0777 & ~ $_[1];
-    my $normperm = 0666 & ~ $_[1];
-    foreach $file (@files) {
-      # do not change permissions on directories here
-      if (!(-d $file)) {
-        # check if the file is executable.
-        if (isExecutableFile($file)) {
-          #printf ("Changing $file to %o",$exeperm);
-          chmod $exeperm, $file;
-        } else {
-          #print ("Changing $file to %o", $normperm);
-          chmod $normperm, $file;
+    my ($file_pattern, $owner, $group, $umask, $do_dirs) = @_;
+    my @files = glob($file_pattern);
+    my $execperm = 0777 & ~ $umask;
+    my $normperm = 0666 & ~ $umask;
+    foreach my $file (@files) {
+        next if (!-e $file);
+        # do not change permissions on directories here unless $do_dirs is set
+        if (!(-d $file)) {
+            chown $owner, $group, $file;
+            # check if the file is executable.
+            if (isExecutableFile($file)) {
+                #printf ("Changing $file to %o\n", $execperm);
+                chmod $execperm, $file;
+            } else {
+                #printf ("Changing $file to %o\n", $normperm);
+                chmod $normperm, $file;
+            }
         }
-      }
+        elsif ($do_dirs) {
+            chown $owner, $group, $file;
+            if ($file =~ /CVS$/) {
+                chmod 0700, $file;
+            }
+            else {
+                #printf ("Changing $file to %o\n", $execperm);
+                chmod $execperm, $file;
+                fixPerms("$file/.htaccess", $owner, $group, $umask, $do_dirs);
+                fixPerms("$file/*", $owner, $group, $umask, $do_dirs); # do the contents of the directory
+            }
+        }
     }
 }
 
@@ -728,21 +1091,48 @@ if ($my_webservergroup) {
     # chown needs to be called with a valid uid, not 0.  $< returns the
     # caller's uid.  Maybe there should be a $bugzillauid, and call with that
     # userid.
-    chown $<, $webservergid, glob('*');
-    if (-e ".htaccess") { chown $<, $webservergid, ".htaccess" } # glob('*') doesn't catch dotfiles
-    if (-e "data/.htaccess") { chown $<, $webservergid, "data/.htaccess" }
-    if (-e "data/webdot/.htaccess") { chown $<, $webservergid, "data/webdot/.htaccess" }
-    fixPerms('*',027);
+    fixPerms('.htaccess', $<, $webservergid, 027); # glob('*') doesn't catch dotfiles
+    fixPerms('data/.htaccess', $<, $webservergid, 027);
+    fixPerms('data/duplicates', $<, $webservergid, 027, 1);
+    fixPerms('data/mining', $<, $webservergid, 027, 1);
+    fixPerms('data/template', $<, $webservergid, 007, 1); # webserver will write to these
+    fixPerms('data/webdot', $<, $webservergid, 007, 1);
+    fixPerms('data/webdot/.htaccess', $<, $webservergid, 027);
+    fixPerms('data/params', $<, $webservergid, 017);
+    fixPerms('*', $<, $webservergid, 027);
+    fixPerms('template', $<, $webservergid, 027, 1);
+    fixPerms('css', $<, $webservergid, 027, 1);
     chmod 0644, 'globals.pl';
     chmod 0644, 'RelationSet.pm';
+
+    # Don't use fixPerms here, because it won't change perms on the directory
+    # unless its using recursion
+    chown $<, $webservergid, 'data';
     chmod 0771, 'data';
+    chown $<, $webservergid, 'graphs';
     chmod 0770, 'graphs';
 } else {
     # get current gid from $( list
     my $gid = (split " ", $()[0];
-    chown $<, $gid, glob('*');
-    fixPerms('*',022);
-    chmod 01777, 'data', 'graphs';
+    fixPerms('.htaccess', $<, $gid, 022); # glob('*') doesn't catch dotfiles
+    fixPerms('data/.htaccess', $<, $gid, 022);
+    fixPerms('data/duplicates', $<, $gid, 022, 1);
+    fixPerms('data/mining', $<, $gid, 022, 1);
+    fixPerms('data/template', $<, $gid, 000, 1); # webserver will write to these
+    fixPerms('data/webdot', $<, $gid, 000, 1);
+    chmod 01777, 'data/webdot';
+    fixPerms('data/webdot/.htaccess', $<, $gid, 022);
+    fixPerms('data/params', $<, $gid, 011);
+    fixPerms('*', $<, $gid, 022);
+    fixPerms('template', $<, $gid, 022, 1);
+    fixPerms('css', $<, $gid, 022, 1);
+
+    # Don't use fixPerms here, because it won't change perms on the directory
+    # unless its using recursion
+    chown $<, $gid, 'data';
+    chmod 0777, 'data';
+    chown $<, $gid, 'graphs';
+    chmod 01777, 'graphs';
 }
 
 
@@ -772,7 +1162,7 @@ my $drh = DBI->install_driver($db_base)
 if ($my_db_check) {
     # Do we have the database itself?
 
-    my $sql_want = "3.22.5";  # minimum version of MySQL
+    my $sql_want = "3.23.6";  # minimum version of MySQL
 
 # original DSN line was:
 #    my $dsn = "DBI:$db_base:$my_db_name;$my_db_host;$my_db_port";
@@ -792,7 +1182,7 @@ if ($my_db_check) {
     # Check what version of MySQL is installed and let the user know
     # if the version is too old to be used with Bugzilla.
     if ( vers_cmp($sql_vers,$sql_want) > -1 ) {
-        print "ok: found v$sql_vers\n\n";
+        print "ok: found v$sql_vers\n";
     } else {
         die "Your MySQL server v$sql_vers is too old./n" . 
             "   Bugzilla requires version $sql_want or later of MySQL.\n" . 
@@ -828,7 +1218,38 @@ my $dbh = DBI->connect($connectstring, $my_db_user, $my_db_pass)
 END { $dbh->disconnect if $dbh }
 
 
+###########################################################################
+# Check GraphViz setup
+###########################################################################
 
+#
+# If we are using a local 'dot' binary, verify the specified binary exists
+# and that the generated images are accessible.
+#
+
+if(-e "data/params") {
+  require "data/params";
+  if( $::param{'webdotbase'} && $::param{'webdotbase'} !~ /^https?:/ ) {
+    printf("Checking for %15s %-9s ", "GraphViz", "(any)");
+    if(-x $::param{'webdotbase'}) {
+      print "ok: found\n";
+    } else {
+      print "not a valid executable: $::param{'webdotbase'}\n";
+    }
+
+    # Check .htaccess allows access to generated images
+    if(-e "data/webdot/.htaccess") {
+      open HTACCESS, "data/webdot/.htaccess";
+      if(! grep(/png/,<HTACCESS>)) {
+        print "Dependency graph images are not accessible.\n";
+        print "Delete data/webdot/.htaccess and re-run checksetup.pl to rectify.\n";
+      }
+      close HTACCESS;
+    }
+  }
+}
+
+print "\n";
 
 
 ###########################################################################
@@ -886,11 +1307,9 @@ $table{attachments} =
     index(bug_id),
     index(creation_ts)';
 
-# 2001-05-05 myk@mozilla.org: Tables to support the attachment tracker.
+# 2001-05-05 myk@mozilla.org: Tables to support attachment statuses.
 # "attachstatuses" stores one record for each status on each attachment.
 # "attachstatusdefs" defines the statuses that can be set on attachments.
-# Note: These tables are only used if the parameter "useattachmenttracker"
-# is turned on via editparameters.cgi.
 
 $table{attachstatuses} =
    '
@@ -940,10 +1359,9 @@ $table{bugs} =
     lastdiffed datetime not null,
     everconfirmed tinyint not null,
     reporter_accessible tinyint not null default 1,
-    assignee_accessible tinyint not null default 1,
-    qacontact_accessible tinyint not null default 1,
     cclist_accessible tinyint not null default 1,
-
+    alias varchar(20),
+    
     index (assigned_to),
     index (creation_ts),
     index (delta_ts),
@@ -958,7 +1376,9 @@ $table{bugs} =
     index (resolution),
     index (target_milestone),
     index (qa_contact),
-    index (votes)';
+    index (votes),
+    
+    unique(alias)';
 
 
 $table{cc} =
@@ -1032,12 +1452,10 @@ $table{groups} =
     unique(bit),
     unique(name)';
 
-
 $table{logincookies} =
    'cookie mediumint not null auto_increment primary key,
     userid mediumint not null,
-    cryptpassword varchar(34),
-    hostname varchar(128),
+    ipaddr varchar(40) NOT NULL,
     lastused timestamp,
 
     index(lastused)';
@@ -1086,22 +1504,10 @@ $table{profiles_activity} =
 $table{namedqueries} =
     'userid mediumint not null,
      name varchar(64) not null,
-     watchfordiffs tinyint not null,
      linkinfooter tinyint not null,
      query mediumtext not null,
 
-     unique(userid, name),
-     index(watchfordiffs)';
-
-# This isn't quite cooked yet...
-#
-#  $table{diffprefs} =
-#     'userid mediumint not null,
-#      fieldid mediumint not null,
-#      mailhead tinyint not null,
-#      maildiffs tinyint not null,
-#
-#      index(userid)';
+     unique(userid, name)';
 
 $table{fielddefs} =
    'fieldid mediumint not null auto_increment primary key,
@@ -1171,11 +1577,41 @@ $table{tokens} =
 
      index(userid)';
 
+# 2002-07-19, davef@tetsubo.com, bug 67950:
+# Store quips in the db.
+$table{quips} =
+    'quipid mediumint not null auto_increment primary key,
+     userid mediumint not null default 0, 
+     quip text not null';
 
 
 ###########################################################################
 # Create tables
 ###########################################################################
+
+# Figure out if any existing tables are of type ISAM and convert them
+# to type MyISAM if so.  ISAM tables are deprecated in MySQL 3.23,
+# which Bugzilla now requires, and they don't support more than 16 
+# indexes per table, which Bugzilla needs.
+my $sth = $dbh->prepare("SHOW TABLE STATUS FROM $::db_name");
+$sth->execute;
+my @isam_tables = ();
+while (my ($name, $type) = $sth->fetchrow_array) {
+    push(@isam_tables, $name) if $type eq "ISAM";
+}
+
+if(scalar(@isam_tables)) {
+    print "One or more of the tables in your existing MySQL database are of type ISAM.\n" . 
+          "ISAM tables are deprecated in MySQL 3.23 and don't support more than 16 indexes\n" . 
+          "per table, which Bugzilla needs.  Converting your ISAM tables to type MyISAM:\n\n";
+    foreach my $table (@isam_tables) {
+        print "Converting table $table... ";
+        $dbh->do("ALTER TABLE $table TYPE = MYISAM");
+        print "done.\n";
+    }
+    print "\nISAM->MyISAM table conversion done.\n\n";
+}
+
 
 # Get a list of the existing tables (if any) in the database
 my @tables = map { $_ =~ s/.*\.//; $_ } $dbh->tables;
@@ -1205,15 +1641,11 @@ while (my ($tabname, $fielddef) = each %table) {
         or die "Could not create table '$tabname'. Please check your '$db_base' access.\n";
 }
 
-
-
-
-
 ###########################################################################
 # Populate groups table
 ###########################################################################
 
-sub GroupExists ($)
+sub GroupDoesExist ($)
 {
     my ($name) = @_;
     my $sth = $dbh->prepare("SELECT name FROM groups WHERE name='$name'");
@@ -1234,7 +1666,7 @@ sub AddGroup {
     my ($name, $desc, $userregexp) = @_;
     $userregexp ||= "";
 
-    return if GroupExists($name);
+    return if GroupDoesExist($name);
     
     # get highest bit number
     my $sth = $dbh->prepare("SELECT bit FROM groups ORDER BY bit DESC");
@@ -1273,12 +1705,12 @@ AddGroup 'editkeywords',   'Can create, destroy, and edit keywords.';
 # code that updates the database structure.
 &AddField('profiles', 'groupset', 'bigint not null');
 
-if (!GroupExists("editbugs")) {
+if (!GroupDoesExist("editbugs")) {
     my $id = AddGroup('editbugs',  'Can edit all aspects of any bug.', ".*");
     $dbh->do("UPDATE profiles SET groupset = groupset | $id");
 }
 
-if (!GroupExists("canconfirm")) {
+if (!GroupDoesExist("canconfirm")) {
     my $id = AddGroup('canconfirm',  'Can confirm a bug.', ".*");
     $dbh->do("UPDATE profiles SET groupset = groupset | $id");
 }
@@ -1346,6 +1778,7 @@ AddFDef("delta_ts", "Last changed date", 0);
 AddFDef("(to_days(now()) - to_days(bugs.delta_ts))", "Days since bug changed",
         0);
 AddFDef("longdesc", "Comment", 0);
+AddFDef("alias", "Alias", 0);
     
     
 
@@ -1474,7 +1907,7 @@ sub bailout {   # this is just in case we get interrupted while getting passwd
     exit 1;
 }
 
-my $sth = $dbh->prepare(<<_End_Of_SQL_);
+$sth = $dbh->prepare(<<_End_Of_SQL_);
   SELECT login_name
   FROM profiles
   WHERE groupset=9223372036854775807
@@ -1488,6 +1921,23 @@ if ($sth->rows == 0) {
   my $pass2 = "*";
   my $admin_ok = 0;
   my $admin_create = 1;
+  my $mailcheckexp = "";
+  my $mailcheck    = ""; 
+
+  # Here we look to see what the emailregexp is set to so we can 
+  # check the email addy they enter. Bug 96675. If they have no 
+  # params (likely but not always the case), we use the default.
+  if (-e "data/params") { 
+    require "data/params"; # if they have a params file, use that
+  }
+  if ($::param{emailregexp}) {
+    $mailcheckexp = $::param{emailregexp};
+    $mailcheck    = $::param{emailregexpdesc};
+  } else {
+    $mailcheckexp = '^[^@]+@[^@]+\\.[^@]+$';
+    $mailcheck    = 'A legal address must contain exactly one \'@\', 
+      and at least one \'.\' after the @.';
+  }
 
   print "\nLooks like we don't have an administrator set up yet.  Either this is your\n";
   print "first time using Bugzilla, or your administrator's privs might have accidently\n";
@@ -1499,6 +1949,14 @@ if ($sth->rows == 0) {
       chomp $login;
       if(! $login ) {
         print "\nYou DO want an administrator, don't you?\n";
+      }
+      unless ($login =~ /$mailcheckexp/) {
+        print "\nThe login address is invalid:\n";
+        print "$mailcheck\n";
+        print "You can change this test on the params page once checksetup has successfully\n";
+        print "completed.\n\n";
+        # Go round, and ask them again
+        $login = "";
       }
     }
     $login = $dbh->quote($login);
@@ -1598,39 +2056,6 @@ _End_Of_SQL_
 _End_Of_SQL_
   }
   print "\n$login is now set up as the administrator account.\n";
-}
-
-
-sub Crypt {
-    # Crypts a password, generating a random salt to do it.
-    # Random salts are generated because the alternative is usually
-    # to use the first two characters of the password itself, and since
-    # the salt appears in plaintext at the beginning of the crypted
-    # password string this has the effect of revealing the first two
-    # characters of the password to anyone who views the crypted version.
-
-    my ($password) = @_;
-
-    # The list of characters that can appear in a salt.  Salts and hashes
-    # are both encoded as a sequence of characters from a set containing
-    # 64 characters, each one of which represents 6 bits of the salt/hash.
-    # The encoding is similar to BASE64, the difference being that the
-    # BASE64 plus sign (+) is replaced with a forward slash (/).
-    my @saltchars = (0..9, 'A'..'Z', 'a'..'z', '.', '/');
-
-    # Generate the salt.  We use an 8 character (48 bit) salt for maximum
-    # security on systems whose crypt uses MD5.  Systems with older
-    # versions of crypt will just use the first two characters of the salt.
-    my $salt = '';
-    for ( my $i=0 ; $i < 8 ; ++$i ) {
-        $salt .= $saltchars[rand(64)];
-    }
-
-    # Crypt the password.
-    my $cryptedpassword = crypt($password, $salt);
-
-    # Return the crypted password.
-    return $cryptedpassword;
 }
 
 
@@ -2518,9 +2943,10 @@ ChangeFieldType("profiles", "disabledtext", "mediumtext not null");
 # Add fields to the bugs table that record whether or not the reporter,
 # assignee, QA contact, and users on the cc: list can see bugs even when
 # they are not members of groups to which the bugs are restricted.
+# 2002-02-06 bbaetz@student.usyd.edu.au - assignee/qa can always see the bug
 AddField("bugs", "reporter_accessible", "tinyint not null default 1");
-AddField("bugs", "assignee_accessible", "tinyint not null default 1");
-AddField("bugs", "qacontact_accessible", "tinyint not null default 1");
+#AddField("bugs", "assignee_accessible", "tinyint not null default 1");
+#AddField("bugs", "qacontact_accessible", "tinyint not null default 1");
 AddField("bugs", "cclist_accessible", "tinyint not null default 1");
 
 # 2001-08-21 myk@mozilla.org bug84338:
@@ -2528,6 +2954,94 @@ AddField("bugs", "cclist_accessible", "tinyint not null default 1");
 # using the attachment manager can record changes to attachments.
 AddField("bugs_activity", "attach_id", "mediumint null");
 
+# 2002-02-04 bbaetz@student.usyd.edu.au bug 95732
+# Remove logincookies.cryptpassword, and delete entries which become
+# invalid
+if (GetFieldDef("logincookies", "cryptpassword")) {
+    # We need to delete any cookies which are invalid, before dropping the
+    # column
+
+    print "Removing invalid login cookies...\n";
+
+    # mysql doesn't support DELETE with multi-table queries, so we have
+    # to iterate
+    my $sth = $dbh->prepare("SELECT cookie FROM logincookies, profiles " .
+                            "WHERE logincookies.cryptpassword != " .
+                            "profiles.cryptpassword AND " .
+                            "logincookies.userid = profiles.userid");
+    $sth->execute();
+    while (my ($cookie) = $sth->fetchrow_array()) {
+        $dbh->do("DELETE FROM logincookies WHERE cookie = $cookie");
+    }
+
+    DropField("logincookies", "cryptpassword");
+}
+
+# 2002-02-13 bbaetz@student.usyd.edu.au - bug 97471
+# qacontact/assignee should always be able to see bugs,
+# so remove their restriction column
+if (GetFieldDef("bugs","qacontact_accessible")) {
+    print "Removing restrictions on bugs for assignee and qacontact...\n";
+
+    DropField("bugs", "qacontact_accessible");
+    DropField("bugs", "assignee_accessible");
+}
+
+# 2002-03-15 bbaetz@student.usyd.edu.au - bug 129466
+# 2002-05-13 preed@sigkill.com - bug 129446 patch backported to the 
+#  BUGZILLA-2_14_1-BRANCH as a security blocker for the 2.14.2 release
+# 
+# Use the ip, not the hostname, in the logincookies table
+if (GetFieldDef("logincookies", "hostname")) {
+    # We've changed what we match against, so all entries are now invalid
+    $dbh->do("DELETE FROM logincookies");
+
+    # Now update the logincookies schema
+    DropField("logincookies", "hostname");
+    AddField("logincookies", "ipaddr", "varchar(40) NOT NULL");
+}
+
+# 2002-07-03 myk@mozilla.org bug99203:
+# Add a bug alias field to the bugs table so bugs can be referenced by alias
+# in addition to ID.
+if (!GetFieldDef("bugs", "alias")) {
+    AddField("bugs", "alias", "VARCHAR(20)");
+    $dbh->do("ALTER TABLE bugs ADD UNIQUE (alias)");
+}
+
+# 2002-07-15 davef@tetsubo.com - bug 67950
+# Move quips to the db.
+my $renamed_comments_file = 0;
+if (GetFieldDef("quips", "quipid")) {
+    if (-e 'data/comments' && open (COMMENTS, "<data/comments")) {
+        print "Populating quips table from data/comments...\n";
+        while (<COMMENTS>) {
+            chomp;
+            $dbh->do("INSERT INTO quips (quip) VALUES ("
+                      . $dbh->quote($_) . ")");
+        }
+        print "The data/comments file (used to store quips) has been        
+               copied into the database, and the data/comments file
+               moved to data/comments.bak - you can delete this file
+               once you're satisfied the migration worked correctly.\n\n";
+        close COMMENTS;
+        rename("data/comments", "data/comments.bak") or next;        
+        $renamed_comments_file = 1;
+    }
+}
+
+# Warn if data/comments.bak exists, as it should be deleted.
+if (-e 'data/comments.bak' && !$renamed_comments_file) {
+    print "The data/comments.bak file can be removed, as it's no longer
+           used.\n\n";
+}
+
+# 2002-07-31 bbaetz@student.usyd.edu.au bug 158236
+# Remove unused column
+if (GetFieldDef("namedqueries", "watchfordiffs")) {
+    DropField("namedqueries", "watchfordiffs");
+}
+        
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
 #
@@ -2541,4 +3055,5 @@ AddField("bugs_activity", "attach_id", "mediumint null");
 # Final checks...
 
 unlink "data/versioncache";
+
 print "Reminder: Bugzilla now requires version 8.7 or later of sendmail.\n";
