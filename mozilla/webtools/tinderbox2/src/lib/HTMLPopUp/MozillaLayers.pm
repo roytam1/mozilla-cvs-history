@@ -281,7 +281,9 @@ sub Link {
     $name = "name=\"$args{'name'}\"";
   }
 
-    
+  # This is important to prevent recursion.  Our popup windows have
+  # links inside them.  Luckally the links do not cause popups.
+
   if (!($args{'windowtxt'})) {
       $out .= "<a $name href=\"$args{'href'}\">";
       $out .= "$args{'linktxt'}</a>\n";
