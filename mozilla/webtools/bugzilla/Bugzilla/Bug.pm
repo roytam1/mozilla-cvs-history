@@ -245,7 +245,7 @@ sub emitXML {
 
   $xml .= "<bug>\n";
 
-  foreach my $field ("bug_id", "urlbase", "bug_status", "product",
+  foreach my $field ("bug_id", "bug_status", "product",
       "priority", "version", "rep_platform", "assigned_to", "delta_ts", 
       "component", "reporter", "target_milestone", "bug_severity", 
       "creation_ts", "qa_contact", "op_sys", "resolution", "bug_file_loc",
@@ -322,7 +322,7 @@ sub XML_Header {
   my ($urlbase, $version, $maintainer, $exporter) = (@_);
 
   my $xml;
-  $xml = "<?xml version=\"1.0\" standalone=\"no\"?>\n";
+  $xml = "<?xml version=\"1.0\" standalone=\"yes\"?>\n";
   $xml .= "<!DOCTYPE bugzilla SYSTEM \"$urlbase";
   if (! ($urlbase =~ /.+\/$/)) {
     $xml .= "/";
@@ -401,7 +401,7 @@ sub CanChangeField {
         # isn't legal.
 
         if ($UserInCanConfirmGroup < 0) {
-            $UserInCanConfirmGroup = &::UserInGroup("canconfirm");
+            $UserInCanConfirmGroup = &::UserInGroup($self->{'whoid'},"canconfirm");
         }
         if ($UserInCanConfirmGroup) {
             return 1;
