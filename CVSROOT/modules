@@ -207,6 +207,7 @@ MozillaSourceUnixOnly -a \
 
 
 MozillaSourceMacOnly -a \
+    mozilla/config/mac  \
     mozilla/cmd/dialup  \
     mozilla/cmd/macfe \
     mozilla/lib/mac/AutoAdmin  \
