@@ -445,7 +445,7 @@ sub backward_compatibility {
   # keep funky characters out of the buildname.  We use ',' as a
   # separator so that must not appear.
 
-  $TINDERBOX{'buildname'} =~ s/[.,;:'"\+]+/_/g;
+  $TINDERBOX{'buildname'} =~ s/[,;:!|\$\*\&\%\^\@\`\'\"\+]+/_/g;
   $TINDERBOX{'buildname'} =~ s/__+/_/g;
  
   return 1;
