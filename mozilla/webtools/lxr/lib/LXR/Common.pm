@@ -286,7 +286,7 @@ sub markupfile {
 #	&$outfun("</pre>\n");
 	untie(%xref);
 
-    } elsif ($fname =~ /\.(gif|jpg|jpeg|pjpg|pjpeg|xbm)$/i) {
+    } elsif ($fname =~ /\.(gif|p?jpe?g|xbm|bmp|[mp]ng)$/i) {
 
 	&$outfun("</PRE>");
 	&$outfun("<UL><TABLE><TR><TH VALIGN=CENTER><B>Image: </B></TH>");
