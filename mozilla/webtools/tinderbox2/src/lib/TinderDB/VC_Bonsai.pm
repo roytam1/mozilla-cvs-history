@@ -287,7 +287,7 @@ sub apply_db_updates {
         $TinderDB::MAX_UPDATES_SINCE_TRIM)
      ) {
     $METADATA{$tree}{'updates_since_trim'}=0;
-    $self->trim_db_history(@_);
+    $self->trim_db_history($tree);
   }
 
   $self->savetree_db($tree);
@@ -381,23 +381,24 @@ sub is_break_cell {
         $LAST_TREESTATE = $DATABASE{$tree}{$time}{'treestate'};
     }
 
-    my $is_state1_same = (defined($LAST_TREESTATE)) &&
+    my $is_state1_different = 
         (
-         !(defined($DATABASE{$tree}{$next_time}{'treestate'})) ||
-         ($last_treestate eq $DATABASE{$tree}{$next_time}{'treestate'})
-         );
+         (defined($LAST_TREESTATE)) &&
+         (defined($DATABASE{$tree}{$next_time}{'treestate'})) &&
+         ($last_treestate ne $DATABASE{$tree}{$next_time}{'treestate'}) &&
+         1);
 
-    my $is_state2_same = (defined($LAST_TREESTATE)) &&
+    my $is_state2_different = 
         (
-         !(defined($DATABASE{$tree}{$time}{'treestate'})) ||
-         ($last_treestate eq $DATABASE{$tree}{$time}{'treestate'})
-         );
+         (defined($LAST_TREESTATE)) &&
+         (defined($DATABASE{$tree}{$time}{'treestate'})) &&
+         ($last_treestate ne $DATABASE{$tree}{$time}{'treestate'}) &&
+         1);
 
-    $is_state_same = $is_state1_same && $is_state2_same;
-    
+    $is_state_different = $is_state1_different || $is_state2_different;    
     my  $is_author_data = defined($DATABASE{$tree}{$time}{'author'});
     
-    my $is_break_cell = ( !($is_state_same) || ($is_author_data) );
+    my $is_break_cell = ( ($is_state_different) || ($is_author_data) );
     
     return $is_break_cell;
 }
