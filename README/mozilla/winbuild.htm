@@ -104,7 +104,7 @@ Notes for more details)</LI>
 
 <LI>
 set MOZ_SRC=(top of your tree, drive letter and path, i.e. set MOZ_SRC=d:\mozilla_src.
-The topmost directory under this should be ns)</LI>
+The topmost directory under this should be mozilla)</LI>
 
 <LI>
 set MOZ_TOOLS=(location of the bin directory containing your GNU tools.
@@ -133,7 +133,7 @@ like dependency generation</LI>
 
 <UL>
 <LI>
-cd ns\config</LI>
+cd mozilla\config</LI>
 
 <LI>
 nmake /f makefile.win</LI>
@@ -145,7 +145,7 @@ tree. You will end up with a mozilla.exe at the end.</LI>
 
 <UL>
 <LI>
-cd ns</LI>
+cd mozilla</LI>
 
 <LI>
 nmake /f client.mak</LI>
@@ -161,14 +161,14 @@ above, you don't need to do this.</LI>
 <LI>
 <B>Build the back end:</B> This builds cross platform components like NSPR
 and the shared library modules. All of the interesting output from this
-part of the build will end up in ns\dist, under public\ if it's a library
+part of the build will end up in mozilla\dist, under public\ if it's a library
 header, and under WIN32_D.OBJ\ (or WIN32_O.OBJ\ for an optimized build)
 if it's a dynamic or static library. The exception is the NSPR public headers,
 which live in WIN32_D.OBJ\include.</LI>
 
 <UL>
 <LI>
-cd ns</LI>
+cd mozilla</LI>
 
 <LI>
 nmake /f makefile.win</LI>
@@ -180,7 +180,7 @@ mozilla.exe.</LI>
 
 <UL>
 <LI>
-cd ns\cmd\winfe\mkfiles32</LI>
+cd mozilla\cmd\winfe\mkfiles32</LI>
 
 <LI>
 nmake /f mozilla.mak DEPEND=1</LI>
@@ -192,7 +192,7 @@ nmake /f mozilla.mak</LI>
 <B><FONT SIZE=+1>Notes:</FONT></B>
 <UL>
 <LI>
-MOZ_OUT: If you don't set this, mozilla.exe will be generated into ns\cmd\winfe\mkfiles32\x86dbg
+MOZ_OUT: If you don't set this, mozilla.exe will be generated into mozilla\cmd\winfe\mkfiles32\x86dbg
 (or x86rel for optimized builds)</LI>
 
 <LI>
