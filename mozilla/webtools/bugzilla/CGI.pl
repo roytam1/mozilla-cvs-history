@@ -33,6 +33,7 @@ use lib ".";
 # use Carp;                       # for confess
 
 use Bugzilla::Util;
+use Bugzilla::Config;
 
 # commented out the following snippet of code. this tosses errors into the
 # CGI if you are perl 5.6, and doesn't if you have perl 5.003. 
@@ -787,6 +788,7 @@ Content-type: text/html
         
         $vars->{'target'} = $nexturl;
         $vars->{'form'} = \%::FORM;
+        $vars->{'mform'} = \%::MFORM;
         
         print "Content-type: text/html\n\n";
         $template->process("account/login.html.tmpl", $vars)
@@ -1065,7 +1067,9 @@ if (defined $ENV{"HTTP_COOKIE"}) {
     foreach my $pair (split(/;/, $ENV{"HTTP_COOKIE"})) {
         $pair = trim($pair);
         if ($pair =~ /^([^=]*)=(.*)$/) {
-            $::COOKIE{$1} = $2;
+            if (!exists($::COOKIE{$1})) {
+                $::COOKIE{$1} = $2;
+            }
         } else {
             $::COOKIE{$pair} = "";
         }
