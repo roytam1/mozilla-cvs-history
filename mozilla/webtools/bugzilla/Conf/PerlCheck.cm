@@ -15,7 +15,7 @@ END
 output "checking for perl: ";
 if (-e "/usr/bonsaitools/bin/perl") {
 	setConf("perl","/usr/bonsaitools/bin/perl");
-	output("FOUND: /usr/bonsaitools/bin/perl\n");
+	output("FOUND: /usr/bonsaitools/bin/perl\n\n");
 } else {
 	unless (searchpathforapp('perl')) { #search the path
 		#if we are here, we didn't find perl in the path, ask for it
@@ -38,15 +38,17 @@ perl installation, the path to perl that was detected or specified, or Bugzilla.
 Try running Configure.pl again.
 EOF
 
-	exec(getConf('perl')." Configure.pl --perl=".getConf('perl')); # exec the new perl with an arg
+	exec(getConf('perl')." $0 --perl=".getConf('perl')); # exec the new perl with an arg
 	exit; # and we are done here...
 
 } else {
 	# something went wrong so we bail out
 	output <<EOF;
-Something appears to have gone wrong and I couldn't find perl. Try calling Configure.pl 
-using the full path to perl and passing the --perl= option like so:
+Something appears to have gone wrong and I couldn't find perl. Try calling 
+Configure.pl using the full path to perl and passing 
+the --perl= option like so:
 /my/path/to/perl Configure.pl --perl=/my/path/to/perl
+
 EOF
 	die "Couldn't find perl\n";
 }

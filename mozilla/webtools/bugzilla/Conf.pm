@@ -86,7 +86,7 @@ sub setConf($$) {
 
 
 sub getConf($) { 
-    my $name = @_;
+    my $name = shift;
     return $main::c{$name}; # return the value
 }
 
