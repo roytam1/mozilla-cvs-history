@@ -61,6 +61,8 @@ runtime: 45.22 (minutes)<br>
 buildstatus: success<br>
 buildname: Linux comet Depend<br>
 tree: SeaMonkey<br>
+<br>
+<a href=http://mozilla.com>test</a><br>
 
 EOF
     ;
