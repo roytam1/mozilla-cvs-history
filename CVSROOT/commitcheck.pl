@@ -310,6 +310,8 @@ if (m:^mozilla/widget/src/xlib/.*$:) {return '121';}
 if (m:^mozilla/ef/.*$:) {return '46';}
 if (m:^mozilla/gfx/src/gtk/.*$:) {return '49';}
 if (m:^mozilla/widget/src/gtk/.*$:) {return '49';}
+if (m:^mozilla/widget/src/gtk2/.*$:) {return '49';}
+if (m:^mozilla/widget/src/gtksuperwin/.*$:) {return '49';}
 if (m:^mozilla/rdf/.*$:) {return '52';}
 if (m:^mozilla/dbm/.*$:) {return '53';}
 if (m:^mozilla/build/.*$:) {return '55';}
