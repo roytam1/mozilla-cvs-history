@@ -57,7 +57,7 @@ select(S); $| = 1; select(STDOUT);
 get_response_code(220);
 print S "EHLO $hostname\n";
 get_response_code(250);
-print S "MAIL FROM: cvs-notify-daemon@$hostname\n";
+print S "MAIL FROM: cvs-notify-daemon\@$hostname\n";
 get_response_code(250);
 foreach $i (@mailto) {
     print S "RCPT TO: $i\n";
