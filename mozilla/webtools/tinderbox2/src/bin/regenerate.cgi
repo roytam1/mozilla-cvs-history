@@ -60,7 +60,6 @@ use FileStructure;
 
     my ($tree) = $form{'tree'};
 
-    $tree = 'SeaMonkey';
     $url = (
             FileStructure::get_filename($tree, 'tree_URL').
             '/'.
