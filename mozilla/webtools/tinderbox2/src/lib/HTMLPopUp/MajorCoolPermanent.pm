@@ -40,7 +40,7 @@
 # Contributor(s): 
 
 
-package HTMLPopUp::MajorCoolWindow;
+package HTMLPopUp::MajorCoolPermanent;
 
 $VERSION = '#tinder_version#';
 
