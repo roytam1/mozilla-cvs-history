@@ -139,7 +139,7 @@ unless ($action) {
     SendSQL("SELECT product, description, disallownew 
              FROM products 
              ORDER BY product");
-    print "<P>\n<TABLE BORDER=1 CELLPADDING=3 CELLSPACING=0 WIDTH=800 ALIGN=center><TR BGCOLOR=\"#BFBFBF\">\n";
+    print "<P>\n<TABLE BORDER=1 CELLPADDING=3 CELLSPACING=0 ALIGN=center><TR BGCOLOR=\"#BFBFBF\">\n";
     print "  <TH ALIGN=\"left\">Product</TH>\n";
     print "  <TH ALIGN=\"left\">Description</TH>\n";
     print "  <TH ALIGN=\"left\">Status</TH>\n";
@@ -394,14 +394,15 @@ if ($action eq 'delete') {
     CheckProduct($product);
 
     # lock the tables before we start to change everything:
-
-    SendSQL("LOCK TABLES attachments WRITE,
+	if ($::driver eq 'mysql') {
+	    SendSQL("LOCK TABLES attachments WRITE,
                          bugs WRITE,
                          bugs_activity WRITE,
                          components WRITE,
                          dependencies WRITE,
                          versions WRITE,
                          products WRITE");
+	}
 
     # According to MySQL doc I cannot do a DELETE x.* FROM x JOIN Y,
     # so I have to iterate over bugs and delete all the indivial entries
@@ -440,7 +441,9 @@ if ($action eq 'delete') {
     SendSQL("DELETE FROM products
              WHERE product=" . SqlQuote($product));
     print "Product '$product' deleted.<BR>\n";
-    SendSQL("UNLOCK TABLES");
+	if ($::driver eq 'mysql') {
+	    SendSQL("UNLOCK TABLES");
+	}
 
     unlink "data/versioncache";
     PutTrailer($localtrailer);
@@ -558,12 +561,13 @@ if ($action eq 'update') {
 
     # Note that the order of this tests is important. If you change
     # them, be sure to test for WHERE='$product' or WHERE='$productold'
-
-    SendSQL("LOCK TABLES bugs WRITE,
+	if ($::driver eq 'mysql') {
+	    SendSQL("LOCK TABLES bugs WRITE,
                          components WRITE,
                          products WRITE,
                          versions WRITE,
 						 product_group WRITE");
+	}
 
     if ($disallownew != $disallownewold) {
         $disallownew ||= 0;
@@ -577,7 +581,9 @@ if ($action eq 'update') {
         unless ($description) {
             print "Sorry, I can't delete the description.";
             PutTrailer($localtrailer);
-            SendSQL("UNLOCK TABLES");
+            if ($::driver eq 'mysql') {
+				SendSQL("UNLOCK TABLES");
+			}
             exit;
         }
         SendSQL("UPDATE products
@@ -598,13 +604,17 @@ if ($action eq 'update') {
         unless ($product) {
             print "Sorry, I can't delete the product name.";
             PutTrailer($localtrailer);
-            SendSQL("UNLOCK TABLES");
+            if ($::driver eq 'mysql') {
+				SendSQL("UNLOCK TABLES");
+			}
             exit;
         }
         if (TestProduct($product)) {
             print "Sorry, product name '$product' is already in use.";
             PutTrailer($localtrailer);
-            SendSQL("UNLOCK TABLES");
+            if ($::driver eq 'mysql') {
+				SendSQL("UNLOCK TABLES");
+			}
             exit;
         }
 
@@ -638,7 +648,9 @@ if ($action eq 'update') {
     }
 	if ($flag) { print "Updated group permissions.<BR>\n"; }
 
-    SendSQL("UNLOCK TABLES");
+	if ($::driver eq 'mysql') {
+	    SendSQL("UNLOCK TABLES");
+	}
 
     PutTrailer($localtrailer);
     exit;

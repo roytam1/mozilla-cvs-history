@@ -59,32 +59,6 @@ if ( Param("strictvaluechecks") ) {
     }
 }
 
-# Hack added by Red Hat to disallow all users ability to make changes to other peoples reports
-# but still be able to add or remove themselves to the cc list.
-# if the user is the reporter or has higher than default privilege, then can make changes
-# this should probably be more flexible. This is for changes other than add themselves to Cc 
-# list or add a comment. This whole thing doesnt work if multiple bugs selected.
-if ($::FORM{'id'}) {
-	if ($::FORM{'add_comment'}) {
-		if (defined $::FORM{'comment'} && $::FORM{'comment'} ne "") {
-            AppendComment($::FORM{'id'}, $::COOKIE{'Bugzilla_login'}, $::FORM{'comment'});
-            print "<CENTER><B>Your comment has been added. Back to Bug # " .
-            	  "<A HREF=\"show_bug.cgi?id=$::FORM{'id'}\">$::FORM{'id'}</A></B></CENTER><P>\n";	
-			# fix by {} - karin@root66.nl.eu.org
-			# we wouldn't like some hacker including shellchars, whould we?
-			$::FORM{'id'} =~ s/[^a-zA-Z0-9\@_\.\/\+\-]//g;
-			$::COOKIE{'Bugzilla_login'} =~ s/[^a-zA-Z0-9\@_\.\/\+\-]//g;
-			system("./processmail $::FORM{'id'} $::COOKIE{'Bugzilla_login'}");
-			PutFooter();
-			exit;
-		} else {
-			PuntTryAgain("<B>You did not submit a comment. Back to Bug # " . 
-            			 "<A HREF=\"show_bug.cgi?id=$::FORM{'id'}\">$::FORM{'id'}</A>");	
-			PutFooter();
-			exit;
-		}
-	}
-}
 
 if ($::FORM{'product'} ne $::dontchange) {
     if ( Param("strictvaluechecks") ) {
@@ -568,7 +542,7 @@ SWITCH: for ($::FORM{'knob'}) {
         $::FORM{'comment'} .= "\n\n*** This bug has been marked as a duplicate of $num ***";
 
         print "<TABLE BORDER=1><TD><H2>Notation added to bug $num</H2>\n";
-        system("./processmail $num $::FORM{'who'}");
+        system("./processmail", $num, $::FORM{'who'});
         print "<TD><A HREF=\"show_bug.cgi?id=$num\">Go To BUG# $num</A></TABLE>\n";
 
         last SWITCH;
@@ -578,19 +552,19 @@ SWITCH: for ($::FORM{'knob'}) {
 		if ($::COOKIE{'Bugzilla_login'} ne $::FORM{'reporter'}) {
             my $whoid = DBNameToIdAndCheck($::COOKIE{'Bugzilla_login'});
             my $cc_query = "SELECT bug_id FROM cc " .
-                           "WHERE bug_id = '" . $::FORM{'id'} . "' and who = '$whoid'";
+                           "WHERE bug_id = $::FORM{'id'} and who = $whoid";
             SendSQL($cc_query);
             $cc_query = FetchOneColumn();
             if ($cc_query) {
                 PuntTryAgain("Nice Try. You are already on the CC list of bug $::FORM{'id'}.");
             } else {
-                SendSQL("INSERT INTO cc VALUES ('$::FORM{'id'}', '$whoid')");
-                print "<CENTER><B>$::COOKIE{'Bugzilla_login'}</B> successfully added to Cc list. " .
-                	  "<A HREF=\"show_bug.cgi?id=$::FORM{'id'}\">Back</A> to bug $::FORM{'id'}</CENTER><P>\n";
+                SendSQL("INSERT INTO cc VALUES ($::FORM{'id'}, $whoid)");
+				last SWITCH;
             }
         } else {
-            print "<CENTER><B>You are the reporter of this bug. You will already receive mail for this report.</B>" .
-            	  "<P>Click back to return to the previous bug report.</CENTER><P>\n";
+            PuntTryAgain("<CENTER><B>You are the reporter of this bug. ". 
+						 "You will already receive mail for this report.</B>" .
+            	  		 "<P>Click back to return to the previous bug report.</CENTER><P>\n");
         }
 	};
 	# non-privileged user wants to remove themselves from the cc list
@@ -604,12 +578,21 @@ SWITCH: for ($::FORM{'knob'}) {
             $cc_query = "DELETE FROM cc " .
                         "WHERE bug_id = '$::FORM{'id'}' and who = '$whoid'";
             SendSQL($cc_query);
-            print "<CENTER><B>$::COOKIE{'Bugzilla_login'}</B> successfully removed from Cc list. " .
-            	  "<A HREF=\"show_bug.cgi?id=$::FORM{'id'}\">Back</A> to bug $::FORM{'id'}</CENTER><P>\n";
+			last SWITCH;
         } else {
             PuntTryAgain("Nice Try. You are not on the CC list of bug " . $::FORM{'id'});
         }
 	};
+	# non-privileged user wants to add a comment 
+    /^add_comment$/ && do {
+        if (defined $::FORM{'comment'} && $::FORM{'comment'} ne "") {
+            AppendComment($::FORM{'id'}, $::COOKIE{'Bugzilla_login'}, $::FORM{'comment'});
+            last SWITCH;
+        } else {
+            PuntTryAgain("<B>You did not type a comment for submission."); 
+        }
+    };
+
     # default
     PuntTryAgain("Unknown action $::FORM{'knob'}!\n");
     exit;
@@ -719,7 +702,8 @@ my $userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
 #
 foreach my $id (@idlist) {
 	
-	if (defined($id) && !CanIChange($id, $::COOKIE{'Bugzilla_login'}, $::FORM{'reporter'}, $::FORM{'assigned_to'})) {
+	if (defined($id) && !CanIChange($id, $userid, DBname_to_id($::FORM{'reporter'}), 
+		DBname_to_id($::FORM{'assigned_to'}))) {
 		print "<H1>Permission denied.</H1><P>\n";
 		print "<B>You do not have permission to modify bug # $id.</B> \n";	
 		next;
@@ -1014,8 +998,7 @@ The changes made were:
                                         # updates about this bug.
             }
             if ($col eq 'product') {
-                RemoveVotes($id,
-                	"This bug has been moved to a different product");
+                RemoveVotes($id, "This bug has been moved to a different product");
             }
 			$col = GetFieldID($col);
             $old = SqlQuote($old);
@@ -1056,7 +1039,7 @@ The changes made were:
     foreach my $k (keys(%dependencychanged)) {
         print "<TABLE BORDER=1 CELLSPACING=0 ALIGN=center>";
 		print "   <TD><H2>Checking for dependency changes on bug $k</H2>\n<P>\n";
-        system("./processmail $k $::FORM{'who'}");
+        system("./processmail", $k, $::FORM{'who'});
         print "<TD><A HREF=\"show_bug.cgi?id=$k\">Go to BUG# $k</A></TABLE>\n<P>\n";
     }
 

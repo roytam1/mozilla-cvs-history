@@ -77,8 +77,8 @@ if ($::driver eq "mysql") {
 
 } else {
 	$ENV{'ORACLE_HOME'} = "/opt/apps/oracle/product/8.0.5/";
-	$ENV{'ORACLE_SID'} = "bugzilla";
-	$ENV{'TWO_TASK'} = "bugzilla";
+	$ENV{'ORACLE_SID'} = "rheng";
+	$ENV{'TWO_TASK'} = "rheng";
 	$ENV{'ORACLE_USERID'} = "bugzilla/bugzilla";
 	$dbname = "rheng";
 	$dbuser = "bugzilla/bugzilla";
@@ -186,7 +186,7 @@ sub SendSQL {
     }
     SqlLog($str);
     $::currentquery = $::db->prepare($str);
-    	$::currentquery->execute || die "$str: " . $DBI::errstr;
+    $::currentquery->execute || die "$str: " . $DBI::errstr;
 	SqlLog('Done');
 	# Very mysql specific
 	if (!$dontshadow && $iswrite && Param("shadowdb")) {
@@ -351,8 +351,7 @@ sub CanIChange {
 	if ($login eq $assigned) {
         return 1;
     }
-	my $userid = DBname_to_id($login);
-	SendSQL("select count(groupid) from user_group where userid = $userid");
+	SendSQL("select count(groupid) from user_group where userid = $login");
 	my $result = FetchOneColumn();
 	if ($result > 0) {
 		return 1;

@@ -101,7 +101,7 @@
         </TR><TR>
                 <TD ALIGN=right><B><A HREF="bug_status.cgi#assigned_to">Assigned To:</A></B></TD>
                 <TD>[+ $assigned_to +]</TD>
-                <TD ALIGN=center>&nbsp;</TD>
+                <TD ALIGN=center>[+ $milestone_popup +]</TD>
 <!--
                 <TD ALIGN=right COLSPAN=2><B><A HREF="bug_status.cgi#component">Component Text:</A></B></TD>
                 <TD>[+ $component_text +]</TD>
@@ -120,6 +120,8 @@
 			<TH ALIGN=right>[+ $summary_element +]</TD>
         </TR><TR>
 		    <TH ALIGN=right>[+ $whiteboard_element +]</TD>
+		</TR><TR>
+            <TH ALIGN=right>[+ $keywords_element +]</TD> 
         </TR><TR>
             <TH ALIGN=right VALIGN=top>Attachments:</TH><TD>[+ $attachment_element +]</TD>
         </TR>

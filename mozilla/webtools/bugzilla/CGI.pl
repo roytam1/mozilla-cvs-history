@@ -796,7 +796,8 @@ sub MailPassword {
 
 sub confirm_login {
     my ($nexturl) = (@_);
-
+	my $cookiepath = Param('cookiepath');
+                
 	# Uncommenting the next line can help debugging...
 	# print "Content-type: text/plain\n\n";
 
@@ -853,13 +854,13 @@ sub confirm_login {
 		my $logincookie = FetchOneColumn();
 
         $::COOKIE{"Bugzilla_logincookie"} = $logincookie;
-        print "Set-Cookie: Bugzilla_login=$enteredlogin ; path=/bugzilla2/; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
-        print "Set-Cookie: Bugzilla_logincookie=$logincookie ; path=/bugzilla2/; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+		print "Set-Cookie: Bugzilla_login=$enteredlogin ; path=$cookiepath ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+        print "Set-Cookie: Bugzilla_logincookie=$logincookie ; path=$cookiepath ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
 
         # This next one just cleans out any old bugzilla passwords that may
         # be sitting around in the cookie files, from the bad old days when
         # we actually stored the password there.
-        print "Set-Cookie: Bugzilla_password= ; path=/bugzilla2/; expires=Sun, 30-Jun-80 00:00:00 GMT\n";
+        print "Set-Cookie: Bugzilla_password= ; path=$cookiepath ; expires=Sun, 30-Jun-80 00:00:00 GMT\n";
 
     }
 
@@ -867,9 +868,9 @@ sub confirm_login {
 
     if ($loginok != 1) {
 		if ($::disabledreason) {
-            print "Set-Cookie: Bugzilla_login= ; path=/bugzilla2/; expires=Sun, 30-Jun-80 00:00:00 GMT
-Set-Cookie: Bugzilla_logincookie= ; path=/bugzilla2/; expires=Sun, 30-Jun-80 00:00:00 GMT
-Set-Cookie: Bugzilla_password= ; path=/bugzilla2/; expires=Sun, 30-Jun-80 00:00:00 GMT
+            print "Set-Cookie: Bugzilla_login= ; path=$cookiepath ; expires=Sun, 30-Jun-80 00:00:00 GMT
+Set-Cookie: Bugzilla_logincookie= ; path=$cookiepath ; expires=Sun, 30-Jun-80 00:00:00 GMT
+Set-Cookie: Bugzilla_password= ; path=$cookiepath ; expires=Sun, 30-Jun-80 00:00:00 GMT
 Content-type: text/html
 
 ";

@@ -38,7 +38,7 @@ sub PutTrailer (@)
 
     my $count = $#links;
     my $num = 0;
-    print "<P>\n";
+    print "<P><CENTER>\n";
     foreach (@links) {
         print $_;
         if ($num == $count) {
@@ -52,6 +52,7 @@ sub PutTrailer (@)
         }
         $num++;
     }
+	print "</CENTER>\n";
     PutFooter();
 }
 
@@ -126,8 +127,8 @@ my $action  = trim($::FORM{action}  || '');
 if ($action eq "") {
     PutHeader("Select keyword");
     my $tableheader = qq{
-<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0>
-<TR BGCOLOR="#6666FF">
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0 ALIGN=center>
+<TR BGCOLOR="#BFBFBF">
 <TH ALIGN="left">Edit keyword ...</TH>
 <TH ALIGN="left">Description</TH>
 <TH ALIGN="left">Bugs</TH>
@@ -138,11 +139,22 @@ if ($action eq "") {
     my $line_count = 0;
     my $max_table_size = 50;
 
-    SendSQL("SELECT keyworddefs.id, keyworddefs.name, keyworddefs.description,
-                    COUNT(keywords.bug_id), keywords.bug_id
-             FROM keyworddefs LEFT JOIN keywords ON keyworddefs.id = keywords.keywordid
-             GROUP BY keyworddefs.id
-             ORDER BY keyworddefs.name");
+	if ($::driver eq 'mysql') {
+	    SendSQL("SELECT keyworddefs.id, keyworddefs.name, keyworddefs.description,
+                COUNT(keywords.bug_id), keywords.bug_id
+             	FROM keyworddefs LEFT JOIN keywords ON keyworddefs.id = keywords.keywordid
+             	GROUP BY keyworddefs.id
+             	ORDER BY keyworddefs.name");
+	} else {
+		SendSQL("SELECT keyworddefs.id, keyworddefs.name, keyworddefs.description,
+				COUNT(keywords.keywordid), keywords.bug_id
+                FROM keyworddefs, keywords
+                WHERE keyworddefs.id = keywords.keywordid (+)
+				GROUP BY keyworddefs.id, keyworddefs.name, 
+						 keyworddefs.description, keywords.bug_id
+                ORDER BY keyworddefs.name");
+	}
+
     while (MoreSQLData()) {
         my ($id, $name, $description, $bugs, $onebug) = FetchSQLData();
         $description ||= "<FONT COLOR=\"red\">missing</FONT>";
@@ -162,17 +174,17 @@ if ($action eq "") {
         $line_count++;
             
         print qq{
-<TR>
-<TH VALIGN="top"><A HREF="editkeywords.cgi?action=edit&id=$id">$name</TH>
-<TD VALIGN="top">$description</TD>
-<TD VALIGN="top" ALIGN="right">$bugs</TD>
-<TH VALIGN="top"><A HREF="editkeywords.cgi?action=delete&id=$id">Delete</TH>
+<TR BGCOLOR="#ECECEC">
+<TH ALIGN="left"><A HREF="editkeywords.cgi?action=edit&id=$id">$name</TH>
+<TD ALIGN="left">$description</TD>
+<TD ALIGN="left" ALIGN="right">$bugs</TD>
+<TH ALIGN="left"><A HREF="editkeywords.cgi?action=delete&id=$id">Delete</TH>
 </TR>
 };
     }
     print qq{
-<TR>
-<TD VALIGN="top" COLSPAN=3>Add a new keyword</TD><TD><A HREF="editkeywords.cgi?action=add">Add</TD>
+<TR BGCOLOR="#ECECEC">
+<TH VALIGN="top" COLSPAN=4><A HREF="editkeywords.cgi?action=add">Add a new keyword</A></TH>
 </TR>
 </TABLE>
 };
@@ -184,13 +196,13 @@ if ($action eq "") {
 if ($action eq 'add') {
     PutHeader("Add keyword");
     print "<FORM METHOD=POST ACTION=editkeywords.cgi>\n";
-    print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0>\n";
+    print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0 ALIGN=center>\n";
 
     EmitFormElements(-1, '', '');
 
-    print "</TABLE>\n<HR>\n";
-    print "<INPUT TYPE=SUBMIT VALUE=\"Add\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"new\">\n";
+    print "</TABLE>\n<HR ALIGN=center WIDTH=800>\n";
+    print "<CENTER><INPUT TYPE=SUBMIT VALUE=\"Add\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"new\"></CENTER>\n";
     print "</FORM>";
 
     my $other = $localtrailer;
@@ -216,8 +228,8 @@ if ($action eq 'new') {
     SendSQL("SELECT id FROM keyworddefs WHERE name = " . SqlQuote($name));
 
     if (FetchOneColumn()) {
-        print "The keyword '$name' already exists. Please press\n";
-        print "<b>Back</b> and try again.\n";
+        print "<CENTER>The keyword '$name' already exists. Please press\n";
+        print "<b>Back</b> and try again.</CENTER>\n";
         PutTrailer($localtrailer);
         exit;
     }
@@ -248,7 +260,7 @@ if ($action eq 'new') {
     # Make versioncache flush
     unlink "data/versioncache";
 
-    print "OK, done.<p>\n";
+    print "<CENTER>OK, done.</CENTER><p>\n";
     PutTrailer($localtrailer);
     exit;
 }
@@ -271,12 +283,12 @@ if ($action eq 'edit') {
              WHERE id=$id");
     my ($name, $description) = FetchSQLData();
     if (!$name) {
-        print "Something screwy is going on.  Please try again.\n";
+        print "<CENTER>Something screwy is going on.  Please try again.</CENTER>\n";
         PutTrailer($localtrailer);
         exit;
     }
     print "<FORM METHOD=POST ACTION=editkeywords.cgi>\n";
-    print "<TABLE  BORDER=0 CELLPADDING=4 CELLSPACING=0>\n";
+    print "<TABLE  BORDER=0 CELLPADDING=4 CELLSPACING=0 ALIGN=center>\n";
 
     EmitFormElements($id, $name, $description);
     
@@ -292,8 +304,8 @@ if ($action eq 'edit') {
 
     print "</TD>\n</TR></TABLE>\n";
 
-    print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"update\">\n";
-    print "<INPUT TYPE=SUBMIT VALUE=\"Update\">\n";
+    print "<CENTER><INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"update\">\n";
+    print "<INPUT TYPE=SUBMIT VALUE=\"Update\"></CENTER>\n";
 
     print "</FORM>";
 
@@ -332,7 +344,7 @@ if ($action eq 'update') {
             ", description = " . SqlQuote($description) .
             " WHERE id = $id");
 
-    print "Keyword updated.<BR>\n";
+    print "<CENTER>Keyword updated.</CENTER><BR>\n";
 
     # Make versioncache flush
     unlink "data/versioncache";
@@ -361,7 +373,7 @@ if ($action eq 'delete') {
             
             
             print qq{
-There are $bugs bugs which have this keyword set.  Are you <b>sure</b> you want
+<CENTER>There are $bugs bugs which have this keyword set.  Are you <b>sure</b> you want
 to delete the <code>$name</code> keyword?
 
 <FORM METHOD=POST ACTION=editkeywords.cgi>
@@ -369,7 +381,7 @@ to delete the <code>$name</code> keyword?
 <INPUT TYPE=HIDDEN NAME="action" VALUE="delete">
 <INPUT TYPE=HIDDEN NAME="reallydelete" VALUE="1">
 <INPUT TYPE=SUBMIT VALUE="Yes, really delete the keyword">
-</FORM>
+</FORM></CENTER>
 };
 
             PutTrailer($localtrailer);
@@ -380,7 +392,7 @@ to delete the <code>$name</code> keyword?
     SendSQL("DELETE FROM keywords WHERE keywordid = $id");
     SendSQL("DELETE FROM keyworddefs WHERE id = $id");
 
-    print "Keyword $name deleted.\n";
+    print "<CENTER>Keyword $name deleted.</CENTER>\n";
 
     # Make versioncache flush
     unlink "data/versioncache";
@@ -390,7 +402,7 @@ to delete the <code>$name</code> keyword?
 }
 
 PutHeader("Error");
-print "I don't have a clue what you want.<BR>\n";
+print "<CENTER>I don't have a clue what you want.</CENTER><BR>\n";
 
 foreach ( sort keys %::FORM) {
     print "$_: $::FORM{$_}<BR>\n";

@@ -969,7 +969,7 @@ END
 
 
 	# Cool, the mail was successfull
-	system("./processmail $id '$Sender'");
+	system("./processmail", $id, "$Sender");
     } else {
 	$id = "<just testing>";
 	print "\n-------------------------------------------------------------------------\n";

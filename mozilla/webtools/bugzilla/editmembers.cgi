@@ -1,24 +1,26 @@
 #!/usr/bonsaitools/bin/perl -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
-# The contents of this file are subject to the Mozilla Public License
-# Version 1.0 (the "License"); you may not use this file except in
-# compliance with the License. You may obtain a copy of the License at
-# http://www.mozilla.org/MPL/
-# 
-# Software distributed under the License is distributed on an "AS IS"
-# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
-# License for the specific language governing rights and limitations
-# under the License.
-# 
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
 # The Original Code is the Bugzilla Bug Tracking System.
-# 
+#
 # The Initial Developer of the Original Code is Netscape Communications
-# Corporation. Portions created by Netscape are Copyright (C) 1998
-# Netscape Communications Corporation. All Rights Reserved.
-# 
+# Corporation. Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
 # Contributor(s): Terry Weissman <terry@mozilla.org>
-#				  David Lawrence <dkl@redhat.com>
+#                 David Lawrence <dkl@redhat.com>
+#    
 
 use diagnostics;
 use strict;
@@ -46,6 +48,13 @@ sub PutGroupForm {
 <B>1. Select members above that you want effected.<BR>	
 2. Check which groups below you wish the members to be in.<BR>
 3. Click Update to commit the changes.</B><BR>
+<P>
+<TABLE ALIGN=center BORDER=1 CELLSPACING=0>
+<TR>
+	<TD ALIGN=center><INPUT TYPE=radio NAME=group_type VALUE=add CHECKED>Add to checked groups</TD>
+	<TD ALIGN=center><INPUT TYPE=radio NAME=group_type VALUE=remove>Remove from checked groups</TD>
+</TR>
+</TABLE>
 <P>
 };	
 	my $count = 0;
@@ -83,13 +92,18 @@ sub PutGroupForm {
 # returns: 		none
 
 sub UpdateGroups {
-	if ($::FORM{'multiple'}) {
+	if (defined($::FORM{'multiple'}) && $::FORM{'multiple'} eq '1') {
 		foreach my $user (grep(/^user-.*$/, keys %::FORM)) {
 			$user =~ s/^user-//g;
-			SendSQL("delete from user_group where userid = $user");
 			foreach my $i (grep (/^group-.*$/, keys %::FORM)) {
 				$i =~ s/^group-//g;
-            	SendSQL("insert into user_group values ($user, $i)");
+				SendSQL("select userid from user_group where userid = $user and groupid = $i");
+				my $result = FetchOneColumn();
+				if (!$result && $::FORM{'group_type'} eq 'add') {
+            		SendSQL("insert into user_group values ($user, $i)");
+				} elsif ($result && $::FORM{'group_type'} eq 'remove') {
+					SendSQL("delete from user_group where userid = $user and groupid = $i");
+				} 
         	}
 		}
 	} else {
@@ -100,6 +114,7 @@ sub UpdateGroups {
 			$::FORM{'userid'} . ", $i)");
 		}
 	}
+	return 1;
 }
 
 
@@ -120,18 +135,19 @@ sub SortPopup {
 	$popup .= qq{
 <FORM METHOD=get ACTION=editmembers.cgi>
 <B>Sort by group</B>
-<SELECT NAME=sortby>
+<SELECT NAME=sort>
 <OPTION VALUE="all">All
 };
 
-	foreach my $group (keys %groups) {
-		my $selected = $::FORM{'sortby'} eq $groups{$group} ? " SELECTED" : "";
+	my @sorted_ids = sort keys %groups;
+	foreach my $group (@sorted_ids) {
+		my $selected = $::FORM{'sort'} eq $groups{$group} ? " SELECTED" : "";
 		$popup .= "<OPTION VALUE=\"$groups{$group}\" $selected>$group";
 	}
 
 	$popup .= qq{
 </SELECT>
-<INPUT TYPE=submit NAME=sort VALUE="Sort">
+<INPUT TYPE=submit NAME= do_sort VALUE="Sort">
 <INPUT TYPE=hidden NAME=login_name VALUE="$::FORM{'login_name'}">
 <INPUT TYPE=hidden NAME=real_name VALUE="$::FORM{'real_name'}">
 <INPUT TYPE=hidden NAME=multiple VALUE="$::FORM{'multiple'}">
@@ -167,23 +183,33 @@ if ($::FORM{'submit'} || $::FORM{'sort'}) {
 	}
 	print "</H2></CENTER>\n"; 
 
-	# Form the query
+	# User didnt enter anything 
 	if (!$::FORM{'login_name'} && !$::FORM{'realname'}) {
-        print "<P>Illegal values - Back up and try again.";
-		exit;
+        PutError("<P>Illegal values - Back up and try again.");
     }
-	my $query = "select userid, login_name, realname
-				 from profiles where"; 
+
+	# Form the Query
+	my $query = "";
+	if (defined($::FORM{'sort'}) && $::FORM{'sort'} ne 'all' && $::FORM{'sort'} ne '') {
+		$query = "select profiles.userid, profiles.login_name, profiles.realname " .
+					"from profiles, user_group " . 
+					"where user_group.userid = profiles.userid and " .
+					"user_group.groupid = $::FORM{'sort'} and ";
+	} else {
+		$query = "select profiles.userid, profiles.login_name, profiles.realname " .
+                    "from profiles where ";
+	}
+
 	if ($::FORM{'login_name'}) {
-		$query .= " login_name like \'%$::FORM{'login_name'}%\'";
+		$query .= " profiles.login_name like \'%$::FORM{'login_name'}%\'";
 	}
 	if ($::FORM{'login_name'} && $::FORM{'realname'}) {
 		$query .= " or ";
 	}
 	if ($::FORM{'realname'}) {
-		$query .= " realname like \'%$::FORM{'realname'}%\'";
+		$query .= " profiles.realname like \'%$::FORM{'realname'}%\'";
 	}
-	$query .= " order by userid";
+	$query .= " order by profiles.userid";
 	SendSQL($query);
 	my @row = ();
 
@@ -241,7 +267,7 @@ if ($::FORM{'submit'} || $::FORM{'sort'}) {
 	print qq{
 <P>
 <CENTER>
-<A HREF="editmembers.cgi?submit=1&login_name=$::FORM{'login_name'}&realname=$::FORM{'realname'}&multiple=1">
+<A HREF="editmembers.cgi?submit=1&login_name=$::FORM{'login_name'}&realname=$::FORM{'realname'}&multiple=1&sort=$::FORM{'sort'}">
 [Edit multiple members at once]</A> &nbsp;
 <A HREF="editmembers.cgi">[Find another member]</A>
 </CENTER>
@@ -253,7 +279,7 @@ if ($::FORM{'submit'} || $::FORM{'sort'}) {
 
 # single member selected so display information for changing
 if ($::FORM{'userid'}) {
-	# we made changed to a single member
+	# we made changes to a single member
 	if ($::FORM{'update'}) {
 		if ($::FORM{'password'} ne "" && $::FORM{'retype'} ne "") {
 			if ($::FORM{'password'} ne $::FORM{'retype'}) {

@@ -32,8 +32,8 @@ print "Content-type: text/html\n\n";
 PutHeader("Bugzilla keyword description");
 
 my $tableheader = qq{
-<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0>
-<TR BGCOLOR="#6666FF">
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0 ALIGN=center>
+<TR BGCOLOR="#BFBFBF">
 <TH ALIGN="left">Name</TH>
 <TH ALIGN="left">Description</TH>
 <TH ALIGN="left">Bugs</TH>
@@ -44,11 +44,20 @@ print $tableheader;
 my $line_count = 0;
 my $max_table_size = 50;
 
-SendSQL("SELECT keyworddefs.name, keyworddefs.description, 
-                COUNT(keywords.bug_id), keywords.bug_id
-         FROM keyworddefs LEFT JOIN keywords ON keyworddefs.id=keywords.keywordid
-         GROUP BY keyworddefs.id
-         ORDER BY keyworddefs.name");
+if ($::driver eq 'mysql') {
+	SendSQL("SELECT keyworddefs.name, keyworddefs.description, 
+    	     COUNT(keywords.bug_id), keywords.bug_id
+        	 FROM keyworddefs LEFT JOIN keywords ON keyworddefs.id=keywords.keywordid
+         	 GROUP BY keyworddefs.id
+         	 ORDER BY keyworddefs.name");
+} else {
+	SendSQL("SELECT keyworddefs.name, keyworddefs.description, 
+             COUNT(keywords.bug_id), keywords.bug_id
+             FROM keyworddefs, keywords 
+			 WHERE keyworddefs.id = keywords.keywordid (+)
+             GROUP BY keyworddefs.name, keyworddefs.description, keywords.bug_id
+             ORDER BY keyworddefs.name");
+}
 
 while (MoreSQLData()) {
     my ($name, $description, $bugs, $onebug) = FetchSQLData();
@@ -69,10 +78,10 @@ while (MoreSQLData()) {
     }
     $line_count++;
     print qq{
-<TR>
-<TH>$name</TH>
+<TR BGCOLOR="#ECECEC">
+<TH ALIGN=left>$name</TH>
 <TD>$description</TD>
-<TD ALIGN="right">$bugs</TD>
+<TD ALIGN=left>$bugs</TD>
 </TR>
 };
 }
@@ -82,7 +91,7 @@ print "</TABLE><P>\n";
 quietly_check_login();
 
 if (UserInGroup("editkeywords")) {
-    print "<p><a href=editkeywords.cgi>Edit keywords</a><p>\n";
+    print "<p><CENTER><a href=editkeywords.cgi>Edit keywords</a></CENTER><p>\n";
 }
 
 PutFooter();

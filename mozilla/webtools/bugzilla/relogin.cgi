@@ -26,9 +26,10 @@ use strict;
 require "CGI.pl";
 
 # Clear out all the relevant cookies
-print "Set-Cookie: Bugzilla_login= ; path=/bugzilla2/; expires=Sun, 30-Jun-80 00:00:00 GMT
-Set-Cookie: Bugzilla_logincookie= ; path=/bugzilla2/; expires=Sun, 30-Jun-80 00:00:00 GMT
-Set-Cookie: Bugzilla_password= ; path=/bugzilla2/; expires=Sun, 30-Jun-80 00:00:00 GMT
+my $cookiepath = Param('cookiepath');
+print "Set-Cookie: Bugzilla_login= ; path=$cookiepath ; expires=Sun, 30-Jun-80 00:00:00 GMT
+Set-Cookie: Bugzilla_logincookie= ; path=$cookiepath ; expires=Sun, 30-Jun-80 00:00:00 GMT
+Set-Cookie: Bugzilla_password= ; path=$cookiepath ; expires=Sun, 30-Jun-80 00:00:00 GMT
 Content-type: text/html\n\n
 ";
 

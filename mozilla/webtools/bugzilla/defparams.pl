@@ -579,5 +579,11 @@ DefParam("commentonduplicate",
          "If this option is on, the user needs to enter a short comment if the bug is marked as duplicate",
          "b", 0 );
 
+# Added so that multiple instances of bugzilla may be ran on the same web server
+DefParam("cookiepath",
+         "Html path is set each time a cookie is sent to the user's browser",
+         "t",
+         "/bugzilla/");
+
 1;
 

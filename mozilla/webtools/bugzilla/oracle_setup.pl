@@ -408,7 +408,9 @@ if ($newstuff ne "") {
 unless (-d 'data') {
     print "Creating data directory ...\n";
     mkdir 'data', 0777;
-    chmod 0777, 'data';
+    if ($webservergroup eq "") {
+    	chmod 0777, 'data';
+    }
     open FILE, '>>data/comments'; close FILE;
     open FILE, '>>data/nomail'; close FILE;
     open FILE, '>>data/mail'; close FILE;
@@ -443,16 +445,16 @@ if ($webservergroup) {
     # Funny! getgrname returns the GID if fed with NAME ...
     my $webservergid = getgrnam($webservergroup);
     chown 0, $webservergid, glob('*');
-    chmod 0755, glob('*');
+    chmod 0640, glob('*');
 
-    chmod 0755, glob('*.cgi'),
+    chmod 0750, glob('*.cgi'),
                 'processmail',
                 'whineatnews.pl',
                 'collectstats.pl',
                 'checksetup.pl',
 				'oracle_setup.pl';
 
-    chmod 0777, 'data', 'shadow';
+    chmod 0770, 'data', 'shadow';
     chmod 0666, glob('data/*');
 }
 
@@ -480,11 +482,11 @@ my $drh = DBI->install_driver($db_base)
     or die "Can't connect to the $db_base. Is the database installed and up and running?\n";
 
 my $db_name = "rheng";
-my $db_user = "bugzilla/bugzilla";
+my $db_user = "lacd/lacd";
 my $db_pass = "";
 my $db_home = "/opt/apps/oracle/product/8.0.5/";
 
-do 'localconfig';
+# do 'localconfig';
 
 my $connectstring = "dbi:$db_base:$db_name";
 
@@ -953,8 +955,8 @@ foreach my $tabname (keys %table) {
 # created with the next available bit set
 #
 
-sub AddGroup ($$;$) {
-    my ($name, $desc, $isbuggroup) = @_;
+sub AddGroup ($$;$$) {
+    my ($name, $desc, $isbuggroup, $contract) = @_;
 	my @row;
 
     # does the group exist?
@@ -978,14 +980,16 @@ sub AddGroup ($$;$) {
 
 	# If this is a bug group set to 1 else set to 0
 	$isbuggroup = defined($isbuggroup) && $isbuggroup == 1 ? $isbuggroup : 0;
+	# do the same for contract
+	$contract = defined($contract) && $contract == 1 ? $contract : 0;
 
     print "Adding group $name ...\n";
 	my $query = "INSERT INTO groups
-                          (groupid, bit, name, description, userregexp, isbuggroup)
-                          VALUES (groups_seq.nextval, ?, ?, ?, ?, ?)";
+                          (groupid, bit, name, description, userregexp, isbuggroup, contract)
+                          VALUES (groups_seq.nextval, ?, ?, ?, ?, ?, ?)";
 	print "$query\n" if $debug;
     $sth = $dbh->prepare($query);
-    $sth->execute($bit, $name, $desc, "", $isbuggroup);
+    $sth->execute($bit, $name, $desc, "", $isbuggroup, $contract);
 }
 
 
@@ -995,14 +999,15 @@ sub AddGroup ($$;$) {
 
 unless ($clean) {
 	AddGroup 'tweakparams',      'Can tweak operating parameters';
-	AddGroup 'editusers',      	 'Can edit or disable users';
 	AddGroup 'editgroupmembers', 'Can put people in and out of groups that they are members of.';
 	AddGroup 'creategroups',     'Can create and destroy groups.';
 	AddGroup 'editcomponents',   'Can create, destroy, and edit components.';
 	AddGroup 'editkeywords',   	 'Can create, destroy, and edit keywords.';
 	AddGroup 'addnews',			 'Can add/modify/delete news items.';
-	AddGroup 'devel',			 'Red Hat Development', '1';
-	AddGroup 'qa',				 'Red Hat Quality Assurance', '1';
+	AddGroup 'devel',			 'Red Hat Development', '1', '0';
+	AddGroup 'qa',				 'Red Hat Quality Assurance', '1', '0';
+	AddGroup 'caneditall', 		 'Can edit all bugs', '0', '0';
+	AddGroup 'setcontract',		 'Can set a contract bug', '0', '1';
 }
 
 
@@ -1546,12 +1551,16 @@ if (GetFieldDef('bugs_activity', 'field')) {
     $sth->execute();
     my %ids;
     while (my ($f) = ($sth->fetchrow_array())) {
+		if (!defined($f)) {
+			next;
+		}		
         my $q = $dbh->quote($f);
         my $s2 =
             $dbh->prepare("SELECT fieldid FROM fielddefs WHERE name = $q");
         $s2->execute();
         my ($id) = ($s2->fetchrow_array());
         if (!$id) {
+			print "Adding fielddef $q...\n";
             $dbh->do("INSERT INTO fielddefs (fieldid, name, description) VALUES " .
                      "(fielddefs_seq.nextval, $q, $q)");
             $s2 = $dbh->prepare("SELECT fielddefs.currval from dual");

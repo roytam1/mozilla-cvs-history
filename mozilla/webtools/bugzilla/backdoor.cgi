@@ -160,4 +160,4 @@ foreach my $cc (split(/,/, $::FORM{'cc'})) {
 }
 
 print "Created bugzilla bug $zillaid\n";
-system("./processmail $zillaid");
+system("./processmail", $zillaid);

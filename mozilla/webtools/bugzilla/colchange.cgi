@@ -46,6 +46,7 @@ if (Param("usestatuswhiteboard")) {
 
 push(@masterlist, ("summary", "summaryfull"));
 
+my $cookiepath = Param('cookiepath');
 
 my @collist;
 if (defined $::FORM{'rememberedquery'}) {
@@ -59,7 +60,7 @@ if (defined $::FORM{'rememberedquery'}) {
         }
     }
     my $list = join(" ", @collist);
-    print "Set-Cookie: COLUMNLIST=$list ; path=/bugzilla2/; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+    print "Set-Cookie: COLUMNLIST=$list ; path=$cookiepath ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
     print "Refresh: 0; URL=buglist.cgi?$::FORM{'rememberedquery'}\n";
     print "\n";
     print "<TITLE>What a hack.</TITLE>\n";

@@ -54,9 +54,7 @@ if ($loginok) {
 
 my $id = $::FORM{'id'}; # id number of current bug
 
-my $query = "";
-if ($::driver eq 'mysql') {
-	$query = "
+my $query = "
 select
         bugs.bug_id,
         product,
@@ -72,9 +70,13 @@ select
         reporter,
         bug_file_loc,
         short_desc,
-		target_milestone,
-		qa_contact,
-		status_whiteboard,
+        target_milestone,
+        qa_contact,
+        status_whiteboard,
+";
+
+if ($::driver eq 'mysql') {
+	$query .= "
         date_format(creation_ts,'%Y-%m-%d %H:%i'),
         groupset,
 		delta_ts,
@@ -83,27 +85,8 @@ from 	bugs left join votes using(bug_id)
 where 	bugs.bug_id = $id
 and 	bugs.groupset & $::usergroupset = bugs.groupset
 		group by bugs.bug_id";
-
 } else {
-    $query = "
-select
-    bugs.bug_id,
-    product,
-    version,
-    rep_platform,
-    op_sys,
-    bug_status,
-    resolution,
-    priority,
-    bug_severity,
-    component,
-    assigned_to,
-    reporter,
-    bug_file_loc,
-    short_desc,
-    target_milestone,
-    qa_contact,
-    status_whiteboard,
+    $query .= "
     TO_CHAR(creation_ts, 'YYYY-MM-DD HH:MI:SS'), 
     groupset,
     TO_CHAR(delta_ts, 'YYYYMMDDHH24MISS')
@@ -111,7 +94,6 @@ from
     bugs
 where 
     bugs.bug_id = $id";
-
 }
 
 SendSQL($query);
@@ -355,8 +337,8 @@ if (@::legal_keywords) {
     }
     my $value = value_quote(join(', ', @list));
     $bug_form{'keywords_element'} = "
-	<TD ALIGN=right><B><A HREF=\"describekeywords.cgi\">Keywords</A>:</B>
-	<TD COLSPAN=6><INPUT NAME=\"keywords\" VALUE=\"$value\" SIZE=60></TD>\n";
+	<A HREF=\"describekeywords.cgi\">Keywords</A>:</TH>
+	<TD ALIGN=left><INPUT NAME=\"keywords\" VALUE=\"$value\" SIZE=60>\n";
 }
 
 $bug_form{'attachment_element'} = "<TABLE WIDTH=\"100%\">\n";
@@ -621,7 +603,7 @@ if ($changeable) {
     if (UserInGroup("errata")) {
         $bug_form{'commit_change'} .= "
         <TD ALIGN=center VALIGN=top>
-        <FORM ACTION=\"http://porkchop.redhat.com/bugzilla/createerrata.cgi\">
+        <FORM ACTION=\"http://porkchop.redhat.com/bugzilla/newerrata.cgi\">
         <INPUT TYPE=hidden NAME=product VALUE=\"$bug{'product'}\">
         <INPUT TYPE=hidden NAME=synopsis VALUE=\"$bug{'component'}\">
         <INPUT TYPE=hidden NAME=id_fixed VALUE=\"$::FORM{'id'}\">
@@ -648,6 +630,11 @@ if ($changeable) {
         <TABLE CELLSPACING=0 CELLPADDING=0 WIDTH=\"100%\">
         <TR>
             <TD ALIGN=center VALIGN=center>
+			<INPUT TYPE=hidden NAME=id VALUE=$id>
+            <INPUT TYPE=hidden NAME=product VALUE=\"$bug{'product'}\">
+            <INPUT TYPE=hidden NAME=version VALUE=\"$bug{'version'}\">
+            <INPUT TYPE=hidden NAME=component VALUE=\"$bug{'component'}\"> 
+			<INPUT TYPE=hidden name=knob VALUE=add_comment>	
             <INPUT TYPE=submit NAME=add_comment VALUE=\"Add Comment\">
             </FORM></TD>
             <TD ALIGN=center VALIGN=center> 

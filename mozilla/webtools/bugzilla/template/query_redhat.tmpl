@@ -66,7 +66,11 @@
                 <TD ALIGN=left><A HREF="bug_status.cgi#rep_platform">Platform</A></TD>
                 <TD ALIGN=left><A HREF="bug_status.cgi#priority">Priority</A></TD>
                 <TD ALIGN=left><A HREF="bug_status.cgi#severity">Severity</A></TD>
-				[+ $targetmilestone_header +]
+[+ 	
+	if ($milestone_popup) {
+		$OUT = "<TD ALIGN=left><A HREF=\"bug_status.cgi#milestone\">Target Milestone</A></TD>\n"; 
+	}
++]
         </TR><TR>
                 <TD ALIGN=left VALIGN=top>
 <!-- begin bugs status selection -->
@@ -106,7 +110,7 @@
 				<TD ALIGN=left VALIGN=top>
 <!-- start targetmilestone selection -->
 
-[+ $targetmilestone_popup +]
+[+ $milestone_popup +]
 
 <!-- end targetmilestone selection -->
 				</TD>
@@ -209,6 +213,13 @@
 [+ $whiteboard_popup +]
 <!-- end whiteboard selection -->
 
+    </TR><TR>
+
+<!-- start keyword selection -->
+[+ $keywords_popup +]
+<!-- end keyword selection -->
+
+	</TR>
     </TABLE>
     </TD>
 </TR>

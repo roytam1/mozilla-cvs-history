@@ -75,6 +75,7 @@ if (defined $::COOKIE{"Bugzilla_login"} && $::COOKIE{'Bugzilla_login'} ne "") {
 # Backwards compatability hack -- if there are any of the old QUERY_*
 # cookies around, and we are logged in, then move them into the database
 # and nuke the cookie.
+my $cookiepath = Param('cookiepath');
 if ($userid) {
     my @oldquerycookies;
     foreach my $i (keys %::COOKIE) {
@@ -105,7 +106,7 @@ if ($userid) {
 #                            "($userid, $qname, " . SqlQuote($value) . ")");
                 }
             }
-            print "Set-Cookie: $cookiename= ; path=/bugzilla2/ ; expires=Sun, 30-Jun-1980 00:00:00 GMT\n";
+            print "Set-Cookie: $cookiename= ; path=$cookiepath ; expires=Sun, 30-Jun-1980 00:00:00 GMT\n";
         }
     }
 }
@@ -596,7 +597,7 @@ if (@::legal_keywords) {
     $query_form{'keywords_popup'} = qq{
 <TR>
 <TD ALIGN="right"><A HREF="describekeywords.cgi">Keywords</A>:</TD>
-<TD><INPUT NAME="keywords" SIZE=30 VALUE="$def"></TD>
+<TD><INPUT NAME="keywords" SIZE=45 VALUE="$def"></TD>
 <TD>
 };
     my $type = $default{"keywords_type"};

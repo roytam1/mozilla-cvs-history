@@ -47,8 +47,9 @@ sub sillyness {
 
 confirm_login();
 
-print "Set-Cookie: PLATFORM=$::FORM{'product'} ; path=/bugzilla2/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
-print "Set-Cookie: VERSION-$::FORM{'product'}=$::FORM{'version'} ; path=/bugzilla2/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+my $cookiepath = Param('cookiepath');
+print "Set-Cookie: PLATFORM=$::FORM{'product'} ; path=$cookiepath ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+print "Set-Cookie: VERSION-$::FORM{'product'}=$::FORM{'version'} ; path=$cookiepath ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
 print "Content-type: text/html\n\n";
 
 if (defined $::FORM{'maketemplate'}) {
@@ -271,7 +272,7 @@ if (Param("contract") && UserInGroup('setcontract')) {
 }
 
 print "<TABLE BORDER=1 CELLSPACING=0 CELLPADDING=3 ALIGN=center><TD><H2>Bug $id posted</H2>\n";
-system("./processmail $id $::COOKIE{'Bugzilla_login'}");
+system("./processmail", $id, $::COOKIE{'Bugzilla_login'});
 print "<TD><A HREF=\"show_bug.cgi?id=$id\">Back To BUG# $id</A></TABLE>\n";
 
 print "<P><CENTER><A HREF=\"createattachment.cgi?id=$id\">Attach a file to this bug</A></CENTER>\n";
