@@ -21,7 +21,7 @@
 # 
 
 #
-# genstats.cgi ( $Id$ )
+# $Id$ 
 #
 # generate various statistics related to external participation in mozilla.org
 #
