@@ -78,7 +78,7 @@ sub LocalVar ($$)
     my ($name, $definition) = @_;
     return if ($main::{$name}); # if localconfig declared it, we're done.
     $newstuff .= " " . $name;
-    open FILE, '>>localconfig';
+    open FILE, '>>Conf/Supplies/localconfig';
     print FILE $definition, "\n\n";
     close FILE;
 }
