@@ -58,6 +58,10 @@
 
 package BTData;
 
+# This package must not use any tinderbox specific libraries.  It is
+# intended to be a base class.
+
+
 $VERSION = '#tinder_version#';
 
 
@@ -106,7 +110,8 @@ $STATUS_FIELD_NAME = 'Status';
 # All status values are converted to lower case for ease of
 # processing.  Each value of this table corresponds to a bug column in
 # the tinderbox status page. You may have as many bug columns as you
-# like.
+# like.  If you wish to indicate that certain states are possible but
+# should not be displayed then indicate the state with a null string.
 
 %STATUS_PROGRESS = (
 		    'ASSIGNED' => 'Progress',
@@ -266,6 +271,10 @@ sub bug_id2bug_url {
 sub get_all_progress_states {
 
   my (@progress_states) = main::uniq( values %BTData::STATUS_PROGRESS );
+
+  # If the first element is null ignore it.
+  ($progress_states[0]) ||
+    (shift @progress_states);
 
   return @progress_states;
 }
