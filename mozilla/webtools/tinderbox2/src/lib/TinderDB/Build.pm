@@ -757,6 +757,10 @@ sub apply_db_updates {
     my ($starttime) = $record->{'starttime'};
     my ($timenow) =  $record->{'timenow'};
 
+    # The time which the previous build started
+    my ($previous_rec) = $DATABASE{$tree}{$build}{'recs'}[0];
+
+
     # sanity check the record, taint checks are done in processmail.
     {
       BuildStatus::is_status_valid($buildstatus) ||
@@ -785,9 +789,6 @@ sub apply_db_updates {
 
     if ( defined($DATABASE{$tree}{$build}{'recs'}) ) {
       
-      # The time which the previous build started
-      my ($previous_rec) = $DATABASE{$tree}{$build}{'recs'}[0];
-
       # Why are we ignoring out of order recipts?  This came from the
       # original tinderbox?
 
