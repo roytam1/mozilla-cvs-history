@@ -59,7 +59,7 @@ sub fdescexpand {
 	while(<FILE>){
 	    if($linecount++ > 40) {
 		last;
-	    }elsif (/\$Id$filename/){
+	    }elsif (/[$]Id: $filename/){
 		#ignore cvs headers
 	    }elsif (/^#/){
 		#ignore cpp directives
