@@ -27,6 +27,7 @@ ALL			$CVSROOT/CVSROOT/cvsmailfilter.pl -a -u http://bonsai.mozilla.org -r /cvsr
 
 # crypto checkins deserve more attention
 mozilla/security	$CVSROOT/CVSROOT/cvsmailfilter.pl -u http://bonsai.mozilla.org -r /cvsroot -s %s mozilla-crypto-checkins@mozilla.org
+mozilla/security	$CVSROOT/CVSROOT/nsscvsmailfilter.pl -u http://bonsai.mozilla.org -r /cvsroot -s %s MisterSSL@aol.com
 mozilla/extensions/psm-glue	$CVSROOT/CVSROOT/cvsmailfilter.pl -u http://bonsai.mozilla.org -r /cvsroot -s %s mozilla-crypto-checkins@mozilla.org
 mozilla/netwerk/security	$CVSROOT/CVSROOT/cvsmailfilter.pl -u http://bonsai.mozilla.org -r /cvsroot -s %s mozilla-crypto-checkins@mozilla.org
 mozilla/netwerk/protocol/http/src	$CVSROOT/CVSROOT/cvsmailfilter.pl -u http://bonsai.mozilla.org -r /cvsroot -s %s mozilla-crypto-checkins@mozilla.org
