@@ -500,7 +500,7 @@ sub trim_db_history {
     
     if ( 
          !(defined($rec)) ||
-         ($rec->{'starttime'} < $last_time)
+         ($rec->{'starttime'} < $last_time) ||
          0) {
         delete $DATABASE{$tree}{$buildname};
     }
