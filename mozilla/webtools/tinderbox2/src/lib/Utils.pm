@@ -599,7 +599,7 @@ sub group_files {
         push @{$dirs{$dirname}}, $file; 
     }
     
-    foreach $dir (keys %dirs) {
+    foreach $dir (sort keys %dirs) {
         
         if ($#{$dirs{$dir}} >= $limit_dir_files) {
             push @out, $dir.'/*';
