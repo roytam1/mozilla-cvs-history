@@ -83,7 +83,7 @@ sub show_bug {
         bug_file_loc, short_desc, target_milestone, 
         qa_contact, status_whiteboard, 
         date_format(creation_ts,'%Y-%m-%d %H:%i'),
-        groupset, delta_ts, sum(votes.count)
+        delta_ts, sum(votes.count)
     FROM bugs LEFT JOIN votes USING(bug_id)
     WHERE bugs.bug_id = $id
     GROUP BY bugs.bug_id";
@@ -97,7 +97,7 @@ sub show_bug {
                        "bug_severity", "component", "assigned_to", "reporter",
                        "bug_file_loc", "short_desc", "target_milestone",
                        "qa_contact", "status_whiteboard", "creation_ts",
-                       "groupset", "delta_ts", "votes") 
+                       "delta_ts", "votes") 
     {
         $value = shift(@row);
         $bug{$field} = defined($value) ? $value : "";
@@ -203,7 +203,8 @@ sub show_bug {
 
     # Groups
     my @groups;
-    if ($::usergroupset ne '0' || $bug{'groupset'} ne '0') {      
+    if (0) { #FIXME
+        # FIXME if ($::usergroupset ne '0' || $bug{'groupset'} ne '0') {
         my $bug_groupset = $bug{'groupset'};
 
         SendSQL("SELECT bit, name, description, (bit & $bug_groupset != 0),

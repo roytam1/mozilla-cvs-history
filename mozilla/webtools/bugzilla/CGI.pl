@@ -288,11 +288,6 @@ sub ValidateBugID {
     # converted-from-alias ID.
     $_[0] = $id;
     
-    # Get the values of the usergroupset and userid global variables
-    # and write them to local variables for use within this function,
-    # setting those local variables to the default value of zero if
-    # the global variables are undefined.
-
     # First check that the bug exists
     SendSQL("SELECT bug_id FROM bugs WHERE bug_id = $id");
 
@@ -302,7 +297,7 @@ sub ValidateBugID {
 
     return if $skip_authorization;
     
-    return if CanSeeBug($id, $::userid, $::usergroupset);
+    return if CanSeeBug($id, $::userid);
 
     # The user did not pass any of the authorization tests, which means they
     # are not authorized to see the bug.  Display an error and stop execution.
@@ -462,7 +457,6 @@ sub PasswordForLogin {
 }
 
 sub quietly_check_login() {
-    $::usergroupset = '0';
     $::disabledreason = '';
     my $userid = 0;
     if (defined $::COOKIE{"Bugzilla_login"} &&

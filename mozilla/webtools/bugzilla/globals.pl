@@ -54,7 +54,6 @@ sub globals_pl_sillyness {
     $zz = @main::milestoneurl;
     $zz = %main::proddesc;
     $zz = @main::prodmaxvotes;
-    $zz = $main::superusergroupset;
     $zz = $main::template;
     $zz = $main::userid;
     $zz = $main::vars;
@@ -105,10 +104,6 @@ $::chooseone = "--Choose_one:--";
 $::defaultqueryname = "(Default query)";
 $::unconfirmedstate = "UNCONFIRMED";
 $::dbwritesallowed = 1;
-
-# Adding a global variable for the value of the superuser groupset.
-# Joe Robins, 7/5/00
-$::superusergroupset = "9223372036854775807";
 
 #sub die_with_dignity {
 #    my ($err_msg) = @_;
@@ -668,30 +663,13 @@ sub InsertNewUser {
     my $password = GenerateRandomPassword();
     my $cryptpassword = Crypt($password);
 
-    # Determine what groups the user should be in by default
-    # and add them to those groups.
-    PushGlobalSQLState();
-    SendSQL("select bit, userregexp from groups where userregexp != ''");
-    my $groupset = "0";
-    while (MoreSQLData()) {
-        my @row = FetchSQLData();
-        # Modified -Joe Robins, 2/17/00
-        # Making this case insensitive, since usernames are email addresses,
-        # and could be any case.
-        if ($username =~ m/$row[1]/i) {
-            $groupset .= "+ $row[0]"; # Silly hack to let MySQL do the math,
-                                      # not Perl, since we're dealing with 64
-                                      # bit ints here, and I don't *think* Perl
-                                      # does that.
-        }
-    }
 
     # Insert the new user record into the database.            
     $username = SqlQuote($username);
     $realname = SqlQuote($realname);
     $cryptpassword = SqlQuote($cryptpassword);
-    SendSQL("INSERT INTO profiles (login_name, realname, cryptpassword, groupset) 
-             VALUES ($username, $realname, $cryptpassword, $groupset)");
+    SendSQL("INSERT INTO profiles (login_name, realname, cryptpassword) 
+             VALUES ($username, $realname, $cryptpassword)");
     PopGlobalSQLState();
 
     # Return the password to the calling code so it can be included 
@@ -733,80 +711,6 @@ sub GenerateRandomPassword {
 
     # Return the password.
     return $password;
-}
-
-sub RemovedSelectVisible {
-    my ($query, $userid, $usergroupset) = @_;
-
-    # Run the SQL $query with the additional restriction that
-    # the bugs can be seen by $userid. $usergroupset is provided
-    # as an optimisation when this is already known, eg from CGI.pl
-    # If not present, it will be obtained from the db.
-    # Assumes that 'bugs' is mentioned as a table name. You should
-    # also make sure that bug_id is qualified bugs.bug_id!
-    # Your query must have a WHERE clause. This is unlikely to be a problem.
-
-    # Also, note that mySQL requires aliases for tables to be locked, as well
-    # This means that if you change the name from selectVisible_cc (or add
-    # additional tables), you will need to update anywhere which does a
-    # LOCK TABLE, and then calls routines which call this
-
-    $usergroupset = 0 unless $userid;
-
-    unless (defined($usergroupset)) {
-        PushGlobalSQLState();
-        SendSQL("SELECT groupset FROM profiles WHERE userid = $userid");
-        $usergroupset = FetchOneColumn();
-        PopGlobalSQLState();
-    }
-
-    # Users are authorized to access bugs if they are a member of all 
-    # groups to which the bug is restricted.  User group membership and 
-    # bug restrictions are stored as bits within bitsets, so authorization
-    # can be determined by comparing the intersection of the user's
-    # bitset with the bug's bitset.  If the result matches the bug's bitset
-    # the user is a member of all groups to which the bug is restricted
-    # and is authorized to access the bug.
-
-    # A user is also authorized to access a bug if she is the reporter, 
-    # or member of the cc: list of the bug and the bug allows users in those
-    # roles to see the bug.  The boolean fields reporter_accessible and 
-    # cclist_accessible identify whether or not those roles can see the bug.
-
-    # Bit arithmetic is performed by MySQL instead of Perl because bitset
-    # fields in the database are 64 bits wide (BIGINT), and Perl installations
-    # may or may not support integers larger than 32 bits.  Using bitsets
-    # and doing bitset arithmetic is probably not cross-database compatible,
-    # however, so these mechanisms are likely to change in the future.
-
-    my $replace = " ";
-
-    if ($userid) {
-        $replace .= "LEFT JOIN cc selectVisible_cc ON 
-                     bugs.bug_id = selectVisible_cc.bug_id AND 
-                     selectVisible_cc.who = $userid "
-    }
-
-    $replace .= "WHERE ((bugs.groupset & $usergroupset) = bugs.groupset ";
-
-    if ($userid) {
-        # There is a mysql bug affecting v3.22 and 3.23 (at least), where this will
-        # cause all rows to be returned! We work arround this by adding an not isnull
-        # test to the JOINed cc table. See http://lists.mysql.com/cgi-ez/ezmlm-cgi?9:mss:11417
-        # Its needed, even though it shouldn't be
-        $replace .= "OR (bugs.reporter_accessible = 1 AND bugs.reporter = $userid)" .
-          " OR (bugs.cclist_accessible = 1 AND selectVisible_cc.who = $userid AND not isnull(selectVisible_cc.who))" .
-          " OR (bugs.assigned_to = $userid)";
-        if (Param("useqacontact")) {
-            $replace .= " OR (bugs.qa_contact = $userid)";
-        }
-    }
-
-    $replace .= ") AND ";
-
-    $query =~ s/\sWHERE\s/$replace/i;
-
-    return $query;
 }
 
 sub CanSeeBug {
@@ -1136,7 +1040,7 @@ sub GetBugLink {
                 $title .= " $bug_res";
                 $post = "</strike>";
             }
-            if ($bug_grp == 0 || CanSeeBug($bug_num, $::userid, $::usergroupset)) {
+            if ($bug_grp == 0 || CanSeeBug($bug_num, $::userid)) {
                 $title .= " - $bug_desc";
             }
             $::buglink{$bug_num} = [$pre, value_quote($title), $post];
