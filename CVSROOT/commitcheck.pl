@@ -31,8 +31,8 @@ $fullname{'19'} = 'mozilla-toplevel';
 $mode{'24'} = 'Restricted';
 $branch{'24'} = 'HEAD';
 $fullname{'24'} = 'nsprpub';
-$blessed{'24'} = [];
-$super{'24'} = ['raman%netscape.com','wtc%netscape.com','srinivas%netscape.com','larryh%netscape.com','gordon%netscape.com',];
+$blessed{'24'} = ['gordon%netscape.com',];
+$super{'24'} = ['wtc%netscape.com','larryh%netscape.com','srinivas%netscape.com',];
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'ColorSync_19980824_BRANCH') {
