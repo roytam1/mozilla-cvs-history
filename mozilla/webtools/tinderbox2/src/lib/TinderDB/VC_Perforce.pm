@@ -532,7 +532,7 @@ sub status_table_row {
        $text_browser_color_string = 
          HTMLPopUp::text_browser_color_string($cell_color, $char);
 
-       # for those who like empty cells to be truely empty, we need to
+       # for those who like empty cells to be truly empty, we need to
        # be sure that they see the different cell colors when they
        # change.
 

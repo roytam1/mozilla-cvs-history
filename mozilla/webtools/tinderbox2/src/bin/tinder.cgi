@@ -103,7 +103,7 @@ CGI Mode Arguments
 		at time --start-time.  If --end-time and --display-hours 
 		are not set the default --display-hours is: $DEFAULT_DISPLAY_HOURS.
 		This argument is only effective if --end-time is not set.
-		Both --end-time and --display-hours are equivlant means
+		Both --end-time and --display-hours are equivalent means
 		of stating when the table should end.
 
 --noignore	Show all build columns even if some of them 
@@ -121,12 +121,11 @@ Daemon Mode Arguments
 Synopsis
 
 This program generates the Tinderbox Web pages.  It can be run either
-in deamon mode via a cron job or via a webserver as a regular cgi bin
+in daemon mode via a cron job or via a webserver as a regular cgi bin
 program.
 
 In daemon mode the program will update all the databases with current
-data and and prepare new summary pages and status pages for all
-trees.
+data and prepare new summary pages and status pages for all trees.
 
 In CGI mode the program will prepare the status page that the user
 asked for, this page is not saved to disk and we update none of the
@@ -134,8 +133,7 @@ databases.  This requires the user to specify a single tree which the
 page will represent and pass in any additional arguments which the
 user wishes to be different from the defaults.
 
-New data is pushed into the via administrative web forms and via mail
-which is delivered to the helper program process mail and has the
+New data is pushed into the system via administrative web forms and 
 specified format.  Additional data is gathed by having the program
 query the Version Control Software to find any updates which have
 happend recently.

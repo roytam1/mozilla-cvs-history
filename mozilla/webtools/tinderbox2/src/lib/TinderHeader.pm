@@ -431,7 +431,7 @@ If some headers are not desired to run the 'use' statements for them
 may be safely commented out and a default value will automatically be
 provided.
 
-Each function discribed here builds an $out string.  If there are bugs
+Each function described here builds an $out string.  If there are bugs
 in the resulting HTML you can put your perl breakpoint on the return
 statement of any function and look at the completed string before it
 is returned.

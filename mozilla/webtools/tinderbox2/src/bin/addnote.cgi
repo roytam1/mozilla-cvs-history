@@ -2,7 +2,7 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# addnote.cgi - the webform which users enter notices to be displayed
+# addnote.cgi - the webform via which users enter notices to be 
 #		 on the tinderbox status page.
 
 

@@ -176,30 +176,30 @@ $VERSION = '#tinder_version#';
 
 #	    # these are dummy trees for testing.	    
 #
-#	    'Project_A' =>  {
-#                   root => '/cvsroot',
-#                   module => '',
-#                   branch => 'HEAD',
-#                  },
-#	    'Project_B' =>  {
-#                   root => '/cvsroot',
-#                   module => 'MozillaTinderboxAll',
-#                   branch => 'HEAD',
-#                  },
-#	    'Project_C' =>  {
-#                   root => '/cvsroot',
-#                   module => 'NSS',
-#                   branch => 'HEAD',
-#                  },
+	    'Project_A' =>  {
+                   root => '/cvsroot',
+                   module => '',
+                   branch => 'HEAD',
+                  },
+	    'Project_B' =>  {
+                   root => '/cvsroot',
+                   module => 'MozillaTinderboxAll',
+                   branch => 'HEAD',
+                  },
+	    'Project_C' =>  {
+                   root => '/cvsroot',
+                   module => 'NSS',
+                   branch => 'HEAD',
+                  },
 
 
 # ------------- Real Trees Go Here ---------- 
 #
 
-	    'SeaMonkey' =>  {
-                   root => '/cvsroot',
-                   module => 'MozillaTinderboxAll',
-                   branch => 'HEAD',
+#	    'SeaMonkey' =>  {
+#                   root => '/cvsroot',
+#                   module => 'MozillaTinderboxAll',
+#                   branch => 'HEAD',
 
                    # If you are using Perforce use perforce filespec
                    # to specify branche/module pairs. Perforce blurs
@@ -230,7 +230,7 @@ $VERSION = '#tinder_version#';
 
                    # branch => '//releases/v2.5',
                    # module => '/webmodule/...',
-                  },
+#                  },
 
 
 	   );

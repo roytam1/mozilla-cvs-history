@@ -109,7 +109,7 @@ sub load_bonsai_libs {
 
   $^W = 0;
 
-  # we should not depend on any directory being mounted, we are a deamon.
+  # we should not depend on any directory being mounted, we are a daemon.
   chdir ("/")	||
     die("Could not cd to /. $!\n");
   
@@ -276,7 +276,7 @@ sub get_checkin_data {
     my ($result) = &query_checkins();
 
     # we should not depend on any directory being mounted, we are a
-    # deamon.
+    # daemon.
 
     chdir ("/")	||
 	die("Could not cd to /. $!\n");
