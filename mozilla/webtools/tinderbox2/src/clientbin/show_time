@@ -1,5 +1,12 @@
 #!/usr/bin/perl
 
+
+# $Revision$ 
+# $Date$ 
+# $Author$ 
+# $Source$ 
+# $Name$ 
+
 $t=time();
 
 print (

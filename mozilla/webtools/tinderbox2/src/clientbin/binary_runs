@@ -2,6 +2,13 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
+
+# $Revision$ 
+# $Date$ 
+# $Author$ 
+# $Source$ 
+# $Name$ 
+
 # binary_runs - exits with a zero exit code if the binary given on the
 # command line runs for several seconds, otherwise exits with a
 # nonzero exit code.  This is a tool to be run in the Makefile,

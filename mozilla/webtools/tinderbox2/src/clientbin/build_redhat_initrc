@@ -9,6 +9,13 @@
 # description: Daemon Build process for buildmachines, will send mail \
 #		to Tinderbox
 
+
+# $Revision$ 
+# $Date$ 
+# $Author$ 
+# $Source$ 
+# $Name$ 
+
 TREE=B-NEON-1-2
 BUILDSCRIPT=/home/tinderbox2/clientbin/build_shellscript
 BUILDCF=/home/tinderbox2/local_conf/reefedge.buildcf
