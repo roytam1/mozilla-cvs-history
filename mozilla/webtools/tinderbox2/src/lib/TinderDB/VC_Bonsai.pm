@@ -374,20 +374,24 @@ sub status_table_start {
 # no data.
 
 sub is_break_cell {
-    my ($tree,$time,$next_time,$last_treestate) = @_;
+    my ($tree,$time,$next_time) = @_;
+
+    if (defined($DATABASE{$tree}{$time}{'treestate'})) {
+        $LAST_TREESTATE = $DATABASE{$tree}{$time}{'treestate'};
+    }
 
     my $is_state1_different = 
         (
          (defined($last_treestate)) &&
          (defined($DATABASE{$tree}{$next_time}{'treestate'})) &&
-         ($last_treestate ne $DATABASE{$tree}{$next_time}{'treestate'}) &&
+         ($LAST_TREESTATE ne $DATABASE{$tree}{$next_time}{'treestate'}) &&
          1);
 
     my $is_state2_different = 
         (
          (defined($last_treestate)) &&
          (defined($DATABASE{$tree}{$time}{'treestate'})) &&
-         ($last_treestate ne $DATABASE{$tree}{$time}{'treestate'}) &&
+         ($LAST_TREESTATE ne $DATABASE{$tree}{$time}{'treestate'}) &&
          1);
 
     $is_state_different = $is_state1_different || $is_state2_different;    
@@ -434,15 +438,8 @@ sub status_table_row {
                        $tree,
                        $DB_TIMES[$next_index],
                        $DB_TIMES[$next_index+1],
-                       $LAST_TREESTATE,
                        )
          )) {
-
-      $next_time = $DB_TIMES[$next_index];
-
-      if (defined($DATABASE{$tree}{$next_time}{'treestate'})) {
-          $LAST_TREESTATE = $DATABASE{$next_tree}{$time}{'treestate'};
-      }
 
       $next_index++;
 
