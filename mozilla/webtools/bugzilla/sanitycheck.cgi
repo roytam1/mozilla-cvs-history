@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -24,6 +24,8 @@
 use diagnostics;
 use strict;
 
+use lib qw(.);
+
 require "CGI.pl";
 
 use vars %::FORM;
@@ -47,23 +49,21 @@ UserInGroup("editbugs")
 print "Content-type: text/html\n";
 print "\n";
 
-SendSQL("set SQL_BIG_TABLES=1");
-
 my $offervotecacherebuild = 0;
 
 sub Status {
     my ($str) = (@_);
-    print "$str <P>\n";
+    print "$str <p>\n";
 }
 
 sub Alert {
     my ($str) = (@_);
-    Status("<font color=red>$str</font>");
+    Status("<font color=\"red\">$str</font>");
 }
 
 sub BugLink {
     my ($id) = (@_);
-    return "<a href='show_bug.cgi?id=$id'>$id</a>";
+    return "<a href=\"show_bug.cgi?id=$id\">$id</a>";
 }
 
 sub AlertBadVoteCache {
@@ -119,6 +119,10 @@ my @checklist;
 
 PutHeader("Bugzilla Sanity Check");
 
+###########################################################################
+# Fix vote cache
+###########################################################################
+
 if (exists $::FORM{'rebuildvotecache'}) {
     Status("OK, now rebuilding vote cache.");
     SendSQL("lock tables bugs write, votes read");
@@ -136,7 +140,29 @@ if (exists $::FORM{'rebuildvotecache'}) {
     Status("Vote cache has been rebuilt.");
 }
 
-print "OK, now running sanity checks.<P>\n";
+print "OK, now running sanity checks.<p>\n";
+
+# This one goes first, because if this is wrong, then the below tests
+# will probably fail too
+
+# This isn't extensible. Thats OK; we're not adding any more enum fields
+Status("Checking for invalid enumeration values");
+foreach my $field (("bug_severity", "bug_status", "op_sys",
+                    "priority", "rep_platform", "resolution")) {
+    # undefined enum values in mysql are an empty string which equals 0
+    SendSQL("SELECT bug_id FROM bugs WHERE $field=0 ORDER BY bug_id");
+    my @invalid;
+    while (MoreSQLData()) {
+        push (@invalid, FetchOneColumn());
+    }
+    if (@invalid) {
+        Alert("Bug(s) found with invalid $field value: ".join(', ',@invalid));
+    }
+}
+
+###########################################################################
+# Perform referential (cross) checks
+###########################################################################
 
 CrossCheck("keyworddefs", "id",
            ["keywords", "keywordid"]);
@@ -187,6 +213,9 @@ CrossCheck("products", "product",
            ["versions", "program", "value"],
            ["attachstatusdefs", "product", "name"]);
 
+###########################################################################
+# Perform group checks
+###########################################################################
 
 Status("Checking groups");
 SendSQL("select bit from groups where bit != pow(2, round(log(bit) / log(2)))");
@@ -204,8 +233,9 @@ while (@row = FetchSQLData()) {
     Alert("Bad groupset $row[1] found in bug " . BugLink($row[0]));
 }
 
-
-
+###########################################################################
+# Perform product specific field checks
+###########################################################################
 
 Status("Checking version/products");
 
@@ -279,7 +309,10 @@ foreach my $ref (@checklist) {
     }
 }
 
-
+###########################################################################
+# Perform login checks
+###########################################################################
+ 
 Status("Checking profile logins");
 
 my $emailregexp = Param("emailregexp");
@@ -292,6 +325,9 @@ while (my ($id,$email) = (FetchSQLData())) {
     Alert "Bad profile email address, id=$id,  &lt;$email&gt;."
 }
 
+###########################################################################
+# Perform vote/keyword cache checks
+###########################################################################
 
 SendSQL("SELECT bug_id,votes,keywords FROM bugs " .
         "WHERE votes != 0 OR keywords != ''");
@@ -578,6 +614,30 @@ while (@row = FetchSQLData()) {
 if (@badbugs > 0) {
     Alert("Bugs that have enough votes to be confirmed but haven't been: " .
           join (", ", @badbugs));
+}
+
+###########################################################################
+# Unsent mail
+###########################################################################
+
+Status("Checking for unsent mail");
+
+@badbugs = ();
+
+SendSQL("SELECT bug_id " .
+        "FROM bugs WHERE lastdiffed < delta_ts AND ".
+        "delta_ts < date_sub(now(), INTERVAL 30 minute) ".
+        "ORDER BY bug_id");
+
+while (@row = FetchSQLData()) {
+    my ($id) = (@row);
+    push(@badbugs, $id);
+}
+
+if (@badbugs > 0) {
+    Alert("Bugs that have changes but no mail sent for at least half an hour: " .
+          join (", ", @badbugs));
+    print("Run <code>processmail rescanall</code> to fix this<p>\n");
 }
 
 ###########################################################################
