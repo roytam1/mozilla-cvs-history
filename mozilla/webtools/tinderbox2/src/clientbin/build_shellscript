@@ -244,6 +244,7 @@ sub get_env {
 # set_static_vars) so that the error environment is setup incase of
 # problems.
 
+  umask 0022; 
   $| = 1;
   $PROGRAM = File::Basename::basename($0);
   $PID = $$; 
@@ -750,8 +751,8 @@ sub slow_build_speed {
   
   my ($actual_build_seconds) = $END_TIME - $START_TIME;
   
-  if ($actual_build_seconds <  $MINIMUM_BUILD_SECONDS) {
-    my ($sleep_time) = $minimum_build_seconds - $actual_build_seconds;
+  if ($actual_build_seconds < $MINIMUM_BUILD_SECONDS) {
+    my ($sleep_time) = $MINIMUM_BUILD_SECONDS - $actual_build_seconds;
     sleep($sleep_time);
   }
 
