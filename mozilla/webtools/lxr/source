@@ -314,11 +314,22 @@ sub printfile {
 #if the file is html then don't print a header because the file
 #has its own -dme
 if (!($Path->{'file'} =~ /\.(html)$/)) {
-    &makeheader('source');
+    if ($Path->{'file'}) {
+	&makeheader('source');
+    } else {
+	&makeheader('sourcedir');
     }
+}
+
 &printfile;
+
 if (!($Path->{'file'} =~ /\.(html)$/)) {
-    &makefooter('source');
+    if ($Path->{'file'}) {
+	&makefooter('source');
+    } else {
+	&makefooter('sourcedir');
     }
+}
+
 #$len = length($file);
 #print ("length is: ", $len) ;
