@@ -387,7 +387,7 @@ tie (%fileidx, "DB_File", "fileidx", O_RDWR|O_CREAT, 0660, $DB_HASH)
 open(FILES, "find $realpath -print |");
 while (<FILES>) {
     chop;
-    if (/\.([ch]|cpp?|cc)$/i) {
+    if (/\.([ch]|cpp?|idl|cc)$/i) {
 	push(@f, $_);
 	push(@t, 0);
     }
@@ -395,7 +395,7 @@ while (<FILES>) {
 	push(@f, $_);
 	push(@ft, 1);
     }
-#    push(@f, $_) if /\.([ch]|cpp?|cc|java)$/i; # Duplicated in lib/LXR/Common.pm
+#    push(@f, $_) if /\.([ch]|cpp?|idl|cc|java)$/i; # Duplicated in lib/LXR/Common.pm
 }
 close(FILES);
 

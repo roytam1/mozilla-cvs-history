@@ -71,6 +71,7 @@ sub fdescexpand {
 	    ($filename =~ /\.cc$/) |
 	    ($filename =~ /\.cp$/) | 
 	    ($filename =~ /\.cpp$/) | 
+	    ($filename =~ /\.idl$/) | 
 	    ($filename =~ /\.java$/)
 	    )){
 	return("\&nbsp\;");
