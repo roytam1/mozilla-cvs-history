@@ -935,7 +935,6 @@ sub status_table_header {
                                "windowtxt"=>$txt,
                                "windowtitle" => $title,
                                "linktxt"=> $buildname,
-                               "windowheight" => (25 * $num_lines)+100,
                                "href"=>"",
                          );
 
