@@ -3234,6 +3234,32 @@ if (GetFieldDef("profiles", "groupset")) {
                   " AND who = $bwho AND fieldid = $gsid");
 
     }
+    $sth = $dbh->prepare("SELECT userid, profiles_when, who, newvalue, oldvalue
+                          FROM profiles_activity WHERE fieldid = $gsid");
+    $sth->execute();
+    while (my ($uid, $uwhen, $uwho, $added, $removed) = $sth->fetchrow_array) {
+        $added ||= 0;
+        $removed ||= 0;
+        my $sth2 = $dbh->prepare("SELECT name FROM groups WHERE (bit & $added) != 0 AND (bit & $removed) = 0");
+        $sth2->execute();
+        my @logadd = ();
+        while (my ($n) = $sth2->fetchrow_array) {
+            push @logadd, $n;
+        }
+        $sth2 = $dbh->prepare("SELECT name FROM groups WHERE (bit & $removed) != 0 AND (bit & $added) = 0");
+        $sth2->execute();
+        my @logrem = ();
+        while (my ($n) = $sth2->fetchrow_array) {
+            push @logrem, $n;
+        }
+        $dbh->do("UPDATE profiles_activity SET fieldid = $bgfid, newvalue = " .
+                  $dbh->quote(join(", ", @logadd)) . ", oldvalue = " . 
+                  $dbh->quote(join(", ", @logrem)) .
+                  " WHERE userid = $uid AND profiles_when = " . 
+                  $dbh->quote($uwhen) .
+                  " AND who = $uwho AND fieldid = $gsid");
+
+    }
     DropField('profiles','groupset');
     DropField('profiles','blessgroupset');
     DropField('bugs','groupset');
