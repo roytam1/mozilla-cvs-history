@@ -103,7 +103,6 @@ unless ($action) {
     print "<form method=post action=editgroups.cgi>\n";
     print "<table border=1>\n";
     print "<tr>";
-    print "<th>Id</th>";
     print "<th>Name</th>";
     print "<th>Description</th>";
     print "<th>User RegExp</th>";
@@ -114,12 +113,20 @@ unless ($action) {
 
     SendSQL("SELECT group_id,name,description,userregexp,isactive,group_type " .
             "FROM groups " .
-            "ORDER BY group_id");
+            "ORDER BY group_type != 0, name");
 
     while (MoreSQLData()) {
         my ($groupid, $name, $desc, $regexp, $isactive, $group_type) = FetchSQLData();
         print "<tr>\n";
-        print "<td valign=middle>$groupid</td>\n";
+        if ($group_type == $::Tgroup_type->{'system'} ) {
+        print "<td>$name</td>\n";
+        print "<td>$desc</td>\n";
+        print "<td><input size=30 name=\"regexp-$groupid\" value=\"$regexp\">\n";
+        print "<input type=hidden name=\"oldregexp-$groupid\" value=\"$regexp\"></td>\n";
+        print "<td>&nbsp</td>";
+        print "<td>";
+            print "system";
+        } else {
         print "<td><input size=20 name=\"name-$groupid\" value=\"$name\">\n";
         print "<input type=hidden name=\"oldname-$groupid\" value=\"$name\"></td>\n";
         print "<td><input size=40 name=\"desc-$groupid\" value=\"$desc\">\n";
@@ -129,13 +136,10 @@ unless ($action) {
         print "<td><input type=\"checkbox\" name=\"isactive-$groupid\" value=\"1\"" . ($isactive ? " checked" : "") . ">\n";
         print "<input type=hidden name=\"oldisactive-$groupid\" value=\"$isactive\"></td>\n";
         print "<td>";
-        if ($group_type == $::Tgroup_type->{'system'} ) {
-            print "system";
-        } else {
             print "<select name=\"group_type-$groupid\" value=\"$group_type\" >\n";
             print "<option value=$::Tgroup_type->{'buggroup'}";
             print " selected" if ($group_type == $::Tgroup_type->{'buggroup'});
-            print ">buggoup</option><option value=$::Tgroup_type->{'user'}";
+            print ">buggroup</option><option value=$::Tgroup_type->{'user'}";
             print " selected" if ($group_type == $::Tgroup_type->{'user'});
             print ">user</option></select>\n";
         }
@@ -148,7 +152,7 @@ unless ($action) {
     }
 
     print "<tr>\n";
-    print "<td colspan=6></td>\n";
+    print "<td colspan=5></td>\n";
     print "<td><a href=\"editgroups.cgi?action=add\">Add Group</a></td>\n";
     print "</tr>\n";
     print "</table>\n";
@@ -280,7 +284,7 @@ if ($action eq 'add') {
     print "<td><input size=30 name=\"regexp\"></td>\n";
     print "<td><input type=\"checkbox\" name=\"isactive\" value=\"1\" checked></td>\n";
     print "<td><select name=\"group_type\" value=\"$::Tgroup_type->{'buggroup'}\" >\n";
-    print "<option value=$::Tgroup_type->{'buggroup'}>buggoup</option>\n";
+    print "<option value=$::Tgroup_type->{'buggroup'}>buggroup</option>\n";
     print "<option value=$::Tgroup_type->{'user'}>user</option>\n";
     print "</select></td>\n";
     print "</TR></TABLE>\n<HR>\n";
@@ -351,6 +355,13 @@ if ($action eq 'new') {
     if ($isactive != 0 && $isactive != 1) {
         ShowError("The active flag was improperly set.  There may be " . 
                   "a problem with Bugzilla or a bug in your browser.<br>" . 
+                  "Please click the <b>Back</b> button and try again.");
+        PutFooter();
+        exit;
+    }
+
+    if (!eval {qr/$regexp/}) {
+        ShowError("The regular expression you entered is invalid. " .
                   "Please click the <b>Back</b> button and try again.");
         PutFooter();
         exit;
@@ -615,12 +626,6 @@ if ($action eq 'update') {
     foreach my $b (grep(/^name-\d*$/, keys %::FORM)) {
         if ($::FORM{$b}) {
             my $v = substr($b, 5);
-
-# print "Old: '" . $::FORM{"oldname-$v"} . "', '" . $::FORM{"olddesc-$v"} .
-#      "', '" . $::FORM{"oldregexp-$v"} . "'<br>";
-# print "New: '" . $::FORM{"name-$v"} . "', '" . $::FORM{"desc-$v"} .
-#      "', '" . $::FORM{"regexp-$v"} . "'<br>";
-
             if ($::FORM{"oldname-$v"} ne $::FORM{"name-$v"}) {
                 $chgs = 1;
                 SendSQL("SELECT name FROM groups WHERE name=" .
@@ -660,6 +665,12 @@ if ($action eq 'update') {
                 }
             }
             if ($::FORM{"oldregexp-$v"} ne $::FORM{"regexp-$v"}) {
+                if (!eval {qr/$::FORM{"regexp-$v"}/}) {
+                    ShowError("The regular expression you entered is invalid. " .
+                              "Please click the <b>Back</b> button and try again.");
+                    PutFooter();
+                    exit;
+                }
                 $chgs = 1;
                 SendSQL("UPDATE groups SET userregexp=" .
                         SqlQuote($::FORM{"regexp-$v"}) .
@@ -691,7 +702,7 @@ if ($action eq 'update') {
             my $group_type = $::FORM{"group_type-$v"} || 0;
             if ($::FORM{"oldgroup_type-$v"} != $group_type) {
                 $chgs = 1;
-                if (GetTypeNameByVal($group_type)) {
+                if (GetTypeNameByVal('group_type', $group_type)) {
                     SendSQL("UPDATE groups SET group_type=$group_type, " .
                             " group_when = NOW() " .
                             " WHERE group_id=" . SqlQuote($v));

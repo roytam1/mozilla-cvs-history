@@ -337,7 +337,7 @@ if(Param("usebuggroups") && GroupExists($product)) {
     ($group_id) = FetchSQLData();
 }
 
-SendSQL("SELECT groups.group_id, groups.name, groups.description " .
+SendSQL("SELECT DISTINCT groups.group_id, groups.name, groups.description " .
         "FROM groups, member_group_map " .
         "WHERE member_group_map.group_id = groups.group_id " .
         "AND member_group_map.member_id = $::userid " .

@@ -212,7 +212,7 @@ sub show_bug {
     # Groups
     my @groups;
 
-    SendSQL("SELECT groups.group_id, name, description, 
+    SendSQL("SELECT DISTINCT groups.group_id, name, description, 
              ISNULL(bug_group_map.group_id) = 0,
              ISNULL(member_group_map.group_id) = 0,
              isactive

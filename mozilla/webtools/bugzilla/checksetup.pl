@@ -1598,8 +1598,7 @@ $table{member_group_map} =
      maptype smallint not null default 0,
      isderived tinyint not null default 0,
 
-     unique(member_id, group_id, maptype, isderived),
-     index(group_id, member_id, maptype, isderived)';
+     index(member_id, group_id)';
 
 # This table determines in which groups a user must be a member to have
 # permission to see a bug
@@ -1735,23 +1734,33 @@ if (GetFieldDef('profiles', 'groupset')) {
     my $sth = $dbh->prepare("SELECT group_id FROM groups 
                 WHERE name = 'admin'");
     $sth->execute();
-    my ($id) = $sth->fetchrow_array();
+    my ($adminid) = $sth->fetchrow_array();
+    # Don't lose admins from DBs where Bug 157704 applies
     $sth = $dbh->prepare("SELECT userid FROM profiles 
-                WHERE groupset = 9223372036854775807");
+                WHERE (groupset | 65536) = 9223372036854775807");
     $sth->execute();
     while ( my ($userid) = $sth->fetchrow_array() ) {
         # existing administrators are made members of group "admin"
         $dbh->do("INSERT INTO member_group_map 
             (member_id, group_id, maptype, isderived) 
-            VALUES ($userid, $id, $::Tmaptype->{'u2gm'}, 0)");
+            VALUES ($userid, $adminid, $::Tmaptype->{'u2gm'}, 0)");
         # existing administrators are made blessers of group "admin"
         # only explitly defined blessers can bless group admin
         # other groups can be blessed by any admin or additional
         # defined blessers
         $dbh->do("INSERT INTO member_group_map 
             (member_id, group_id, maptype, isderived) 
-            VALUES ($userid, $id, $::Tmaptype->{'uBg'}, 0)");
+            VALUES ($userid, $adminid, $::Tmaptype->{'uBg'}, 0)");
     }
+    $sth = $dbh->prepare("SELECT group_id FROM groups");
+    $sth->execute();
+    while ( my ($id) = $sth->fetchrow_array() ) {
+        # admins can bless every group
+        $dbh->do("INSERT INTO member_group_map 
+            (member_id, group_id, maptype, isderived) 
+            VALUES ($adminid, $id, $::Tmaptype->{'gBg'}, 0)");
+    }
+                          
 }
 
 

@@ -633,9 +633,9 @@ sub NewProcessOnePerson ($$$$$$$$$$$$) {
     }
 
         
-    SendSQL("SELECT userid " .
+    SendSQL("SELECT userid, (refreshed_when > " . SqlQuote($::group_when) . ") " .
             "FROM profiles WHERE login_name = " . SqlQuote($person));
-    my ($userid) =  (FetchSQLData());
+    my ($userid, $current) =  (FetchSQLData());
 
     $seen{$person} = 1;
 
@@ -771,6 +771,9 @@ if (open(FID, "<data/nomail")) {
     }
     close FID;
 }
+
+SendSQL("SELECT MAX(group_when) FROM groups");
+($::group_when) = FetchSQLData();
 
 if ($#ARGV >= 0 && $ARGV[0] eq "regenerate") {
     print "Regenerating is no longer required or supported\n";
