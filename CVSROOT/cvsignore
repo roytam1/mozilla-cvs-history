@@ -26,3 +26,4 @@ _stubs
 so_locations
 *.flc
 depend.mk
+_xpidlgen
