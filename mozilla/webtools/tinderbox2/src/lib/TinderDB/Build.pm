@@ -611,7 +611,6 @@ sub status_table_header {
       $num_lines++;
     }
 
-    $txt .= "<p>";
     $num_lines++;
 
     if ($avg_buildtime) {
@@ -628,7 +627,6 @@ sub status_table_header {
       $num_lines++;
     }
     
-    $txt .= "<p>";
     $num_lines++;
 
     my $estimated_remaining = undef;
@@ -685,7 +683,7 @@ sub status_table_header {
                                "windowtxt"=>$txt,
                                "windowtitle" => $title,
                                "linktxt"=>$buildname,
-                               "windowheight" => (25 * $num_lines),
+                               "windowheight" => (25 * $num_lines)+100,
                                "href"=>"",
                          );
 
@@ -804,7 +802,7 @@ sub apply_db_updates {
          ($record->{'starttime'} == $previous_rec->{'starttime'})
        ) {
 
-      if (BuildStatus::is_status_final($previou_rec->{'status'})) {
+      if (BuildStatus::is_status_final($previous_rec->{'status'})) {
         # Ignore the new entry if old entry was final.
         next;
       }
