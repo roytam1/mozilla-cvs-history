@@ -18,6 +18,7 @@
 # Netscape Communications Corporation. All Rights Reserved.
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Andrew Anderson <andrew@redhat.com>
 
 use diagnostics;
 use strict;
@@ -42,7 +43,7 @@ sub Alert {
 
 sub BugLink {
     my ($id) = (@_);
-    return "<a href='show_bug.cgi?id=$id'>$id</a>";
+    return "<a href=\"show_bug.cgi?id=$id\">$id</a>";
 }
 
 
@@ -50,20 +51,31 @@ PutHeader("Bugzilla Sanity Check");
 
 print "OK, now running sanity checks.<P>\n";
 
-Status("Checking profile ids...");
-
-SendSQL("select userid,login_name from profiles");
+Status("Checking profile and group ids...");
 
 my @row;
+
+my %groupids;
+
+SendSQL("select groupid from groups");
+while (@row = FetchSQLData()) {
+    my ($gid) = (@row);
+    $groupids{$gid} = 1;
+}
+
+SendSQL("select userid,login_name,groupid from profiles");
 
 my %profid;
 
 while (@row = FetchSQLData()) {
-    my ($id, $email) = (@row);
+    my ($id, $email, $gid) = (@row);
     if ($email =~ /^[^@, ]*@[^@, ]*\.[^@, ]*$/) {
         $profid{$id} = 1;
     } else {
         Alert "Bad profile id $id &lt;$email&gt;."
+    }
+    if (!$groupids{$gid}) {
+	Alert "Bad group id $gid for $id &lt;$email&gt;."
     }
 }
 
@@ -96,7 +108,6 @@ while (@row = FetchSQLData()) {
         Alert("Bad cc $cc in " . BugLink($id));
     }
 }
-
 
 Status("Checking activity table");
 

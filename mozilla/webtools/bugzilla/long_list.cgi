@@ -24,12 +24,13 @@ use diagnostics;
 use strict;
 
 require "CGI.pl";
+my $pre = Param("prefix");
+require "$pre-security.pl";
 
 # Shut up misguided -w warnings about "used only once":
 use vars %::FORM;
 
 print "Content-type: text/html\n\n";
-print "<TITLE>Full Text Bug Listing</TITLE>\n";
 
 my $generic_query  = "
 select
@@ -46,42 +47,77 @@ select
   report.login_name,
   bugs.component,
   bugs.bug_file_loc,
-  bugs.short_desc
+  bugs.short_desc,
+  bugs.class,
+  bugs.view
 from bugs,profiles assign,profiles report
-where assign.userid = bugs.assigned_to and report.userid = bugs.reporter and
+where assign.userid = bugs.assigned_to 
+and report.userid = bugs.reporter and
 ";
 
 ConnectToDatabase();
 
+my $view_query = "SELECT type_id, name FROM type WHERE name = 'public'";
+SendSQL($view_query);
+(my $type_id, my $type_name) = FetchSQLData();
+$view_query = "and bugs.view = " . $type_id . " ";
+if(CanIView("view")){
+	$view_query = "";
+}
+
 foreach my $bug (split(/:/, $::FORM{'buglist'})) {
-    SendSQL("$generic_query bugs.bug_id = $bug");
+    SendSQL("$generic_query bugs.bug_id = $bug $view_query");
 
     my @row;
     if (@row = FetchSQLData()) {
         my ($id, $product, $version, $platform, $opsys, $status, $severity,
             $priority, $resolution, $assigned, $reporter, $component, $url,
-            $shortdesc) = (@row);
-        print "<IMG SRC=\"1x1.gif\" WIDTH=1 HEIGHT=80 ALIGN=LEFT>\n";
-        print "<TABLE WIDTH=100%>\n";
-        print "<TD COLSPAN=4><TR><DIV ALIGN=CENTER><B><FONT =\"+3\">" .
-            html_quote($shortdesc) .
-                "</B></FONT></DIV>\n";
-        print "<TR><TD><B>Bug#:</B> <A HREF=\"show_bug.cgi?id=$id\">$id</A>\n";
-        print "<TD><B>Product:</B> $product\n";
-        print "<TD><B>Version:</B> $version\n";
-        print "<TD><B>Platform:</B> $platform\n";
-        print "<TR><TD><B>OS/Version:</B> $opsys\n";
-        print "<TD><B>Status:</B> $status\n";
-        print "<TD><B>Severity:</B> $severity\n";
-        print "<TD><B>Priority:</B> $priority\n";
-        print "<TR><TD><B>Resolution:</B> $resolution</TD>\n";
-        print "<TD><B>Assigned To:</B> $assigned\n";
-        print "<TD><B>Reported By:</B> $reporter\n";
-        print "<TR><TD><B>Component:</B> $component\n";
-        print "<TR><TD COLSPAN=6><B>URL:</B> " . html_quote($url) . "\n";
-        print "<TR><TD COLSPAN=6><B>Summary&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</B> " . html_quote($shortdesc) . "\n";
-        print "<TR><TD><B>Description&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</B>\n</TABLE>\n";
-        print "<PRE>" . html_quote(GetLongDescription($bug)) . "</PRE>\n";
-        print "<HR>\n";
+            $shortdesc, $class) = (@row);
+	PutHeader("Full Text Bug Listing", html_quote($shortdesc), $::FORM{'id'});
+
+        print "
+<IMG SRC=\"1x1.gif\" WIDTH=\"1\" HEIGHT=\"80\" ALIGN=\"LEFT\">
+<TABLE WIDTH=\"100%\">
+  <TR>
+    <TD><B>Bug#:</B> <A HREF=\"show_bug.cgi?id=$id\">$id</A>
+    <TD><B>Product:</B> $product
+    <TD><B>Version:</B> $version
+    <TD><B>Platform:</B> $platform
+  <TR>
+    <TD><B>OS/Version:</B> $opsys
+    <TD><B>Status:</B> $status
+    <TD><B>Severity:</B> $severity
+    <TD><B>Priority:</B> $priority
+  <TR>
+    <TD><B>Resolution:</B> $resolution</TD>
+    <TD><B>Assigned To:</B> $assigned
+    <TD COLSPAN=\"2\"><B>Reported By:</B> $reporter
+  <TR>
+    <TD COLSPAN=\"2\"><B>Component:</B> $component";
+
+if(CanIView("class")){
+    print "    <TD><B>Class:</B> $class\n";
+} else {
+    print "    <TD>&nbsp; </TD>\n";
+}
+
+if(CanIView("view")){
+    print "    <TD><B>View:</B> $type_name\n";
+} else {
+    print "    <TD>&nbsp; </TD>\n";
+}
+
+print "
+  <TR>
+    <TD COLSPAN=\"6\"><B>URL:</B> " . html_quote($url) . "
+  <TR>
+    <TD><B>Summary:</B>
+    <TD COLSPAN=\"5\"> " . html_quote($shortdesc) . "
+  <TR>
+    <TD COLSPAN=\"5\"><B>Description:</B>
+</TABLE>
+<PRE>" . html_quote(GetLongDescription($bug)) . "</PRE>
+<HR>
+";
     }
 }

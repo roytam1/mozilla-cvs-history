@@ -44,9 +44,9 @@ PutHeader("Edit Component Owners");
 
 print "This lets you edit the owners of the program components of bugzilla.\n";
 
-print "<form method=post action=doeditowners.cgi><table>\n";
+print "<form method=\"post\" action=\"doeditowners.cgi\"><table>\n";
 
-my $rowbreak = "<tr><td colspan=2><hr></td></tr>";
+my $rowbreak = "<tr><td colspan=\"2\"><hr></td></tr>";
 
 SendSQL("select program, value, initialowner from components order by program, value");
 
@@ -56,17 +56,17 @@ my $curProgram = "";
 while (@line = FetchSQLData()) {
     if ($line[0] ne $curProgram) {
         print $rowbreak;
-        print "<tr><th align=right valign=top>$line[0]:</th><td></td></tr>\n";
+        print "<tr><th align=\"right\" valign=\"top\">$line[0]:</th><td></td></tr>\n";
         $curProgram = $line[0];
     }
-    print "<tr><td valign = top>$line[1]</td><td><input size=80 ";
+    print "<tr><td valign =\"top\">$line[1]</td><td><input size=\"80\" ";
     print "name=\"$line[0]_$line[1]\" value=\"$line[2]\"></td></tr>\n";
 }
 
 print "</table>\n";
 
-print "<input type=submit value=\"Submit changes\">\n";
+print "<input type=\"submit\" value=\"Submit changes\">\n";
 
 print "</form>\n";
 
-print "<p><a href=query.cgi>Skip all this, and go back to the query page</a>\n";
+print "<p><a href=\"query.cgi\">Skip all this, and go back to the query page</a>\n";

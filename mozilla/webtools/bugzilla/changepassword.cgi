@@ -24,20 +24,20 @@ require "CGI.pl";
 confirm_login();
 
 if (! defined $::FORM{'pwd1'}) {
-    print "Content-type: text/html
-
-<H1>Change your password</H1>
-<form method=post>
+    print "Content-type: text/html\n\n";
+    PutHeader("Change your password", "Change your password", "");
+    print "
+<form method=\"post\">
 <table>
 <tr>
-<td align=right>Please enter the new password for <b>$::COOKIE{'Bugzilla_login'}</b>:</td>
-<td><input type=password name=pwd1></td>
+<td align=\"right\">Please enter the new password for <b>$::COOKIE{'Bugzilla_login'}</b>:</td>
+<td><input type=\"password\" name=\"pwd1\"></td>
 </tr>
 <tr>
-<td align=right>Re-enter your new password:</td>
-<td><input type=password name=pwd2></td>
+<td align=\"right\">Re-enter your new password:</td>
+<td><input type=\"password\" name=\"pwd2\"></td>
 </table>
-<input type=submit value=Submit>\n";
+<input type=\"submit\" value=\"Submit\">\n";
     exit;
 }
 
@@ -85,4 +85,4 @@ SendSQL("update logincookies set cryptpassword = '$encrypted' where cookie = $::
 print "<H1>OK, done.</H1>
 Your new password has been set.
 <p>
-<a href=query.cgi>Back to query page.</a>\n";
+<a href=\"query.cgi\">Back to query page.</a>\n";

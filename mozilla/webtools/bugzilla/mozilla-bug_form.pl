@@ -21,6 +21,13 @@
 use diagnostics;
 use strict;
 
+use vars @::versions,
+        @::components,
+        %::legal_priority,
+        %::legal_severity;
+        @::legal_resolution_no_dup,
+        %::legal_platforms;
+
 my $query = "
 select
         bug_id,
@@ -39,7 +46,7 @@ select
         short_desc,
         date_format(creation_ts,'Y-m-d')
 from bugs
-where bug_id = '" . $::FORM{'id'} . "'";
+where bug_id = $::FORM{'id'}";
 
 SendSQL($query);
 my %bug;
@@ -78,14 +85,14 @@ GetVersionTable();
 #
 
 my $resolution_popup = make_options(\@::legal_resolution_no_dup,
-				    $bug{'resolution'}, 0);
-my $platform_popup = make_options(\@::legal_platform, $bug{'rep_platform'}, 0);
-my $priority_popup = make_options(\@::legal_priority, $bug{'priority'}, 0);
-my $sev_popup = make_options(\@::legal_severity, $bug{'bug_severity'}, 0);
+				    $bug{'resolution'});
+my $platform_popup = make_options($::legal_platforms{$bug{'product'}}, $bug{'rep_platform'});
+my $priority_popup = make_options(\@::legal_priority, $bug{'priority'});
+my $sev_popup = make_options(\@::legal_severity, $bug{'bug_severity'});
 
 
 my $component_popup = make_options($::components{$bug{'product'}},
-				   $bug{'component'}, 0);
+				   $bug{'component'});
 
 my $cc_element = '<INPUT NAME=cc SIZE=30 VALUE="' .
     ShowCcList($::FORM{'id'}) . '">';
@@ -107,35 +114,35 @@ print "
 <INPUT TYPE=HIDDEN NAME=\"was_assigned_to\" VALUE=\"$bug{'assigned_to'}\">
   <TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0><TR>
     <TD ALIGN=RIGHT><B>Bug#:</B></TD><TD>$bug{'bug_id'}</TD>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.phtml#rep_platform\">Platform:</A></B></TD>
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#rep_platform\">Platform:</A></B></TD>
     <TD><SELECT NAME=rep_platform>$platform_popup</SELECT></TD>
     <TD ALIGN=RIGHT><B>Version:</B></TD>
     <TD><SELECT NAME=version>" .
-    make_options($::versions{$bug{'product'}}, $bug{'version'}, 0) .
+    make_options($::versions{$bug{'product'}}, $bug{'version'}) .
     "</SELECT></TD>
   </TR><TR>
     <TD ALIGN=RIGHT><B>Product:</B></TD>
     <TD><SELECT NAME=product>" .
-    make_options(\@::legal_product, $bug{'product'}, 0) .
+    make_options(\@::legal_product, $bug{'product'}) .
     "</SELECT></TD>
     <TD ALIGN=RIGHT><B>OS:</B></TD><TD>$bug{'op_sys'}</TD>
     <TD ALIGN=RIGHT><B>Reporter:</B></TD><TD>$bug{'reporter'}</TD>
   </TR><TR>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.phtml\">Status:</A></B></TD>
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html\">Status:</A></B></TD>
       <TD>$bug{'bug_status'}</TD>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.phtml#priority\">Priority:</A></B></TD>
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#priority\">Priority:</A></B></TD>
       <TD><SELECT NAME=priority>$priority_popup</SELECT></TD>
     <TD ALIGN=RIGHT><B>Cc:</B></TD>
       <TD> $cc_element </TD>
   </TR><TR>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.phtml\">Resolution:</A></B></TD>
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html\">Resolution:</A></B></TD>
       <TD>$bug{'resolution'}</TD>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.phtml#severity\">Severity:</A></B></TD>
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#severity\">Severity:</A></B></TD>
       <TD><SELECT NAME=bug_severity>$sev_popup</SELECT></TD>
     <TD ALIGN=RIGHT><B>Component:</B></TD>
       <TD><SELECT NAME=component>$component_popup</SELECT></TD>
   </TR><TR>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.phtml#assigned_to\">Assigned&nbsp;To:
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#assigned_to\">Assigned&nbsp;To:
         </A></B></TD>
       <TD>$bug{'assigned_to'}</TD>
   </TR><TR>
@@ -177,7 +184,7 @@ if ($status eq "NEW" || $status eq "ASSIGNED" || $status eq "REOPENED") {
         $knum++;
     }
     print "<INPUT TYPE=radio NAME=knob VALUE=resolve>
-        Resolve bug, changing <A HREF=\"bug_status.phtml\">resolution</A> to
+        Resolve bug, changing <A HREF=\"bug_status.html\">resolution</A> to
         <SELECT NAME=resolution
           ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\">
           $resolution_popup</SELECT><br>\n";
@@ -189,7 +196,7 @@ if ($status eq "NEW" || $status eq "ASSIGNED" || $status eq "REOPENED") {
     my $assign_element = "<INPUT NAME=assigned_to SIZE=32 ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\" VALUE=$bug{'assigned_to'}>";
 
     print "<INPUT TYPE=radio NAME=knob VALUE=reassign> 
-          <A HREF=\"bug_status.phtml#assigned_to\">Reassign</A> bug to
+          <A HREF=\"bug_status.html#assigned_to\">Reassign</A> bug to
           $assign_element
         <br>\n";
     $knum++;

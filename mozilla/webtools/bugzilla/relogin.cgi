@@ -30,11 +30,13 @@ Set-Cookie: Bugzilla_logincookie= ; path=/; expires=Sun, 30-Jun-80 00:00:00 GMT
 Set-Cookie: Bugzilla_password= ; path=/; expires=Sun, 30-Jun-80 00:00:00 GMT
 Content-type: text/html
 
-<H1>Your login has been forgotten.</H1>
+";
+PutHeader("Your login has been forgotten", "Your login has been forgotten", "");
+print "
 The cookie that was remembering your login is now gone.  The next time you
 do an action that requires a login, you will be prompted for it.
 <p>
-<a href=query.cgi>Back to the query page.</a>
+<a href=\"query.cgi\">Back to the query page.</a>
 ";
 
 exit;
@@ -49,5 +51,5 @@ exit;
 # puts "<H1>OK, logged in.</H1>"
 # puts "You are now logged in as <b>$COOKIE(Bugzilla_login)</b>."
 # puts "<p>"
-# puts "<a href=query.cgi>Back to the query page.</a>"
+# puts "<a href=\"query.cgi\">Back to the query page.</a>"
 

@@ -39,8 +39,8 @@ sub GeneratePersonInput {
 }
 
 sub GeneratePeopleInput {
-    my ($field, $def_value) = (@_);
-    return "<INPUT NAME=\"$field\" SIZE=45 VALUE=\"$def_value\">";
+    my ($field, $size, $def_value) = (@_);
+    return "<INPUT NAME=\"$field\" SIZE=\"$size\" VALUE=\"$def_value\">";
 }
 
 
@@ -187,15 +187,15 @@ sub make_options {
 	    }
             $last = $item;
             if ($isregexp ? $item =~ $default : $default eq $item) {
-                $popup .= "<OPTION SELECTED VALUE=\"$item\">$item";
+                $popup .= "  <OPTION SELECTED VALUE=\"" . url_quote($item) . "\">" . url_decode($item) . "\n";
                 $found = 1;
             } else {
-		$popup .= "<OPTION VALUE=\"$item\">$item";
+		$popup .= "  <OPTION VALUE=\"" . url_quote($item) . "\">" . url_decode($item) . "\n";
             }
         }
     }
     if (!$found && $default ne "") {
-	$popup .= "<OPTION SELECTED>$default";
+	$popup .= "  <OPTION SELECTED>$default\n";
     }
     return $popup;
 }
@@ -203,9 +203,9 @@ sub make_options {
 
 sub make_popup {
     my ($name,$src,$default,$listtype,$onchange) = (@_);
-    my $popup = "<SELECT NAME=$name";
+    my $popup = "<SELECT NAME=\"$name\"";
     if ($listtype > 0) {
-        $popup .= " SIZE=5";
+        $popup .= " SIZE=\"5\"";
         if ($listtype == 2) {
             $popup .= " MULTIPLE";
         }
@@ -234,10 +234,61 @@ sub PasswordForLogin {
 sub confirm_login {
     my ($nexturl) = (@_);
 
-# Uncommenting the next line can help debugging...
+# Uncommenting the following lines can help debugging...
 #    print "Content-type: text/plain\n\n";
+#    print "$::FORM{'Bugzilla_login'}\n$::FORM{'Bugzilla_password'}\n";
 
     ConnectToDatabase();
+
+    my $authdomain = "";
+    my $count = 0;
+    my $authorized = 0;
+    # Apache 1.3.x users: this requires "HostNameLookups on" to work
+    if (defined Param('authdomain') && defined($ENV{'REMOTE_HOST'})) {
+        $authdomain = Param('authdomain');
+        #print "Content-type: text/html\n\n";
+        #print "<PRE>authdomain: $authdomain</PRE><BR>\n";
+        if ($::COOKIE{"Bugzilla_login"} =~ /$authdomain$/) {
+	    #print "<PRE>check authdomain: $authdomain</PRE><BR>\n";
+            use Socket;
+            while (defined($::param{'authnet'}[$count]) ne "") {
+                #print "$::param{'authnet'}[$count]<BR>\n";
+		my $ip_addr = unpack("N4", inet_aton($ENV{'REMOTE_HOST'}));
+		my ($network, $netmask) = 
+		    split("/", $::param{'authnet'}[$count]);
+		#print "network: $network, netmask, $netmask<BR>\n";
+		$network = unpack("N4", inet_aton($network));
+		$netmask = unpack("N4", inet_aton($netmask));
+		#printf ("ip_addr: %lx, network %lx, netmask: %lx<BR>\n",
+		#    $ip_addr, $network, $netmask);
+		my $net = $network & $netmask;
+		#printf ("net: %lx<BR>\n", $net);
+		my $xor = $ip_addr ^ $net;
+		#printf ("xor: %lx<BR>\n", $xor);
+		my $and = $ip_addr | $net;
+		#printf ("and: %lx<BR>\n", $and);
+		if ($and == $ip_addr) {
+			#print "TRUE<BR>\n";
+			$authorized = 1;
+		}
+		$count++;
+            }
+        } else {
+	    # We got here because we don't have a login cookie yet.
+	    $authorized = 1;
+	}
+        if (!$authorized) {
+            print "Content-type: text/html\n\n";
+	    PutHeader("Unauthorized host");
+	    print "You have connedted as a user from <I>$authdomain</I>, ";
+	    print "but you are not in <I>$authdomain</I>, currently.<P>";
+	    print "You must either create a new username to use ";
+	    print "from your current location, or you must connect ";
+	    print "from an authorized host.";
+	    exit;
+        }
+    }
+
     if (defined $::FORM{"Bugzilla_login"} &&
 	defined $::FORM{"Bugzilla_password"}) {
 
@@ -246,7 +297,8 @@ sub confirm_login {
 	if ($enteredlogin !~ /^[^@, ]*@[^@, ]*\.[^@, ]*$/) {
             print "Content-type: text/html\n\n";
 
-            print "<H1>Invalid e-mail address entered.</H1>\n";
+	    PutHeader("Invalid e-mail address entered");
+
             print "The e-mail address you entered\n";
             print "(<b>$enteredlogin</b>) didn't match our minimal\n";
             print "syntax checking for a legal email address.  A legal\n";
@@ -286,12 +338,12 @@ To use the wonders of bugzilla, you can use the following:
             my $msg = sprintf($template, $enteredlogin, $enteredlogin,
 			      $realpwd);
             
-	    open SENDMAIL, "|/usr/lib/sendmail -t";
+	    open SENDMAIL, "|/usr/lib/sendmail -t -f bugzilla\@redhat.com";
 	    print SENDMAIL $msg;
 	    close SENDMAIL;
 
             print "Content-type: text/html\n\n";
-            print "<H1>Password has been emailed.</H1>\n";
+	    PutHeader("Password has been emailed.");
             print "The password for the e-mail address\n";
             print "$enteredlogin has been e-mailed to that address.\n";
             print "<p>When the e-mail arrives, you can click <b>Back</b>\n";
@@ -302,7 +354,7 @@ To use the wonders of bugzilla, you can use the following:
 	my $enteredcryptpwd = crypt($enteredpwd, substr($realcryptpwd, 0, 2));
         if ($realcryptpwd eq "" || $enteredcryptpwd ne $realcryptpwd) {
             print "Content-type: text/html\n\n";
-            print "<H1>Login failed.</H1>\n";
+	    PutHeader("Login failed.");
             print "The username or password you entered is not valid.\n";
             print "Please click <b>Back</b> and try again.\n";
             exit;
@@ -323,11 +375,13 @@ To use the wonders of bugzilla, you can use the following:
 
     }
 
-
     my $loginok = 0;
 
+#    print "Content-type: text/plain\n\n";
+#    print "$::FORM{'Bugzilla_login'}\n$::FORM{'Bugzilla_password'}\n";
     if (defined $::COOKIE{"Bugzilla_login"} &&
 	defined $::COOKIE{"Bugzilla_logincookie"}) {
+
         SendSQL("select profiles.login_name = " .
 		SqlQuote($::COOKIE{"Bugzilla_login"}) .
 		" and profiles.cryptpassword = logincookies.cryptpassword " .
@@ -344,7 +398,7 @@ To use the wonders of bugzilla, you can use the following:
 
     if ($loginok ne "1") {
         print "Content-type: text/html\n\n";
-        print "<H1>Please log in.</H1>\n";
+        PutHeader("Please log in.");
         print "I need a legitimate e-mail address and password to continue.\n";
         if (!defined $nexturl || $nexturl eq "") {
 	    # Sets nexturl to be argv0, stripping everything up to and
@@ -385,7 +439,7 @@ name=PleaseMailAPassword>
 
         # This seems like as good as time as any to get rid of old
         # crufty junk in the logincookies table.  Get rid of any entry
-        # that hasn't been used in a month.
+        # that hasn't been used in a day.
         SendSQL("delete from logincookies where to_days(now()) - to_days(lastused) > 30");
 
         

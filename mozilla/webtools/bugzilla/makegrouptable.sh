@@ -22,23 +22,27 @@ mysql > /dev/null 2>/dev/null << OK_ALL_DONE
 
 use bugs;
 
-drop table profiles
+drop table groups
 OK_ALL_DONE
 
 mysql << OK_ALL_DONE
 use bugs;
-create table profiles (
-userid mediumint not null auto_increment primary key,
-login_name varchar(255) not null,
-password varchar(16),
-cryptpassword varchar(64),
-realname varchar(255),
-groupid mediumint,
-index(login_name)
+create table groups (
+        groupid mediumint not null primary key,
+        groupname varchar(255) not null,
+	flags mediumint not null,
+	goodfor bigint not null
 );
 
+insert into groups values (1, 'default',        0, 1800);
+insert into groups values (2, 'support',      263, 86400);
+insert into groups values (3, 'devel',      65535, 31536000);
+insert into groups values (4, 'qa',        262143, 31536000);
+insert into groups values (5, 'unlimited', 262143, 1800);
+insert into groups values (6, 'comsup',         0, 86400);
+insert into groups values (7, 'labs',       65535, 31536000);
 
-show columns from profiles;
-show index from profiles;
+show columns from groups;
+show index from groups;
 
 OK_ALL_DONE

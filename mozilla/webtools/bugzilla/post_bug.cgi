@@ -18,6 +18,7 @@
 # Netscape Communications Corporation. All Rights Reserved.
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Andrew Anderson <andrew@redhat.com>
 
 
 use diagnostics;
@@ -34,17 +35,19 @@ $zz = $zz . $zz;
 
 confirm_login();
 
-print "Set-Cookie: PLATFORM=$::FORM{'product'} ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
-print "Set-Cookie: VERSION-$::FORM{'product'}=$::FORM{'version'} ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+my $platform = url_quote($::FORM{'product'});
+my $version = url_quote($::FORM{'version'});
+
+print "Set-Cookie: PLATFORM=$platform ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+print "Set-Cookie: VERSION-$platform=$version ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
 print "Content-type: text/html\n\n";
 
 if (defined $::FORM{'maketemplate'}) {
-    print "<TITLE>Bookmarks are your friend.</TITLE>\n";
-    print "<H1>Template constructed.</H1>\n";
+    PutHeader("Bookmarks are your friend.", "Template constructed.", "");
     
     my $url = "enter_bug.cgi?$::buffer";
 
-    print "If you put a bookmark <a href=\"$url\">to this link</a>, it will\n";
+    print "If you put a bookmark <A HREF=\"$url\">to this link</a>, it will\n";
     print "bring up the submit-a-new-bug page with the fields initialized\n";
     print "as you've requested.\n";
     exit;
@@ -76,24 +79,48 @@ $::FORM{'assigned_to'} = DBNameToIdAndCheck($::FORM{'assigned_to'}, $forceAssign
 $::FORM{'reporter'} = DBNameToIdAndCheck($::FORM{'reporter'});
 
 
-my @bug_fields = ("reporter", "product", "version", "rep_platform",
+my @bug_fields = ("reporter", "product", "version", "release", "rep_platform",
                   "bug_severity", "priority", "op_sys", "assigned_to",
-                  "bug_status", "bug_file_loc", "short_desc", "component");
+                  "bug_status", "short_desc", "component");
 my $query = "insert into bugs (\n" . join(",\n", @bug_fields) . ",
-creation_ts, long_desc )
+group_id, view, creation_ts, long_desc )
 values (
 ";
-
 
 foreach my $field (@bug_fields) {
     $query .= SqlQuote($::FORM{$field}) . ",\n";
 }
 
+my $gid_query = "SELECT groupid FROM profiles " . 
+	"WHERE userid = $::FORM{'reporter'}";
+#print "<PRE>$gid_query</PRE>";
+SendSQL($gid_query);
+my $gid = FetchOneColumn();
+#print "<PRE>gid = $gid</PRE><BR>\n";
+$query .= "$gid, ";
+
+my $view_query;
+my $view_id;
+my $view_name;
+
+if (defined $::FORM{'view'}) {
+    $view_query = "SELECT type_id FROM type WHERE name = '" . 
+	$::FORM{'view'} . "'";
+    SendSQL($view_query);
+    ($view_id, $view_name) = FetchSQLData();
+    $query .= "'$view_id' ,";
+} else {
+    $view_query = "SELECT type_id FROM type WHERE name = 'public'";
+    SendSQL($view_query);
+    ($view_id, $view_name) = FetchSQLData();
+    $query .= "'$view_id', ";
+}
+
 $query .= "now(), " . SqlQuote($::FORM{'comment'}) . " )\n";
 
+#print "<PRE>$query</PRE>\n";
 
 my %ccids;
-
 
 if (defined $::FORM{'cc'}) {
     foreach my $person (split(/[ ,]/, $::FORM{'cc'})) {
@@ -118,6 +145,8 @@ foreach my $person (keys %ccids) {
 print "<H2>Changes Submitted</H2>\n";
 print "<A HREF=\"show_bug.cgi?id=$id\">Show BUG# $id</A>\n";
 print "<BR><A HREF=\"query.cgi\">Back To Query Page</A>\n";
+print "<BR><A HREF=\"enter_bug.cgi?product=" . url_quote($::FORM{'product'}). "\">Enter a new bug</A>\n";
+
 
 system("./processmail $id < /dev/null > /dev/null 2> /dev/null &");
 exit;

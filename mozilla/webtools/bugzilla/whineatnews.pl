@@ -59,7 +59,8 @@ foreach my $email (sort (keys %bugs)) {
     foreach my $i (@{$bugs{$email}}) {
         $msg .= "  ${urlbase}show_bug.cgi?id=$i\n"
     }
-    open(SENDMAIL, "|/usr/lib/sendmail -t") || die "Can't open sendmail";
+    open(SENDMAIL, "|/usr/lib/sendmail -t -oi -f bugzilla\@redhat.com") 
+	|| die "Can't open sendmail";
     print SENDMAIL $msg;
     close SENDMAIL;
     print "$email      " . join(" ", @{$bugs{$email}}) . "\n";

@@ -23,6 +23,8 @@ use diagnostics;
 use strict;
 
 require "CGI.pl";
+my $pre = Param("prefix");
+require "$pre-security.pl";
 
 print "Content-type: text/html\n\n";
 
@@ -34,30 +36,41 @@ my $query = "
                 bugs_activity.oldvalue, bugs_activity.newvalue,
                 profiles.login_name
         from bugs_activity,profiles
-        where bugs_activity.bug_id = $::FORM{'id'}
-        and profiles.userid = bugs_activity.who
-        order by bugs_activity.when";
+        where bugs_activity.bug_id = '" . $::FORM{'id'} . "'
+        and profiles.userid = bugs_activity.who";
 
 ConnectToDatabase();
+
+my $view_query = "SELECT type_id FROM type where name = 'public'";
+SendSQL($view_query);
+my $type = FetchOneColumn();
+
+if (CanIView("type")){
+        $query .= " and bugs.type = " . $type;
+}
+
+
+$query .= " order by bugs_activity.when";
+
 SendSQL($query);
 
-print "<table border cellpadding=4>\n";
-print "<tr>\n";
+print "<TABLE BORDER CELLPADDING=\"4\">\n";
+print "<TR>\n";
 print "    <th>Who</th><th>What</th><th>Old value</th><th>New value</th><th>When</th>\n";
-print "</tr>\n";
+print "</TR>\n";
 
 my @row;
 while (@row = FetchSQLData()) {
     my ($field,$when,$old,$new,$who) = (@row);
     $old = value_quote($old);
     $new = value_quote($new);
-    print "<tr>\n";
-    print "<td>$who</td>\n";
-    print "<td>$field</td>\n";
-    print "<td>$old</td>\n";
-    print "<td>$new</td>\n";
-    print "<td>$when</td>\n";
-    print "</tr>\n";
+    print "<TR>\n";
+    print "<TD>$who</TD>\n";
+    print "<TD>$field</TD>\n";
+    print "<TD>$old</TD>\n";
+    print "<TD>$new</TD>\n";
+    print "<TD>$when</TD>\n";
+    print "</TR>\n";
 }
-print "</table>\n";
-print "<hr><a href=show_bug.cgi?id=$::FORM{'id'}>Back to bug $::FORM{'id'}</a>\n";
+print "</TABLE>\n";
+print "<HR><A HREF=\"show_bug.cgi?id=$::FORM{'id'}\">Back to bug $::FORM{'id'}</a>\n";

@@ -15,8 +15,33 @@ get daily stats collected now. README updated: Chart::Base is listed as
 a requirement, instructions for using collectstats.pl included as 
 an optional step. also got silly and added optional quips to bug
 reports. 
-
+ 
 10/17/98 modified README installation instructions slightly. 
+
+10/16/98 Updated all of the cgi programs to quote all HTML fields
+to prevent any "suprises" as fields are used for different things
+than they were originally.  (Like when the product field gained
+spaces in the product name.)
+
+10/15/98 Added a security mechanism so that you can define groups of
+users, and what fields those users are allowed to edit.  Two new
+tables were added (security and groups), and the profiles table was
+extended to support this.  The security table is a list of "labels"
+and a number that maps to a bit.  The idea is that you query the
+label, get the bit field, and compare that to the permissions
+given to the user via the bitmap in the groups table.
+
+Also broke out the UI portion of the cgi scripts into seperate files 
+that will allow a site to customize the look and feel without mucking 
+with the code as much.  This also could allow for a seperate look and 
+feel for a set of users, if the site were so inclined.  
+
+Cleaned up some of the error forms to include the generic header.
+
+10/13/98 Added a new table called "platforms".  This is used to build
+the platform entries based on the product selected.  There is a
+makeplatformtable.sh that must be run to create and populate the new
+table.
 
 10/7/98 Added a new table called "products".  Right now, this is used
 only to have a description for each product, and that description is

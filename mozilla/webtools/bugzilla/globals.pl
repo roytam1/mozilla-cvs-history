@@ -17,51 +17,70 @@
 # Netscape Communications Corporation. All Rights Reserved.
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Andrew Anderson <andrew@redhat.com>
 
 # Contains some global variables and routines used throughout bugzilla.
 
 use diagnostics;
 use strict;
-use Mysql;
+use DBI;
+
+# Change this to your specific database
+$::driver = "mysql";
+my $database = "bugs";
+my $host = "localhost";
+my $dsn = "DBI:" . $::driver . ":database=$database;host=$host";
+my $user = "bugs";
+my $pass = "";
 
 use Date::Format;               # For time2str().
 
 # Contains the version string for the current running Bugzilla.
-$::param{'version'} = '2.1';
+$::param{'version'} = '2.1r';
 
 $::dontchange = "--do_not_change--";
 $::chooseone = "--Choose_one:--";
 
 sub ConnectToDatabase {
     if (!defined $::db) {
-	$::db = Mysql->Connect("localhost", "bugs", "bugs", "")
+	$::db = DBI->connect($dsn, $user, $pass)
             || die "Can't connect to database server.";
     }
 }
 
+sub DisconnectFromDatabase {
+    if(defined $::db) {
+	DBI->disconnect;
+    }
+}
+
 sub SendSQL {
+    #print "<PRE>SendSQL</PRE>\n";
     my ($str) = (@_);
-    $::currentquery = $::db->query($str)
-	|| die "$str: $::db_errstr";
+    $::currentquery = $::db->prepare($str);
+    $::currentquery->execute
+        || die "$str: ", $::currentquery->errstr;
 }
 
 sub MoreSQLData {
+    #print "<PRE>MoreSQLData</PRE>\n";
     if (defined @::fetchahead) {
 	return 1;
     }
-    if (@::fetchahead = $::currentquery->fetchrow()) {
+    if (@::fetchahead = $::currentquery->fetchrow_array) {
 	return 1;
     }
     return 0;
 }
 
 sub FetchSQLData {
+    #print "<PRE>FetchSQLData</PRE>\n";
     if (defined @::fetchahead) {
 	my @result = @::fetchahead;
 	undef @::fetchahead;
 	return @result;
     }
-    return $::currentquery->fetchrow();
+    return $::currentquery->fetchrow_array;
 }
 
 
@@ -76,7 +95,7 @@ sub FetchOneColumn {
                   "Linux", "OSF/1", "Solaris", "SunOS", "other");
 
 
-@::default_column_list = ("severity", "priority", "platform", "owner",
+@::default_column_list = ("severity", "priority", "owner",
                           "status", "resolution", "summary");
 
 sub AppendComment {
@@ -144,7 +163,20 @@ sub Version_element {
     return make_popup("version", $versionlist, $defversion, 1, $onchange);
 }
         
-
+sub Platform_element {
+    my ($arch, $prod, $onchange) = (@_);
+    my $archlist;
+    if (!defined $::platforms{$prod}) {
+        $archlist = [];
+    } else {
+        $archlist = $::platforms{$prod};
+    }
+    my $defarch = $archlist->[0];
+    if (lsearch($archlist,$arch) >= 0) {
+        $defarch = $arch;
+    }
+    return make_popup("platforms", $archlist, $defarch, 1, $onchange);
+}
 
 # Generate a string which, when later interpreted by the Perl compiler, will
 # be the same as the given string.
@@ -212,10 +244,11 @@ sub GenerateArrayCode {
 
 sub GenerateVersionTable {
     ConnectToDatabase();
-    SendSQL("select value, program from versions order by value");
+    SendSQL("select value, program from versions order by value desc");
     my @line;
     my %varray;
     my %carray;
+    my %parray;
     while (@line = FetchSQLData()) {
         my ($v,$p1) = (@line);
         if (!defined $::versions{$p1}) {
@@ -224,7 +257,7 @@ sub GenerateVersionTable {
         push @{$::versions{$p1}}, $v;
         $varray{$v} = 1;
     }
-    SendSQL("select value, program from components");
+    SendSQL("select value, program from components order by value");
     while (@line = FetchSQLData()) {
         my ($c,$p) = (@line);
         if (!defined $::components{$p}) {
@@ -240,9 +273,22 @@ sub GenerateVersionTable {
         my ($p, $d) = (@line);
         $::proddesc{$p} = $d;
     }
-            
+     
+    SendSQL("select value, program from platforms");
+    while (@line = FetchSQLData()) {
+        my ($a,$p) = (@line);
+        if (!defined $::legal_platforms{$p}) {
+            $::legal_platforms{$p} = [];
+        }
+        my $ref = $::legal_platforms{$p};
+        push @$ref, $a;
+        $parray{$a} = 1;
+    }
 
-    my $cols = LearnAboutColumns("bugs");
+    my $cols = LearnAboutColumns("sources");
+    @::legal_sources = SplitEnumType($cols->{"source,type"});
+
+    $cols = LearnAboutColumns("bugs");
     
     @::log_columns = @{$cols->{"-list-"}};
     foreach my $i ("bug_id", "creation_ts", "delta_ts", "long_desc") {
@@ -252,9 +298,9 @@ sub GenerateVersionTable {
         }
     }
 
+    @::legal_classes = SplitEnumType($cols->{"class,type"});
     @::legal_priority = SplitEnumType($cols->{"priority,type"});
     @::legal_severity = SplitEnumType($cols->{"bug_severity,type"});
-    @::legal_platform = SplitEnumType($cols->{"rep_platform,type"});
     @::legal_bug_status = SplitEnumType($cols->{"bug_status,type"});
     @::legal_resolution = SplitEnumType($cols->{"resolution,type"});
     @::legal_resolution_no_dup = @::legal_resolution;
@@ -268,7 +314,7 @@ sub GenerateVersionTable {
     mkdir("data", 0777);
     chmod 0777, "data";
     my $tmpname = "data/versioncache.$$";
-    open(FID, ">$tmpname") || die "Can't create $tmpname";
+    open(FID, ">$tmpname") || die "Can't create $tmpname: $!";
 
     print FID GenerateCode('@::log_columns');
     print FID GenerateCode('%::versions');
@@ -278,20 +324,24 @@ sub GenerateVersionTable {
             $::components{$i} = "";
         }
     }
-    @::legal_versions = sort {uc($a) cmp uc($b)} keys(%varray);
+    @::legal_versions = sort {uc($b) cmp uc($a)} keys(%varray);
     print FID GenerateCode('@::legal_versions');
     print FID GenerateCode('%::components');
     @::legal_components = sort {uc($a) cmp uc($b)} keys(%carray);
     print FID GenerateCode('@::legal_components');
-    foreach my $i('product', 'priority', 'severity', 'platform',
-                  'bug_status', 'resolution', 'resolution_no_dup') {
+    @::legal_platforms = sort {uc($a) cmp uc($b)} keys(%parray);
+    print FID GenerateCode('%::legal_platforms');
+    foreach my $i('product', 'priority', 'severity', 'bug_status', 
+		'resolution', 'resolution_no_dup') {
         print FID GenerateCode('@::legal_' . $i);
     }
     print FID GenerateCode('%::proddesc');
+    print FID GenerateCode('@::legal_sources');
+    print FID GenerateCode('@::legal_classes');
 
     print FID "1;\n";
     close FID;
-    rename $tmpname, "data/versioncache" || die "Can't rename $tmpname to versioncache";
+    rename $tmpname, "data/versioncache" || die "Can't rename $tmpname to versioncache; $!";
     chmod 0666, "data/versioncache";
 }
 
@@ -337,7 +387,9 @@ sub InsertNewUser {
     for (my $i=0 ; $i<8 ; $i++) {
         $password .= substr("abcdefghijklmnopqrstuvwxyz", int(rand(26)), 1);
     }
-    SendSQL("insert into profiles (login_name, password, cryptpassword) values (@{[SqlQuote($username)]}, '$password', encrypt('$password'))");
+    SendSQL("SELECT groupid FROM groups where groupname = 'default'");
+    my $gid = FetchOneColumn();
+    SendSQL("insert into profiles (login_name, password, cryptpassword, groupid) values (@{[SqlQuote($username)]}, '$password', encrypt('$password'), $gid)");
     return $password;
 }
 

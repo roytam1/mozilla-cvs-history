@@ -68,5 +68,5 @@ foreach my $update (@updates) {
 }
 
 print "OK, done.<p>\n";
-print "<a href=editowners.cgi>Edit the owners some more.</a><p>\n";
-print "<a href=query.cgi>Go back to the query page.</a>\n";
+print "<a href=\"editowners.cgi\">Edit the owners some more.</a><p>\n";
+print "<a href=\"query.cgi\">Go back to the query page.</a>\n";

@@ -109,8 +109,8 @@ sub GetBugText {
     
     my @collist = ("bug_id", "product", "version", "rep_platform", "op_sys",
                    "bug_status", "resolution", "priority", "bug_severity",
-                   "area", "assigned_to", "reporter", "bug_file_loc",
-                   "short_desc", "component");
+                   "assigned_to", "reporter", "bug_file_loc", "short_desc", 
+		   "component");
 
     my $query = "select " . join(", ", @collist) .
         " from bugs where bug_id = $id";
@@ -148,7 +148,6 @@ Resolution: $::bug{'resolution'}
 Severity: $::bug{'bug_severity'}
 Priority: $::bug{'priority'}
 Component: $::bug{'component'}
-Area: $::bug{'area'}
 AssignedTo: $::bug{'assigned_to'}                            
 ReportedBy: $::bug{'reporter'}               
 URL: $::bug{'bug_file_loc'}
@@ -236,7 +235,8 @@ foreach my $i (@ARGV) {
     print FID $text;
     close FID;
     if (Different($old, $new)) {
-        system("diff -c $old $new > $diffs");
+	my $diffcmd = Param("diffcmd");
+        system("$diffcmd $old $new > $diffs");
         my $tolist = fixaddresses([$::bug{'assigned_to'}, $::bug{'reporter'}]);
         my $cclist = fixaddresses($::bug{'cclist'});
         my $logstr = "Bug $i changed";
@@ -257,7 +257,7 @@ foreach my $i (@ARGV) {
             my $msg = PerformSubsts(Param("changedmail"), \%substs);
 
             if (!$regenerate) {
-                open(SENDMAIL, "|/usr/lib/sendmail -t") ||
+                open(SENDMAIL, "|/usr/lib/sendmail -t -oi -f bugzilla\@redhat.com") ||
                     die "Can't open sendmail";
                 print SENDMAIL $msg;
                 close SENDMAIL;

@@ -22,7 +22,11 @@
 use diagnostics;
 use strict;
 
+require "globals.pl";
 require "CGI.pl";
+
+my $pre = Param("prefix");
+require "$pre-security.pl";
 
 # Shut up misguided -w warnings about "used only once":
 
@@ -37,7 +41,7 @@ print "Content-type: text/html\n\n";
 GetVersionTable();
 
 if ($::FORM{'product'} ne $::dontchange) {
-    my $prod = $::FORM{'product'};
+    my $prod = url_decode($::FORM{'product'});
     my $vok = lsearch($::versions{$prod}, $::FORM{'version'}) >= 0;
     my $cok = lsearch($::components{$prod}, $::FORM{'component'}) >= 0;
     if (!$vok || !$cok) {
@@ -46,29 +50,30 @@ if ($::FORM{'product'} ne $::dontchange) {
         print "component fields are not correct.  (Or, possibly, the bug did\n";
         print "not have a valid component or version field in the first place.)\n";
         print "Anyway, please set the version and component now.<p>\n";
+        print "vok: $vok, cok: $cok, ver: $::FORM{'version'}, comp: $::FORM{'component'}<P>\n";
         print "<form>\n";
         print "<table>\n";
         print "<tr>\n";
-        print "<td align=right><b>Product:</b></td>\n";
+        print "<td align=\"right\"><b>Product:</b></td>\n";
         print "<td>$prod</td>\n";
         print "</tr><tr>\n";
-        print "<td align=right><b>Version:</b></td>\n";
+        print "<td align=\"right\"><b>Version:</b></td>\n";
         print "<td>" . Version_element($::FORM{'version'}, $prod) . "</td>\n";
         print "</tr><tr>\n";
-        print "<td align=right><b>Component:</b></td>\n";
+        print "<td align=\"right\"><b>Component:</b></td>\n";
         print "<td>" . Component_element($::FORM{'component'}, $prod) . "</td>\n";
         print "</tr>\n";
         print "</table>\n";
         foreach my $i (keys %::FORM) {
             if ($i ne 'version' && $i ne 'component') {
-                print "<input type=hidden name=$i value=\"" .
+                print "<input type=\"hidden\" name=\"$i\" value=\"" .
                 value_quote($::FORM{$i}) . "\">\n";
             }
         }
-        print "<input type=submit value=Commit>\n";
+        print "<input type=\"submit\" value=\"Commit\">\n";
         print "</form>\n";
         print "</hr>\n";
-        print "<a href=query.cgi>Cancel all this and go back to the query page.</a>\n";
+        print "<a href=\"query.cgi\">Cancel all this and go back to the query page.</a>\n";
         exit;
     }
 }
@@ -89,11 +94,6 @@ if (!defined $::FORM{'who'}) {
     $::FORM{'who'} = $::COOKIE{'Bugzilla_login'};
 }
 
-print "<TITLE>Update Bug " . join(" ", @idlist) . "</TITLE>\n";
-if (defined $::FORM{'id'}) {
-    navigation_header();
-}
-print "<HR>\n";
 $::query = "update bugs\nset";
 $::comma = "";
 umask(0);
@@ -105,7 +105,8 @@ sub DoComma {
 
 sub ChangeStatus {
     my ($str) = (@_);
-    if ($str ne $::dontchange) {
+    if ($str ne $::dontchange && 
+	CanIEdit("bug_status", $::FORM{'who'}, $::FORM{'id'})) {
         DoComma();
         $::query .= "bug_status = '$str'";
     }
@@ -113,27 +114,24 @@ sub ChangeStatus {
 
 sub ChangeResolution {
     my ($str) = (@_);
-    if ($str ne $::dontchange) {
+    if ($str ne $::dontchange &&
+	CanIEdit("resolution", $::FORM{'who'}, $::FORM{'id'})) {
         DoComma();
         $::query .= "resolution = '$str'";
     }
 }
 
+ConnectToDatabase();
 
 foreach my $field ("rep_platform", "priority", "bug_severity", "url",
                    "summary", "component", "bug_file_loc", "short_desc",
-                   "product", "version", "component") {
-    if (defined $::FORM{$field}) {
-        if ($::FORM{$field} ne $::dontchange) {
+                   "product", "version", "component", "class") {
+    if (defined $::FORM{$field} && $::FORM{$field} ne $::dontchange
+	&& CanIEdit($field, $::FORM{'who'}, $::FORM{'id'})) {
             DoComma();
-            $::query .= "$field = " . SqlQuote($::FORM{$field});
-        }
+            $::query .= "$field = " . SqlQuote(url_decode($::FORM{$field}));
     }
 }
-
-
-
-ConnectToDatabase();
 
 SWITCH: for ($::FORM{'knob'}) {
     /^none$/ && do {
@@ -153,7 +151,7 @@ SWITCH: for ($::FORM{'knob'}) {
         last SWITCH;
     };
     /^reassign$/ && do {
-        ChangeStatus('NEW');
+        ChangeStatus('ASSIGNED');
         DoComma();
         my $newid = DBNameToIdAndCheck($::FORM{'assigned_to'});
         $::query .= "assigned_to = $newid";
@@ -165,7 +163,7 @@ SWITCH: for ($::FORM{'knob'}) {
             print "assigned these bugs.\n";
             exit 0
         }
-        ChangeStatus('NEW');
+        ChangeStatus('ASSIGNED');
         SendSQL("select initialowner from components where program=" .
                 SqlQuote($::FORM{'product'}) . " and value=" .
                 SqlQuote($::FORM{'component'}));
@@ -177,6 +175,7 @@ SWITCH: for ($::FORM{'knob'}) {
     };   
     /^reopen$/ && do {
         ChangeStatus('REOPENED');
+        ChangeResolution('');
         last SWITCH;
     };
     /^verify$/ && do {
@@ -197,7 +196,8 @@ SWITCH: for ($::FORM{'knob'}) {
             exit;
         }
         if ($::FORM{'dup_id'} == $::FORM{'id'}) {
-            print "Nice try.  But it doesn't really make sense to mark a\n";
+	    PutHeader("Nice try.");
+            print "But it doesn't really make sense to mark a\n";
             print "bug as a duplicate of itself, does it?\n";
             exit;
         }
@@ -206,6 +206,17 @@ SWITCH: for ($::FORM{'knob'}) {
         system("./processmail $::FORM{'dup_id'} < /dev/null > /dev/null 2> /dev/null &");
         last SWITCH;
     };
+    /^newsource$/ && do {
+	my $source_query;
+	if ((defined $::FORM{'source'}) && ($::FORM{'source'} ne $::dontchange)
+	    && (CanIEdit('source', $::FORM{'who'}, $::FORM{'id'}))) {
+		$source_query = "insert into sources (bug_id, source) ".
+			" values ($::FORM{'id'}, '" .
+			url_decode($::FORM{'source'}) ."')";
+                SendSQL($source_query);
+	}
+	last SWITCH;
+    };
     # default
     print "Unknown action $::FORM{'knob'}!\n";
     exit;
@@ -213,6 +224,7 @@ SWITCH: for ($::FORM{'knob'}) {
 
 
 if ($#idlist < 0) {
+    PutHeader("Nothing to modify");
     print "You apparently didn't choose any bugs to modify.\n";
     print "<p>Click <b>Back</b> and try again.\n";
     exit;
@@ -231,7 +243,7 @@ my $basequery = $::query;
 sub SnapShotBug {
     my ($id) = (@_);
     SendSQL("select " . join(',', @::log_columns) .
-            " from bugs where bug_id = $id");
+            " from bugs where bug_id = '" . $id . "'");
     return FetchSQLData();
 }
 
@@ -240,7 +252,7 @@ foreach my $id (@idlist) {
     SendSQL("lock tables bugs write, bugs_activity write, cc write, profiles write");
     my @oldvalues = SnapShotBug($id);
 
-    my $query = "$basequery\nwhere bug_id = $id";
+    my $query = "$basequery\nwhere bug_id = '" . $id . "'";
     
 # print "<PRE>$query</PRE>\n";
 
@@ -261,22 +273,23 @@ foreach my $id (@idlist) {
             }
         }
         
-        SendSQL("delete from cc where bug_id = $id");
+        SendSQL("delete from cc where bug_id = '" . $id . "'");
         foreach my $ccid (keys %ccids) {
             SendSQL("insert into cc (bug_id, who) values ($id, $ccid)");
         }
     }
 
     my @newvalues = SnapShotBug($id);
-    my $whoid;
-    my $timestamp;
+    my $whoid = "";
+    my $timestamp = "";
     foreach my $col (@::log_columns) {
         my $old = shift @oldvalues;
         my $new = shift @newvalues;
         if ($old ne $new) {
             if (!defined $whoid) {
                 $whoid = DBNameToIdAndCheck($::FORM{'who'});
-                SendSQL("select delta_ts from bugs where bug_id = $id");
+                $query = "select delta_ts from bugs where bug_id = '" . $id . "'";
+                SendSQL($query);
                 $timestamp = FetchOneColumn();
             }
             if ($col eq 'assigned_to') {
@@ -287,17 +300,26 @@ foreach my $id (@idlist) {
             $old = SqlQuote($old);
             $new = SqlQuote($new);
             my $q = "insert into bugs_activity (bug_id,who,when,field,oldvalue,newvalue) values ($id,$whoid,$timestamp,$col,$old,$new)";
-            # puts "<pre>$q</pre>"
+            # print "<pre>$q</pre>";
             SendSQL($q);
         }
     }
     
-    print "<TABLE BORDER=1><TD><H1>Changes Submitted</H1>\n";
-    print "<TD><A HREF=\"show_bug.cgi?id=$id\">Back To BUG# $id</A></TABLE>\n";
+
+    PutHeader("Changes submitted for bug $::FORM{'id'}", 
+	"Changes Submitted", $::FORM{'id'});
+    if (defined $::FORM{'id'}) {
+        navigation_header();
+    }
+    print "<HR>\n<P>\n";
+    print "<A HREF=\"show_bug.cgi?id=$id\">Back To BUG# $id</A>\n";
+    print "<BR><A HREF=\"query.cgi\">Back To Query Page</A>\n";
+    print "<BR><A HREF=\"enter_bug.cgi\">Enter a new bug</A>\n";
 
     SendSQL("unlock tables");
 
     system("./processmail $id < /dev/null > /dev/null 2> /dev/null &");
+    exit;
 }
 
 if (defined $::next_bug) {
@@ -306,6 +328,4 @@ if (defined $::next_bug) {
 
     navigation_header();
     do "bug_form.pl";
-} else {
-    print "<BR><A HREF=\"query.cgi\">Back To Query Page</A>\n";
 }

@@ -17,6 +17,7 @@
 # Netscape Communications Corporation. All Rights Reserved.
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Andrew Anderson <andrew@redhat.com>
 
 mysql > /dev/null 2>/dev/null << OK_ALL_DONE
 
@@ -28,25 +29,28 @@ OK_ALL_DONE
 mysql << OK_ALL_DONE
 use bugs;
 create table bugs (
-bug_id mediumint not null auto_increment primary key,
-assigned_to mediumint not null, # This is a comment.
+bug_id int8 not null auto_increment primary key,
+group_id mediumint not null,
+assigned_to mediumint not null,
 bug_file_loc text,
-bug_severity enum("critical", "major", "normal", "minor", "trivial", "enhancement") not null,
-bug_status enum("NEW", "ASSIGNED", "REOPENED", "RESOLVED", "VERIFIED", "CLOSED") not null,
+patch_file_loc text,
+bug_severity enum("security", "high", "normal", "low") not null,
+bug_status enum("NEW", "VERIFIED", "ASSIGNED", "REOPENED", "RESOLVED") not null,
+view tinyint,
 creation_ts datetime,
 delta_ts timestamp,
 short_desc mediumtext,
 long_desc mediumtext,
 op_sys tinytext,
-priority enum("P1", "P2", "P3", "P4", "P5") not null,
-product varchar(16) not null,
-rep_platform enum("All", "DEC", "HP", "Macintosh", "PC", "SGI", "Sun", "X-Windows", "Other"),
+priority enum("high", "normal", "low") not null,
+product varchar(255) not null,
+rep_platform enum("All", "alpha", "m68k", "i386", "mips", "sparc", "sparc64", "ppc", "Other"),
 reporter mediumint not null,
 version varchar(16) not null,
-area enum("BUILD", "CODE", "CONTENT", "DOC", "PERFORMANCE", "TEST", "UI", "i18n", "l10n") not null,
+release varchar(16) not null,
 component varchar(50) not null,
-resolution enum("", "FIXED", "INVALID", "WONTFIX", "LATER", "REMIND", "DUPLICATE", "WORKSFORME") not null,
-
+resolution enum("", "FIXED", "DISCARD", "WONTFIX", "LATER", "REMIND", "DUPLICATE", "WORKSFORME") not null,
+class enum("install/upgrade", "packaging", "functionality", "security", "documentation") not null,
 
 index (assigned_to),
 index (delta_ts),
@@ -56,7 +60,6 @@ index (priority),
 index (product),
 index (reporter),
 index (version),
-index (area),
 index (component),
 index (resolution)
 

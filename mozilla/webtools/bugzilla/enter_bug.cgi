@@ -18,17 +18,24 @@
 # Netscape Communications Corporation. All Rights Reserved.
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Andrew Anderson <andrew@redhat.com>
 
 use diagnostics;
 use strict;
 
 require "CGI.pl";
+require "globals.pl";
+
+my $body = Param("prefix") . "-enterform.pl";
+require "$body";
+$body = Param("prefix") . "-security.pl";
+require "$body";
 
 # Shut up misguided -w warnings about "used only once":
-use vars @::legal_platform,
-    @::buffer,
+use vars @::buffer,
     @::legal_severity,
     @::legal_opsys,
+    @::legal_platforms,
     @::legal_priority;
 
 
@@ -43,9 +50,9 @@ if (!defined $::FORM{'product'}) {
         print "a bug.</H2>\n";
         print "<table>";
         foreach my $p (sort (@prodlist)) {
-            print "<tr><th align=right valign=top><a href=\"enter_bug.cgi?product=" . url_quote($p) . "\"&$::buffer>$p</a>:</th>\n";
+            print "<tr><th align=\"right\" valign=\"top\"><a href=\"enter_bug.cgi?product=" . url_quote($p) . "\"&$::buffer>$p</a>:</th>\n";
             if (defined $::proddesc{$p}) {
-                print "<td valign=top>$::proddesc{$p}</td>\n";
+                print "<td valign=\"top\">$::proddesc{$p}</td>\n";
             }
             print "</tr>";
         }
@@ -55,7 +62,7 @@ if (!defined $::FORM{'product'}) {
     $::FORM{'product'} = $prodlist[0];
 }
 
-my $product = $::FORM{'product'};
+my $product = url_decode($::FORM{'product'});
 
 confirm_login();
 
@@ -110,6 +117,21 @@ sub pickversion {
     return $::versions{$product}->[0];
 }
 
+sub pickarch {
+    my $arch = formvalue('arch');
+    if ($arch eq "") {
+        if ($ENV{'HTTP_USER_AGENT'} =~ m#Mozilla.*\(.*;.*;.* (.*)\)#) {
+            $arch = $1;
+        }
+    }
+    if( $arch =~ /i.86/ ) {
+	$arch = "i386";
+    }
+    if (lsearch($::legal_platforms{$product}, $arch) < 0) {
+	$arch = "";
+    }
+    return $arch;
+}
 
 sub pickcomponent {
     my $result =formvalue('component');
@@ -149,104 +171,22 @@ GetVersionTable();
 
 my $assign_element = GeneratePersonInput('assigned_to', 1,
                                          formvalue('assigned_to'));
-my $cc_element = GeneratePeopleInput('cc', formvalue('cc'));
+my $cc_element = GeneratePeopleInput('cc', 45, formvalue('cc'));
 
 
 my $priority_popup = make_popup('priority', \@::legal_priority,
-                                formvalue('priority', 'P2'), 0);
+                                formvalue('priority', 'normal'), 0);
 my $sev_popup = make_popup('bug_severity', \@::legal_severity,
                            formvalue('bug_severity', 'normal'), 0);
-my $platform_popup = make_popup('rep_platform', \@::legal_platform,
-                                pickplatform(), 0);
 my $opsys_popup = make_popup('op_sys', \@::legal_opsys, pickos(), 0);
 
 my $component_popup = make_popup('component', $::components{$product},
                                  formvalue('component'), 1);
+my $platforms_popup = make_popup('rep_platform', $::legal_platforms{$product},
+                                pickarch(), 0);
 
 PutHeader ("Enter Bug");
 
-print "
-<FORM NAME=enterForm METHOD=POST ACTION=\"post_bug.cgi\">
-<INPUT TYPE=HIDDEN NAME=bug_status VALUE=NEW>
-<INPUT TYPE=HIDDEN NAME=reporter VALUE=$::COOKIE{'Bugzilla_login'}>
-<INPUT TYPE=HIDDEN NAME=product VALUE=$product>
-  <TABLE CELLSPACING=2 CELLPADDING=0 BORDER=0>
-  <TR>
-    <td ALIGN=right valign=top><B>Product:</B></td>
-    <td valign=top>$product</td>
-  </TR>
-  <TR>
-    <td ALIGN=right valign=top><B>Version:</B></td>
-    <td>" . Version_element(pickversion(), $product) . "</td>
-    <td align=right valign=top><b>Component:</b></td>
-    <td>$component_popup</td>
-  </TR>
-  <tr><td>&nbsp<td> <td> <td> <td> <td> </tr>
-  <TR>
-    <td align=right><b><B><A HREF=\"bug_status.html#rep_platform\">Platform:</A></B></td>
-    <TD>$platform_popup</TD>
-    <TD ALIGN=RIGHT><B>OS:</B></TD>
-    <TD>$opsys_popup</TD>
-    <td align=right valign=top></td>
-    <td rowspan=3></td>
-    <td></td>
-  </TR>
-  <TR>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#priority\">Priority</A>:</B></TD>
-    <TD>$priority_popup</TD>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#severity\">Severity</A>:</B></TD>
-    <TD>$sev_popup</TD>
-    <td></td>
-    <td></td>
-  </TR>
-  <tr><td>&nbsp<td> <td> <td> <td> <td> </tr>
-  <tr>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#assigned_to\">Assigned To:
-        </A></B></TD>
-    <TD colspan=5>$assign_element
-    (Leave blank to assign to default owner for component)</td>
-  </tr>
-  <tr>
-    <TD ALIGN=RIGHT ><B>Cc:</B></TD>
-    <TD colspan=5>$cc_element</TD>
-  </tr>
-  <tr><td>&nbsp<td> <td> <td> <td> <td> </tr>
-  <TR>
-    <TD ALIGN=RIGHT><B>URL:</B>
-    <TD COLSPAN=5>
-      <INPUT NAME=bug_file_loc SIZE=60 value=\"" .
-    value_quote(formvalue('bug_file_loc')) .
-    "\"></TD>
-  </TR>
-  <TR>
-    <TD ALIGN=RIGHT><B>Summary:</B>
-    <TD COLSPAN=5>
-      <INPUT NAME=short_desc SIZE=60 value=\"" .
-    value_quote(formvalue('short_desc')) .
-    "\"></TD>
-  </TR>
-  <tr><td>&nbsp<td> <td> <td> <td> <td> </tr>
-  <tr>
-    <td aligh=right valign=top><B>Description:</b>
-    <td colspan=5><TEXTAREA WRAP=HARD NAME=comment ROWS=10 COLS=80>" .
-    value_quote(formvalue('comment')) .
-    "</TEXTAREA><BR></td>
-  </tr>
-  <tr>
-    <td></td>
-    <td colspan=5>
-       <INPUT TYPE=\"submit\" VALUE=\"    Commit    \">
-       &nbsp;&nbsp;&nbsp;&nbsp;
-       <INPUT TYPE=\"reset\" VALUE=\"Reset\">
-       &nbsp;&nbsp;&nbsp;&nbsp;
-       <INPUT TYPE=\"submit\" NAME=maketemplate VALUE=\"Remember values as bookmarkable template\">
-    </td>
-  </tr>
-  </TABLE>
-  <INPUT TYPE=hidden name=form_name VALUE=enter_bug>
-</FORM>
-
-Some fields initialized from your user-agent, <b>$ENV{'HTTP_USER_AGENT'}</b>.
-If you think it got it wrong, please tell " . Param('maintainer') . " what it should have been.
-
-</BODY></HTML>";
+PutBody($product, $component_popup, $platforms_popup, 
+            $opsys_popup, $priority_popup, $sev_popup, 
+            $assign_element, $cc_element);
