@@ -68,7 +68,7 @@ include"$page_header";
             $subver = $row["SubVer"];
             $release = "$row[major].$row[minor]";
             if ($row["release"]) {
-                $release = ".$release$row[release]";
+                $release = "$release.$row[release]";
             }
         $currentver = $release;
         $currentver_display = $version;

@@ -100,7 +100,7 @@ while ($row = mysql_fetch_array($sql_result)) {
   $subver = $row["SubVer"];
   $release = "$row[major].$row[minor]";
   if ($row["release"]) {
-    $release = ".$release$row[release]";
+    $release = "$release.$row[release]";
   }
   if ($subver !=="final") {
     $release="$release$subver";

@@ -241,7 +241,7 @@ $sql = "SELECT `Version`, `major`, `minor`, `release`, `SubVer` FROM `applicatio
   $version = $row["Version"];
   $subver = $row["SubVer"];
   $release = "$row[major].$row[minor]";
-  if ($row["release"]) {$release = ".$release$row[release]";}
+  if ($row["release"]) {$release = "$release.$row[release]";}
 if ($app_version=="0.95") {$app_version="0.10"; }
 //Firesomething Support
 if ($application=="firefox") { if ($release == "0.7") {$application="firebird";} else {$application="firefox";} }
@@ -283,7 +283,7 @@ $sql = "SELECT `Version`, `major`, `minor`, `release`, `SubVer` FROM `applicatio
   $version = $row["Version"];
   $subver = $row["SubVer"];
   $release = "$row[major].$row[minor]";
-  if ($row["release"]) {$release = ".$release$row[release]";}
+  if ($row["release"]) {$release = "$release.$row[release]";}
   if ($subver !=="final") {$release="$release$subver";}
 
   $appvernames[$release] = $version;

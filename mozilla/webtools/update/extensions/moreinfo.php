@@ -98,7 +98,7 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
         $version = $row["Version"];
         $subver = $row["SubVer"];
         $release = "$row[major].$row[minor]";
-        if ($row["release"]) {$release = ".$release$row[release]";}
+        if ($row["release"]) {$release = "$release.$row[release]";}
         if ($subver !=="final") {$release="$release$subver";}
         $appvernames[$release] = $version;
     }

@@ -58,7 +58,7 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
         $subver = $row["SubVer"];
         $release = "$row[major].$row[minor]";
         if ($row["release"]) {
-            $release = ".$release$row[release]";
+            $release = "$release.$row[release]";
         }
     $currentver = $release;
     $currentver_display = $version;
