@@ -17,6 +17,8 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 # 
+# $Id$
+#
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 
 use diagnostics;
@@ -126,7 +128,7 @@ ConnectToDatabase();
 
 foreach my $field ("rep_platform", "priority", "bug_severity", "url",
                    "summary", "component", "bug_file_loc", "short_desc",
-                   "product", "version", "component", "class") {
+                   "product", "version", "component", "class", "view") {
     if ($::cgi->param($field) && $::cgi->param($field) ne $::dontchange
 	&& CanIEdit($field, $who, $::cgi->param('id'))) {
             DoComma();
@@ -134,9 +136,44 @@ foreach my $field ("rep_platform", "priority", "bug_severity", "url",
     }
 }
 
-SWITCH: for ($::cgi->param('knob')) {
+my $knob = $::cgi->param('knob');
+SWITCH: for ($knob) {
     /^none$/ && do {
         last SWITCH;
+    };
+    /^add_cc$/ && do {
+        my $whoid = DBNameToIdAndCheck($who);
+	my $cc_query = "SELECT bug_id FROM cc " .
+                       "WHERE bug_id = '$::bug_id' and who = '$whoid'";
+	SendSQL($cc_query);
+	$cc_query = FetchOneColumn();
+	if ($cc_query) {
+	    PutHeader("Nice try");
+            print "You are already on the CC list of bug $::bug_id";
+	} else {
+	    PutHeader("Added to CC list");
+	    SendSQL("INSERT INTO cc VALUES ($::bug_id, '$whoid')");
+            print "You have been added to the CC list of bug $::bug_id";
+	}
+        exit 0;
+    };
+    /^rem_cc$/ && do {
+        my $whoid = DBNameToIdAndCheck($who);
+	my $cc_query = "SELECT bug_id FROM cc " .
+                       "WHERE bug_id = '$::bug_id' and who = '$whoid'";
+	SendSQL($cc_query);
+	$cc_query = FetchOneColumn();
+	if ($cc_query) {
+	    $cc_query = "DELETE FROM cc " . 
+                        "WHERE bug_id = '$::bug_id' and who = '$whoid'";
+	    SendSQL($cc_query);
+	    PutHeader("Removed from CC list");
+            print "You have been removed from the CC list of bug $::bug_id";
+	} else {
+	    PutHeader("Nice try");
+            print "You are not on the CC list of bug $::bug_id";
+	}
+        exit 0;
     };
     /^accept$/ && do {
         ChangeStatus('ASSIGNED');
@@ -196,20 +233,20 @@ SWITCH: for ($::cgi->param('knob')) {
             print "duplicate.  The bug has not been changed.\n";
             exit;
         }
-        if ($num == $::cgi->param('id')) {
+        if ($num == $::bug_id) {
 	    PutHeader("Nice try.");
             print "But it doesn't really make sense to mark a\n";
             print "bug as a duplicate of itself, does it?\n";
             exit;
         }
         AppendComment($num, $who, 
-             "*** Bug $num has been marked as a duplicate of this bug. ***\n" .
+             "\n\n*** Bug $::bug_id has been marked as a duplicate of this bug. ***\n\n" .
              GetLongDescription($::bug_id));
         $::cgi->param(-name=>'comment', 
               -value=>$::cgi->param('comment') . 
               "\n\n*** This bug has been marked as a duplicate of $num ***",
               -override=>"1");
-	# FIXME: copy cc list from dup to orig
+	AppendCC($::bug_id, $num);
         system("./processmail $num < /dev/null > /dev/null 2> /dev/null &");
         last SWITCH;
     };
@@ -226,7 +263,7 @@ SWITCH: for ($::cgi->param('knob')) {
 	last SWITCH;
     };
     # default
-    print "Unknown action $::cgi->param('knob')!\n";
+    print "Unknown action '" . $::cgi->param('knob') . "'!\n";
     exit;
 }
 
@@ -234,15 +271,16 @@ if ($#idlist < 0) {
     PutHeader("Nothing to modify");
     print "You apparently didn't choose any bugs to modify.\n",
           $::cgi->p,
-          "Click $::cgi->b(Back) and try again\n";
+          "Click ", $::cgi->b("Back"), " and try again\n";
     exit;
 }
 
 if ($::comma eq "" && 
     ($::cgi->param('comment') eq "" || 
      $::cgi->param('comment') =~ /^\s*$/)) {
+        PutHeader("Nothing was changed");
         print "You apparently did not change anything on the selected bugs.\n",
-              "$::cgi->p Click $::cgi->b(Back) and try again.\n";
+              $::cgi->p, "Click ", $::cgi->b("Back"), " and try again.\n";
         exit;
 }
 
@@ -316,8 +354,16 @@ foreach my $id (@idlist) {
     }
     
 
-    PutHeader("Changes submitted for bug " . $::cgi->param('id'), 
-	"Changes Submitted", $::cgi->param('id'));
+    # avoid those damn 'used only once' warnings
+    $::header = $::h1 = $::h2 = "";
+
+    my $bug_id = $::cgi->param('id');
+    $::header = "Changes submitted for bug $bug_id";
+    $::h1 = "Changes Submitted";
+    $::h2 = $bug_id;
+
+    #PutHeader("Changes submitted for bug " . $::cgi->param('id'), 
+    #    "Changes Submitted", $::cgi->param('id'));
     #if ($::cgi->param('id')) {
     #    navigation_header();
     #}
@@ -335,7 +381,7 @@ foreach my $id (@idlist) {
 #    $::cgi->hidden(-name=>'id', -value=>$::next_bug, -override=>"1");
 #    print "$::cgi->hr\n";
 #
-    navigation_header();
+#    navigation_header();
     do "bug_form.pl";
 #} else {
 #    print "<BR><A HREF=\"query.cgi\">Back To Query Page</A>\n";

@@ -16,6 +16,8 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 # 
+# $Id$
+#
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Andrew Anderson <andrew@redhat.com>
 
@@ -50,6 +52,7 @@ select
         bug_file_loc,
         short_desc,
         class,
+        view,
         date_format(creation_ts,'Y-m-d')
 from bugs
 where bug_id = '" . $::bug_id . "'";
@@ -71,11 +74,17 @@ my %bug;
 my @row = "";
 if (@row = FetchSQLData()) {
     #print $::cgi->h1("@row");
+    #PutHeader("Bugzilla bug $::bug_id", "Bugzilla Bug", $::bug_id);
+    PutHeader($::header, $::h1, $::h2);
+    # avoid those damn 'used only once' warnings
+    $::header = $::h1 = $::h2 = "";
+    navigation_header();
     my $count = 0;
     foreach my $field ("bug_id", "product", "version", "rep_platform",
 		       "op_sys", "bug_status", "resolution", "priority",
 		       "bug_severity", "component", "assigned_to", "reporter",
-		       "bug_file_loc", "short_desc", "class", "creation_ts") {
+		       "bug_file_loc", "short_desc", "class", "view", 
+                       "creation_ts") {
 	$bug{"$field"} = shift @row;
         #print $::cgi->h2($field . " : " .  $bug{"$field"});
 	if (!defined $bug{$field}) {
@@ -86,8 +95,8 @@ if (@row = FetchSQLData()) {
 
     print $::cgi->hr;
 } else {
-    PutHeader("Query Error");
-    print "Bug $::bug_id not found\n";
+    PutHeader("Query Error", "Bugzilla Bug", "$::bug_id not found");
+    navigation_header();
     exit 0;
 }
 
@@ -110,28 +119,58 @@ my $bug_status_html = Param('bugstatushtml');
 #
 
 my $resolution_popup = $::cgi->hidden(-name=>'resolution', 
-                                      -value=>"$bug{'resolution'}") . 
+                                      -value=>$bug{'resolution'}) . 
                           $bug{'resolution'};
 my $version_popup    = $::cgi->hidden(-name=>"version", 
-                                      -value=>"$bug{'version'}") . 
+                                      -value=>$bug{'version'}) . 
                           $bug{'version'};
 my $platform_popup   = $::cgi->hidden(-name=>"rep_platform", 
-                                      -value=>"$bug{'rep_platform'}") .
+                                      -value=>$bug{'rep_platform'}) .
                           $bug{'rep_platform'};
 my $priority_popup   = $::cgi->hidden(-name=>"priority", 
-                                      -value=>"$bug{'priority'}") . 
+                                      -value=>$bug{'priority'}) . 
                           $bug{'priority'};
 my $class_row        = "&nbsp;";
-my $source_popup     = $::cgi->hidden(-name=>"source", 
-                                      -value=>"$bug{'source'}");
+my $source_popup     = $::cgi->hidden(-name =>"source", 
+                                      -value=>$bug{'source'});
 my $sev_popup        = $::cgi->hidden(-name=>"bug_severity", 
-                                      -value=>"$bug{'bug_severity'}") .
+                                      -value=>$bug{'bug_severity'}) .
                           $bug{'bug_severity'};
 my $component_popup  = $::cgi->hidden(-name=>"component", 
-                                      -value=>"$bug{'component'}") .
+                                      -value=>$bug{'component'}) .
                           $bug{'component'};
 my $cc_element       = $::cgi->td({-colspan=>"5"}, 
                           "&nbsp;" . ShowCcList($::bug_id));
+my $add_cc           = $::cgi->startform(
+                            '-method' => "POST",
+                            '-action' => "process_bug.cgi") .
+                       $::cgi->hidden(-name=>"component", 
+                                      -value=>$bug{'component'}) .
+                       $::cgi->hidden(-name=>"version", 
+                                      -value=>$bug{'version'}) . 
+                       $::cgi->hidden(-name=>"product", 
+                                      -value=>$bug{'product'}) .
+                       $::cgi->hidden(-name=>"id", 
+                                      -value=>$::bug_id).
+                       $::cgi->hidden(-name=>"knob", -value=>"add_cc") .
+                       $::cgi->submit(
+                            '-name' => "Add me to the CC list").
+                       $::cgi->endform;
+my $rem_cc           = $::cgi->startform(
+                            '-method' => "POST",
+                            '-action' => "process_bug.cgi").
+                       $::cgi->hidden(-name=>"component", 
+                                      -value=>$bug{'component'}) .
+                       $::cgi->hidden(-name=>"version", 
+                                      -value=>$bug{'version'}) . 
+                       $::cgi->hidden(-name=>"product", 
+                                      -value=>$bug{'product'}).
+                       $::cgi->hidden(-name=>"id", 
+                                      -value=>$::bug_id).
+                       $::cgi->hidden(-name=>"knob", -value=>"rem_cc").
+                       $::cgi->submit(
+                            '-name' => "Remove me from the CC list").
+                       $::cgi->endform;
 my $URLBlock         = "";
 my $SummaryBlock     = $::cgi->td({-align=>"RIGHT"}, "<B>Summary:</B>");
 my $StatusBlock      = $::cgi->br;
@@ -176,13 +215,13 @@ if ($bug{'bug_status'} ne "NEW") {
                         $::cgi->a({-href=>"$bug_status_html#class"},
                            $::cgi->b('Class:'))
                      ) .
-	             $::cgi->td({-align=>"RIGHT"}, $class_popup);
+	             $::cgi->td({-align=>"LEFT"}, $class_popup);
     } else {
         $class_popup = $::cgi->hidden(-name=>"class", 
                                       -value=>$bug{'class'}) . 
                                       $bug{'class'};
 	$class_row = $::cgi->td({-align=>"RIGHT"}, "&nbsp;"),
-                     $::cgi->td($class_popup);
+                     $::cgi->td({-align=>"LEFT"}, $class_popup);
     }
 }
 
@@ -210,6 +249,8 @@ if (CanIEdit("cc", $bug{'reporter'}, $bug{'bug_id'})) {
                           $::cgi->textfield(-name=>"cc", 
                                             -size=>"60",
                                             -value=>ShowCcList($::bug_id)));
+	$add_cc = "";
+	$rem_cc = "";
 }
 
 if (CanIEdit("bug_file_loc", $bug{'reporter'}, $bug{'bug_id'})) {
@@ -250,7 +291,8 @@ if (CanIEdit("short_desc", $bug{'reporter'}, $bug{'bug_id'})) {
 } else {
 	$SummaryBlock .= $::cgi->td({-colspan=>"6"}, "&nbsp;$bug{'short_desc'}",
                          $::cgi->hidden(-name=>"short_desc", 
-                                        -value=>"$bug{'short_desc'}"));
+                                        -value=>
+                              $::cgi->escapeHTML("$bug{'short_desc'}")));
 }
 
 my $AdditionalCommentsBlock = $::cgi->br .
@@ -270,7 +312,32 @@ if ( -d "data/maildir/$bug{'bug_id'}" ) {
 	          $::cgi->a({-href=>"data/maildir/$bug{'bug_id'}"}, 
 	             "Bug #${bug{'bug_id'}} email"));
 } else {
-    $maildir = $::cgi->td({-colspan=>"5"}, "&nbsp;$bug{'assigned_to'}");
+    $maildir = $::cgi->td("&nbsp;$bug{'assigned_to'}") . 
+               $::cgi->td({-colspan=>"2", -align=>"RIGHT"}, 
+                          "No email for Bug #${bug{'bug_id'}}");
+}
+
+if (CanIEdit("view", $bug{'reporter'}, $bug{'bug_id'})) {
+    my %view_labels;
+    my @view_values;
+    my @view_row;
+    my $view_query = "SELECT type_id,name from type";
+    SendSQL($view_query);
+    while(@view_row = FetchSQLData()) {
+	$view_labels{$view_row[0]} = $view_row[1];
+	push(@view_values, $view_row[0]);
+    }
+    $maildir .= $::cgi->td({-align=>"RIGHT"}, "View:");
+    $maildir .= $::cgi->td({-align=>"LEFT"}, 
+                   $::cgi->popup_menu(
+                        '-name' => 'view',
+                        '-values' => \@view_values,
+                        '-labels' => \%view_labels,
+                        '-default' => $bug{'view'}
+                   )
+                );
+} else {
+    $maildir .= $::cgi->td({-colspan=>"2"}, "&nbsp;");
 }
 
 print $::cgi->start_html(-title=>"Bug $::bug_id -- $bug{'short_desc'}"),
@@ -294,9 +361,9 @@ print $::cgi->start_html(-title=>"Bug $::bug_id -- $bug{'short_desc'}"),
         ),
         $::cgi->TR(
            $::cgi->td({-align=>"RIGHT"}, $::cgi->b("Product:")),
-           $::cgi->td({-colspan=>"2"}, "&nbsp;$bug{'product'}"),
-           $::cgi->td({-align=>"LEFT"}, $::cgi->b("Reporter:")),
-           $::cgi->td({-colspan=>"2"}, "&nbsp;$bug{'reporter'}")
+           $::cgi->td({-colspan=>"1"}, "&nbsp;$bug{'product'}"),
+           $::cgi->td({-align=>"RIGHT"}, $::cgi->b("Reporter:")),
+           $::cgi->td({-colspan=>"3"}, "&nbsp;$bug{'reporter'}")
         ),
         $::cgi->TR(
            $::cgi->td({-align=>"RIGHT"}, 
@@ -403,6 +470,9 @@ if(CanIEdit("bug_status", $bug{'reporter'}, $bug{'bug_id'})) {
 	if ($transition eq "REOPENED" and $status ne "REOPENED") {
 	    push(@radio_values, "reopen");
 	    $radio_labels{"reopen"} = "Reopen bug" . $::cgi->br;
+            # if the bug is resolved, and they add
+            # a comment, we need to reopen the bug
+            $default = "reopen";
 	}
 	if ($transition eq "CLOSED" and $status ne "CLOSED") {
 	    push(@radio_values, "close");
@@ -441,10 +511,26 @@ if(CanIEdit("bug_status", $bug{'reporter'}, $bug{'bug_id'})) {
     print $::cgi->hidden(-name=>"knob", -value=>"none");
 }
 
-print $::cgi->submit(-name=>"submit", -value=>"Commit"),
-      "&nbsp;",
-      $::cgi->reset,
-      $::cgi->hidden(-name=>"form_name", -value=>"process_bug"),
+print $::cgi->table({'-border' => '0'},
+         $::cgi->TR(
+            $::cgi->td({'-valign' => 'top'},
+                 $::cgi->submit(
+                      '-name' => "submit", 
+                      '-value' => "Commit"
+                 )
+            ),
+            $::cgi->td({'-valign' => 'top'},
+                 $::cgi->reset,
+                 $::cgi->endform
+            ),
+            $::cgi->td({'-valign' => 'top'},
+                 $add_cc
+            ),
+            $::cgi->td({'-valign' => 'top'},
+                 $rem_cc
+            )
+         )
+      ),
       $::cgi->br,
       $::cgi->font({-size=>"+1"}, 
          $::cgi->a({-href=>"show_activity.cgi?id=$::bug_id"}, 
@@ -453,7 +539,6 @@ print $::cgi->submit(-name=>"submit", -value=>"Commit"),
 	     $::cgi->b("Format For Printing"))
       ),
       $::cgi->br,
-      $::cgi->endform,
       $::cgi->table(
          $::cgi->TR(
 	    $::cgi->td({-align=>"LEFT"}, $::cgi->b('Description:')),
@@ -462,7 +547,7 @@ print $::cgi->submit(-name=>"submit", -value=>"Commit"),
 	 )
       ),
       $::cgi->hr,
-      $::cgi->pre("$bug{'long_desc'}"),
+      $::cgi->pre($::cgi->escapeHTML("$bug{'long_desc'}")),
       $::cgi->hr;
 
 # To add back option of editing the long description, insert after the above

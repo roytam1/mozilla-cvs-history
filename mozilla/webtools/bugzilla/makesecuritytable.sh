@@ -16,7 +16,9 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 # 
-# Contributor(s): Terry Weissman <terry@mozilla.org>
+# $Id$
+#
+# Contributor(s): Andrew Anderson <andrew@redhat.com>
 
 mysql > /dev/null 2>/dev/null << OK_ALL_DONE
 

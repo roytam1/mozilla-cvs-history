@@ -17,6 +17,8 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 # 
+# $Id$
+#
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Andrew Anderson <andrew@redhat.com>
 
@@ -63,7 +65,7 @@ my $namedcmd = $::cgi->param('namedcmd');
 my $newqueryname = $::cgi->param('newqueryname');
 my $cookie = "";
 my $query = "";
-my $id = DBNameToIdAndCheck($::cgi->cookie('Bugzilla_login'));
+my $id = DBname_to_id($::cgi->cookie('Bugzilla_login'));
 my $needheader = 0;
 
 if (!$id) { 
@@ -203,7 +205,8 @@ DefCol("version", "substring(bugs.version, 1, 5)", "Vers", "bugs.version");
 DefCol("os", "substring(bugs.op_sys, 1, 4)", "OS", "bugs.op_sys");
 
 my @collist;
-if ($::cgi->cookie('COLUMNLIST') ne "") {
+my $columnlist = $::cgi->cookie('COLUMNLIST');
+if ($columnlist) {
     @collist = split(/ /, $::cgi->cookie('COLUMNLIST'));
 } else {
     @collist = @::default_column_list;
@@ -251,7 +254,8 @@ if (CanIView("view")){
 $query .= $view_query;
 
 # FIXME: should this be protected by a config option?
-if ($::cgi->param('sql') ne "") {
+my $sql = $::cgi->param('sql');
+if ($sql) {
   $query .= "and (\n" . $::cgi->param('sql') . "\n)"
 } else {
   my @legal_fields = ("bug_id", "product", "version", "rep_platform", "op_sys",
@@ -702,18 +706,23 @@ if ($count > 0) {
                    $::cgi->startform(-method=>"POST", 
                                      -action=>"long_list.cgi"),
                    $::cgi->hidden(-name=>'buglist', -value=>$buglist),
-                   $::cgi->submit(-name=>"SUBMIT", -value=>"Long Format"),
+                   $::cgi->submit(-name=>"SUBMIT", 
+                                  -value=>"Long Format"),
                    $::cgi->endform
                 ),
                 $::cgi->td(
                    $::cgi->startform(-method=>"POST", -action=>"query.cgi"),
-	           $::cgi->submit(-name=>"QUERY", -value=>"Query Page"),
+	           $::cgi->submit(-name=>"QUERY", 
+                                  -value=>"Query Page"),
                    $::cgi->endform
                 ),
                 $::cgi->td(
                    $::cgi->startform(-method=>"POST", 
                                      -action=>"colchange.cgi"),
-	           $::cgi->submit(-name=>"COLCHANGE", -value=>"Change Columns"),
+                   $::cgi->hidden(-name=>'querystring', 
+                                  -value=>$fields),
+	           $::cgi->submit(-name=>"COLCHANGE", 
+                                  -value=>"Change Columns"),
                    $::cgi->endform
                 )
              )

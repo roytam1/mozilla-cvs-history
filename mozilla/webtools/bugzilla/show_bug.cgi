@@ -17,6 +17,8 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 # 
+# $Id$
+#
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 
 use diagnostics;
@@ -43,9 +45,12 @@ ConnectToDatabase();
 
 GetVersionTable();
 
-$::bug_id = $::cgi->param("id");
+# get rid of those damn 'used only once errors'
+$::header = $::h1 = $::h2 = "";  
 
-PutHeader("Bugzilla bug $::bug_id", "Bugzilla Bug", $::bug_id);
-navigation_header();
+$::bug_id = $::cgi->param("id");
+$::header = "Bugzilla Bug $::bug_id";
+$::h1 = "Bugzilla Bug";
+$::h2 = "$::bug_id";
 
 do "bug_form.pl";

@@ -17,6 +17,8 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 # 
+# $Id$
+#
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Andrew Anderson <andrew@redhat.com>
 
@@ -31,14 +33,15 @@ require "CGI.pl";
 # Shut up misguided -w warnings about "used only once":
 
 use vars @::legal_resolution,
-  @::legal_product,
-  @::legal_bug_status,
-  @::legal_priority,
-  @::legal_components,
-  @::legal_versions,
-  @::legal_severity;
+         @::legal_product,
+         @::legal_bug_status,
+         @::legal_priority,
+         @::legal_components,
+         @::legal_versions,
+         @::legal_severity;
 
-if ($::cgi->param('GoAheadAndLogIn') ne "") {
+my $gologin = $::cgi->param('GoAheadAndLogin');
+if ($gologin) {
     # We got here from a login page, probably from relogin.cgi
     # We better make sure the password is legit.
     confirm_login();
@@ -54,7 +57,7 @@ foreach my $name ("bug_status", "resolution", "assigned_to", "rep_platforms",
     $type{$name} = 'false';
 }
 
-GetVersionTable();
+&GetVersionTable;
 
 # Hack alert -- this handles the case when no product is selected, and
 # we need to build a platform list to handle any possible query
@@ -70,15 +73,15 @@ if (scalar(@{$default{'product'}}) == 0) {
     }
 }
 
-ConnectToDatabase();
+&ConnectToDatabase;
 
-my %namelist = {};
+my %namelist = ();
 my @oldqueries;
 my $dbquery = "";
 my $id = "";
 my $login = $::cgi->cookie('Bugzilla_login');
 
-if ($login ne "") {
+if ($login) {
     $id = DBNameToIdAndCheck($login);
     # This is as good a place as any to clean up old query cookies
     my @cookies = $::cgi->cookie();
@@ -201,7 +204,16 @@ $type_labels{'regex'} = 'Regex';
 
 delete($namelist{'defaultquery'});
 my $named_query = '';
-my @queries = keys(%namelist);
+# yes @queries = keys(%namelist) would be more efficient here, but
+# since we are deleting members of the list, we might end up with
+# an empty hash reference in the array -- so we do it the long way
+# just to be sure
+my @queries = ();
+foreach my $name (keys %namelist) {
+	#print $::cgi->h4("key: $name, name: $namelist{$name}")
+	#	if ($namelist{$name});
+	push(@queries, $name) if ($namelist{$name});
+}
 if (scalar(@queries) > 0) {
     $named_query = $::cgi->TR(
                       $::cgi->td(
@@ -243,61 +255,81 @@ if (scalar(@{$default{'product'}}) > 1) {
 	@prod_array = $::legal_platforms{'empty'};
 }
 
-print $::cgi->startform(-name=>"queryForm", -action=>"buglist.cgi"),
-      $::cgi->table(
+my $formaction = "buglist.cgi";
+print $::cgi->startform(
+	  '-action' => $formaction);
+
+my $tableheader = 
           $::cgi->TR(
-	      $::cgi->th({-align=>"LEFT"}, 
-	          $::cgi->a({-href=>"$bug_status_html"}, "Status"), ":"),
-	      $::cgi->th({-align=>"LEFT"}, 
-	          $::cgi->a({-href=>"$bug_status_html"}, "Resolution"), ":"),
-	      $::cgi->th({-align=>"LEFT"}, 
-	          $::cgi->a({-href=>"$bug_status_html#rep_platform"}, 
-		      "Platform"), ":"),
-	      $::cgi->th({-align=>"LEFT"}, 
-	          $::cgi->a({-href=>"$bug_status_html#priority"}, 
-		      "Priority"), ":"),
-	      $::cgi->th({-align=>"LEFT"}, 
-	          $::cgi->a({-href=>"$bug_status_html#severity"}, 
-		      "Severity"), ":")
-	  ),
+	      $::cgi->th({"-align" => "LEFT"}, 
+	          $::cgi->a({"-href" => "$bug_status_html"}, 
+		 "Status:")),
+	      $::cgi->th({"-align" => "LEFT"}, 
+	          $::cgi->a({"-href" => "$bug_status_html"}, 
+		 "Resolution:")),
+	      $::cgi->th({"-align" => "LEFT"}, 
+	          $::cgi->a({"-href" => "$bug_status_html\#rep_platform"}, 
+		 "Platform:")),
+	      $::cgi->th({"-align" => "LEFT"}, 
+	          $::cgi->a({"-href" => "$bug_status_html\#priority"}, 
+		 "Priority:")),
+	      $::cgi->th({"-align" => "LEFT"}, 
+	          $::cgi->a({"-href" => "$bug_status_html\#severity"}, 
+		 "Severity:"))
+	 );
+
+my @defaultbug_status   = exists($default{'bug_status'})   ? @{$default{'bug_status'}}   : [];
+my $bug_status = $::cgi->td({"-align" => "LEFT", "-valign" => "TOP"},
+	          $::cgi->scrolling_list('-name' => "bug_status",
+			'-values'   => \@::legal_bug_status,
+			'-default'  => \@defaultbug_status,
+			'-size'     => "7",
+			'-multiple' => $type{'bug_status'})), $::cgi->p;
+
+my @defaultresolution   = exists($default{'resolution'})   ? @{$default{'resolution'}}   : [];
+my $resolution = $::cgi->td({"-align"=>"LEFT", "-valign"=>"TOP"},
+	          $::cgi->scrolling_list('-name' => "resolution",
+			'-values'   => \@local_legal_resolution,
+			'-default'  => @defaultresolution,
+			'-size'     => "7",
+			'-multiple' => $type{'resolution'})), $::cgi->p;
+
+my @defaultrep_platform = exists($default{'rep_platform'}) ? @{$default{'rep_platform'}} : [];
+my $platform = $::cgi->td({"-align"=>"LEFT", "-valign"=>"TOP"},
+	          $::cgi->scrolling_list('-name' => "rep_platform",
+			'-values'   => @prod_array,
+			'-default'  => @defaultrep_platform,
+			'-size'     => "7",
+			'-multiple' => $type{'rep_platform'}));
+
+my @defaultpriority     = exists($default{'priority'})     ? @{$default{'priority'}}     : [];
+my $priority = $::cgi->td({"-align"=>"LEFT", "-valign"=>"TOP"},
+	          $::cgi->scrolling_list('-name' => "priority",
+			'-values'   => \@::legal_priority,
+			'-default'  => @defaultpriority,
+			'-size'     => "7",
+			'-multiple' => "$type{'priority'}")), $::cgi->p;
+
+my @defaultbug_severity = exists($default{'bug_severity'}) ? @{$default{'bug_severity'}} : [];
+my $severity = $::cgi->td({"-align"=>"LEFT", "-valign"=>"TOP"},
+	          $::cgi->scrolling_list('-name' => "bug_severity",
+			'-values'   => \@::legal_severity,
+			'-default'  => \@defaultbug_severity,
+			'-size'     => "7",
+			'-multiple' => "$type{'bug_severity'}")), $::cgi->p;
+
+print $::cgi->table(
+          $tableheader,
           $::cgi->TR(
-	      $::cgi->td({-align=>"LEFT", -valign=>"TOP"},
-	          $::cgi->scrolling_list(-name=>"bug_status",
-		        '-values'=>\@::legal_bug_status,
-			-default=>\@{$default{'bug_status'}},
-			-size=>"7",
-			'-multiple'=>$type{'bug_status'})),
-	      $::cgi->p,
-	      $::cgi->td({-align=>"LEFT", -valign=>"TOP"},
-	          $::cgi->scrolling_list(-name=>"resolution",
-		        '-values'=>\@local_legal_resolution,
-			-size=>"7",
-			-default=>\@{$default{'resolution'}},
-			'-multiple'=>$type{'resolution'})),
-	      $::cgi->p,
-	      $::cgi->td({-align=>"LEFT", -valign=>"TOP"},
-	          $::cgi->scrolling_list(-name=>"rep_platform",
-		        '-values'=>@prod_array,
-			-size=>"7",
-			-default=>\@{$default{'rep_platform'}},
-			'-multiple'=>"$type{'rep_platform'}")),
-	      $::cgi->td({-align=>"LEFT", -valign=>"TOP"},
-	          $::cgi->scrolling_list(-name=>"priority",
-		        '-values'=>\@::legal_priority,
-			-size=>"7",
-			-default=>\@{$default{'priority'}},
-			'-multiple'=>"$type{'priority'}")),
-	      $::cgi->p,
-	      $::cgi->td({-align=>"LEFT", -valign=>"TOP"},
-	          $::cgi->scrolling_list(-name=>"bug_severity",
-		        '-values'=>\@::legal_severity,
-			-default=>\@{$default{'bug_severity'}},
-			-size=>"7",
-			'-multiple'=>"$type{'bug_severity'}")),
-	      $::cgi->p
-	  ),
-      ),
-      $::cgi->p,
+	      $bug_status,
+	      $resolution,
+	      $platform,
+	      $priority,
+	      $severity
+	  )
+      );
+
+print $::cgi->p,
       $::cgi->table(
           $::cgi->TR(
 	      $::cgi->td({-align=>"RIGHT"},
@@ -311,15 +343,19 @@ print $::cgi->startform(-name=>"queryForm", -action=>"buglist.cgi"),
 	          $::cgi->a({-href=>"$bug_status_html#reporter"},
 		      $::cgi->b("Reporter:"))
 	      ),
-	      $::cgi->td("$reporter"),
+	      $::cgi->td("$reporter")
 	  )
-      ),
-      $::cgi->p,
+      );
+
+print $::cgi->p,
       "Changed in the last ", 
       $::cgi->textfield(-name=>"changedin", -size=>"2"),
       " days.",
-      $::cgi->p,
-      $::cgi->table(
+      $::cgi->p;
+
+my @defaultversion = @{$default{'version'}};
+my @defaultcomponent = @{$default{'component'}};
+print $::cgi->table(
           $::cgi->TR(
 	      $::cgi->th({-align=>"LEFT"}, "Program:"),
 	      $::cgi->th({-align=>"LEFT"}, "Version:"),
@@ -329,22 +365,22 @@ print $::cgi->startform(-name=>"queryForm", -action=>"buglist.cgi"),
 	      $::cgi->td({-align=>"LEFT", -valign=>"TOP"},
 	          $::cgi->scrolling_list(-name=>"product",
 		        '-values'=>\@::legal_product,
-			-size=>"5",
-			-default=>\@{$default{'product'}},
+			'-size'=>"5",
+			'-default'=>$default{'product'},
 			'-multiple'=>$type{'product'})),
 	      $::cgi->p,
 	      $::cgi->td({-align=>"LEFT", -valign=>"TOP"},
 	          $::cgi->scrolling_list(-name=>"version",
 		        '-values'=>\@::legal_versions,
-			-size=>"5",
-			-default=>\@{$default{'version'}},
+			'-size'=>"5",
+			'-default'=>\@defaultversion,
 			'-multiple'=>$type{'version'})),
 	      $::cgi->p,
 	      $::cgi->td({-align=>"LEFT", -valign=>"TOP"},
 	          $::cgi->scrolling_list(-name=>"component",
 		        '-values'=>\@::legal_components,
-			-size=>"5",
-			-default=>\@{$default{'component'}},
+			'-size'=>"5",
+			'-default'=>\@defaultcomponent,
 			'-multiple'=>$type{'component'})),
 	      $::cgi->p
 	  )
@@ -413,10 +449,13 @@ print $::cgi->startform(-name=>"queryForm", -action=>"buglist.cgi"),
       ),
       $::cgi->p,
       $::cgi->b("Sort By:"), 
-      "&nbsp;&nbsp;",
-      $::cgi->popup_menu(-name=>'order',
-            '-values'=>['Bug Number', 'Importance', 'Assignee'],
-	     -default=>\@{$default{'order'}}),
+      "&nbsp;&nbsp;";
+
+my @orderdefault = @{$default{'order'}};
+print $::cgi->popup_menu(
+              '-name'=>'order',
+              '-values'=>['Bug Number', 'Importance', 'Assignee'],
+	     '-default'=>@orderdefault),
       $::cgi->submit(-name=>'submit', -value=>'Submit'),
       "&nbsp;&nbsp;",
       $::cgi->reset(-value=>'Reset back to the default query'),
@@ -428,7 +467,8 @@ print $::cgi->startform(-name=>"queryForm", -action=>"buglist.cgi"),
       " about how to use this form.",
       $::cgi->p;
 
-if ($::cgi->cookie('Bugzilla_login') ne "") {
+my $logincookie = $::cgi->cookie('Bugzilla_login');
+if ($logincookie) {
     if ($::cgi->cookie('Bugzilla_login') eq Param("maintainer")) {
         print $::cgi->a({-href=>"editparams.cgi"}, 
 	          "Edit Bugzilla operating parameters"),

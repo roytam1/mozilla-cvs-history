@@ -16,6 +16,8 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 # 
+# $Id$
+#
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Andrew Anderson <andrew@redhat.com>
 #                 <david.gardiner@unisa.edu.au>
@@ -24,7 +26,7 @@
 
 use diagnostics;
 use strict;
-
+use Socket;
 use CGI::Carp qw(fatalsToBrowser);
 
 require 'globals.pl';
@@ -68,7 +70,8 @@ sub value_quote {
 }
 
 sub navigation_header {
-    if ($::cgi->cookie('BUGLIST') ne "") {
+    my $buglist_cookie = $::cgi->cookie('BUGLIST');
+    if ($buglist_cookie) {
 	my @bugs = split(/:/, $::cgi->cookie('BUGLIST'));
 	my $cur = lsearch(\@bugs, $::cgi->param('id'));
 	print $::cgi->b('Bug List:') . " (@{[$cur + 1]} of @{[$#bugs + 1]})\n",
@@ -153,8 +156,9 @@ sub make_popup {
 
 sub PasswordForLogin {
     my ($login) = (@_);
-    SendSQL("select cryptpassword from profiles where login_name = " .
-	    SqlQuote($login));
+    my $query = "select cryptpassword from profiles where login_name = " .
+	    SqlQuote($login);
+    SendSQL($query);
     my $result = FetchOneColumn();
     if (!defined $result) {
         $result = "";
@@ -167,23 +171,29 @@ sub confirm_login {
     my $printed_header = 0;
 
 # Uncommenting the following lines can help debugging...
-#    print $::cgi->header(-type=>'text/html'),
-#          $::cgi->cookie('Bugzilla_login'),
-#          $::cgi->cookie('Bugzilla_password'),
-#          $::cgi->dump;
+#    print $::cgi->header(-type=>'text/html');
+#    print "login: ", $::cgi->cookie('Bugzilla_login'), "<BR>\n";
+#    print "cookie: ", $::cgi->cookie('Bugzilla_logincookie'), "<BR>\n";
+#    print $::cgi->dump;
 
     ConnectToDatabase();
 
     my $authdomain = "";
     my $authorized = 0;
     my $rem_host = $::cgi->remote_host();
+    my $Bugzilla_logincookie_cookie = $::cgi->cookie("Bugzilla_logincookie");
+    my $Bugzilla_login_param = $::cgi->param("Bugzilla_login");
+    my $Bugzilla_password_param = $::cgi->param("Bugzilla_password");
+    # This construct is assenine, but perl bitches about 
+    # an unintialized variable unless it's done this way
+    my $Bugzilla_login_cookie = $::cgi->cookie("Bugzilla_login") ? 
+                                $::cgi->cookie("Bugzilla_login") : "";
 
     # Apache 1.3.x users: this requires "HostNameLookups on" to work
-    if (defined Param('authdomain') && $rem_host) {
+    if (defined(Param('authdomain')) && $rem_host) {
         $authdomain = Param('authdomain');
-        if ($::cgi->cookie("Bugzilla_login") =~ /$authdomain$/) {
-            use Socket;
-	    my @authnets = split (",", Param('authnet'));
+        if ( $Bugzilla_login_cookie =~ /$authdomain$/ ) {
+	    my @authnets = split (/,/, Param('authnet'));
 	    for my $authnet (@authnets) {
 		my $ip_addr = unpack("N4", inet_aton($rem_host));
 		my ($network, $netmask) = split("/", $authnet);
@@ -215,18 +225,17 @@ sub confirm_login {
 
     my ($login_cookie, $logincookie_cookie, $password_cookie, $logincookie);
     my $loginok = 0;
+    $logincookie = $Bugzilla_logincookie_cookie ? 
+                   $Bugzilla_logincookie_cookie : '';
 
-    if ($::cgi->param('Bugzilla_login') ne "") {
-
-	my $enteredlogin = $::cgi->param('Bugzilla_login');
-        my $enteredpwd = $::cgi->param('Bugzilla_password');
-
-	if ($enteredlogin !~ /^[^@, ]*@[^@, ]*\.[^@, ]*$/) {
+    if ($Bugzilla_login_param) {
+	if ($Bugzilla_login_param !~ /^[^@, ]*@[^@, ]*\.[^@, ]*$/) {
             print $::cgi->header(-type=>'text/html');
 
 	    PutHeader("Invalid e-mail address entered");
 
-            print "The e-mail address you entered ($::cgi->b($enteredlogin)) ",
+            print "The e-mail address you entered ",
+                  "($::cgi->b($Bugzilla_login_param)) ",
                   "didn't match our minimal syntax checking for a legal email ",
                   "address.  A legal address must contain exactly one '\@', ",
                   "and at least one '.' after the \@, and may not contain any ",
@@ -234,15 +243,16 @@ sub confirm_login {
                   "$::cgi->b('back') and try again.\n",
             exit;
         }
-        my $realcryptpwd  = PasswordForLogin($enteredlogin);
+        my $realcryptpwd  = PasswordForLogin($Bugzilla_login_param);
         
-        if ($::cgi->param("PleaseMailAPassword") ne "") {
+        my $mailpassword = $::cgi->param("PleaseMailAPassword");
+        if ($mailpassword) {
 	    my $realpwd;
             if ($realcryptpwd eq "") {
-		$realpwd = InsertNewUser($enteredlogin);
+		$realpwd = InsertNewUser($Bugzilla_login_param);
             } else {
                 SendSQL("select password from profiles where login_name = " .
-			SqlQuote($enteredlogin));
+			SqlQuote($Bugzilla_login_param));
 		$realpwd = FetchOneColumn();
             }
 	    my $template = "
@@ -257,15 +267,15 @@ To use the wonders of bugzilla, you can use the following:
  (Your bugzilla and CVS password, if any, are not currently synchronized.
  Top hackers are working around the clock to fix this, as you read this.)
 ";
-            my $msg = sprintf($template, $enteredlogin, 
+            my $msg = sprintf($template, $Bugzilla_login_param, 
                               $realpwd, Param("urlbase"));
             
-	    Mail($enteredlogin, "", "Your bugzilla password", $msg);
+	    Mail($Bugzilla_login_param, "", "Your bugzilla password", $msg);
 
             print $::cgi->header(-type=>'text/html');
 	    PutHeader("Password has been emailed.");
             print "The password for the e-mail address\n",
-                  "$enteredlogin has been e-mailed to that address.\n",
+                  "$Bugzilla_login_param has been e-mailed to that address.\n",
                   $::cgi->p,
                   "When the e-mail arrives, you can click ",
                   $::cgi->b('back'),
@@ -273,7 +283,8 @@ To use the wonders of bugzilla, you can use the following:
             exit;
         }
 
-	my $enteredcryptpwd = crypt($enteredpwd, substr($realcryptpwd, 0, 2));
+	my $enteredcryptpwd = 
+		crypt($Bugzilla_password_param, substr($realcryptpwd, 0, 2));
         if ($realcryptpwd eq "" || $enteredcryptpwd ne $realcryptpwd) {
             print $::cgi->header(-type=>'text/html');
 	    PutHeader("Login failed.");
@@ -283,12 +294,12 @@ To use the wonders of bugzilla, you can use the following:
         }
 	# FIXME: make path a config item
 	$login_cookie = $::cgi->cookie(-name=>'Bugzilla_login',
-                              -value=>$enteredlogin,
+                              -value=>$Bugzilla_login_param,
                               -path=>"/bugzilla/",
                               -expires=>"Sun, 30-Jun-2029 00:00:00 GMT");
 	my $query = "insert into logincookies " .
                     "(userid,cryptpassword,hostname) " .
-                    "values (@{[DBNameToIdAndCheck($enteredlogin)]}, " .
+                    "values (@{[DBNameToIdAndCheck($Bugzilla_login_param)]}, " .
                     "@{[SqlQuote($realcryptpwd)]}, " .
                     "@{[SqlQuote($rem_host)]})";
 	SendSQL($query);
@@ -325,20 +336,17 @@ To use the wonders of bugzilla, you can use the following:
 	$loginok = 1;
     }
 
-    if (!$loginok &&
-        ($::cgi->cookie('Bugzilla_login') ne "") &&
-	($::cgi->cookie('Bugzilla_logincookie') ne "")) {
-
-	my $login = $::cgi->cookie('Bugzilla_login');
-	$logincookie = $::cgi->cookie('Bugzilla_logincookie');
-
+    #print $::cgi->h4("loginok: $loginok");
+    #print $::cgi->h4("login: $Bugzilla_login_cookie");
+    #print $::cgi->h4("cookie: $Bugzilla_logincookie_cookie");
+    if (!$loginok && $Bugzilla_login_cookie && $Bugzilla_logincookie_cookie) {
         SendSQL("select profiles.login_name = " .
-		SqlQuote($login) .
+		SqlQuote($Bugzilla_login_cookie) .
 		" and profiles.cryptpassword = logincookies.cryptpassword " .
 		"and logincookies.hostname = " .
 		SqlQuote($rem_host) .
 		" from profiles,logincookies where logincookies.cookie = '" .
-		$logincookie .
+		$Bugzilla_logincookie_cookie .
 		"' and profiles.userid = logincookies.userid");
         $loginok = FetchOneColumn();
         if (!defined $loginok) {
@@ -349,8 +357,8 @@ To use the wonders of bugzilla, you can use the following:
     if ($loginok ne "1") {
         print $::cgi->header(-type=>'text/html');
         PutHeader("Please log in.");
-        #print $::cgi->cookie('Bugzilla_login') . $::cgi->br . "\n";
-        #print $::cgi->cookie('Bugzilla_logincookie') . $::cgi->br . "\n";
+        #print $Bugzilla_login_cookie . $::cgi->br . "\n";
+        #print $Bugzilla_logincookie_cookie . $::cgi->br . "\n";
         print "I need a legitimate e-mail address and password to continue.\n";
         if (!defined $nexturl || $nexturl eq "") {
 	    # Sets nexturl to be argv0, stripping everything up to and
@@ -417,29 +425,34 @@ sub PutHeader {
                              -BGCOLOR=>"#FFFFFF",
                              -TEXT=>"#000000",
 			     -LINK=>"#0000EE",
-			     -VLINK=>#551A8B",
+			     -VLINK=>"#551A8B",
 			     -ALINK=>"#FF0000");
     print PerformSubsts(Param("bannerhtml"), undef);
 
-    print $::cgi->table({-border=>"0", 
-                         -cellpadding=>"12", 
-			 -cellspacing=>"0",
-                         -width=>"100%"},
+    print $::cgi->table(
+                        {'-border'      => "0", 
+                         '-cellpadding' => "12", 
+		       '-cellspacing' => "0",
+                         '-width'       => "100%"},
 	     $::cgi->TR(
 	        $::cgi->td(
-		   $::cgi->table({-border=>"0", 
-		                  -cellpadding=>"0", 
-				  -cellspacing=>"2"},
+		   $::cgi->table(
+		                 {'-border'      => "0", 
+		                  '-cellpadding' => "0", 
+				'-cellspacing' => "2"},
 		      $::cgi->TR(
-		         $::cgi->td({-valign=>"TOP", 
-			             -align=>"DENTER", 
-				     -nowrap},
-		            $::cgi->font({-size=>"+3"},
+		         $::cgi->td(
+			           {'-valign' => "TOP", 
+			            '-align'  => "CENTER", 
+				   '-nowrap' => "1"},
+		            $::cgi->font({'-size' => "+3"},
 			       $::cgi->b($h1))
 			 )
 		      ),
 		      $::cgi->TR(
-		         $::cgi->td({-valign=>"TOP", -align=>"CENTER"},
+		         $::cgi->td(
+			    {'-valign' => "TOP", 
+			     '-align' => "CENTER"},
 			    $::cgi->b($h2))
 		      )
 		   )

@@ -17,6 +17,8 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 # 
+# $Id$
+#
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Andrew Anderson <andrew@redhat.com>
 
@@ -33,8 +35,7 @@ require "CGI.pl";
 
 my @masterlist = ("opendate", "changeddate", "severity", "priority",
                   "platform", "owner", "reporter", "status", "resolution",
-                  "component", "product", "version", "project",
-                  "summary", "summaryfull");
+                  "component", "product", "version", "summary", "summaryfull");
 
 
 my @collist;
@@ -83,8 +84,11 @@ my $query_string = $::cgi->query_string;
 print "Check which columns you wish to appear on the list, and then click\n";
 print "on submit.\n<P>\n";
 print $::cgi->startform(-method=>"POST");
+#print $::cgi->hidden(-name=>"rememberedquery", 
+#                   -value=>$query_string) . "\n";
 print $::cgi->hidden(-name=>"rememberedquery", 
-                   -value=>$query_string) . "\n";
+                   -value=>$::cgi->param('querystring'), 
+                   -override=>"1") . "\n";
 
 foreach my $i (@masterlist) {
     if (lsearch(\@collist, $i) >= 0) {
@@ -100,9 +104,6 @@ print "<P>\n" . $::cgi->submit(-name=>"submit", -value=>"Submit") . "\n";
 print $::cgi->endform . "\n";
 
 print $::cgi->startform;
-print $::cgi->hidden(-name=>"rememberedquery", 
-                   -value=>"$query_string", 
-                   -override=>"1") . "\n";
 print $::cgi->hidden(-name=>"resetit", 
                    -value=>"1", 
                    -override=>"1") . "\n";

@@ -17,6 +17,8 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 # 
+# $Id$
+#
 # Contributor(s): Andrew Anderson <andrew@redhat.com>
 
 use diagnostics;
@@ -63,7 +65,7 @@ my $doupdate = 0;
 
 foreach my $group (@groups) {
     $newflags = $doupdate = 0;
-    (my $groupid, my $groupname, my $flags) = split(":", $group);
+    (my $groupid, my $groupname, my $flags) = split(/:/, $group);
     my $curItem = "$groupid" . "-groupid";
     if ($::cgi->param($curItem) ne "") {
 	foreach my $field (@fields) {
@@ -109,5 +111,5 @@ if($#updates) {
 }
 
 print $::cgi->a({-href=>"editgroups.cgi"}, "Edit the groups some more.") .
-      "\n<BR>\n" .
+      $::cgi->br .
       $::cgi->a({-href=>"query.cgi"}, "Go back to the query page.");

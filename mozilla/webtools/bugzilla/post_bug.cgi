@@ -17,6 +17,8 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 # 
+# $Id$
+#
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Andrew Anderson <andrew@redhat.com>
 
@@ -91,9 +93,10 @@ $::cgi->param(-name=>'reporter',
 
 my @bug_fields = ("reporter", "product", "version", "rep_platform",
                   "bug_severity", "priority", "op_sys", "assigned_to",
-                  "bug_status", "short_desc", "component");
+                  "bug_status", "short_desc", "component", "bug_file_loc", 
+                  "view");
 my $query = "insert into bugs (\n" . join(",\n", @bug_fields) . ",
-group_id, view, creation_ts, long_desc )
+group_id, creation_ts, long_desc )
 values (
 ";
 
@@ -113,18 +116,18 @@ my $view_query;
 my $view_id;
 my $view_name;
 
-if ($::cgi->param('view') ne "") {
-    $view_query = "SELECT type_id FROM type WHERE name = '" . 
-	$::cgi->param('view') . "'";
-    SendSQL($view_query);
-    ($view_id, $view_name) = FetchSQLData();
-    $query .= "'$view_id' ,";
-} else {
-    $view_query = "SELECT type_id FROM type WHERE name = 'public'";
-    SendSQL($view_query);
-    ($view_id, $view_name) = FetchSQLData();
-    $query .= "'$view_id', ";
-}
+#if ($::cgi->param('view') ne "") {
+#    $view_query = "SELECT type_id FROM type WHERE name = '" . 
+#	$::cgi->param('view') . "'";
+#    SendSQL($view_query);
+#    ($view_id, $view_name) = FetchSQLData();
+#    $query .= "'$view_id' ,";
+#} else {
+#    $view_query = "SELECT type_id FROM type WHERE name = 'public'";
+#    SendSQL($view_query);
+#    ($view_id, $view_name) = FetchSQLData();
+#    $query .= "'$view_id', ";
+#}
 
 $query .= "now(), " . SqlQuote($::cgi->param('comment')) . " )\n";
 
@@ -156,7 +159,7 @@ print $::cgi->h2("Changes Submitted"),
       $::cgi->br,
       $::cgi->a({-href=>"query.cgi"}, "Back To Query Page"),
       $::cgi->br,
-      $::cgi->a({-href=>"enter_bug.cgi?product=$::cgi->param('product')"}, 
+      $::cgi->a({-href=>"enter_bug.cgi?product=" . $::cgi->param('product')}, 
            "Enter a new bug");
 
 system("./processmail $id < /dev/null > /dev/null 2> /dev/null &");

@@ -17,6 +17,8 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 # 
+# $Id$
+#
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Andrew Anderson <andrew@redhat.com>
 
@@ -40,7 +42,8 @@ use vars
 my $product = $::cgi->param('product');
 confirm_login();
 
-if ($::cgi->param('product') eq "") {
+my $product_param = $::cgi->param('product');
+if (!$product_param) {
     GetVersionTable();
     my @prodlist = keys %::versions;
     if ($#prodlist != 0) {
@@ -122,7 +125,7 @@ sub pickplatform {
 sub pickversion {
     my $version = $::cgi->param('version');
     my $browser = $::cgi->user_agent();
-    if ($version eq "") {
+    if (!$version) {
         if ($browser =~ m@Mozilla[ /]([^ ]*)@) {
             $version = $1;
         }
@@ -131,7 +134,8 @@ sub pickversion {
     if (lsearch($::versions{$product}, $version) >= 0) {
         return $version;
     } else {
-        if ($::cgi->cookie("VERSION-$product") ne "") {
+        my $versioncookie = $::cgi->cookie("VERSION-$product");
+        if ($versioncookie) {
             if (lsearch($::versions{$product},
                         $::cgi->cookie("VERSION-$product")) >= 0) {
                 return $::cgi->cookie("VERSION-$product");
@@ -143,7 +147,7 @@ sub pickversion {
 
 sub pickarch {
     my $arch = $::cgi->param('arch');
-    if ($arch eq "") {
+    if (!$arch) {
         my $browser = $::cgi->user_agent();
         if ($browser =~ m#Mozilla.*\(.*;.*;.* (.*)\)#) {
             $arch = $1;
@@ -168,8 +172,9 @@ sub pickcomponent {
 
 
 sub pickos {
-    if ($::cgi->param('op_sys') ne "") {
-        return $::cgi->param('op_sys');
+    my $op_sys = $::cgi->param('op_sys');
+    if ($op_sys) {
+        return $op_sys;
     }
     my $browser = $::cgi->user_agent();
     for ($browser) {
@@ -259,13 +264,27 @@ if(CanIView("source")) {
 
 my $view_cell;
 if(CanIView("view")) {
-    $view_cell = $::cgi->td({-align=>"RIGHT"}, $::cgi->b("View:")),
-                 $::cgi->td($::cgi->popup_menu(-name=>'view',
-                                              '-values'=>['Public', 'Private'],
-                                               -default=>'Public'));
+    my %view_labels;
+    my @view_values;
+    my @view_row;
+    my $view_query = "SELECT type_id,name from type";
+    SendSQL($view_query);
+    while(@view_row = FetchSQLData()) {
+	$view_labels{$view_row[0]} = $view_row[1];
+	push(@view_values, $view_row[0]);
+    }
+    $view_cell = $::cgi->td({-align=>"RIGHT"}, $::cgi->b("View:")) .
+                 $::cgi->td({-align=>"LEFT"},
+                      $::cgi->popup_menu(
+                           '-name' => 'view',
+                           '-values' => \@view_values,
+                           '-labels' => \%view_labels,
+                           '-default' => '1'
+                      )
+                 );
 } else {
     $view_cell = $::cgi->td({-colspan=>"2"}, 
-                    $::cgi->hidden(-name=>'view', -value=>"Public"));
+                    $::cgi->hidden(-name=>'view', -value=>'1'));
 }
 
 my $assigned_cell;
@@ -280,7 +299,7 @@ if(CanIView("assigned_to")) {
                      );
 }
 
-print $::cgi->start_form(-name=>'enterForm', -action=>'post_bug.cgi'),
+print $::cgi->startform(-name=>'enterForm', -action=>'post_bug.cgi'),
       $::cgi->hidden(-name=>'bug_status', -value=>'NEW'),
       $::cgi->hidden(-name=>'reporter', 
                      -value=>$::cgi->cookie('Bugzilla_login')),
@@ -362,5 +381,5 @@ print $::cgi->start_form(-name=>'enterForm', -action=>'post_bug.cgi'),
          ),
       ),
       $::cgi->hidden(-name=>"form_name", -value=>"enter_bug"),
-      $::cgi->end_form,
+      $::cgi->endform,
       $::cgi->end_html;

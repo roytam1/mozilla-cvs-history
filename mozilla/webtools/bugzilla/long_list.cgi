@@ -17,6 +17,8 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 # 
+# $Id$
+#
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Andrew Anderson <andrew@redhat.com>
 
@@ -29,7 +31,7 @@ $::cgi = new CGI;
 require "CGI.pl";
 require "security.pl";
 
-print $::cgi->header(-type=>'text/html');
+print $::cgi->header('-type' => 'text/html');
 
 my $generic_query  = "
 select
@@ -54,7 +56,7 @@ where assign.userid = bugs.assigned_to
 and report.userid = bugs.reporter and
 ";
 
-ConnectToDatabase();
+&ConnectToDatabase;
 
 my $view_html;
 my $class_html;
@@ -64,13 +66,16 @@ SendSQL($view_query);
 $view_query = "and bugs.view = " . $type_id . " ";
 if(CanIView("view")){
     $view_query = "";
-    $view_html = $::cgi->td("<B>View:</B> $type_name");
+    $view_html = $::cgi->td($::cgi->b("View:"),  $type_name);
 } else {
     $view_html = $::cgi->td("&nbsp;");
 }
 
-foreach my $bug (split(/:/, $::cgi->param('buglist'))) {
-    SendSQL("$generic_query bugs.bug_id = $bug $view_query");
+my $buglist = $::cgi->param('buglist');
+my @bugs = split(/:/, $buglist);
+foreach my $bug (@bugs) {
+    my $query = $generic_query . " bugs.bug_id = " . $bug . " " . $view_query;
+    SendSQL($query);
 
     my @row;
     if (@row = FetchSQLData()) {
@@ -81,53 +86,46 @@ foreach my $bug (split(/:/, $::cgi->param('buglist'))) {
                   html_quote($shortdesc), 
                   $::cgi->param('id'));
 
-    if(CanIView("class")){
-        $class_html = $::cgi->td("<B>Class:</B> $class");
-    } else {
-        $class_html = $::cgi->td("&nbsp;");
-    }
+        if(CanIView("class")){
+            $class_html = $::cgi->td("<B>Class:</B> $class");
+        } else {
+            $class_html = $::cgi->td("&nbsp;");
+        }
 
-    print $::cgi->img({-src=>"1x1.gif", 
-                     -width=>"1", 
-                     -height=>"80", 
-                     -align=>"LEFT"}),
-          $::cgi->table({-width=>"100%"},
-             $::cgi->TR(
-                $::cgi->td("<B>Bug#:</B>", 
-                   $::cgi->a({-href=>"show_bug.cgi?id=$id"}, "$id")),
-                $::cgi->td("<B>Product:</B> $product"),
-                $::cgi->td("<B>Version:</B> $version"),
-                $::cgi->td("<B>Platform:</B> $platform")
-             ),
-             $::cgi->TR(
-                $::cgi->td("<B>OS/Version:</B> $opsys"),
-                $::cgi->td("<B>Status:</B> $status"),
-                $::cgi->td("<B>Severity:</B> $severity"),
-                $::cgi->td("<B>Priority:</B> $priority")
-             ),
-             $::cgi->TR(
-                $::cgi->td("<B>Resolution:</B> $resolution"),
-                $::cgi->td("<B>Assigned To:</B> $assigned"),
-                $::cgi->td({-colspan=>"2"}, "<B>Reported By:</B> $reporter")
-             ),
-             $::cgi->TR(
-                $::cgi->td("<B>Component:</B>"),
-		$::cgi->td("$component"),
-                $view_html,
-                $class_html,
-             ),
-             $::cgi->TR(
-                $::cgi->td({-colspan=>"6"}, "<B>URL:</B> $url"),
-             ),
-             $::cgi->TR(
-                $::cgi->td("<B>Summary:</B>"),
-                $::cgi->td({-colspan=>"5"}, $shortdesc)
-             ),
-             $::cgi->TR(
-                $::cgi->td({-colspan=>"5"}, "<B>Description:</B>")
-             )
-         ),
-         $::cgi->pre(GetLongDescription($bug)),
-         $::cgi->hr;
+        print $::cgi->img({'-src'    => "1x1.gif", 
+                           '-width'  => "1", 
+                           '-height' => "80", 
+                           '-align'  => "LEFT"});
+    my $href = "show_bug.cgi?id=" . $id;
+    my $firstrow = $::cgi->TR(
+                        $::cgi->td($::cgi->b("Bug#:"), 
+                           $::cgi->a({-href=>$href}, $id)),
+                        $::cgi->td($::cgi->b("Product:"), $product),
+                        $::cgi->td($::cgi->b("Version:"), $version),
+                        $::cgi->td($::cgi->b("Platform:"), $platform));
+    my $secondrow = $::cgi->TR(
+                         $::cgi->td($::cgi->b("Resolution:"), $resolution),
+                         $::cgi->td($::cgi->b("Assigned To:"), $assigned),
+                         $::cgi->td({'-colspan' => "2"}, 
+		            $::cgi->b("Reported By:"), $reporter));
+    my $thirdrow = $::cgi->TR(
+                        $::cgi->td($::cgi->b("Component:")),
+                        $::cgi->td($component),
+                        $view_html,
+                        $class_html);
+    my $fourthrow = $::cgi->TR($::cgi->td({'-colspan' => "6"}, 
+                         $::cgi->b("URL:"), $url));
+    my $fifthrow = $::cgi->TR(
+                        $::cgi->td($::cgi->b("Summary:")),
+                        $::cgi->td({'-colspan' => "5"}, $shortdesc));
+    my $sixthrow = $::cgi->TR($::cgi->td({'-colspan' => "5"}, 
+                        $::cgi->b("Description:")));
+    print $::cgi->table({'-width' => "100%"},
+	    $firstrow, $secondrow, $thirdrow, 
+	    $fourthrow, $fifthrow, $sixthrow,
+          );
+    my $long_desc = GetLongDescription($bug);
+    print $::cgi->pre($long_desc);
+    print $::cgi->hr;
     }
 }

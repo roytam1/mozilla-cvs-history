@@ -16,6 +16,8 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 # 
+# $Id$
+#
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Andrew Anderson <andrew@redhat.com>
 
@@ -24,6 +26,7 @@
 use diagnostics;
 use strict;
 use DBI;
+use English;
 
 use Net::SMTP;
 my $mailhost = 'localhost'; # change this to your SMTP server
@@ -111,6 +114,22 @@ sub AppendComment {
     $desc .= $comment;
     SendSQL("update bugs set long_desc=" . SqlQuote($desc) .
             " where bug_id=$bugid");
+}
+
+sub AppendCC {
+    my ($oldid, $newid) = (@_);
+    my $who;
+    SendSQL("SELECT who FROM cc WHERE bug_id = '$oldid'");
+    while(($who) = FetchSQLData()) {
+        # out with the old,
+        SendSQL("DELETE FROM cc WHERE bug_id = '$oldid' and who = '$who'");
+	# and in with the new
+        SendSQL("INSERT INTO cc VALUES ('$newid', '$who')");
+    }
+    # and don't forget the reporter of the old bug
+    SendSQL("SELECT reporter FROM bugs WHERE bug_id = '$oldid'");
+    ($who) = FetchOneColumn();
+    SendSQL("INSERT INTO cc VALUES ('$newid', '$who')");
 }
 
 sub lsearch {
@@ -313,7 +332,7 @@ sub GenerateVersionTable {
     mkdir("data", 0777);
     chmod 0777, "data";
     my $tmpname = "data/versioncache.$$";
-    open(FID, ">$tmpname") || die "Can't create $tmpname";
+    open(FID, ">$tmpname") || die "Can't create $tmpname: $ERRNO";
 
     print FID GenerateCode('@::log_columns');
     print FID GenerateCode('%::versions');
@@ -503,17 +522,10 @@ sub SplitEnumType {
     return @result;
 }
 
-
-# This routine is largely copied from Mysql.pm.
-
 sub SqlQuote {
-    my ($str) = (@_);
-    $str =~ s/([\\\'])/\\$1/g;
-    $str =~ s/\0/\\0/g;
-    return "'$str'";
+    my ($temp) = (@_);
+    return $::db->quote($temp);
 }
-
-
 
 sub Param {
     my ($value) = (@_);
