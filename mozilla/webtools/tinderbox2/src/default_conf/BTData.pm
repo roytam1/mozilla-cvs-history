@@ -135,10 +135,10 @@ $STATUS_FIELD_NAME = 'Status';
                     'DUPLICATE' => 'Progress',
                     'WORKSFORME' => 'Progress',
 
-		    'REOPENED' => 'Slipage',
-		    'FAILED' => 'Slipage',
-		    'OPENED' => 'Slipage',
-		    'NEW' => 'Slipage',
+		    'REOPENED' => 'Slippage',
+		    'FAILED' => 'Slippage',
+		    'OPENED' => 'Slippage',
+		    'NEW' => 'Slippage',
 		   );
 
 
