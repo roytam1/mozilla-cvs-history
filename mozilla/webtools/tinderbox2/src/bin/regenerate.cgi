@@ -46,21 +46,21 @@
 use lib '#tinder_libdir#';
 
 use HTMLPopUp;
+use FileStructure;
 
 
 
 #       Main        
 {
-
-    $DEFAULT_HTML_PAGE = ( ($DEFAULT_HTML_PAGE::DEFAULT_HTML_PAGE) ||
-			   ("status.html"));
-
+    $tree = '';
+    $url = FileStructure::get_filename($tree, 'tree_URL').
+        
 
   HTMLPopUp::regenerate_HTML_pages();
 
     $out = <<EOF;
 <TITLE>tinderbox</TITLE>
-<META HTTP-EQUIV="Refresh" CONTENT="0; URL=$DEFAULT_HTML_PAGE">
+<META HTTP-EQUIV="Refresh" CONTENT="0; URL=$url">
 <BODY   BGCOLOR="#FFFFFF" TEXT="#000000"
         LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
 <CENTER>
@@ -70,6 +70,10 @@ Regenerating HTML now.
 </FONT>
 </TD></TR></TABLE>
 </CENTER>
+
+EOF
+
+;
 
     print $out;
 
