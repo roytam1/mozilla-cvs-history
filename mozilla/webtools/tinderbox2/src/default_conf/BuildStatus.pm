@@ -122,7 +122,6 @@ package BuildStatus;
                         # People are really attached to the flame gif
                         # for the header of broken builds
                         'header_background'=> 'file:/opt/apache/htdocs/tinderbox2/gif/1afi003r.gif',  
-                        'header_background'=> 'file:/home/kestes/mozilla/webtools/tinderbox2/src/gif/1afi003r.gif',  
                         'handler' => \&main::null,
                         'description' => 'Build failed',
                         'order' => 2

@@ -323,7 +323,7 @@ $DEFAULT_HTML_PAGE = 'status.html';
 # This is used in TinderDB::Notice.pm
 
 #$NOTICE_AVAILABLE = "X";
-$NOTICE_AVAILABLE = "<img src='/opt/apache/htdocs/tinderbox2/gif/star.gif' border=0>";
+$NOTICE_AVAILABLE = "<img src='http://opt/apache/htdocs/tinderbox2/gif/star.gif' border=0>";
 
 
 # The amount of time rmlogs keeps logs on file
