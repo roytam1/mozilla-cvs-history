@@ -221,6 +221,9 @@ $fullname{'117'} = 'XPIDL';
 $mode{'106'} = 'Open';
 $branch{'106'} = 'HEAD';
 $fullname{'106'} = 'XPToolkit';
+$mode{'135'} = 'Open';
+$branch{'135'} = 'HEAD';
+$fullname{'135'} = 'xul.css';
 $mode{'93'} = 'Open';
 $branch{'93'} = 'HEAD';
 $fullname{'93'} = 'Zlib';
@@ -296,6 +299,7 @@ if (m:^mozilla/silentdl/.*$:) {return '110';}
 if (m:^base/src/photon/.*$:) {return '113';}
 if (m:^gfx/src/photon/.*$:) {return '113';}
 if (m:^widget/src/photon/.*$:) {return '113';}
+if (m:^!mozilla/xpfe/global/resources/skin/xul\.css$:) {return '105';}
 if (m:^mozilla/xpfe$:) {return '105';}
 if (m:^mozilla/widget/public/.*$:) {return '134';}
 if (m:^mozilla/profile$:) {return '120';}
