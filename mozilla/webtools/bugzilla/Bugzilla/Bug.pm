@@ -1317,7 +1317,7 @@ sub WriteChanges {
          next;
        }
        elsif ($field eq 'cc') {
-         CommitCCchanges($self, $snap);
+#         CommitCCchanges($self, $snap);
          next;
        }
        else {
@@ -1352,7 +1352,7 @@ sub Commit {
            if (@changed > 0) {
                WriteChanges($self, \@changed, \%snapshot);
                UnlockDatabase();
-               DoMailNotification();
+               DoMailNotification($self);
                delete $self->{'dirty'};
                return 1;
            }
@@ -1370,12 +1370,13 @@ sub DoMailNotification {
    my $cc;
 
    if (defined($self->{'cc'})) {
-      $cc = join(",", $self->{'cc'});
+      $cc = join(",", @{$self->{'cc'}});
    } 
    else {
       $cc = '';
    } 
-   system("./processmail", "-forcecc", $cc, $self->{'bug_id'}, $self->{'who'}); 
+   my $login = &::DBID_to_name($self->{'whoid'});
+   system("./processmail", "-forcecc", $cc, $self->{'bug_id'}, $login); 
 
 }
 
