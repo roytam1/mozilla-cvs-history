@@ -170,16 +170,16 @@ package BuildStatus;
 %TinderboxPrint = (
 
                         'A'  => {
-                                 'description'=> '(Nuber of Allocs)',
+                                 'description'=> '(Number of Allocs)',
                                  },
                          'Bl' => {
-                                  'description'=> '(bytes allocated, bloat)',
+                                  'description'=> '(Bytes allocated, bloat)',
                                  },
                         'Lk' => {
-                                 'description'=> '(bytes leaked)',
+                                 'description'=> '(Bytes leaked)',
                                 },
                         'MH' => {
-                                  'description'=> '(bytes allocated, Max Heap)',
+                                 'description'=> '(Bytes allocated, Max Heap)',
                                 },
                         'Tp' => {
                                  'description'=> '(PageLoadTime in milliseconds)',
