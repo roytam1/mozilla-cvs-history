@@ -31,12 +31,16 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
+# complete rewrite by Ken Estes:
+#	 kestes@staff.mail.com Old work.
+#	 kestes@tradinglinx.com New work.
+#	 kestes@walrus.com Home.
 # Contributor(s): 
 
 
 
 # Standard perl libraries
+use File::Basename;
 use CGI ':standard';
 
 # Tinderbox libraries
@@ -529,6 +533,13 @@ sub make_all_changes {
       push @results, ("Check changes are correct on the status page, ".
                       "different administrators can cange ".
                       "the settings at the same time.");
+
+      # I believe this will work, it is too hard to get the full
+      # pathname of tinder.cgi into the script. However the webserver
+      # may play strange games with our ARGV and prevent us from
+      # updating the state.
+
+      system( (basename($0).'tinder.cgi'), '--daemon-mode' );
     } else {
       push @results, "No changes attempted due to security issues.";
     }
