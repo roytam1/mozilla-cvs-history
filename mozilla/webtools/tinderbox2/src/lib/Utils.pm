@@ -513,6 +513,21 @@ sub uniq {
   return @out;
 }
 
+# given a hash return a string suitable for printing.
+
+sub hash2string {
+    my (%hash) = @_;
+    my (@keys) = sort keys %hash;
+    my $str;
+
+    foreach $key (@keys) {
+        $str .= "\t$key=$hash{$key}\n";
+    }
+
+    return $str
+}
+
+
 # load a list of modules
 
 sub require_modules {

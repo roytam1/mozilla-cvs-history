@@ -1156,7 +1156,7 @@ sub assemble_files {
   $SIG{'__DIE__'} = \&MailProcess::fatal_mailprocessing_error;
 
   %MAIL_HEADER =  MailProcess::parse_mail_header();
-  %TINDERBOX = MailProcess::parse_tinderbox_vars();
+  %TINDERBOX = MailProcess::parse_tinderbox_vars( main::hash2string(%MAIL_HEADER) );
   @DATE_FIELDS = qw(builddate starttime timenow);
 
   fix_tinderboxvar_time_format();

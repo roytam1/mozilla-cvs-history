@@ -170,6 +170,7 @@ sub parse_mail_header {
 
 
 sub parse_tinderbox_vars {
+    my $error_context = @_;
 
 # Ignore all lines in the mail till we find the tinderbox lines, so
 # the lines we want should be at the top of the mail.  We ignore the
@@ -227,7 +228,8 @@ sub parse_tinderbox_vars {
 
   # bounce the mail message
 
-  die("No Tinderbox variables found in message.\n");
+  die("No Tinderbox variables found in message.\n".
+      "$error_context\n");
 }
 
 
