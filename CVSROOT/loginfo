@@ -29,4 +29,5 @@ ALL			$CVSROOT/CVSROOT/dolog.pl -h 127.0.0.1 -r /cvsroot bonsai-new-checkin-daem
 # ALL			$CVSROOT/CVSROOT/dolog.pl -h 127.0.0.1 -r /cvsroot bonsai@tinderbox.seawood.org
 # mozilla/webtools	$CVSROOT/CVSROOT/dolog.pl -h 127.0.0.1 -r /cvsroot webtools-changed@warp.mcom.com
 mozilla/webtools	$CVSROOT/CVSROOT/cvsmailfilter.pl -u http://cvs-mirror.mozilla.org/webtools/bonsai -r /cvsroot -s %s webtools-changed@warp.mcom.com terry@mozilla.org
+mozilla/tripledb	$CVSROOT/CVSROOT/cvsmailfilter.pl -u http://cvs-mirror.mozilla.org/webtools/bonsai -r /cvsroot -s %s terry@mozilla.org
 CVSROOT		$CVSROOT/CVSROOT/cvsmailfilter.pl -u http://cvs-mirror.mozilla.org/webtools/bonsai -r /cvsroot -s %s -f modules cyeh@netscape.com sar@netscape.com leaf@netscape.com donm@netscape.com
