@@ -910,7 +910,7 @@ sub apply_db_updates {
 
       # fix for mozilla.org issues
 
-      $record->{'deadtime'} = max( 0, $record->{'deadtime'} );
+      $record->{'deadtime'} = main::max( 0, $record->{'deadtime'} );
 
       $record->{'endtime'} = $record->{'timenow'};
 
