@@ -239,7 +239,7 @@ sub show_bug {
         # This means that all product groups will be skipped, but 
         # non-product bug groups will still be displayed.
         if($ison || 
-           ($isactive && ($ingroup && (($name eq $bug{'product'}) ||
+           ($isactive && ($ingroup && (!Param("usebuggroups") || ($name eq $bug{'product'}) ||
                          (!defined $::proddesc{$name})))))
         {
             $user{'inallgroups'} &= $ingroup;

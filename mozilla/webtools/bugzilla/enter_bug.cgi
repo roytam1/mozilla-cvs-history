@@ -350,7 +350,7 @@ my @groups;
 while (MoreSQLData()) {
     my ($id, $prodname, $description) = FetchSQLData();
     # Don't want to include product groups other than this product.
-    next unless($prodname eq $product || 
+    next unless(!Param("usebuggroups") || $prodname eq $product || 
                 !defined($::proddesc{$prodname}));
 
     my $check;
