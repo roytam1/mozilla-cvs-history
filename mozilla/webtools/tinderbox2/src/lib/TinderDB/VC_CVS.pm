@@ -449,6 +449,9 @@ sub apply_db_updates {
     } # foreach $line
   } # any updates
 
+  ($num_updates) ||
+      return 0;
+
   $METADATA{$tree}{'updates_since_trim'} += $num_updates;
 
   if ( ($METADATA{$tree}{'updates_since_trim'} >
