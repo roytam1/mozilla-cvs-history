@@ -272,7 +272,6 @@ JavaStubWin -a \
 	mozilla/sun-java/stubs/makefile.win
 
 ######################################################################
-
 #
 # Modules for the raptor layout effort. Note that raptor dist is temporary
 # until raptor is integrated into the mainline build.
@@ -337,29 +336,6 @@ RaptorMac -a \
 	mozilla/lib/mac/MoreFiles \
 	mozilla/lib/mac/NSRuntime \
 	mozilla/lib/mac/NSStdLib
-
-#####################################################################
-# Module for the Normandy landing.
-
-NormandyBeach -a \
-	MozillaSource \
-	mozilla/lib/libaddr \
-	mozilla/lib/libmsg
-
-NormandyBeachWin -a \
-	MozillaSourceWin \
-	mozilla/lib/libaddr \
-	mozilla/lib/libmsg
-
-NormandyBeachUnix -a \
-	MozillaSourceUnix \
-	mozilla/lib/libaddr \
-	mozilla/lib/libmsg
-
-NormandyBeachMac -a \
-	MozillaSourceMac \
-	mozilla/lib/libaddr \
-	mozilla/lib/libmsg
 
 #######################################################################
 # Modules for the Directory SDK.  There are two users of the libldap
