@@ -241,8 +241,8 @@ sub write_update_record {
 
   $update_file = main::extract_filename_chars($update_file);
 
-  mkdir_R("$TINDERBOX_DATA_DIR/$tree/db", 0777);
-  mkdir_R("$TINDERBOX_DATA_DIR/$tree/h", 0777);
+  mkdir_R("$TINDERBOX_DATA_DIR/$tree/db");
+  mkdir_R("$TINDERBOX_DATA_DIR/$tree/h");
 
   Persistence::save_structure( 
                               \%data,
