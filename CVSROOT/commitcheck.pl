@@ -28,6 +28,11 @@ $fullname{'18'} = 'macfe';
 $mode{'19'} = 'Open';
 $branch{'19'} = 'HEAD';
 $fullname{'19'} = 'mozilla-toplevel';
+$mode{'24'} = 'Restricted';
+$branch{'24'} = 'HEAD';
+$fullname{'24'} = 'nsprpub';
+$blessed{'24'} = [];
+$super{'24'} = ['wtc%netscape.com',];
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'ColorSync_19980824_BRANCH') {
@@ -35,6 +40,7 @@ if ($b eq 'ColorSync_19980824_BRANCH') {
 if ($b eq 'HEAD') {
 if (m:^CVSROOT/commitcheck\.pl$:) {return '3';}
 if (m:^CVSROOT/passwd$:) {return '3';}
+if (m:^nsprpub/.*$:) {return '24';}
 }
 return '';
 }
