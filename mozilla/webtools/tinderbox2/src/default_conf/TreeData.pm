@@ -174,30 +174,34 @@ $VERSION = '#tinder_version#';
 #                         is_bonsai_default => 1,
 #			 },
 
- 
+#	    # these are dummy trees for testing.	    
+#
+#	    'Project_A' =>  {
+#                   root => '/cvsroot',
+#                   module => '',
+#                   branch => 'HEAD',
+#                  },
+#	    'Project_B' =>  {
+#                   root => '/cvsroot',
+#                   module => 'MozillaTinderboxAll',
+#                   branch => 'HEAD',
+#                  },
+#	    'Project_C' =>  {
+#                   root => '/cvsroot',
+#                   module => 'NSS',
+#                   branch => 'HEAD',
+#                  },
+#
+
+# ------------- Real Trees Go Here ---------- 
+#
+
 	    'SeaMonkey' =>  {
                    root => '/cvsroot',
                    module => 'MozillaTinderboxAll',
                    branch => 'HEAD',
                   },
 
-	    # these are dummy trees for testing.	    
-
-	    'Project_A' =>  {
-                   root => '/cvsroot',
-                   module => '',
-                   branch => 'HEAD',
-                  },
-	    'Project_B' =>  {
-                   root => '/cvsroot',
-                   module => 'MozillaTinderboxAll',
-                   branch => 'HEAD',
-                  },
-	    'Project_C' =>  {
-                   root => '/cvsroot',
-                   module => 'NSS',
-                   branch => 'HEAD',
-                  },
 
 	   );
 
