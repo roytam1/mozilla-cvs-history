@@ -43,7 +43,6 @@ sub sillyness {
 }
 
 my $editall;
-my $opblessgroupset = '9223372036854775807'; # This is all 64 bits.
 
 
 
@@ -152,6 +151,7 @@ sub EmitFormElements ($$$$)
             print "<TD COLSPAN=2 ALIGN=LEFT><B>User is a member of these groups</B></TD>\n";
             while (MoreSQLData()) {
                 my ($groupid, $name, $description, $checked) = FetchSQLData();
+                next if (!$editall && !UserCanBlessGroup($name));
                 PushGlobalSQLState();
                 SendSQL("SELECT member_id " .
                         "FROM member_group_map " .
@@ -231,9 +231,7 @@ print "Content-type: text/html\n\n";
 $editall = UserInGroup("editusers");
 
 if (!$editall) {
-    SendSQL("SELECT blessgroupset FROM profiles WHERE userid = $::userid");
-    $opblessgroupset = FetchOneColumn();
-    if (!$opblessgroupset) {
+    if (!UserCanBlessAnything()) {
         PutHeader("Not allowed");
         print "Sorry, you aren't a member of the 'editusers' group, and you\n";
         print "don't have permissions to put people in or out of any group.\n";
@@ -678,13 +676,14 @@ if ($action eq 'edit') {
     EmitFormElements($thisuserid, $user, $realname, $disabledtext);
     
     print "</TR></TABLE>\n";
-
     print "<INPUT TYPE=HIDDEN NAME=\"userold\" VALUE=\"$user\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"realnameold\" VALUE=\"$realname\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"disabledtextold\" VALUE=\"" .
         value_quote($disabledtext) . "\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"update\">\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Update\">\n";
+    print "<BR>User is a member of any groups shown with grey bars as a result
+    of a regular expression match or membership in another group.<BR>";
 
     print "</FORM>";
 

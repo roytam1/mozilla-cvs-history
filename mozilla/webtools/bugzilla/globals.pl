@@ -1250,12 +1250,14 @@ sub UserCanBlessGroup {
     }
     PushGlobalSQLState();
     # check if user is a member of a group that can bless this group
+    # this group does not count
     SendSQL("SELECT groups.group_id FROM groups, member_group_map, 
         member_group_map AS G
         WHERE groups.group_id = G.group_id 
         AND member_group_map.member_id = $::userid
         AND member_group_map.maptype = 0
         AND G.maptype = 3
+        AND G.group_id != G.member_id
         AND member_group_map.group_id = G.member_id
         AND groups.name = " . SqlQuote($groupname));
     $rslt = FetchOneColumn();

@@ -148,7 +148,7 @@ unless ($action) {
     print "<p>";
     print "<b>Name</b> is what is used with the UserInGroup() function in any
 customized cgi files you write that use a given group.  It can also be used by
-people submitting bugs by email to limit a bug to a certain groupset. <p>";
+people submitting bugs by email to limit a bug to a certain set of groups. <p>";
     print "<b>Description</b> is what will be shown in the bug reports to
 members of the group where they can choose whether the bug will be restricted
 to others in the same group.<p>";
@@ -202,18 +202,30 @@ if ($action eq 'changeform') {
 
     print "<FORM METHOD=POST ACTION=editgroups.cgi>\n";
     print "<TABLE>";
+    print "<TR><TD COLSPAN=4>Members of these groups can grant membership to this group</TD></TR>";
+    print "<TR><TD ALIGN=CENTER>|</TD><TD COLSPAN=3>Members of these groups are included in this group</TD></TR>";
+    print "<TR><TD ALIGN=CENTER>|</TD><TD ALIGN=CENTER>|</TD><TD COLSPAN=2></TD><TR>";
     SendSQL("SELECT groups.group_id, groups.name, groups.description,
-             ISNULL(member_group_map.member_id) = 0 FROM groups
+             ISNULL(member_group_map.member_id) = 0, 
+             ISNULL(B.member_id) = 0
+             FROM groups
              LEFT JOIN member_group_map 
              ON member_group_map.member_id = groups.group_id
              AND member_group_map.group_id = $group_id
              AND member_group_map.maptype = 2
+             LEFT JOIN member_group_map as B
+             ON B.member_id = groups.group_id
+             AND B.group_id = $group_id
+             AND B.maptype = 3
              WHERE groups.group_id != $group_id ORDER by name");
 
     while (MoreSQLData()) {
-        my ($grpid, $grpnam, $grpdesc, $grpmember) = FetchSQLData();
+        my ($grpid, $grpnam, $grpdesc, $grpmember, $blessmember) = FetchSQLData();
         my $grpchecked = $grpmember ? "CHECKED" : "";
+        my $blesschecked = $blessmember ? "CHECKED" : "";
         print "<TR>";
+        print "<TD><INPUT TYPE=checkbox NAME=\"bless-$grpid\" $blesschecked VALUE=1>";
+        print "<INPUT TYPE=HIDDEN NAME=\"oldbless-$grpid\" VALUE=$blessmember></TD>";
         print "<TD><INPUT TYPE=checkbox NAME=\"grp-$grpid\" $grpchecked VALUE=1>";
         print "<INPUT TYPE=HIDDEN NAME=\"oldgrp-$grpid\" VALUE=$grpmember></TD>";
         print "<TD><B>$grpnam</B></TD>";
@@ -263,7 +275,7 @@ if ($action eq 'add') {
     print "<p>";
     print "<b>Name</b> is what is used with the UserInGroup() function in any
 customized cgi files you write that use a given group.  It can also be used by
-people submitting bugs by email to limit a bug to a certain groupset.  It
+people submitting bugs by email to limit a bug to a certain set of groups.  It
 may not contain any spaces.<p>";
     print "<b>Description</b> is what will be shown in the bug reports to
 members of the group where they can choose whether the bug will be restricted
@@ -337,7 +349,11 @@ if ($action eq 'new') {
             "$isbuggroup," .
             SqlQuote($regexp) . "," . 
             $isactive . ", NOW())" );
-
+    SendSQL("SELECT last_insert_id()");
+    my $gid = FetchOneColumn();
+    my $admin = GroupNameToId('admin');
+    SendSQL("INSERT INTO member_group_map (member_id, group_id, maptype)
+             VALUES ($admin, $gid, 3)");
     print "OK, done.<p>\n";
     PutTrailer("<a href=\"editgroups.cgi?action=add\">Add another group</a>",
                "<a href=\"editgroups.cgi\">Back to the group list</a>");
@@ -386,11 +402,8 @@ if ($action eq 'del') {
 
     print "<FORM METHOD=POST ACTION=editgroups.cgi>\n";
     my $cantdelete = 0;
-    SendSQL("SELECT login_name FROM profiles, member_group_map 
-             WHERE profiles.userid = member_group_map.member_id
-             AND member_group_map.group_id = $gid
-             AND member_group_map.maptype = 0 
-             AND member_group_map.isderived = 0");
+    SendSQL("SELECT member_id FROM member_group_map 
+             WHERE group_id = $gid");
     if (!FetchOneColumn()) {} else {
        $cantdelete = 1;
        print "
@@ -401,14 +414,15 @@ url_quote("(groupset & \$bit) OR (blessgroupset & \$bit)") . "\">Show me which u
 this group for me<P>
 ";
     }
-    SendSQL("SELECT bug_id FROM bugs WHERE (groupset & \$bit)");
+    SendSQL("SELECT bug_id FROM bug_group_map WHERE group_id = $gid");
+    my $buglist="";
     if (MoreSQLData()) {
-       $cantdelete = 1;
-       my $buglist = "0";
-       while (MoreSQLData()) {
-         my ($bug) = FetchSQLData();
-         $buglist .= "," . $bug;
-       }
+        $cantdelete = 1;
+        my $buglist = "0";
+        while (MoreSQLData()) {
+            my ($bug) = FetchSQLData();
+            $buglist .= "," . $bug;
+        }
        print "
 <B>One or more bug reports are visible only to this group.
 You cannot delete this group while any bugs are using it.</B><BR>
@@ -452,8 +466,8 @@ You cannot delete this group while it is tied to a product.</B><BR>
 
 if ($action eq 'delete') {
     PutHeader("Deleting group");
-    my $bit = trim($::FORM{group} || '');
-    unless ($bit) {
+    my $gid = trim($::FORM{group} || '');
+    unless ($gid) {
         ShowError("No group specified.<BR>" .
                   "Click the <b>Back</b> button and try again.");
         PutFooter();
@@ -461,27 +475,26 @@ if ($action eq 'delete') {
     }
     SendSQL("SELECT name " .
             "FROM groups " .
-            "WHERE bit = " . SqlQuote($bit));
+            "WHERE group_id = " . SqlQuote($gid));
     my ($name) = FetchSQLData();
 
     my $cantdelete = 0;
-    my $opblessgroupset = '9223372036854775807'; # This is all 64 bits.
 
-    SendSQL("SELECT userid FROM profiles " .
-            "WHERE (groupset & $opblessgroupset)=$opblessgroupset");
-    my @opusers = ();
-    while (MoreSQLData()) {
-      my ($userid) = FetchSQLData();
-      push @opusers, $userid; # cache a list of the users with admin powers
-    }
-    SendSQL("SELECT login_name FROM profiles WHERE " .
-            "(groupset & $bit)=$bit OR (blessgroupset & $bit)=$bit");
+    #SendSQL("SELECT userid FROM profiles " .
+    #"WHERE (groupset & $opblessgroupset)=$opblessgroupset");
+    #my @opusers = ();
+    #while (MoreSQLData()) {
+        #my ($userid) = FetchSQLData();
+        #push @opusers, $userid; # cache a list of the users with admin powers
+        #}
+    SendSQL("SELECT member_id FROM member_group_map 
+             WHERE group_id = $gid");
     if (FetchOneColumn()) {
       if (!defined $::FORM{'removeusers'}) {
         $cantdelete = 1;
       }
     }
-    SendSQL("SELECT bug_id FROM bugs WHERE (groupset & $bit)=$bit");
+    SendSQL("SELECT bug_id FROM bug_group_map WHERE group_id = $gid");
     if (FetchOneColumn()) {
       if (!defined $::FORM{'removebugs'}) {
         $cantdelete = 1;
@@ -499,40 +512,17 @@ if ($action eq 'delete') {
           "records in the database which refer to it.  All child records " .
           "must be removed or altered to remove the reference to this " .
           "group before the group can be deleted.");
-      print "<A HREF=\"editgroups.cgi?action=del&group=$bit\">" .
+      print "<A HREF=\"editgroups.cgi?action=del&group=$gid\">" .
             "View the list of which records are affected</A><BR>";
       PutTrailer("<a href=editgroups.cgi>Back to group list</a>");
       exit;
     }
 
-    SendSQL("SELECT login_name,groupset,blessgroupset FROM profiles WHERE " .
-            "(groupset & $bit) OR (blessgroupset & $bit)");
-    if (FetchOneColumn()) {
-      SendSQL("UPDATE profiles SET groupset=(groupset-$bit) " .
-              "WHERE (groupset & $bit)");
-      print "All users have been removed from group $bit.<BR>";
-      SendSQL("UPDATE profiles SET blessgroupset=(blessgroupset-$bit) " .
-              "WHERE (blessgroupset & $bit)");
-      print "All users with authority to add users to group $bit have " .
-            "had that authority removed.<BR>";
-    }
-    SendSQL("SELECT bug_id FROM bugs WHERE (groupset & $bit)");
-    if (FetchOneColumn()) {
-      SendSQL("UPDATE bugs SET groupset=(groupset-$bit), delta_ts=delta_ts " .
-              "WHERE (groupset & $bit)");
-      print "All bugs have had group bit $bit cleared.  Any of these " .
-            "bugs that were not also in another group are now " .
-            "publicly visible.<BR>";
-    }
-    SendSQL("DELETE FROM groups WHERE bit=$bit");
-    print "<B>Group $bit has been deleted.</B><BR>";
+    SendSQL("DELETE FROM member_group_map WHERE group_id = $gid");
+    SendSQL("DELETE FROM bug_group_map WHERE group_id = $gid");
+    SendSQL("DELETE FROM groups WHERE group_id = $gid");
+    print "<B>Group $gid has been deleted.</B><BR>";
 
-    foreach my $userid (@opusers) {
-      SendSQL("UPDATE profiles SET groupset=$opblessgroupset " .
-              "WHERE userid=$userid");
-      print "Group bits restored for " . DBID_to_name($userid) .
-            " (maintainer)<BR>\n";
-    }
 
     PutTrailer("<a href=editgroups.cgi>Back to group list</a>");
     exit;
@@ -572,6 +562,23 @@ if ($action eq 'postchanges') {
                     SendSQL("DELETE FROM member_group_map
                              WHERE member_id = $v AND group_id = $gid
                              AND maptype = 2");
+                }
+            }
+
+            my $bless = $::FORM{"bless-$v"} || 0;
+            if ($::FORM{"oldbless-$v"} != $bless) {
+                $chgs = 1;
+                print "changed";
+                if ($bless != 0) {
+                    print " set ";
+                    SendSQL("INSERT INTO member_group_map 
+                             (member_id, group_id, maptype, isderived)
+                             VALUES ($v, $gid, 3, 0)");
+                } else {
+                    print " cleared ";
+                    SendSQL("DELETE FROM member_group_map
+                             WHERE member_id = $v AND group_id = $gid
+                             AND maptype = 3");
                 }
             }
 
