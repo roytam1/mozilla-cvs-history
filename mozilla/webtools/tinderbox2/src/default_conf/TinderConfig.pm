@@ -92,7 +92,7 @@ $TINDERBOX_HTML_DIR = "/opt/apache/htdocs/tinderbox2";
 
 #$TINDERBOX_DATA_DIR = "/home/httpd/html/tinderbox";
 #$TINDERBOX_DATA_DIR = "/var/spool/tinderbox";
-$TINDERBOX_DATA_DIR = "/opt/tbox2-data";
+$TINDERBOX_DATA_DIR = "/export2/tbox2-data";
 
 # The top level tinderbox index file. Change this if you wish to
 # provide your own index file for tinderboxs web pages.
