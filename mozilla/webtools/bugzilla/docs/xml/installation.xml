@@ -149,8 +149,8 @@
 
       <para>
         Download a Bugzilla tarball (or check it out from CVS) and place
-        it in a suitable directory, writable by the default web server user 
-        (probably <quote>nobody</quote>). 
+        it in a suitable directory, accessible by the default web server user 
+        (probably <quote>apache</quote> or <quote>www</quote>). 
         Good locations are either directly in the main web space for your
         web server or perhaps in 
         <filename>/usr/local</filename>
@@ -158,7 +158,7 @@
       </para>
 
       <caution>
-        <para>The default Bugzilla distribution is not designed to be placed
+        <para>The default Bugzilla distribution is NOT designed to be placed
         in a <filename class="directory">cgi-bin</filename> directory. This
         includes any directory which is configured using the
         <option>ScriptAlias</option> directive of Apache.
