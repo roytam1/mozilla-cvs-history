@@ -1,4 +1,4 @@
-package Conf::Finish;
+package Conf::ModuleCheck;
 use Conf;
 no warnings;
 
