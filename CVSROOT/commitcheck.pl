@@ -97,9 +97,6 @@ $fullname{'72'} = 'LiveConnect';
 $mode{'47'} = 'Open';
 $branch{'47'} = 'HEAD';
 $fullname{'47'} = 'Macintosh FE';
-$mode{'75'} = 'Open';
-$branch{'75'} = 'HEAD';
-$fullname{'75'} = 'MailTo: Composing';
 $mode{'76'} = 'Open';
 $branch{'76'} = 'HEAD';
 $fullname{'76'} = 'MIMELib';
@@ -229,7 +226,6 @@ if (m:^mozilla/js/src/.*$:) {return '70';}
 if (m:^mozilla/js/jsd/.*$:) {return '71';}
 if (m:^mozilla/js/jsj/.*$:) {return '72';}
 if (m:^mozilla/cck/.*$:) {return '108';}
-if (m:^mozilla/lib/mailto/.*$:) {return '75';}
 if (m:^mozilla/lib/libmime/.*$:) {return '76';}
 if (m:^mozilla/network/.*$:) {return '77';}
 if (m:^mozilla/nsprpub/.*$:) {return '78';}
