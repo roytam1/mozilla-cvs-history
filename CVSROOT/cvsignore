@@ -13,6 +13,7 @@ nuke
 _jmc
 *.class
 .depends
+.deps
 .d
 manifest.mnw
 _gen
