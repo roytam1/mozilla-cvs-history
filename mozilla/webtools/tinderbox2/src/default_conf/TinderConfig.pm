@@ -274,7 +274,7 @@ $VC_NAME = "Guilty";
 
 # a regular expression to find bug ticket numbers in checkin comments.
 
-$VC_BUGNUM_REGEXP = "(\d\d\d+)";
+$VC_BUGNUM_REGEXP = '(\d\d\d+)';
 
 # Pick one method for storting data, Data::Dumper is slow but text
 # files allows great debugging capabilities and Storable, available
