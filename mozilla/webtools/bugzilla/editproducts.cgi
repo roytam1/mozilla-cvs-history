@@ -331,6 +331,8 @@ if ($action eq 'new') {
             $disallownew . "," .
             "$votesperuser, $maxvotesperbug, $votestoconfirm, " .
             SqlQuote($defaultmilestone) . ")");
+    SendSQL("SELECT last_insert_id()");
+    my $product_id = FetchOneColumn();
     SendSQL("INSERT INTO versions ( " .
           "value, program" .
           " ) VALUES ( " .
@@ -343,14 +345,49 @@ if ($action eq 'new') {
     # If we're using bug groups, then we need to create a group for this
     # product as well.  -JMR, 2/16/00
     if(Param("usebuggroups")) {
-        # Next we insert into the groups table
+        # Next, we insert into the groups table
         SendSQL("INSERT INTO groups " .
                 "(name, description, group_type, group_when) " .
                 "VALUES (" .
                 SqlQuote($product) . ", " .
                 SqlQuote($product . " Bugs Access") . ", " .
                 "$::Tgroup_type->{'buggroup'}, NOW())");
-        
+        SendSQL("SELECT last_insert_id()");
+        my $gid = FetchOneColumn();
+        # Then, we set the initial permissions and restrictions
+        # on the new group to match the traditional system
+        if(Param("usebuggroupsentry")) {
+            SendSQL("INSERT INTO group_control_map
+                     (control_id, control_id_type, control_type, group_id)
+                     VALUES ($product_id, $::Tcontrol_id_type->{'product'},
+                     $::Tcontrol_type->{'entry'}, $gid)");
+        }
+        SendSQL("INSERT INTO group_control_map
+                 (control_id, control_id_type, control_type, group_id)
+                 VALUES ($product_id, $::Tcontrol_id_type->{'product'},
+                 $::Tcontrol_type->{'default'}, $gid)");
+        SendSQL("INSERT INTO group_control_map
+                 (control_id, control_id_type, control_type, group_id)
+                 VALUES ($product_id, $::Tcontrol_id_type->{'product'},
+                 $::Tcontrol_type->{'permitted'}, $gid)");
+        # FIXME -- add all the other buggroups who are not named same 
+        # as products
+        SendSQL("SELECT group_id, ISNULL(product_id) 
+                 FROM groups 
+                 LEFT JOIN products
+                 ON product = name");
+                 
+        while ( MoreSQLData() ) {
+            my ($ogid, $flg) = FetchSQLData();
+            if ($flg) {
+                PushGlobalSQLState();
+                SendSQL("INSERT INTO group_control_map
+                         (control_id, control_id_type, control_type, group_id)
+                         VALUES ($product_id, $::Tcontrol_id_type->{'product'},
+                         $::Tcontrol_type->{'permitted'}, $ogid)");
+                PopGlobalSQLState();
+            }
+        }
     }
 
     # Make versioncache flush
@@ -574,6 +611,14 @@ if ($action eq 'delete') {
              WHERE product=" . SqlQuote($product));
     print "Milestones deleted.<BR>\n";
 
+    SendSQL("SELECT product_id FROM products
+             WHERE product=" . SqlQuote($product));
+    my $product_id = FetchOneColumn();
+    SendSQL("DELETE FROM group_control_map
+             WHERE control_id = $product_id 
+             AND control_id_type = $::Tcontrol_id_type->{'product'}");
+    print "Group Controls for Product deleted.<BR>\n";
+
     SendSQL("DELETE FROM products
              WHERE product=" . SqlQuote($product));
     print "Product '$product' deleted.<BR>\n";
@@ -705,8 +750,119 @@ if ($action eq 'edit') {
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"update\">\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Update\">\n";
 
+    print "<TABLE>\n";
+    print "<TR><TD COLSPAN=7 ALIGN=LEFT>Entry Restriction</TD></TR>\n";
+    print "<TR><TD ALIGN=CENTER>|</TD>
+           <TD COLSPAN=6 ALIGN=LEFT>Default Restriction</TD></TR>\n";
+    print "<TR><TD ALIGN=CENTER>|</TD>
+           <TD ALIGN=CENTER>|</TD>
+           <TD COLSPAN=5 ALIGN=LEFT>Required Restriction</TD></TR>\n";
+    print "<TR><TD ALIGN=CENTER>|</TD>
+           <TD ALIGN=CENTER>|</TD>
+           <TD ALIGN=CENTER>|</TD>
+           <TD COLSPAN=4 ALIGN=LEFT>Permitted Restriction</TD></TR>\n";
+    print "<TR><TD ALIGN=CENTER>|</TD>
+           <TD ALIGN=CENTER>|</TD>
+           <TD ALIGN=CENTER>|</TD>
+           <TD ALIGN=CENTER>|</TD>
+           <TD COLSPAN=3 ALIGN=LEFT>CanEdit Restriction</TD></TR>\n";
+    print "<TR><TD ALIGN=CENTER>|</TD>
+           <TD ALIGN=CENTER>|</TD>
+           <TD ALIGN=CENTER>|</TD>
+           <TD ALIGN=CENTER>|</TD>
+           <TD ALIGN=CENTER>|</TD>
+           <TD ALIGN=CENTER></TD></TR>\n";
+    print "<TR><TH ALIGN=CENTER>E</TH>
+           <TH ALIGN=CENTER>D</TH>
+           <TH ALIGN=CENTER>R</TH>
+           <TH ALIGN=CENTER>P</TH>
+           <TH ALIGN=CENTER>C</TH>
+           <TH>Group</TH>
+           <TH>Description</TH></TR>\n";
+
+
+    SendSQL("SELECT product_id FROM products
+             WHERE product=" . SqlQuote($product));
+    my $product_id = FetchOneColumn();
+
+    SendSQL("SELECT groups.group_id, name, description,
+             ISNULL(E.group_id) = 0,
+             ISNULL(D.group_id) = 0,
+             ISNULL(R.group_id) = 0,
+             ISNULL(P.group_id) = 0,
+             ISNULL(C.group_id) = 0
+             FROM groups
+             LEFT JOIN group_control_map AS E
+             ON E.group_id = groups.group_id
+             AND E.control_id = $product_id
+             AND E.control_id_type = $::Tcontrol_id_type->{'product'}
+             AND E.control_type = $::Tcontrol_type->{'entry'}
+             LEFT JOIN group_control_map AS D
+             ON D.group_id = groups.group_id
+             AND D.control_id = $product_id
+             AND D.control_id_type = $::Tcontrol_id_type->{'product'}
+             AND D.control_type = $::Tcontrol_type->{'default'}
+             LEFT JOIN group_control_map AS R
+             ON R.group_id = groups.group_id
+             AND R.control_id = $product_id
+             AND R.control_id_type = $::Tcontrol_id_type->{'product'}
+             AND R.control_type = $::Tcontrol_type->{'required'}
+             LEFT JOIN group_control_map AS P
+             ON P.group_id = groups.group_id
+             AND P.control_id = $product_id
+             AND P.control_id_type = $::Tcontrol_id_type->{'product'}
+             AND P.control_type = $::Tcontrol_type->{'permitted'}
+             LEFT JOIN group_control_map AS C
+             ON C.group_id = groups.group_id
+             AND C.control_id = $product_id
+             AND C.control_id_type = $::Tcontrol_id_type->{'product'}
+             AND C.control_type = $::Tcontrol_type->{'canedit'}
+             WHERE group_type = $::Tgroup_type->{'buggroup'}
+             ORDER BY name 
+            ");
+
+    while (MoreSQLData()) {
+        my @box = FetchSQLData();
+        my $group_id = shift @box;
+        my $group_name = shift @box;
+        my $group_desc = shift @box;
+        print "<TR>\n";
+        foreach my $col ("entry", "default", "required", "permitted", "canedit") {
+            my $check = shift @box;
+            my $mark = $check ? "CHECKED" : "";
+            print "<TD>
+            <INPUT TYPE=CHECKBOX NAME=\"ctl-$group_id-$col\" VALUE=1 $mark>
+            <INPUT TYPE=HIDDEN NAME=\"oldctl-$group_id-$col\" VALUE=$check>
+            </TD>\n";
+        }
+        print "<TD><B>$group_name</B></TD>";
+        print "<TD>$group_desc</TD>";
+        print "</TR>\n";
+    }
+    print "</TABLE>\n";
+    print "<INPUT TYPE=SUBMIT VALUE=\"Update\">\n";
     print "</FORM>";
 
+    print "<P>
+           <B>Entry</B> Restrictions:  If any groups are selected, then only
+           users who are members of ALL of the selected groups will
+           be permitted to enter bugs in this product.<P>\n";
+    print "<B>Default</B> Restrictions: When a new bug is created in this
+           product, it will default to being visible only to users who are
+           members of ALL of the groups specified even if the user creating
+           the bug is not a member of one or more of those groups.<P>\n";
+    print "<B>Required</B> Restrictions: When a bug is created or edited,
+           it will be restricted to users who are members of ALL of the
+           required groups. No option is offerred to the user.<P>\n";
+    print "<B>Permitted</B> Restrictions: When a bug is created or edited,
+           the user will be offerred a group restriction checkbox for
+           only the groups that are permitted AND of which the user is a
+           member AND which are not required.<P>\n";
+    print "<B>CanEdit</B> Restrictions: If any groups are specified for
+           a CanEdit restriction, then even users who are able to see bugs
+           will be allowed to edit them only if they are members of ALL
+           of the groups specified in the CanEdit restriction.<P>\n";
+           
     my $x = $localtrailer;
     $x =~ s/more/other/;
     PutTrailer($x);
@@ -930,6 +1086,33 @@ if ($action eq 'update') {
 
     }
 
+    SendSQL("SELECT product_id FROM products
+             WHERE product=" . SqlQuote($product));
+    my $product_id = FetchOneColumn();
+
+    foreach my $ofld (keys %::FORM) {
+        if ($ofld =~ /oldctl-(\d+)-(\w+)/) {
+            my $col = $2;
+            my $gid = $1;
+            my $nfld = $ofld;
+            $nfld =~ s/oldctl/ctl/;
+            if (($::FORM{$ofld} == 1) && !($::FORM{$nfld})) {
+                # delete it
+                SendSQL("DELETE FROM group_control_map
+                         WHERE control_id = $product_id
+                         AND control_id_type = $::Tcontrol_id_type->{'product'}
+                         AND control_type = $::Tcontrol_type->{$col}
+                         AND group_id = $gid");
+            } elsif (($::FORM{$ofld} != 1) && ($::FORM{$nfld})) {
+                # add it
+                SendSQL("INSERT INTO group_control_map
+                         (control_id, control_id_type, control_type, group_id)
+                         VALUES ($product_id, $::Tcontrol_id_type->{'product'},
+                         $::Tcontrol_type->{$col}, $gid)");
+
+            }
+        }
+    }
     PutTrailer($localtrailer);
     exit;
 }

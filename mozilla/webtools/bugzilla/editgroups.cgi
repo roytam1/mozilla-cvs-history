@@ -103,7 +103,6 @@ unless ($action) {
     print "<form method=post action=editgroups.cgi>\n";
     print "<table border=1>\n";
     print "<tr>";
-    print "<th>Id</th>";
     print "<th>Name</th>";
     print "<th>Description</th>";
     print "<th>User RegExp</th>";
@@ -114,12 +113,11 @@ unless ($action) {
 
     SendSQL("SELECT group_id,name,description,userregexp,isactive,group_type " .
             "FROM groups " .
-            "ORDER BY group_id");
+            "ORDER BY group_type != 0, name");
 
     while (MoreSQLData()) {
         my ($groupid, $name, $desc, $regexp, $isactive, $group_type) = FetchSQLData();
         print "<tr>\n";
-        print "<td valign=middle>$groupid</td>\n";
         print "<td><input size=20 name=\"name-$groupid\" value=\"$name\">\n";
         print "<input type=hidden name=\"oldname-$groupid\" value=\"$name\"></td>\n";
         print "<td><input size=40 name=\"desc-$groupid\" value=\"$desc\">\n";
@@ -135,7 +133,7 @@ unless ($action) {
             print "<select name=\"group_type-$groupid\" value=\"$group_type\" >\n";
             print "<option value=$::Tgroup_type->{'buggroup'}";
             print " selected" if ($group_type == $::Tgroup_type->{'buggroup'});
-            print ">buggoup</option><option value=$::Tgroup_type->{'user'}";
+            print ">bug</option><option value=$::Tgroup_type->{'user'}";
             print " selected" if ($group_type == $::Tgroup_type->{'user'});
             print ">user</option></select>\n";
         }
@@ -172,7 +170,7 @@ Deactivating a group is a much less drastic way to stop a group from growing
 than deleting the group would be.<p>";
     print "The <b>Type</b> field identifies system groups and determines 
           whether or not the group should generate a checkbox on bug 
-          entry/edit pages for group restrictions.  If type is 'buggroup,' 
+          entry/edit pages for group restrictions.  If type is 'bug,' 
           the checkbox will be offerred. If type is 'user,' the group 
           is not used for bugs but can be used to organize groups of users<p>";  
     print "</form>\n";
@@ -280,7 +278,7 @@ if ($action eq 'add') {
     print "<td><input size=30 name=\"regexp\"></td>\n";
     print "<td><input type=\"checkbox\" name=\"isactive\" value=\"1\" checked></td>\n";
     print "<td><select name=\"group_type\" value=\"$::Tgroup_type->{'buggroup'}\" >\n";
-    print "<option value=$::Tgroup_type->{'buggroup'}>buggoup</option>\n";
+    print "<option value=$::Tgroup_type->{'buggroup'}>bug</option>\n";
     print "<option value=$::Tgroup_type->{'user'}>user</option>\n";
     print "</select></td>\n";
     print "</TR></TABLE>\n<HR>\n";
@@ -551,7 +549,6 @@ if ($action eq 'postchanges') {
     }
 
     my $chgs = 0;
-    print "Checking....";
     foreach my $b (grep(/^oldgrp-\d*$/, keys %::FORM)) {
         if (defined($::FORM{$b})) {
             my $v = substr($b, 7);
@@ -559,7 +556,6 @@ if ($action eq 'postchanges') {
             my $grp = $::FORM{"grp-$v"} || 0;
             if ($::FORM{"oldgrp-$v"} != $grp) {
                 $chgs = 1;
-                print "changed";
                 if ($grp != 0) {
                     print " set ";
                     SendSQL("INSERT INTO member_group_map 

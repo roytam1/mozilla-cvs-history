@@ -3151,6 +3151,47 @@ if (GetFieldDef("profiles", "groupset")) {
     DropField('groups','bit');
 }
 
+if(-e "data/params") {
+    require "data/params";
+    $sth = $dbh->prepare("SELECT COUNT(*) FROM group_control_map");
+    $sth->execute();
+    my ($mapcnt) = $sth->fetchrow_array();
+    if (($mapcnt == 0) && $::param{'usebuggroups'}) {
+        # initially populate group_control_map
+        my @clist = ("default", "permitted");
+        if ($::param{'usebuggroupsentry'}) {
+            push(@clist,"entry");
+        }
+        $sth = $dbh->prepare("SELECT product_id, group_id
+                              FROM products, groups
+                              WHERE name = product 
+                              AND group_type = $::Tgroup_type->{'buggroup'}");
+        $sth->execute();
+        while (my ($pid, $gid) = $sth->fetchrow_array()) {
+            foreach my $ctype (@clist) {
+                $dbh->do("INSERT INTO group_control_map 
+                          (control_id, control_id_type, control_type, group_id) 
+                          VALUES ($pid, $::Tcontrol_id_type->{'product'}, 
+                          $::Tcontrol_type->{$ctype}, $gid)");    
+            }
+        }
+        $sth = $dbh->prepare("SELECT products.product_id, group_id, 
+                              ISNULL(P.product_id)
+                              FROM products, groups
+                              LEFT JOIN products as P
+                              ON groups.name = P.product");
+        $sth->execute();
+        while (my ($pid, $gid, $flg) = $sth->fetchrow_array()) {
+            if ($flg) {
+                $dbh->do("INSERT INTO group_control_map 
+                          (control_id, control_id_type, control_type, group_id) 
+                          VALUES ($pid, $::Tcontrol_id_type->{'product'}, 
+                          $::Tcontrol_type->{'permitted'}, $gid)");    
+            }
+        }
+    }
+}
+
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
 #
