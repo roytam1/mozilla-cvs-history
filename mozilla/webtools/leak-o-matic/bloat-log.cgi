@@ -35,7 +35,7 @@ use Zip;
 $::query = new CGI();
 
 # The ZIP where all the log files are kept
-$::log = $::query->param('log' => 'current');
+$::log = $::query->param('log');
 $::zip = new Zip($::log);
 
 print $::query->header;
