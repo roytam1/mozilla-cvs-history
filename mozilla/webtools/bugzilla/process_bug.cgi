@@ -282,6 +282,16 @@ sub CheckCanChangeField {
     if (trim($oldvalue) eq trim($newvalue)) {
         return 1;
     }
+    if ($f eq "resolution") { # always OK this.  if they really can't,
+        return 1;             # it'll flag it when "status" is checked.
+    }
+    if ($UserInEditGroupSet < 0) {
+        $UserInEditGroupSet = 
+            (UserInGroup("editbugs") && CanEditBug($::FORM{'id'},$::userid));
+    }
+    if ($UserInEditGroupSet) {
+        return 1;
+    }
     if ($f =~ /^longdesc/) {
         PushGlobalSQLState();
         SendSQL("SELECT allcancomment FROM bugs, products " .
@@ -295,16 +305,6 @@ sub CheckCanChangeField {
         ThrowUserError("You tried to comment on this bug,
                         but only the owner or submitter of the bug, or a 
                         sufficiently empowered user, may add a comment.");
-    }
-    if ($f eq "resolution") { # always OK this.  if they really can't,
-        return 1;             # it'll flag it when "status" is checked.
-    }
-    if ($UserInEditGroupSet < 0) {
-        $UserInEditGroupSet = 
-            (UserInGroup("editbugs") && CanEditBug($::FORM{'id'},$::userid));
-    }
-    if ($UserInEditGroupSet) {
-        return 1;
     }
     if ($lastbugid != $bugid) {
         SendSQL("SELECT reporter, assigned_to, qa_contact FROM bugs " .
