@@ -668,11 +668,13 @@ sub status_table_row {
   my ($db_index, $last_treestate, $authors) =
       cell_data($tree, $NEXT_DB{$tree}, $row_times->[$row_index]);
   
+  $LAST_TREESTATE{$tree} = $last_treestate || $LAST_TREESTATE{$tree};
+  $last_treestate = $LAST_TREESTATE{$tree};
+  
   if (%{$authors}) {
 
       $NEXT_DB{$tree} = $db_index;
       $NEXT_ROW{$tree} = $row_index + 1;
-      $LAST_TREESTATE{$tree} = $last_treestate || $LAST_TREESTATE{$tree};
 
       my ($mindate) = $row_times->[$row_index], 
       my ($maxdate);
@@ -718,7 +720,6 @@ sub status_table_row {
 
       $NEXT_ROW{$tree} = $row_index + $rowspan;
       $NEXT_DB{$tree} = $db_index;
-      $LAST_TREESTATE{$tree} = $last_treestate || $LAST_TREESTATE{$tree};
 
       my @html= render_empty_cell($LAST_TREESTATE{$tree}, $rowspan);
       return @html;
