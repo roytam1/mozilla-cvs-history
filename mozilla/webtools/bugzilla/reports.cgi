@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -40,6 +40,8 @@
 
 use diagnostics;
 use strict;
+
+use lib qw(.);
 
 eval "use GD";
 my $use_gd = $@ ? 0 : 1;
@@ -122,6 +124,10 @@ if (! defined $FORM{'product'}) {
       || DisplayError("You entered an invalid output type.") 
       && exit;
 
+    # We've checked that the product exists, and that the user can see it
+    # This means that is OK to detaint
+    trick_taint($FORM{'product'});
+
     # Output appropriate HTTP response headers
     print "Content-type: text/html\n";
     # Changing attachment to inline to resolve 46897 - zach@zachlipton.com
@@ -144,7 +150,6 @@ if (! defined $FORM{'product'}) {
     PutFooter() if $FORM{banner};
 
 }
-
 
 
 ##################################
@@ -230,14 +235,6 @@ print <<FIN;
 <td align=left>
 <input type=checkbox name=links checked value=1>&nbsp;Links to Bugs<br>
 <input type=checkbox name=banner checked value=1>&nbsp;Banner<br>
-FIN
-  
-    if (Param('usequip')) {
-        print "<input type=checkbox name=quip value=1>&nbsp;Quip<br>";
-    } else {
-        print "<input type=hidden name=quip value=0>";
-    }
-    print <<FIN;
 </td>
 </tr>
 <tr>
@@ -246,6 +243,7 @@ FIN
 </td>
 </tr>
 </table>
+</center>
 </form>
 <p>
 FIN
@@ -268,32 +266,21 @@ FIN
     my $query;
     $query = <<FIN;
 select 
-    bugs.bug_id, bugs.assigned_to, bugs.bug_severity,
-    bugs.bug_status, bugs.product, 
+    bugs.bug_id,
+    bugs.bug_status,
     assign.login_name,
-    report.login_name,
     unix_timestamp(date_format(bugs.creation_ts, '%Y-%m-%d %h:%m:%s'))
 
 from   bugs,
-       profiles assign,
-       profiles report,
-       versions projector
+       profiles assign
 where  bugs.assigned_to = assign.userid
-and    bugs.reporter = report.userid
 FIN
 
     if ($FORM{'product'} ne "-All-" ) {
         $query .= "and    bugs.product=".SqlQuote($FORM{'product'});
     }
 
-    $query .= <<FIN;
-and      
-    ( 
-    bugs.bug_status = 'NEW' or 
-    bugs.bug_status = 'ASSIGNED' or 
-    bugs.bug_status = 'REOPENED'
-    )
-FIN
+    $query .= "AND bugs.bug_status IN ('NEW', 'ASSIGNED', 'REOPENED')";
 # End build up $query string
 
     print "<font color=purple><tt>$query</tt></font><p>\n" 
@@ -303,7 +290,6 @@ FIN
     
     my $c = 0;
 
-    my $quip = "Summary";
     my $bugs_count = 0;
     my $bugs_new_this_week = 0;
     my $bugs_reopened = 0;
@@ -318,7 +304,7 @@ FIN
     #############################
 
     my $week = 60 * 60 * 24 * 7;
-    while (my ($bid, $a, $sev, $st, $prod, $who, $rep, $ts) = FetchSQLData()) {
+    while (my ($bid, $st, $who, $ts) = FetchSQLData()) {
         next if (exists $bugs_lookup{$bid});
         
         $bugs_lookup{$bid} ++;
@@ -332,17 +318,6 @@ FIN
         $bugs_totals{$who}{$st} ++;
     }
 
-    if ($FORM{'quip'}) {
-        if (open (COMMENTS, "<data/comments")) {
-            my @cdata;
-            while (<COMMENTS>) {
-                push @cdata, $_;
-            }
-            close COMMENTS;
-            $quip = "<i>" . $cdata[int(rand($#cdata + 1))] . "</i>";
-        }
-    } 
-
     #########################
     # start painting report #
     #########################
@@ -351,7 +326,7 @@ FIN
     $bugs_status{'ASSIGNED'} ||= '0';
     $bugs_status{'REOPENED'} ||= '0';
     print <<FIN;
-<h1>$quip</h1>
+<h1>Summary</h1>
 <table border=1 cellpadding=5>
 <tr>
 <td align=right><b>New Bugs This Week</b></td>
@@ -525,6 +500,19 @@ sub chart_image_type {
 sub chart_image_name {
     my ($data_file, $type) = @_;
 
+    # This routine generates a filename from the requested fields. The problem
+    # is that we have to check the safety of doing this. We can't just require
+    # that the fields exist, because what stats were collected could change
+    # over time (eg by changing the resolutions available)
+    # Instead, just require that each field name consists only of letters
+    # and number
+
+    if ($FORM{'datasets'} !~ m/[A-Za-z0-9:]/) {
+        die "Invalid datasets $FORM{'datasets'}";
+    }
+    # Since we pass the tests, consider it OK
+    trick_taint($FORM{'datasets'});
+
     # Cache charts by generating a unique filename based on what they
     # show. Charts should be deleted by collectstats.pl nightly.
     my $id = join ("_", split (":", $FORM{datasets}));
@@ -653,7 +641,6 @@ sub bybugs {
 sub most_doomed_for_milestone {
     my $when = localtime (time);
     my $ms = "M" . Param("curmilestone");
-    my $quip = "Summary";
 
     print "<center>\n<h1>";
     if( $FORM{'product'} ne "-All-" ) {
@@ -670,17 +657,6 @@ sub most_doomed_for_milestone {
     # start painting report #
     #########################
 
-    if ($FORM{'quip'}) {
-        if (open (COMMENTS, "<data/comments")) {
-            my @cdata;
-            while (<COMMENTS>) {
-                push @cdata, $_;
-            }
-            close COMMENTS;
-            $quip = "<i>" . $cdata[int(rand($#cdata + 1))] . "</i>";
-        }
-    }
-    
     # Build up $query string
     my $query;
     $query = "select distinct assigned_to from bugs where target_milestone=\"$ms\"";
@@ -775,8 +751,7 @@ FIN
 sub most_recently_doomed {
     my $when = localtime (time);
     my $ms = "M" . Param("curmilestone");
-    my $quip = "Summary";
-                                                     
+
     print "<center>\n<h1>";
     if( $FORM{'product'} ne "-All-" ) {
         SendSQL("SELECT defaultmilestone FROM products WHERE product = " .
@@ -791,18 +766,6 @@ sub most_recently_doomed {
     #########################
     # start painting report #
     #########################
-
-    if ($FORM{'quip'}) {
-        if (open (COMMENTS, "<data/comments")) {
-            my @cdata;
-            while (<COMMENTS>) {
-                push @cdata, $_;
-            }
-            close COMMENTS;
-            $quip = "<i>" . $cdata[int(rand($#cdata + 1))] . "</i>";
-        }
-    }
-
 
     # Build up $query string
     my $query = "select distinct assigned_to from bugs where bugs.bug_status='NEW' and target_milestone='' and bug_severity!='enhancement' and status_whiteboard='' and (product='Browser' or product='MailNews')";
