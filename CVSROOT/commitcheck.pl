@@ -230,6 +230,9 @@ $fullname{'115'} = 'small-devices';
 $mode{'87'} = 'Open';
 $branch{'87'} = 'HEAD';
 $fullname{'87'} = 'SmartUpdate';
+$mode{'173'} = 'Open';
+$branch{'173'} = 'HEAD';
+$fullname{'173'} = 'Standalone Composer';
 $mode{'170'} = 'Closed';
 $branch{'170'} = 'HEAD';
 $fullname{'170'} = 'Standalone Mail';
@@ -300,6 +303,7 @@ if (m:^CVSROOT/passwd$:) {return '3';}
 if (m:^mozilla/security/coreconf/.*$:) {return '145';}
 if (m:^mozilla/security/jss/.*$:) {return '145';}
 if (m:^mozilla/security/nss/.*$:) {return '145';}
+if (m:^composer$:) {return '173';}
 if (m:^mozilla/[^/]*$:) {return '19';}
 if (m:^mozilla/gfx/src/xlib/.*$:) {return '121';}
 if (m:^mozilla/widget/src/xlib/.*$:) {return '121';}
