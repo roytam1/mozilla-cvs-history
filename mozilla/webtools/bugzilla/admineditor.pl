@@ -82,6 +82,9 @@ $::bugsreffieldref = undef;
 # Get this information from the schema.
 $::maxnamesize = undef;
 
+# Whether to use sortkeys.
+$::usesortkeys = undef;
+
 ################################################################################
 # The following may be changed by the caller.
 ################################################################################
@@ -143,7 +146,8 @@ sub ValidateName ($) {
 
     if (defined $id) {
         $sqlcondition = "name = $sqlname AND id != $id";
-    } else {
+    }
+    else {
         $sqlcondition = "name = $sqlname";
     }
 
@@ -200,14 +204,33 @@ sub ValidateIsActive ($) {
 
     if (!defined $::FORM{isactive}) {
         $$fieldsref{isactive} = 0;
-    } elsif ($::FORM{isactive} eq "1") {
+    }
+    elsif ($::FORM{isactive} eq "1") {
         $$fieldsref{isactive} = 1;
-    } else {
+    }
+    else {
         ThatDoesntValidate("isactive");
         exit;
     }
 
 }
+
+sub ValidateSortKey ($) {
+
+    my ($fieldsref) = @_;
+
+    $::FORM{sortkey} = trim($::FORM{sortkey});
+
+    if (detaint_natural($::FORM{sortkey})) {
+        $$fieldsref{sortkey} = $::FORM{sortkey};
+    }
+    else {
+        ThatDoesntValidate('sortkey');
+        exit;
+    }
+
+}
+
 
 my $vars;
 
@@ -269,8 +292,11 @@ sub AdminEditor() {
         'valuetype' => $::valuetype,
         'valuetypeicap' => $::valuetypeicap,
         
-        # Maximum size allowed for a name of this value
+        # Maximum size allowed for a name of this value.
         'maxnamesize' => $::maxnamesize,
+
+        # Whether we're using sortkeys for this value.
+        'usesortkeys' => $::usesortkeys
     };
 
     &$::extravarsref($vars);
@@ -288,37 +314,45 @@ sub AdminEditor() {
 
         ListScreen("");
 
-    } elsif ($action eq "add") {
+    }
+    elsif ($action eq "add") {
         
         CreateScreen();
         
-    } elsif ($action eq "new") {
+    }
+    elsif ($action eq "new") {
         
         ValidateName(\%fields);
         ValidateDesc(\%fields);
+        ValidateSortKey(\%fields) if ($::usesortkeys);
         &$::validaterestref(\%fields);
         InsertNew(%fields);
         
-    } elsif ($action eq "edit") {
+    }
+    elsif ($action eq "edit") {
         
         ValidateID(\%fields);
         EditScreen(%fields);
         
-    } elsif ($action eq "update") {
+    }
+    elsif ($action eq "update") {
         
         ValidateID(\%fields);
         ValidateName(\%fields);
         ValidateDesc(\%fields);
         ValidateIsActive(\%fields);
+        ValidateSortKey(\%fields) if ($::usesortkeys);
         &$::validaterestref(\%fields);
         UpdateExisting(%fields);
         
-    } elsif ($action eq "delete") {
+    }
+    elsif ($action eq "delete") {
         
         ValidateID(\%fields);
         DeleteExisting(%fields);
         
-    } else {
+    }
+    else {
         
         print "Content-type: text/html\n\n";
         ThatDoesntValidate("action");
@@ -337,12 +371,17 @@ sub ListScreen ($) {
 
     my ($message) = (@_);
 
-    SendSQL("SELECT $::tablename.id, $::tablename.name, $::tablename.description, " .
-            "$::tablename.isactive, COUNT($::bugsreffieldref) " .
+    my $ordering = $::usesortkeys
+        ? "$::tablename.sortkey, $::tablename.name"
+        : "$::tablename.name";
+
+    SendSQL("SELECT $::tablename.id, $::tablename.name, " .
+            "$::tablename.description, $::tablename.isactive, " .
+            "COUNT($::bugsreffieldref) " .
             "FROM $::tablename LEFT JOIN $::bugsreftablename ON " .
             "$::tablename.id = $::bugsreffieldref " .
             "GROUP BY $::tablename.id " .
-            "ORDER BY $::tablename.name");
+            "ORDER BY $ordering");        
 
     my @values;
 
@@ -370,13 +409,10 @@ sub CreateScreen() {
 
     $vars->{name} = '';
     $vars->{description} = '';
+    $vars->{sortkey} = 0;
 
     # Defaults for the rest
-    my %defaults = %::defaultrest;
-
-    foreach my $fieldname (keys %defaults) {
-        $vars->{$fieldname} = $defaults{$fieldname};
-    }
+    %$vars = ( %$vars, %::defaultrest );
 
     # Generate the template.
     EmitTemplate("admin/$::valuetypeplural/create.atml");
@@ -420,15 +456,10 @@ sub InsertNew(%) {
     $fields{description} = SqlQuote($fields{description});
     &$::preparerestforsqlref(\%fields);
 
-    # Separate the keys and values.
-    my (@fieldnames, @fieldvalues);
-    SeparateHash(\%fields, \@fieldnames, \@fieldvalues);
-
-    # Join them into two separate strings.
-    my $fieldnames = join(', ', @fieldnames);
-    my $fieldvalues = join(', ', @fieldvalues);
-
     # Add the new record.
+    my $fieldnames = join(', ', keys(%fields));
+    my $fieldvalues = join(', ', values(%fields));
+
     SendSQL("INSERT INTO $::tablename ($fieldnames) VALUES ($fieldvalues)");
 
     # Make versioncache flush
@@ -447,11 +478,14 @@ sub EditScreen (%) {
     my $id = $fields{id};
 
     my %defaults = %::defaultrest;
+
     my @fieldnames = ('name', 'description', 'isactive', keys %defaults);
+    @fieldnames = (@fieldnames, 'sortkey') if ($::usesortkeys);
+
     my $fieldnames = join(', ', @fieldnames);
 
     # get data of record
-    SendSQL("SELECT $fieldnames FROM $::tablename WHERE id=$id");
+    SendSQL("SELECT $fieldnames FROM $::tablename WHERE id = $id");
 
     if (!MoreSQLData()) {
         DisplayError("$::wentwrong I can't find the $::valuetype ID $id.");
@@ -512,7 +546,7 @@ sub DeleteExisting (%) {
     my (%fields) = @_;
     my $id = $fields{id};
 
-    SendSQL("SELECT name FROM $::tablename WHERE id=$id");
+    SendSQL("SELECT name FROM $::tablename WHERE id = $id");
 
     if (!MoreSQLData()) {
         DisplayError("$::wentwrong That $::valuetype does not exist!");
@@ -534,7 +568,8 @@ sub DeleteExisting (%) {
 
                 EmitTemplate("admin/$::valuetypeplural/confirmdelete.atml");
                 exit;
-            } else {
+            }
+            else {
                 DisplayError("There are $bugcount bug(s) which have " .
                              "the $::valuetype $htmlname.  You " .
                              "can't delete the $::valuetype while " .

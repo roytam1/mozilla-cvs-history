@@ -213,7 +213,7 @@ will be marked with one of the following resolutions.
 <ul>
 };
 
-SendSQL("SELECT name, description FROM resolutions ORDER BY name");
+SendSQL("SELECT name, description FROM resolutions ORDER BY sortkey, name");
 
 while (MoreSQLData()) {
     my ($name, $description) = FetchSQLData();

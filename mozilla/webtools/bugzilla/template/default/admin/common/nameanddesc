@@ -8,3 +8,9 @@
       <td><textarea rows=4 cols=64 wrap=virtual name="description">[% description %]</textarea></td>
     </tr>
 
+    [% IF usesortkeys %]
+      <tr>
+        <th align="right">Sortkey:</th>
+        <td><input size=4 maxlength=4 name="sortkey" value="[% sortkey %]"></td>
+      </tr>
+    [% END %]

@@ -103,7 +103,7 @@ certain status transitions are allowed.
 <TD>
 <DL>};
 
-SendSQL("SELECT name, description FROM resolutions");
+SendSQL("SELECT name, description FROM resolutions ORDER BY sortkey, name");
 
 while (MoreSQLData()) {
     my ($name, $description) = FetchSQLData();

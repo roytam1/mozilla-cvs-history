@@ -50,6 +50,7 @@ sub edit_resolutions_sillyness {
     $zz = $::duperestype;
     $zz = $::movedrestype;
     $zz = $::tryagain;
+    $zz = $::usesortkeys;
 }
 
 ################################################################################
@@ -66,6 +67,7 @@ $::tablename = "resolutions";
 $::bugsreftablename = "bugs";
 $::bugsreffieldref = "$::bugsreftablename.resolution_id";
 $::maxnamesize = 64;
+$::usesortkeys = 1;
 
 $::validaterestref = sub ($) {
 

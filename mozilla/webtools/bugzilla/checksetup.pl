@@ -124,6 +124,18 @@ sub SplitEnumType {
     return @result;
 }
 
+sub lsearch {
+    my ($list,$item) = (@_);
+    my $count = 0;
+    foreach my $i (@$list) {
+        if ($i eq $item) {
+            return $count;
+        }
+        $count++;
+    }
+    return -1;
+}
+
 $::duperestype = 2;
 
 ###########################################################################
@@ -1196,9 +1208,11 @@ $table{resolutions} =
      name         varchar(64) not null,
      description  mediumtext not null,
      isactive     tinyint not null default 1,
+     sortkey      smallint not null default 0,
 
      restype      tinyint not null,
 
+     index(sortkey),
      unique(name)';
 
 
@@ -1738,7 +1752,7 @@ sub AddResolution ($) {
 
     $id++;
 
-    my ($restype, $description);
+    my $restype;
 
     if ($name eq 'FIXED') {
         $restype = 0;
@@ -1752,26 +1766,36 @@ sub AddResolution ($) {
 
     my %descriptions = (
         'FIXED'          => 'A fix for this bug is checked into the tree and tested.',
-        'DUPLICATE'      => 'The problem is a duplicate of an existing bug. Marking a bug duplicate requires the bug number of the duplicate.',
-        'MOVED'          => 'The bug has been moved to another Bugzilla installation.',
         'INVALID'        => 'The problem described is not a bug.',
         'FEATURENOTBUG'  => 'This is not a bug, it\'s a feature.',
+        'NOTWORTHIT'     => 'The problem should be fixed in a perfect world, but this isn\'t a perfect world, so it won\'t be.',
         'WONTFIX'        => 'This is not a bug, it\'s a feature.',
-        'CAREFACTORZERO' => 'When the person responsible really just does not care.',
-        'REMIND'         => 'The problem described is a bug which will probably not be fixed in this version of the product, but might still be.',
         'LATER'          => 'The problem described is a bug which will not be fixed in this version of the product.',
+        'REMIND'         => 'The problem described is a bug which will probably not be fixed in this version of the product, but might still be.',
+        'DUPLICATE'      => 'The problem is a duplicate of an existing bug. Marking a bug duplicate requires the bug number of the duplicate.',
         'WORKSFORME'     => 'All attempts at reproducing this bug were futile, reading the code produces no clues as to why this behavior would occur. ' .
             'If more information appears later, please reopen the bug.',
-        'NOTWORTHIT'     => 'The problem should be fixed in a perfect world, but this isn\'t a perfect world, so it won\'t be.',
-        'MISSING'        => 'When a bug report can\'t be dealt with because an external resource (eg a page at a URL) is missing.'
+        'MOVED'          => 'The bug has been moved to another Bugzilla installation.',
+        'MISSING'        => 'When a bug report can\'t be dealt with because an external resource (eg a page at a URL) is missing.',
+        'CAREFACTORZERO' => 'When the person responsible really just does not care.'
     );
 
-    $description = $descriptions{$name};
+    my $description = $descriptions{$name};
+    $description = "" if (!defined $description);
+
+    my %sortkeys = (
+        'FIXED' => 10, 'INVALID' => 20, 'FEATURENOTBUG' => 30, 'NOTWORTHIT' => 40,
+        'WONTFIX' => 50, 'LATER' => 60, 'REMIND' => 70, 'DUPLICATE' => 80,
+        'WORKSFORME' => 90, 'MOVED' => 100, 'MISSING' => 110, 'CAREFACTORZERO' => 120
+    );
+
+    my $sortkey = $sortkeys{$name};
+    $sortkey = 200 if (!defined $sortkey);
 
     print "Adding resolution $name ...\n";
-    $dbh->do("INSERT INTO resolutions(id, name, description, restype) " .
+    $dbh->do("INSERT INTO resolutions(id, name, description, restype, sortkey) " .
              "VALUES ($id, " . SqlQuote($name) . ", " .
-             SqlQuote($description) . ", $restype)");
+             SqlQuote($description) . ", $restype, $sortkey)");
 
     return $id;
 }
@@ -1780,21 +1804,17 @@ sub AddResolution ($) {
 # BugZilla uses --RESOLUTIONS-- to mark why a bug was resolved.
 #
 
-unless ($sth->rows) {
-
-    if (!RecordExists("bugs")) {
-        # These are the default resolutions for new installations.
-        AddResolution("MOVED");
-        AddResolution("DUPLICATE");
-        AddResolution("FIXED");
-        AddResolution("WORKSFORME");
-        AddResolution("INVALID");
-        AddResolution("NOTWORTHIT");
-        AddResolution("FEATURENOTBUG");
-        AddResolution("CAREFACTORZERO");
-        AddResolution("MISSING");
-    }
-
+if (!RecordExists("resolutions") && !RecordExists("bugs") ) {
+    # These are the default resolutions for new installations.
+    AddResolution("MOVED");
+    AddResolution("DUPLICATE");
+    AddResolution("FIXED");
+    AddResolution("WORKSFORME");
+    AddResolution("INVALID");
+    AddResolution("NOTWORTHIT");
+    AddResolution("FEATURENOTBUG");
+    AddResolution("CAREFACTORZERO");
+    AddResolution("MISSING");
 }
 
 ###########################################################################

@@ -528,7 +528,7 @@ sub GenerateVersionTable {
 
     SendSQL("SELECT name, isactive, bug_id IS NOT NULL, restype " .
             "FROM resolutions LEFT JOIN bugs ON resolutions.id = bugs.resolution_id ".
-            "ORDER BY name");
+            "ORDER BY sortkey, name");
 
     while (MoreSQLData()) {
         my ($name, $isactive, $isused, $restype) = FetchSQLData();
@@ -1599,18 +1599,5 @@ sub GenerateUpdateSQL (%) {
 
     return join( ', ', @assignments);
 }
-
-# Separates a hash into two arrays - keys and values.
-sub SeparateHash ($$$) {
-
-    my ($fieldsref, $namesref, $valuesref) = @_;
-
-    foreach my $fieldname (keys %$fieldsref) {
-        push(@$namesref, $fieldname);
-        push(@$valuesref, $$fieldsref{$fieldname});
-    }
-
-}
-
 
 1;
