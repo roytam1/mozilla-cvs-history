@@ -45,6 +45,7 @@
 
 use lib '#tinder_libdir#';
 
+use TinderConfig;
 use TreeData;
 use HTMLPopUp;
 use FileStructure;
