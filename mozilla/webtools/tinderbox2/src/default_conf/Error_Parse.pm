@@ -147,6 +147,7 @@ sub line_type {
             ($line =~ /\b[Aa]ssertion\b/)	||		# test error
             ($line =~ /\b[Aa]borted\b/)		||		# cvs error
             ($line =~ /\b[Ff]ailed\b/)		||		# java nmake
+            ($line =~ /BUILD FAILED/)		||		# ant
 
             ($line =~ /Unknown host /)		||		# cvs error
             ($line =~ /\: cannot find module/)	||		# cvs error
