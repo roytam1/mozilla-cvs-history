@@ -351,14 +351,15 @@ sub UserInGroup {
 }
 
 sub CheckCanChangeField {
-   my $self = shift();
-   my ($f, $oldvalue, $newvalue) = (@_);
+   my $self = shift;
+   my ($f, $oldvalue, $newvalue) = @_;
    my $UserInEditGroupSet = -1;
    my $UserInCanConfirmGroupSet = -1;
    my $ownerid;
    my $reporterid;
    my $qacontactid;
 
+   print "$f old=$oldvalue new=$newvalue\n";
     if ($f eq "assigned_to" || $f eq "reporter" || $f eq "qa_contact") {
         if ($oldvalue =~ /^\d+$/) {
             if ($oldvalue == 0) {
@@ -416,29 +417,23 @@ sub CheckCanChangeField {
              $qacontactid eq $self->{'whoid'}) {
         return 1;
     }
-    $self->{'error'} = "
+    PushError($self, "
 Only the owner or submitter of the bug, or a sufficiently
-empowered user, may make that change to the $f field.";
+empowered user, may make that change to the $f field.");
     return 0;
 }
 
-sub MyLock {
-    my $self = shift();
+sub LockDatabase {
     my $write = "WRITE";        # Might want to make a param to control
                                 # whether we do LOW_PRIORITY ...
     &::SendSQL("LOCK TABLES bugs $write, bugs_activity $write, cc $write, " .
             "profiles $write, dependencies $write, votes $write, " .
             "keywords $write, longdescs $write, fielddefs $write, " .
             "keyworddefs READ, groups READ, attachments READ, products READ");
-    &::SendSQL("SELECT delta_ts FROM bugs where bug_id=$self->{'bug_id'}");
-    my $delta_ts = &::FetchOneColumn();
-    &::SendSQL("unlock tables");
-    if ($self->{'delta_ts'} ne $delta_ts) {
-       return 1;
-    }
-    else {
-       return 0;
-    }
+}
+
+sub UnlockDatabase {
+    &::SendSQL("UNLOCK TABLES");
 }
 
 sub PushError {
@@ -458,6 +453,13 @@ sub PrintErrors {
    foreach my $err (@{$self->{'error'}}) {
        print $err . "\n";
    }
+}
+
+sub DeleteErrors {
+   my $self = shift;
+
+   delete $self->{'errors'};
+   return 1;
 }
 
 sub SetDirtyFlag {
@@ -632,9 +634,13 @@ sub SetVersion {
    my $self = shift;
    my ($version) = (@_);
    
-   unless (CheckField($self, 'version', \@::legal_versions)) {
+   unless (CheckField('version', \@::legal_versions)) {
      PushError($self, "Invalid version \'$version\'");
      return 0;
+   }
+   unless(CheckCanChangeField($self, 'version', $self->{'version'},
+                              $version)) {
+      return 0;
    }
    $self->{'version'} = $version;
    SetDirtyFlag($self);
@@ -645,9 +651,13 @@ sub SetPlatform {
    my $self = shift;
    my ($platform) = (@_);
   
-   unless (CheckField($self, $platform, 'rep_platform', \@::legal_platform)) {
+   unless (CheckField($platform, 'rep_platform', \@::legal_platform)) {
      PushError($self, "Invalid platform \'$platform\'");
      return 0;
+   }
+   unless(CheckCanChangeField($self, 'rep_platform', $self->{'rep_platform'},
+                              $platform)) {
+      return 0;
    }
    $self->{'rep_platform'} = "$platform";
    return 1;
@@ -655,11 +665,15 @@ sub SetPlatform {
 
 sub SetOperatingSystem {
    my $self = shift;
-   my ($os) = (@_);
+   my ($os) = @_;
    
-   unless (CheckField($self, $os, 'op_sys', \@::legal_opsys)) {
+   unless (CheckField($os, 'op_sys', \@::legal_opsys)) {
      PushError($self, "Invalid operating system \'$os\'");
      return 0;
+   }
+   unless(CheckCanChangeField($self, 'op_sys', $self->{'op_sys'},
+                              $os)) {
+      return 0;
    }
    $self->{'op_sys'} = $os;
    SetDirtyFlag($self);
@@ -670,9 +684,13 @@ sub SetPriority {
    my $self = shift;
    my ($priority) = @_;
 
-  unless (CheckField($priority, 'priority', \@::legal_priority)) {
+   unless (CheckField($priority, 'priority', \@::legal_priority)) {
      PushError($self,"Invalid priority \'$priority\'");
      return 0;
+   }
+   unless(CheckCanChangeField($self, 'priority', $self->{'priority'},
+                              $priority)) {
+      return 0;
    }
    $self->{'priority'} = $priority;
    SetDirtyFlag($self);
@@ -683,9 +701,13 @@ sub SetSeverity {
    my $self = shift;
    my ($severity) = (@_);
    
-   unless (CheckField($self, 'bug_severity', @::legal_severity)) {
-     PushError($self, "Invalid bug severity \'$severity\'");
-     return 0;
+   unless (CheckField('bug_severity', \@::legal_severity)) {
+      PushError($self, "Invalid bug severity \'$severity\'");
+      return 0;
+   }
+   unless(CheckCanChangeField($self, 'bug_severity', $self->{'bug_severity'},
+                              $severity)) {
+      return 0;
    }
    $self->{'bug_severity'} = $severity;
    SetDirtyFlag($self);
@@ -721,6 +743,10 @@ sub SetAssignedTo {
    my ($assignee) = (@_);
     
    my $id = CheckUserExists($assignee);
+   unless(CheckCanChangeField($self, 'assigned_to', $self->{'assigned_to'},
+                              $assignee)) {
+      return 0;
+   }
    if ($id) {
       $self->{'assigned_to'} = $assignee;
    }
@@ -730,27 +756,105 @@ sub SetAssignedTo {
    }
 }
 
-#SetShortDescription {
-#
-#}
-#
-#SetTargetMilestone {
-#
-#}
-#
-#SetQAContact {
-#
-#}
-#
-#SetStatusWhiteboard {
-#
-#}
+sub SetShortDescription {
+   my $self = shift;
+   my ($desc) = (@_);
+
+   unless(CheckCanChangeField($self, 'short_desc', $self->{'short_desc'}, $desc)) {
+      return 0;
+   }
+   $self->{'short_desc'} = $desc;
+   SetDirtyFlag($self);
+   return 1;
+}
+
+
+sub SetTargetMilestone {
+   my $self = shift;
+   my ($stone) = @_;
+
+   if (&::Param('usetargetmilestone')) {
+       unless (CheckField($self, 'target_milestone', @::legal_target_milestone)) {
+          PushError($self, "Invalid target milestone \'$stone\'");
+          return 0;
+       }
+       unless(CheckCanChangeField($self, 'target_milestone', 
+              $self->{'target_milestone'}, $stone)) {
+          return 0;
+       }    
+      $self->{'target_milestone'} = $stone;
+      SetDirtyFlag($self);
+      return 1;
+   }
+   else {
+       PushError($self, "Target Milestones not enabled at this installation.");
+       return 0;
+   }
+}
+
+sub SetQAContact {
+   my $self = shift;
+   my ($contact) = (@_);
+
+   if (&::Param('useqacontact')) {
+       my $id = CheckUserExists($contact);
+       unless(CheckCanChangeField($self, 'qa_contact', $self->{'qa_contact'},
+                                  $contact)) {
+          return 0;
+       }
+       if ($id) {
+          $self->{'qa_contact'} = $contact;
+          SetDirtyFlag($self);
+       }
+       else {
+           PushError($self, "No such userid \'$contact\'");
+           return 0;
+       }
+   }
+   else {
+       PushError($self, "useqacontact not enabled at this installation.");
+       return 0;
+   }
+}
+
+sub SetStatusWhiteboard {
+   my $self = shift;
+   my ($white) = @_;
+
+   if (&::Param('usestatuswhiteboard')) {
+       unless(CheckCanChangeField($self, 'status_whiteboard',
+                  $self->{'status_whiteboard'}, $white)) {
+           return 0;
+       }
+       $self->{'status_whiteboard'} = $white;
+       SetDirtyFlag($self);
+       return 1;
+   }
+   else {
+       PushError($self, "usestatuswhiteboard not enabled at this installation.");
+       return 0;
+   }
+
+}
+
+sub SetURL {
+   my $self = shift;
+   my ($url) = @_;
+
+   unless(CheckCanChangeField($self, 'bug_file_loc', $self->{'bug_file_loc'},
+                               $url)) {
+      return 0;
+   }
+   $self->{'bug_file_loc'} = $url;
+   SetDirtyFlag($self);
+   return 1;
+}
 
 sub SetStatus {
    my $self = shift;
-   my ($status) = (@_);
+   my ($status) = @_;
 
-   unless(CheckField($self, $status, 'bug_status', \@::legal_bug_status)) {
+   unless(CheckField($status, 'bug_status', \@::legal_bug_status)) {
       PushError($self, "Invalid status \'$status\'");
       return 0;
    }
@@ -761,7 +865,7 @@ sub SetStatus {
 
 sub SetResolution {
    my $self = shift;
-   my ($resolution) = (@_);
+   my ($resolution) = @_;
 
    unless(CheckField($self, 'resolution', @::legal_resolution)) {
       PushError($self,"Invalid resolution \'$resolution\'");
@@ -774,7 +878,7 @@ sub SetResolution {
 
 sub CheckonComment {
     my $self = shift;
-    my ($function) = (@_);
+    my ($function) = @_;
 
     # Param is 1 if comment should be added !
     my $ret = &::Param( "commenton" . $function );
@@ -849,19 +953,6 @@ sub MarkResolvedWorksForMe {
 
 }
 
-sub WriteChanges {
-    my $self = shift;
-
-    my $write = "WRITE";        # Might want to make a param to control
-                                # whether we do LOW_PRIORITY ...
-    &::SendSQL("LOCK TABLES bugs $write, bugs_activity $write, cc $write, " .
-            "profiles $write, dependencies $write, votes $write, " .
-            "keywords $write, longdescs $write, fielddefs $write, " .
-            "keyworddefs READ, groups READ, attachments READ, products READ");   
-    &::SendSQL($self->{'query'});
-    &::SendSQL("UNLOCK TABLES");
-} 
-
 # stupid subroutine for checking if lists are equal.
 sub ListDiff {
     my (@source, @dest, $type) = @_;
@@ -933,23 +1024,77 @@ sub TestChanged {
    }
 }
 
-#sub Collision {
-#   my $self = shift;
-#   my $delta_ts;
-#   my $id;
-#
-#   $id = $self->{'bug_id'};
-#
-#   &::SendSQL("SELECT FROM bugs delta_ts WHERE bug_id=$id");
-#   $delta_ts = &::FetchOneColumn;
-#
-#   if ($delta_ts > $self->{'delta_ts'}) {
-#       PushError($self, "A collision has occurred: someone has made changes to the bug already.");
+sub Collision {
+   my $self = shift;
+   my $delta_ts;
+   my $id;
+
+   $id = $self->{'bug_id'};
+
+   &::SendSQL("SELECT delta_ts FROM bugs WHERE bug_id=$id");
+   $delta_ts = &::FetchOneColumn;
+
+   if ($delta_ts > $self->{'delta_ts'}) {
+       PushError($self, "A collision has occurred: someone has made changes " .
+                         "to bug $self->{'bug_id'} already.");
        return 1;   
-#   }
-#   return 0; 
-#
-#}
+   }
+   return 0; 
+
+}
+
+sub WriteChanges {
+   my $self = shift;
+   my (@fields) = @_;
+   my $sql;
+   my $comma = "";
+
+   $sql = "UPDATE bugs set\n";
+#if it's something on the bug table, build onto a query
+#else 
+   foreach my $field (@fields) {
+       if (($field eq 'dependson') || ($field eq 'blocks')) {
+            #go into dependency hell
+       }
+       else {
+          $sql .= "$comma $field=\'$self->{$field}\'";
+          if ($comma eq "") {
+              $comma = ", ";
+          }
+       }
+   }
+   print $sql . "\n";
+   &::SendSQL($sql);
+}
+
+sub Commit {
+   my $self = shift;
+   my %snapshot;
+   my @changed;
+
+   print "committing\n"; 
+   if (($self->{'dirty'}) && (defined($self->{'error'}))) {
+       print "locking\n";
+       LockDatabase();
+       print "locked\n";
+       unless (Collision($self)) {
+           %snapshot = SnapShotBugInDB($self);
+           @changed = ChangedFields($self, %snapshot); 
+           if (@changed > 0) {
+               WriteChanges($self, @changed);
+               UnlockDatabase();
+#           DoMailNotification();
+               delete $self->{'dirty'};
+               return 1;
+           }
+       }
+       else {
+           UnlockDatabase();
+           return 0;
+       }
+   }
+}
+
 
 
 sub AUTOLOAD {
