@@ -66,9 +66,6 @@ $fullname{'62'} = 'HTML to Text/PostScript Translation';
 $mode{'67'} = 'Open';
 $branch{'67'} = 'HEAD';
 $fullname{'67'} = 'I18N Library';
-$mode{'66'} = 'Open';
-$branch{'66'} = 'HEAD';
-$fullname{'66'} = 'Image Conversion Library';
 $mode{'64'} = 'Open';
 $branch{'64'} = 'HEAD';
 $fullname{'64'} = 'Image Handling: JPEG';
@@ -291,7 +288,6 @@ if (m:^mozilla/directory/.*$:) {return '59';}
 if (m:^gfx/src/ps/.*$:) {return '62';}
 if (m:^mozilla/modules/libimg/.*$:) {return '63';}
 if (m:^mozilla/modules/libutil/.*$:) {return '63';}
-if (m:^mozilla/include/libcnv\.h/.*$:) {return '66';}
 if (m:^mozilla/intl/.*$:) {return '67';}
 if (m:^mozilla/modules/oji/.*$:) {return '68';}
 if (m:^mozilla/nav-java/.*$:) {return '68';}
