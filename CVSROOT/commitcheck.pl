@@ -295,15 +295,6 @@ $fullname{'93'} = 'Zlib';
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'HEAD') {
-if (m:^mozilla/directory/buildsdk\.txt$:) {return '59';}
-if (m:^mozilla/directory/c-sdk/.*$:) {return '59';}
-if (m:^mozilla/directory/ldapsdk\.mak$:) {return '59';}
-if (m:^mozilla/directory/ldapsdk\.mk$:) {return '59';}
-if (m:^mozilla/directory/Makefile$:) {return '59';}
-if (m:^mozilla/string/.*$:) {return '160';}
-if (m:^gfx/src/ps/.*$:) {return '62';}
-if (m:^mozilla/gfx/src/qt/.*$:) {return '161';}
-if (m:^mozilla/widget/src/qt/.*$:) {return '161';}
 if (m:^mozilla/modules/libpr0n/.*$:) {return '63';}
 if (m:^mozilla/extensions/p3p/.*$:) {return '162';}
 if (m:^jpeg$:) {return '64';}
@@ -430,6 +421,15 @@ if (m:^mozilla/config/.*$:) {return '55';}
 if (m:^mozilla/l10n/.*$:) {return '55';}
 if (m:^mozilla/uriloader/.*$:) {return '158';}
 if (m:^mozilla/editor/.*$:) {return '56';}
+if (m:^mozilla/directory/buildsdk\.txt$:) {return '59';}
+if (m:^mozilla/directory/c-sdk/.*$:) {return '59';}
+if (m:^mozilla/directory/ldapsdk\.mak$:) {return '59';}
+if (m:^mozilla/directory/ldapsdk\.mk$:) {return '59';}
+if (m:^mozilla/directory/Makefile$:) {return '59';}
+if (m:^mozilla/string/.*$:) {return '160';}
+if (m:^gfx/src/ps/.*$:) {return '62';}
+if (m:^mozilla/gfx/src/qt/.*$:) {return '161';}
+if (m:^mozilla/widget/src/qt/.*$:) {return '161';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
