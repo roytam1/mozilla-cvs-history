@@ -167,6 +167,9 @@ $fullname{'87'} = 'SmartUpdate';
 $mode{'48'} = 'Open';
 $branch{'48'} = 'HEAD';
 $fullname{'48'} = 'Windows FE';
+$mode{'121'} = 'Open';
+$branch{'121'} = 'HEAD';
+$fullname{'121'} = 'Xlib-based gfx + widget';
 $mode{'88'} = 'Open';
 $branch{'88'} = 'HEAD';
 $fullname{'88'} = 'XML';
@@ -207,6 +210,8 @@ if (m:^CVSROOT/passwd$:) {return '3';}
 if (m:^jpeg/.*$:) {return '12';}
 if (m:^mozilla/[^/]*$:) {return '19';}
 if (m:^mozilla/cmd/macfe/.*$:) {return '47';}
+if (m:^mozilla/gfx/src/xlib/.*$:) {return '121';}
+if (m:^mozilla/widget/src/xlib/.*$:) {return '121';}
 if (m:^mozilla/ef/.*$:) {return '46';}
 if (m:^mozilla/cmd/wincom/.*$:) {return '48';}
 if (m:^mozilla/cmd/winfe/.*$:) {return '48';}
