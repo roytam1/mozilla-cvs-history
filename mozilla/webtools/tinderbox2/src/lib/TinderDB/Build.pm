@@ -152,6 +152,7 @@ use BuildStatus;
 use TinderDB::BasicTxtDB;
 use VCDisplay;
 use Utils;
+use TinderConfig;
 
 $VERSION = '#tinder_version#';
 
@@ -529,12 +530,8 @@ sub event_times_vec {
       my ($num_recs) = $#{ $DATABASE{$tree}{$buildname}{'recs'} };
       foreach $i (0 .. $num_recs) {
 
-          # By convention we only show the start times since people
-          # are only interested in what made it into builds.  Do not
-          # also push the $rec->{'endtime'};
-
           my $rec = $DATABASE{$tree}{$buildname}{'recs'}[$i];
-          push @times, $rec->{'starttime'};
+          push @times, $rec->{'starttime'}, $rec->{'endtime'};
 
       }
   }
