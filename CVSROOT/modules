@@ -544,6 +544,7 @@ SeaMonkeyCore -a \
 	mozilla/lib/mac/NSRuntime \
 	mozilla/lib/mac/NSStdLib \
 	mozilla/lib/mac/PowerPlant \
+	mozilla/lib/mac/InterfaceLib \
 	mozilla/lib/xp \
 	mozilla/modules/libimg \
 	mozilla/modules/libjar \
