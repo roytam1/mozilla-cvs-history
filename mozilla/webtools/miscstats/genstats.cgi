@@ -273,10 +273,20 @@ for ( ; $curYear <= $lastYear ; $curYear++ ) {
 # statistics output
 #
 print p();
-print h4("\nThese statistics were generated using the assumption that " .
+print "\nAll numbers on this page represent the work done by Mozilla " .
+	 "contributors other than Netscape.";
+
+print p();
+print "Though we don't generally think in these terms (a contribution is" .
+      " a contribution, regardless of the source), there has been " .
+      " some interest in these numbers.";
+
+print p();
+print "These statistics were generated using the assumption that " .
 		" contributions from mozilla.org should " .
 	        b( $F::mozillaOrgAsNscp eq "yes" ? "" : "not ") .  
-	        "be considered Netscape contributions.");
+	        "be considered Netscape contributions.";
+
 
 # generate the row of headers listing the months
 #
