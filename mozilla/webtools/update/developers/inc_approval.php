@@ -28,9 +28,9 @@ $sql = "SELECT TM.ID, `Name`, `vID`, TV.Version from `main` TM INNER JOIN `versi
 global $installation, $uninstallation, $newchrome, $appworks, $visualerrors, $allelementsthemed, $cleanprofile, $worksasdescribed, $testbuild, $testos, $comments;
         $sql2 = "INSERT INTO `approvallog` (`ID`, `vID`, `UserID`, `action`, `date`, `Installation`, `Uninstallation`, `NewChrome`, `AppWorks`, `VisualErrors`, `AllElementsThemed`, `CleanProfile`, `WorksAsDescribed`, `TestBuild`, `TestOS`, `comments`) VALUES ('$id', '$vid', '$userid', '$action_comment', NOW(NULL), '$installation', '$uninstallation', '$newchrome', '$appworks', '$visualerrors', '$allelementsthemed', '$cleanprofile', '$worksasdescribed', '$testbuild', '$testos', '$comments');";
           $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-          if ($sql_result2) {} else { $operations_failed=="true";}
+          if ($sql_result2) {} else { $operations_failed="true";}
     }
-    if ($sql_result) {} else { $operations_failed=="true";}
+    if ($sql_result) {} else { $operations_failed="true";}
 
 //Secondly, If Stage 1 was successful (and we're approving the file), let's move the file to it's new home in /ftp/ for staging...
 $filename = str_replace ("http://$sitehostname/developers/approvalfile.php", "$repositorypath/approval", $file);
@@ -49,11 +49,11 @@ if ($action=="approve") {
                 //Rename Successfull
             } else {
                 //Rename Unsuccessfull
-                $operations_failed=="true";
+                $operations_failed="true";
             }
         } else {
             //A File exists, not safe to rename, throw error.
-            $operations_failed=="true";
+            $operations_failed="true";
         }
         //$ftpurl defined in config.php
         $uri = str_replace("$repositorypath/ftp","$ftpurl","$destination");
@@ -69,7 +69,7 @@ if ($action=="approve") {
 //Thirdly, update version record...
 $sql = "UPDATE `version` SET `URI`='$uri', `approved`='$approved', `DateUpdated`=NOW(NULL) WHERE `URI`='$file'";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-   if ($sql_result) {} else { $operations_failed=="true";}
+   if ($sql_result) {} else { $operations_failed="true";}
 
 @include"mail_approval.php";
 

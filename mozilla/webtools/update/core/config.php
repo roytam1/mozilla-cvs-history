@@ -45,7 +45,7 @@ include"dbconfig.php"; // Include Database Server Configuration File
 
 // General Website Configuration Variables
 $websitepath = "/opt/update-beta";                 // Local Path to Site Files
-$repositorypath = "/opt/update-beta/files/";        //Path to XPI/JAR Respository
+$repositorypath = "/opt/update-beta/files";        //Path to XPI/JAR Respository
 $sitehostname = $_SERVER["SERVER_NAME"]; // DNS Hostname, ex. "update.mozilla.org"
 $ftpurl = "http://ftp.mozilla.org/pub/mozilla.org"; // URL to FTP site
 

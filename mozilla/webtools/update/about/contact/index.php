@@ -52,23 +52,23 @@ include"$page_header";
 <div id="mBody">
 
 <h1>Contact Mozilla Update</h1>
-Are you looking for contact information for the Mozilla Update staff to report a bug?<br>
+<p>Are you looking for contact information for the Mozilla Update staff to report a bug?  
 Mozilla Update bugs should be filed in Bugzilla, the mozilla organizations bug tracking tool.
-For more information, visit our <a href="../#bugs">frequently asked questions</a>.
-
-
-<h2>E-Mail</h2>
-You can contact the Mozilla Update staff via e-mail by sending an e-mail message to
-<a href="mailto:update-admin@mozilla.org">update-admin@mozilla.org</a>. This is particularly ideal for
-situations requiring fast response. For most everyday issues it is preferred that you <a href="../#bugs">file a bug</a>.
+For more information, visit our <a href="../#bugs">frequently asked
+questions</a>.</p>
 
 <h2>IRC</h2>
-Some of the Mozilla Update staff can be found on IRC. In the <a href="irc://irc.mozilla.org/umo">#umo</a> channel
-on <a href="irc://irc.mozilla.org">irc.mozilla.org</a>.
+<p>For support questions, please visit <a href="irc://irc.mozilla.org/firefox">#firefox</a> 
+and <a href="irc://irc.mozilla.org/thunderbird">#thunderbird</a>.</p>
+
+<p>Some of the Mozilla Update staff can be found on IRC. In the 
+<a href="irc://irc.mozilla.org/umo">#umo</a> channel on 
+<a href="irc://irc.mozilla.org">irc.mozilla.org</a>. Note: this channel is not
+for end-user support.</p>
 
 </div>
 <?php
 include"$page_footer";
 ?>
-</BODY>
-</HTML>
+</body>
+</html>

@@ -40,13 +40,13 @@
 
 //Cache Control Headers
 if ($nocache==TRUE) {
-$expstr = gmdate("D, d M Y H:i:s", time() - 1800) . " GMT";
-header("Expires: $expstr");
-header("Cache-Control: public, max-age=0");
+    $expstr = gmdate("D, d M Y H:i:s", time() - 1800) . " GMT";
+    header("Expires: $expstr");
+    header("Cache-Control: public, max-age=0");
 } else {
-$expstr = gmdate("D, d M Y H:i:s", time() + 1800) . " GMT";
-header("Expires: $expstr");
-header("Cache-Control: public, max-age=1800");
+    $expstr = gmdate("D, d M Y H:i:s", time() + 1800) . " GMT";
+    header("Expires: $expstr");
+    header("Cache-Control: public, max-age=1800");
 }
 
 // ---------------------------

@@ -79,7 +79,7 @@ if ($securitywarning=="true") {
 <div id="mBody">
 	<div id="mainContent" class="right">
 	<h2>What is Mozilla Update?</h2>
-	<p class="first">Mozilla Update is the place to get extras for your <a href="http://www.mozilla.org/">Mozilla</a> products. Learn more <a href="/about/">about us</a>.</p>
+    <p class="first">Mozilla Update is the place to get updates and extras for your <a href="http://www.mozilla.org/">Mozilla</a> products.  This service is undergoing <a href="/about/update.php">several changes</a> that we hope will make the site better.  We will be posting frequent <a href="./about/update.php">status updates</a> as to our progress with the UMO service.</p>
 
     <?php
     $uriparams_skip="application";
