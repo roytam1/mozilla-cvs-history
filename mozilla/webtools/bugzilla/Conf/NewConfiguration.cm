@@ -30,30 +30,43 @@ output "Your choices are:\n";
 foreach $cur (@databases) { output $cur."\n" }
 output "\n";
 
-storeData(); 
+storeData();
 
 my $found;
 
 { # bare blocks are really annoying but it works, thanks to
-  # Randle L Schwartz in http://perlmonks.org/index.pl?node_id=239614
-	ask('databasetype','Database type?','mysql');
-	
-
-	foreach $cur (@databases) {
-		if (getConf('databasetype') eq $cur) {
-			$found = 1;
-			last;
-		}
-	}
-
-	unless ($found) {
-		output "Sorry, invalid option\n\n";
-		redo;
-	}
+    # Randle L Schwartz in http://perlmonks.org/index.pl?node_id=239614
+    ask('databasetype','Database type?','mysql');
+    
+    
+    foreach $cur (@databases) {
+        if (getConf('databasetype') eq $cur) {
+            $found = 1;
+            last;
+        }
+    }
+    
+    unless ($found) {
+        output "Sorry, invalid option\n\n";
+        redo;
+    }
 }
 
 storeData();
 
+output "Now that you have selected your database type,\n";
+output "we will need to configure your database information\n\n";
 
+output "Please enter the name of the database you wish to use.\n";
+output "If it does not already exist, it will be created for you and\n";
+output "Any existing data in this database may be deleted.\n";
+output "Remember that you can answer 'stop' at any time to save your settings\n";
+ask('db_name','Database name?','bugs');
+
+output "Now configuring other database configuration settings\n";
+ask('db_port',"Database port?",3306);
+ask('db_user',"Database username?",'bugs');
+ask('db_pass',"Database password (leave blank if none)?",'');
+storeData();
 
 1;
