@@ -13,7 +13,9 @@ I will display recomended values for your system.
 You may see this message more than once if Configure needs to restart. 
 This is normal. 
 
-Press any key to continue.
++--------------------------+
+|Press any key to continue.|
++--------------------------+
 
 Thanks for using Bugzilla,
 

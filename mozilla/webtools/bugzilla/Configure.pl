@@ -39,19 +39,23 @@ use Conf;
 
 $args = join(' ',@ARGV);
 
+unless ($] >= 5.006) {
+    die "Sorry, you need at least Perl 5.6\n";
+}
+
 # Insert lines in this space to run .cm files like:
 # runconf('Conf/Foo.cm'); 
 # runconf() will handle the path mapping for XP purposes
 # NOT SURE IF WE REALLY NEED TO ADJUST THE PATH
 runconf('Conf/Begin.cm');
 
-if ($args =~ /--perl\=([\/A-Za-z0-9]+) /) { # they passed us a perl arg
+if ($args =~ /--perl\=([\/A-Za-z0-9]+|[\/A-Za-z0-9]+ )/) { # they passed us a perl arg
 	setConf('perl',$1); # set the path to perl and move on...
 } else {
 	# they haven't run configure.pl before so run PerlCheck now...
 	runconf('Conf/PerlCheck.cm'); 
 }
-
+runconf('Conf/ModuleCheck.cm');
 runconf('Conf/UpgradeCheck.cm');
 
 

@@ -58,7 +58,7 @@ sub _ask($$$) {
 	foreach $cur (@ignorequestions) { #check to see if we should ignore it
 		if ($cur eq $name) { # the question should be ignored
 			print "$question [$default]\n";
-			print "AUTOMATICALLY ANSWERED BY VENDOR\n";
+			print "AUTOMATICALLY ANSWERED\n";
 			return $default;
 		}
 	}

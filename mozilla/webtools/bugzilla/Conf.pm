@@ -63,7 +63,7 @@ sub ask {
     if ($Conf::Supplies::Config::answers{$name}) { # if it's in Config.pm, use it
         $default = $Conf::Supplies::Config::answers{$name};
     }
-    _ask($name,$question,$default);
+    my $answer = _ask($name,$question,$default);
     if ($answer eq "") { $answer = $default; } # handle the default
     $main::c{$name} = $answer;
 } 

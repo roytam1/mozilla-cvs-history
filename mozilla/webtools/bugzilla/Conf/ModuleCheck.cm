@@ -1,0 +1,199 @@
+package Conf::ModuleCheck;
+use Conf;
+no warnings;
+
+output "\nChecking for required modules\n";
+
+# "borrowed" from checksetup.pl
+
+# Check versions of dependencies.  0 for version = any version acceptible
+my $modules = [ 
+    { 
+        name => 'AppConfig',  
+        version => '1.52' 
+    }, 
+    { 
+        name => 'CGI', 
+        version => '2.88' 
+    }, 
+    {
+        name => 'Data::Dumper', 
+        version => '0' 
+    }, 
+    {        
+        name => 'Date::Parse', 
+        version => '0' 
+    }, 
+    { 
+        name => 'DBI', 
+        version => '1.32' 
+    }, 
+    { 
+        name => 'DBD::mysql', 
+        version => '2.1010' 
+    }, 
+    { 
+        name => 'File::Spec', 
+        version => '0.82' 
+    }, 
+    {
+        name => 'File::Temp',
+        version => '0'
+    },
+    { 
+        name => 'Template', 
+        version => '2.08' 
+    }, 
+    { 
+        name => 'Text::Wrap', 
+        version => '2001.0131' 
+    } 
+];
+
+my %missing = ();
+
+# Modules may change $SIG{__DIE__} and $SIG{__WARN__}, so localise them here
+# so that later errors display 'normally'
+foreach my $module (@{$modules}) {
+    local $::SIG{__DIE__};
+    local $::SIG{__WARN__};
+    unless (have_vers($module->{name}, $module->{version})) { 
+        $missing{$module->{name}} = $module->{version};
+    }
+}
+
+if (%missing) {
+	output <<EOF;
+	
+You are missing one or more perl modules that are required for Bugzilla to run.
+The easist way to install these modules is by running (as root):
+perl -MCPAN -e 'install Bundle::Bugzilla'
+
+If you would prefer to install the modules manually, consult the list of 
+install commands below and review the installation section of the Bugzilla Guide. 
+
+EOF
+	foreach my $module (keys %missing) {
+        output "   perl -MCPAN -e 'install \"$module\"'\n";
+        if ($missing{$module} > 0) {
+            output "   Minimum version required: $missing{$module}\n";
+        }
+    }
+    output "\n";
+    exit;
+}
+
+output "\nRequired modules found\n";
+output "Checking optional modules\n";
+
+my $gd          = have_vers("GD","1.20");
+my $chartbase   = have_vers("Chart::Base","0.99");
+my $xmlparser   = have_vers("XML::Parser",0);
+my $gdgraph     = have_vers("GD::Graph",0);
+my $gdtextalign = have_vers("GD::Text::Align",0);
+
+if ((!$gd || !$chartbase)) {
+    output <<EOF;
+    
+For graphical bug charts, you will need to install the libgd library 
+and both the GD and Chart perl modules.
+
+EOF
+}
+
+if (!$xmlparser {
+	output <<EOF;
+
+To use Bugzilla's import/export bug feature (to move bugs from one 
+installation to another), you will need the XML::Parser module.
+
+EOF
+}
+
+if ((!$gd || !$gdgraph || !$gdtextalign)) {
+	output <<EOF;
+
+For graphical charts of bug data, you will need libgd and the following 
+modules:
+
+GD
+GD::Graph
+GD::Text::Align
+
+EOF
+}
+
+
+# vers_cmp is adapted from Sort::Versions 1.3 1996/07/11 13:37:00 kjahds,
+# which is not included with Perl by default, hence the need to copy it here.
+# Seems silly to require it when this is the only place we need it...
+sub vers_cmp {
+  if (@_ < 2) { die "not enough parameters for vers_cmp" }
+  if (@_ > 2) { die "too many parameters for vers_cmp" }
+  my ($a, $b) = @_;
+  my (@A) = ($a =~ /(\.|\d+|[^\.\d]+)/g);
+  my (@B) = ($b =~ /(\.|\d+|[^\.\d]+)/g);
+  my ($A,$B);
+  while (@A and @B) {
+    $A = shift @A;
+    $B = shift @B;
+    if ($A eq "." and $B eq ".") {
+      next;
+    } elsif ( $A eq "." ) {
+      return -1;
+    } elsif ( $B eq "." ) {
+      return 1;
+    } elsif ($A =~ /^\d+$/ and $B =~ /^\d+$/) {
+      return $A <=> $B if $A <=> $B;
+    } else {
+      $A = uc $A;
+      $B = uc $B;
+      return $A cmp $B if $A cmp $B;
+    }
+  }
+  @A <=> @B;
+}
+
+# This was originally clipped from the libnet Makefile.PL, adapted here to
+# use the above vers_cmp routine for accurate version checking.
+sub have_vers {
+  my ($pkg, $wanted) = @_;
+  my ($msg, $vnum, $vstr);
+  no strict 'refs';
+  printf("Checking for %15s %-9s ", $pkg, !$wanted?'(any)':"(v$wanted)");
+
+  eval { my $p; ($p = $pkg . ".pm") =~ s!::!/!g; require $p; };
+
+  $vnum = ${"${pkg}::VERSION"} || ${"${pkg}::Version"} || 0;
+  $vnum = -1 if $@;
+
+  # CGI's versioning scheme went 2.75, 2.751, 2.752, 2.753, 2.76
+  # That breaks the standard version tests, so we need to manually correct
+  # the version
+  if ($pkg eq 'CGI' && $vnum =~ /(2\.7\d)(\d+)/) {
+      $vnum = $1 . "." . $2;
+  }
+
+  if ($vnum eq "-1") { # string compare just in case it's non-numeric
+    $vstr = "not found";
+  }
+  elsif (vers_cmp($vnum,"0") > -1) {
+    $vstr = "found v$vnum";
+  }
+  else {
+    $vstr = "found unknown version";
+  }
+
+  my $vok = (vers_cmp($vnum,$wanted) > -1);
+  print ((($vok) ? "ok: " : " "), "$vstr\n") unless $silent;
+  return $vok;
+}
+
+sub correctpath($) { # fix the dir seperator, do we really need this?
+	my ($path) = @_;
+    my @pathlist = split('/',$path);
+    return File::Spec->catfile(@pathlist);
+}
+
+1;
+

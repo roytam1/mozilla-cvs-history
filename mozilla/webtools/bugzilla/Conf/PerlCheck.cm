@@ -28,18 +28,18 @@ if (-e "/usr/bonsaitools/bin/perl") {
 
 # check to make sure we have a path set:
 if (getConf('perl')) { # they have one set
+
+	output("I detected your perl install at ".getConf('perl')."\n");
+	ask('perlcorrect','Is this correct?','yes');
 	
-	output <<EOF;
-
-I'm now going to need to restart Configure.pl to pick up any changes 
-in the location of perl you wish to use. If this gives an error message 
-or simply dies, it probably means that something is wrong with: your 
-perl installation, the path to perl that was detected or specified, or Bugzilla.
-Try running Configure.pl again.
-EOF
-
-	exec(getConf('perl')." $0 --perl=".getConf('perl')); # exec the new perl with an arg
-	exit; # and we are done here...
+	if (getConf('perlcorrect') =~ /(yes|y)/i) {
+		restart();
+	} else {
+		output "What perl install would you like to use?";
+		ask('perl',"Please enter a complete path",'/usr/bin/perl');
+		
+		restart(); 
+	}
 
 } else {
 	# something went wrong so we bail out
@@ -69,6 +69,25 @@ sub correctpath($) { # fix the dir seperator, do we really need this?
 	my ($path) = @_;
     my @pathlist = split('/',$path);
     return File::Spec->catfile(@pathlist);
+}
+
+sub restart() {
+	output <<EOF;
+
+I'm now going to need to restart Configure.pl to use the correct perl on 
+your system If this results in an error message,it probably means that 
+something is wrong with your perl installation or path to perl that 
+was detected or specified. You may want to try running 
+this script again if you get an error.  
+
+Press any key to proceed.
+
+---------------------------------------------------------------------
+EOF
+	holduntilkey();
+		
+	exec(getConf('perl')." $0 --perl=".getConf('perl')); # exec the new perl with an arg
+	exit; # and we are done here...
 }
 
 1;
