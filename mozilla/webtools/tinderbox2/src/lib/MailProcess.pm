@@ -89,8 +89,8 @@ sub fatal_mailprocessing_error {
 
   my  @error = @_;
   foreach $_ (@error) {
-    print LOG "[$LOCALTIME] $_";
-    print STDERR "[$LOCALTIME] $_";
+    print LOG "[$main::LOCALTIME] $_";
+    print STDERR "[$main::LOCALTIME] $_";
   }
   print LOG "\n";
   print STDERR "\n";
