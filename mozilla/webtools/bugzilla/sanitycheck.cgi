@@ -162,6 +162,36 @@ if (exists $::FORM{'rederivegroupsnow'}) {
         DeriveGroup($id);
     }
 }
+
+if (exists $::FORM{'cleangroupsnow'}) {
+    Status("OK, now cleaning stale groups.");
+    # Only users that were out of date already long ago should be cleaned
+    # and the cleaning is done with tables locked.  This is require in order
+    # to keep another session from proceeding with permission checks
+    # after the groups have been cleaned unless it first had an opportunity
+    # to get the groups up to date.
+    # If any page starts taking longer than one hour to load, this interval
+    # should be revised.
+    SendSQL("SELECT MAX(group_when) FROM groups WHERE group_when < NOW() - INTERVAL 1 HOUR");
+    (my $cutoff) = FetchSQLData();
+    Status("Cutoff is $cutoff");
+    SendSQL("LOCK TABLES user_group_map WRITE, profiles READ");
+    SendSQL("SELECT COUNT(*) FROM user_group_map");
+    (my $before) = FetchSQLData();
+    SendSQL("SELECT userid FROM profiles WHERE " .
+            "refreshed_when < " . SqlQuote($cutoff));
+    while ((my $id) = FetchSQLData()) {
+        PushGlobalSQLState();
+        SendSQL("DELETE FROM user_group_map WHERE " .
+            "user_id = $id AND isderived = 1 AND isbless = 0");
+        PopGlobalSQLState();
+    }
+    SendSQL("UNLOCK TABLES");
+    SendSQL("SELECT COUNT(*) FROM user_group_map");
+    (my $after) = FetchSQLData();
+    Status("Cleaned table - reduced from $before records to $after records");
+}
+
 print "OK, now running sanity checks.<p>\n";
 
 # This one goes first, because if this is wrong, then the below tests
