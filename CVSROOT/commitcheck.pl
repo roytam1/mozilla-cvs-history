@@ -11,6 +11,11 @@ $fullname{'52'} = 'Aurora/RDF BE';
 $mode{'53'} = 'Open';
 $branch{'53'} = 'HEAD';
 $fullname{'53'} = 'Berkeley DB';
+$mode{'166'} = 'Restricted';
+$branch{'166'} = 'HEAD';
+$fullname{'166'} = 'Browser';
+$blessed{'166'} = [];
+$super{'166'} = ['hyatt%netscape.com','ben%netscape.com','blakeross%telocity.com','bryner%netscape.com','pinkerton%netscape.com',];
 $mode{'55'} = 'Open';
 $branch{'55'} = 'HEAD';
 $fullname{'55'} = 'Build Config';
@@ -372,6 +377,7 @@ if (m:^mozilla/gfx/src/qt/.*$:) {return '161';}
 if (m:^mozilla/widget/src/qt/.*$:) {return '161';}
 if (m:^mozilla/extensions/p3p/.*$:) {return '162';}
 if (m:^mozilla/chimera/.*$:) {return '164';}
+if (m:^mozilla/browser/.*$:) {return '166';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
