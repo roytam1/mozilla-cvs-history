@@ -27,11 +27,7 @@ require "CGI.pl";
 
 ConnectToDatabase();
 
-quietly_check_login();
-
-# More warning suppression silliness.
-$::userid = $::userid;
-$::usergroupset = $::usergroupset;
+my $userid = quietly_check_login();
 
 ######################################################################
 # Begin Data/Security Validation
@@ -40,7 +36,7 @@ $::usergroupset = $::usergroupset;
 # Make sure the bug ID is a positive integer representing an existing
 # bug that the user is authorized to access.
 if (defined $::FORM{'id'}) {
-  ValidateBugID($::FORM{'id'});
+  ValidateBugID($::FORM{'id'}, $userid);
 }
 
 ######################################################################
@@ -124,16 +120,16 @@ node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
         my $summary = "";
         my $stat;
         if ($::FORM{'showsummary'}) {
-            SendSQL(SelectVisible("SELECT bug_status, short_desc FROM bugs " .
-                                  "WHERE bugs.bug_id = $k",
-                                  $::userid,
-                                  $::usergroupset));
+            SendSQL("select bug_status, short_desc from bugs where bugs.bug_id = $k", $userid);
             ($stat, $summary) = (FetchSQLData());
             $stat = "NEW" if !defined $stat;
             $summary = "" if !defined $summary;
         } else {
             SendSQL("select bug_status from bugs where bug_id = $k");
             $stat = FetchOneColumn();
+        }
+        if (!ValidateBugID($k, $userid) ) {
+            next;
         }
         my @params;
 #        print DOT "$k [URL" . qq{="${urlbase}show_bug.cgi?id=$k"};

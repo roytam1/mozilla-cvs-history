@@ -32,7 +32,7 @@ sub bug_form_pl_sillyness {
     my $zz;
     $zz = %::FORM;
     $zz = %::components;
-    $zz = %::proddesc;
+#    $zz = %::proddesc;
     $zz = %::prodmaxvotes;
     $zz = %::versions;
     $zz = @::legal_keywords;
@@ -44,7 +44,7 @@ sub bug_form_pl_sillyness {
     $zz = %::target_milestone;
 }
 
-my $loginok = quietly_check_login();
+my $userid = quietly_check_login();
 
 my $id = $::FORM{'id'};
 
@@ -68,7 +68,6 @@ select
         qa_contact,
         status_whiteboard,
         date_format(creation_ts,'%Y-%m-%d %H:%i'),
-        groupset,
         delta_ts,
         sum(votes.count)
 from bugs left join votes using(bug_id)
@@ -85,7 +84,7 @@ foreach my $field ("bug_id", "product", "version", "rep_platform",
                    "bug_severity", "component", "assigned_to", "reporter",
                    "bug_file_loc", "short_desc", "target_milestone",
                    "qa_contact", "status_whiteboard", "creation_ts",
-                   "groupset", "delta_ts", "votes") {
+                   "delta_ts", "votes") {
     $bug{$field} = shift @row;
     if (!defined $bug{$field}) {
         $bug{$field} = "";
@@ -188,8 +187,7 @@ if (1 < @prodlist) {
         "</SELECT>";
 }
 else {
-    $product_popup = $bug{'product'} .
-        "<INPUT TYPE=\"HIDDEN\" NAME=\"product\" VALUE=\"$bug{'product'}\">";
+    $product_popup = $bug{'product'};
 }
 
 print "
@@ -356,7 +354,7 @@ sub EmitDependList {
     while (MoreSQLData()) {
         my ($i) = (FetchSQLData());
         push(@list, $i);
-        print GetBugLink($i, $i);
+        print GetBugLink($i, $i, $userid);
         print " ";
     }
     print "</td><td><input name=$targetfield value=\"" .
@@ -398,66 +396,68 @@ print "
 <BR>
 <TEXTAREA WRAP=HARD NAME=comment ROWS=10 COLS=80></TEXTAREA><BR>";
 
+my $numgroups = 0;
+if ($userid) {
+    SendSQL("SELECT COUNT(*) FROM user_group_map WHERE user_id = $userid");
+    $numgroups = FetchOneColumn();
+}
 
-if ($::usergroupset ne '0' || $bug{'groupset'} ne '0') {
-    SendSQL("select bit, name, description, (bit & $bug{'groupset'} != 0), " .
-            "(bit & $::usergroupset != 0) from groups where isbuggroup != 0 " .
-            # Include active groups as well as inactive groups to which
-            # the bug already belongs.  This way the bug can be removed
-            # from an inactive group but can only be added to active ones.
-            "and ((isactive = 1 and (bit & $::usergroupset != 0)) or " .
-            "(bit & $bug{'groupset'} != 0)) " . 
-            "order by description");
-    # We only print out a header bit for this section if there are any
-    # results.
+if ($numgroups) {
+    # Find out which groups we are a member of and form radio buttons
+    SendSQL("SELECT groups.group_id, groups.name, groups.description " .
+            "FROM user_group_map, groups " .
+            "WHERE user_group_map.group_id = groups.group_id " .
+            "AND user_group_map.user_id = $userid " .
+            "AND groups.isbuggroup != 0 " .
+            "AND groups.isactive = 1 " . 
+            "ORDER BY groups.group_id");
+    my %usergroups;
+    my %groupnames;
     my $groupFound = 0;
     my $inAllGroups = 1;
     while (MoreSQLData()) {
-      my ($bit, $name, $description, $ison, $ingroup) = (FetchSQLData());
-      # For product groups, we only want to display the checkbox if either
-      # (1) The bit is already set, or
-      # (2) The user is in the group, but either:
-      #     (a) The group is a product group for the current product, or
-      #     (b) The group name isn't a product name
-      # This measns that all product groups will be skipped, but non-product
-      # bug groups will still be displayed.
-      if($ison || ($ingroup && (($name eq $bug{'product'}) ||
-                                (!defined $::proddesc{$name})))) {
-        if(!$groupFound) {
-          print "<br><b>Only users in the selected groups can view this bug:</b><br>\n";
-          print "<font size=\"-1\">(Unchecking all boxes makes this a public bug.)</font><br><br>\n";
-          $groupFound = 1;
-        }
-        if(!$ingroup) {
+        my ($group_id, $name, $description) = FetchSQLData();
+        $groupnames{$group_id} = $name;
+        $usergroups{$group_id} = $description;
+    }
+
+    print "<br><b>Only users in the selected groups can view this bug:</b><br>\n";
+    print "<font size=\"-1\">(Leave all boxes unchecked to make this a public bug.)</font><br><br>\n";
+
+    # Find out if this bug is private to any of the groups the user belongs to
+    my %buggroups;
+    SendSQL("SELECT group_id FROM bug_group_map WHERE bug_id = $id");
+    while (my ($buggroup) = FetchSQLData()) {
+        $buggroups{$buggroup} = 1;
+        $groupFound = 1;
+        if (!$groupnames{$buggroup}) {
             $inAllGroups = 0;
         }
-        # Modifying this to use checkboxes instead
-        my $checked = $ison ? " CHECKED" : "";
-        my $disabled = $ingroup ? "" : " DISABLED=\"disabled\"";
-        # indent these a bit
+    }
+
+    foreach my $group_id ( keys %usergroups ) {
+        my $checked = $buggroups{$group_id} ? "CHECKED" : "";
         print "&nbsp;&nbsp;&nbsp;&nbsp;";
-        print "<input type=checkbox name=\"bit-$bit\" value=1$checked$disabled>\n";
-        print "$description<br>\n";
-      }
+        print "<input type=checkbox name=\"group-$group_id\" value=1 $checked>\n";
+        print "$usergroups{$group_id}<br>\n";
     }
     if (!$inAllGroups) {
-        print "<b>Only members of a group can change the visibility of a bug for that group</b><br>";
+        print "<br><b>Only members of a group can change the visibility of a bug for that group</b><br>";
     }
 
     # If the bug is restricted to a group, display checkboxes that allow
     # the user to set whether or not the reporter, assignee, QA contact, 
     # and cc list can see the bug even if they are not members of all 
     # groups to which the bug is restricted.
-    if ( $bug{'groupset'} != 0 ) {
+    if ($groupFound) {
         # Determine whether or not the bug is always accessible by the reporter,
         # QA contact, and/or users on the cc: list.
         SendSQL("SELECT  reporter_accessible , assignee_accessible , 
                          qacontact_accessible , cclist_accessible
                  FROM    bugs
-                 WHERE   bug_id = $id
-                ");
-        my ($reporter_accessible, $assignee_accessible, $qacontact_accessible, $cclist_accessible) = FetchSQLData();
+                 WHERE   bug_id = $id");
 
+        my ($reporter_accessible, $assignee_accessible, $qacontact_accessible, $cclist_accessible) = FetchSQLData();#
         # Convert boolean data about which roles always have access to the bug
         # into "checked" attributes for the HTML checkboxes by which users
         # set and change these values.
@@ -467,7 +467,7 @@ if ($::usergroupset ne '0' || $bug{'groupset'} ne '0') {
         my $cclist_checked = $cclist_accessible ? " checked" : "";
 
         # Display interface for changing the values.
-        print qq|
+        print qq{
             <p>
             <b>But users in the roles selected below can always view this bug:</b><br>
             <small>(Does not take effect unless the bug is restricted to at least one group.)</small>
@@ -479,13 +479,9 @@ if ($::usergroupset ne '0' || $bug{'groupset'} ne '0') {
             <input type="checkbox" name="qacontact_accessible" value="1" $qacontact_checked>QA Contact
             <input type="checkbox" name="cclist_accessible" value="1" $cclist_checked>CC List
             </p>
-        |;
+        };
     }
 }
-
-
-
-
 
 print "<br>
 <INPUT TYPE=radio NAME=knob VALUE=none CHECKED>
@@ -498,18 +494,18 @@ my $knum = 1;
 
 my $status = $bug{'bug_status'};
 
-# In the below, if the person hasn't logged in ($::userid == 0), then
+# In the below, if the person hasn't logged in ($userid == 0), then
 # we treat them as if they can do anything.  That's because we don't
 # know why they haven't logged in; it may just be because they don't
 # use cookies.  Display everything as if they have all the permissions
 # in the world; their permissions will get checked when they log in
 # and actually try to make the change.
 
-my $canedit = UserInGroup("editbugs") || ($::userid == 0);
+my $canedit = UserInGroup($userid, "editbugs") || ($userid == 0);
 my $canconfirm;
 
 if ($status eq $::unconfirmedstate) {
-    $canconfirm = UserInGroup("canconfirm") || ($::userid == 0);
+    $canconfirm = UserInGroup($userid, "canconfirm") || ($userid == 0);
     if ($canedit || $canconfirm) {
         print "<INPUT TYPE=radio NAME=knob VALUE=confirm>";
         print "Confirm bug (change status to <b>NEW</b>)<br>";
@@ -521,8 +517,8 @@ my $movers = Param("movers");
 $movers =~ s/\s?,\s?/|/g;
 $movers =~ s/@/\@/g;
 
-if ($canedit || $::userid == $assignedtoid ||
-      $::userid == $reporterid || $::userid == $qacontactid) {
+if ($canedit || $userid == $assignedtoid ||
+      $userid == $reporterid || $userid == $qacontactid) {
     if (IsOpenedState($status)) {
         if ($status ne "ASSIGNED") {
             print "<INPUT TYPE=radio NAME=knob VALUE=accept>";

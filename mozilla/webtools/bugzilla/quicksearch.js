@@ -46,11 +46,8 @@ function do_shift(l) {
 }
 
 function go_to (url) {
-    if (sidebar == 1) {
-        load_relative_url(url);
-    } else {
-        document.location.href = url;
-    }
+  document.location.href = url;
+  //window.open(url, "other" );
 }
 
 function map(l, f) {
@@ -603,7 +600,8 @@ function unique_id () {
     return (new Date()).getTime();
 }
 
-function ShowURL(mode,input) {
+function ShowURL(mode) {
+    var input = document.f.id.value;
     var searchURL = make_query_URL(bugzilla+"buglist.cgi", input, false);
     if (searchURL != no_result) {
         var pieces = searchURL.replace(/[\?]/g,"\n?").replace(/[\&]/g,"\n&");
@@ -686,7 +684,7 @@ function Search(url, input, searchLong) {
 // derived from http://www.cs.hmc.edu/~jruderma/s/bugz.html
 
 // QuickSearch combines lookup-by-bug-number and search
-// in a single textbox. 
+// in a single textbox. It's name must be document.f.id .
 //
 // type nothing:
 //    --> go to bugzilla front page
@@ -698,8 +696,10 @@ function Search(url, input, searchLong) {
 //    --> search summary, product, component, keywords, status whiteboard
 //        (and URL if it's an IP address, a host.name, or an absolute://URL)
 
-function QuickSearch (input)
+function QuickSearch ()
 {
+    var input = document.f.id.value;
+
     //remove leading and trailing whitespace
     input = input.replace(/^[\s]+/,"").replace(/[\s]+$/,"");
 
@@ -726,7 +726,9 @@ function QuickSearch (input)
     return;
 }
 
-function LoadQuery(input) {
+function LoadQuery() {
+    var input = document.f.id.value;
+
     //remove leading and trailing whitespace
     input = input.replace(/^[\s]+/,"").replace(/[\s]+$/,"");
 

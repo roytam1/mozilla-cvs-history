@@ -71,7 +71,8 @@ my %reports =
 # If we're using bug groups for products, we should apply those restrictions
 # to viewing reports, as well.  Time to check the login in that case.
 ConnectToDatabase(1);
-quietly_check_login();
+
+my $userid = quietly_check_login();
 
 GetVersionTable();
 
@@ -81,7 +82,7 @@ my @myproducts;
 if(Param("usebuggroups")) {
     push( @myproducts, "-All-");
     foreach my $this_product (@legal_product) {
-        if(GroupExists($this_product) && !UserInGroup($this_product)) {
+        if(GroupExists($this_product) && !UserInGroup($userid, $this_product)) {
             next;
         } else {
             push( @myproducts, $this_product )
@@ -110,7 +111,7 @@ if (! defined $FORM{'product'}) {
     # reports for products they don't have permissions for...
     Param("usebuggroups") 
       && GroupExists($FORM{'product'}) 
-      && !UserInGroup($FORM{'product'})
+      && !UserInGroup($userid, $FORM{'product'})
       && DisplayError("You do not have the permissions necessary to view reports for this product.")
       && exit;
           

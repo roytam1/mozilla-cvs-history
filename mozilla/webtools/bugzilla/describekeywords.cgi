@@ -81,9 +81,9 @@ qq{">$name</A></TH>
 
 print "</TABLE><P>\n";
 
-quietly_check_login();
+my $userid = quietly_check_login();
 
-if (UserInGroup("editkeywords")) {
+if (UserInGroup($userid, "editkeywords")) {
     print "<p><a href=editkeywords.cgi>Edit keywords</a><p>\n";
 }
 

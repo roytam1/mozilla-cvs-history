@@ -64,9 +64,8 @@ my $vars =
     'PerformSubsts' => \&PerformSubsts
   };
 
-# Check whether or not the user is logged in and, if so, set the $::userid 
-# and $::usergroupset variables.
-quietly_check_login();
+# Check whether or not the user is logged in and, if so, set the $userid 
+my $userid = quietly_check_login();
 
 ################################################################################
 # Main Body Execution
@@ -86,19 +85,19 @@ if ($action eq "view")
 }
 elsif ($action eq "viewall") 
 { 
-  ValidateBugID($::FORM{'bugid'});
+  ValidateBugID($::FORM{'bugid'}, $userid);
   viewall(); 
 }
 elsif ($action eq "enter") 
 { 
   confirm_login();
-  ValidateBugID($::FORM{'bugid'});
+  ValidateBugID($::FORM{'bugid'}, $userid);
   enter(); 
 }
 elsif ($action eq "insert")
 {
   confirm_login();
-  ValidateBugID($::FORM{'bugid'});
+  ValidateBugID($::FORM{'bugid'}, $userid);
   validateFilename();
   validateData();
   validateDescription();
@@ -115,7 +114,7 @@ elsif ($action eq "edit")
 elsif ($action eq "update") 
 { 
   confirm_login();
-  UserInGroup("editbugs")
+  UserInGroup($userid, "editbugs")
     || DisplayError("You are not authorized to edit attachments.")
     && exit;
   validateID();
@@ -154,7 +153,7 @@ sub validateID
 
   # Make sure the user is authorized to access this attachment's bug.
   my ($bugid) = FetchSQLData();
-  ValidateBugID($bugid);
+  ValidateBugID($bugid, $userid);
 }
 
 sub validateDescription
@@ -326,7 +325,7 @@ sub validateObsolete
     my ($bugid, $isobsolete, $description) = FetchSQLData();
 
     # Make sure the user is authorized to access this attachment's bug.
-    ValidateBugID($bugid);
+    ValidateBugID($bugid, $userid);
 
     if ($bugid != $::FORM{'bugid'})
     {
@@ -509,7 +508,7 @@ sub insert
   # special syntax of the "open" and "exec" commands to capture the output of 
   # "processmail", which "system" doesn't allow, without running the command 
   # through a shell, which backticks (``) do.
-  #system ("./processmail", $bugid , $::userid);
+  #system ("./processmail", $bugid , $userid);
   #my $mailresults = `./processmail $bugid $::userid`;
   my $mailresults = '';
   open(PMAIL, "-|") or exec('./processmail', $::FORM{'bugid'}, $::COOKIE{'Bugzilla_login'});
@@ -684,23 +683,23 @@ sub update
     my $quotedolddescription = SqlQuote($olddescription);
     my $fieldid = GetFieldID('attachments.description');
     SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
-             VALUES ($bugid, $::FORM{'id'}, $::userid, NOW(), $fieldid, $quotedolddescription, $quoteddescription)");
+             VALUES ($bugid, $::FORM{'id'}, $userid, NOW(), $fieldid, $quotedolddescription, $quoteddescription)");
   }
   if ($oldcontenttype ne $::FORM{'contenttype'}) {
     my $quotedoldcontenttype = SqlQuote($oldcontenttype);
     my $fieldid = GetFieldID('attachments.mimetype');
     SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
-             VALUES ($bugid, $::FORM{'id'}, $::userid, NOW(), $fieldid, $quotedoldcontenttype, $quotedcontenttype)");
+             VALUES ($bugid, $::FORM{'id'}, $userid, NOW(), $fieldid, $quotedoldcontenttype, $quotedcontenttype)");
   }
   if ($oldispatch ne $::FORM{'ispatch'}) {
     my $fieldid = GetFieldID('attachments.ispatch');
     SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
-             VALUES ($bugid, $::FORM{'id'}, $::userid, NOW(), $fieldid, $oldispatch, $::FORM{'ispatch'})");
+             VALUES ($bugid, $::FORM{'id'}, $userid, NOW(), $fieldid, $oldispatch, $::FORM{'ispatch'})");
   }
   if ($oldisobsolete ne $::FORM{'isobsolete'}) {
     my $fieldid = GetFieldID('attachments.isobsolete');
     SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
-             VALUES ($bugid, $::FORM{'id'}, $::userid, NOW(), $fieldid, $oldisobsolete, $::FORM{'isobsolete'})");
+             VALUES ($bugid, $::FORM{'id'}, $userid, NOW(), $fieldid, $oldisobsolete, $::FORM{'isobsolete'})");
   }
   if ($oldstatuslist ne $newstatuslist) {
     my ($removed, $added) = DiffStrings($oldstatuslist, $newstatuslist);
@@ -708,7 +707,7 @@ sub update
     my $quotedadded = SqlQuote($added);
     my $fieldid = GetFieldID('attachstatusdefs.name');
     SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
-             VALUES ($bugid, $::FORM{'id'}, $::userid, NOW(), $fieldid, $quotedremoved, $quotedadded)");
+             VALUES ($bugid, $::FORM{'id'}, $userid, NOW(), $fieldid, $quotedremoved, $quotedadded)");
   }
 
   # Unlock all database tables now that we are finished updating the database.
@@ -758,9 +757,9 @@ sub update
     }
 
     # Get the user's login name since the AppendComment function needs it.
-    my $who = DBID_to_name($::userid);
-    # Mention $::userid again so Perl doesn't give me a warning about it.
-    my $neverused = $::userid;
+    my $who = DBID_to_name($userid);
+    # Mention $userid again so Perl doesn't give me a warning about it.
+    my $neverused = $userid;
 
     # Append the comment to the list of comments in the database.
     AppendComment($bugid, $who, $wrappedcomment);
@@ -771,10 +770,10 @@ sub update
   # of the "open" and "exec" commands to capture the output of "processmail",
   # which "system" doesn't allow, without running the command through a shell,
   # which backticks (``) do.
-  #system ("./processmail", $bugid , $::userid);
-  #my $mailresults = `./processmail $bugid $::userid`;
+  #system ("./processmail", $bugid , $userid);
+  #my $mailresults = `./processmail $bugid $userid`;
   my $mailresults = '';
-  open(PMAIL, "-|") or exec('./processmail', $bugid, DBID_to_name($::userid));
+  open(PMAIL, "-|") or exec('./processmail', $bugid, DBID_to_name($userid));
   $mailresults .= $_ while <PMAIL>;
   close(PMAIL);
  

@@ -27,10 +27,11 @@ require "CGI.pl";
 
 ConnectToDatabase();
 
+my $userid = 0;
 if ($::FORM{'GoAheadAndLogIn'}) {
-    confirm_login();
+    $userid = confirm_login();
 } else {
-    quietly_check_login();
+    $userid = quietly_check_login();
 }
 
 ######################################################################
@@ -40,7 +41,7 @@ if ($::FORM{'GoAheadAndLogIn'}) {
 # Make sure the bug ID is a positive integer representing an existing
 # bug that the user is authorized to access.
 if (defined ($::FORM{'id'})) {
-    ValidateBugID($::FORM{'id'});
+    ValidateBugID($::FORM{'id'}, $userid);
 }
 
 ######################################################################

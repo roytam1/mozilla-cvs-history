@@ -37,7 +37,6 @@ sub sillyness {
     $zz = $::db_name;
     $zz = $::defaultqueryname;
     $zz = $::unconfirmedstate;
-    $zz = $::userid;
     $zz = @::components;
     $zz = @::default_column_list;
     $zz = @::legal_keywords;
@@ -56,7 +55,7 @@ my $serverpush = 0;
 ConnectToDatabase();
 
 #print "Content-type: text/plain\n\n";    # Handy for debugging.
-#$::FORM{'debug'} = 1;
+# $::FORM{'debug'} = 1;
 
 
 if (grep(/^cmd-/, keys(%::FORM))) {
@@ -155,6 +154,10 @@ sub GenerateSQL {
     my @specialchart;
     my @andlist;
 
+    my $userid = 0;
+    quietly_check_login();
+    $userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
+
     # First, deal with all the old hard-coded non-chart-based poop.
 
     unshift(@supptables,
@@ -199,7 +202,7 @@ sub GenerateSQL {
     my @legal_fields = ("product", "version", "rep_platform", "op_sys",
                         "bug_status", "resolution", "priority", "bug_severity",
                         "assigned_to", "reporter", "component",
-                        "target_milestone", "groupset");
+                        "target_milestone");
 
     foreach my $field (keys %F) {
         if (lsearch(\@legal_fields, $field) != -1) {
@@ -814,8 +817,6 @@ sub GenerateSQL {
                   " WHERE " . join(' AND ', (@wherepart, @andlist)) .
                   " GROUP BY bugs.bug_id");
 
-    $query = SelectVisible($query, $::userid, $::usergroupset);
-
     if ($debug) {
         print "<P><CODE>" . value_quote($query) . "</CODE><P>\n";
         exit();
@@ -827,8 +828,7 @@ sub GenerateSQL {
 
 sub LookupNamedQuery {
     my ($name) = (@_);
-    confirm_login();
-    my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
+    my $userid = confirm_login();
     SendSQL("SELECT query FROM namedqueries " .
             "WHERE userid = $userid AND name = " . SqlQuote($name));
     my $result = FetchOneColumn();
@@ -864,8 +864,7 @@ Refresh: 0; URL=$url
         exit;
     };
     /^forgetnamed$/ && do {
-        confirm_login();
-        my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
+        my $userid = confirm_login();
         SendSQL("DELETE FROM namedqueries WHERE userid = $userid " .
                 "AND name = " . SqlQuote($::FORM{'namedcmd'}));
 
@@ -881,8 +880,7 @@ OK, the <B>$::FORM{'namedcmd'}</B> query is gone.
         exit;
     };
     /^asdefault$/ && do {
-        confirm_login();
-        my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
+        my $userid = confirm_login();
         print "Content-type: text/html\n\n";
         SendSQL("REPLACE INTO namedqueries (userid, name, query) VALUES " .
                 "($userid, '$::defaultqueryname'," .
@@ -898,8 +896,7 @@ individual query.
         exit();
     };
     /^asnamed$/ && do {
-        confirm_login();
-        my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
+        my $userid = confirm_login();
         print "Content-type: text/html\n\n";
         my $name = trim($::FORM{'newqueryname'});
         if ($name eq "" || $name =~ /[<>&]/) {
@@ -1024,9 +1021,10 @@ if (defined $::FORM{'votes'}) {
 
 my $dotweak = defined $::FORM{'tweak'};
 
+my $userid = 0;
 if ($dotweak) {
-    confirm_login();
-    if (!UserInGroup("editbugs")) {
+    $userid = confirm_login();
+    if (!UserInGroup($userid, "editbugs")) {
         print qq{
 Sorry; you do not have sufficient privileges to edit a bunch of bugs
 at once.
@@ -1036,10 +1034,11 @@ at once.
     }
 } else {
     quietly_check_login();
+    $userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
 }
 
 
-my @fields = ("bugs.bug_id", "bugs.groupset");
+my @fields = ("bugs.bug_id");
 
 foreach my $c (@collist) {
     if (exists $::needquote{$c}) {
@@ -1131,9 +1130,9 @@ if (defined $::FORM{'order'} && $::FORM{'order'} ne "") {
 }
 
 
-if ($::FORM{'debug'} && $serverpush) {
-    print "<P><CODE>" . value_quote($query) . "</CODE><P>\n";
-}
+#if ($::FORM{'debug'} && $serverpush) {
+#    print "<P><CODE>" . value_quote($query) . "</CODE><P>\n";
+#}
 
 
 if (Param('expectbigqueries')) {
@@ -1216,6 +1215,7 @@ $tablestart .= "\n";
 my @row;
 my %seen;
 my @bugarray;
+my %valuehash;
 my %prodhash;
 my %statushash;
 my %ownerhash;
@@ -1238,17 +1238,134 @@ my @weekday= qw( Sun Mon Tue Wed Thu Fri Sat );
 # Truncate email to 30 chars per bug #103592
 my $maxemailsize = 30;
 
+#while (@row = FetchSQLData()) {
+#    my $bug_id = shift @row;
+#    my $g = shift @row;         # Bug's group set.
+#    if (!defined $seen{$bug_id}) {
+#        $seen{$bug_id} = 1;
+#        $count++;
+#        if ($count % 200 == 0) {
+#            # Too big tables take too much browser memory...
+#            pnl "</TABLE>$tablestart";
+#        }
+#        push @bugarray, $bug_id;
+#
+#        # retrieve this bug's priority and severity, if available,
+#        # by looping through all column names -- gross but functional
+#        my $priority = "unknown";
+#        my $severity;
+#        if ($pricol >= 0) {
+#            $priority = $row[$pricol];
+#        }
+#        if ($sevcol >= 0) {
+#            $severity = $row[$sevcol];
+#        }
+#        my $customstyle = "";
+#        if ($severity) {
+#            if ($severity eq "enh") {
+#                $customstyle = "style='font-style:italic ! important'";
+#            }
+#            if ($severity eq "blo") {
+#                $customstyle = "style='color:red ! important; font-weight:bold ! important'";
+#            }
+#            if ($severity eq "cri") {
+#                $customstyle = "style='color:red; ! important'";
+#            }
+#        }
+#        pnl "<TR VALIGN=TOP ALIGN=LEFT CLASS=$priority $customstyle><TD>";
+#        if ($dotweak) {
+#            pnl "<input type=checkbox name=id_$bug_id>";
+#        }
+#        pnl "<A HREF=\"show_bug.cgi?id=$bug_id\">";
+#        pnl "$bug_id</A>";
+#        if ($g != "0") { pnl "*"; }
+#        pnl " ";
+#        foreach my $c (@collist) {
+#            if (exists $::needquote{$c}) {
+#                my $value = shift @row;
+#                if (!defined $value) {
+#                    pnl "<TD>";
+#                    next;
+#                }
+#                if ($c eq "owner") {
+#                    $ownerhash{$value} = 1;
+#                }
+#                if ($c eq "qa_contact") {
+#                    $qahash{$value} = 1;
+#                }
+#                if ( ($c eq "owner" || $c eq "qa_contact" ) &&
+#                        length $value > $maxemailsize )  {
+#                    my $trunc = substr $value, 0, $maxemailsize;
+#                    $value = value_quote($value);
+#                    $value = qq|<SPAN TITLE="$value">$trunc...</SPAN>|;
+#                } elsif( $c eq 'changeddate' or $c eq 'opendate' ) {
+#                    my $age = time() - $value;
+#                    my ($s,$m,$h,$d,$mo,$y,$wd)= localtime $value;
+#                    if( $age < 18*60*60 ) {
+#                        $value = sprintf "%02d:%02d:%02d", $h,$m,$s;
+#                    } elsif ( $age < 6*24*60*60 ) {
+#                        $value = sprintf "%s %02d:%02d", $weekday[$wd],$h,$m;
+#                    } else {
+#                        $value = sprintf "%04d-%02d-%02d", 1900+$y,$mo+1,$d;
+#                    }
+#                }
+#                if ($::needquote{$c} || $::needquote{$c} == 5) {
+#                    $value = html_quote($value);
+#                } else {
+#                    $value = "<nobr>$value</nobr>";
+#                }
+#
+#                pnl "<td class=$c>$value";
+#            }
+#        }
+#        if ($dotweak) {
+#            my $value = shift @row;
+#            $prodhash{$value} = 1;
+#            $value = shift @row;
+#            $statushash{$value} = 1;
+#        }
+#        pnl "\n";
+#    }
+#}
+
 while (@row = FetchSQLData()) {
     my $bug_id = shift @row;
-    my $g = shift @row;         # Bug's group set.
+    push @bugarray, $bug_id;
+
+    $valuehash{$bug_id} = [];
+    push (@{$valuehash{$bug_id}}, shift @row);  # Bug's groupset
+
+    foreach my $col ( @collist ) {
+        if ( exists $::needquote{$col} ) {
+             my $value = shift @row;
+            push (@{$valuehash{$bug_id}}, $value);
+        }
+    }
+
+    if ($dotweak) {
+        my $value = shift @row;
+        $prodhash{$value} = 1;
+        $value = shift @row;
+        $statushash{$value} = 1;
+    }
+}
+
+my @newbugarray;
+my $canseeref = CanSeeBug(\@bugarray, $userid);
+
+foreach my $bug_id (@bugarray) {
+    # Do not show this bug if the user does not have permission to see it
+    next if !$canseeref->{$bug_id};
+    push (@newbugarray, $bug_id);
+
     if (!defined $seen{$bug_id}) {
         $seen{$bug_id} = 1;
+
         $count++;
         if ($count % 200 == 0) {
             # Too big tables take too much browser memory...
             pnl "</TABLE>$tablestart";
         }
-        push @bugarray, $bug_id;
 
         # retrieve this bug's priority and severity, if available,
         # by looping through all column names -- gross but functional
@@ -1273,16 +1390,20 @@ while (@row = FetchSQLData()) {
             }
         }
         pnl "<TR VALIGN=TOP ALIGN=LEFT CLASS=$priority $customstyle><TD>";
+
         if ($dotweak) {
             pnl "<input type=checkbox name=id_$bug_id>";
         }
         pnl "<A HREF=\"show_bug.cgi?id=$bug_id\">";
         pnl "$bug_id</A>";
-        if ($g != "0") { pnl "*"; }
+
+        # Place an asterisk next to the bug id if this bug is marked private
+        if ($canseeref->{$bug_id} > 1) { pnl "*"; }
+
         pnl " ";
         foreach my $c (@collist) {
             if (exists $::needquote{$c}) {
-                my $value = shift @row;
+                my $value = shift @{$valuehash{$bug_id}};
                 if (!defined $value) {
                     pnl "<TD>";
                     next;
@@ -1319,16 +1440,16 @@ while (@row = FetchSQLData()) {
             }
         }
         if ($dotweak) {
-            my $value = shift @row;
+            my $value = shift @{$valuehash{$bug_id}};
             $prodhash{$value} = 1;
-            $value = shift @row;
+            $value = shift @{$valuehash{$bug_id}};
             $statushash{$value} = 1;
         }
         pnl "\n";
     }
 }
-my $buglist = join(":", @bugarray);
 
+my $buglist = join(":", @newbugarray);
 
 # This is stupid.  We really really need to move the quip list into the DB!
 my $quip;
@@ -1377,9 +1498,9 @@ if (Param('usebuggroups')) {
    print "<BR>* next to a bug number notes a bug not visible to everyone.<BR>";
 }
 
-if (defined $::FORM{'debug'}) {
-    print "<P><CODE>" . value_quote($query) . "</CODE><P>\n";
-}
+#if (defined $::FORM{'debug'}) {
+#    print "<P><CODE>" . value_quote($query) . "</CODE><P>\n";
+#}
 
 if ($toolong) {
     print "<h2>This list is too long for bugzilla's little mind; the\n";
@@ -1529,17 +1650,20 @@ document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCh
 <BR>
 <TEXTAREA WRAP=HARD NAME=comment ROWS=5 COLS=80></TEXTAREA><BR>";
 
-if($::usergroupset ne '0') {
-    SendSQL("select bit, name, description, isactive ".
-            "from groups where bit & $::usergroupset != 0 ".
-            "and isbuggroup != 0 ".
+SendSQL("SELECT COUNT(*) FROM user_group_map WHERE user_id = $userid");
+my $usergroupset = FetchOneColumn();
+
+if($usergroupset) {
+    SendSQL("select groups.group_id, name, description, isactive ".
+            "from groups, user_group_map where groups.group_id = user_group_map.group_id ".
+            "and user_group_map.user_id = $userid and isbuggroup != 0 ".
             "order by description");
     # We only print out a header bit for this section if there are any
     # results.
     my $groupFound = 0;
     my $inactiveFound = 0;
     while (MoreSQLData()) {
-        my ($bit, $groupname, $description, $isactive) = (FetchSQLData());
+        my ($groupid, $groupname, $description, $isactive) = (FetchSQLData());
         if(($prodhash{$groupname}) || (!defined($::proddesc{$groupname}))) {
           if(!$groupFound) {
             print "<B>Groupset:</B><BR>\n";
@@ -1552,10 +1676,10 @@ if($::usergroupset ne '0') {
           }
           # Modifying this to use radio buttons instead
           print "<TR>";
-          print "<TD ALIGN=center><input type=radio name=\"bit-$bit\" value=\"-1\" checked></TD>\n";
-          print "<TD ALIGN=center><input type=radio name=\"bit-$bit\" value=\"0\"></TD>\n";
+          print "<TD ALIGN=center><input type=radio name=\"group-$groupid\" value=\"-1\" checked></TD>\n";
+          print "<TD ALIGN=center><input type=radio name=\"group-$groupid\" value=\"0\"></TD>\n";
           if ($isactive) {
-            print "<TD ALIGN=center><input type=radio name=\"bit-$bit\" value=\"1\"></TD>\n";
+            print "<TD ALIGN=center><input type=radio name=\"group-$groupid\" value=\"1\"></TD>\n";
           } else {
             $inactiveFound = 1;
             print "<TD>&nbsp;</TD>\n";
@@ -1686,14 +1810,14 @@ if ($count > 0) {
 <NOBR><A HREF=\"enter_bug.cgi\">Enter New Bug</A></NOBR>
 &nbsp;&nbsp;
 <NOBR><A HREF=\"colchange.cgi?$::buffer\">Change columns</A></NOBR>";
-    if (!$dotweak && $count > 1 && UserInGroup("editbugs")) {
+    if (!$dotweak && $count > 1 && UserInGroup($userid, "editbugs")) {
         print "&nbsp;&nbsp;\n";
         print "<NOBR><A HREF=\"buglist.cgi?$fields$orderpart&tweak=1\">";
         print "Change several bugs at once</A></NOBR>\n";
     }
     my @owners = sort(keys(%ownerhash));
     my $suffix = Param('emailsuffix');
-    if (@owners > 1 && UserInGroup("editbugs")) {
+    if (@owners > 1 && UserInGroup($userid, "editbugs")) {
         if ($suffix ne "") {
             map(s/$/$suffix/, @owners);
         }

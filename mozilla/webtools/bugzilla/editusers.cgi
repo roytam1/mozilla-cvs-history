@@ -36,16 +36,8 @@ require "globals.pl";
 # Shut up misguided -w warnings about "used only once".  "use vars" just
 # doesn't work for me.
 
-sub sillyness {
-    my $zz;
-    $zz = $::userid;
-    $zz = $::superusergroupset;
-}
-
 my $editall;
-my $opblessgroupset = '9223372036854775807'; # This is all 64 bits.
-
-
+my @opblessgroupset = ();    # Groups that this viewer can bless someone into
 
 # TestUser:  just returns if the specified user does exists
 # CheckUser: same check, optionally  emit an error text
@@ -99,7 +91,7 @@ sub EmitElement ($$)
 
 sub EmitFormElements ($$$$$)
 {
-    my ($user, $realname, $groupset, $blessgroupset, $disabledtext) = @_;
+    my ($user, $realname, $disabledtext, $groups_belong, $bless_belong) = @_;
 
     print "  <TH ALIGN=\"right\">Login name:</TH>\n";
     EmitElement("user", $user);
@@ -133,11 +125,11 @@ sub EmitFormElements ($$$$$)
         
     
     if($user ne "") {
+        # Edit bug groups
         print "</TR><TR><TH VALIGN=TOP ALIGN=RIGHT>Group Access:</TH><TD><TABLE><TR>";
-        SendSQL("SELECT bit,name,description,bit & $groupset != 0, " .
-                "       bit & $blessgroupset " .
+        SendSQL("SELECT group_id, name, description " .
                 "FROM groups " .
-                "WHERE bit & $opblessgroupset != 0 AND isbuggroup " .
+                "WHERE isbuggroup = 1 " .
                 "ORDER BY name");
         if (MoreSQLData()) {
             if ($editall) {
@@ -147,23 +139,30 @@ sub EmitFormElements ($$$$$)
             print "<TD COLSPAN=2 ALIGN=LEFT><B>User is a member of these groups</B></TD>\n";
         }
         while (MoreSQLData()) {
-            my ($bit,$name,$description,$checked,$blchecked) = FetchSQLData();
+            my ($groupid, $name, $description) = FetchSQLData();
+            my ($bless_checked, $group_checked);
+            my $canedit = 0;
             print "</TR><TR>\n";
             if ($editall) {
-                $blchecked = ($blchecked) ? "CHECKED" : "";
-                print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"blbit_$name\" $blchecked VALUE=\"$bit\"></TD>";
+                $bless_checked = (lsearch($bless_belong, $groupid) >= 0) ? "CHECKED" : "";
+                print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"bless_$name\" $bless_checked VALUE=\"$groupid\"></TD>";
+            } 
+            if ( $editall || (lsearch(\@opblessgroupset, $groupid) >= 0) ) {
+                $group_checked = (lsearch($groups_belong, $groupid) >= 0) ? "CHECKED" : "";
+                print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"group_$name\" $group_checked VALUE=\"$groupid\"></TD>";
+                $canedit = 1;
+               }
+            if ( $canedit ) {
+                print "<TD><B>" . ucfirst($name) . "</B>: $description</TD>\n";
             }
-            $checked = ($checked) ? "CHECKED" : "";
-            print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"bit_$name\" $checked VALUE=\"$bit\"></TD>";
-            print "<TD><B>" . ucfirst($name) . "</B>: $description</TD>\n";
         }
         print "</TR></TABLE></TD>\n";
     
+        # Non non bug groups
         print "</TR><TR><TH VALIGN=TOP ALIGN=RIGHT>Privileges:</TH><TD><TABLE><TR>";
-        SendSQL("SELECT bit,name,description,bit & $groupset != 0, " .
-                "       bit & $blessgroupset " .
+        SendSQL("SELECT group_id, name, description " .
                 "FROM groups " .
-                "WHERE bit & $opblessgroupset != 0 AND !isbuggroup " .
+                "WHERE isbuggroup != 1 " .
                 "ORDER BY name");
         if (MoreSQLData()) {
             if ($editall) {
@@ -173,15 +172,22 @@ sub EmitFormElements ($$$$$)
             print "<TD COLSPAN=2 ALIGN=LEFT><B>User has these priveleges</B></TD>\n";
         }
         while (MoreSQLData()) {
-            my ($bit,$name,$description,$checked,$blchecked) = FetchSQLData();
+            my ($groupid, $name, $description) = FetchSQLData();
+               my ($bless_checked, $group_checked);
+            my $canedit = 0;
             print "</TR><TR>\n";
             if ($editall) {
-                $blchecked = ($blchecked) ? "CHECKED" : "";
-                print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"blbit_$name\" $blchecked VALUE=\"$bit\"></TD>";
+                $bless_checked = (lsearch($bless_belong, $groupid) >= 0) ? "CHECKED" : "";
+                print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"bless_$name\" $bless_checked VALUE=\"$groupid\"></TD>";
             }
-            $checked = ($checked) ? "CHECKED" : "";
-            print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"bit_$name\" $checked VALUE=\"$bit\"></TD>";
-            print "<TD><B>" . ucfirst($name) . "</B>: $description</TD>\n";
+            if ( $editall || (lsearch(\@opblessgroupset, $groupid) >= 0) ) {
+                $group_checked = (lsearch($groups_belong, $groupid) >= 0) ? "CHECKED" : "";
+                print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"group_$name\" $group_checked VALUE=\"$groupid\"></TD>";
+                $canedit = 1;
+            }
+            if ( $canedit ) {
+                print "<TD><B>" . ucfirst($name) . "</B>: $description</TD>\n";
+            }
         }
     } else {
         print "</TR><TR><TH ALIGN=RIGHT>Groups and<br>Priveleges:</TH><TD><TABLE><TR>";        
@@ -230,16 +236,19 @@ sub PutTrailer (@)
 # Preliminary checks:
 #
 
-confirm_login();
+my $userid = confirm_login();
 
 print "Content-type: text/html\n\n";
 
-$editall = UserInGroup("editusers");
+$editall = UserInGroup($userid, "editusers");
 
 if (!$editall) {
-    SendSQL("SELECT blessgroupset FROM profiles WHERE userid = $::userid");
-    $opblessgroupset = FetchOneColumn();
-    if (!$opblessgroupset) {
+    SendSQL("SELECT group_id FROM user_group_map WHERE user_id = $userid AND canbless = 1");
+    while ( my @row = FetchSQLData() ) {
+        push(@opblessgroupset, $row[0]);
+    }
+
+    unless ( @opblessgroupset ) {
         PutHeader("Not allowed");
         print "Sorry, you aren't a member of the 'editusers' group, and you\n";
         print "don't have permissions to put people in or out of any group.\n";
@@ -295,28 +304,34 @@ if ($action eq 'list') {
     my $query = "";
     my $matchstr = $::FORM{'matchstr'};
     if (exists $::FORM{'matchtype'}) {
-      $query = "SELECT login_name,realname,disabledtext " .
-          "FROM profiles WHERE login_name ";
-      if ($::FORM{'matchtype'} eq 'substr') {
-          $query .= "like";
-          $matchstr = '%' . $matchstr . '%';
-      } elsif ($::FORM{'matchtype'} eq 'regexp') {
-          $query .= "regexp";
-          $matchstr = '.'
+        $query = "SELECT login_name,realname,disabledtext " .
+                 "FROM profiles " .
+                 "WHERE login_name ";
+        if ($::FORM{'matchtype'} eq 'substr') {
+            $query .= "like";
+            $matchstr = '%' . $matchstr . '%';
+        } elsif ($::FORM{'matchtype'} eq 'regexp') {
+            $query .= "regexp";
+            $matchstr = '.'
                 unless $matchstr;
-      } elsif ($::FORM{'matchtype'} eq 'notregexp') {
-          $query .= "not regexp";
-          $matchstr = '.'
+        } elsif ($::FORM{'matchtype'} eq 'notregexp') {
+            $query .= "not regexp";
+            $matchstr = '.'
                 unless $matchstr;
-      } else {
-          die "Unknown match type";
-      }
-      $query .= SqlQuote($matchstr) . " ORDER BY login_name";
+        } else {
+            die "Unknown match type";
+        }
+        $query .= SqlQuote($matchstr) . " ORDER BY login_name";
     } elsif (exists $::FORM{'query'}) {
-      $query = "SELECT login_name,realname,disabledtext " .
-          "FROM profiles WHERE " . $::FORM{'query'} . " ORDER BY login_name";
+        $query = "SELECT login_name,realname,disabledtext " .
+                 "FROM profiles WHERE " . $::FORM{'query'} . " ORDER BY login_name";
+    } elsif (exists $::FORM{'group'}) {
+        $query = "SELECT login_name,realname,disabledtext " .
+                 "FROM profiles, user_group_map " . 
+                 "WHERE profiles.userid = user_group_map.user_id " . 
+                 "AND user_group_map.group_id = " . $::FORM{'group'} . " ORDER BY login_name";
     } else {
-      die "Missing parameters";
+        die "Missing parameters";
     }
 
     SendSQL($query);
@@ -395,7 +410,7 @@ if ($action eq 'add') {
     print "<FORM METHOD=POST ACTION=editusers.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
-    EmitFormElements('', '', 0, 0, '');
+    EmitFormElements('', '', '', '', '');
 
     print "</TR></TABLE>\n<HR>\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Add\">\n";
@@ -468,38 +483,40 @@ if ($action eq 'new') {
     # their initial group membership.
     # We also keep a list of groups the user was added to for display on the
     # confirmation page.
-    my $bits = "0";
-    my @grouplist = ();
-    SendSQL("select bit, name, userregexp from groups where userregexp != ''");
+    my @groupidlist = ();
+    my @groupnamelist = ();
+    SendSQL("select group_id, name, userregexp from groups where userregexp != ''");
     while (MoreSQLData()) {
         my @row = FetchSQLData();
         if ($user =~ m/$row[2]/i) {
-            $bits .= "+ $row[0]"; # Silly hack to let MySQL do the math,
-                                  # not Perl, since we're dealing with 64
-                                  # bit ints here, and I don't *think* Perl
-                                  # does that.
-            push(@grouplist, $row[1]);
+            push(@groupidlist, $row[0]);
+            push(@groupnamelist, $row[1]);
         }
     }
 
     # Add the new user
     SendSQL("INSERT INTO profiles ( " .
-            "login_name, cryptpassword, realname, groupset, " .
-            "disabledtext" .
+            "login_name, cryptpassword, realname, disabledtext" .
             " ) VALUES ( " .
             SqlQuote($user) . "," .
             SqlQuote(Crypt($password)) . "," .
             SqlQuote($realname) . "," .
-            $bits . "," .
             SqlQuote($disabledtext) . ")" );
 
     #+++ send e-mail away
 
+    # grab userid and place user in each of the groups they need to be
+    SendSQL("select userid from profiles where login_name = " . SqlQuote($user));
+    my $userid = FetchOneColumn();
+    foreach my $groupid ( @groupidlist ) {
+        SendSQL("insert into user_group_map values ($userid, $groupid)");
+    }
+
     print "OK, done.<br>\n";
-    if($#grouplist > -1) {
+    if($#groupidlist > -1) {
         print "New user added to these groups based on group regexps:\n";
         print "<ul>\n";
-        foreach (@grouplist) {
+        foreach (@groupnamelist) {
             print "<li>$_</li>\n";
         }
         print "</ul>\n";
@@ -536,10 +553,9 @@ if ($action eq 'del') {
     CheckUser($user);
 
     # display some data about the user
-    SendSQL("SELECT realname, groupset FROM profiles
-             WHERE login_name=" . SqlQuote($user));
-    my ($realname, $groupset) = 
-      FetchSQLData();
+    SendSQL("SELECT realname FROM profiles
+         WHERE login_name=" . SqlQuote($user));
+    my $realname = FetchOneColumn();
     $realname ||= "<FONT COLOR=\"red\">missing</FONT>";
     
     print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0>\n";
@@ -559,9 +575,8 @@ if ($action eq 'del') {
     print "  <TD VALIGN=\"top\">Group set:</TD>\n";
     print "  <TD VALIGN=\"top\">";
     SendSQL("SELECT name
-             FROM groups
-             WHERE bit & $groupset = bit
-             ORDER BY isbuggroup, name");
+              FROM groups
+              ORDER BY isbuggroup, name");
     my $found = 0;
     while ( MoreSQLData() ) {
         my ($name) = FetchSQLData();
@@ -692,23 +707,38 @@ if ($action eq 'edit') {
     CheckUser($user);
 
     # get data of user
-    SendSQL("SELECT realname, groupset, blessgroupset, disabledtext
-             FROM profiles
-             WHERE login_name=" . SqlQuote($user));
-    my ($realname, $groupset, $blessgroupset,
-        $disabledtext) = FetchSQLData();
+    SendSQL("SELECT userid, realname, disabledtext
+         FROM profiles
+         WHERE login_name = " . SqlQuote($user));
+    my ($userid, $realname, $disabledtext) = FetchSQLData();
+    
+    # find out which groups belong to
+    my $groups_belong = [];
+    SendSQL("SELECT group_id FROM user_group_map WHERE user_id = $userid");
+    while ( my @row = FetchSQLData() ) {
+        push (@{$groups_belong}, $row[0]);
+    }
+
+    # find out when groups this person can bless others into
+    my $bless_belong = [];
+    SendSQL("SELECT group_id FROM user_group_map WHERE user_id = $userid AND canbless = 1");
+    while ( my @row = FetchSQLData() ) {
+        push (@{$bless_belong}, $row[0]);
+    }
+        
+    #print "Groups: " . join(', ', @{$groups_belong}) . "<br>\n";
+    #print "Bless: " . join(', ', @{$bless_belong}) . "<br>\n";
+    #print "OpBless: " . join(', ', @opblessgroupset) . "<br>\n";
 
     print "<FORM METHOD=POST ACTION=editusers.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
-    EmitFormElements($user, $realname, $groupset, $blessgroupset, $disabledtext);
+    EmitFormElements($user, $realname, $disabledtext, $groups_belong, $bless_belong);
     
     print "</TR></TABLE>\n";
 
     print "<INPUT TYPE=HIDDEN NAME=\"userold\" VALUE=\"$user\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"realnameold\" VALUE=\"$realname\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"groupsetold\" VALUE=\"$groupset\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"blessgroupsetold\" VALUE=\"$blessgroupset\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"disabledtextold\" VALUE=\"" .
         value_quote($disabledtext) . "\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"update\">\n";
@@ -735,69 +765,141 @@ if ($action eq 'update') {
     my $password              = $::FORM{password}                  || '';
     my $disabledtext          = trim($::FORM{disabledtext}         || '');
     my $disabledtextold       = trim($::FORM{disabledtextold}      || '');
-    my $groupsetold           = trim($::FORM{groupsetold}          || '0');
-    my $blessgroupsetold      = trim($::FORM{blessgroupsetold}     || '0');
 
-    my $groupset = "0";
+      my @groupset = ();
+      my @blessgroupset = ();
+
     foreach (keys %::FORM) {
-        next unless /^bit_/;
+        next unless /^group_/;
         #print "$_=$::FORM{$_}<br>\n";
         detaint_natural($::FORM{$_}) || die "Groupset field tampered with";
-        $groupset .= " + $::FORM{$_}";
+        push(@groupset, $::FORM{$_});    
     }
-    my $blessgroupset = "0";
     foreach (keys %::FORM) {
-        next unless /^blbit_/;
+        next unless /^bless_/;
         #print "$_=$::FORM{$_}<br>\n";
         detaint_natural($::FORM{$_}) || die "Blessgroupset field tampered with";
-        $blessgroupset .= " + $::FORM{$_}";
+        push(@blessgroupset, $::FORM{$_});
     }
+
+      # print "Groups: " . join(', ', @groupset) . "<br>\n";
+    # print "Bless: " . join(', ', @blessgroupset) . "<br>\n";
 
     CheckUser($userold);
 
-    # Note that the order of this tests is important. If you change
-    # them, be sure to test for WHERE='$product' or WHERE='$productold'
+    SendSQL("SELECT userid, admin FROM profiles WHERE login_name = " . SqlQuote($userold));
+    my ($userid, $admin) = FetchSQLData();
+#    if ($groupset ne $groupsetold) {
+#        SendSQL("SELECT groupset FROM profiles WHERE login_name=" .
+#                SqlQuote($userold));
+#        $groupsetold = FetchOneColumn();
+#        # Updated, 5/7/00, Joe Robins
+#        # We don't want to change the groupset of a superuser.
+#        if($groupsetold eq $::superusergroupset) {
+#          print "Cannot change permissions of superuser.\n";
+#        } else {
+#           SendSQL("UPDATE profiles
+#                    SET groupset =
+#                         groupset - (groupset & $opblessgroupset) + $groupset
+#                    WHERE login_name=" . SqlQuote($userold));
+#
+#           # I'm paranoid that someone who I give the ability to bless people
+#           # will start misusing it.  Let's log who blesses who (even though
+#           # nothing actually uses this log right now).
+#           my $fieldid = GetFieldID("groupset");
+#           SendSQL("SELECT userid, groupset FROM profiles WHERE login_name=" .
+#                   SqlQuote($userold));
+#           my $u;
+#           ($u, $groupset) = (FetchSQLData());
+#           if ($groupset ne $groupsetold) {
+#               SendSQL("INSERT INTO profiles_activity " .
+#                       "(userid,who,profiles_when,fieldid,oldvalue,newvalue) " .
+#                       "VALUES " .
+#                       "($u, $userid, now(), $fieldid, " .
+#                       " $groupsetold, $groupset)");
+#           }
+#           print "Updated permissions.\n";
+#       }
+#    }
 
-    if ($groupset ne $groupsetold) {
-        SendSQL("SELECT groupset FROM profiles WHERE login_name=" .
-                SqlQuote($userold));
-        $groupsetold = FetchOneColumn();
-        # Updated, 5/7/00, Joe Robins
-        # We don't want to change the groupset of a superuser.
-        if($groupsetold eq $::superusergroupset) {
-          print "Cannot change permissions of superuser.\n";
-        } else {
-           SendSQL("UPDATE profiles
-                    SET groupset =
-                         groupset - (groupset & $opblessgroupset) + 
-                         (($groupset) & $opblessgroupset)
-                    WHERE login_name=" . SqlQuote($userold));
+    if ( !$admin ) {
+        SendSQL("DELETE FROM user_group_map WHERE user_id = $userid");
+        foreach my $groupid ( @groupset ) {
+            if ( $editall || (lsearch(\@opblessgroupset, $groupid) >= 0) ) {
+                SendSQL("INSERT INTO user_group_map (user_id, group_id) VALUES ($userid, $groupid)");
+            }
+        }    
+        print "Updated permissions<br>\n";
 
-           # I'm paranoid that someone who I give the ability to bless people
-           # will start misusing it.  Let's log who blesses who (even though
-           # nothing actually uses this log right now).
-           my $fieldid = GetFieldID("groupset");
-           SendSQL("SELECT userid, groupset FROM profiles WHERE login_name=" .
-                   SqlQuote($userold));
-           my $u;
-           ($u, $groupset) = (FetchSQLData());
-           if ($groupset ne $groupsetold) {
-               SendSQL("INSERT INTO profiles_activity " .
-                       "(userid,who,profiles_when,fieldid,oldvalue,newvalue) " .
-                       "VALUES " .
-                       "($u, $::userid, now(), $fieldid, " .
-                       " $groupsetold, $groupset)");
-           }
-           print "Updated permissions.\n";
-       }
+        foreach my $groupid ( @blessgroupset ) {
+            if ( $editall || (lsearch(\@opblessgroupset, $groupid) >= 0) ) {
+                SendSQL("UPDATE user_group_map SET canbless = 1 WHERE user_id = $userid AND group_id = $groupid");
+            }
+        }
+        print "Updated ability to tweak permissions of other users.<br>\n";
+    } else {
+        print "Cannot change permissions of a superuser.<br>\n";
+
+#    if ($groupset ne $groupsetold) {
+#        SendSQL("SELECT groupset FROM profiles WHERE login_name=" .
+#                SqlQuote($userold));
+#        $groupsetold = FetchOneColumn();
+#        # Updated, 5/7/00, Joe Robins
+#        # We don't want to change the groupset of a superuser.
+#        if($groupsetold eq $::superusergroupset) {
+#          print "Cannot change permissions of superuser.\n";
+#        } else {
+#           SendSQL("UPDATE profiles
+#                    SET groupset =
+#                         groupset - (groupset & $opblessgroupset) + 
+#                         (($groupset) & $opblessgroupset)
+#                    WHERE login_name=" . SqlQuote($userold));
+#
+#           # I'm paranoid that someone who I give the ability to bless people
+#           # will start misusing it.  Let's log who blesses who (even though
+#           # nothing actually uses this log right now).
+#           my $fieldid = GetFieldID("groupset");
+#           SendSQL("SELECT userid, groupset FROM profiles WHERE login_name=" .
+#                   SqlQuote($userold));
+#           my $u;
+#           ($u, $groupset) = (FetchSQLData());
+#           if ($groupset ne $groupsetold) {
+#               SendSQL("INSERT INTO profiles_activity " .
+#                       "(userid,who,profiles_when,fieldid,oldvalue,newvalue) " .
+#                       "VALUES " .
+#                       "($u, $::userid, now(), $fieldid, " .
+#                       " $groupsetold, $groupset)");
+#           }
+#           print "Updated permissions.\n";
+#       }
+#    }
+#
+#    if ($editall && $blessgroupset ne $blessgroupsetold) {
+#        SendSQL("UPDATE profiles
+#                 SET blessgroupset=" . $blessgroupset . "
+#                 WHERE login_name=" . SqlQuote($userold));
+#        print "Updated ability to tweak permissions of other users.\n";
+
     }
 
-    if ($editall && $blessgroupset ne $blessgroupsetold) {
-        SendSQL("UPDATE profiles
-                 SET blessgroupset=" . $blessgroupset . "
-                 WHERE login_name=" . SqlQuote($userold));
-        print "Updated ability to tweak permissions of other users.\n";
-    }
+    # FIXME to work with new group schema support
+    # I'm paranoid that someone who I give the ability to bless people
+    # will start misusing it.  Let's log who blesses who (even though
+    # nothing actually uses this log right now).
+    #my $fieldid = GetFieldID("groupset");
+    #SendSQL("SELECT userid, groupset FROM profiles WHERE login_name=" .
+    #        SqlQuote($userold));
+    #my $u;
+    #($u, $groupset) = (FetchSQLData());
+    #if ($groupset ne $groupsetold) {
+    #    SendSQL("INSERT INTO profiles_activity " .
+    #            "(userid,who,profiles_when,fieldid,oldvalue,newvalue) " .
+    #            "VALUES " .
+    #            "($u, $::userid, now(), $fieldid, " .
+    #            " $groupsetold, $groupset)");
+    #    }
+    #    print "Updated permissions.\n";
+    #}
 
     # Update the database with the user's new password if they changed it.
     if ( !Param('useLDAP') && $editall && $password ) {

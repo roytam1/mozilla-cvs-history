@@ -32,11 +32,11 @@ use vars %::param,
     @::param_list;
 
 
-confirm_login();
+my $userid = confirm_login();
 
 print "Content-type: text/html\n\n";
 
-if (!UserInGroup("tweakparams")) {
+if (!UserInGroup($userid, "tweakparams")) {
     print "<H1>Sorry, you aren't a member of the 'tweakparams' group.</H1>\n";
     print "And so, you aren't allowed to edit the parameters.\n";
     PutFooter();
