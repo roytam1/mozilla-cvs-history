@@ -24,7 +24,7 @@ open(MAKE,">Makefile");
 open(MAKEIN,"Makefile.in");
 while(<MAKEIN>) {
     $line = $_;
-    $line =~ s/@@(\s?.*?)@@/$main::c{$1}/;
+    $line =~ s/\*\*(\s?.*?)\*\*/$main::c{$1}/;
     print MAKE $line; # and output the line with changes made
 }
 close(MAKE);
