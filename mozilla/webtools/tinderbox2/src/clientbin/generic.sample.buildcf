@@ -392,7 +392,7 @@ sub build_name {
 sub build_administrator {
   my (%args) = @_;
 
-  my $admin = "your.mailing.address\@company.com";
+  my $admin = 'your.mailing.address@company.com';
 
   return $admin;
 }
@@ -402,7 +402,7 @@ sub build_administrator {
 sub mail_to {
   my (%args) = @_;
 
-  my $mail_to "tinderbox_builds\@mail.yourcompany.com";
+  my $mail_to = 'tinderbox_builds@mail.yourcompany.com';
 
   return $mail_to;
 }
@@ -411,7 +411,7 @@ sub mail_to {
 sub mail_from {
   my (%args) = @_;
 
-  my $mail_from = "tinderbox-build-daemon\@".$args{'hostname'};
+  my $mail_from = 'tinderbox-build-daemon@'.$args{'hostname'};
 
   return $mail_from;
 }
