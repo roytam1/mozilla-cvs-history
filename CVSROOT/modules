@@ -347,3 +347,12 @@ DirectorySDKSourceBuild -a mozilla/config mozilla/nsprpub
 
 PerLDAP -a \
 	mozilla/directory/perldap
+
+#######################################################################
+# Modules for the Messenging Server SDK. Code maintained by Prasad Yendluri
+# (prasad@netscape.com)
+#
+
+MessagingSDK -a \
+	mozilla/msgsdk
+
