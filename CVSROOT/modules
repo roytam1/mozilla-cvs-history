@@ -532,6 +532,7 @@ SeaMonkeyCore -a \
 	mozilla/caps \
 	mozilla/config \
 	mozilla/dbm \
+	mozilla/db/.cvsignore \
 	mozilla/db/Makefile.in \
 	mozilla/db/makefile.win \
 	mozilla/db/mork \
