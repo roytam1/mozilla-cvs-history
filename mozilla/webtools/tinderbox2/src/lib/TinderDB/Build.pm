@@ -1125,6 +1125,14 @@ sub status_table_row {
                 );
     }
 
+    # Error count (not a link, but hey)
+
+    if ($current_rec->{'errors'}) {
+      $links .= "\t\t<br>errs: ". 
+	$current_rec->{'errors'}."\n";
+    }
+
+    
     $links.=  "\t\t".$text_browser_color_string."\n";
 
     push @outrow, ( "\t<!-- cell for build: $buildname, tree: $tree -->\n".
