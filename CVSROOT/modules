@@ -165,6 +165,7 @@ MozillaSourceUnixOnly -a \
 	mozilla/cmd/Makefile \
 	mozilla/cmd/Makefile.in \
 	mozilla/cmd/stubfe \
+	mozilla/cmd/unixfe \
 	mozilla/config/.cvsignore \
 	mozilla/config/AIX.mk \
 	mozilla/config/BSD_OS.mk \
