@@ -235,8 +235,6 @@ if (m:^mozilla/modules/security/.*$:) {return '86';}
 if (m:^mozilla/modules/softupdt/.*$:) {return '87';}
 if (m:^mozilla/modules/xml/.*$:) {return '88';}
 if (m:^mozilla/xpcom/.*$:) {return '89';}
-if (m:^mozilla/include/xp_file\.h/.*$:) {return '90';}
-if (m:^mozilla/lib/xp/xp_file\.c/.*$:) {return '90';}
 if (m:^mozilla/include/shist\.h/.*$:) {return '91';}
 if (m:^mozilla/lib/libmisc/.*$:) {return '91';}
 if (m:^mozilla/include/xp\.h/.*$:) {return '92';}
