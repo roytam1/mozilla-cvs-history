@@ -37,6 +37,7 @@ sub sillyness {
     $zz = $::db_name;
     $zz = $::defaultqueryname;
     $zz = $::unconfirmedstate;
+    $zz = $::userid;
     $zz = @::components;
     $zz = @::default_column_list;
     $zz = @::legal_keywords;
@@ -164,9 +165,7 @@ sub GenerateSQL {
     unshift(@wherepart,
             ("bugs.assigned_to = map_assigned_to.userid",
              "bugs.reporter = map_reporter.userid",
-             "bugs.groupset & $::usergroupset = bugs.groupset",
              "bugs.resolution_id = map_resolution.id"));
-
 
     my $minvotes;
     if (defined $F{'votes'}) {
@@ -830,10 +829,14 @@ sub GenerateSQL {
             $suppseen{$str} = 1;
         }
     }
+
     my $query =  ("SELECT " . join(', ', @fields) .
                   " FROM $suppstring" .
                   " WHERE " . join(' AND ', (@wherepart, @andlist)) .
                   " GROUP BY bugs.bug_id");
+
+    $query = SelectVisible($query, $::userid, $::usergroupset);
+
     if ($debug) {
         print "<P><CODE>" . value_quote($query) . "</CODE><P>\n";
         exit();
@@ -1094,8 +1097,6 @@ ReconnectToShadowDatabase();
 
 my $query = GenerateSQL(\@fields, undef, undef, $::buffer);
 
-
-
 if ($::COOKIE{'LASTORDER'}) {
     if ((!$::FORM{'order'}) || $::FORM{'order'} =~ /^reuse/i) {
         $::FORM{'order'} = url_decode($::COOKIE{'LASTORDER'});
@@ -1158,6 +1159,7 @@ if ($::FORM{'debug'} && $serverpush) {
 if (Param('expectbigqueries')) {
     SendSQL("set option SQL_BIG_TABLES=1");
 }
+
 SendSQL($query);
 
 my $count = 0;
@@ -1237,6 +1239,7 @@ my @bugarray;
 my %prodhash;
 my %statushash;
 my %ownerhash;
+my %qahash;
 
 my $pricol = -1;
 my $sevcol = -1;
@@ -1306,6 +1309,9 @@ while (@row = FetchSQLData()) {
                 }
                 if ($c eq "owner") {
                     $ownerhash{$value} = 1;
+                }
+                if ($c eq "qa_contact") {
+                    $qahash{$value} = 1;
                 }
                 if ( ($c eq "owner" || $c eq "qa_contact" ) &&
                         length $value > $maxemailsize )  {
@@ -1706,14 +1712,23 @@ if ($count > 0) {
         print "Change several bugs at once</A></NOBR>\n";
     }
     my @owners = sort(keys(%ownerhash));
+    my $suffix = Param('emailsuffix');
     if (@owners > 1 && UserInGroup("editbugs")) {
-        my $suffix = Param('emailsuffix');
         if ($suffix ne "") {
             map(s/$/$suffix/, @owners);
         }
         my $list = join(',', @owners);
         print qq{&nbsp;&nbsp;\n};
-        print qq{<NOBR><A HREF="mailto:$list">Send mail to bug owners</A></NOBR>\n};
+        print qq{<A HREF="mailto:$list">Send&nbsp;mail&nbsp;to&nbsp;bug&nbsp;owners</A>\n};
+    }
+    my @qacontacts = sort(keys(%qahash));
+    if (@qacontacts > 1 && UserInGroup("editbugs") && Param("useqacontact")) {
+        if ($suffix ne "") {
+            map(s/$/$suffix/, @qacontacts); 
+        }
+        my $list = join(',', @qacontacts);
+        print qq{&nbsp;&nbsp;\n};
+        print qq{<A HREF="mailto:$list">Send&nbsp;mail&nbsp;to&nbsp;bug&nbsp;QA&nbsp;contacts</A>\n};
     }
     print qq{&nbsp;&nbsp;\n};
     print qq{<NOBR><A HREF="query.cgi?$::buffer">Edit this query</A></NOBR>\n};
