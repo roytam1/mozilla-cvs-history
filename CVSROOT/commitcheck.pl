@@ -313,7 +313,7 @@ if (m:^mozilla/directory/Makefile$:) {return '59';}
 if (m:^gfx/src/ps/.*$:) {return '62';}
 if (m:^mozilla/modules/libpr0n/.*$:) {return '63';}
 if (m:^mozilla/jpeg$:) {return '64';}
-if (m:^modules/libimg/png/.*$:) {return '65';}
+if (m:^mozilla/modules/libimg/png/.*$:) {return '65';}
 if (m:^mozilla/intl/.*$:) {return '67';}
 if (m:^mozilla/modules/oji/.*$:) {return '68';}
 if (m:^mozilla/nav-java/.*$:) {return '68';}
