@@ -87,7 +87,9 @@ if ($filename eq '')
     &print_usage;
     exit;
 }
+
 my ($file_head, $file_tail) = $filename =~ m@(.*/)?(.+)@;
+$file_head = '' if !defined($file_head);
 my $url_filename = url_quote($filename);
 my $url_file_tail = url_quote($file_tail);
 
@@ -113,7 +115,8 @@ if (defined $root and $root ne '') {
     } else {
         print "\n";
         &print_top;
-        print "Error:  Root, $root, is not a directory.<BR><BR>\n";
+        print "Error:  Root, " . html_quote($root) . 
+	    ", is not a directory.<BR><BR>\n";
         print "</BODY></HTML>\n";
         &print_bottom;
         exit;
@@ -435,7 +438,7 @@ sub max {
 }
 
 sub print_top {
-    my ($title_text) = "for $file_tail (";
+    my ($title_text) = "for " . html_quote($file_tail) . " (";
     $title_text .= "$browse_revtag:" unless $browse_revtag eq 'HEAD';
     $title_text .= $revision if $revision;
     $title_text .= ")";
@@ -707,6 +710,7 @@ sub print_raw_data {
   my %revs_seen = ();
   my $prev_rev = $::revision_map[0];
   my $count = 0;
+  print "<PRE>\n";
   for my $rev (@::revision_map) {
     if ($prev_rev eq $rev) {
       $count++;
@@ -722,6 +726,7 @@ sub print_raw_data {
   for my $rev (sort keys %revs_seen) {
     print "$rev|$::revision_ctime{$rev}|$::revision_author{$rev}|$::revision_log{$rev}.\n";
   }
+  print "</PRE>\n";
 }
 
 sub link_includes {

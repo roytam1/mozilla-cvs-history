@@ -128,8 +128,9 @@ unless ($found_rcs_file) {
 &ChrootFilename($root, $rcs_filename);
 
 my $rcs_path;
+my $url_rcs_path;
 ($rcs_path) = $rcs_filename =~ m@$root/(.*)/.+?,v@;
-
+$url_rcs_path = url_quote($rcs_path);
 
 # Parse the rcs file ($::opt_rev is passed as a global)
 #
@@ -160,6 +161,7 @@ foreach my $rev (split(',',$mark_arg)) {
 #
 my %use_author;
 my $author_arg = SanitizeUsernames($::FORM{'author'});
+my $url_author_arg = url_quote($author_arg);
 foreach my $author (split(',',$author_arg)) {
     $use_author{$author} = 1;
 }
@@ -196,7 +198,7 @@ foreach my $path (split('/',$rcs_path)) {
     print "<A HREF='$lxr_path'>$path</a>/ ";
 }
 $lxr_path = Fix_LxrLink("$link_path$file_tail");
-print "<A HREF='$lxr_path'>$file_tail</a> ";
+print "<A HREF='$lxr_path'>" . html_quote($file_tail) . "</a> ";
 
 my $graph_cell = Param('cvsgraph') ? <<"--endquote--" : "";
        </TR><TR>
@@ -229,7 +231,7 @@ print qq(
         </TD>
        </TR><TR>
         <TD>
-         <A HREF="cvsview2.cgi?command=DIRECTORY&subdir=$rcs_path&files=$url_file_tail&branch=$::opt_rev">diff</A>
+         <A HREF="cvsview2.cgi?command=DIRECTORY&subdir=$url_rcs_path&files=$url_file_tail&branch=$::opt_rev">diff</A>
         </TD><TD NOWRAP>
          Compare any two version.
         </TD>
@@ -257,9 +259,9 @@ $graph_cell
 my $table_tag = "<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=3 WIDTH='100%'>";
 my $table_header_tag = "";
 if ($opt_sort eq 'author') {
-    $table_header_tag .= "<TH ALIGN=LEFT><A HREF='cvslog.cgi?file=$url_filename&root=$root&rev=$browse_revtag&sort=revision&author=$author_arg'>Rev</A><TH ALIGN=LEFT>Author<TH ALIGN=LEFT><A HREF='cvslog.cgi?file=$url_filename&root=$root&rev=$browse_revtag&sort=date&author=$author_arg'>Date</A><TH><TH ALIGN=LEFT>Log";
+    $table_header_tag .= "<TH ALIGN=LEFT><A HREF='cvslog.cgi?file=$url_filename&root=$root&rev=$browse_revtag&sort=revision&author=$url_author_arg'>Rev</A><TH ALIGN=LEFT>Author<TH ALIGN=LEFT><A HREF='cvslog.cgi?file=$url_filename&root=$root&rev=$browse_revtag&sort=date&author=$url_author_arg'>Date</A><TH><TH ALIGN=LEFT>Log";
 } else {
-    $table_header_tag .= "<TH ALIGN=LEFT>Rev<TH ALIGN=LEFT><A HREF='cvslog.cgi?file=$url_filename&root=$root&rev=$browse_revtag&sort=author&author=$author_arg'>Author</A><TH ALIGN=LEFT>Date<TH><TH ALIGN=LEFT>Log";
+    $table_header_tag .= "<TH ALIGN=LEFT>Rev<TH ALIGN=LEFT><A HREF='cvslog.cgi?file=$url_filename&root=$root&rev=$browse_revtag&sort=author&author=$url_author_arg'>Author</A><TH ALIGN=LEFT>Date<TH><TH ALIGN=LEFT>Log";
 }
 
 $table_header_tag = &url_encode3($table_header_tag);
@@ -310,11 +312,11 @@ foreach $revision (@revisions)
 
     if (defined($::prev_revision{$revision})) {
         $anchor .= "?diff_mode=context&whitespace_mode=show&file=$url_file_tail&branch=$::opt_rev"
-            ."&root=$root&subdir=$rcs_path&command=DIFF_FRAMESET"
+            ."&root=$root&subdir=$url_rcs_path&command=DIFF_FRAMESET"
             ."&rev1=$::prev_revision{$revision}&rev2=$revision";
     } else {
         $anchor .= "?files=$url_file_tail"
-            ."&root=$root&subdir=$rcs_path\&command=DIRECTORY\&rev2=$revision&branch=$::opt_rev";
+            ."&root=$root&subdir=$url_rcs_path\&command=DIRECTORY\&rev2=$revision&branch=$::opt_rev";
         $anchor .= "&branch=$browse_revtag" unless $browse_revtag eq 'HEAD';
     }
 
@@ -398,7 +400,7 @@ sub sprint_author {
 
 
 sub print_top {
-    my ($title_text) = "for $file_tail (";
+    my ($title_text) = "for " . html_quote($file_tail) . " (";
     $title_text .= "$browse_revtag:" unless $browse_revtag eq 'HEAD';
     $title_text .= $revision if $revision;
     $title_text .= ")";
@@ -503,14 +505,17 @@ sub print_useful_links {
     my ($path) = @_;
     my ($dir, $file) = $path =~ m@(.*/)?(.+)@;
     $dir =~ s@/$@@;
+    my $url_dir = url_quote($dir);
+    my $url_file = url_quote($file);
 
     my $diff_base = "cvsview2.cgi";
     my $blame_base = "cvsblame.cgi";
 
     my $lxr_path = $path;
     my $lxr_link = Fix_LxrLink($lxr_path);
-    my $diff_link = "$diff_base?command=DIRECTORY\&subdir=$dir\&files=$file\&branch=$::opt_rev";
-    my $blame_link = "$blame_base?root=$::CVS_ROOT\&file=$path\&rev=$::opt_rev";
+    my $url_path = url_quote($path);
+    my $diff_link = "$diff_base?command=DIRECTORY\&subdir=$url_dir\&files=$url_file\&branch=$::opt_rev";
+    my $blame_link = "$blame_base?root=$::CVS_ROOT\&file=$url_path\&rev=$::opt_rev";
 
 print "<DIV ALIGN=RIGHT>
  <TABLE BORDER CELLPADDING=10 CELLSPACING=0>
