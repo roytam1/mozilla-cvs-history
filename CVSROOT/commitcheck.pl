@@ -120,6 +120,9 @@ $fullname{'100'} = 'New HTML Style System';
 $mode{'98'} = 'Open';
 $branch{'98'} = 'HEAD';
 $fullname{'98'} = 'New Layout Engine';
+$mode{'122'} = 'Open';
+$branch{'122'} = 'HEAD';
+$fullname{'122'} = 'News';
 $mode{'78'} = 'Restricted';
 $branch{'78'} = 'HEAD';
 $fullname{'78'} = 'NSPR';
@@ -280,6 +283,7 @@ if (m:^xpcom/typelib$:) {return '117';}
 if (m:^js/src/xpconnect$:) {return '118';}
 if (m:^xpcom/reflect/xptcall$:) {return '118';}
 if (m:^xpcom/reflect/xptinfo$:) {return '118';}
+if (m:^mozilla/mailnews/news/.*$:) {return '122';}
 }
 return '';
 }
