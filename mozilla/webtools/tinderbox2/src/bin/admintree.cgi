@@ -539,7 +539,7 @@ sub make_all_changes {
       # may play strange games with our ARGV and prevent us from
       # updating the state.
 
-      system( (basename($0).'tinder.cgi'), '--daemon-mode' );
+#      system( (basename($0).'tinder.cgi'), '--daemon-mode' );
     } else {
       push @results, "No changes attempted due to security issues.";
     }
