@@ -554,6 +554,11 @@ SeaMonkeyCore -a \
 	mozilla/intl \
 	mozilla/jpeg \
 	mozilla/js/jsd \
+	!mozilla/js/jsd/jsdb \
+	!mozilla/js/jsd/classes \
+	!mozilla/js/jsd/corba \
+	!mozilla/js/jsd/java \
+	!mozilla/js/jsd/javawrap \
 	JSClient \
 	mozilla/lib/mac/MacMemoryAllocator \
 	mozilla/lib/mac/Misc \
