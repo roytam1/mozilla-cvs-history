@@ -73,7 +73,7 @@ sub TestVersion ($$)
 {
     my ($prod,$ver) = @_;
 
-    # does the version exist?
+    # does the product exist?
     SendSQL("SELECT program,value
              FROM versions
              WHERE program=" . SqlQuote($prod) . " and value=" . SqlQuote($ver));
@@ -416,13 +416,12 @@ if ($action eq 'delete') {
     CheckVersion($product,$version);
 
     # lock the tables before we start to change everything:
-    if ($::driver eq 'mysql') {
-        SendSQL("LOCK TABLES attachments WRITE,
-                bugs WRITE,
-                bugs_activity WRITE,
-                versions WRITE,
-                dependencies WRITE");
-    }
+
+    SendSQL("LOCK TABLES attachments WRITE,
+                         bugs WRITE,
+                         bugs_activity WRITE,
+                         versions WRITE,
+                         dependencies WRITE");
 
     # According to MySQL doc I cannot do a DELETE x.* FROM x JOIN Y,
     # so I have to iterate over bugs and delete all the indivial entries
@@ -458,9 +457,7 @@ if ($action eq 'delete') {
              WHERE program=" . SqlQuote($product) . "
                AND value=" . SqlQuote($version));
     print "Version deleted.<P>\n";
-    if ($::driver eq 'mysql') {
-        SendSQL("UNLOCK TABLES");
-    }
+    SendSQL("UNLOCK TABLES");
 
     unlink "data/versioncache";
     PutTrailer($localtrailer);
@@ -514,26 +511,21 @@ if ($action eq 'update') {
 
     # Note that the order of this tests is important. If you change
     # them, be sure to test for WHERE='$version' or WHERE='$versionold'
-    if ($::driver eq 'mysql') {
-        SendSQL("LOCK TABLES bugs WRITE,
-                versions WRITE");
-    }
+
+    SendSQL("LOCK TABLES bugs WRITE,
+                         versions WRITE");
 
     if ($version ne $versionold) {
         unless ($version) {
             print "Sorry, I can't delete the version text.";
             PutTrailer($localtrailer);
-            if ($::driver eq 'mysql') {
-                SendSQL("UNLOCK TABLES");
-            }
+            SendSQL("UNLOCK TABLES");
             exit;
         }
         if (TestVersion($product,$version)) {
             print "Sorry, version '$version' is already in use.";
             PutTrailer($localtrailer);
-            if ($::driver eq 'mysql') {
-                SendSQL("UNLOCK TABLES");
-            }
+            SendSQL("UNLOCK TABLES");
             exit;
         }
         SendSQL("UPDATE bugs
@@ -547,9 +539,7 @@ if ($action eq 'update') {
         unlink "data/versioncache";
         print "Updated version.<BR>\n";
     }
-    if ($::driver eq 'mysql') {
-        SendSQL("UNLOCK TABLES");
-    }
+    SendSQL("UNLOCK TABLES");
 
     PutTrailer($localtrailer);
     exit;

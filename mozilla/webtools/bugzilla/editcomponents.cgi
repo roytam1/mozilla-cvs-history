@@ -226,7 +226,7 @@ unless ($product) {
         SendSQL("SELECT products.product,products.description,COUNT(bug_id)
              FROM products LEFT JOIN bugs
                ON products.product=bugs.product
-             GROUP BY products.product, products.description
+             GROUP BY products.product
              ORDER BY products.product");
     } else {
         SendSQL("SELECT products.product,products.description
@@ -274,13 +274,12 @@ unless ($action) {
              FROM components LEFT JOIN bugs
                ON components.program=bugs.product AND components.value=bugs.component
              WHERE program=" . SqlQuote($product) . "
-             GROUP BY value, description, initialowner, initialqacontact
-             ORDER BY value");
+             GROUP BY value");
     } else {
         SendSQL("SELECT value,description,initialowner,initialqacontact
              FROM components 
              WHERE program=" . SqlQuote($product) . "
-             ORDER BY value");
+             GROUP BY value");
     }        
     print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR BGCOLOR=\"#6666FF\">\n";
     print "  <TH ALIGN=\"left\">Edit component ...</TH>\n";
@@ -590,13 +589,12 @@ if ($action eq 'delete') {
     CheckComponent($product,$component);
 
     # lock the tables before we start to change everything:
-    if ($::driver eq 'mysql') {
-        SendSQL("LOCK TABLES attachments WRITE,
-                bugs WRITE,
-                bugs_activity WRITE,
-                components WRITE,
-                dependencies WRITE");
-    }
+
+    SendSQL("LOCK TABLES attachments WRITE,
+                         bugs WRITE,
+                         bugs_activity WRITE,
+                         components WRITE,
+                         dependencies WRITE");
 
     # According to MySQL doc I cannot do a DELETE x.* FROM x JOIN Y,
     # so I have to iterate over bugs and delete all the indivial entries
@@ -631,9 +629,8 @@ if ($action eq 'delete') {
              WHERE program=" . SqlQuote($product) . "
                AND value=" . SqlQuote($component));
     print "Components deleted.<P>\n";
-    if ($::driver eq 'mysql') {
-        SendSQL("UNLOCK TABLES");
-    }
+    SendSQL("UNLOCK TABLES");
+
     unlink "data/versioncache";
     PutTrailer($localtrailer);
     exit;
@@ -727,18 +724,15 @@ if ($action eq 'update') {
 
     # Note that the order of this tests is important. If you change
     # them, be sure to test for WHERE='$component' or WHERE='$componentold'
-    if ($::driver eq 'mysql') {
-        SendSQL("LOCK TABLES bugs WRITE,
-                components WRITE, profiles READ");
-    }
+
+    SendSQL("LOCK TABLES bugs WRITE,
+                         components WRITE, profiles READ");
 
     if ($description ne $descriptionold) {
         unless ($description) {
             print "Sorry, I can't delete the description.";
             PutTrailer($localtrailer);
-            if ($::driver eq 'mysql') {
-                SendSQL("UNLOCK TABLES");
-            }
+            SendSQL("UNLOCK TABLES");
             exit;
         }
         SendSQL("UPDATE components
@@ -751,10 +745,8 @@ if ($action eq 'update') {
 
     if ($initialowner ne $initialownerold) {
         unless ($initialowner) {
-            print "Sorry, I can't delete the initial owner.";    
-            if ($::driver eq 'mysql') {
-                SendSQL("UNLOCK TABLES");
-            }
+            print "Sorry, I can't delete the initial owner.";
+            SendSQL("UNLOCK TABLES");
             PutTrailer($localtrailer);
             exit;
         }
@@ -762,9 +754,7 @@ if ($action eq 'update') {
         my $initialownerid = DBname_to_id($initialowner);
         unless ($initialownerid) {
             print "Sorry, you must use an existing Bugzilla account as initial owner.";
-            if ($::driver eq 'mysql') {
-                SendSQL("UNLOCK TABLES");
-            }
+            SendSQL("UNLOCK TABLES");
             PutTrailer($localtrailer);
             exit;
         }
@@ -779,9 +769,7 @@ if ($action eq 'update') {
     if (Param('useqacontact') && $initialqacontact ne $initialqacontactold) {
         unless ($initialqacontact) {
             print "Sorry, I can't delete the initial QA contact.";
-            if ($::driver eq 'mysql') {
-                SendSQL("UNLOCK TABLES");
-            }
+            SendSQL("UNLOCK TABLES");
             PutTrailer($localtrailer);
             exit;
         }
@@ -789,9 +777,7 @@ if ($action eq 'update') {
         my $initialqacontactid = DBname_to_id($initialqacontact);
         unless ($initialqacontactid) {
             print "Sorry, you must use an existing Bugzilla account as initial QA contact.";
-            if ($::driver eq 'mysql') {
-                SendSQL("UNLOCK TABLES");
-            }
+            SendSQL("UNLOCK TABLES");
             PutTrailer($localtrailer);
             exit;
         }
@@ -808,17 +794,13 @@ if ($action eq 'update') {
         unless ($component) {
             print "Sorry, I can't delete the product name.";
             PutTrailer($localtrailer);
-            if ($::driver eq 'mysql') {
-                SendSQL("UNLOCK TABLES");
-            }
+            SendSQL("UNLOCK TABLES");
             exit;
         }
         if (TestComponent($product,$component)) {
             print "Sorry, component name '$component' is already in use.";
             PutTrailer($localtrailer);
-            if ($::driver eq 'mysql') {
-                SendSQL("UNLOCK TABLES");
-            }
+            SendSQL("UNLOCK TABLES");
             exit;
         }
 
@@ -834,9 +816,7 @@ if ($action eq 'update') {
         unlink "data/versioncache";
         print "Updated product name.<BR>\n";
     }
-    if ($::driver eq 'mysql') {
-        SendSQL("UNLOCK TABLES");
-    }
+    SendSQL("UNLOCK TABLES");
 
     PutTrailer($localtrailer);
     exit;

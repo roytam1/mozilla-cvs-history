@@ -266,8 +266,7 @@ FIN
 
 # Build up $query string
     my $query;
-    if ($::driver eq 'mysql') {
-        $query = <<FIN;
+    $query = <<FIN;
 select 
     bugs.bug_id,
     bugs.bug_status,
@@ -278,23 +277,6 @@ from   bugs,
        profiles assign
 where  bugs.assigned_to = assign.userid
 FIN
-    } elsif ($::driver eq 'Pg') {
-        $query = <<FIN;
-select 
-    bugs.bug_id, bugs.assigned_to, bugs.bug_severity,
-    bugs.bug_status, bugs.product, 
-    assign.login_name,
-    report.login_name,
-    timestamp(bugs.creation_ts)
-
-from   bugs,
-       profiles assign,
-       profiles report,
-       versions projector
-where  bugs.assigned_to = assign.userid
-and    bugs.reporter = report.userid
-FIN
-    }
 
     if ($FORM{'product'} ne "-All-" ) {
         $query .= "and    bugs.product=".SqlQuote($FORM{'product'});

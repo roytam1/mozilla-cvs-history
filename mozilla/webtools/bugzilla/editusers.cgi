@@ -43,7 +43,7 @@ sub sillyness {
 }
 
 my $editall;
-my $opblessgroupset = '72057594037927935'; # This is all 64 bits.
+my $opblessgroupset = '9223372036854775807'; # This is all 64 bits.
 
 
 
@@ -54,7 +54,7 @@ sub TestUser ($)
 {
     my $user = shift;
 
-    # does the user exist?
+    # does the product exist?
     SendSQL("SELECT login_name
              FROM profiles
              WHERE login_name=" . SqlQuote($user));
@@ -65,7 +65,7 @@ sub CheckUser ($)
 {
     my $user = shift;
 
-    # do we have a user?
+    # do we have a product?
     unless ($user) {
         print "Sorry, you haven't specified a user.";
         PutTrailer();
@@ -134,19 +134,11 @@ sub EmitFormElements ($$$$$)
     
     if($user ne "") {
         print "</TR><TR><TH VALIGN=TOP ALIGN=RIGHT>Group Access:</TH><TD><TABLE><TR>";
-        if ($::driver eq 'mysql') {
-            SendSQL("SELECT group_bit, name, description, (group_bit & $groupset) != 0, " .
-                    "       (group_bit & $blessgroupset) != 0 " .
-                    "FROM groups " .
-                    "WHERE (group_bit & $opblessgroupset) != 0 AND isbuggroup != 0 " .
-                    "ORDER BY name");
-        } elsif ($::driver eq 'Pg') {
-            SendSQL("SELECT group_bit, name, description, (group_bit & int8($groupset)) != 0, " .
-                    "       (group_bit & int8($blessgroupset)) != 0 " .
-                    "FROM groups " .
-                    "WHERE (group_bit & int8($opblessgroupset)) != 0 AND isbuggroup != 0 " .
-                    "ORDER BY name");
-        }
+        SendSQL("SELECT bit,name,description,bit & $groupset != 0, " .
+                "       bit & $blessgroupset " .
+                "FROM groups " .
+                "WHERE bit & $opblessgroupset != 0 AND isbuggroup " .
+                "ORDER BY name");
         if (MoreSQLData()) {
             if ($editall) {
                 print "<TD COLSPAN=3 ALIGN=LEFT><B>Can turn this bit on for other users</B></TD>\n";
@@ -168,19 +160,11 @@ sub EmitFormElements ($$$$$)
         print "</TR></TABLE></TD>\n";
     
         print "</TR><TR><TH VALIGN=TOP ALIGN=RIGHT>Privileges:</TH><TD><TABLE><TR>";
-        if ($::driver eq 'mysql') {
-            SendSQL("SELECT group_bit, name, description, (group_bit & $groupset) != 0, " .
-                    "       (group_bit & $blessgroupset) != 0 " .
-                    "FROM groups " .
-                    "WHERE (group_bit & $opblessgroupset) != 0 AND isbuggroup = 0 " .
-                    "ORDER BY name");
-        } elsif ($::driver eq 'Pg') {
-            SendSQL("SELECT group_bit, name, description, (group_bit & int8($groupset)) != 0, " .
-                    "       (group_bit & int8($blessgroupset)) != 0 " .
-                    "FROM groups " .
-                    "WHERE (group_bit & int8($opblessgroupset)) != 0 AND isbuggroup = 0 " .
-                    "ORDER BY name");
-        }
+        SendSQL("SELECT bit,name,description,bit & $groupset != 0, " .
+                "       bit & $blessgroupset " .
+                "FROM groups " .
+                "WHERE bit & $opblessgroupset != 0 AND !isbuggroup " .
+                "ORDER BY name");
         if (MoreSQLData()) {
             if ($editall) {
                 print "<TD COLSPAN=3 ALIGN=LEFT><B>Can turn this bit on for other users</B></TD>\n";
@@ -312,17 +296,22 @@ if ($action eq 'list') {
     my $matchstr = $::FORM{'matchstr'};
     if (exists $::FORM{'matchtype'}) {
       $query = "SELECT login_name,realname,disabledtext " .
-          "FROM profiles WHERE ";
+          "FROM profiles WHERE login_name ";
       if ($::FORM{'matchtype'} eq 'substr') {
-          $query .= "login_name like '%" . $::FORM{'matchstr'} . "%'";
+          $query .= "like";
+          $matchstr = '%' . $matchstr . '%';
       } elsif ($::FORM{'matchtype'} eq 'regexp') {
-          $query .= SqlRegEx("login_name", SqlQuote($::FORM{'matchstr'}));
+          $query .= "regexp";
+          $matchstr = '.'
+                unless $matchstr;
       } elsif ($::FORM{'matchtype'} eq 'notregexp') {
-          $query .= SqlRegEx("login_name", SqlQuote($::FORM{'matchstr'}), "not");
+          $query .= "not regexp";
+          $matchstr = '.'
+                unless $matchstr;
       } else {
           die "Unknown match type";
       }
-      $query .= " ORDER BY login_name";
+      $query .= SqlQuote($matchstr) . " ORDER BY login_name";
     } elsif (exists $::FORM{'query'}) {
       $query = "SELECT login_name,realname,disabledtext " .
           "FROM profiles WHERE " . $::FORM{'query'} . " ORDER BY login_name";
@@ -481,7 +470,7 @@ if ($action eq 'new') {
     # confirmation page.
     my $bits = "0";
     my @grouplist = ();
-    SendSQL("select group_bit, name, userregexp from groups where userregexp != ''");
+    SendSQL("select bit, name, userregexp from groups where userregexp != ''");
     while (MoreSQLData()) {
         my @row = FetchSQLData();
         if ($user =~ m/$row[2]/i) {
@@ -494,13 +483,12 @@ if ($action eq 'new') {
     }
 
     # Add the new user
-    my $encrypted = crypt($password, substr($password, 0, 2));
     SendSQL("INSERT INTO profiles ( " .
             "login_name, cryptpassword, realname, groupset, " .
             "disabledtext" .
-            " ) VALUES (" .
+            " ) VALUES ( " .
             SqlQuote($user) . "," .
-            SqlQuote($encrypted) . "," .
+            SqlQuote(Crypt($password)) . "," .
             SqlQuote($realname) . "," .
             $bits . "," .
             SqlQuote($disabledtext) . ")" );
@@ -570,17 +558,10 @@ if ($action eq 'del') {
     print "</TR><TR>\n";
     print "  <TD VALIGN=\"top\">Group set:</TD>\n";
     print "  <TD VALIGN=\"top\">";
-    if ($::driver eq 'mysql') {
-        SendSQL("SELECT name
-                FROM groups
-                 WHERE bit & $groupset = bit
-                 ORDER BY isbuggroup, name");
-    } elsif ($::driver eq 'Pg') {
-        SendSQL("SELECT name
-                 FROM groups
-                 WHERE group_bit & $groupset = group_bit
-                 ORDER BY isbuggroup, name");
-    }
+    SendSQL("SELECT name
+             FROM groups
+             WHERE bit & $groupset = bit
+             ORDER BY isbuggroup, name");
     my $found = 0;
     while ( MoreSQLData() ) {
         my ($name) = FetchSQLData();
@@ -786,19 +767,12 @@ if ($action eq 'update') {
         if($groupsetold eq $::superusergroupset) {
           print "Cannot change permissions of superuser.\n";
         } else {
-           if ($::driver eq 'mysql') {
-               SendSQL("UPDATE profiles
-                        SET groupset =
-                            groupset - (groupset & $opblessgroupset) + 
-                            (($groupset) & $opblessgroupset)
-                        WHERE login_name=" . SqlQuote($userold));
-           } elsif ($::driver eq 'Pg') {
-               SendSQL("UPDATE profiles
-                        SET groupset =
-                            groupset - (groupset & int8($opblessgroupset)) + 
-                            ((int8($groupset)) & int8($opblessgroupset))
-                        WHERE login_name=" . SqlQuote($userold));
-           }
+           SendSQL("UPDATE profiles
+                    SET groupset =
+                         groupset - (groupset & $opblessgroupset) + 
+                         (($groupset) & $opblessgroupset)
+                    WHERE login_name=" . SqlQuote($userold));
+
            # I'm paranoid that someone who I give the ability to bless people
            # will start misusing it.  Let's log who blesses who (even though
            # nothing actually uses this log right now).
@@ -812,7 +786,7 @@ if ($action eq 'update') {
                        "(userid,who,profiles_when,fieldid,oldvalue,newvalue) " .
                        "VALUES " .
                        "($u, $::userid, now(), $fieldid, " .
-                       SqlQuote($groupsetold) . ", " . SqlQuote($groupset) . ")");
+                       " $groupsetold, $groupset)");
            }
            print "Updated permissions.\n";
        }

@@ -208,8 +208,7 @@ unless ($action) {
                     votesperuser,maxvotesperbug,votestoconfirm,COUNT(bug_id)
              FROM products LEFT JOIN bugs
                ON products.product=bugs.product
-             GROUP BY products.product,description,disallownew,
-                      votesperuser,maxvotesperbug,votestoconfirm
+             GROUP BY products.product
              ORDER BY products.product");
     print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR BGCOLOR=\"#6666FF\">\n";
     print "  <TH ALIGN=\"left\">Edit product ...</TH>\n";
@@ -331,7 +330,7 @@ if ($action eq 'new') {
     SendSQL("INSERT INTO products ( " .
             "product, description, milestoneurl, disallownew, votesperuser, " .
             "maxvotesperbug, votestoconfirm, defaultmilestone" .
-            " ) VALUES (" .
+            " ) VALUES ( " .
             SqlQuote($product) . "," .
             SqlQuote($description) . "," .
             SqlQuote($milestoneurl) . "," .
@@ -344,8 +343,8 @@ if ($action eq 'new') {
           SqlQuote($version) . "," .
           SqlQuote($product) . ")" );
 
-    SendSQL("INSERT INTO milestones (product, value, sortkey) VALUES (" .
-            SqlQuote($product) . ", " . SqlQuote($defaultmilestone) . ", 1)");
+    SendSQL("INSERT INTO milestones (product, value) VALUES (" .
+            SqlQuote($product) . ", " . SqlQuote($defaultmilestone) . ")");
 
     # If we're using bug groups, then we need to create a group for this
     # product as well.  -JMR, 2/16/00
@@ -353,7 +352,7 @@ if ($action eq 'new') {
         # First we need to figure out the bit for this group.  We'll simply
         # use the next highest bit available.  We'll use a minimum bit of 256,
         # to leave room for a few more Bugzilla operation groups at the bottom.
-        SendSQL("SELECT MAX(group_bit) FROM groups");
+        SendSQL("SELECT MAX(bit) FROM groups");
         my $bit = FetchOneColumn();
         if($bit < 256) {
             $bit = 256;
@@ -363,7 +362,7 @@ if ($action eq 'new') {
         
         # Next we insert into the groups table
         SendSQL("INSERT INTO groups " .
-                "(group_bit, name, description, isbuggroup, userregexp) " .
+                "(bit, name, description, isbuggroup, userregexp) " .
                 "VALUES (" .
                 $bit . ", " .
                 SqlQuote($product) . ", " .
@@ -388,15 +387,9 @@ if ($action eq 'new') {
         # find matching users with a much simpler statement that lets the
         # mySQL database do the work.
         unless($userregexp eq "") {
-            if ($::driver eq 'mysql') {
-                SendSQL("UPDATE profiles ".
-                        "SET groupset = groupset | " . $bit . " " .
-                        "WHERE " . SqlRegEx("login_name", SqlQuote($userregexp)));
-            } elsif ($::driver eq 'Pg') {
-                SendSQL("UPDATE profiles ".
-                        "SET groupset = groupset | int8(" . $bit . ") " .
-                        "WHERE " . SqlRegEx("login_name", SqlQuote($userregexp)));
-            }
+            SendSQL("UPDATE profiles ".
+                    "SET groupset = groupset | " . $bit . " " .
+                    "WHERE LOWER(login_name) REGEXP LOWER(" . SqlQuote($userregexp) . ")");
         }
     }
 
@@ -585,18 +578,17 @@ if ($action eq 'delete') {
     CheckProduct($product);
 
     # lock the tables before we start to change everything:
-    if ($::driver eq 'mysql') {
-        SendSQL("LOCK TABLES attachments WRITE,
-                bugs WRITE,
-                bugs_activity WRITE,
-                components WRITE,
-                dependencies WRITE,
-                versions WRITE,
-                products WRITE,
-                groups WRITE,
-                profiles WRITE,
-                milestones WRITE");
-    }
+
+    SendSQL("LOCK TABLES attachments WRITE,
+                         bugs WRITE,
+                         bugs_activity WRITE,
+                         components WRITE,
+                         dependencies WRITE,
+                         versions WRITE,
+                         products WRITE,
+                         groups WRITE,
+                         profiles WRITE,
+                         milestones WRITE");
 
     # According to MySQL doc I cannot do a DELETE x.* FROM x JOIN Y,
     # so I have to iterate over bugs and delete all the indivial entries
@@ -646,7 +638,7 @@ if ($action eq 'delete') {
     if (Param("usebuggroups")) {
         # We need to get the bit of the group from the table, then update the
         # groupsets of members of that group and remove the group.
-        SendSQL("SELECT group_bit, description FROM groups " . 
+        SendSQL("SELECT bit, description FROM groups " . 
                 "WHERE name = " . SqlQuote($product));
         my ($bit, $group_desc) = FetchSQLData();
 
@@ -655,28 +647,20 @@ if ($action eq 'delete') {
             # I'm kludging a bit so that I don't break superuser access;
             # I'm merely checking to make sure that the groupset is not
             # the superuser groupset in doing this update...
-            if ($::driver eq 'mysql') {
-                SendSQL("UPDATE profiles " .
-                        "SET groupset = groupset - $bit " .
-                        "WHERE (groupset & $bit) " .
-                        "AND (groupset != 9223372036854710271)");
-            } elsif ($::driver eq 'Pg') {
-                SendSQL("UPDATE profiles " .
-                        "SET groupset = groupset - $bit " .
-                        "WHERE (groupset & int8($bit)) " .
-                        "AND (groupset != int8(9223372036854710271))");
-            }
+            SendSQL("UPDATE profiles " .
+                    "SET groupset = groupset - $bit " .
+                    "WHERE (groupset & $bit) " .
+                    "AND (groupset != 9223372036854710271)");
             print "Users dropped from group '$group_desc'.<BR>\n";
 
             SendSQL("DELETE FROM groups " .
-                    "WHERE group_bit = $bit");
+                    "WHERE bit = $bit");
             print "Group '$group_desc' deleted.<BR>\n";
         }
     }
-    if ($::driver eq 'mysql') {
-        SendSQL("UNLOCK TABLES");
-    }
-    
+
+    SendSQL("UNLOCK TABLES");
+
     unlink "data/versioncache";
     PutTrailer($localtrailer);
     exit;
@@ -860,15 +844,14 @@ if ($action eq 'update') {
 
     # Note that the order of this tests is important. If you change
     # them, be sure to test for WHERE='$product' or WHERE='$productold'
-    if ($::driver eq 'mysql') {
-        SendSQL("LOCK TABLES bugs WRITE,
-                components WRITE,
-                products WRITE,
-                versions WRITE,
-                groups WRITE,
-                profiles WRITE,
-                milestones WRITE");
-    }
+
+    SendSQL("LOCK TABLES bugs WRITE,
+                         components WRITE,
+                         products WRITE,
+                         versions WRITE,
+                         groups WRITE,
+                         profiles WRITE,
+                         milestones WRITE");
 
     if ($disallownew ne $disallownewold) {
         $disallownew ||= 0;
@@ -881,9 +864,7 @@ if ($action eq 'update') {
     if ($description ne $descriptionold) {
         unless ($description) {
             print "Sorry, I can't delete the description.";
-            if ($::driver eq 'mysql') {
-                SendSQL("UNLOCK TABLES");
-            }
+            SendSQL("UNLOCK TABLES");
             PutTrailer($localtrailer);
             exit;
         }
@@ -907,7 +888,7 @@ if ($action eq 'update') {
         # update users groupsets.
         # First we find out if there's an existing group for this product, and
         # get its bit if there is.
-        SendSQL("SELECT group_bit " .
+        SendSQL("SELECT bit " .
                 "FROM groups " .
                 "WHERE name = " . SqlQuote($productold));
         my $bit = FetchOneColumn();
@@ -920,7 +901,7 @@ if ($action eq 'update') {
         } else {
             # Group doesn't exist.  Let's make it, the same way as we make a
             # group for a new product above.
-            SendSQL("SELECT MAX(group_bit) FROM groups");
+            SendSQL("SELECT MAX(bit) FROM groups");
             my $tmp_bit = FetchOneColumn();
             if($tmp_bit < 256) {
                 $bit = 256;
@@ -928,7 +909,7 @@ if ($action eq 'update') {
                 $bit = $tmp_bit * 2;
             }
             SendSQL("INSERT INTO groups " .
-                    "(group_bit, name, description, isbuggroup, userregexp) " .
+                    "(bit, name, description, isbuggroup, userregexp) " .
                     "values (" . $bit . ", " .
                     SqlQuote($productold) . ", " .
                     SqlQuote($productold . " Bugs Access") . ", " .
@@ -952,15 +933,9 @@ if ($action eq 'update') {
         my $updated_profiles = 0;
         foreach $this_login (@login_list) {
             if($this_login =~ /$userregexp/) {
-                if ($::driver eq 'mysql') {
-                    SendSQL("UPDATE profiles " .
-                            "SET groupset = groupset | " . $bit . " " .
-                            "WHERE login_name = " . SqlQuote($this_login));
-                } elsif ($::driver eq 'Pg') {
-                    SendSQL("UPDATE profiles " .
-                            "SET groupset = groupset | int8(" . $bit . ") " .
-                            "WHERE login_name = " . SqlQuote($this_login));
-                }
+                SendSQL("UPDATE profiles " .
+                        "SET groupset = groupset | " . $bit . " " .
+                        "WHERE login_name = " . SqlQuote($this_login));
                 $updated_profiles = 1;
             }
         }
@@ -1002,9 +977,7 @@ if ($action eq 'update') {
                 "  AND product = " . SqlQuote($productold));
         if (!FetchOneColumn()) {
             print "Sorry, the milestone $defaultmilestone must be defined first.";
-            if ($::driver eq 'mysql') {
-                SendSQL("UNLOCK TABLES");
-            }
+            SendSQL("UNLOCK TABLES");
             PutTrailer($localtrailer);
             exit;
         }
@@ -1020,17 +993,13 @@ if ($action eq 'update') {
     if ($product ne $productold) {
         unless ($product) {
             print "Sorry, I can't delete the product name.";
-            if ($::driver eq 'mysql') {
-                SendSQL("UNLOCK TABLES");
-            }
+            SendSQL("UNLOCK TABLES");
             PutTrailer($localtrailer);
             exit;
         }
         if (TestProduct($product)) {
             print "Sorry, product name '$product' is already in use.";
-            if ($::driver eq 'mysql') {
-                SendSQL("UNLOCK TABLES");
-            }
+            SendSQL("UNLOCK TABLES");
             PutTrailer($localtrailer);
             exit;
         }
@@ -1052,9 +1021,7 @@ if ($action eq 'update') {
         print "Updated product name.<BR>\n";
     }
     unlink "data/versioncache";
-    if ($::driver eq 'mysql') {
-        SendSQL("UNLOCK TABLES");
-    }
+    SendSQL("UNLOCK TABLES");
 
     if ($checkvotes) {
         print "Checking existing votes in this product for anybody who now has too many votes.";

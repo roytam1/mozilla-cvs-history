@@ -26,7 +26,6 @@ use strict;
 use vars %::COOKIE;
 
 require "CGI.pl";
-require "globals.pl";
 
 my $cookiepath = Param("cookiepath");
 print "Set-Cookie: Bugzilla_login= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:00:00 GMT

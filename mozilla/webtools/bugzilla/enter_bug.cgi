@@ -341,7 +341,7 @@ if(Param("usebuggroupsentry")
 # First we get the bit and description for the group.
 my $group_bit=0;
 if(Param("usebuggroups") && GroupExists($product)) {
-    SendSQL("select group_bit from groups ".
+    SendSQL("select bit from groups ".
             "where name = ".SqlQuote($product)." ".
             "and isbuggroup != 0");
     ($group_bit) = FetchSQLData();
@@ -462,15 +462,9 @@ print "
 ";
 
 if ($::usergroupset ne '0') {
-    if ($::driver eq 'mysql') {
-        SendSQL("SELECT bit, description FROM groups " .
-                "WHERE (bit & $::usergroupset) != 0 " .
-                "  AND isbuggroup != 0 AND isactive = 1 ORDER BY description");
-    } elsif ($::driver eq 'Pg') {
-        SendSQL("SELECT group_bit, name, description FROM groups " .
-                "WHERE (group_bit & int8($::usergroupset)) != 0 " .
-                "  AND isbuggroup != 0 AND isactive = 1 ORDER BY description");
-    }
+    SendSQL("SELECT bit, name, description FROM groups " .
+            "WHERE bit & $::usergroupset != 0 " .
+            "  AND isbuggroup != 0 AND isactive = 1 ORDER BY description");
     # We only print out a header bit for this section if there are any
     # results.
     my $groupFound = 0;
