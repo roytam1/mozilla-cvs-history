@@ -275,7 +275,7 @@ for ( ; $curYear <= $lastYear ; $curYear++ ) {
 print p();
 print h4("\nThese statistics were generated using the assumption that " .
 		" contributions from mozilla.org should " .
-	        b( mozillaOrgAsNscp eq "yes" ? "" : "not ") .  
+	        b( $mozillaOrgAsNscp eq "yes" ? "" : "not ") .  
 	        "be considered Netscape contributions.");
 
 # generate the row of headers listing the months
