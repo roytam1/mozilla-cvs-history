@@ -86,7 +86,8 @@ MozillaCommon -a \
     ns/l10n \
     ns/nsprpub \
     ns/dbm  \
-    ns/modules/schedulr
+    ns/modules/schedulr  \
+    README 
 
 MozillaWinOnly -a \
     ns/client.mak  \
