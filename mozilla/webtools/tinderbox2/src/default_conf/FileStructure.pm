@@ -74,7 +74,7 @@ $URL_HTML = ($TinderConfig::URL_HTML ||
 
          'gunzip' => "$URL_BIN/gunzip.cgi",
 
-         'treepages' => "$URL_HTML",
+         'indexpage' => "$URL_HTML/index.html",
          
          'regenerate' => "$URL_BIN/regenerate.cgi",  
 
