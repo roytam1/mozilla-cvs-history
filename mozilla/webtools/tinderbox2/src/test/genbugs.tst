@@ -76,8 +76,13 @@ $TINDERBOX_DIR = ( $TinderConfig::TINDERBOX_DIR ||
 	      'PERFORMANCE problems building the subscribe datasource',
 	      'assertions caused my multi-part news messages', 
 
+	      'Time shown ought to be UTC',
+	      'Make distclean failes: too many args on command line',
+	      'Connection fails; no error message',
+
 	      ('Clicking on &quot;Twisty&quot; in &lt;Subscribe dialog&gt;'.
 	       ' crashes.'),
+
 
 	      # Single quotes seem to always break the popup window,
 	      # even if they are escaped.  I wonder if this is a bug
