@@ -345,7 +345,7 @@ if ($action eq 'new') {
     if(Param("usebuggroups")) {
         # Next we insert into the groups table
         SendSQL("INSERT INTO groups " .
-                "(name, description, isbuggroup, group_when) " .
+                "(name, description, isbuggroup, last_changed) " .
                 "VALUES (" .
                 SqlQuote($product) . ", " .
                 SqlQuote("Access to bugs in the $product product") . ", 1, NOW())");

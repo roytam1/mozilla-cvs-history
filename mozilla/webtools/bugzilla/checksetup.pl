@@ -1467,7 +1467,7 @@ $table{groups} =
     name varchar(255) not null,
     description text not null,
     isbuggroup tinyint not null,
-    group_when datetime not null,
+    last_changed datetime not null,
     userregexp tinytext not null,
     isactive tinyint not null default 1,
 
@@ -3068,7 +3068,7 @@ sub ListBits {
 my @admins = ();
 # The groups system needs to be converted if groupset exists
 if (GetFieldDef("profiles", "groupset")) {
-    AddField('groups', 'group_when', 'datetime not null');
+    AddField('groups', 'last_changed', 'datetime not null');
     # Some mysql versions will promote any unique key to primary key
     # so all unique keys are removed first and then added back in
     $dbh->do("ALTER TABLE groups DROP INDEX bit") if GetIndexDef("groups","bit");

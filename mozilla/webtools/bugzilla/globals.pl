@@ -730,13 +730,13 @@ sub Crypt {
 
 # ConfirmGroup(userid) is called prior to any activity that relies
 # on user_group_map to ensure that derived group permissions are up-to-date.
-# Permissions must be rederived if ANY groups have a group_when newer
+# Permissions must be rederived if ANY groups have a last_changed newer
 # than the profiles.refreshed_when value.
 sub ConfirmGroup {
     my ($user) = (@_);
     PushGlobalSQLState();
     SendSQL("SELECT userid FROM profiles, groups WHERE userid = $user " .
-            "AND profiles.refreshed_when <= groups.group_when ");
+            "AND profiles.refreshed_when <= groups.last_changed ");
     my $ret = FetchSQLData();
     PopGlobalSQLState();
     if ($ret) {
@@ -1253,10 +1253,7 @@ sub UserCanBlessGroup {
         AND groups.name = " . SqlQuote($groupname));
     $result = FetchOneColumn();
     PopGlobalSQLState();
-    if ($result) {
-        return 1;
-    }
-    return 0;
+    return $result; 
 }
 
 sub UserCanBlessAnything {

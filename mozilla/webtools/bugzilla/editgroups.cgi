@@ -147,7 +147,7 @@ to others in the same group.<p>";
     print "<b>User RegExp</b> is optional, and if filled in, will automatically
 grant membership to this group to anyone creating a new account with an
 email address that matches this perl regular expression. Do not forget the trailing \'\$\'.  Example \'\@mycompany\\.com\$\'<p>";
-    print "The <b>Use For Bugs</b> flag determines whether or not the group is eligable to be used for bugs.
+    print "The <b>Use For Bugs</b> flag determines whether or not the group is eligible to be used for bugs.
 If you remove this flag, it will no longer be possible for users to add bugs
 to this group, although bugs already in the group will remain in the group.
 Doing so is a much less drastic way to stop a group from growing
@@ -302,7 +302,7 @@ may not contain any spaces.<p>";
     print "<b>Description</b> is what will be shown in the bug reports to
 members of the group where they can choose whether the bug will be restricted
 to others in the same group.<p>";
-    print "The <b>Use For Bugs</b> flag determines whether or not the group is eligable to be used for bugs.
+    print "The <b>Use For Bugs</b> flag determines whether or not the group is eligible to be used for bugs.
 If you clear this, it will no longer be possible for users to add bugs
 to this group, although bugs already in the group will remain in the group.
 Doing so is a much less drastic way to stop a group from growing
@@ -370,7 +370,7 @@ if ($action eq 'new') {
 
     # Add the new group
     SendSQL("INSERT INTO groups ( " .
-            "name, description, isbuggroup, userregexp, isactive, group_when " .
+            "name, description, isbuggroup, userregexp, isactive, last_changed " .
             " ) VALUES ( " .
             SqlQuote($name) . ", " .
             SqlQuote($desc) . ", " .
@@ -638,7 +638,7 @@ if ($action eq 'postchanges') {
         print "You didn't change anything!<BR>\n";
         print "If you really meant it, hit the <B>Back</B> button and try again.<p>\n";
     } else {
-        SendSQL("UPDATE groups SET group_when = NOW() WHERE id = $gid");
+        SendSQL("UPDATE groups SET last_changed = NOW() WHERE id = $gid");
         print "Done.<p>\n";
     }
     PutTrailer("<a href=editgroups.cgi>Back to the group list</a>");

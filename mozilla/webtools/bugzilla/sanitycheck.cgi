@@ -153,7 +153,7 @@ if (exists $::FORM{'rebuildvotecache'}) {
 if (exists $::FORM{'rederivegroups'}) {
     Status("OK, All users' inherited permissions will be rechecked when " .
            "they next access Bugzilla.");
-    SendSQL("UPDATE groups SET group_when = NOW() LIMIT 1");
+    SendSQL("UPDATE groups SET last_changed = NOW() LIMIT 1");
 }
 
 # rederivegroupsnow is REALLY only for testing.
@@ -175,7 +175,7 @@ if (exists $::FORM{'cleangroupsnow'}) {
     # to get the groups up to date.
     # If any page starts taking longer than one hour to load, this interval
     # should be revised.
-    SendSQL("SELECT MAX(group_when) FROM groups WHERE group_when < NOW() - INTERVAL 1 HOUR");
+    SendSQL("SELECT MAX(last_changed) FROM groups WHERE last_changed < NOW() - INTERVAL 1 HOUR");
     (my $cutoff) = FetchSQLData();
     Status("Cutoff is $cutoff");
     SendSQL("SELECT COUNT(*) FROM user_group_map");
@@ -282,14 +282,9 @@ CrossCheck("products", "id",
            ["versions", "product_id", "value"],
            ["attachstatusdefs", "product_id", "name"]);
 
-DateCheck("groups", "group_when");
+DateCheck("groups", "last_changed");
 DateCheck("profiles", "refreshed_when");
 
-###########################################################################
-# Perform group checks
-###########################################################################
-
-    
 
 ###########################################################################
 # Perform product specific field checks
