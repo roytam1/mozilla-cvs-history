@@ -211,6 +211,9 @@ $fullname{'90'} = 'XP File Handling';
 $mode{'91'} = 'Open';
 $branch{'91'} = 'HEAD';
 $fullname{'91'} = 'XP Miscellany';
+$mode{'137'} = 'Open';
+$branch{'137'} = 'HEAD';
+$fullname{'137'} = 'XPApps';
 $mode{'89'} = 'Open';
 $branch{'89'} = 'HEAD';
 $fullname{'89'} = 'XPCOM';
@@ -316,7 +319,6 @@ if (m:^mozilla/java/webclient/.*$:) {return '127';}
 if (m:^mozilla/java/dom/.*$:) {return '130';}
 if (m:^mozilla/java/fe/.*$:) {return '131';}
 if (m:^mozilla/java/util/.*$:) {return '133';}
-if (m:^mozilla/xpfe/global/resources/skin/xul\.css$:) {return '136';}
 }
 return '';
 }
