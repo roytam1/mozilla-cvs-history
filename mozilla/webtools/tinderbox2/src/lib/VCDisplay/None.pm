@@ -41,7 +41,7 @@
 
 
 
-package VCDisplay;
+package VCDisplay::None;
 
 $VERSION = '#tinder_version#';
 
@@ -61,7 +61,7 @@ use HTMLPopUp;
 # create a Link to a VC file and its line number
 
 sub source {
-  my (%args) = @_;
+  my ($self, %args) = @_;
 
   if ($DEBUG) {
 
@@ -90,7 +90,7 @@ sub source {
 # who is looking at the error log.
 
 sub guess {
-  my (%args) = @_;
+  my ($self, %args) = @_;
 
   if ($DEBUG) {
 
@@ -115,7 +115,7 @@ sub guess {
 
 
 sub query {
-  my (%args) = @_;
+  my ($self, %args) = @_;
 
   if ($DEBUG) {
 
