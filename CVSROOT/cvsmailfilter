@@ -1,8 +1,10 @@
 #!/bin/sh
-PATH=/bin:/usr/bin;export PATH
+PATH=/bin:/usr/bin:/sbin:/usr/sbin;export PATH
 
 (
-URL=`echo "$1" | tr ' ' '+' | sed -e 's/\([^+]*\)\+\(.*\)/\subdir=\1\&files=\2/'`
+URL="subdir=`dirname $1`&files=`basename $1`"
+
+
 
 echo "Subject: $1"
 echo 'Content-Type: text/html; charset=us-ascii'
