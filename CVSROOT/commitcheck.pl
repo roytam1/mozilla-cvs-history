@@ -31,9 +31,6 @@ $super{'15'} = ['ebb3%apple.com','pinkerton%netscape.com','pnunn%netscape.com','
 $mode{'56'} = 'Open';
 $branch{'56'} = 'HEAD';
 $fullname{'56'} = 'Composer';
-$mode{'57'} = 'Open';
-$branch{'57'} = 'HEAD';
-$fullname{'57'} = 'Compositor Library';
 $mode{'4'} = 'Open';
 $branch{'4'} = 'HEAD';
 $fullname{'4'} = 'default';
@@ -227,7 +224,6 @@ if (m:^mozilla/include/edt\.h/.*$:) {return '56';}
 if (m:^mozilla/include/edttypes\.h/.*$:) {return '56';}
 if (m:^mozilla/lib/layout/.*$:) {return '56';}
 if (m:^mozilla/modules/edtplug/.*$:) {return '56';}
-if (m:^mozilla/modules/liblayer/.*$:) {return '57';}
 if (m:^mozilla/cmd/dialup/.*$:) {return '58';}
 if (m:^mozilla/directory/.*$:) {return '59';}
 if (m:^mozilla/modules/libfont/.*$:) {return '60';}
