@@ -144,18 +144,18 @@ sub GetBug {
     # Retrieves the necessary information about a bug, stores it in the bug cache,
     # and returns it to the calling code.
     my ($id) = @_;
+
+    return {} if !CanSeeBug($id, $::userid, $::usergroupset);
     
-    SendSQL(SelectVisible("SELECT 1, 
-                                  bug_status, 
-                                  short_desc, 
-                                  $milestone_column, 
-                                  assignee.userid, 
-                                  assignee.login_name
-                             FROM bugs, profiles AS assignee
-                            WHERE bugs.bug_id = $id
-                              AND bugs.assigned_to = assignee.userid", 
-                          $::userid, 
-                          $::usergroupset));
+    SendSQL("SELECT 1, 
+                 bug_status, 
+                 short_desc, 
+                 $milestone_column, 
+                 assignee.userid, 
+                 assignee.login_name
+             FROM bugs, profiles AS assignee
+             WHERE bugs.bug_id = $id
+                 AND bugs.assigned_to = assignee.userid");
     
     my $bug = {};
     

@@ -127,17 +127,22 @@ if ($::FORM{'doall'}) {
     }
 }
 
+my @canseebugs = keys %seen;
+my $canseeref = CanSeeBug(\@canseebugs, $::userid, $::usergroupset);
+
 foreach my $k (keys(%seen)) {
     my $summary = "";
     my $stat;
     if ($::FORM{'showsummary'}) {
-        SendSQL(SelectVisible("SELECT bug_status, short_desc FROM bugs " .
-                              "WHERE bugs.bug_id = $k",
-                              $::userid,
-                              $::usergroupset));
-        ($stat, $summary) = FetchSQLData();
-        $stat = "NEW" if !defined $stat;
-        $summary = "" if !defined $summary;
+        if (!$canseeref->{$k}) {
+            SendSQL("SELECT bug_status FROM bugs WHERE bug_id = $k");
+            $stat = FetchOneColumn();
+        } else {
+            SendSQL("SELECT bug_status, short_desc FROM bugs WHERE bugs.bug_id = $k");
+            ($stat, $summary) = FetchSQLData();
+            $stat = "NEW" if !defined $stat;
+            $summary = "" if !defined $summary;
+        }
     } else {
         SendSQL("SELECT bug_status FROM bugs WHERE bug_id = $k");
         $stat = FetchOneColumn();

@@ -67,10 +67,17 @@ my $buglist = $::FORM{'buglist'} ||
 
 my @bugs;
 
+trick_taint($buglist);
+my @canseebugs = split(/[:,]/, $buglist);
+my $canseeref = CanSeeBug(\@canseebugs, $::userid, $::usergroupset);
+
 foreach my $bug_id (split(/[:,]/, $buglist)) {
     detaint_natural($bug_id) || next;
-    SendSQL(SelectVisible("$generic_query AND bugs.bug_id = $bug_id",
-                          $::userid, $::usergroupset));
+
+    # Skip if we cannot see this bug
+    next if !$canseeref->{$bug_id};
+
+    SendSQL("$generic_query AND bugs.bug_id = $bug_id");
 
     my %bug;
     my @row = FetchSQLData();

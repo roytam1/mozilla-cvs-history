@@ -151,14 +151,18 @@ my @bugs;
 my @bug_ids; 
 my $loop = 0;
 
+my @canseebugs = keys %count;
+my $canseeref = CanSeeBug(\@canseebugs, $userid, $usergroupset);
+
 foreach my $id (keys(%count)) {
     # Maximum row count is dealt with in the template.
     # If there's a buglist, restrict the bugs to that list.
     next if $sortvisible && $buglist[0] && (lsearch(\@buglist, $id) == -1);
 
-    SendSQL(SelectVisible("$generic_query bugs.bug_id = $id", 
-                           $userid, 
-                           $usergroupset));
+    # Skip if we cannot see this bug
+    next if !$canseeref->{$id};
+
+    SendSQL("$generic_query bugs.bug_id = $id"); 
                            
     next unless MoreSQLData();
     my ($component, $bug_severity, $op_sys, $target_milestone, 

@@ -56,7 +56,7 @@ sub sillyness {
     $zz = @::settable_resolution;
     $zz = @::target_milestone;
     $zz = $::unconfirmedstate;
-    # $zz = $::userid;
+    $zz = $::userid;
     $zz = @::versions;
 };
 
@@ -1486,6 +1486,18 @@ while (my @row = FetchSQLData()) {
     push(@bugs, $bug);
 }
 
+# Fix the list of bugs depending on which ones we are allowed to see
+my @buglist = ();
+my @canseebugs = ();
+foreach my $bug (@bugs) {
+    push(@buglist, $bug->{id});
+}
+my $canseeref = CanSeeBug(\@buglist, $::userid, $::usergroupset);
+foreach my $bug (@bugs) {
+    next if !$canseeref->{$bug->{id}};
+    push (@canseebugs, $bug);
+}
+
 # Switch back from the shadow database to the regular database so PutFooter()
 # can determine the current user even if the "logincookies" table is corrupted
 # in the shadow database.
@@ -1497,8 +1509,8 @@ SendSQL("USE $::db_name") if $::driver eq 'mysql';
 
 # Define the variables and functions that will be passed to the UI template.
 
-$vars->{'bugs'} = \@bugs;
-$vars->{'buglist'} = join(',', map($_->{id}, @bugs));
+$vars->{'bugs'} = \@canseebugs;
+$vars->{'buglist'} = join(',', map($_->{id}, @canseebugs));
 $vars->{'columns'} = $columns;
 $vars->{'displaycolumns'} = \@displaycolumns;
 
@@ -1610,7 +1622,7 @@ if ($format->{'extension'} eq "html") {
         my $qorder = url_quote($order);
         print "Set-Cookie: LASTORDER=$qorder ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
     }
-    my $bugids = join(":", map( $_->{'id'}, @bugs));
+    my $bugids = join(":", map( $_->{'id'}, @canseebugs));
     # See also Bug 111999
     if (length($bugids) < 4000) {
         print "Set-Cookie: BUGLIST=$bugids ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
