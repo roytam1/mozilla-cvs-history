@@ -171,7 +171,7 @@ sub line_type {
                      0);
       
       if ($ignore) {
-          undefine $error;
+          undef $error;
       }
   }
 
@@ -312,7 +312,7 @@ sub line_type {
                      0);
       
       if ($ignore) {
-          undefine $error;
+          undef $error;
       }
   }
 
