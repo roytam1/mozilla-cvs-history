@@ -558,7 +558,8 @@ SeaMonkeyLayout -a \
 	mozilla/layout \
 	mozilla/view \
 	mozilla/webshell \
-	mozilla/widget
+	mozilla/widget \
+	mozilla/expat
 
 SeaMonkeyXPToolKit -a \
 	SeaMonkeyLayout \
