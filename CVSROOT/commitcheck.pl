@@ -300,6 +300,22 @@ $fullname{'93'} = 'Zlib';
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'HEAD') {
+if (m:^mozilla/modules/oji/.*$:) {return '68';}
+if (m:^mozilla/nav-java/.*$:) {return '68';}
+if (m:^mozilla/sun-java/.*$:) {return '68';}
+if (m:^mozilla/mail/.*$:) {return '170';}
+if (m:^mozilla/caps/.*$:) {return '69';}
+if (m:^mozilla/extensions/cookie$:) {return '171';}
+if (m:^js/src/*\.c$:) {return '70';}
+if (m:^js/src/*\.def$:) {return '70';}
+if (m:^js/src/*\.h$:) {return '70';}
+if (m:^js/src/*\.m*k$:) {return '70';}
+if (m:^js/src/*\.tbl$:) {return '70';}
+if (m:^js/src/*akefile.*$:) {return '70';}
+if (m:^mozilla/gfx/src/beos$:) {return '172';}
+if (m:^mozilla/widget/src/beos$:) {return '172';}
+if (m:^mozilla/extensions/jsd/.*$:) {return '71';}
+if (m:^mozilla/js/jsd/.*$:) {return '71';}
 if (m:^mozilla/extensions/help$:) {return '174';}
 if (m:^js/src/liveconnect/.*$:) {return '72';}
 if (m:^mozilla/gfx/src/windows/.*$:) {return '175';}
@@ -420,22 +436,6 @@ if (m:^mozilla/browser/.*$:) {return '166';}
 if (m:^mozilla/chrome/.*$:) {return '166';}
 if (m:^mozilla/toolkit/.*$:) {return '166';}
 if (m:^mozilla/intl/.*$:) {return '67';}
-if (m:^mozilla/modules/oji/.*$:) {return '68';}
-if (m:^mozilla/nav-java/.*$:) {return '68';}
-if (m:^mozilla/sun-java/.*$:) {return '68';}
-if (m:^mozilla/mail/.*$:) {return '170';}
-if (m:^mozilla/caps/.*$:) {return '69';}
-if (m:^mozilla/extensions/cookie$:) {return '171';}
-if (m:^js/src/*\.c$:) {return '70';}
-if (m:^js/src/*\.def$:) {return '70';}
-if (m:^js/src/*\.h$:) {return '70';}
-if (m:^js/src/*\.m*k$:) {return '70';}
-if (m:^js/src/*\.tbl$:) {return '70';}
-if (m:^js/src/*akefile.*$:) {return '70';}
-if (m:^mozilla/gfx/src/beos$:) {return '172';}
-if (m:^mozilla/widget/src/beos$:) {return '172';}
-if (m:^mozilla/extensions/jsd/.*$:) {return '71';}
-if (m:^mozilla/js/jsd/.*$:) {return '71';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
