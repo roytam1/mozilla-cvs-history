@@ -512,6 +512,7 @@ SeaMonkeyCore -a \
 	mozilla/configure.in \
 	mozilla/allmakefiles.sh \
 	mozilla/Makefile.in \
+	mozilla/makefile.win \
 	mozilla/aclocal.m4 \
 	mozilla/base \
 	mozilla/build \
