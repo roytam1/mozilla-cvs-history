@@ -128,18 +128,12 @@ MozillaSourceUnixOnly -a \
     mozilla/config/AIX.mk  \
     mozilla/config/BSD_OS.mk  \
     mozilla/config/bsdecho.c  \
-    mozilla/config/bsdecho.c  \
     mozilla/config/clobber_miss.pl  \
-    mozilla/config/clobber_miss.pl  \
-    mozilla/config/common.mk  \
     mozilla/config/common.mk  \
     mozilla/config/config.guess  \
     mozilla/config/config.mk  \
     mozilla/config/coreconf.mk  \
-    mozilla/config/coreconf.mk  \
     mozilla/config/cvsco.pl  \
-    mozilla/config/cvsco.pl  \
-    mozilla/config/fastcwd.pl  \
     mozilla/config/fastcwd.pl  \
     mozilla/config/FreeBSD.mk  \
     mozilla/config/gtscc.c  \
@@ -147,12 +141,8 @@ MozillaSourceUnixOnly -a \
     mozilla/config/IRIX.mk  \
     mozilla/config/Linux.mk  \
     mozilla/config/makecopy.c  \
-    mozilla/config/makecopy.c  \
-    mozilla/config/Makefile  \
     mozilla/config/Makefile  \
     mozilla/config/mangle.c  \
-    mozilla/config/mangle.c  \
-    mozilla/config/mantomak.c  \
     mozilla/config/mantomak.c  \
     mozilla/config/mkdepend  \
     mozilla/config/NCR.mk  \
@@ -160,28 +150,19 @@ MozillaSourceUnixOnly -a \
     mozilla/config/NEWS-OS.mk  \
     mozilla/config/NEXTSTEP.mk  \
     mozilla/config/nfspwd.pl  \
-    mozilla/config/nfspwd.pl  \
     mozilla/config/nodl.pl  \
-    mozilla/config/nodl.pl  \
-    mozilla/config/nsinstall.c  \
     mozilla/config/nsinstall.c  \
     mozilla/config/OSF1.mk  \
     mozilla/config/outofdate.pl  \
-    mozilla/config/outofdate.pl  \
-    mozilla/config/pathsub.c  \
     mozilla/config/pathsub.c  \
     mozilla/config/pathsub.h  \
-    mozilla/config/pathsub.h  \
-    mozilla/config/pkg2dpth.pl  \
     mozilla/config/pkg2dpth.pl  \
     mozilla/config/ports  \
-    mozilla/config/revdepth.pl  \
     mozilla/config/revdepth.pl  \
     mozilla/config/Rhapsody.mk  \
     mozilla/config/rules.mk  \
     mozilla/config/SCOOS.mk  \
     mozilla/config/SINIX.mk  \
-    mozilla/config/sj.pl  \
     mozilla/config/sj.pl  \
     mozilla/config/SunOS.mk  \
     mozilla/config/SunOS4.mk  \
