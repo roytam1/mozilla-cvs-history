@@ -1216,12 +1216,6 @@ AddType text/xml .rdf</screen>
 
      <para>If after hearing all that, you have enough pain tolerance to attempt
      installing Bugzilla on Win32, here are some pointers.
-     <![%bz-devel;[
-       Because this is a development version of the guide, these instructions
-       are subject to change without notice. In fact, the Bugzilla Team hopes
-       to have Bugzilla reasonably close to "out of
-       the box" compatibility with Windows by the 2.18 release.
-      ]]>
       </para>
 
       <section id="win32-perl">
