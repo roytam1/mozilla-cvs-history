@@ -43,6 +43,8 @@ package TinderHeader::BasicTxtHeader;
 
 # Tinderbox libraries
 
+use lib '#tinder_libdir#';
+
 use FileStructure;
 use Persistence;
 

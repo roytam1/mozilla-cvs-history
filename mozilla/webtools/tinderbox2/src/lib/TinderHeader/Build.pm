@@ -38,6 +38,14 @@
 
 package TinderHeader::Build;
 
+
+# Load standard perl libraries
+
+
+# Load Tinderbox libraries
+
+use lib '#tinder_libdir#';
+
 use TinderDB::Build;
 
 @ISA = qw(TinderDB::Build);

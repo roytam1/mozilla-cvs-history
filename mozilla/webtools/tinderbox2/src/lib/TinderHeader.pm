@@ -52,6 +52,8 @@ use File::Basename;
 
 # Tinderbox Specific Libraries
 
+use lib '#tinder_libdir#';
+
 use Utils;
 
 

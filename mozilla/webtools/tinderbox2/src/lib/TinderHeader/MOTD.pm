@@ -37,6 +37,13 @@
 
 package TinderHeader::MOTD;
 
+# Load standard perl libraries
+
+
+# Load Tinderbox libraries
+
+use lib '#tinder_libdir#';
+
 use TinderHeader::BasicTxtHeader;
 
 @ISA = qw(TinderHeader::BasicTxtHeader);

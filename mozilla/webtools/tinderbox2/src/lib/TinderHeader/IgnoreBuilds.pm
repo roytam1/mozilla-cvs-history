@@ -45,6 +45,13 @@ package TinderHeader::IgnoreBuilds;
 # this file is only used by TreeState_Basic.pm the package
 # TreeState_Bonsai.pm uses something hard coded.
 
+# Load standard perl libraries
+
+
+# Load Tinderbox libraries
+
+use lib '#tinder_libdir#';
+
 use TinderHeader::BasicTxtHeader;
 
 @ISA = qw(TinderHeader::BasicTxtHeader);
