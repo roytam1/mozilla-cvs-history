@@ -57,6 +57,7 @@ MozillaCommon -a \
     ns/lib/xlate \
     ns/lib/xp  \
     ns/modules/edtplug/src  \
+    ns/modules/edtplug/include \
     ns/modules/libfont/classes  \
     ns/modules/libfont/public  \
     ns/modules/libfont/src  \
@@ -86,7 +87,6 @@ MozillaWinOnly -a \
     ns/config  \
     ns/lib/makefile.win  \
     ns/modules/coreincl  \
-    ns/modules/edtplug/include  \
     ns/modules/edtplug/makefile.win  \
     ns/makefile.win  \
     ns/modules/libfont/jmcgen  \
