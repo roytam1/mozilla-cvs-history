@@ -210,6 +210,10 @@ $VCDisplayImpl = (
 		  #'VCDisplay::Bonsai',
 		 );
 
+# The name of the version control system as it should appear on the
+# column heading.
+
+$VC_NAME = "CVS";
 
 # Pick one method for storting data, Data::Dumper is slow but text
 # files allows great debugging capabilities and Storable, availible
@@ -240,6 +244,11 @@ $BONSAI_DIR = "/home/httpd/cgi-bin/bonsai";
 # to point to the bug tracking CGI programs.
 
 $BT_URL	= 'http://bugzilla.mozilla.org/';
+
+# The name of the bug tracking system as it should appear on the
+# column heading.
+
+$BT_NAME = "BT";
 
 # The default number of hours shown on the status page
 
