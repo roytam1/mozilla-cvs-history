@@ -16,7 +16,7 @@
 # knowing those details.  I may code a TreeData specific admin-CGI
 # script in the future but I do not have time now and the benefits are
 # not so clear.  For bonsai users it would be best if the DB stored
-# the tree data.  The tinderbox server could down load the data from a
+# the tree data.  The tinderbox server could download the data from a
 # central place when it first starts up, and this down load could
 # trigger a registration for email updates of changes to any trees
 # which this tinderbox server is monitoring. As long as the data is
