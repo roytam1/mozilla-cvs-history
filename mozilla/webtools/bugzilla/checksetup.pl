@@ -1605,6 +1605,16 @@ $table{bug_group_map} =
      unique(bug_id, group_id),
      index(group_id)';
 
+# This table determines which groups are used for bug entry, by default,
+# are required, are permitted, and canedit a bug
+$table{group_control_map} =
+    'control_id mediumint not null,
+     control_id_type smallint not null,
+     control_type smallint not null,
+     group_id mediumint not null,
+     index(control_id_type, control_id)';
+
+
 ###########################################################################
 # Create tables
 ###########################################################################

@@ -1849,11 +1849,16 @@ $::vars =
     'T' => {
         'group_type' => {'system' => 0, 'buggroup' => 1, 'user' => 2},
         'maptype' => {'u2gm' => 0, 'uBg' => 1, 'g2gm' => 2, 'gBg' => 3},
+        'control_id_type' => {'product' => 0},
+        'control_type' => {'entry' => 0, 'default' => 1, 'required' => 2,
+            'permitted' => 3, 'canedit' => 4},
     }
 
   };
 
   $::Tgroup_type = $::vars->{'T'}{'group_type'};
   $::Tmaptype = $::vars->{'T'}{'maptype'};
+  $::Tcontrol_id_type = $::vars->{'T'}{'control_id_type'};
+  $::Tcontrol_type = $::vars->{'T'}{'control_type'};
 
 1;
