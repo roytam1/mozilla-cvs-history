@@ -237,6 +237,7 @@ sub status_table_row {
   my ($self, $row_times, $row_index, $tree, ) = @_;
 
   my @outrow = ();
+  my @authors = ();
 
   # we assume that tree states only change rarely so there are very
   # few cells which have more then one state associated with them.
@@ -281,7 +282,7 @@ sub status_table_row {
  # Instead it would be useful to have a mailto so that users can mail
  # the authors of the notice.
 
-  $href = 'mailto:'.join(', ', @authors);
+  $href = 'mailto:'.join(', ', main::uniq(@authors));
 
   if ($rendered_notice) {
 
