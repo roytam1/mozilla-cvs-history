@@ -40,7 +40,6 @@ require "globals.pl";
 sub sillyness {
     my $zz;
     $zz = $::userid;
-    $zz = $::superusergroupset;
 }
 
 my $editall;

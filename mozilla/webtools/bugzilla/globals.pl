@@ -808,8 +808,10 @@ sub DeriveGroup {
     PushGlobalSQLState();
     SendSQL("SELECT login_name, NOW() FROM profiles WHERE userid = $user");
     my ($login, $starttime) = FetchSQLData();
+    
     SendSQL("DELETE FROM member_group_map WHERE member_id = $user " .
             "AND maptype = 0 AND isderived = 1");
+
     SendSQL("SELECT group_id, userregexp FROM groups WHERE userregexp != ''");
     while (MoreSQLData()) {
         my ($groupid, $rexp) = FetchSQLData();
@@ -822,6 +824,35 @@ sub DeriveGroup {
 
         }
     }
+
+    my %groupschecked;
+    my @groupstocheck = ();
+    SendSQL("SELECT group_id FROM member_group_map WHERE member_id = $user
+             AND maptype = 0");
+    while (MoreSQLData()) {
+        my ($groupid) = FetchSQLData();
+        push(@groupstocheck,$groupid);
+    }
+    while (@groupstocheck) {
+        my $group = shift @groupstocheck;
+        if (!defined($groupschecked{"$group"})) {
+            $groupschecked{"$group"} = 1;
+            SendSQL("SELECT group_id FROM member_group_map WHERE
+                     member_id = $group AND maptype = 2");
+            while (MoreSQLData()) {
+                my ($groupid) = FetchSQLData();
+                if (!defined($groupschecked{"$groupid"})) {
+                    push(@groupstocheck,$groupid);
+                    PushGlobalSQLState();
+                    SendSQL("INSERT IGNORE INTO member_group_map 
+                             (member_id, group_id, maptype, isderived)
+                             VALUES ($user, $groupid, 0, 1)");
+                    PopGlobalSQLState();
+                }
+            }
+        }
+    }
+            
     SendSQL("UPDATE profiles SET refreshed_when = " .
             SqlQuote($starttime) . "WHERE userid = $user");
     PopGlobalSQLState();
