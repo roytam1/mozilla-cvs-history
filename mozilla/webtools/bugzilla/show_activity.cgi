@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -20,17 +20,21 @@
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Myk Melez <myk@mozilla.org>
+#                 Gervase Markham <gerv@gerv.net>
 
 use diagnostics;
 use strict;
+
+use lib qw(.);
+use vars qw ($template $vars);
 
 require "CGI.pl";
 
 ConnectToDatabase();
 
-######################################################################
+###############################################################################
 # Begin Data/Security Validation
-######################################################################
+###############################################################################
 
 # Check whether or not the user is currently logged in. This function 
 # sets the value of $::usergroupset, the binary number that records
@@ -42,17 +46,17 @@ quietly_check_login();
 # bug that the user is authorized to access.
 ValidateBugID($::FORM{'id'});
 
-######################################################################
+###############################################################################
 # End Data/Security Validation
-######################################################################
+###############################################################################
+
+($vars->{'operations'}, $vars->{'incomplete_data'}) = 
+                                                 GetBugActivity($::FORM{'id'});
+
+$vars->{'bug_id'} = $::FORM{'id'};
 
 print "Content-type: text/html\n\n";
 
-PutHeader("Changes made to bug $::FORM{'id'}", "Activity log",
-          "Bug $::FORM{'id'}");
+$template->process("bug/activity/show.html.tmpl", $vars)
+  || ThrowTemplateError($template->error());
 
-DumpBugActivity($::FORM{'id'});
-
-print qq|<hr><a href="show_bug.cgi?id=$::FORM{'id'}">Back to bug $::FORM{'id'}</a>\n|;
-
-PutFooter();

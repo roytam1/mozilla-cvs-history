@@ -15,6 +15,7 @@
 
 use diagnostics;
 use strict;
+use lib ".";
 
 require "CGI.pl";
 require "globals.pl";
@@ -145,6 +146,7 @@ sub PutTrailer (@)
 # Preliminary checks:
 #
 
+ConnectToDatabase();
 confirm_login();
 
 print "Content-type: text/html\n\n";
@@ -530,7 +532,8 @@ if ($action eq 'update') {
             exit;
         }
         SendSQL("UPDATE bugs
-                 SET target_milestone=" . SqlQuote($milestone) . "
+                 SET target_milestone=" . SqlQuote($milestone) . ",
+                 delta_ts=delta_ts
                  WHERE target_milestone=" . SqlQuote($milestoneold) . "
                    AND product=" . SqlQuote($product));
         SendSQL("UPDATE milestones

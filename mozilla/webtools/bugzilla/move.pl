@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -23,6 +23,9 @@
 
 use diagnostics;
 use strict;
+
+use lib qw(.);
+
 use Bug;
 require "CGI.pl";
 $::lockcount = 0;
@@ -34,6 +37,7 @@ unless ( Param("move-enabled") ) {
 }
 
 ConnectToDatabase();
+confirm_login();
 
 sub Log {
     my ($str) = (@_);
@@ -47,11 +51,7 @@ sub Log {
 sub Lock {
     if ($::lockcount <= 0) {
         $::lockcount = 0;
-        if (!open(LOCKFID, ">>data/maillock")) {
-            mkdir "data", 0777;
-            chmod 0777, "data";
-            open(LOCKFID, ">>data/maillock") || die "Can't open lockfile.";
-        }
+        open(LOCKFID, ">>data/maillock") || die "Can't open data/maillock: $!";
         my $val = flock(LOCKFID,2);
         if (!$val) { # '2' is magic 'exclusive lock' const.
             print "Content-type: text/html\n\n";
@@ -81,7 +81,6 @@ if ( !defined $::FORM{'buglist'} ) {
   exit;
 }
 
-confirm_login();
 my $exporter = $::COOKIE{"Bugzilla_login"};
 my $movers = Param("movers");
 $movers =~ s/\w?,\w?/|/g;
@@ -118,7 +117,11 @@ foreach my $id (split(/:/, $::FORM{'buglist'})) {
     SendSQL("UPDATE bugs SET bug_status =\"RESOLVED\" where bug_id=\"$id\"");
     SendSQL("UPDATE bugs SET resolution =\"MOVED\" where bug_id=\"$id\"");
 
-    my $comment = "Bug moved to " . Param("move-to-url") . ".\n\n";
+    my $comment = "";
+    if (defined $::FORM{'comment'} && $::FORM{'comment'} !~ /^\s*$/) {
+        $comment .= $::FORM{'comment'} . "\n\n";
+    }
+    $comment .= "Bug moved to " . Param("move-to-url") . ".\n\n";
     $comment .= "If the move succeeded, $exporter will receive a mail\n";
     $comment .= "containing the number of the new bug in the other database.\n";
     $comment .= "If all went well,  please mark this bug verified, and paste\n";
@@ -147,7 +150,7 @@ $msg .= "Subject: Moving bug(s) $buglist\n\n";
 $msg .= $xml . "\n";
 
 open(SENDMAIL,
-  "|/usr/lib/sendmail -ODeliveryMode=background -t") ||
+  "|/usr/lib/sendmail -ODeliveryMode=background -t -i") ||
     die "Can't open sendmail";
 print SENDMAIL $msg;
 close SENDMAIL;
