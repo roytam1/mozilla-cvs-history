@@ -1437,10 +1437,6 @@ $table{dependencies} =
 # without enabling them to extend the life of the group by adding bugs to it.
 # http://bugzilla.mozilla.org/show_bug.cgi?id=75482
 
-# group type
-#    0 - system groups
-#    1 - bug groups
-#    2 - normal groups
 $table{groups} =
    'group_id mediumint not null auto_increment primary key,
     name varchar(255) not null,
@@ -1580,18 +1576,13 @@ $table{tokens} =
 
 # group membership tables for tracking group and privilege 
 # 
-# This table determines the groups that a user beloings to
+# This table determines the groups that a user belongs to
 # directly or due to regexp and which groups can be blessed
-# by a user or group
+# by a user 
 # maptype:
-# val  nick     meaning
-# 0 - "u2gm"    member_id is the user_id of a group member
-# 1 - "uBg"     member_id is the user_id of a user who can bless the group
-# 2 - "g2gm"    member_id is the group_id of a group included in the group
-# 3 - "gBg"     member_id is the group_id of a group who can bless the group
-# isderived: (applies to u2gm records only)
-# if 0 - u2gm record was explicitly granted
-# if 1 - u2gm record was created by evaluating a regexp or group hierarchy
+# isderived: 
+# if 0 - record was explicitly granted
+# if 1 - record was created by evaluating a regexp or group hierarchy
 $table{user_group_map} =
     'user_id mediumint not null,
      group_id mediumint not null,

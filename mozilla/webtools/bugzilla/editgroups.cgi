@@ -29,11 +29,6 @@ use lib ".";
 
 require "CGI.pl";
 
-sub sillyness {
-    my $zz;
-}
-
-
 ConnectToDatabase();
 confirm_login();
 
@@ -124,24 +119,24 @@ unless ($action) {
         my ($groupid, $name, $desc, $regexp, $isactive, $isbuggroup) = FetchSQLData();
         print "<tr>\n";
         if ($isbuggroup == 0 ) {
-        print "<td>$name</td>\n";
-        print "<td>$desc</td>\n";
-        print "<td><input size=30 name=\"regexp-$groupid\" value=\"$regexp\">\n";
-        print "<input type=hidden name=\"oldregexp-$groupid\" value=\"$regexp\"></td>\n";
-        print "<td>&nbsp</td>";
-        print "<td>";
+            print "<td>$name</td>\n";
+            print "<td>$desc</td>\n";
+            print "<td><input size=30 name=\"regexp-$groupid\" value=\"$regexp\">\n";
+            print "<input type=hidden name=\"oldregexp-$groupid\" value=\"$regexp\"></td>\n";
+            print "<td>&nbsp</td>";
+            print "<td>";
             print "system";
         } else {
-        print "<td><input size=20 name=\"name-$groupid\" value=\"$name\">\n";
-        print "<input type=hidden name=\"oldname-$groupid\" value=\"$name\"></td>\n";
-        print "<td><input size=40 name=\"desc-$groupid\" value=\"$desc\">\n";
-        print "<input type=hidden name=\"olddesc-$groupid\" value=\"$desc\"></td>\n";
-        print "<td><input size=30 name=\"regexp-$groupid\" value=\"$regexp\">\n";
-        print "<input type=hidden name=\"oldregexp-$groupid\" value=\"$regexp\"></td>\n";
-        print "<td><input type=\"checkbox\" name=\"isactive-$groupid\" value=\"1\"" . ($isactive ? " checked" : "") . ">\n";
-        print "<input type=hidden name=\"oldisactive-$groupid\" value=\"$isactive\"></td>\n";
-        print "<td>user</td>\n";
-    }
+            print "<td><input size=20 name=\"name-$groupid\" value=\"$name\">\n";
+            print "<input type=hidden name=\"oldname-$groupid\" value=\"$name\"></td>\n";
+            print "<td><input size=40 name=\"desc-$groupid\" value=\"$desc\">\n";
+            print "<input type=hidden name=\"olddesc-$groupid\" value=\"$desc\"></td>\n";
+            print "<td><input size=30 name=\"regexp-$groupid\" value=\"$regexp\">\n";
+            print "<input type=hidden name=\"oldregexp-$groupid\" value=\"$regexp\"></td>\n";
+            print "<td><input type=\"checkbox\" name=\"isactive-$groupid\" value=\"1\"" . ($isactive ? " checked" : "") . ">\n";
+            print "<input type=hidden name=\"oldisactive-$groupid\" value=\"$isactive\"></td>\n";
+            print "<td>user</td>\n";
+        }
         print "<td align=center valign=middle>
                <a href=\"editgroups.cgi?action=changeform&group=$groupid\">Edit</a>";
         print " | <a href=\"editgroups.cgi?action=del&group=$groupid\">Delete</a>" if ($isbuggroup != 0);
