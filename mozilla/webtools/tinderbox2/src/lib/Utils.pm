@@ -126,15 +126,13 @@ sub set_static_vars {
 
   @ORIG_ARGV = @ARGV;
 
-  $ENV{'PATH'}= (
-                 '/bin'.
-                 ':/usr/bin'.
-                 ':/usr/local/bin'.
-                 
-                 ':/opt/gnu/bin'.
-                 ':/usr/ucb'.
-                 ':/usr/ccs/bin'.
-                 '');
+  # set a minimal path.  All the commands we run should have explicit
+  # paths for security reasons.
+
+  $ENV{'PATH'}=  (
+                  '/bin'.
+                  ':/usr/bin'.
+                   '');
   
   # taint perl requires we clean up these bad environmental variables.
   
