@@ -53,8 +53,10 @@ unzip -o -q win-19980415.zip</LI>
 <LI>
 There are several environment variables you will need to set, either manually
 or via a script within a command session, or by setting them in your system
-environment located through the Control Panel | System icon. Those variables
-are:</LI>
+environment located through the Control Panel | System icon.<P>
+<B>Note: There is an additional variable for building Raptor!
+Use this list carefully!</B><P>
+The variables are:</LI>
 
 <UL>
 <LI>
@@ -95,6 +97,10 @@ set NSPR20=1</LI>
 <LI>
 if you are running VC++ 5.0 or higher: set _MSC_VER=1100; if you are running
 VC++ 4.2 then set MOZ_VCVER=42</LI>
+
+<LI>
+<B>set STANDALONE_IMAGE_LIB=1</B></LI> 
+
 </UL>
 </UL>
 <B><FONT SIZE=+1>Building:</FONT></B>
