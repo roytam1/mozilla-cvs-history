@@ -678,6 +678,19 @@ SeaMonkeyBlackwood -a \
 GtkMozilla -a \
 	mozilla/webshell/embed/gtk
 
+############################################################
+#
+# Module for Chimera, the embedded MacOSX browser.
+# Because this project is mixing a branched SeaMonkeyAll
+# with a trunk mozilla/chimera, we need a small module here
+# for tinderbox to track mozilla/chimera.  This module
+# should be temporary until mozilla/chimera joins another
+# major module.  -mcafee
+#
+#############################################################
+Chimera -a \
+    mozilla/chimera
+
 #############################################################
 #
 # Modules For Webtools
