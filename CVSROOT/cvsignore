@@ -15,6 +15,8 @@ _jmc
 .depends
 .deps
 .d
+*.dylib
+__.SYMDEF*
 manifest.mnw
 _gen
 _stubs
