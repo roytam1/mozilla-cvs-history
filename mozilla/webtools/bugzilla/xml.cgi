@@ -39,7 +39,7 @@ if (!defined $::FORM{'id'} || !$::FORM{'id'}) {
     exit;
 }
 
-quietly_check_login();
+my $userid = quietly_check_login();
 
 my $exporter = $::COOKIE{"Bugzilla_login"} || undef;
 
@@ -49,7 +49,7 @@ print "Content-type: text/xml\n\n";
 print Bug::XML_Header(Param("urlbase"), $::param{'version'}, 
                       Param("maintainer"), $exporter);
 foreach my $id (@ids) {
-  my $bug = new Bug(trim($id), $::userid);
+  my $bug = new Bug(trim($id), $userid);
   print $bug->emitXML;
 }
 

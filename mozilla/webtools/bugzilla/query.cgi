@@ -50,18 +50,19 @@ use vars qw(
     $vars
 );
 
+my $userid = 0;
 if (defined $::FORM{"GoAheadAndLogIn"}) {
     # We got here from a login page, probably from relogin.cgi.  We better
     # make sure the password is legit.
-    confirm_login();
+    $userid = confirm_login();
 } else {
-    quietly_check_login();
+    $userid = quietly_check_login();
 }
 
 # Backwards compatibility hack -- if there are any of the old QUERY_*
 # cookies around, and we are logged in, then move them into the database
 # and nuke the cookie. This is required for Bugzilla 2.8 and earlier.
-if ($::userid) {
+if ($userid) {
     my @oldquerycookies;
     foreach my $i (keys %::COOKIE) {
         if ($i =~ /^QUERY_(.*)$/) {
@@ -198,7 +199,7 @@ foreach my $p (@::legal_product) {
     # If we're using bug groups to restrict entry on products, and
     # this product has a bug group, and the user is not in that
     # group, we don't want to include that product in this list.
-    next if (Param("usebuggroups") && GroupExists($p) && !UserInGroup($p));
+    next if (Param("usebuggroups") && GroupExists($p) && !UserInGroup($userid, $p));
 
     # We build up boolean hashes in the "-set" hashes for each of these things 
     # before making a list because there may be duplicates names across products.
@@ -296,7 +297,7 @@ $vars->{'rep_platform'} = \@::legal_platform;
 $vars->{'op_sys'} = \@::legal_opsys;
 $vars->{'priority'} = \@::legal_priority;
 $vars->{'bug_severity'} = \@::legal_severity;
-$vars->{'userid'} = $::userid;
+$vars->{'userid'} = $userid;
 
 # Boolean charts
 my @fields;
@@ -344,10 +345,10 @@ for (my $chart = 0; $::FORM{"field$chart-0-0"}; $chart++) {
 $default{'charts'} = \@charts;
 
 # Named queries
-if ($::userid) {
+if ($userid) {
     my @namedqueries;
     SendSQL("SELECT name FROM namedqueries " .
-            "WHERE userid = $::userid AND name != '$::defaultqueryname' " .
+            "WHERE userid = $userid AND name != '$::defaultqueryname' " .
             "ORDER BY name");
     while (MoreSQLData()) {
         push(@namedqueries, FetchOneColumn());

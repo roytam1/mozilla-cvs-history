@@ -212,12 +212,12 @@ sub changePassword {
     
     # Update the user's password in the profiles table and delete the token
     # from the tokens table.
-    SendSQL("LOCK TABLES profiles WRITE , tokens WRITE");
+    SendSQL("LOCK TABLE profiles WRITE , tokens WRITE") if $::driver eq 'mysql';
     SendSQL("UPDATE   profiles
              SET      cryptpassword = $quotedpassword
              WHERE    userid = $userid");
     SendSQL("DELETE FROM tokens WHERE token = $::quotedtoken");
-    SendSQL("UNLOCK TABLES");
+    SendSQL("UNLOCK TABLES") if $::driver eq 'mysql';
 
     InvalidateLogins($userid);
 
@@ -229,19 +229,7 @@ sub changePassword {
       || ThrowTemplateError($template->error());
 }
 
-sub confirmChangeEmail {
-    # Return HTTP response headers.
-    print "Content-Type: text/html\n\n";
-
-    $vars->{'title'} = "Confirm Change Email";
-    $vars->{'token'} = $::token;
-
-    $template->process("account/email/confirm.html.tmpl", $vars)
-      || ThrowTemplateError($template->error());
-}
-
 sub changeEmail {
-
     # Get the user's ID from the tokens table.
     SendSQL("SELECT userid, eventdata FROM tokens 
               WHERE token = $::quotedtoken");
@@ -264,24 +252,33 @@ sub changeEmail {
 
     # Update the user's login name in the profiles table and delete the token
     # from the tokens table.
-    SendSQL("LOCK TABLES profiles WRITE , tokens WRITE");
+    SendSQL("LOCK TABLES profiles WRITE , tokens WRITE") if $::driver eq 'mysql';
     SendSQL("UPDATE   profiles
          SET      login_name = $quotednewemail
          WHERE    userid = $userid");
     SendSQL("DELETE FROM tokens WHERE token = $::quotedtoken");
     SendSQL("DELETE FROM tokens WHERE userid = $userid 
                                   AND tokentype = 'emailnew'");
-    SendSQL("UNLOCK TABLES");
+    SendSQL("UNLOCK TABLES") if $::driver eq 'mysql';
 
+    InvalidateLogins($userid);
+
+    $vars->{'title'} = "Password Changed";
+    $vars->{'message'} = "Your password has been changed.";
+
+    print "Content-Type: text/html\n\n";
+    $template->process("global/message.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
+}
+
+sub confirmChangeEmail {
     # Return HTTP response headers.
     print "Content-Type: text/html\n\n";
 
-    # Let the user know their email address has been changed.
+    $vars->{'title'} = "Confirm Change Email";
+    $vars->{'token'} = $::token;
 
-    $vars->{'title'} = "Bugzilla Login Changed";
-    $vars->{'message'} = "Your Bugzilla login has been changed.";
-
-    $template->process("global/message.html.tmpl", $vars)
+    $template->process("account/email/confirm.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 }
 
@@ -303,11 +300,11 @@ sub cancelChangeEmail {
         if($actualemail ne $old_email) {
             my $quotedoldemail = SqlQuote($old_email);
 
-            SendSQL("LOCK TABLES profiles WRITE");
+            SendSQL("LOCK TABLES profiles WRITE") if $::driver eq 'mysql';
             SendSQL("UPDATE   profiles
                  SET      login_name = $quotedoldemail
                  WHERE    userid = $userid");
-            SendSQL("UNLOCK TABLES");
+            SendSQL("UNLOCK TABLES") if $::driver eq 'mysql';
             $vars->{'message'} .= 
                 "  Your old account settings have been reinstated.";
         } 
@@ -318,11 +315,11 @@ sub cancelChangeEmail {
     }
     Token::Cancel($::token, $vars->{'message'});
 
-    SendSQL("LOCK TABLES tokens WRITE");
+    SendSQL("LOCK TABLES tokens WRITE") if $::driver eq 'mysql';
     SendSQL("DELETE FROM tokens 
              WHERE userid = $userid 
              AND tokentype = 'emailold' OR tokentype = 'emailnew'");
-    SendSQL("UNLOCK TABLES");
+    SendSQL("UNLOCK TABLES") if $::driver eq 'mysql';
 
     # Return HTTP response headers.
     print "Content-Type: text/html\n\n";

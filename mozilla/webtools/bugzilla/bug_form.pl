@@ -62,7 +62,7 @@ sub show_bug {
     $vars->{'lsearch'} = \&lsearch,
     $vars->{'header_done'} = (@_),
 
-    quietly_check_login();
+    my $userid = quietly_check_login();
 
     my $id = $::FORM{'id'};
     
@@ -77,16 +77,61 @@ sub show_bug {
 
     # Populate the bug hash with the info we get directly from the DB.
     my $query = "
-    SELECT bugs.bug_id, product, version, rep_platform, 
-        op_sys, bug_status, resolution, priority, 
-        bug_severity, component, assigned_to, reporter, 
-        bug_file_loc, short_desc, target_milestone, 
-        qa_contact, status_whiteboard, 
-        date_format(creation_ts,'%Y-%m-%d %H:%i'),
-        groupset, delta_ts, sum(votes.count)
-    FROM bugs LEFT JOIN votes USING(bug_id)
-    WHERE bugs.bug_id = $id
-    GROUP BY bugs.bug_id";
+SELECT
+    bugs.bug_id,
+    product,
+    version,
+    rep_platform,
+    op_sys,
+    bug_status,
+    resolution,
+    priority,
+    bug_severity,
+    component,
+    assigned_to,
+    reporter,
+    bug_file_loc,
+    short_desc,
+    target_milestone,
+    qa_contact,
+    status_whiteboard, ";
+
+    if ($::driver eq 'mysql') {
+        $query .= "
+    date_format(creation_ts, '%Y-%m-%d %H:%i'),
+    delta_ts, ";
+    } elsif ($::driver eq 'Pg') {
+        $query .= "
+    TO_CHAR(creation_ts, 'YYYY-MM-DD HH24:MI:SS'),
+    TO_CHAR(delta_ts, 'YYYYMMDDHH24MISS'), ";
+    }
+
+    $query .= "
+    SUM(votes.count)
+FROM 
+    bugs LEFT JOIN votes USING(bug_id)
+WHERE 
+    bugs.bug_id = $id
+GROUP BY 
+    bugs.bug_id,
+    product,
+    version,
+    rep_platform,
+    op_sys,
+    bug_status,
+    resolution,
+    priority,
+    bug_severity,
+    component,
+    assigned_to,
+    reporter,
+    bug_file_loc,
+    short_desc,
+    target_milestone,
+    qa_contact,
+    status_whiteboard,
+    creation_ts,
+    delta_ts ";
 
     SendSQL($query);
 
@@ -97,7 +142,7 @@ sub show_bug {
                        "bug_severity", "component", "assigned_to", "reporter",
                        "bug_file_loc", "short_desc", "target_milestone",
                        "qa_contact", "status_whiteboard", "creation_ts",
-                       "groupset", "delta_ts", "votes") 
+                       "delta_ts", "votes") 
     {
         $value = shift(@row);
         $bug{$field} = defined($value) ? $value : "";
@@ -122,7 +167,7 @@ sub show_bug {
 
         if (Param("usebuggroupsentry")
           && GroupExists($product)
-          && !UserInGroup($product))
+          && !UserInGroup($userid, $product))
         {
             # If we're using bug groups to restrict entry on products, and
             # this product has a bug group, and the user is not in that
@@ -202,39 +247,49 @@ sub show_bug {
 
     # Groups
     my @groups;
-    if ($::usergroupset ne '0' || $bug{'groupset'} ne '0') {      
-        my $bug_groupset = $bug{'groupset'};
+    my (%buggroups, %usergroups);
 
-        SendSQL("SELECT bit, name, description, (bit & $bug_groupset != 0),
-                 (bit & $::usergroupset != 0) FROM groups 
-                 WHERE isbuggroup != 0 " .
-                 # Include active groups as well as inactive groups to which
-                 # the bug already belongs.  This way the bug can be removed
-                 # from an inactive group but can only be added to active ones.
-                "AND ((isactive = 1 AND (bit & $::usergroupset != 0)) OR
-                 (bit & $bug_groupset != 0))");
+    # Find out if this bug is private to any group
+    SendSQL("SELECT group_id FROM bug_group_map WHERE bug_id = $id");
+    while (my $group_id = FetchOneColumn()) {
+        $buggroups{$group_id} = 1;
+    }
 
-        $user{'inallgroups'} = 1;
+    # Get a list of active groups the user is in, subject to the above conditions
+    if ($userid) {
+        # NB - the number of groups is likely to be small - should we just select
+        # everything, and weed manually? OTOH, the number of products is likely
+        # to be small, too. This buggroup stuff needs to be rethought
+        SendSQL("SELECT groups.group_id, groups.isactive " .
+                "FROM user_group_map, " .
+                "groups LEFT JOIN products ON groups.name = products.product " .
+                "WHERE groups.group_id = user_group_map.group_id AND " .
+                "user_group_map.user_id = $userid AND groups.isbuggroup != 0 AND " .
+                "(groups.name = " . SqlQuote($bug{'product'}) . " OR " .
+                "products.product IS NULL)");
+        while (my $group_id = FetchOneColumn()) {
+            $usergroups{$group_id} = 1;
+        }
 
+        # Now get information about each group
+        SendSQL("SELECT group_id, name, description " .
+                "FROM groups " .
+                # "WHERE group_id IN (" . join(',', @groups) . ") " .
+                "ORDER BY description");
         while (MoreSQLData()) {
-            my ($bit, $name, $description, $ison, $ingroup) = FetchSQLData();
-            # For product groups, we only want to display the checkbox if either
-            # (1) The bit is already set, or
-            # (2) The user is in the group, but either:
-            #     (a) The group is a product group for the current product, or
-            #     (b) The group name isn't a product name
-            # This means that all product groups will be skipped, but 
-            # non-product bug groups will still be displayed.
-            if($ison || 
-               ($ingroup && (($name eq $bug{'product'}) ||
-                             (!defined $::proddesc{$name}))))
+            my ($group_id, $name, $description) = FetchSQLData();
+            my ($ison, $ingroup);
+    
+            if ($buggroups{$group_id} || 
+                ($usergroups{$group_id} && (($name eq $bug{'product'}) || 
+                                (!defined $::proddesc{$name})))) 
             {
                 $user{'inallgroups'} &= $ingroup;
 
-                push (@groups, { "bit" => $bit,
-                                 "ison" => $ison,
-                                 "ingroup" => $ingroup,
-                                 "description" => $description });            
+                push (@groups, { "bit" => $group_id,
+                                 "ison" => $buggroups{$group_id},
+                                 "ingroup" => $usergroups{$group_id},
+                                 "description" => $description });
             }
         }
 
@@ -242,7 +297,7 @@ sub show_bug {
         # the user to set whether or not the reporter 
         # and cc list can see the bug even if they are not members of all 
         # groups to which the bug is restricted.
-        if ($bug{'groupset'} != 0) {
+        if (%buggroups) {
             $bug{'inagroup'} = 1;
 
             # Determine whether or not the bug is always accessible by the
@@ -274,8 +329,8 @@ sub show_bug {
                        || $::userid == $bug{'reporter'}
                        || $::userid == $bug{'qa_contact'}
                        || $::userid == $bug{'assigned_to'}
-                       || UserInGroup("editbugs");                   
-    $user{'canconfirm'} = ($::userid == 0) || UserInGroup("canconfirm");
+                       || UserInGroup($userid, "editbugs");                   
+    $user{'canconfirm'} = ($::userid == 0) || UserInGroup($userid, "canconfirm");
 
     # Bug states
     $bug{'isunconfirmed'} = ($bug{'bug_status'} eq $::unconfirmedstate);

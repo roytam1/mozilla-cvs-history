@@ -56,7 +56,6 @@ sub sillyness {
     $zz = @::settable_resolution;
     $zz = @::target_milestone;
     $zz = $::unconfirmedstate;
-    $zz = $::userid;
     $zz = @::versions;
 };
 
@@ -137,9 +136,10 @@ if ($::FORM{'cmdtype'} eq 'runnamed') {
     $filename =~ s/\s//;
 }
 
+my $userid = 0;
 if ($dotweak) {
-    confirm_login();
-    if (!UserInGroup("editbugs")) {
+    $userid = confirm_login();
+    if (!UserInGroup($userid, "editbugs")) {
         DisplayError("Sorry, you do not have sufficient privileges to edit
                       multiple bugs.");
         exit;
@@ -147,7 +147,7 @@ if ($dotweak) {
     GetVersionTable();
 }
 else {
-    quietly_check_login();
+    $userid = quietly_check_login();
 }
 
 
@@ -195,7 +195,7 @@ sub GetByWordList {
             $word =~ s/^'//;
             $word =~ s/'$//;
             $word = '(^|[^a-z0-9])' . $word . '($|[^a-z0-9])';
-            push(@list, "lower($field) regexp '$word'");
+            push(@list, SqlRegEx($field, SqlQuote($word)));
         }
     }
 
@@ -211,7 +211,7 @@ sub GetByWordListSubstr {
 
     foreach my $word (split(/[\s,]+/, $strs)) {
         if ($word ne "") {
-            push(@list, "INSTR(LOWER($field), " . lc(SqlQuote($word)) . ")");
+            push(@list, SqlStrSearch($field, SqlQuote($word), "lower"));
         }
     }
 
@@ -251,15 +251,16 @@ sub GetQuip {
 }
 
 sub GetGroupsByGroupSet {
-    my ($groupset) = @_;
+    my ($userid) = @_;
 
-    return if !$groupset;
+    return if !$userid;
 
     SendSQL("
-        SELECT  bit, name, description, isactive
+        SELECT  groups.group_id, groups.name, groups.description, groups.isactive
           FROM  groups
-         WHERE  (bit & $groupset) != 0
-           AND  isbuggroup != 0
+                LEFT JOIN user_group_map ON groups.group_id = user_group_map.group_id
+         WHERE  groups.isbuggroup != 0
+                AND user_group_map.user_id = $userid
       ORDER BY  description ");
 
     my @groups;
@@ -282,23 +283,32 @@ sub GetGroupsByGroupSet {
 
 sub GenerateSQL {
     my $debug = 0;
-    my ($fieldsref, $urlstr) = (@_);
+    my ($fieldsref, $urlstr, $groupbyref) = (@_);
     my @fields;
+    my @groupbylist;
     my @supptables;
     my @wherepart;
     @fields = @$fieldsref if $fieldsref;
+    @groupbylist = @$groupbyref if $groupbyref;
     my %F;
     my %M;
     ParseUrlString($urlstr, \%F, \%M);
     my @specialchart;
     my @andlist;
 
+    my $userid = quietly_check_login();
+
     # First, deal with all the old hard-coded non-chart-based poop.
+
+#    unshift(@supptables,
+#            ("profiles map_assigned_to",
+#             "profiles map_reporter",
+#             "LEFT JOIN profiles map_qa_contact  ON bugs.qa_contact = map_qa_contact.userid"));
 
     unshift(@supptables,
             ("profiles map_assigned_to",
-             "profiles map_reporter",
-             "LEFT JOIN profiles map_qa_contact ON bugs.qa_contact = map_qa_contact.userid"));
+             "profiles map_reporter"));
+
     unshift(@wherepart,
             ("bugs.assigned_to = map_assigned_to.userid",
              "bugs.reporter = map_reporter.userid"));
@@ -338,7 +348,7 @@ sub GenerateSQL {
     my @legal_fields = ("product", "version", "rep_platform", "op_sys",
                         "bug_status", "resolution", "priority", "bug_severity",
                         "assigned_to", "reporter", "component",
-                        "target_milestone", "groupset");
+                        "target_milestone");
 
     foreach my $field (keys %F) {
         if (lsearch(\@legal_fields, $field) != -1) {
@@ -632,7 +642,11 @@ sub GenerateSQL {
              }
          },
          "^changedin," => sub {
-             $f = "(to_days(now()) - to_days(bugs.delta_ts))";
+            if ($::driver eq 'mysql') {
+                $f = "(to_days(now()) - to_days(bugs.delta_ts))";
+            } elsif ($::driver eq 'Pg') {
+                $f = "(now() - bugs.delta_ts)";
+            }
          },
 
          "^keywords," => sub {
@@ -700,19 +714,19 @@ sub GenerateSQL {
              $term = "$ff != $q";
          },
          ",casesubstring" => sub {
-             $term = "INSTR($ff, $q)";
+            $term = SqlStrSearch($ff, $q);
          },
          ",(substring|substr)" => sub {
-             $term = "INSTR(LOWER($ff), " . lc($q) . ")";
+            $term = SqlStrSearch($ff, $q, "lower", "not");
          },
          ",notsubstring" => sub {
-             $term = "INSTR(LOWER($ff), " . lc($q) . ") = 0";
+            $term = SqlStrSearch($ff, $q, "lower");
          },
          ",regexp" => sub {
-             $term = "LOWER($ff) REGEXP $q";
+            $term = SqlRegEx($ff, $q);
          },
-         ",notregexp" => sub {
-             $term = "LOWER($ff) NOT REGEXP $q";
+         ",notregexp" => sub {    
+            $term = SqlRegEx($ff, $q);
          },
          ",lessthan" => sub {
              $term = "$ff < $q";
@@ -1002,6 +1016,7 @@ sub GenerateSQL {
             }
         }
     }
+
     my %suppseen = ("bugs" => 1);
     my $suppstring = "bugs";
     foreach my $str (@supptables) {
@@ -1015,9 +1030,10 @@ sub GenerateSQL {
     }
     my $query =  ("SELECT DISTINCT " . join(', ', @fields) .
                   " FROM $suppstring" .
-                  " WHERE " . join(' AND ', (@wherepart, @andlist)));
+                  " WHERE " . join(' AND ', (@wherepart, @andlist)) .
+                  " GROUP BY " . join(", ", @groupbylist));
 
-    $query = SelectVisible($query, $::userid, $::usergroupset);
+    # $query = SelectVisible($query, $::userid, $::usergroupset);
 
     if ($debug) {
         print "<P><CODE>" . value_quote($query) . "</CODE><P>\n";
@@ -1077,8 +1093,21 @@ CMD: for ($::FORM{'cmdtype'}) {
         my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
         my $qname = SqlQuote($::defaultqueryname);
         my $qbuffer = SqlQuote($::buffer);
-        SendSQL("REPLACE INTO namedqueries (userid, name, query)
-                 VALUES ($userid, $qname, $qbuffer)");
+        if ($::driver eq 'mysql') {
+            SendSQL("REPLACE INTO namedqueries (userid, name, query)" .
+                    "VALUES ($userid, $qname, $qbuffer)");
+        } elsif ($::driver eq 'Pg') {
+            SendSQL("SELECT userid FROM namedqueries WHERE userid = $userid " .
+                    "AND name = $qname");
+            my $result = FetchOneColumn();
+            if ( $result ) {
+                SendSQL("UPDATE namedqueries SET query = $qbuffer " .
+                        "WHERE userid = $userid AND name = $qname");
+            } else {
+                SendSQL("INSERT INTO namedqueries (userid, name, query, watchfordiffs, linkinfooter) VALUES " .
+                        "($userid, $qname, $qbuffer, '', '')");
+            }
+        }
         print "Content-Type: text/html\n\n";
         # Generate and return the UI (HTML page) from the appropriate template.
         $vars->{'title'} = "OK, default is set";
@@ -1117,7 +1146,7 @@ CMD: for ($::FORM{'cmdtype'}) {
                       WHERE  userid = $userid AND name = $qname");
         }
         else {
-            SendSQL("REPLACE INTO namedqueries (userid, name, query, linkinfooter)
+            SendSQL("INSERT INTO namedqueries (userid, name, query, linkinfooter)
                      VALUES ($userid, $qname, $qbuffer, $tofooter)");
         }
         
@@ -1178,9 +1207,17 @@ sub DefineColumn {
 
 # Column:     ID                    Name                           Title
 DefineColumn("id"                , "bugs.bug_id"                , "ID"               );
-DefineColumn("groupset"          , "bugs.groupset"              , "Groupset"         );
-DefineColumn("opendate"          , "bugs.creation_ts"           , "Opened"           );
-DefineColumn("changeddate"       , "bugs.delta_ts"              , "Changed"          );
+if ($::driver eq 'mysql') {
+    DefineColumn("opendate", "unix_timestamp(bugs.creation_ts)", "Opened",
+           "bugs.creation_ts");
+    DefineColumn("changeddate", "unix_timestamp(bugs.delta_ts)", "Changed",
+           "bugs.delta_ts");
+} elsif ($::driver eq 'Pg') {
+    DefineColumn("opendate", "bugs.creation_ts", "Opened",
+           "bugs.creation_ts");
+    DefineColumn("changeddate", "bugs.delta_ts", "Changed",
+           "bugs.delta_ts");
+}
 DefineColumn("severity"          , "bugs.bug_severity"          , "Severity"         );
 DefineColumn("priority"          , "bugs.priority"              , "Priority"         );
 DefineColumn("platform"          , "bugs.rep_platform"          , "Platform"         );
@@ -1236,9 +1273,6 @@ else {
 # and are hard-coded into the display templates.
 @displaycolumns = grep($_ ne 'id', @displaycolumns);
 
-# IMPORTANT! Never allow the groupset column to be displayed!
-@displaycolumns = grep($_ ne 'groupset', @displaycolumns);
-
 # Add the votes column to the list of columns to be displayed
 # in the bug list if the user is searching for bugs with a certain
 # number of votes and the votes column is not already on the list.
@@ -1250,6 +1284,9 @@ if (trim($::FORM{'votes'}) && !grep($_ eq 'votes', @displaycolumns)) {
     push(@displaycolumns, 'votes');
 }
 
+################################################################################
+# Select Column Determination
+################################################################################
 
 ################################################################################
 # Select Column Determination
@@ -1257,20 +1294,23 @@ if (trim($::FORM{'votes'}) && !grep($_ eq 'votes', @displaycolumns)) {
 
 # Generate the list of columns that will be selected in the SQL query.
 
-# The bug ID and groupset are always selected because bug IDs are always
-# displayed and we need the groupset to determine whether or not the bug
-# is visible to the user.
-my @selectcolumns = ("id", "groupset");
+# The bug ID is always selected because bug IDs are always
+# displayed
+my @selectcolumns = ("id");
+my @groupbylist = ("id");
 
 # Display columns are selected because otherwise we could not display them.
 push (@selectcolumns, @displaycolumns);
+push (@groupbylist, @displaycolumns);
 
 # If the user is editing multiple bugs, we also make sure to select the product
 # and status because the values of those fields determine what options the user
 # has for modifying the bugs.
 if ($dotweak) {
     push(@selectcolumns, "product") if !grep($_ eq 'product', @selectcolumns);
+    push(@groupbylist, "product") if !grep($_ eq 'product', @groupbylist);
     push(@selectcolumns, "status") if !grep($_ eq 'status', @selectcolumns);
+    push(@groupbylist, "status") if !grep($_ eq 'product', @groupbylist);
 }
 
 
@@ -1280,10 +1320,10 @@ if ($dotweak) {
 
 # Convert the list of columns being selected into a list of column names.
 my @selectnames = map($columns->{$_}->{'name'}, @selectcolumns);
+my @groupbynames = map($columns->{$_}->{'name'}, @groupbylist);
 
 # Generate the basic SQL query that will be used to generate the bug list.
-my $query = GenerateSQL(\@selectnames, $::buffer);
-
+my $query = GenerateSQL(\@selectnames, $::buffer, \@groupbynames);
 
 ################################################################################
 # Sort Order Determination
@@ -1388,7 +1428,7 @@ ReconnectToShadowDatabase();
 
 # Tell MySQL to store temporary tables on the hard drive instead of memory
 # to avoid "table out of space" errors on MySQL versions less than 3.23.2.
-SendSQL("SET OPTION SQL_BIG_TABLES=1") if Param('expectbigqueries');
+SendSQL("SET OPTION SQL_BIG_TABLES=1") if Param('expectbigqueries') && $::driver eq 'mysql';
 
 # Normally, we ignore SIGTERM and SIGPIPE (see globals.pl) but we need to
 # respond to them here to prevent someone DOSing us by reloading a query
@@ -1398,7 +1438,6 @@ $::SIG{PIPE} = 'DEFAULT';
 
 # Execute the query.
 SendSQL($query);
-
 
 ################################################################################
 # Results Retrieval
@@ -1410,6 +1449,8 @@ SendSQL($query);
 my $bugowners = {};
 my $bugproducts = {};
 my $bugstatuses = {};
+my @buglist = ();
+my @canseebugs = ();
 
 my @bugs; # the list of records
 
@@ -1434,15 +1475,24 @@ while (my @row = FetchSQLData()) {
     $bugproducts->{$bug->{'product'}} = 1 if $bug->{'product'};
     $bugstatuses->{$bug->{'status'}} = 1 if $bug->{'status'};
 
+    # Keep list of bugs so we can check them later for permission
+    push(@buglist, $bug->{id});
+
     # Add the record to the list.
     push(@bugs, $bug);
+}
+
+# Check to see which bugs we have permission to see
+my $canseeref = CanSeeBug(\@buglist, $userid);
+foreach my $bug (@bugs) {
+#    next if !$canseeref->{$bug->{id}};
+    push(@canseebugs, $bug);
 }
 
 # Switch back from the shadow database to the regular database so PutFooter()
 # can determine the current user even if the "logincookies" table is corrupted
 # in the shadow database.
-SendSQL("USE $::db_name");
-
+SendSQL("USE $::db_name") if $::driver eq 'mysql';
 
 ################################################################################
 # Template Variable Definition
@@ -1473,7 +1523,7 @@ $vars->{'order'} = $order;
 # The user's login account name (i.e. email address).
 my $login = $::COOKIE{'Bugzilla_login'};
 
-$vars->{'caneditbugs'} = UserInGroup('editbugs');
+$vars->{'caneditbugs'} = UserInGroup($userid, 'editbugs');
 $vars->{'usebuggroups'} = Param('usebuggroups');
 
 # Whether or not this user is authorized to move bugs to another installation.
@@ -1483,7 +1533,7 @@ $vars->{'ismover'} = 1
       && Param('movers') =~ /^(\Q$login\E[,\s])|([,\s]\Q$login\E[,\s]+)/;
 
 my @bugowners = keys %$bugowners;
-if (scalar(@bugowners) > 1 && UserInGroup('editbugs')) {
+if (scalar(@bugowners) > 1 && UserInGroup($userid, 'editbugs')) {
     my $suffix = Param('emailsuffix');
     map(s/$/$suffix/, @bugowners) if $suffix;
     my $bugowners = join(",", @bugowners);
@@ -1521,7 +1571,7 @@ if ($dotweak) {
     $vars->{'bugstatuses'} = [ keys %$bugstatuses ];
 
     # The groups to which the user belongs.
-    $vars->{'groups'} = GetGroupsByGroupSet($::usergroupset) if $::usergroupset ne '0';
+    $vars->{'groups'} = GetGroupsByGroupSet($userid) if $userid ne '0';
 
     # If all bugs being changed are in the same product, the user can change
     # their version and component, so generate a list of products, a list of
@@ -1535,7 +1585,6 @@ if ($dotweak) {
         $vars->{'targetmilestones'} = $::target_milestone{$product} if Param('usetargetmilestone');
     }
 }
-
 
 ################################################################################
 # HTTP Header Generation
@@ -1590,3 +1639,4 @@ $template->process("list/$format->{'template'}", $vars)
 ################################################################################
 
 print "\n--thisrandomstring--\n" if $serverpush;
+

@@ -32,12 +32,12 @@ use vars qw($vars $template);
 
 ConnectToDatabase();
 
-quietly_check_login();
+my $userid = quietly_check_login();
 
 SendSQL("SELECT keyworddefs.name, keyworddefs.description, 
                 COUNT(keywords.bug_id)
          FROM keyworddefs LEFT JOIN keywords ON keyworddefs.id=keywords.keywordid
-         GROUP BY keyworddefs.id
+         GROUP BY keyworddefs.id, keyworddefs.name, keyworddefs.description, keywords.bug_id
          ORDER BY keyworddefs.name");
 
 my @keywords;
@@ -51,7 +51,7 @@ while (MoreSQLData()) {
 }
    
 $vars->{'keywords'} = \@keywords;
-$vars->{'caneditkeywords'} = UserInGroup("editkeywords");
+$vars->{'caneditkeywords'} = UserInGroup($userid, "editkeywords");
 
 print "Content-type: text/html\n\n";
 $template->process("reports/keywords.html.tmpl", $vars)

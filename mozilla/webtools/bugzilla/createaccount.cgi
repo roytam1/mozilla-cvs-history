@@ -30,12 +30,13 @@ use strict;
 use lib qw(.);
 
 require "CGI.pl";
+require "globals.pl";
 
 # Shut up misguided -w warnings about "used only once":
 use vars qw(
-  %FORM
-  $template
-  $vars
+%FORM
+$template
+$vars
 );
 
 ConnectToDatabase();

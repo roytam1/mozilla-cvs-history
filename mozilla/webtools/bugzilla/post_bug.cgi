@@ -35,7 +35,6 @@ require "bug_form.pl";
 sub sillyness {
     my $zz;
     $zz = $::buffer;
-    $zz = $::usergroupset;
     $zz = %::COOKIE;
     $zz = %::components;
     $zz = %::versions;
@@ -45,13 +44,13 @@ sub sillyness {
     $zz = @::legal_product;
     $zz = @::legal_severity;
     $zz = %::target_milestone;
+    $zz = $::driver;
 }
 
 # Use global template variables.
 use vars qw($vars $template);
 
-confirm_login();
-
+my $userid = confirm_login();
 
 # The format of the initial comment can be structured by adding fields to the
 # enter_bug template and then referencing them in the comment template.
@@ -96,7 +95,7 @@ ConnectToDatabase();
 
 # Some sanity checking
 if(Param("usebuggroupsentry") && GroupExists($product)) {
-    if(!UserInGroup($product)) {
+    if(!UserInGroup($userid, $product)) {
         DisplayError("Sorry; you do not have the permissions necessary to enter
                       a bug against this product.", "Permission Denied");
         exit;
@@ -143,7 +142,9 @@ if (Param("useqacontact")) {
         $::FORM{'qa_contact'} = $qa_contact;
         push(@bug_fields, "qa_contact");
     }
-}
+} # else {
+#    $::FORM{'qa_contact'} = "0";
+#}
 
 if (exists $::FORM{'bug_status'}) {
     # Ignore the given status, so that we can set it to UNCONFIRMED
@@ -151,7 +152,7 @@ if (exists $::FORM{'bug_status'}) {
     # unconfirmed (so that a user can't override the below check), or if
     # the user doesn't have permission to change the default status anyway
     if ($::FORM{'bug_status'} eq $::unconfirmedstate
-        || (!UserInGroup("canedit") && !UserInGroup("canconfirm"))) {
+        || (!UserInGroup($userid, "canedit") && !UserInGroup($userid, "canconfirm"))) {
         delete $::FORM{'bug_status'};
     }
 }
@@ -205,7 +206,7 @@ if (exists $::FORM{'bug_status'}
 
 # Build up SQL string to add bug.
 my $sql = "INSERT INTO bugs " . 
-  "(" . join(",", @used_fields) . ", reporter, creation_ts, groupset) " . 
+  "(" . join(",", @used_fields) . ", reporter, creation_ts) " . 
   "VALUES (";
 
 foreach my $field (@used_fields) {
@@ -218,12 +219,14 @@ $comment = trim($comment);
 # OK except for the fact that it causes e-mail to be suppressed.
 $comment = $comment ? $comment : " ";
 
-$sql .= "$::userid, now(), (0";
+$sql .= "$userid, now())";
+
+my @groupids;
 
 # Groups
-foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
+foreach my $b (grep(/^group-\d*$/, keys %::FORM)) {
     if ($::FORM{$b}) {
-        my $v = substr($b, 4);
+        my $v = substr($b, 6);
         $v =~ /^(\d+)$/
           || ThrowCodeError("One of the group bits submitted was invalid.",
                                                                 undef, "abort");
@@ -233,31 +236,25 @@ foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
             # hacked the "enter bug" form since otherwise the UI 
             # for adding the bug to the group won't appear on that form.
             ThrowCodeError("Attempted to add bug to an inactive group, " . 
-                           "identified by the bit '$v'.", undef, "abort");
+                           "identified by the id '$v'.", undef, "abort");
         }
-        $sql .= " + $v";    # Carefully written so that the math is
-                            # done by MySQL, which can handle 64-bit math,
-                            # and not by Perl, which I *think* can not.
+        push @groupids, $v;
     }
 }
-
-$sql .= ") & $::usergroupset)\n";
 
 # Lock tables before inserting records for the new bug into the database
 # if we are using a shadow database to prevent shadow database corruption
 # when two bugs get created at the same time.
-SendSQL("LOCK TABLES bugs WRITE, longdescs WRITE, cc WRITE") if Param("shadowdb");
+SendSQL("LOCK TABLES bugs WRITE, longdescs WRITE, cc WRITE, bug_group_map WRITE") if Param("shadowdb");
 
 # Add the bug report to the DB.
 SendSQL($sql);
 
-# Get the bug ID back.
-SendSQL("select LAST_INSERT_ID()");
-my $id = FetchOneColumn();
+my $id = CurrId("bugs_bug_id_seq");
 
 # Add the comment
 SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) 
-         VALUES ($id, $::userid, now(), " . SqlQuote($comment) . ")");
+         VALUES ($id, $userid, now(), " . SqlQuote($comment) . ")");
 
 my %ccids;
 my $ccid;
@@ -277,7 +274,11 @@ if (defined $::FORM{'cc'}) {
     }
 }
 
-SendSQL("UNLOCK TABLES") if Param("shadowdb");
+foreach my $group (@groupids) {
+    SendSQL("INSERT INTO bug_group_map (bug_id, group_id) VALUES ($id, $group)");
+}
+
+SendSQL("UNLOCK TABLES") if Param("shadowdb") && $::driver eq 'mysql';
 
 # Assemble the -force* strings so this counts as "Added to this capacity"
 my @ARGLIST = ();
@@ -291,7 +292,7 @@ if (defined $::FORM{'qa_contact'}) {
     push (@ARGLIST, "-forceqacontact", DBID_to_name($::FORM{'qa_contact'}));
 }
 
-push (@ARGLIST, "-forcereporter", DBID_to_name($::userid));
+push (@ARGLIST, "-forcereporter", DBID_to_name($userid));
 
 push (@ARGLIST, $id, $::COOKIE{'Bugzilla_login'});
 

@@ -44,8 +44,9 @@ ConnectToDatabase();
 # Make sure the user is logged in and is allowed to edit products
 # (i.e. the user has "editcomponents" privileges), since attachment
 # statuses are product-specific.
-confirm_login();
-UserInGroup("editcomponents")
+my $userid = confirm_login();
+
+UserInGroup($userid, "editcomponents")
   || DisplayError("You are not authorized to administer attachment statuses.")
   && exit;
 
@@ -183,7 +184,7 @@ sub list
   SendSQL("SELECT id, name, description, sortkey, product, count(statusid)
            FROM attachstatusdefs LEFT JOIN attachstatuses 
                 ON attachstatusdefs.id=attachstatuses.statusid
-           GROUP BY id
+           GROUP BY id, name, description, sortkey, product
            ORDER BY sortkey");
   my @statusdefs;
   while ( MoreSQLData() )
@@ -238,13 +239,17 @@ sub insert
   my $desc = SqlQuote($::FORM{'desc'});
   my $product = SqlQuote($::FORM{'product'});
 
-  SendSQL("LOCK TABLES attachstatusdefs WRITE");
+  if ($::driver eq 'mysql') {
+    SendSQL("LOCK TABLES attachstatusdefs WRITE");
+  }
   SendSQL("SELECT MAX(id) FROM attachstatusdefs");
   my $id = FetchSQLData() || 0;
   $id++;
   SendSQL("INSERT INTO attachstatusdefs (id, name, description, sortkey, product)
            VALUES ($id, $name, $desc, $::FORM{'sortkey'}, $product)");
-  SendSQL("UNLOCK TABLES");
+  if ($::driver eq 'mysql') {
+    SendSQL("UNLOCK TABLES");
+  }
 
   # Display the "administer attachment status flags" page
   # along with a message that the flag has been created.
@@ -286,7 +291,9 @@ sub update
   my $name = SqlQuote($::FORM{'name'});
   my $desc = SqlQuote($::FORM{'desc'});
 
-  SendSQL("LOCK TABLES attachstatusdefs WRITE");
+  if ($::driver eq 'mysql') {
+    SendSQL("LOCK TABLES attachstatusdefs WRITE");
+  }
   SendSQL("
            UPDATE  attachstatusdefs 
            SET     name = $name , 
@@ -294,7 +301,9 @@ sub update
                    sortkey = $::FORM{'sortkey'} 
            WHERE   id = $::FORM{'id'}
          ");
-  SendSQL("UNLOCK TABLES");
+  if ($::driver eq 'mysql') {
+    SendSQL("UNLOCK TABLES");
+  }
 
   # Display the "administer attachment status flags" page
   # along with a message that the flag has been updated.
@@ -332,11 +341,14 @@ sub confirmDelete
 sub deleteStatus
 {
   # Delete an attachment status flag from the database.
-
-  SendSQL("LOCK TABLES attachstatusdefs WRITE, attachstatuses WRITE");
+  if ($::driver eq 'mysql') {
+    SendSQL("LOCK TABLES attachstatusdefs WRITE, attachstatuses WRITE");
+  }
   SendSQL("DELETE FROM attachstatuses WHERE statusid = $::FORM{'id'}");
   SendSQL("DELETE FROM attachstatusdefs WHERE id = $::FORM{'id'}");
-  SendSQL("UNLOCK TABLES");
+  if ($::driver eq 'mysql') {
+    SendSQL("UNLOCK TABLES");
+  }
 
   # Display the "administer attachment status flags" page
   # along with a message that the flag has been deleted.

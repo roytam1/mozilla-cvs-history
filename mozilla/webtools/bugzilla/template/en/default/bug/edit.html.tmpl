@@ -316,7 +316,7 @@
 
     [% FOREACH group = groups %]
       &nbsp;&nbsp;&nbsp;&nbsp;
-      <input type="checkbox" name="bit-[% group.bit %]" value="1" 
+      <input type="checkbox" name="group-[% group.bit %]" value="1" 
         [% " checked=\"checked\"" IF group.ison %]
         [% " disabled=\"disabled\"" IF NOT group.ingroup %]>
       [% group.description %]

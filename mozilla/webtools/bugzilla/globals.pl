@@ -54,9 +54,8 @@ sub globals_pl_sillyness {
     $zz = @main::milestoneurl;
     $zz = %main::proddesc;
     $zz = @main::prodmaxvotes;
-    $zz = $main::superusergroupset;
     $zz = $main::template;
-    $zz = $main::userid;
+    $zz = $main::template;
     $zz = $main::vars;
 }
 
@@ -69,7 +68,11 @@ $::db_host = "localhost";
 $::db_port = 3306;
 $::db_name = "bugs";
 $::db_user = "bugs";
-$::db_pass = "";
+$::db_pass = "n0morehax";
+
+# Set this your database driver
+# $::driver = "mysql";
+$::driver = "Pg";
 
 do 'localconfig';
 
@@ -106,10 +109,6 @@ $::defaultqueryname = "(Default query)";
 $::unconfirmedstate = "UNCONFIRMED";
 $::dbwritesallowed = 1;
 
-# Adding a global variable for the value of the superuser groupset.
-# Joe Robins, 7/5/00
-$::superusergroupset = "9223372036854775807";
-
 #sub die_with_dignity {
 #    my ($err_msg) = @_;
 #    print $err_msg;
@@ -137,16 +136,25 @@ sub ConnectToDatabase {
             $name = Param("shadowdb");
             $::dbwritesallowed = 0;
         }
-        $::db = DBI->connect("DBI:mysql:host=$::db_host;database=$name;port=$::db_port", $::db_user, $::db_pass)
+        my $connectstring = "DBI:$::driver:";
+        if ($::driver eq 'mysql') {
+            $connectstring .= "database=$name;port=$::db_port";
+        } elsif ($::driver eq 'Pg') {
+            $connectstring .= "dbname=$name";
+        }
+        $connectstring .= ";host=$::db_host";
+        $::db = DBI->connect($connectstring, $::db_user, $::db_pass)
             || die "Bugzilla is currently broken. Please try again later. " . 
-      "If the problem persists, please contact " . Param("maintainer") .
-      ". The error you should quote is: " . $DBI::errstr;
+                   "If the problem persists, please contact " . Param("maintainer") .
+                   ". The error you should quote is: " . $DBI::errstr;
     }
 }
 
 sub ReconnectToShadowDatabase {
     if (Param("shadowdb") && Param("queryagainstshadowdb")) {
-        SendSQL("USE " . Param("shadowdb"));
+        if ($::driver eq 'mysql') {
+            SendSQL("USE " . Param("shadowdb"));
+        }
         $::dbwritesallowed = 0;
     }
 }
@@ -324,8 +332,74 @@ sub FetchOneColumn {
     return $row[0];
 }
 
-    
+# subroutine:  SqlRegEx
+# description: Outputs SQL syntax for doing regular expressions searches in format
+#              suitable for a given database.
+# Params:      $field = name of db field regular expression applied against (scalar)
+#              $pattern = regular express search pattern (scalar)
+#              $not = return if not within search patter (scalar)
+# Returns:     formatted SQL for regular expression search (scalar)
 
+sub SqlRegEx {
+    my ($field, $pattern, $not) = @_;
+    if ($::driver eq 'mysql') {
+        if (!$not) {
+            return " LOWER($field) REGEXP $pattern ";    
+        } else {
+            return " LOWER($field) NOT REGEXP $pattern ";
+        }
+    } elsif ($::driver eq 'Pg') {
+        if (!$not) {
+            return " LOWER($field) ~ '$pattern' ";
+        } else {
+            return " LOWER($field) !~ '$pattern' ";
+        }
+    } 
+}
+
+# subroutine:  SqlStrSearch
+# description: Outputs SQL syntax for doing string searches in format
+#              suitable for a given database.
+# Params:      $field = name of db field containing string search for (scalar)
+#              $str = string to search for (scalar)
+#              $lower = whether the search is case sensitive or not (scalar)
+#              $not = return SQL for when string is NOT in searched field (scalar) 
+# Returns:     formatted SQL for regular expression search (scalar)
+
+sub SqlStrSearch {
+    my ($field, $str, $lower, $not) = @_;
+    if ($::driver eq 'mysql') {
+        if (!$lower) {
+            if (!$not) {
+                return " INSTR($field, $str) != 0 ";
+            } else {
+                return " INSTR($field, $str) = 0 ";
+            }
+        } else {
+            if (!$not) {
+                return " INSTR(LOWER($field), " . lc($str) . ") != 0 ";
+            } else {
+                return " INSTR(LOWER($field), " . lc($str) . ") = 0 ";
+            }
+        }
+    } elsif ($::driver eq 'Pg') {
+        if (!$lower) {
+            if (!$not) {
+                return " STRPOS($field, $str) != 0 ";
+            } else {
+                return " STRPOS($field, $str) = 0 ";
+            }
+        } else {
+            if (!$not) {
+                return " STRPOS(LOWER($field), " . lc($str) . ") != 0 ";
+            } else {
+                return " STRPOS(LOWER($field), " . lc($str) . ") = 0 ";
+            }
+        }
+    }    
+}
+
+    
 @::default_column_list = ("severity", "priority", "platform", "owner",
                           "status", "resolution", "summary");
 
@@ -351,9 +425,13 @@ sub GetFieldID {
     my $fieldid = FetchOneColumn();
     if (!$fieldid) {
         my $q = SqlQuote($f);
-        SendSQL("REPLACE INTO fielddefs (name, description) VALUES ($q, $q)");
-        SendSQL("SELECT LAST_INSERT_ID()");
-        $fieldid = FetchOneColumn();
+        if ($::driver eq 'mysql') {
+            SendSQL("REPLACE INTO fielddefs (name, description) VALUES ($q, $q)");
+        } elsif ($::driver eq 'Pg') {
+            SendSQL("INSERT INTO fielddefs (name, description, sortkey) " . 
+                    "VALUES ($q, $q, 1)");
+        }
+        $fieldid = CurrId("fielddefs_fieldid_seq");
     }
     return $fieldid;
 }
@@ -497,12 +575,21 @@ sub GenerateVersionTable {
     }
     @::log_columns = (sort(@::log_columns));
 
-    @::legal_priority = SplitEnumType($cols->{"priority,type"});
-    @::legal_severity = SplitEnumType($cols->{"bug_severity,type"});
-    @::legal_platform = SplitEnumType($cols->{"rep_platform,type"});
-    @::legal_opsys = SplitEnumType($cols->{"op_sys,type"});
-    @::legal_bug_status = SplitEnumType($cols->{"bug_status,type"});
-    @::legal_resolution = SplitEnumType($cols->{"resolution,type"});
+    if ($::driver eq 'mysql') {
+        @::legal_priority = SplitEnumType($cols->{"priority,type"});
+           @::legal_severity = SplitEnumType($cols->{"bug_severity,type"});
+        @::legal_platform = SplitEnumType($cols->{"rep_platform,type"});
+        @::legal_opsys = SplitEnumType($cols->{"op_sys,type"});
+        @::legal_bug_status = SplitEnumType($cols->{"bug_status,type"});
+        @::legal_resolution = SplitEnumType($cols->{"resolution,type"});
+    } elsif ($::driver eq 'Pg') {
+        @::legal_priority = SplitTableValues("priority");
+        @::legal_severity = SplitTableValues("bug_severity");
+        @::legal_platform = SplitTableValues("rep_platform");
+        @::legal_opsys = SplitTableValues("op_sys");
+        @::legal_bug_status = SplitTableValues("bug_status");
+        @::legal_resolution = SplitTableValues("resolution");
+    }
 
     # 'settable_resolution' is the list of resolutions that may be set 
     # directly by hand in the bug form. Start with the list of legal 
@@ -674,32 +761,39 @@ sub InsertNewUser {
     my $password = GenerateRandomPassword();
     my $cryptpassword = Crypt($password);
 
+    PushGlobalSQLState();
+
+    # Insert the new user record into the database.            
+    $username = SqlQuote($username);
+    $realname = SqlQuote($realname);
+    $cryptpassword = SqlQuote($cryptpassword);
+    SendSQL("INSERT INTO profiles (login_name, realname, cryptpassword) 
+             VALUES ($username, $realname, $cryptpassword)");
+
+    # Find the user's new id for adding to groups
+    SendSQL("select LAST_INSERT_ID()");
+    my $userid = FetchOneColumn();
+
     # Determine what groups the user should be in by default
     # and add them to those groups.
-    PushGlobalSQLState();
-    SendSQL("select bit, userregexp from groups where userregexp != ''");
-    my $groupset = "0";
+    SendSQL("select group_id, userregexp from groups where userregexp != ''");
+    my @groups = ();
     while (MoreSQLData()) {
         my @row = FetchSQLData();
         # Modified -Joe Robins, 2/17/00
         # Making this case insensitive, since usernames are email addresses,
         # and could be any case.
         if ($username =~ m/$row[1]/i) {
-            $groupset .= "+ $row[0]"; # Silly hack to let MySQL do the math,
-                                      # not Perl, since we're dealing with 64
-                                      # bit ints here, and I don't *think* Perl
-                                      # does that.
+            push(@groups, $row[0]);  
         }
     }
 
-    # Insert the new user record into the database.            
-    $username = SqlQuote($username);
-    $realname = SqlQuote($realname);
-    $cryptpassword = SqlQuote($cryptpassword);
-    SendSQL("INSERT INTO profiles (login_name, realname, cryptpassword, groupset) 
-             VALUES ($username, $realname, $cryptpassword, $groupset)");
-    PopGlobalSQLState();
+    foreach my $groupid (@groups) {
+        SendSQL("INSERT INTO user_group_map VALUES ($userid, $groupid)");
+    }
 
+    PopGlobalSQLState();
+    
     # Return the password to the calling code so it can be included 
     # in an email sent to the user.
     return $password;
@@ -741,94 +835,90 @@ sub GenerateRandomPassword {
     return $password;
 }
 
-sub SelectVisible {
-    my ($query, $userid, $usergroupset) = @_;
-
-    # Run the SQL $query with the additional restriction that
-    # the bugs can be seen by $userid. $usergroupset is provided
-    # as an optimisation when this is already known, eg from CGI.pl
-    # If not present, it will be obtained from the db.
-    # Assumes that 'bugs' is mentioned as a table name. You should
-    # also make sure that bug_id is qualified bugs.bug_id!
-    # Your query must have a WHERE clause. This is unlikely to be a problem.
-
-    # Also, note that mySQL requires aliases for tables to be locked, as well
-    # This means that if you change the name from selectVisible_cc (or add
-    # additional tables), you will need to update anywhere which does a
-    # LOCK TABLE, and then calls routines which call this
-
-    $usergroupset = 0 unless $userid;
-
-    unless (defined($usergroupset)) {
-        PushGlobalSQLState();
-        SendSQL("SELECT groupset FROM profiles WHERE userid = $userid");
-        $usergroupset = FetchOneColumn();
-        PopGlobalSQLState();
-    }
-
-    # Users are authorized to access bugs if they are a member of all 
-    # groups to which the bug is restricted.  User group membership and 
-    # bug restrictions are stored as bits within bitsets, so authorization
-    # can be determined by comparing the intersection of the user's
-    # bitset with the bug's bitset.  If the result matches the bug's bitset
-    # the user is a member of all groups to which the bug is restricted
-    # and is authorized to access the bug.
-
-    # A user is also authorized to access a bug if she is the reporter, 
-    # or member of the cc: list of the bug and the bug allows users in those
-    # roles to see the bug.  The boolean fields reporter_accessible and 
-    # cclist_accessible identify whether or not those roles can see the bug.
-
-    # Bit arithmetic is performed by MySQL instead of Perl because bitset
-    # fields in the database are 64 bits wide (BIGINT), and Perl installations
-    # may or may not support integers larger than 32 bits.  Using bitsets
-    # and doing bitset arithmetic is probably not cross-database compatible,
-    # however, so these mechanisms are likely to change in the future.
-
-    my $replace = " ";
-
-    if ($userid) {
-        $replace .= "LEFT JOIN cc selectVisible_cc ON 
-                     bugs.bug_id = selectVisible_cc.bug_id AND 
-                     selectVisible_cc.who = $userid "
-    }
-
-    $replace .= "WHERE ((bugs.groupset & $usergroupset) = bugs.groupset ";
-
-    if ($userid) {
-        # There is a mysql bug affecting v3.22 and 3.23 (at least), where this will
-        # cause all rows to be returned! We work arround this by adding an not isnull
-        # test to the JOINed cc table. See http://lists.mysql.com/cgi-ez/ezmlm-cgi?9:mss:11417
-        # Its needed, even though it shouldn't be
-        $replace .= "OR (bugs.reporter_accessible = 1 AND bugs.reporter = $userid) 
-                   OR (bugs.cclist_accessible = 1 AND selectVisible_cc.who = $userid AND not isnull(selectVisible_cc.who))";
-    }
-
-    $replace .= ") AND ";
-
-    $query =~ s/\sWHERE\s/$replace/i;
-
-    return $query;
-}
-
 sub CanSeeBug {
-    # Note that we pass in the usergroupset, since this is known
-    # in most cases (ie viewing bugs). Maybe make this an optional
-    # parameter?
+    my ($bugs, $userid) = @_;
+    my %cansee;
+    my @buglist;
+    my @groups; 
+ 
+    if(ref($bugs)) {
+        @buglist = @{$bugs};
+    } else {
+        push(@buglist, $bugs);
+    }
 
-    my ($id, $userid, $usergroupset) = @_;
-
-    # Query the database for the bug, retrieving a boolean value that
-    # represents whether or not the user is authorized to access the bug.
+    if (@buglist < 1) {
+        return 0;
+    }
 
     PushGlobalSQLState();
-    SendSQL(SelectVisible("SELECT bugs.bug_id FROM bugs WHERE bugs.bug_id = $id",
-                          $userid, $usergroupset));
 
-    my $ret = defined(FetchSQLData());
+    if ($userid) {
+        SendSQL("SELECT group_id FROM user_group_map WHERE user_id = $userid");
+        while (my @row = FetchSQLData()) {
+            # Processmail requires everything coming out of the db to be detainted
+            detaint_natural($row[0]);
+            push(@groups, $row[0]);
+        }
+    } else {
+        $userid = 0;
+    }
+
+    my $query = "
+    SELECT 
+        bugs.bug_id,
+        COUNT(bug_group_map.group_id)
+    FROM
+        bugs LEFT JOIN bug_group_map ON bugs.bug_id = bug_group_map.bug_id
+        LEFT JOIN cc ON bugs.bug_id = cc.bug_id 
+    WHERE 
+        bugs.bug_id IN (" . join(',', @buglist) . ") 
+        AND ((";
+    if ($#groups >= 0) {
+        $query .= "bug_group_map.group_id IN (" . join(',', @groups) . ") OR ";
+    }
+    $query .= "bug_group_map.group_id IS NULL) ";
+    if ($userid) {
+        $query .= "OR (bugs.reporter_accessible = 1 AND bugs.reporter = $userid) 
+          OR (bugs.cclist_accessible = 1 AND cc.who = $userid)";
+    }
+    $query .= ") GROUP BY bugs.bug_id";
+
+    SendSQL($query);
+    
+    while (my ($id, $count) = FetchSQLData()) {
+        $cansee{$id} = 1 + $count;
+    }
+    
     PopGlobalSQLState();
 
-    return $ret;
+    if ((keys %cansee) < 1) {
+        return 0;
+    } else {
+        return \%cansee;
+    }
+}
+
+sub CanSeeProduct {
+    my ($userid, $product) = (@_);
+    my @groups = ();
+
+    ConnectToDatabase();
+    PushGlobalSQLState();
+
+    SendSQL("
+    SELECT
+        products.product_id 
+    FROM
+        products
+        LEFT JOIN product_group_map ON products.product_id = product_group_map.product_id
+    WHERE 
+        products.product = " . SqlQuote($product) . "
+        AND (product_group_map.group_id IN (" . join(",", @groups) . ") OR product_group_map.group_id IS NULL)");
+    my $result = FetchOneColumn(); 
+    PopGlobalSQLState();
+    return 1 if $result;
+    return 0;
 }
 
 sub ValidatePassword {
@@ -1014,7 +1104,7 @@ sub quoteUrls {
         my $item = $&;
         my $bugnum = $2;
         my $comnum = $4;
-        $item = GetBugLink($bugnum, $item);
+        $item = GetBugLink($bugnum, $item, $::userid);
         $item =~ s/(id=\d+)/$1#c$comnum/;
         $things[$count++] = $item;
     }
@@ -1028,7 +1118,7 @@ sub quoteUrls {
     while ($text =~ s/\bbug(\s|%\#)*(\d+)/"##$count##"/ei) {
         my $item = $&;
         my $num = $2;
-        $item = GetBugLink($num, $item);
+        $item = GetBugLink($num, $item, $::userid);
         $things[$count++] = $item;
     }
     while ($text =~ s/\b(Created an )?attachment(\s|%\#)*(\(id=)?(\d+)\)?/"##$count##"/ei) {
@@ -1043,7 +1133,7 @@ sub quoteUrls {
         my $item = $&;
         my $num = $1;
         my $bug_link;
-        $bug_link = GetBugLink($num, $num);
+        $bug_link = GetBugLink($num, $num, $::userid);
         $item =~ s@\d+@$bug_link@;
         $things[$count++] = $item;
     }
@@ -1063,12 +1153,12 @@ sub quoteUrls {
 }
 
 # This is a new subroutine written 12/20/00 for the purpose of processing a
-# link to a bug.  It can be called using "GetBugLink (<BugNumber>, <LinkText>);"
+# link to a bug.  It can be called using "GetBugLink (<BugNumber>, <LinkText>, <userid>);"
 # Where <BugNumber> is the number of the bug and <LinkText> is what apprears
 # between '<a>' and '</a>'.
 
 sub GetBugLink {
-    my ($bug_num, $link_text) = (@_);
+    my ($bug_num, $link_text, $userid) = (@_);
     detaint_natural($bug_num) || die "GetBugLink() called with non-integer bug number";
 
     # If we've run GetBugLink() for this bug number before, %::buglink
@@ -1079,12 +1169,12 @@ sub GetBugLink {
         # is saved off rather than overwritten
         PushGlobalSQLState();
 
-        SendSQL("SELECT bugs.bug_status, resolution, short_desc, groupset " .
+        SendSQL("SELECT bugs.bug_status, resolution, short_desc " .
                 "FROM bugs WHERE bugs.bug_id = $bug_num");
 
         # If the bug exists, save its data off for use later in the sub
         if (MoreSQLData()) {
-            my ($bug_state, $bug_res, $bug_desc, $bug_grp) = FetchSQLData();
+            my ($bug_state, $bug_res, $bug_desc) = FetchSQLData();
             # Initialize these variables to be "" so that we don't get warnings
             # if we don't change them below (which is highly likely).
             my ($pre, $title, $post) = ("", "", "");
@@ -1099,7 +1189,7 @@ sub GetBugLink {
                 $title .= " $bug_res";
                 $post = "</strike>";
             }
-            if ($bug_grp == 0 || CanSeeBug($bug_num, $::userid, $::usergroupset)) {
+            if (CanSeeBug($bug_num, $userid)) {
                 $title .= " - $bug_desc";
             }
             $::buglink{$bug_num} = [$pre, value_quote($title), $post];
@@ -1130,20 +1220,43 @@ sub GetLongDescriptionAsText {
     my ($id, $start, $end) = (@_);
     my $result = "";
     my $count = 0;
-    my ($query) = ("SELECT profiles.login_name, longdescs.bug_when, " .
-                   "       longdescs.thetext " .
-                   "FROM   longdescs, profiles " .
-                   "WHERE  profiles.userid = longdescs.who " .
-                   "AND    longdescs.bug_id = $id ");
+    my $query = "
+    SELECT 
+        profiles.login_name, ";
+
+    if ($::driver eq 'mysql') {
+        $query .= "
+        longdescs.bug_when, ";
+    } elsif ($::driver eq 'Pg') {
+        $query .= "
+        TO_CHAR(longdescs.bug_when, 'YYYY-MM-DD HH24:MI:SS'), ";
+    }
+    
+    $query .= "
+        longdescs.thetext
+    FROM 
+        longdescs, 
+        profiles
+    WHERE 
+        profiles.userid = longdescs.who
+        AND longdescs.bug_id = $id ";
 
     if ($start && $start =~ /[1-9]/) {
         # If the start is all zeros, then don't do this (because we want to
         # not emit a leading "Additional Comments" line in that case.)
-        $query .= "AND longdescs.bug_when > '$start'";
+        if ($::driver eq 'mysql') {
+            $query .= "AND longdescs.bug_when > '$start' ";
+        } elsif ($::driver eq 'Pg') {
+            $query .= "AND TO_CHAR(longdescs.bug_when, 'YYYYMMDDHH24MISS') > '$start' ";
+        }
         $count = 1;
     }
     if ($end) {
-        $query .= "AND longdescs.bug_when <= '$end'";
+        if ($::driver eq 'mysql') {
+            $query .= "AND longdescs.bug_when <= '$end' ";
+        } elsif ($::driver eq 'Pg') {
+            $query .= "AND TO_CHAR(longdescs.bug_when, 'YYYYMMDDHH24MISS') <= '$end' ";
+        }
     }
 
     $query .= "ORDER BY longdescs.bug_when";
@@ -1164,14 +1277,21 @@ sub GetLongDescriptionAsText {
 sub GetComments {
     my ($id) = (@_);
     my @comments;
-    
-    SendSQL("SELECT  profiles.realname, profiles.login_name, 
-                     date_format(longdescs.bug_when,'%Y-%m-%d %H:%i'), 
-                     longdescs.thetext
+    my $query = "SELECT  profiles.realname, profiles.login_name, ";
+
+    if ($::driver eq 'mysql') {
+        $query .= "date_format(longdescs.bug_when,'%Y-%m-%d %H:%i'), ";
+    } elsif ($::driver eq 'Pg') {
+        $query .= "TO_CHAR(longdescs.bug_when,'YYYY-MM-DD HH24:MI'), ";
+    }
+
+    $query .= "longdescs.thetext
             FROM     longdescs, profiles
             WHERE    profiles.userid = longdescs.who 
               AND    longdescs.bug_id = $id 
-            ORDER BY longdescs.bug_when");
+            ORDER BY longdescs.bug_when";
+
+    SendSQL($query);
              
     while (MoreSQLData()) {
         my %comment;
@@ -1195,13 +1315,23 @@ sub GetComments {
 sub LearnAboutColumns {
     my ($table) = (@_);
     my %a;
-    SendSQL("show columns from $table");
     my @list = ();
-    my @row;
-    while (@row = FetchSQLData()) {
-        my ($name,$type) = (@row);
-        $a{"$name,type"} = $type;
-        push @list, $name;
+    if ($::driver eq 'mysql') {
+        SendSQL("show columns from $table");
+        while ( my @row = FetchSQLData() ) {
+            my ($name,$type) = (@row);
+            $a{"$name,type"} = $type;
+            push (@list, $name);
+        }
+    } elsif ($::driver eq 'Pg') {
+        my $ref = $::db->func($table, "table_attributes");
+        for my $index ( 0..@{$ref} ) {
+            next if !$ref->[$index]->{'NAME'};
+            my $name = $ref->[$index]->{'NAME'};
+            my $type = $ref->[$index]->{'TYPE'};
+            $a{"$name,type"} = $type;
+            push (@list, $name);
+        }
     }
     $a{"-list-"} = \@list;
     return \%a;
@@ -1225,6 +1355,21 @@ sub SplitEnumType {
     return @result;
 }
 
+# subroutine:   SplitTableValues
+# description:  This will take a table of values that were previously enum data types and return 
+#               the legal values
+
+sub SplitTableValues {
+    my ($str) = (@_);
+    my @result = ();
+    my @row = ();
+    my $query = "select value from $str";
+    SendSQL($query);
+    while (@row = FetchSQLData()) {
+        push (@result, $row[0]);
+    }
+    return @result;
+}
 
 # This routine is largely copied from Mysql.pm.
 
@@ -1243,26 +1388,28 @@ sub SqlQuote {
 
 
 sub UserInGroup {
-    my ($groupname) = (@_);
-    if ($::usergroupset eq "0") {
+    my ($userid, $groupname) = (@_);
+    if (!$userid) {
         return 0;
     }
     ConnectToDatabase();
-    PushGlobalSQLState();
-    SendSQL("select (bit & $::usergroupset) != 0 from groups where name = " . SqlQuote($groupname));
-    my $bit = FetchOneColumn();
-    PopGlobalSQLState();
-    if ($bit) {
-        return 1;
-    }
+    SendSQL("SELECT user_id FROM user_group_map, groups
+            WHERE user_group_map.group_id = groups.group_id 
+            AND groups.name = " . SqlQuote($groupname) .
+            " AND user_id = $userid");
+    my $result = FetchOneColumn();
+    return 1 if $result;
     return 0;
 }
 
 sub BugInGroup {
     my ($bugid, $groupname) = (@_);
-    my $groupbit = GroupNameToBit($groupname);
+    my $groupid = GroupNameToId($groupname);
     PushGlobalSQLState();
-    SendSQL("SELECT (bugs.groupset & $groupbit) != 0 FROM bugs WHERE bugs.bug_id = $bugid");
+    SendSQL("SELECT bug_id FROM bug_group_map 
+            WHERE bug_group_map.group_id = groups.group_id
+            AND groups.name = " . SqlQuote($groupname) .
+            " AND bug_id = $bugid");
     my $bugingroup = FetchOneColumn();
     PopGlobalSQLState();
     return $bugingroup;
@@ -1271,7 +1418,7 @@ sub BugInGroup {
 sub GroupExists {
     my ($groupname) = (@_);
     ConnectToDatabase();
-    SendSQL("select count(*) from groups where name=" . SqlQuote($groupname));
+    SendSQL("select count(*) from groups where name = " . SqlQuote($groupname));
     my $count = FetchOneColumn();
     return $count;
 }
@@ -1279,24 +1426,24 @@ sub GroupExists {
 # Given the name of an existing group, returns the bit associated with it.
 # If the group does not exist, returns 0.
 # !!! Remove this function when the new group system is implemented!
-sub GroupNameToBit {
+sub GroupNameToId {
     my ($groupname) = (@_);
     ConnectToDatabase();
     PushGlobalSQLState();
-    SendSQL("SELECT bit FROM groups WHERE name = " . SqlQuote($groupname));
-    my $bit = FetchOneColumn() || 0;
+    SendSQL("SELECT group_id FROM groups WHERE name = " . SqlQuote($groupname));
+    my $id = FetchOneColumn() || 0;
     PopGlobalSQLState();
-    return $bit;
+    return $id;
 }
 
 # Determines whether or not a group is active by checking 
 # the "isactive" column for the group in the "groups" table.
 # Note: This function selects groups by bit rather than by name.
 sub GroupIsActive {
-    my ($groupbit) = (@_);
-    $groupbit ||= 0;
+    my ($groupid) = (@_);
+    $groupid ||= 0;
     ConnectToDatabase();
-    SendSQL("select isactive from groups where bit=$groupbit");
+    SendSQL("select isactive from groups where group_id=$groupid");
     my $isactive = FetchOneColumn();
     return $isactive;
 }
@@ -1412,7 +1559,7 @@ sub RemoveVotes {
         SendSQL("SELECT SUM(count) FROM votes WHERE bug_id = $id");
         my $v = FetchOneColumn();
         $v ||= 0;
-        SendSQL("UPDATE bugs SET votes = $v, delta_ts = delta_ts " .
+        SendSQL("UPDATE bugs SET votes = $v, delta_ts = now() " .
                 "WHERE bug_id = $id");
     }
 }
@@ -1508,6 +1655,30 @@ sub trim {
     $str =~ s/^\s+//g;
     $str =~ s/\s+$//g;
     return $str;
+}
+
+# Returns current value from a given sequence or auto_increment depending
+# on the database being used.
+sub CurrId {
+    my $seqname = shift;
+    if ($::driver eq 'mysql') {
+        SendSQL("select LAST_INSERT_ID()");
+        return FetchOneColumn();        
+    } elsif ($::driver eq 'Pg') {
+        if ( !$seqname ) {
+            return 0;
+        }
+        SendSQL("SELECT last_value FROM $seqname");    
+        return FetchOneColumn();
+    } elsif ($::driver eq 'Oracle') {
+        if (!$seqname) {
+            return 0;
+        }
+        SendSQL("select $seqname.currval from dual");
+        return FetchOneColumn();
+    } else {
+        return 0;
+    }
 }
 
 ###############################################################################

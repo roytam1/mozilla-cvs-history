@@ -36,7 +36,7 @@ require "CGI.pl";
 ConnectToDatabase();
 GetVersionTable();
 
-quietly_check_login();
+my $userid = quietly_check_login();
 
 if (!defined $::FORM{'product'}) {
     # Reference to a subset of %::proddesc, which the user is allowed to see
@@ -46,7 +46,7 @@ if (!defined $::FORM{'product'}) {
         # OK, now only add products the user can see
         confirm_login() unless $::userid;
         foreach my $p (@::legal_product) {
-            if (!GroupExists($p) || UserInGroup($p)) {
+            if (!GroupExists($p) || UserInGroup($userid, $p)) {
                 $products{$p} = $::proddesc{$p};
             }
         }
@@ -90,9 +90,9 @@ grep($product eq $_ , @::legal_product)
   && exit;
 
 # Make sure the user is authorized to access this product.
-if (Param("usebuggroups") && GroupExists($product)) {
-    confirm_login() unless $::userid;
-    UserInGroup($product)
+if (Param("usebuggroups") && GroupExists($product) && !$::userid) {
+    $userid = confirm_login();
+    UserInGroup($userid, $product)
       || DisplayError("You are not authorized to access that product.")
         && exit;
 }

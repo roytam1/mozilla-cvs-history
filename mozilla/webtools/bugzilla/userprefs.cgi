@@ -34,7 +34,6 @@ use RelationSet;
 sub sillyness {
     my $zz;
     $zz = $::defaultqueryname;
-    $zz = $::usergroupset;
 }
 
 # Use global template variables.
@@ -67,11 +66,19 @@ sub DoAccount {
     $vars->{'realname'} = FetchSQLData();
 
     if(Param('allowemailchange')) {
-        SendSQL("SELECT tokentype, issuedate + INTERVAL 3 DAY, eventdata 
+        if ($::driver eq 'mysql') {
+            SendSQL("SELECT tokentype, issuedate + INTERVAL 3 DAY, eventdata 
                     FROM tokens
                     WHERE userid = $userid
                     AND tokentype LIKE 'email%' 
                     ORDER BY tokentype ASC LIMIT 1");
+        } elsif ($::driver eq 'Pg') {
+            SendSQL("SELECT tokentype, issuedate + INTERVAL '3 days', eventdata 
+                    FROM tokens
+                    WHERE userid = $userid
+                    AND tokentype LIKE 'email%' 
+                    ORDER BY tokentype ASC LIMIT 1");
+        }
         if(MoreSQLData()) {
             my ($tokentype, $change_date, $eventdata) = &::FetchSQLData();
             $vars->{'login_change_date'} = $change_date;
@@ -274,7 +281,7 @@ sub SaveEmail {
         ($CCDELTAS[0] eq "") || SendSQL($CCDELTAS[0]);
         ($CCDELTAS[1] eq "") || SendSQL($CCDELTAS[1]);
 
-        SendSQL("UNLOCK TABLES");       
+        SendSQL("UNLOCK TABLES") if $::driver eq 'mysql';       
     }
 }
 
@@ -328,23 +335,24 @@ sub SaveFooter {
     $vars->{'user'} = GetUserInfo($::userid);
 }
     
-    
 sub DoPermissions {
     my (@has_bits, @set_bits);
-    
-    SendSQL("SELECT description FROM groups " .
-            "WHERE bit & $::usergroupset != 0 " .
-            "ORDER BY bit");
+
+    SendSQL("SELECT description FROM groups, user_group_map " .
+            "WHERE groups.group_id = user_group_map.group_id " .
+            "AND user_group_map.user_id = $userid " .
+            "ORDER BY description");    
     while (MoreSQLData()) {
         push(@has_bits, FetchSQLData());
     }
-    
-    SendSQL("SELECT blessgroupset FROM profiles WHERE userid = $userid");
-    my $blessgroupset = FetchOneColumn();
-    if ($blessgroupset) {
-        SendSQL("SELECT description FROM groups " .
-                "WHERE bit & $blessgroupset != 0 " .
-                "ORDER BY bit");
+    SendSQL("SELECT COUNT(*) FROM user_group_map WHERE user_id = $userid AND canbless >= 1");
+    my $blessgroups = FetchOneColumn();
+    if ($blessgroups) { 
+        SendSQL("SELECT description FROM groups, user_group_map " .
+                  "WHERE groups.group_id = user_group_map.group_id " .
+                  "AND user_group_map.user_id = $userid " .
+                  "AND canbless = 1 " .
+                  "ORDER BY description");
         while (MoreSQLData()) {
             push(@set_bits, FetchSQLData());
         }
@@ -359,7 +367,7 @@ sub DoPermissions {
 ###############################################################################
 # Live code (not subroutine definitions) starts here
 ###############################################################################
-confirm_login();
+$userid = confirm_login();
 
 GetVersionTable();
 

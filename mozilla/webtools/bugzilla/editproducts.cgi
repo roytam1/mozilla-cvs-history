@@ -42,6 +42,7 @@ sub sillyness {
     $zz = $::unconfirmedstate;
 }
 
+my $userid = 0;
 
 # TestProduct:  just returns if the specified product does exists
 # CheckProduct: same check, optionally  emit an error text
@@ -175,11 +176,11 @@ sub PutTrailer (@)
 # Preliminary checks:
 #
 
-confirm_login();
+$userid = confirm_login();
 
 print "Content-type: text/html\n\n";
 
-unless (UserInGroup("editcomponents")) {
+unless (UserInGroup($userid, "editcomponents")) {
     PutHeader("Not allowed");
     print "Sorry, you aren't a member of the 'editcomponents' group.\n";
     print "And so, you aren't allowed to add, modify or delete products.\n";
@@ -209,7 +210,8 @@ unless ($action) {
                     votesperuser,maxvotesperbug,votestoconfirm,COUNT(bug_id)
              FROM products LEFT JOIN bugs
                ON products.product=bugs.product
-             GROUP BY products.product
+             GROUP BY products.product,description,disallownew,
+                      votesperuser,maxvotesperbug,votestoconfirm
              ORDER BY products.product");
     print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR BGCOLOR=\"#6666FF\">\n";
     print "  <TH ALIGN=\"left\">Edit product ...</TH>\n";
@@ -224,6 +226,7 @@ unless ($action) {
     while ( MoreSQLData() ) {
         my ($product, $description, $disallownew, $votesperuser,
             $maxvotesperbug, $votestoconfirm, $bugs) = FetchSQLData();
+
         $description ||= "<FONT COLOR=\"red\">missing</FONT>";
         $disallownew = $disallownew ? 'closed' : 'open';
         $bugs        ||= 'none';
@@ -338,39 +341,41 @@ if ($action eq 'new') {
             $disallownew . "," .
             "$votesperuser, $maxvotesperbug, $votestoconfirm, " .
             SqlQuote($defaultmilestone) . ")");
+
+    my $productid = CurrId('products_product_id_seq');
+
     SendSQL("INSERT INTO versions ( " .
           "value, program" .
           " ) VALUES ( " .
           SqlQuote($version) . "," .
           SqlQuote($product) . ")" );
 
-    SendSQL("INSERT INTO milestones (product, value) VALUES (" .
-            SqlQuote($product) . ", " . SqlQuote($defaultmilestone) . ")");
-
+    SendSQL("INSERT INTO milestones (product, value, sortkey) VALUES (" .
+            SqlQuote($product) . ", " . SqlQuote($defaultmilestone) . ", 0)");
+    
     # If we're using bug groups, then we need to create a group for this
     # product as well.  -JMR, 2/16/00
     if(Param("usebuggroups")) {
-        # First we need to figure out the bit for this group.  We'll simply
-        # use the next highest bit available.  We'll use a minimum bit of 256,
-        # to leave room for a few more Bugzilla operation groups at the bottom.
-        SendSQL("SELECT MAX(bit) FROM groups");
-        my $bit = FetchOneColumn();
-        if($bit < 256) {
-            $bit = 256;
+        # Check for a group already by this name
+        SendSQL("SELECT name FROM groups WHERE name = " . SqlQuote($product));
+        my $name = FetchOneColumn();
+        if ($name) {
+             DisplayError("There is already a group by that name.")
+                && exit;
         } else {
-            $bit = $bit * 2;
+            # Next we insert into the groups table
+            SendSQL("INSERT INTO groups " .
+                    "(name, description, isbuggroup, userregexp) " .
+                    "VALUES (" .
+                    SqlQuote($product) . ", " .
+                    SqlQuote($product . " Bugs Access") . ", " .
+                    "1, " .
+                    SqlQuote($userregexp) . ")");
         }
-        
-        # Next we insert into the groups table
-        SendSQL("INSERT INTO groups " .
-                "(bit, name, description, isbuggroup, userregexp) " .
-                "VALUES (" .
-                $bit . ", " .
-                SqlQuote($product) . ", " .
-                SqlQuote($product . " Bugs Access") . ", " .
-                "1, " .
-                SqlQuote($userregexp) . ")");
-        
+
+        SendSQL("SELECT group_id FROM groups WHERE name = " . SqlQuote($product));
+        my $groupid = FetchOneColumn();
+
         # And last, we need to add any existing users that match the regexp
         # to the group.
         # There may be a better way to do this in MySql, but I need to compare
@@ -388,9 +393,21 @@ if ($action eq 'new') {
         # find matching users with a much simpler statement that lets the
         # mySQL database do the work.
         unless($userregexp eq "") {
-            SendSQL("UPDATE profiles ".
-                    "SET groupset = groupset | " . $bit . " " .
-                    "WHERE LOWER(login_name) REGEXP LOWER(" . SqlQuote($userregexp) . ")");
+            SendSQL("SELECT DISTINCT userid FROM profiles " . 
+                    "WHERE admin = 1 OR " . SqlRegEx('login_name', "$userregexp")); 
+            my @winners = ();
+            while (my ($userid) = FetchSQLData()) {
+                push (@winners, $userid);
+            }
+
+            foreach my $userid (@winners) {
+                SendSQL("SELECT user_id FROM user_group_map " . 
+                        "WHERE user_id = $userid AND group_id = $groupid");
+                my $result = FetchOneColumn();
+                if (!$result) {
+                    SendSQL("INSERT INTO user_group_map VALUES ($userid, $groupid, 0)");
+                }
+            }
         }
     }
 
@@ -441,23 +458,6 @@ if ($action eq 'del') {
         print "</TR><TR>\n";
         print "  <TD VALIGN=\"top\">Milestone URL:</TD>\n";
         print "  <TD VALIGN=\"top\">$milestonelink</TD>\n";
-    }
-
-    # Added -JMR, 2/16/00
-    if(Param('usebuggroups')) {
-        # Get the regexp for this product.
-        SendSQL("SELECT userregexp
-                 FROM groups
-                 WHERE name=" . SqlQuote($product));
-        my $userregexp = FetchOneColumn();
-        if(!defined $userregexp) {
-            $userregexp = "<FONT COLOR=\"red\">undefined</FONT>";
-        } elsif ($userregexp eq "") {
-            $userregexp = "<FONT COLOR=\"blue\">blank</FONT>";
-        }
-        print "</TR><TR>\n";
-        print "  <TD VALIGN=\"top\">User Regexp for Bug Group:</TD>\n";
-        print "  <TD VALIGN=\"top\">$userregexp</TD>\n";
     }
 
     print "</TR><TR>\n";
@@ -577,19 +577,21 @@ one.";
 if ($action eq 'delete') {
     PutHeader("Deleting product");
     CheckProduct($product);
-
+    
     # lock the tables before we start to change everything:
-
-    SendSQL("LOCK TABLES attachments WRITE,
-                         bugs WRITE,
-                         bugs_activity WRITE,
-                         components WRITE,
-                         dependencies WRITE,
-                         versions WRITE,
-                         products WRITE,
-                         groups WRITE,
-                         profiles WRITE,
-                         milestones WRITE");
+    if ($::driver eq 'mysql') {
+        SendSQL("LOCK TABLES attachments WRITE,
+                bugs WRITE,
+                bugs_activity WRITE,
+                components WRITE,
+                dependencies WRITE,
+                versions WRITE,
+                products WRITE,
+                groups WRITE,
+                profiles WRITE,
+                milestones WRITE,
+                user_group_map WRITE");
+    }
 
     # According to MySQL doc I cannot do a DELETE x.* FROM x JOIN Y,
     # so I have to iterate over bugs and delete all the indivial entries
@@ -631,36 +633,20 @@ if ($action eq 'delete') {
              WHERE product=" . SqlQuote($product));
     print "Milestones deleted.<BR>\n";
 
+    # Deleting any users from product group and delete group
+    SendSQL("SELECT group_id FROM groups WHERE name = " . SqlQuote($product));
+    my $groupid = FetchOneColumn();
+    if ($groupid) {
+       SendSQL("DELETE FROM user_group_map WHERE group_id = $groupid");
+       SendSQL("DELETE FROM groups WHERE group_id = $groupid");
+       print "Users removed from product group and group removed.<br>\n";
+    }
+
     SendSQL("DELETE FROM products
              WHERE product=" . SqlQuote($product));
     print "Product '$product' deleted.<BR>\n";
 
-    # Added -JMR, 2/16/00
-    if (Param("usebuggroups")) {
-        # We need to get the bit of the group from the table, then update the
-        # groupsets of members of that group and remove the group.
-        SendSQL("SELECT bit, description FROM groups " . 
-                "WHERE name = " . SqlQuote($product));
-        my ($bit, $group_desc) = FetchSQLData();
-
-        # Make sure there is a group before we try to do any deleting...
-        if($bit) {
-            # I'm kludging a bit so that I don't break superuser access;
-            # I'm merely checking to make sure that the groupset is not
-            # the superuser groupset in doing this update...
-            SendSQL("UPDATE profiles " .
-                    "SET groupset = groupset - $bit " .
-                    "WHERE (groupset & $bit) " .
-                    "AND (groupset != 9223372036854710271)");
-            print "Users dropped from group '$group_desc'.<BR>\n";
-
-            SendSQL("DELETE FROM groups " .
-                    "WHERE bit = $bit");
-            print "Group '$group_desc' deleted.<BR>\n";
-        }
-    }
-
-    SendSQL("UNLOCK TABLES");
+    SendSQL("UNLOCK TABLES") if $::driver eq 'mysql';
 
     unlink "data/versioncache";
     PutTrailer($localtrailer);
@@ -814,7 +800,8 @@ if ($action eq 'edit') {
 
 if ($action eq 'update') {
     PutHeader("Update product");
-
+    
+    my $productid           = trim($::FORM{productid}           || 0);
     my $productold          = trim($::FORM{productold}          || '');
     my $description         = trim($::FORM{description}         || '');
     my $descriptionold      = trim($::FORM{descriptionold}      || '');
@@ -845,14 +832,16 @@ if ($action eq 'update') {
 
     # Note that the order of this tests is important. If you change
     # them, be sure to test for WHERE='$product' or WHERE='$productold'
-
-    SendSQL("LOCK TABLES bugs WRITE,
-                         components WRITE,
-                         products WRITE,
-                         versions WRITE,
-                         groups WRITE,
-                         profiles WRITE,
-                         milestones WRITE");
+    if ($::driver eq 'mysql') {
+        SendSQL("LOCK TABLES bugs WRITE,
+                             components WRITE,
+                             products WRITE,
+                             versions WRITE,
+                             groups WRITE,
+                             profiles WRITE,
+                             milestones WRITE,
+                             user_group_map WRITE");
+    }
 
     if ($disallownew ne $disallownewold) {
         $disallownew ||= 0;
@@ -865,7 +854,9 @@ if ($action eq 'update') {
     if ($description ne $descriptionold) {
         unless ($description) {
             print "Sorry, I can't delete the description.";
-            SendSQL("UNLOCK TABLES");
+            if ($::driver eq 'mysql') {
+                SendSQL("UNLOCK TABLES");
+            }
             PutTrailer($localtrailer);
             exit;
         }
@@ -882,65 +873,54 @@ if ($action eq 'update') {
         print "Updated mile stone URL.<BR>\n";
     }
 
-    # Added -JMR, 2/16/00
+        # Added -JMR, 2/16/00
     if (Param("usebuggroups") && $userregexp ne $userregexpold) {
         # This will take a little bit of work here, since there may not be
         # an existing bug group for this product, and we will also have to
         # update users groupsets.
         # First we find out if there's an existing group for this product, and
         # get its bit if there is.
-        SendSQL("SELECT bit " .
-                "FROM groups " .
-                "WHERE name = " . SqlQuote($productold));
-        my $bit = FetchOneColumn();
-        if($bit) {
+        SendSQL("SELECT group_id FROM groups WHERE name = " . SqlQuote($productold));
+        my $groupid = FetchOneColumn();
+        if($groupid) {
             # Group exists, so we do an update statement.
             SendSQL("UPDATE groups " .
                     "SET userregexp = " . SqlQuote($userregexp) . " " .
                     "WHERE name = " . SqlQuote($productold));
             print "Updated user regexp for bug group.<BR>\n";
         } else {
-            # Group doesn't exist.  Let's make it, the same way as we make a
-            # group for a new product above.
-            SendSQL("SELECT MAX(bit) FROM groups");
-            my $tmp_bit = FetchOneColumn();
-            if($tmp_bit < 256) {
-                $bit = 256;
-            } else {
-                $bit = $tmp_bit * 2;
-            }
+            # Next we insert into the groups table
             SendSQL("INSERT INTO groups " .
-                    "(bit, name, description, isbuggroup, userregexp) " .
-                    "values (" . $bit . ", " .
-                    SqlQuote($productold) . ", " .
-                    SqlQuote($productold . " Bugs Access") . ", " .
+                    "(name, description, isbuggroup, userregexp) " .
+                    "VALUES (" .
+                    SqlQuote($product) . ", " .
+                    SqlQuote($product . " Bugs Access") . ", " .
                     "1, " .
                     SqlQuote($userregexp) . ")");
-            print "Created bug group.<BR>\n";
+            print "Created bug group.<br>\n";
         }
-        
-        # And now we have to update the profiles again to add any users who
-        # match the new regexp to the group.  I'll do this the same way as
-        # when I create a new group above.  Note that I'm not taking out
-        # users who matched the old regexp and not the new one;  that would
-        # be insanely messy.  Use the group administration page for that
-        # instead.
-        SendSQL("SELECT login_name FROM profiles");
-        my @login_list = ();
-        my $this_login;
-        while($this_login = FetchOneColumn()) {
-            push @login_list, $this_login;
-        }
-        my $updated_profiles = 0;
-        foreach $this_login (@login_list) {
-            if($this_login =~ /$userregexp/) {
-                SendSQL("UPDATE profiles " .
-                        "SET groupset = groupset | " . $bit . " " .
-                        "WHERE login_name = " . SqlQuote($this_login));
-                $updated_profiles = 1;
+
+        SendSQL("SELECT group_id FROM groups WHERE name = " . SqlQuote($productold));
+        $groupid = FetchOneColumn();
+
+        # And last, we need to add any existing users that match the regexp
+        # to the group. This does not remove pre-existing users that used to match.
+        unless($userregexp eq "") {
+            SendSQL("SELECT DISTINCT userid FROM profiles " . 
+                    "WHERE admin = 1 OR " . SqlRegEx('login_name', $userregexp)); 
+            my @winners = ();
+            while (my ($userid) = FetchSQLData()) {
+                push (@winners, $userid);
             }
-        }
-        if($updated_profiles) {
+
+            foreach my $userid (@winners) {
+                SendSQL("SELECT user_id FROM user_group_map " . 
+                        "WHERE user_id = $userid AND group_id = $groupid");
+                my $result = FetchOneColumn();
+                if (!$result) {
+                    SendSQL("INSERT INTO user_group_map VALUES ($userid, $groupid, 0)");
+                }
+            }
             print "Added users matching regexp to group.<BR>\n";
         }
     }
@@ -978,7 +958,9 @@ if ($action eq 'update') {
                 "  AND product = " . SqlQuote($productold));
         if (!FetchOneColumn()) {
             print "Sorry, the milestone $defaultmilestone must be defined first.";
-            SendSQL("UNLOCK TABLES");
+            if ($::driver eq 'mysql') {
+                SendSQL("UNLOCK TABLES");
+            }
             PutTrailer($localtrailer);
             exit;
         }
@@ -994,13 +976,17 @@ if ($action eq 'update') {
     if ($product ne $productold) {
         unless ($product) {
             print "Sorry, I can't delete the product name.";
-            SendSQL("UNLOCK TABLES");
+            if ($::driver eq 'mysql') {
+                SendSQL("UNLOCK TABLES");
+            }
             PutTrailer($localtrailer);
             exit;
         }
         if (TestProduct($product)) {
             print "Sorry, product name '$product' is already in use.";
-            SendSQL("UNLOCK TABLES");
+            if ($::driver eq 'mysql') {
+                SendSQL("UNLOCK TABLES");
+            }
             PutTrailer($localtrailer);
             exit;
         }
@@ -1010,19 +996,14 @@ if ($action eq 'update') {
         SendSQL("UPDATE products SET product=$qp WHERE product=$qpold");
         SendSQL("UPDATE versions SET program=$qp WHERE program=$qpold");
         SendSQL("UPDATE milestones SET product=$qp WHERE product=$qpold");
-        # Need to do an update to groups as well.  If there is a corresponding
-        # bug group, whether usebuggroups is currently set or not, we want to
-        # update it so it will match in the future.  If there is no group, this
-        # update statement will do nothing, so no harm done.  -JMR, 3/8/00
-        SendSQL("UPDATE groups " .
-                "SET name=$qp, " .
-                "description=".SqlQuote($product." Bugs Access")." ".
-                "WHERE name=$qpold");
         
         print "Updated product name.<BR>\n";
     }
+
     unlink "data/versioncache";
-    SendSQL("UNLOCK TABLES");
+    if ($::driver eq 'mysql') {
+        SendSQL("UNLOCK TABLES");
+    }
 
     if ($checkvotes) {
         print "Checking existing votes in this product for anybody who now has too many votes.";

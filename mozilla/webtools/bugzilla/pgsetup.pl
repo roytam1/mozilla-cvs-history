@@ -22,8 +22,7 @@
 #                 Terry Weissman <terry@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Dave Miller <justdave@syndicomm.com>
-#                 Zach Lipton  <zach@zachlipton.com>
-#
+#                  David Lawrence <dkl@redhat.com>
 #
 # Direct any questions on this source code to
 #
@@ -33,7 +32,7 @@
 #
 # Hey, what's this?
 #
-# 'checksetup.pl' is a script that is supposed to run during installation
+# 'pgsetup.pl' is a script that is supposed to run during installation
 # time and also after every upgrade.
 #
 # The goal of this script is to make the installation even more easy.
@@ -50,7 +49,7 @@
 #     - set defaults for local configuration variables
 #     - create and populate the data directory after installation
 #     - set the proper rights for the *.cgi, *.html ... etc files
-#     - check if the code can access MySQL
+#     - check if the code can access PostgreSQL 
 #     - creates the database 'bugs' if the database does not exist
 #     - creates the tables inside the database if they don't exist
 #     - automatically changes the table definitions of older BugZilla
@@ -77,7 +76,7 @@
 #     check for more prerequired modules               --MODULES--
 #     change the defaults for local configuration vars --LOCAL--
 #     update the assigned file permissions             --CHMOD--
-#     add more MySQL-related checks                    --MYSQL--
+#     add more PostgreSQL -related checks              --PGSQL--
 #     change table definitions                         --TABLE--
 #     add more groups                                  --GROUPS--
 #     create initial administrator account             --ADMIN--
@@ -95,11 +94,24 @@
 use diagnostics;
 use strict;
 
+#
+# This are the --LOCAL-- variables defined in 'localconfig'
+# 
 # 12/17/00 justdave@syndicomm.com - removed declarations of the localconfig
 # variables from this location.  We don't want these declared here.  They'll
 # automatically get declared in the process of reading in localconfig, and
 # this way we can look in the symbol table to see if they've been declared
 # yet or not.
+
+# Trim whitespace from front and back.
+
+sub trim {
+    ($_) = (@_);
+    s/^\s+//g;
+    s/\s+$//g;
+    return $_;
+}
+
 
 
 ###########################################################################
@@ -158,10 +170,10 @@ sub have_vers {
   $vnum = ${"${pkg}::VERSION"} || ${"${pkg}::Version"} || 0;
   $vnum = -1 if $@;
 
-  if ($vnum eq "-1") { # string compare just in case it's non-numeric
+  if ($vnum < 0) {
     $vstr = "not found";
   }
-  elsif (vers_cmp($vnum,"0") > -1) {
+  elsif ($vnum > 0) {
     $vstr = "found v$vnum";
   }
   else {
@@ -176,46 +188,46 @@ sub have_vers {
 # Check versions of dependencies.  0 for version = any version acceptible
 my $modules = [ 
     { 
-        name => 'AppConfig',  
+        name => 'AppConfig',
         version => '1.52' 
     }, 
     { 
         name => 'CGI::Carp', 
-        version => '0' 
+        version => '0'
     }, 
     {
-        name => 'Data::Dumper', 
-        version => '0' 
-    }, 
-    {        
-        name => 'Date::Parse', 
-        version => '0' 
-    }, 
-    { 
-        name => 'DBI', 
-        version => '1.13' 
-    }, 
-    { 
-        name => 'DBD::mysql', 
-        version => '1.2209' 
-    }, 
-    { 
-        name => 'File::Spec', 
-        version => '0.82' 
-    }, 
-    { 
-        name => 'Template', 
-        version => '2.07' 
-    }, 
-    { 
+        name => 'Data::Dumper',
+        version => '0'
+    },
+    {
+        name => 'Date::Parse',
+        version => '0'
+    },
+    {
+        name => 'DBI',
+        version => '1.13'
+    },
+    {
+        name => 'DBD::Pg',
+        version => '1.13'
+    },
+    {
+        name => 'File::Spec',
+        version => '0.82'
+    },
+    {
+        name => 'Template',
+        version => '2.07'
+    },
+    {
         name => 'Text::Wrap', 
-        version => '2001.0131' 
-    } 
+        version => '2001.0131'
+    }
 ];
 
 my %missing = ();
 foreach my $module (@{$modules}) {
-    unless (have_vers($module->{name}, $module->{version})) { 
+    unless (have_vers($module->{name}, $module->{version})) {
         $missing{$module->{name}} = $module->{version};
     }
 }
@@ -235,7 +247,6 @@ $charts++ if have_vers("GD","1.19");
 $charts++ if have_vers("Chart::Base","0.99");
 my $xmlparser = have_vers("XML::Parser",0);
 
-print "\n";
 if ($charts != 2) {
     print "If you you want to see graphical bug dependency charts, you may install\n",
     "the optional libgd and the Perl modules GD-1.19 and Chart::Base-0.99b, e.g. by\n",
@@ -285,9 +296,9 @@ if (%missing) {
 # know, we never want to overwrite your own version of 'localconfig', so
 # we can't put it into the CVS/tarfile, can we?
 #
-# Now, we need a new variable. We simply add the necessary stuff to checksetup.
-# The user get's the new version of Bugzilla from the CVS, runs checksetup
-# and checksetup finds out "Oh, there is something new". Then it adds some
+# Now, we need a new variable. We simply add the necessary stuff to pgsetup.
+# The user get's the new version of Bugzilla from the CVS, runs pgsetup
+# and pgsetup finds out "Oh, there is something new". Then it adds some
 # default value to the user's local setup and informs the user to check that
 # to see if that is what the user wants.
 #
@@ -309,7 +320,7 @@ Alternately rename your 'localconfig' file, rerun
 checksetup.pl, and re-enter your answers.
 
   \$ mv -f localconfig localconfig.old
-  \$ ./checksetup.pl
+  \$ ./pgsetup.pl
 
 
 EOT
@@ -365,7 +376,6 @@ LocalVar('mysqlpath', <<"END");
 \$mysqlpath = "$mysql_binaries";
 END
 
-
 LocalVar('create_htaccess', <<'END');
 #
 # If you are using Apache for your web server, Bugzilla can create .htaccess
@@ -382,52 +392,42 @@ LocalVar('create_htaccess', <<'END');
 $create_htaccess = 1;
 END
 
-    
 LocalVar('webservergroup', '
 #
 # This is the group your web server runs on.
 # If you have a windows box, ignore this setting.
-# If you do not wish for checksetup to adjust the permissions of anything,
-# set this to "". If you do set this to "", then your Bugzilla installation
-# will be _VERY_ insecure, because some files will be world readable/writable,
-# and so anyone who can get local access to your machine can do whatever they
-# want. You should only have this set to "" if this is a testing installation
-# and you cannot set this up any other way. YOU HAVE BEEN WARNED.
-# If you set this to anything besides "", you will need to run checksetup.pl
-# as root, or as a user who is a member of the specified group.
-$webservergroup = "nobody";
+# If you do not wish for pgsetup to adjust the permissions of anything,
+# set this to "".
+# If you set this to anything besides "", you will need to run pgsetup.pl
+# as root.
+$webservergroup = "apache";
 ');
 
 LocalVar('db_host', '
 #
 # How to access the SQL database:
 #
-$db_driver = "mysql";           # Which database we are using
+$db_driver = "Pg";
 $db_host = "localhost";         # where is the database?
-$db_port = 3306;                # which port to use
-$db_name = "bugs";              # name of the MySQL database
-$db_user = "bugs";              # user to attach to the MySQL database
+$db_port = "";                  # which port to use
+$db_name = "bugs";              # name of the Postgresql database
+$db_user = "bugs";              # user to attach to the Postgresql database
 ');
+
 LocalVar('db_pass', '
 #
-# Enter your database password here. It\'s normally advisable to specify
-# a password for your bugzilla database user.
-# If you use apostrophe (\') or a backslash (\\) in your password, you\'ll
-# need to escape it by preceding it with a \\ character. (\\\') or (\\\\)
+# Some people actually use passwords with their MySQL database ...
 #
-$db_pass = \'\';
+$db_pass = "";
 ');
-
-
 
 LocalVar('db_check', '
 #
-# Should checksetup.pl try to check if your MySQL setup is correct?
-# (with some combinations of MySQL/Msql-mysql/Perl/moonphase this doesn\'t work)
+# Should pgsetup.pl try to check if your PostgreSQL setup is correct?
+# (with some combinations of PostgreSQL/DBD::Pg/Perl/moonphase this doesn\'t work)
 #
 $db_check = 1;
 ');
-
 
 LocalVar('severities', '
 #
@@ -444,8 +444,6 @@ LocalVar('severities', '
 );
 ');
 
-
-
 LocalVar('priorities', '
 #
 # Which priorities do you want to assign to bugs and feature-request?
@@ -459,8 +457,6 @@ LocalVar('priorities', '
 );
 ');
 
-
-
 LocalVar('opsys', '
 #
 # What operatings systems may your products run on?
@@ -471,16 +467,15 @@ LocalVar('opsys', '
         "Windows 95",
         "Windows 98",
         "Windows ME",  # Millenium Edition (upgrade of 98)
-        "Windows 2000",
+    "Windows 2000",
         "Windows NT",
-        "Windows XP",
         "Mac System 7",
         "Mac System 7.5",
         "Mac System 7.6.1",
         "Mac System 8.0",
         "Mac System 8.5",
         "Mac System 8.6",
-        "Mac System 9.x",
+        "Mac System 9.0",
         "MacOS X",
         "Linux",
         "BSDI",
@@ -501,8 +496,6 @@ LocalVar('opsys', '
 );
 ');
 
-
-
 LocalVar('platforms', '
 #
 # What hardware platforms may your products run on?
@@ -519,9 +512,6 @@ LocalVar('platforms', '
 );
 ');
 
-
-
-
 LocalVar('contenttypes', '
 #
 # The types of content that template files can generate, indexed by file extension.
@@ -534,15 +524,12 @@ $contenttypes = {
 };
 ');
 
-
-
-
 if ($newstuff ne "") {
     print "\nThis version of Bugzilla contains some variables that you may want\n",
           "to change and adapt to your local settings. Please edit the file\n",
-          "'localconfig' and rerun checksetup.pl\n\n",
+          "'localconfig' and rerun pgsetup.pl\n\n",
           "The following variables are new to localconfig since you last ran\n",
-          "checksetup.pl:  $newstuff\n\n";
+          "pgsetup.pl:  $newstuff\n\n";
     exit;
 }
 
@@ -559,73 +546,12 @@ my $my_db_name = ${*{$main::{'db_name'}}{SCALAR}};
 my $my_db_user = ${*{$main::{'db_user'}}{SCALAR}};
 my $my_db_pass = ${*{$main::{'db_pass'}}{SCALAR}};
 my $my_index_html = ${*{$main::{'index_html'}}{SCALAR}};
-my $my_create_htaccess = ${*{$main::{'create_htaccess'}}{SCALAR}};
 my $my_webservergroup = ${*{$main::{'webservergroup'}}{SCALAR}};
+my $my_create_htaccess = ${*{$main::{'create_htaccess'}}{SCALAR}};
 my @my_severities = @{*{$main::{'severities'}}{ARRAY}};
 my @my_priorities = @{*{$main::{'priorities'}}{ARRAY}};
 my @my_platforms = @{*{$main::{'platforms'}}{ARRAY}};
 my @my_opsys = @{*{$main::{'opsys'}}{ARRAY}};
-
-if ($my_webservergroup) {
-    if ($< != 0) { # zach: if not root, yell at them, bug 87398 
-        print <<EOF;
-
-Warning: you have entered a value for the "webservergroup" parameter
-in localconfig, but you are not running this script as root.
-This can cause permissions problems and decreased security.  If you
-experience problems running Bugzilla scripts, log in as root and re-run
-this script, or remove the value of the "webservergroup" parameter.
-Note that any warnings about "uninitialized values" that you may
-see below are caused by this.
-
-EOF
-    }
-} else {
-    # Theres no webservergroup, this is very very very very bad.
-    # However, if we're being run on windows, then this option doesn't
-    # really make sense. Doesn't make it any more secure either, though,
-    # but don't print the message, since they can't do anything about it.
-    if ($^O !~ /MSWin32/i) {
-        print <<EOF;
-
-********************************************************************************
-WARNING! You have not entered a value for the "webservergroup" parameter
-in localconfig. This means that certain files and directories which need
-to be editable by both you and the webserver must be world writable, and
-other files (including the localconfig file which stores your database
-password) must be world readable. This means that _anyone_ who can obtain
-local access to this machine can do whatever they want to your Bugzilla
-installation, and is probably also able to run arbitrary Perl code as the
-user that the webserver runs as.
-
-You really, really, really need to change this setting.
-********************************************************************************
-
-EOF
-    }
-}
-
-###########################################################################
-# Global Utility Library
-###########################################################################
-
-# globals.pl clears the PATH, but File::Find uses Cwd::cwd() instead of
-# Cwd::getcwd(), which we need to do because `pwd` isn't in the path - see
-# http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-09/msg00115.html
-# As a workaround, since we only use File::Find in checksetup, which doesn't
-# run in taint mode anyway, preserve the path...
-my $origPath = $::ENV{'PATH'};
-
-# Use the Bugzilla utility library for various functions.  We do this
-# here rather than at the top of the file so globals.pl doesn't define
-# localconfig variables for us before we get a chance to check for
-# their existence and create them if they don't exist.  Also, globals.pl
-# removes $ENV{'path'}, which we need in order to run `which mysql` above.
-require "globals.pl";
-
-# ...and restore it. This doesn't change tainting, so this will still cause
-# errors if this script ever does run with -T.
-$::ENV{'PATH'} = $origPath;
 
 ###########################################################################
 # Check data directory
@@ -638,8 +564,8 @@ $::ENV{'PATH'} = $origPath;
 unless (-d 'data') {
     print "Creating data directory ...\n";
     # permissions for non-webservergroup are fixed later on
-    mkdir 'data', 0770; 
-    mkdir 'data/mimedump-tmp', 01777; 
+    mkdir 'data', 0770;
+    mkdir 'data/mimedump-tmp', 01777;
     open FILE, '>>data/comments'; close FILE;
     open FILE, '>>data/nomail'; close FILE;
     open FILE, '>>data/mail'; close FILE;
@@ -652,22 +578,22 @@ unless (-d 'data') {
 unless (-d 'graphs') {
     print "Creating graphs directory...\n";
     # permissions for non-webservergroup are fixed later on
-    mkdir 'graphs', 0770; 
+    mkdir 'graphs', 0770;
     # Upgrade data format
     foreach my $in_file (glob("data/mining/*"))
     {
         # Don't try and upgrade image or db files!
-        if (($in_file =~ /\.gif$/i) || 
+        if (($in_file =~ /\.gif$/i) ||
             ($in_file =~ /\.png$/i) ||
             ($in_file =~ /\.db$/i) ||
             ($in_file =~ /\.orig$/i)) {
             next;
         }
 
-        rename("$in_file", "$in_file.orig") or next;        
+        rename("$in_file", "$in_file.orig") or next;
         open(IN, "$in_file.orig") or next;
         open(OUT, ">$in_file") or next;
-        
+
         # Fields in the header
         my @declared_fields = ();
 
@@ -713,8 +639,8 @@ unless (-d 'graphs') {
                     print "This was unexpected. You may want to check your data files.\n";
                 }
 
-                print OUT join('|', map { 
-                              defined ($data{$_}) ? ($data{$_}) : "" 
+                print OUT join('|', map {
+                              defined ($data{$_}) ? ($data{$_}) : ""
                                                           } @out_fields), "\n";
             }
             else {
@@ -724,7 +650,7 @@ unless (-d 'graphs') {
 
         close(IN);
         close(OUT);
-    }    
+    }
 }
 
 if ($my_create_htaccess) {
@@ -757,17 +683,6 @@ END
     close HTACCESS;
     chmod $fileperm, "data/.htaccess";
   }
-  if (!-e "template/.htaccess") {
-    print "Creating template/.htaccess...\n";
-    open HTACCESS, ">template/.htaccess";
-    print HTACCESS <<'END';
-# nothing in this directory is retrievable unless overriden by an .htaccess
-# in a subdirectory
-deny from all
-END
-    close HTACCESS;
-    chmod $fileperm, "template/.htaccess";
-  }
   if (!-e "data/webdot/.htaccess") {
     if (!-d "data/webdot") {
       mkdir "data/webdot", $dirperm;
@@ -776,18 +691,13 @@ END
     print "Creating data/webdot/.htaccess...\n";
     open HTACCESS, ">data/webdot/.htaccess";
     print HTACCESS <<'END';
-# Restrict access to .dot files to the public webdot server at research.att.com 
+# Allow access to nothing in this directory except for .dot files
+# and don't allow access to those to anyone except research.att.com
 # if research.att.com ever changed their IP, or if you use a different
 # webdot server, you'll need to edit this
 <FilesMatch ^[0-9]+\.dot$>
   Allow from 192.20.225.10
   Deny from all
-</FilesMatch>
-
-# Allow access by a local copy of 'dot' to .png, .gif, .jpg, and
-# .map files
-<FilesMatch ^[0-9]+\.(png|gif|jpg|map)$>
-  Allow from all
 </FilesMatch>
 
 # And no directory listings, either.
@@ -822,148 +732,19 @@ END
             print "\n\n";
             print "*** It appears that you still have an old index.html hanging\n";
             print "    around.  The contents of this file should be moved into a\n";
-            print "    template and placed in the 'template/en/custom' directory.\n\n";
+            print "    template and placed in the 'template/custom' directory.\n\n";
+            print "    template and placed in the 'template/custom' directory.\n\n";
         }
         close HTML;
     }
 }
 
-{
-    eval("use Date::Parse");
-    # Templates will be recompiled if the source changes, but not if the
-    # settings in globals.pl change, so we need to be able to force a rebuild
-    # if that happens
-
-    # The last time the global template params were changed. Keep in UTC,
-    # YYYY-MM-DD
-    my $lastTemplateParamChange = str2time("2002-04-27", "UTC");
-    if (-e 'data/template') {
-        unless (-d 'data/template' && -e 'data/template/.lastRebuild' &&
-                (stat('data/template/.lastRebuild'))[9] >= $lastTemplateParamChange) {
-            # If File::Path::rmtree reported errors, then I'd use that
-            use File::Find;
-            sub remove {
-                return if $_ eq ".";
-                if (-d $_) {
-                    rmdir $_ || die "Couldn't rmdir $_: $!\n";
-                } else {
-                    unlink $_ || die "Couldn't unlink $_: $!\n";
-                }
-            }
-            finddepth(\&remove, 'data/template');
-        }
-    }
-
-    # Precompile stuff. This speeds up initial access (so the template isn't
-    # compiled multiple times simulataneously by different servers), and helps
-    # to get the permissions right.
-    eval("use Template");
-    my $redir = ($^O =~ /MSWin32/i) ? "NUL" : "/dev/null";
-    my $template = Template->new(
-      {
-        # Output to /dev/null here
-        OUTPUT => $redir,
-
-        # Colon-separated list of directories containing templates.
-        INCLUDE_PATH => "template/en/custom:template/en/default",
-
-        PRE_CHOMP => 1 ,
-        TRIM => 1 ,
-
-        COMPILE_DIR => 'data/', # becomes data/template/en/{custom,default}
-
-        # These don't actually need to do anything here, just exist
-        FILTERS =>
-        {
-         strike => sub { return $_; } ,
-         js => sub { return $_; },
-         html => sub { return $_; },
-         url_quote => sub { return $_; },
-         no_break => sub { return $_; }
-        },
-      }) || die ("Could not create Template: " . Template->error() . "\n");
-
-    sub compile {
-        # no_chdir doesn't work on perl 5.005
-
-        my $origDir = $File::Find::dir;
-        my $name = $File::Find::name;
-
-        return if (-d $name);
-        return if ($name =~ /\/CVS\//);
-        return if ($name !~ /\.tmpl$/);
-        $name =~ s!template/en/default/!!; # trim the bit we don't pass to TT
-
-        chdir($::baseDir);
-
-        $template->process($name, {})
-          || die "Could not compile $name:" . $template->error() . "\n";
-
-        chdir($origDir);
-    }
-
-    {
-        use File::Find;
-
-        use Cwd;
-
-        $::baseDir = getcwd();
-
-        # Don't hang on templates which use the CGI library
-        eval("use CGI qw(-no_debug)");
-
-        # Disable warnings which come from running the compiled templates
-        # This way is OK, because they're all runtime warnings.
-        # The reason we get these warnings here is that none of the required
-        # vars will be present.
-        local ($^W) = 0;
-
-        # Traverse the default hierachy. Custom templates will be picked up
-        # via the INCLUDE_PATH, but we know that bugzilla will only be
-        # calling stuff which exists in en/default
-        # FIXME - if we start doing dynamic INCLUDE_PATH we may have to
-        # recurse all of template/, changing the INCLUDE_PATH each time
-
-        find(\&compile, "template/en/default");
-    }
-
-    # update the time on the stamp file
-    open FILE, '>data/template/.lastRebuild'; close FILE;
-    utime $lastTemplateParamChange, $lastTemplateParamChange, ('data/template/.lastRebuild');
-}
 
 # Just to be sure ...
 unlink "data/versioncache";
 
-# Remove parameters from the data/params file that no longer exist in Bugzilla.
-if (-e "data/params") {
-    require "data/params";
-    require "defparams.pl";
-    use vars @::param_list;
-    my @oldparams;
-    
-    open(PARAMFILE, ">>old-params.txt") 
-      || die "$0: Can't open old-params.txt for writing: $!\n";
-      
-    foreach my $item (keys %::param) {
-        if (!grep($_ eq $item, @::param_list) && $item ne "version") {
-            push (@oldparams, $item);
-            print PARAMFILE "\n\n$item:\n$::param{$item}\n";
-                
-            delete $::param{$item};
-        }
-    }
-    
-    if (@oldparams) {
-        print "The following parameters are no longer used in Bugzilla, " .
-              "and so have been\nremoved from your parameters file and " .
-              "appended to old-params.txt:\n";
-        print join(", ", @oldparams) . "\n\n";               
-    }
-    
-    close PARAMFILE;
-    WriteParams();
-}
+
+
 
 
 ###########################################################################
@@ -996,6 +777,7 @@ if (-e "data/params") {
 #
 # (end changes, 03/14/00 by SML)
 #
+#
 # Changes 15/06/01 kiko@async.com.br
 # 
 # Fix file permissions for non-webservergroup installations (see
@@ -1006,7 +788,7 @@ if (-e "data/params") {
 
 # These are the files which need to be marked executable
 my @executable_files = ('processmail', 'whineatnews.pl', 'collectstats.pl',
-   'checksetup.pl', 'syncshadowdb', 'importxml.pl', 'runtests.sh');
+   'pgsetup.pl', 'syncshadowdb', 'importxml.pl', 'runtests.sh');
 
 # tell me if a file is executable.  All CGI files and those in @executable_files
 # are executable
@@ -1061,19 +843,29 @@ sub fixPerms {
 }
 
 if ($my_webservergroup) {
+    unless ($< == 0) { # zach: if not root, yell at them, bug 87398 
+    print <<EOF;
+
+Warning: you have entered a value for the "webservergroup" parameter
+in localconfig, but you are not running this script as root.
+This can cause permissions problems and decreased security.  If you
+experience problems running Bugzilla scripts, log in as root and re-run
+this script, or remove the value of the "webservergroup" parameter.
+Note that any warnings about "uninitialized values" that you may
+see below are caused by this.
+
+EOF
+    }
+
     # Funny! getgrname returns the GID if fed with NAME ...
     my $webservergid = getgrnam($my_webservergroup);
     # chown needs to be called with a valid uid, not 0.  $< returns the
-    # caller's uid.  Maybe there should be a $bugzillauid, and call with that
-    # userid.
+    # caller's uid.  Maybe there should be a $bugzillauid, and call with that userid.
     fixPerms('.htaccess', $<, $webservergid, 027); # glob('*') doesn't catch dotfiles
     fixPerms('data/.htaccess', $<, $webservergid, 027);
-    fixPerms('data/template', $<, $webservergid, 007, 1); # webserver will write to these
     fixPerms('data/webdot/.htaccess', $<, $webservergid, 027);
-    fixPerms('data/params', $<, $webservergid, 017);
     fixPerms('*', $<, $webservergid, 027);
     fixPerms('template', $<, $webservergid, 027, 1);
-    fixPerms('css', $<, $webservergid, 027, 1);
     chmod 0644, 'globals.pl';
     chmod 0644, 'RelationSet.pm';
     chmod 0771, 'data';
@@ -1083,29 +875,22 @@ if ($my_webservergroup) {
     my $gid = (split " ", $()[0];
     fixPerms('.htaccess', $<, $gid, 022); # glob('*') doesn't catch dotfiles
     fixPerms('data/.htaccess', $<, $gid, 022);
-    fixPerms('data/template', $<, $gid, 022, 1);
     fixPerms('data/webdot/.htaccess', $<, $gid, 022);
-    fixPerms('data/params', $<, $gid, 011);
     fixPerms('*', $<, $gid, 022);
     fixPerms('template', $<, $gid, 022, 1);
-    fixPerms('css', $<, $gid, 022, 1);
-    chmod 0777, 'data';
-    chmod 01777, 'graphs';
+    chmod 01777, 'data', 'graphs';
 }
-
+ 
 
 ###########################################################################
-# Check MySQL setup
+# Check Postgresql setup
 ###########################################################################
 
 #
-# Check if we have access to --MYSQL--
+# Check if we have access to --PGSQL--
 #
 
-# This settings are not yet changeable, because other code depends on
-# the fact that we use MySQL and not, say, PostgreSQL.
-
-my $db_base = 'mysql';
+my $db_base = 'Pg';
 
 # No need to "use" this here.  It should already be loaded from the
 # version-checking routines above, and this file won't even compile if
@@ -1120,94 +905,72 @@ my $drh = DBI->install_driver($db_base)
 if ($my_db_check) {
     # Do we have the database itself?
 
-    my $sql_want = "3.22.5";  # minimum version of MySQL
+    my $sql_want = "7.2";  # minimum version of PostgreSQL 
 
-# original DSN line was:
-#    my $dsn = "DBI:$db_base:$my_db_name;$my_db_host;$my_db_port";
-# removed the $db_name because we don't know it exists yet, and this will fail
-# if we request it here and it doesn't. - justdave@syndicomm.com 2000/09/16
-    my $dsn = "DBI:$db_base:;$my_db_host;$my_db_port";
-    my $dbh = DBI->connect($dsn, $my_db_user, $my_db_pass)
+    my $dsn = "dbi:$db_base:dbname=template1;host=$my_db_host";
+    my $dbh = DBI->connect($dsn, "postgres", "")
       or die "Can't connect to the $db_base database. Is the database " .
-        "installed and\nup and running?  Do you have the correct username " .
-        "and password selected in\nlocalconfig?\n\n";
-    printf("Checking for %15s %-9s ", "MySQL Server", "(v$sql_want)");
-    my $qh = $dbh->prepare("SELECT VERSION()");
-    $qh->execute;
-    my ($sql_vers) = $qh->fetchrow_array;
-    $qh->finish;
+        "installed and\nup and running?\n\n";
 
-    # Check what version of MySQL is installed and let the user know
-    # if the version is too old to be used with Bugzilla.
-    if ( vers_cmp($sql_vers,$sql_want) > -1 ) {
-        print "ok: found v$sql_vers\n";
-    } else {
-        die "Your MySQL server v$sql_vers is too old./n" . 
-            "   Bugzilla requires version $sql_want or later of MySQL.\n" . 
-            "   Please visit http://www.mysql.com/ and download a newer version.\n";
+    printf("Checking for %15s %-9s ", "PostreSQL Server", "(v$sql_want)");
+    my $sth = $dbh->prepare("SELECT VERSION()");
+    $sth->execute;
+    my ($sql_vers) = $sth->fetchrow_array;
+    $sql_vers =~ m/.*PostgreSQL +([\d.]+) +.*/;
+    $sql_vers = $1;
+    $sth->finish;
+
+    my $sql_vok = (vers_cmp($sql_vers,$sql_want) > -1);
+    print (($sql_vok ? "ok: " : " "), "found v$sql_vers\n");
+    print "\n";
+    unless ($sql_vok) {
+      die "Your PostgreSQL server is either too old or a known broken version.\n",
+          "   Bugzilla requires version $sql_want or later of PostgreSQL.\n",
+          "   Please visit http://www.postgresql.org and download a newer version.\n";
     }
 
-    my @databases = $dbh->func('_ListDBs');
-    unless (grep /^$my_db_name$/, @databases) {
+    my $query = "select datname from pg_database where datname = 'bugs'";
+    $sth = $dbh->prepare($query);
+    $sth->execute() or die "Could not check for existing bugs database\n";
+    my ($database) = $sth->fetchrow_array();
+    $sth->finish;
+
+    if ( !$database ) {
        print "Creating database $my_db_name ...\n";
-       $drh->func('createdb', $my_db_name, "$my_db_host:$my_db_port", $my_db_user, $my_db_pass, 'admin')
+       $dbh->do("create database $my_db_name")
             or die <<"EOF"
 
 The '$my_db_name' database is not accessible. This might have several reasons:
 
-* MySQL is not running.
-* MySQL is running, but the rights are not set correct. Go and read the
-  Bugzilla Guide in the doc directory and all parts of the MySQL
-  documentation.
-* There is an subtle problem with Perl, DBI, DBD::mysql and MySQL. Make
+* PostgreSQL is not running.
+* PostgreSQL is running, but the rights are not set correct or wrong user. 
+* There is an subtle problem with Perl, DBI, or DBD::Pg. Make
   sure all settings in 'localconfig' are correct. If all else fails, set
   '\$db_check' to zero.\n
 EOF
     }
+
+    # Check for the existence of the bugs user
+    $query = "select usename from pg_shadow where usename = 'bugs'";
+    $sth = $dbh->prepare($query);
+    $sth->execute() or die "Could not check for bugs user\n";
+    my ($usename) = $sth->fetchrow_array();
+    $sth->finish;
+
+    if ( !$usename ) {
+        die "Please login as 'postgres' user and run 'createuser bugs' to create the default Bugzilla database user.\nThen run pgsetup.pl again\n";
+    }
+
     $dbh->disconnect if $dbh;
 }
 
 # now get a handle to the database:
-my $connectstring = "dbi:$db_base:$my_db_name:host=$my_db_host:port=$my_db_port";
-my $dbh = DBI->connect($connectstring, $my_db_user, $my_db_pass)
+my $connectstring = "dbi:$db_base:dbname=$my_db_name;host=$my_db_host";
+my $dbh = DBI->connect($connectstring, $my_db_user, $my_db_pass, {PrintError=>0, RaiseError=>1})
     or die "Can't connect to the table '$connectstring'.\n",
            "Have you read the Bugzilla Guide in the doc directory?  Have you read the doc of '$db_base'?\n";
 
 END { $dbh->disconnect if $dbh }
-
-
-###########################################################################
-# Check GraphViz setup
-###########################################################################
-
-#
-# If we are using a local 'dot' binary, verify the specified binary exists
-# and that the generated images are accessible.
-#
-
-if(-e "data/params") {
-  require "data/params";
-  if( $::param{'webdotbase'} && $::param{'webdotbase'} !~ /^https?:/ ) {
-    printf("Checking for %15s %-9s ", "GraphViz", "(any)");
-    if(-x $::param{'webdotbase'}) {
-      print "ok: found\n";
-    } else {
-      print "not a valid executable: $::param{'webdotbase'}\n";
-    }
-
-    # Check .htaccess allows access to generated images
-    if(-e "data/webdot/.htaccess") {
-      open HTACCESS, "data/webdot/.htaccess";
-      if(! grep(/png/,<HTACCESS>)) {
-        print "Dependency graph images are not accessible.\n";
-        print "Delete data/webdot/.htaccess and re-run checksetup.pl to rectify.\n";
-      }
-      close HTACCESS;
-    }
-  }
-}
-
-print "\n";
 
 
 ###########################################################################
@@ -1221,12 +984,12 @@ print "\n";
 # delete existing tables.
 #
 # If you want intentionally do this, yon can always drop a table and re-run
-# checksetup, e.g. like this:
+# pgsetup, e.g. like this:
 #
-#    $ mysql bugs
-#    mysql> drop table votes;
-#    mysql> exit;
-#    $ ./checksetup.pl
+#    $ psql bugs bugs
+#    psql> drop table votes;
+#    psql> exit;
+#    $ ./pgsetup.pl
 #
 # If you change one of those field definitions, then also go below to the
 # next occurence of the string --TABLE-- (near the end of this file) to
@@ -1235,148 +998,164 @@ print "\n";
 
 
 my %table;
+my %index;
 
 $table{bugs_activity} = 
-   'bug_id mediumint not null,
-    attach_id mediumint null,
-    who mediumint not null,
-    bug_when datetime not null,
-    fieldid mediumint not null,
-    added tinytext,
-    removed tinytext,
+   'bug_id integer not null,
+    attach_id integer,
+    who integer not null,
+    bug_when timestamp not null,
+    fieldid integer not null,
+    added varchar(4000),
+    removed varchar(4000)';
 
-    index (bug_id),
-    index (bug_when),
-    index (fieldid)';
+$index{bugs_activity} = [
+    'bug_id', 
+    'bug_when', 
+    'fieldid'
+];
 
-
+# FIXME Learn to use large object support in Pos
 $table{attachments} =
-   'attach_id mediumint not null auto_increment primary key,
-    bug_id mediumint not null,
-    creation_ts timestamp,
-    description mediumtext not null,
-    mimetype mediumtext not null,
-    ispatch tinyint,
-    filename mediumtext not null,
-    thedata longblob not null,
-    submitter_id mediumint not null,
-    isobsolete tinyint not null default 0, 
+   'attach_id serial,
+    bug_id integer not null,
+    creation_ts timestamp not null default now(),
+    description varchar(4000) not null,
+    mimetype varchar(2000) not null,
+    ispatch integer,
+    filename varchar(4000) not null,
+    thedata text not null,
+    submitter_id integer not null,
+    isobsolete integer not null default 0';
 
-    index(bug_id),
-    index(creation_ts)';
+$index{attachments} = [
+    'bug_id', 
+    'creation_ts'
+];
 
-# 2001-05-05 myk@mozilla.org: Tables to support attachment statuses.
+# 2001-05-05 myk@mozilla.org: Tables to support the attachment tracker.
 # "attachstatuses" stores one record for each status on each attachment.
 # "attachstatusdefs" defines the statuses that can be set on attachments.
+# Note: These tables are only used if the parameter "useattachmenttracker"
+# is turned on via editparameters.cgi.
 
-$table{attachstatuses} =
-   '
-     attach_id    MEDIUMINT    NOT NULL , 
-     statusid     SMALLINT     NOT NULL , 
-     PRIMARY KEY(attach_id, statusid) 
-   ';
+$table{attachstatuses} = '
+     attach_id    INTEGER  PRIMARY KEY NOT NULL , 
+     statusid     SMALLINT NOT NULL 
+';
 
-$table{attachstatusdefs} =
-   '
+$table{attachstatusdefs} = '
      id           SMALLINT     NOT NULL  PRIMARY KEY , 
      name         VARCHAR(50)  NOT NULL , 
-     description  MEDIUMTEXT   NULL , 
+     description  VARCHAR(2000), 
      sortkey      SMALLINT     NOT NULL  DEFAULT 0 , 
-     product      VARCHAR(64)  NOT NULL 
-   ';
+     product      VARCHAR(64)  NOT NULL
+';
 
-#
-# Apostrophe's are not supportied in the enum types.
-# See http://bugzilla.mozilla.org/show_bug.cgi?id=27309
-#
 $table{bugs} =
-   'bug_id mediumint not null auto_increment primary key,
-    assigned_to mediumint not null, # This is a comment.
-    bug_file_loc text,
-    bug_severity enum($my_severities) not null,
-    bug_status enum("UNCONFIRMED", "NEW", "ASSIGNED", "REOPENED", "RESOLVED", "VERIFIED", "CLOSED") not null,
-    creation_ts datetime not null,
+   'bug_id serial,
+    assigned_to integer not null, 
+    bug_file_loc varchar(4000),
+    bug_severity varchar(255) not null,
+    bug_status varchar(255) not null,
+    creation_ts timestamp not null,
     delta_ts timestamp,
-    short_desc mediumtext,
-    op_sys enum($my_opsys) not null,
-    priority enum($my_priorities) not null,
+    short_desc varchar(4000),
+    op_sys varchar(255) not null,
+    priority varchar(255) not null,
     product varchar(64) not null,
-    rep_platform enum($my_platforms),
-    reporter mediumint not null,
-    version varchar(64) not null,
+    rep_platform varchar(255),
+    reporter integer not null,
+    version varchar(16) not null,
     component varchar(50) not null,
-    resolution enum("", "FIXED", "INVALID", "WONTFIX", "LATER", "REMIND", "DUPLICATE", "WORKSFORME", "MOVED") not null,
-    target_milestone varchar(20) not null default "---",
-    qa_contact mediumint not null,
-    status_whiteboard mediumtext not null,
-    votes mediumint not null,
-    keywords mediumtext not null, ' # Note: keywords field is only a cache;
-                                # the real data comes from the keywords table.
-    . '
-    lastdiffed datetime not null,
-    everconfirmed tinyint not null,
-    reporter_accessible tinyint not null default 1,
-    cclist_accessible tinyint not null default 1,
+    resolution varchar(255) not null default \'\',
+    target_milestone varchar(20) not null default \'---\',
+    qa_contact integer not null default 0,
+    status_whiteboard text not null default \'\',
+    votes integer not null default 0,
+    keywords text not null default \'\', 
+    lastdiffed timestamp,
+    everconfirmed integer not null,
+    reporter_accessible integer not null default 1,
+    cclist_accessible integer not null default 1';
 
-    index (assigned_to),
-    index (creation_ts),
-    index (delta_ts),
-    index (bug_severity),
-    index (bug_status),
-    index (op_sys),
-    index (priority),
-    index (product),
-    index (reporter),
-    index (version),
-    index (component),
-    index (resolution),
-    index (target_milestone),
-    index (qa_contact),
-    index (votes)';
+# Note: keywords field is only a cache;
+# the real data comes from the keywords table.
+
+$index{bugs} = [
+    'assigned_to', 
+    'creation_ts', 
+    'delta_ts', 
+    'bug_severity', 
+    'bug_status', 
+    'op_sys', 
+    'priority',
+    'product',
+    'reporter',
+    'version',
+    'component',
+    'resolution',
+    'target_milestone',
+    'qa_contact',
+    'votes'
+];
 
 
 $table{cc} =
-   'bug_id mediumint not null,
-    who mediumint not null,
+   'bug_id integer not null,
+    who integer not null';
 
-    index(who),
-    unique(bug_id,who)';
+$index{cc} = [
+    'bug_id',
+    'who'
+];
+
 
 $table{watch} =
-   'watcher mediumint not null,
-    watched mediumint not null,
+   'watcher integer not null,
+    watched integer not null';
 
-    index(watched),
-    unique(watcher,watched)';
+$index{watch} = [
+    'watched'
+];
 
 
 $table{longdescs} = 
-   'bug_id mediumint not null,
-    who mediumint not null,
-    bug_when datetime not null,
-    thetext mediumtext,
+   'bug_id integer not null,
+    who integer not null,
+    bug_when timestamp not null,
+    thetext text';
 
-    index(bug_id),
-    index(who),
-    index(bug_when)';
-
+$index{longdescs} = [
+    'bug_id',
+    'who',
+    'bug_when'
+];
 
 $table{components} =
-   'value tinytext,
+   'value varchar(2000),
     program varchar(64),
-    initialowner mediumint not null,
-    initialqacontact mediumint not null,
-    description mediumtext not null';
+    initialowner integer not null,
+    initialqacontact integer not null,
+    description varchar(4000) not null';
 
 
 $table{dependencies} =
-   'blocked mediumint not null,
-    dependson mediumint not null,
+   'blocked integer not null,
+    dependson integer not null';
 
-    index(blocked),
-    index(dependson)';
+$index{dependencies} = [
+    'blocked',
+    'dependson'
+];
 
-
+# Group bits must be a power of two. Groups are identified by a bit; sets of
+# groups are indicated by or-ing these values together.
+#
+# isbuggroup is nonzero if this is a group that controls access to a set
+# of bugs.  In otherword, the groupset field in the bugs table should only
+# have this group's bit set if isbuggroup is nonzero.
+#
 # User regexp is which email addresses are initially put into this group.
 # This is only used when an email account is created; otherwise, profiles
 # may be individually tweaked to add them in and out of groups.
@@ -1389,185 +1168,232 @@ $table{dependencies} =
 # http://bugzilla.mozilla.org/show_bug.cgi?id=75482
 
 $table{groups} =
-    'group_id mediumint not null auto_increment primary key,
-    name varchar(255) not null,
+   'group_id serial,
+    name varchar(255) constraint groupname_unique unique not null,
     description text not null,
-    isbuggroup tinyint not null,
-    userregexp tinytext not null,
-    isactive tinyint not null default 1,
+    isbuggroup integer not null,
+    userregexp varchar(2000) not null,
+    isactive integer not null default 1';
 
-    unique(group_id),
-    unique(name)';
+# Changed bit to group_bit since Postgres did not like use of keyword bit
+
 
 $table{logincookies} =
-   'cookie mediumint not null auto_increment primary key,
-    userid mediumint not null,
-    ipaddr varchar(40) NOT NULL,
-    lastused timestamp,
+   'cookie serial,
+    userid integer not null,
+    cryptpassword varchar(64),
+    ipaddr varchar(128),
+    lastused timestamp';
 
-    index(lastused)';
+$index{lastused} = [
+    'lastused'
+];
 
 
 $table{products} =
-   'product_id mediumint primary key auto_increment not null,
-    product varchar(64),
-    description mediumtext,
-    milestoneurl tinytext not null,
-    disallownew tinyint not null,
-    votesperuser smallint not null,
-    maxvotesperbug smallint not null default 10000,
-    votestoconfirm smallint not null,
-    defaultmilestone varchar(20) not null default "---"
+    'product_id serial,
+    product varchar(64) constraint product_unique unique not null,
+    description varchar(4000),
+    milestoneurl varchar(2000) not null,
+    disallownew integer not null,
+    votesperuser integer not null,
+    maxvotesperbug integer not null default 10000,
+    votestoconfirm integer not null,
+    defaultmilestone varchar(20) not null default \'---\'
 ';
 
 
 $table{profiles} =
-   'userid mediumint not null auto_increment primary key,
-    login_name varchar(255) not null,
+   'userid serial,
+    login_name varchar(255) constraint loginname_unique unique not null,
     cryptpassword varchar(34),
     realname varchar(255),
-    disabledtext mediumtext not null,
-    mybugslink tinyint not null default 1,
-    emailflags mediumtext,
-    admin tinyint not null default 0,
-
-    unique(login_name)';
+    disabledtext varchar(4000),
+    mybugslink integer not null default 1,
+    emailflags text,
+    admin integer default 0';
 
 
 $table{profiles_activity} = 
-   'userid mediumint not null,
-    who mediumint not null,
-    profiles_when datetime not null,
-    fieldid mediumint not null,
-    oldvalue tinytext,
-    newvalue tinytext,
+   'userid integer not null,
+    who integer not null,
+    profiles_when timestamp not null,
+    fieldid integer not null,
+    oldvalue varchar(2000),
+    newvalue varchar(2000)';
 
-    index (userid),
-    index (profiles_when),
-    index (fieldid)';
-
+$index{profiles_activity} = [
+    'userid',
+    'profiles_when',
+    'fieldid'
+];
 
 $table{namedqueries} =
-    'userid mediumint not null,
+    'userid integer not null,
      name varchar(64) not null,
-     watchfordiffs tinyint not null,
-     linkinfooter tinyint not null,
-     query mediumtext not null,
+     watchfordiffs integer not null,
+     linkinfooter integer not null,
+     query text not null';
 
-     unique(userid, name),
-     index(watchfordiffs)';
+$index{namedqueries} = [
+    'watchfordiffs'
+];
+
 
 # This isn't quite cooked yet...
 #
 #  $table{diffprefs} =
-#     'userid mediumint not null,
-#      fieldid mediumint not null,
-#      mailhead tinyint not null,
-#      maildiffs tinyint not null,
+#     'userid integer not null,
+#      fieldid integer not null,
+#      mailhead integer not null,
+#      maildiffs integer not null,
 #
 #      index(userid)';
 
 $table{fielddefs} =
-   'fieldid mediumint not null auto_increment primary key,
-    name varchar(64) not null,
-    description mediumtext not null,
-    mailhead tinyint not null default 0,
-    sortkey smallint not null,
+   'fieldid serial,
+    name varchar(64) constraint fieldname_unique unique not null,
+    description text not null,
+    mailhead integer not null default 0,
+    sortkey integer not null';
 
-    unique(name),
-    index(sortkey)';
+$index{fielddefs} = [
+    'sortkey'
+];
+
 
 $table{versions} =
-   'value tinytext,
+   'value varchar(2000),
     program varchar(64) not null';
 
 
 $table{votes} =
-   'who mediumint not null,
-    bug_id mediumint not null,
-    count smallint not null,
+   'who integer not null,
+    bug_id integer not null,
+    count integer not null';
 
-    index(who),
-    index(bug_id)';
+$index{votes} = [
+    'who',
+    'bug_id'
+];
 
 $table{keywords} =
-    'bug_id mediumint not null,
-     keywordid smallint not null,
+    'bug_id integer not null,
+     keywordid integer not null';
 
-     index(keywordid),
-     unique(bug_id,keywordid)';
+$index{keywords} = [
+    'keywordid'
+];
+
 
 $table{keyworddefs} =
-    'id smallint not null primary key,
+    'id serial,
      name varchar(64) not null,
-     description mediumtext,
-
-     unique(name)';
+     description text';
 
 
 $table{milestones} =
     'value varchar(20) not null,
      product varchar(64) not null,
-     sortkey smallint not null,
-     unique (product, value)';
+     sortkey integer not null';
+
 
 $table{shadowlog} =
-    'id int not null auto_increment primary key,
+    'id serial,
      ts timestamp,
-     reflected tinyint not null,
-     command mediumtext not null,
-     index(reflected)';
+     reflected integer not null,
+     command text not null';
+
+$index{shadowlog} = [
+    'reflected'
+];
+
 
 # GRM
 $table{duplicates} =
-    'dupe_of mediumint(9) not null,
-     dupe mediumint(9) not null primary key';
+    'dupe_of integer not null,
+     dupe integer not null primary key';
+
+
+# New flat tables to replace enum data types
+# Set single values to primary keys for use as foreign keys in
+# bugs table
+$table{bug_status} = 
+    'value varchar(255) primary key not null';
+
+$table{rep_platform} =
+    'value varchar(255) primary key not null';
+
+$table{resolution} =
+    'value varchar(255) primary key not null';
+
+$table{op_sys} =
+    'value varchar(255) primary key not null';
+
+$table{bug_severity} =
+    'value varchar(255) primary key not null';
+
+$table{priority} =
+    'value varchar(255) primary key not null';
+
 
 # 2001-06-21, myk@mozilla.org, bug 77473:
 # Stores the tokens users receive when they want to change their password 
 # or email address.  Tokens provide an extra measure of security for these changes.
 $table{tokens} =
-    'userid mediumint not null , 
-     issuedate datetime not null , 
+    'userid integer not null , 
+     issuedate timestamp not null , 
      token varchar(16) not null primary key ,  
      tokentype varchar(8) not null , 
-     eventdata tinytext null , 
+     eventdata text null';
 
-     index(userid)';
+$index{tokens} = [
+    'userid'
+];
 
 # 2001-09-18, dkl@redhat.com
 # Group tables for tracking group memberships, admin memberships, 
 # product permissions, and bug permissions.
-#
+#   
 # This table determines the groups that a user belongs to
 # and the level that they can bless others to.
 # canbless:
 # 0 = Cannot bless others into the group
 # 1 = Can bless others into the group
 # 2 = Can give others permission to bless people into the group
-$table{user_group_map} = 
-    'user_id mediumint not null,
-     group_id mediumint not null,
-     canbless smallint default 0,
+$table{user_group_map} =
+    'user_id integer not null,
+     group_id integer not null,
+     canbless integer default 0,
 
-     unique(user_id, group_id),    
-     index(group_id)';
+     unique(user_id, group_id)'; 
+
+$index{user_group_map} = [
+     'group_id'
+];
 
 # This table determines which groups have permission to see a bug
 $table{bug_group_map} =
-    'bug_id mediumint not null,
-     group_id mediumint not null,
+    'bug_id integer not null,
+     group_id integer not null,
 
-     unique(bug_id, group_id),
-     index(group_id)';
+     unique(bug_id, group_id)';
+
+$index{bug_group_map} = [
+     'group_id'
+];
 
 # This table determines which groups may report bugs against a product
 $table{product_group_map} =
-    'product_id mediumint not null,
-     group_id mediumint not null,
+    'product_id integer not null,
+     group_id integer not null,
 
-     unique(product_id, group_id),
-     index(group_id)';
+     unique(product_id, group_id)';
+
+$index{product_group_map} = [
+     'group_id'
+];
+
 
 ###########################################################################
 # Create tables
@@ -1577,33 +1403,89 @@ $table{product_group_map} =
 my @tables = map { $_ =~ s/.*\.//; $_ } $dbh->tables;
 #print 'Tables: ', join " ", @tables, "\n";
 
+# Form a list of tables actually added and create indexes if needed
+my @create_indexes;
+
 # add lines here if you add more --LOCAL-- config vars that end up in the enums:
 
-my $my_severities = '"' . join('", "', @my_severities) . '"';
-my $my_priorities = '"' . join('", "', @my_priorities) . '"';
-my $my_opsys      = '"' . join('", "', @my_opsys)      . '"';
-my $my_platforms  = '"' . join('", "', @my_platforms)  . '"';
+#my $my_severities = "'" . join("', '", @my_severities) . "'";
+#my $my_priorities = "'" . join("', '", @my_priorities) . "'";
+#my $my_opsys      = "'" . join("', '", @my_opsys)      . "'";
+#my $my_platforms  = "'" . join("', '", @my_platforms)  . "'";
+
+my %enum_data = (
+    'bug_severity'     => \@my_severities,
+    'priorities'    => \@my_priorities,
+    'rep_platform'    => \@my_platforms,
+    'op_sys'        => \@my_opsys
+);
 
 # go throught our %table hash and create missing tables
 while (my ($tabname, $fielddef) = each %table) {
     next if grep /^$tabname$/, @tables;
     print "Creating table $tabname ...\n";
 
-    # add lines here if you add more --LOCAL-- config vars that end up in
-    # the enums:
-
-    $fielddef =~ s/\$my_severities/$my_severities/;
-    $fielddef =~ s/\$my_priorities/$my_priorities/;
-    $fielddef =~ s/\$my_opsys/$my_opsys/;
-    $fielddef =~ s/\$my_platforms/$my_platforms/;
-
+    my $create_string = "CREATE TABLE $tabname (\n$fielddef\n)";
+    print $create_string . "\n";
     $dbh->do("CREATE TABLE $tabname (\n$fielddef\n)")
         or die "Could not create table '$tabname'. Please check your '$db_base' access.\n";
+
+    # Add this table name for possible creation of index
+    if ( $index{$tabname} ) {
+        AddIndex($tabname, $index{$tabname});
+    }
+
+    foreach my $enum ( keys %enum_data ) {
+        if ( $tabname =~ /$enum/ ) {
+            print "Adding values into $tabname.\n";
+            foreach my $value ( @{$enum_data{$enum}} ) {
+                print "insert into $tabname values ('$value')\n";
+                $dbh->do("insert into $tabname values ('$value')")
+                    or die "Could not insert $value into $tabname.\n";
+            }
+        }
+    }
 }
 
+###########################################################################
+# Create indexes 
+###########################################################################
 
+# go throught our @create_indexes array and create missing indexes
+sub AddIndex {
+    my ($tabname, $fielddef) = @_;
 
+    # Drop the old index if it exists
+    my $query = "select relname from pg_class where relkind = 'i' " . 
+                "and relname = " . $dbh->quote($tabname . "_index");
+    my $sth = $dbh->prepare($query);
+    $sth->execute();
+    my ($result) = $sth->fetchrow_array();
+    if ( $result ) {
+        print "Dropping index for $tabname ...\n";
+        $dbh->do("drop index $tabname" . "_index");
+    }
+ 
+    # Create the new index
+    print "Creating index for $tabname ...\n";
+    
+    my $create_string = "CREATE INDEX $tabname" . "_index on $tabname (\n" . join(",", @{$fielddef}) . "\n)";
+    print $create_string . "\n";
+    $dbh->do($create_string)
+        or die "Could not create index '$tabname" . "_index'. Please check your '$db_base' access.\n";
+}
 
+#sub GetIndexDef ($$)
+#{
+#    my ($table, $field) = @_;
+#    my $sth = $dbh->prepare("SHOW INDEX FROM $table");
+#    $sth->execute;
+#
+#    while (my $ref = $sth->fetchrow_arrayref) {
+#        next if $$ref[2] ne $field;
+#        return $ref;
+#   }
+# }
 
 ###########################################################################
 # Populate groups table
@@ -1625,19 +1507,18 @@ if (&GetFieldDef('groups', 'bit')) {
         $sth2->execute();
         $currentgroupid++;
     }
-}
+}   
 
 sub GroupDoesExist ($)
 {
     my ($name) = @_;
-    my $sth = $dbh->prepare("SELECT name FROM groups WHERE name='$name'");
+    my $sth = $dbh->prepare("SELECT name FROM groups WHERE name = " . $dbh->quote($name));
     $sth->execute;
     if ($sth->rows) {
         return 1;
     }
     return 0;
 }
-
 
 #
 # This subroutine checks if a group exist. If not, it will be automatically
@@ -1649,30 +1530,29 @@ sub AddGroup {
     $userregexp ||= "";
 
     return if GroupDoesExist($name);
-    
+
     print "Adding group $name ...\n";
     my $sth = $dbh->prepare('INSERT INTO groups
                           (name, description, userregexp, isbuggroup)
                           VALUES (?, ?, ?, ?)');
     $sth->execute($name, $desc, $userregexp, 0);
 
-    $sth = $dbh->prepare("select last_insert_id()");
+    $sth = $dbh->prepare("SELECT group_id FROM groups WHERE name = " . $dbh->quote($name));
     $sth->execute();
     my ($last) = $sth->fetchrow_array();
 
     return $last;
 }
 
-
 #
 # BugZilla uses --GROUPS-- to assign various rights to its users. 
 #
 
-AddGroup 'tweakparams',      'Can tweak operating parameters';
-AddGroup 'editusers',      'Can edit or disable users';
-AddGroup 'creategroups',     'Can create and destroy groups.';
-AddGroup 'editcomponents',   'Can create, destroy, and edit components.';
-AddGroup 'editkeywords',   'Can create, destroy, and edit keywords.';
+AddGroup('tweakparams', 'Can tweak operating parameters');
+AddGroup('editusers', 'Can edit or disable users');
+AddGroup('creategroups', 'Can create and destroy groups.');
+AddGroup('editcomponents', 'Can create, destroy, and edit components.');
+AddGroup('editkeywords', 'Can create, destroy, and edit keywords.');
 
 if (!GroupDoesExist("editbugs")) {
     my $id = AddGroup('editbugs',  'Can edit all aspects of any bug.', ".*");
@@ -1693,8 +1573,6 @@ if (!GroupDoesExist("canconfirm")) {
 }
 
 
-
-
 ###########################################################################
 # Populate the list of fields.
 ###########################################################################
@@ -1707,22 +1585,25 @@ sub AddFDef ($$$) {
     $name = $dbh->quote($name);
     $description = $dbh->quote($description);
 
-    my $sth = $dbh->prepare("SELECT fieldid FROM fielddefs " .
-                            "WHERE name = $name");
+    my $query = "SELECT fieldid FROM fielddefs WHERE name = $name";
+    my $sth = $dbh->prepare($query);
     $sth->execute();
-    my ($fieldid) = ($sth->fetchrow_array());
+    my ($fieldid) = $sth->fetchrow_array();
     if (!$fieldid) {
-        $fieldid = 'NULL';
+        $query = "INSERT INTO fielddefs (name, description, mailhead, sortkey) VALUES " .
+                 "($name, $description, $mailhead, $headernum)"; 
+        $dbh->do($query);
+    } else {
+        $query = "UPDATE fielddefs set name = $name, description = $description, " . 
+                 "mailhead = $mailhead, sortkey = $headernum" . 
+                 "WHERE fieldid = $fieldid";
+        $dbh->do($query);
     }
-
-    $dbh->do("REPLACE INTO fielddefs " .
-             "(fieldid, name, description, mailhead, sortkey) VALUES " .
-             "($fieldid, $name, $description, $mailhead, $headernum)");
     $headernum++;
 }
 
 
-AddFDef("bug_id", "Bug \#", 1);
+AddFDef("bug_id", "Bug #", 1);
 AddFDef("short_desc", "Summary", 1);
 AddFDef("product", "Product", 1);
 AddFDef("version", "Version", 1);
@@ -1751,12 +1632,10 @@ AddFDef("attachments.isobsolete", "Attachment is obsolete", 0);
 AddFDef("attachstatusdefs.name", "Attachment Status", 0);
 AddFDef("target_milestone", "Target Milestone", 0);
 AddFDef("delta_ts", "Last changed date", 0);
-AddFDef("(to_days(now()) - to_days(bugs.delta_ts))", "Days since bug changed",
-        0);
+AddFDef("now() - bugs.delta_ts", "Days since bug changed", 0);
 AddFDef("longdesc", "Comment", 0);
     
-    
-
+   
 
 ###########################################################################
 # Detect changed local settings
@@ -1765,70 +1644,47 @@ AddFDef("longdesc", "Comment", 0);
 sub GetFieldDef ($$)
 {
     my ($table, $field) = @_;
-    my $sth = $dbh->prepare("SHOW COLUMNS FROM $table");
-    $sth->execute;
+    my $sth = $dbh->func($table, 'table_attributes');
 
-    while (my $ref = $sth->fetchrow_arrayref) {
-        next if $$ref[0] ne $field;
+    for my $index ( 0..@{$sth} ) {
+        my $ref = [];
+        $ref->[0] = $sth->[$index]->{NAME};
+        $ref->[1] = $sth->[$index]->{TYPE};
+        $ref->[2] = $sth->[$index]->{NULLIBLE};
+        $ref->[3] = $sth->[$index]->{PRIMARY_KEY};
+        $ref->[4] = $sth->[$index]->{DEFAULT};
+
+        next if !$ref->[0] || $ref->[0] ne $field;
         return $ref;
-   }
-}
-
-sub GetIndexDef ($$)
-{
-    my ($table, $field) = @_;
-    my $sth = $dbh->prepare("SHOW INDEX FROM $table");
-    $sth->execute;
-
-    while (my $ref = $sth->fetchrow_arrayref) {
-        next if $$ref[2] ne $field;
-        return $ref;
-   }
-}
-
-sub CountIndexes ($)
-{
-    my ($table) = @_;
-    
-    my $sth = $dbh->prepare("SHOW INDEX FROM $table");
-    $sth->execute;
-
-    if ( $sth->rows == -1 ) {
-      die ("Unexpected response while counting indexes in $table:" .
-           " \$sth->rows == -1");
     }
-    
-    return ($sth->rows);
+}
+
+sub ChangeIndex {
+    my ($table, @fieldlist) = @_;
+
+    if ( exists $index{$table} ) {
+        DropIndex($table);
+    }
+
+    my %templist = ();
+    foreach my $field ( @{$index{$table}}, @fieldlist ) {
+        $templist{$field} = 1;
+    }
+
+    print "Creating index for $table ...\n";
+    my $create_string = "create index $table" . "_index on $table (" . join(',', keys %templist) . ")";
+    $dbh->do($create_string) 
+        or die "Could not create index for $table: $!\n";
 }
 
 sub DropIndexes ($)
 {
     my ($table) = @_;
-    my %SEEN;
-
-    # get the list of indexes
-    #
-    my $sth = $dbh->prepare("SHOW INDEX FROM $table");
-    $sth->execute;
-
-    # drop each index
-    #
-    while ( my $ref = $sth->fetchrow_arrayref) {
-      
-      # note that some indexes are described by multiple rows in the
-      # index table, so we may have already dropped the index described
-      # in the current row.
-      # 
-      next if exists $SEEN{$$ref[2]};
-
-      my $dropSth = $dbh->prepare("ALTER TABLE $table DROP INDEX $$ref[2]");
-      $dropSth->execute;
-      $dropSth->finish;
-      $SEEN{$$ref[2]} = 1;
-
-    }
-
+    
+    print "Dropping index for $table ...\n";
+    $dbh->do("drop index $table" . "_index");
 }
+
 #
 # Check if the enums in the bugs table return the same values that are defined
 # in the various locally changeable variables. If this is true, then alter the
@@ -1839,16 +1695,15 @@ sub CheckEnumField ($$@)
 {
     my ($table, $field, @against) = @_;
 
-    my $ref = GetFieldDef($table, $field);
-    #print "0: $$ref[0]   1: $$ref[1]   2: $$ref[2]   3: $$ref[3]  4: $$ref[4]\n";
-    
-    $_ = "enum('" . join("','", @against) . "')";
-    if ($$ref[1] ne $_) {
-        print "Updating field $field in table $table ...\n";
-        $_ .= " NOT NULL" if $$ref[3];
-        $dbh->do("ALTER TABLE $table
-                  CHANGE $field
-                  $field $_");
+    foreach my $value ( @against ) {
+        $value = $dbh->quote($value);
+        my $query = "select value from $table where value = $value";
+        my $sth = $dbh->prepare($query);
+        $sth->execute();
+        my ($result) = $sth->fetchrow_array();
+        next if $result;
+        print "Updating value $value in table $table ...\n";
+        $dbh->do("insert into $table values ($value)");
     }
 }
 
@@ -1858,16 +1713,16 @@ sub CheckEnumField ($$@)
 # This code changes the enum types of some SQL tables whenever you change
 # some --LOCAL-- variables. Once you have a running system, to add new 
 # severities, priorities, operating systems and platforms, add them to 
-# the localconfig file and then re-run checksetup.pl which will make the 
+# the localconfig file and then re-run pgsetup.pl which will make the 
 # necessary changes to your database. Additions to these fields in
-# checksetup.pl after the initial installation of bugzilla on a system
+# pgsetup.pl after the initial installation of bugzilla on a system
 # are ignored.
 #
 
-CheckEnumField('bugs', 'bug_severity', @my_severities);
-CheckEnumField('bugs', 'priority',     @my_priorities);
-CheckEnumField('bugs', 'op_sys',       @my_opsys);
-CheckEnumField('bugs', 'rep_platform', @my_platforms);
+CheckEnumField('bug_severity', 'bug_severity', @my_severities);
+CheckEnumField('priority',     'priority', @my_priorities);
+CheckEnumField('op_sys',       'op_sys', @my_opsys);
+CheckEnumField('rep_platform', 'rep_platform', @my_platforms);
 
 
 ###########################################################################
@@ -1877,6 +1732,11 @@ CheckEnumField('bugs', 'rep_platform', @my_platforms);
 #  Prompt the user for the email address and name of an administrator.  Create
 #  that login, if it doesn't exist already, and make it a member of all groups.
 
+sub bailout {   # this is just in case we get interrupted while getting passwd
+    system("stty","echo"); # re-enable input echoing
+    exit 1;
+}
+
 my @groups = ();
 my $sth = $dbh->prepare("select group_id from groups");
 $sth->execute();
@@ -1884,18 +1744,15 @@ while ( my @row = $sth->fetchrow_array() ) {
     push (@groups, $row[0]);
 }
 
-sub bailout {   # this is just in case we get interrupted while getting passwd
-    system("stty","echo"); # re-enable input echoing
-    exit 1;
-}
+#$sth = $dbh->prepare("select userid from user_group where groupid in (" . join(',', @groups) . ")");
 
 $sth = $dbh->prepare(<<_End_Of_SQL_);
-  SELECT login_name  
+  SELECT login_name
   FROM profiles
   WHERE admin = 1 
 _End_Of_SQL_
-$sth->execute;
 
+$sth->execute;
 # when we have no admin users, prompt for admin email address and password ...
 if ($sth->rows == 0) {
   my $login = "";
@@ -1913,14 +1770,15 @@ if ($sth->rows == 0) {
   if (-e "data/params") { 
     require "data/params"; # if they have a params file, use that
   }
-  if ($::param{emailregexp}) {
-    $mailcheckexp = $::param{emailregexp};
-    $mailcheck    = $::param{emailregexpdesc};
+  if ($::params{emailregexp}) {
+    $mailcheckexp = $::params{emailregexp};
+    $mailcheck    = $::params{emailregexpdesc};
   } else {
     $mailcheckexp = '^[^@]+@[^@]+\\.[^@]+$';
     $mailcheck    = 'A legal address must contain exactly one \'@\', 
       and at least one \'.\' after the @.';
   }
+  my $encrypted = "";
 
   print "\nLooks like we don't have an administrator set up yet.  Either this is your\n";
   print "first time using Bugzilla, or your administrator's privs might have accidently\n";
@@ -1936,17 +1794,14 @@ if ($sth->rows == 0) {
       unless ($login =~ /$mailcheckexp/) {
         print "\nThe login address is invalid:\n";
         print "$mailcheck\n";
-        print "You can change this test on the params page once checksetup has successfully\n";
-        print "completed.\n\n";
-        # Go round, and ask them again
-        $login = "";
+        die "Please try again\n";
       }
     }
     $login = $dbh->quote($login);
     $sth = $dbh->prepare(<<_End_Of_SQL_);
       SELECT login_name
       FROM profiles
-      WHERE login_name=$login
+      WHERE login_name = $login
 _End_Of_SQL_
     $sth->execute;
     if ($sth->rows > 0) {
@@ -2000,8 +1855,6 @@ _End_Of_SQL_
         chomp $pass1;
         if(! $pass1 ) {
           print "\n\nIt's just plain stupid to not have a password.  Try again!\n";
-        } elsif ( $pass1 !~ /^.{3,16}$/ ) {
-          print "The password must be 3-16 characters in length.";
         }
       }
       print "\nPlease retype the password to verify: ";
@@ -2023,7 +1876,9 @@ _End_Of_SQL_
     $SIG{QUIT} = 'DEFAULT';
     $SIG{TERM} = 'DEFAULT';
 
+    $encrypted = crypt($pass1, substr($pass1, 0, 2));
     $realname = $dbh->quote($realname);
+    $pass1 = $dbh->quote($pass1);
     $cryptedpassword = $dbh->quote($cryptedpassword);
 
     $dbh->do(<<_End_Of_SQL_);
@@ -2031,88 +1886,112 @@ _End_Of_SQL_
       (login_name, realname, cryptpassword, admin)
       VALUES ($login, $realname, $cryptedpassword, 1)
 _End_Of_SQL_
-
+    
     # Put the admin in each group if not already    
-    my $query = "select userid from profiles where login_name = $login";    
-    $sth = $dbh->prepare($query); 
-    $sth->execute();
-    my ($userid) = $sth->fetchrow_array();
-
-    foreach my $group ( @groups ) {
-        my $query = "SELECT user_id FROM user_group_map WHERE group_id = $group AND user_id = $userid"; 
-        $sth = $dbh->prepare($query);
-        $sth->execute();
-
-        if ( !$sth->fetchrow_array() ) {
-            $dbh->do("INSERT INTO user_group_map VALUES ($userid, $group, 1)");
-        } else {
-            $dbh->do("UPDATE user_group_map SET canbless = 1 WHERE user_id = $userid AND group_id = $group");
-        }
-    }
-
-  } else {
-    $dbh->do(<<_End_Of_SQL_);
-      UPDATE profiles
-      SET admin=1
-      WHERE login_name=$login
-_End_Of_SQL_
-
-    # Put the admin in each group if not already    
-    my $query = "SELECT userid FROM profiles WHERE login_name = $login";
+    my $query = "select userid from profiles where login_name = $login";
     $sth = $dbh->prepare($query);
     $sth->execute();
     my ($userid) = $sth->fetchrow_array();
-    
+
     foreach my $group ( @groups ) {
         my $query = "SELECT user_id FROM user_group_map WHERE group_id = $group AND user_id = $userid";
         $sth = $dbh->prepare($query);
         $sth->execute();
 
         if ( !$sth->fetchrow_array() ) {
-            $dbh->do("INSERT INTO user_group_map VALUES ($userid, $group, 1)");
-        } else {
-            $dbh->do("UPDATE user_group_map SET canbless = 1 WHERE user_id = $userid AND group_id = $group");
+                $dbh->do("INSERT INTO user_group_map VALUES ($userid, $group, 1)");
+            } else {
+                $dbh->do("UPDATE user_group_map SET canbless = 1 WHERE user_id = $userid AND group_id = $group");
+            }
+        }
+
+    } else {
+        $dbh->do(<<_End_Of_SQL_);
+      UPDATE profiles
+      SET admin = 1 
+      WHERE login_name = $login
+_End_Of_SQL_
+
+        # Put the admin in each group if not already    
+        my $query = "SELECT userid FROM profiles WHERE login_name = $login";
+        $sth = $dbh->prepare($query);
+        $sth->execute();
+        my ($userid) = $sth->fetchrow_array();
+
+        foreach my $group ( @groups ) {
+            my $query = "SELECT user_id FROM user_group_map WHERE group_id = $group AND user_id = $userid";
+            $sth = $dbh->prepare($query);
+            $sth->execute();
+
+            if ( !$sth->fetchrow_array() ) {
+                $dbh->do("INSERT INTO user_group_map VALUES ($userid, $group, 1)");
+            } else {
+                $dbh->do("UPDATE user_group_map SET canbless = 1 WHERE user_id = $userid AND group_id = $group");
+            }   
         }
     }
-  }
-  print "\n$login is now set up as the administrator account.\n";
+    print "\n$login is now set up as the administrator account.\n";
 }
 
+sub Crypt {
+    # Crypts a password, generating a random salt to do it.
+    # Random salts are generated because the alternative is usually
+    # to use the first two characters of the password itself, and since
+    # the salt appears in plaintext at the beginning of the crypted
+    # password string this has the effect of revealing the first two
+    # characters of the password to anyone who views the crypted version.
 
+    my ($password) = @_;
+
+    # The list of characters that can appear in a salt.  Salts and hashes
+    # are both encoded as a sequence of characters from a set containing
+    # 64 characters, each one of which represents 6 bits of the salt/hash.
+    # The encoding is similar to BASE64, the difference being that the
+    # BASE64 plus sign (+) is replaced with a forward slash (/).
+    my @saltchars = (0..9, 'A'..'Z', 'a'..'z', '.', '/');
+
+    # Generate the salt.  We use an 8 character (48 bit) salt for maximum
+    # security on systems whose crypt uses MD5.  Systems with older
+    # versions of crypt will just use the first two characters of the salt.
+    my $salt = '';
+    for ( my $i=0 ; $i < 8 ; ++$i ) {
+        $salt .= $saltchars[rand(64)];
+    }
+
+    # Crypt the password.
+    my $cryptedpassword = crypt($password, $salt);
+
+    # Return the crypted password.
+    return $cryptedpassword;
+}
 
 
 ###########################################################################
 # Create initial test product if there are no products present.
 ###########################################################################
 
-$sth = $dbh->prepare(<<_End_Of_SQL_);
-  SELECT userid
-  FROM profiles
-  WHERE admin=1
-_End_Of_SQL_
+$sth = $dbh->prepare("SELECT userid FROM profiles WHERE admin = 1 LIMIT 1");
 $sth->execute;
-my ($adminuid) = $sth->fetchrow_array;
-if (!$adminuid) { die "No administator!" } # should never get here
+my ($adminuid) = $sth->fetchrow_array();
+
 $sth = $dbh->prepare("SELECT product FROM products");
 $sth->execute;
 unless ($sth->rows) {
     print "Creating initial dummy product 'TestProduct' ...\n";
-    $dbh->do('INSERT INTO products(product, description, milestoneurl, disallownew, votesperuser, votestoconfirm) VALUES ("TestProduct",
-              "This is a test product.  This ought to be blown away and ' .
-             'replaced with real stuff in a finished installation of ' .
-             'bugzilla.", "", 0, 0, 0)');
-    $dbh->do('INSERT INTO versions (value, program) VALUES ("other", "TestProduct")');
+    $dbh->do("INSERT INTO products(product, description, milestoneurl, disallownew, " . 
+             "votesperuser, votestoconfirm) VALUES ('TestProduct', " .
+             "'This is a test product.  This ought to be blown away and " .
+             "replaced with real stuff in a finished installation of " .
+             "bugzilla.', '', 0, 0, 0)");
+    $dbh->do("INSERT INTO versions (value, program) VALUES ('other', 'TestProduct')");
     $dbh->do("INSERT INTO components (value, program, description, initialowner, initialqacontact)
              VALUES (" .
              "'TestComponent', 'TestProduct', " .
              "'This is a test component in the test product database.  " .
              "This ought to be blown away and replaced with real stuff in " .
              "a finished installation of bugzilla.', $adminuid, 0)");
-    $dbh->do('INSERT INTO milestones (product, value) VALUES ("TestProduct","---")');
+    $dbh->do("INSERT INTO milestones (product, value, sortkey) VALUES ('TestProduct','---', 0)");
 }
-
-
-
 
 
 ###########################################################################
@@ -2123,6 +2002,9 @@ unless ($sth->rows) {
 # As time passes, fields in tables get deleted, added, changed and so on.
 # So we need some helper subroutines to make this possible:
 #
+
+# FIXME Don't think Postgresql currently supports altering column type
+# Only supports changing default values and column statistics for analysis
 
 sub ChangeFieldType ($$$)
 {
@@ -2143,11 +2025,12 @@ sub ChangeFieldType ($$$)
         print "Updating field type $field in table $table ...\n";
         print "old: $oldtype\n";
         print "new: $newtype\n";
-#        'not null' should be passed as part of the call to ChangeFieldType()
-#        $newtype .= " NOT NULL" if $$ref[3];
-        $dbh->do("ALTER TABLE $table
-                  CHANGE $field
-                  $field $newtype");
+        $newtype .= " NOT NULL" if $$ref[3];
+        # FIXME Not yet supported by PostgreSQL
+        print "SORRY: Alter field type not yet supported by PostgreSQL\n";
+        #$dbh->do("ALTER TABLE $table
+        #          ALTER COLUMN $field
+        #          $field $newtype");
     }
 }
 
@@ -2164,7 +2047,7 @@ sub RenameField ($$$)
         my $type = $$ref[1];
         $type .= " NOT NULL" if $$ref[3];
         $dbh->do("ALTER TABLE $table
-                  CHANGE $field
+                  RENAME COLUMN $field TO
                   $newname $type");
     }
 }
@@ -2189,45 +2072,39 @@ sub DropField ($$)
     return unless $ref; # already dropped?
 
     print "Deleting unused field $field from table $table ...\n";
-    $dbh->do("ALTER TABLE $table
-              DROP COLUMN $field");
+    # FIXME Not yet supported in postgresql
+    # $dbh->do("ALTER TABLE $table
+    #         DROP COLUMN $field");
 }
 
-# this uses a mysql specific command. 
 sub TableExists ($)
 {
-   my ($table) = @_;
-   my @tables;
-   my $dbtable;
-   my $exists = 0;
-   my $sth = $dbh->prepare("SHOW TABLES");
-   $sth->execute;
-   while ( ($dbtable) = $sth->fetchrow_array ) {
-      if ($dbtable eq $table) {
-         $exists = 1;
-      } 
-   } 
-   return $exists;
+       my ($table) = @_;
+       my @tables = map { $_ =~ s/.*\.//; $_ } $dbh->tables;
+
+    return 1 if grep($_ eq $table, @tables);    
+    return 0;
 }   
 
 
-# really old fields that were added before checksetup.pl existed
+# really old fields that were added before pgsetup.pl existed
 # but aren't in very old bugzilla's (like 2.1)
 # Steve Stock (sstock@iconnect-inc.com)
-AddField('bugs', 'target_milestone', 'varchar(20) not null default "---"');
-AddField('bugs', 'qa_contact', 'mediumint not null');
-AddField('bugs', 'status_whiteboard', 'mediumtext not null');
-AddField('products', 'disallownew', 'tinyint not null');
-AddField('products', 'milestoneurl', 'tinytext not null');
-AddField('components', 'initialqacontact', 'tinytext not null');
-AddField('components', 'description', 'mediumtext not null');
-ChangeFieldType('components', 'program', 'varchar(64)');
+#AddField('bugs', 'target_milestone', "varchar(20) not null default '---'");
+#AddField('bugs', 'groupset', 'integer not null');
+#AddField('bugs', 'qa_contact', 'integer not null');
+#AddField('bugs', 'status_whiteboard', 'text not null');
+#AddField('products', 'disallownew', 'integer not null');
+#AddField('products', 'milestoneurl', 'varchar(2000) not null');
+#AddField('components', 'initialqacontact', 'varchar(2000) not null');
+#AddField('components', 'description', 'text not null');
+#ChangeFieldType('components', 'program', 'varchar');
 
 
 # 1999-06-22 Added an entry to the attachments table to record who the
 # submitter was.  Nothing uses this yet, but it still should be recorded.
 
-AddField('attachments', 'submitter_id', 'mediumint not null');
+#AddField('attachments', 'submitter_id', 'integer not null');
 
 #
 # One could even populate this field automatically, e.g. with
@@ -2241,13 +2118,11 @@ AddField('attachments', 'submitter_id', 'mediumint not null');
 
 
 
-# 1999-9-15 Apparently, newer alphas of MySQL won't allow you to have "when"
+# 1999-9-15 Apparently, newer alphas of PostgreSQL won't allow you to have "when"
 # as a column name.  So, I have had to rename a column in the bugs_activity
 # table.
 
 RenameField ('bugs_activity', 'when', 'bug_when');
-
-
 
 # 1999-10-11 Restructured voting database to add a cached value in each bug
 # recording how many total votes that bug has.  While I'm at it, I removed
@@ -2257,38 +2132,38 @@ RenameField ('bugs_activity', 'when', 'bug_when');
 # (P.S. All is not lost; it appears that the latest betas of MySQL support
 # a new table format which will allow 32 indices.)
 
-DropField('bugs', 'area');
-AddField('bugs',     'votes',        'mediumint not null, add index (votes)');
-AddField('products', 'votesperuser', 'mediumint not null');
-
+#DropField('bugs', 'area');
+#AddField('bugs', 'votes', 'integer not null');
+#AddField('products', 'votesperuser', 'integer not null');
 
 
 # The product name used to be very different in various tables.
 #
 # It was   varchar(16)   in bugs
-#          tinytext      in components
-#          tinytext      in products
-#          tinytext      in versions
+#          varchar(2000)      in components
+#          varchar(2000)      in products
+#          varchar(2000)      in versions
 #
-# tinytext is equivalent to varchar(255), which is quite huge, so I change
+# varchar(2000) is equivalent to varchar(255), which is quite huge, so I change
 # them all to varchar(64).
 
-ChangeFieldType ('bugs',       'product', 'varchar(64) not null');
-ChangeFieldType ('components', 'program', 'varchar(64)');
-ChangeFieldType ('products',   'product', 'varchar(64)');
-ChangeFieldType ('versions',   'program', 'varchar(64) not null');
+#ChangeFieldType ('bugs',       'product', 'varchar(64)');
+#ChangeFieldType ('components', 'program', 'varchar(64)');
+#ChangeFieldType ('products',   'product', 'varchar(64)');
+#ChangeFieldType ('versions',   'program', 'varchar(64)');
 
 # 2000-01-16 Added a "keywords" field to the bugs table, which
 # contains a string copy of the entries of the keywords table for this
 # bug.  This is so that I can easily sort and display a keywords
 # column in bug lists.
 
+
 if (!GetFieldDef('bugs', 'keywords')) {
-    AddField('bugs', 'keywords', 'mediumtext not null');
+    AddField('bugs', 'keywords', 'varchar(4000) not null');
 
     my @kwords;
     print "Making sure 'keywords' field of table 'bugs' is empty ...\n";
-    $dbh->do("UPDATE bugs SET delta_ts = delta_ts, keywords = '' " .
+    $dbh->do("UPDATE bugs SET delta_ts = now(), keywords = '' " .
              "WHERE keywords != ''");
     print "Repopulating 'keywords' field of table 'bugs' ...\n";
     my $sth = $dbh->prepare("SELECT keywords.bug_id, keyworddefs.name " .
@@ -2303,7 +2178,7 @@ if (!GetFieldDef('bugs', 'keywords')) {
         my ($b, $k) = ($sth->fetchrow_array());
         if (!defined $b || $b ne $bugid) {
             if (@list) {
-                $dbh->do("UPDATE bugs SET delta_ts = delta_ts, keywords = " .
+                $dbh->do("UPDATE bugs SET delta_ts = now(), keywords = " .
                          $dbh->quote(join(', ', @list)) .
                          " WHERE bug_id = $bugid");
             }
@@ -2322,8 +2197,7 @@ if (!GetFieldDef('bugs', 'keywords')) {
 # empty, then this account has been disabled, and this field is to contain
 # text describing why.
 
-AddField('profiles', 'disabledtext',  'mediumtext not null');
-
+#AddField('profiles', 'disabledtext',  'varchar(4000) not null');
 
 
 # 2000-01-20 Added a new "longdescs" table, which is supposed to have all the
@@ -2353,8 +2227,6 @@ if (GetFieldDef('bugs', 'long_desc')) {
     print "Populating new long_desc table.  This is slow.  There are $total\n";
     print "bugs to process; a line of dots will be printed for each 50.\n\n";
     $| = 1;
-
-    $dbh->do("LOCK TABLES bugs write, longdescs write, profiles write");
 
     $dbh->do('DELETE FROM longdescs');
 
@@ -2427,13 +2299,15 @@ if (GetFieldDef('bugs', 'long_desc')) {
                         # This username doesn't exist.  Maybe someone renamed
                         # him or something.  Invent a new profile entry,
                         # disabled, just to represent him.
+                        my $cryptedpassword = Crypt('okthen');
+                        $cryptedpassword = $dbh->quote($cryptedpassword);
                         $dbh->do("INSERT INTO profiles " .
                                  "(login_name, cryptpassword," .
                                  " disabledtext) VALUES (" .
                                  $dbh->quote($name) .
-                                 ", " . $dbh->quote(Crypt('okthen')) . ", " . 
+                                 ", $cryptedpassword, " .
                                  "'Account created only to maintain database integrity')");
-                        $s2 = $dbh->prepare("SELECT LAST_INSERT_ID()");
+                        $s2 = $dbh->prepare("SELECT last_value FROM profiles_userid_seq");
                         $s2->execute();
                         ($who) = ($s2->fetchrow_array());
                     }
@@ -2454,8 +2328,6 @@ if (GetFieldDef('bugs', 'long_desc')) {
     print "\n\n";
 
     DropField('bugs', 'long_desc');
-
-    $dbh->do("UNLOCK TABLES");
 }
 
 
@@ -2464,11 +2336,9 @@ if (GetFieldDef('bugs', 'long_desc')) {
 # now has a pointer into that table instead of recording the name directly.
 
 if (GetFieldDef('bugs_activity', 'field')) {
-    AddField('bugs_activity', 'fieldid',
-             'mediumint not null, ADD INDEX (fieldid)');
-    print "Populating new fieldid field ...\n";
+    AddField('bugs_activity', 'fieldid', 'integer not null');
 
-    $dbh->do("LOCK TABLES bugs_activity WRITE, fielddefs WRITE");
+    print "Populating new fieldid field ...\n";
 
     my $sth = $dbh->prepare('SELECT DISTINCT field FROM bugs_activity');
     $sth->execute();
@@ -2482,13 +2352,12 @@ if (GetFieldDef('bugs_activity', 'field')) {
         if (!$id) {
             $dbh->do("INSERT INTO fielddefs (name, description) VALUES " .
                      "($q, $q)");
-            $s2 = $dbh->prepare("SELECT LAST_INSERT_ID()");
+            $s2 = $dbh->prepare("select last_value from fielddefs_fieldid_seq");
             $s2->execute();
             ($id) = ($s2->fetchrow_array());
         }
         $dbh->do("UPDATE bugs_activity SET fieldid = $id WHERE field = $q");
     }
-    $dbh->do("UNLOCK TABLES");
 
     DropField('bugs_activity', 'field');
 }
@@ -2502,8 +2371,8 @@ if (GetFieldDef('bugs_activity', 'field')) {
 #   http://bugzilla.mozilla.org/show_bugs.cgi?id=71552
 
 if (!GetFieldDef('bugs', 'lastdiffed')) {
-    AddField('bugs', 'lastdiffed', 'datetime not null');
-    $dbh->do('UPDATE bugs SET lastdiffed = now(), delta_ts = delta_ts');
+    AddField('bugs', 'lastdiffed', 'timestamp not null default now()');
+    $dbh->do('UPDATE bugs SET lastdiffed = now(), delta_ts = now()');
 }
 
 
@@ -2512,57 +2381,57 @@ if (!GetFieldDef('bugs', 'lastdiffed')) {
 # in my database.  This code detects that, cleans up the duplicates, and
 # then tweaks the table to declare the field to be unique.  What a pain.
 
-if (GetIndexDef('profiles', 'login_name')) {
-    print "Searching for duplicate entries in the profiles table ...\n";
-    while (1) {
-        # This code is weird in that it loops around and keeps doing this
-        # select again.  That's because I'm paranoid about deleting entries
-        # out from under us in the profiles table.  Things get weird if
-        # there are *three* or more entries for the same user...
-        $sth = $dbh->prepare("SELECT p1.userid, p2.userid, p1.login_name " .
-                             "FROM profiles AS p1, profiles AS p2 " .
-                             "WHERE p1.userid < p2.userid " .
-                             "AND p1.login_name = p2.login_name " .
-                             "ORDER BY p1.login_name");
-        $sth->execute();
-        my ($u1, $u2, $n) = ($sth->fetchrow_array);
-        if (!$u1) {
-            last;
-        }
-        print "Both $u1 & $u2 are ids for $n!  Merging $u2 into $u1 ...\n";
-        foreach my $i (["bugs", "reporter"],
-                       ["bugs", "assigned_to"],
-                       ["bugs", "qa_contact"],
-                       ["attachments", "submitter_id"],
-                       ["bugs_activity", "who"],
-                       ["cc", "who"],
-                       ["votes", "who"],
-                       ["longdescs", "who"]) {
-            my ($table, $field) = (@$i);
-            print "   Updating $table.$field ...\n";
-            my $extra = "";
-            if ($table eq "bugs") {
-                $extra = ", delta_ts = delta_ts";
-            }
-            $dbh->do("UPDATE $table SET $field = $u1 $extra " .
-                     "WHERE $field = $u2");
-        }
-        $dbh->do("DELETE FROM profiles WHERE userid = $u2");
-    }
-    print "OK, changing index type to prevent duplicates in the future ...\n";
-    
-    $dbh->do("ALTER TABLE profiles DROP INDEX login_name");
-    $dbh->do("ALTER TABLE profiles ADD UNIQUE (login_name)");
-
-}    
+# if (GetIndexDef('profiles', 'login_name')->[1]) {
+#     print "Searching for duplicate entries in the profiles table ...\n";
+#     while (1) {
+#         # This code is weird in that it loops around and keeps doing this
+#         # select again.  That's because I'm paranoid about deleting entries
+#         # out from under us in the profiles table.  Things get weird if
+#         # there are *three* or more entries for the same user...
+#         $sth = $dbh->prepare("SELECT p1.userid, p2.userid, p1.login_name " .
+#                              "FROM profiles AS p1, profiles AS p2 " .
+#                              "WHERE p1.userid < p2.userid " .
+#                              "AND p1.login_name = p2.login_name " .
+#                              "ORDER BY p1.login_name");
+#         $sth->execute();
+#         my ($u1, $u2, $n) = ($sth->fetchrow_array);
+#         if (!$u1) {
+#             last;
+#         }
+#         print "Both $u1 & $u2 are ids for $n!  Merging $u2 into $u1 ...\n";
+#         foreach my $i (["bugs", "reporter"],
+#                        ["bugs", "assigned_to"],
+#                        ["bugs", "qa_contact"],
+#                        ["attachments", "submitter_id"],
+#                        ["bugs_activity", "who"],
+#                        ["cc", "who"],
+#                        ["votes", "who"],
+#                        ["longdescs", "who"]) {
+#             my ($table, $field) = (@$i);
+#             print "   Updating $table.$field ...\n";
+#             my $extra = "";
+#             if ($table eq "bugs") {
+#                 $extra = ", delta_ts = delta_ts";
+#             }
+#             $dbh->do("UPDATE $table SET $field = $u1 $extra " .
+#                      "WHERE $field = $u2");
+#         }
+#         $dbh->do("DELETE FROM profiles WHERE userid = $u2");
+#     }
+#     print "OK, changing index type to prevent duplicates in the future ...\n";
+#     
+#     $dbh->do("ALTER TABLE profiles DROP INDEX login_name");
+#     $dbh->do("ALTER TABLE profiles ADD UNIQUE (login_name)");
+# 
+# }    
 
 
 # 2000-01-24 Added a new field to let people control whether the "My
 # bugs" link appears at the bottom of each page.  Also can control
 # whether each named query should show up there.
 
-AddField('profiles', 'mybugslink', 'tinyint not null default 1');
-AddField('namedqueries', 'linkinfooter', 'tinyint not null');
+#AddField('profiles', 'mybugslink', 'integer not null default 1');
+#AddField('namedqueries', 'linkinfooter', 'integer not null');
 
 
 # 2000-02-12 Added a new state to bugs, UNCONFIRMED.  Added ability to confirm
@@ -2571,9 +2440,9 @@ AddField('namedqueries', 'linkinfooter', 'tinyint not null');
 # Added a user field which controls which groups a user can put other users 
 # into.
 
-my @resolutions = ("", "FIXED", "INVALID", "WONTFIX", "LATER", "REMIND",
+my @resolutions = (" ", "FIXED", "INVALID", "WONTFIX", "LATER", "REMIND",
                   "DUPLICATE", "WORKSFORME", "MOVED");
-CheckEnumField('bugs', 'resolution', @resolutions);
+CheckEnumField('resolution', 'resolution', @resolutions);
 
 if (($_ = GetFieldDef('components', 'initialowner')) and ($_->[1] eq 'tinytext')) {
     $sth = $dbh->prepare("SELECT program, value, initialowner, initialqacontact FROM components");
@@ -2633,18 +2502,18 @@ if (($_ = GetFieldDef('components', 'initialqacontact')) and ($_->[1] eq 'tinyte
     ChangeFieldType('components','initialqacontact','mediumint');
 }
 
-
-
 my @states = ("UNCONFIRMED", "NEW", "ASSIGNED", "REOPENED", "RESOLVED",
               "VERIFIED", "CLOSED");
-CheckEnumField('bugs', 'bug_status', @states);
+CheckEnumField('bug_status', 'bug_status', @states);
+
 
 if (!GetFieldDef('bugs', 'everconfirmed')) {
-    AddField('bugs', 'everconfirmed',  'tinyint not null');
-    $dbh->do("UPDATE bugs SET everconfirmed = 1, delta_ts = delta_ts");
+    AddField('bugs', 'everconfirmed',  'integer not null');
+    $dbh->do("UPDATE bugs SET everconfirmed = 1, delta_ts = now()");
 }
-AddField('products', 'maxvotesperbug', 'smallint not null default 10000');
-AddField('products', 'votestoconfirm', 'smallint not null');
+#AddField('products', 'maxvotesperbug', 'integer not null default 10000');
+#AddField('products', 'votestoconfirm', 'integer not null');
+#AddField('profiles', 'blessgroupset', 'integer not null');
 
 # 2000-03-21 Adding a table for target milestones to 
 # database - matthew@zeroknowledge.com
@@ -2653,18 +2522,17 @@ $sth = $dbh->prepare("SELECT count(*) from milestones");
 $sth->execute();
 if (!($sth->fetchrow_arrayref()->[0])) {
     print "Replacing blank milestones...\n";
-    $dbh->do("UPDATE bugs SET target_milestone = '---', delta_ts=delta_ts WHERE target_milestone = ' '");
-    
-# Populate milestone table with all exisiting values in database
+    $dbh->do("UPDATE bugs SET target_milestone = '---', delta_ts=delta_ts WHERE target_milestone = ''");
+
+    # Populate milestone table with all exisiting values in database
     $sth = $dbh->prepare("SELECT DISTINCT target_milestone, product FROM bugs");
     $sth->execute();
-    
+
     print "Populating milestones table...\n";
-    
+
     my $value;
     my $product;
-    while(($value, $product) = $sth->fetchrow_array())
-    {
+    while(($value, $product) = $sth->fetchrow_array()) {
         # check if the value already exists
         my $sortkey = substr($value, 1);
         if ($sortkey !~ /^\d+$/) {
@@ -2676,9 +2544,8 @@ if (!($sth->fetchrow_arrayref()->[0])) {
         $product = $dbh->quote($product);
         my $s2 = $dbh->prepare("SELECT value FROM milestones WHERE value = $value AND product = $product");
         $s2->execute();
-        
-        if(!$s2->fetchrow_array())
-        {
+
+        if(!$s2->fetchrow_array()) {
             $dbh->do("INSERT INTO milestones(value, product, sortkey) VALUES($value, $product, $sortkey)");
         }
     }
@@ -2689,17 +2556,15 @@ if (!($sth->fetchrow_arrayref()->[0])) {
 # doing), and made the size of the value field in the milestones table match
 # the size of the target_milestone field in the bugs table.
 
-ChangeFieldType('bugs', 'target_milestone',
-                'varchar(20) not null default "---"');
-ChangeFieldType('milestones', 'value', 'varchar(20) not null');
+#ChangeFieldType('bugs', 'target_milestone', "varchar(20) default '---'");
+#ChangeFieldType('milestones', 'value', 'varchar(20)');
 
 
 # 2000-03-23 Added a defaultmilestone field to the products table, so that
 # we know which milestone to initially assign bugs to.
 
 if (!GetFieldDef('products', 'defaultmilestone')) {
-    AddField('products', 'defaultmilestone',
-             'varchar(20) not null default "---"');
+    AddField('products', 'defaultmilestone', "varchar(20) not null default '---'");
     $sth = $dbh->prepare("SELECT product, defaultmilestone FROM products");
     $sth->execute();
     while (my ($product, $defaultmilestone) = $sth->fetchrow_array()) {
@@ -2720,26 +2585,27 @@ if (!GetFieldDef('products', 'defaultmilestone')) {
 # prevents certain database inconsistencies, and, moreover, is required for
 # new generalized list code to work.
 
-if ( CountIndexes('cc') != 3 ) {
+#if ( CountIndexes('cc') != 3 ) {
+#
+#    # XXX should eliminate duplicate entries before altering
+#    #
+#    print "Recreating indexes on cc table.\n";
+#    DropIndexes('cc');
+#    $dbh->do("ALTER TABLE cc ADD UNIQUE (bug_id,who)");
+#    $dbh->do("ALTER TABLE cc ADD INDEX (who)");
+#}    
+#
+#if ( CountIndexes('keywords') != 3 ) {
+#
+#    # XXX should eliminate duplicate entries before altering
+#    #
+#    print "Recreating indexes on keywords table.\n";
+#    DropIndexes('keywords');
+#    $dbh->do("ALTER TABLE keywords ADD INDEX (keywordid)");
+#    $dbh->do("ALTER TABLE keywords ADD UNIQUE (bug_id,keywordid)");
+#
+#}    
 
-    # XXX should eliminate duplicate entries before altering
-    #
-    print "Recreating indexes on cc table.\n";
-    DropIndexes('cc');
-    $dbh->do("ALTER TABLE cc ADD UNIQUE (bug_id,who)");
-    $dbh->do("ALTER TABLE cc ADD INDEX (who)");
-}    
-
-if ( CountIndexes('keywords') != 3 ) {
-
-    # XXX should eliminate duplicate entries before altering
-    #
-    print "Recreating indexes on keywords table.\n";
-    DropIndexes('keywords');
-    $dbh->do("ALTER TABLE keywords ADD INDEX (keywordid)");
-    $dbh->do("ALTER TABLE keywords ADD UNIQUE (bug_id,keywordid)");
-
-}    
 
 # 2000-07-15 Added duplicates table so Bugzilla tracks duplicates in a better 
 # way than it used to. This code searches the comments to populate the table
@@ -2749,49 +2615,50 @@ if ( CountIndexes('keywords') != 3 ) {
 $sth = $dbh->prepare("SELECT count(*) from duplicates");
 $sth->execute();
 if (!($sth->fetchrow_arrayref()->[0])) {
-        # populate table
-        print("Populating duplicates table...\n");
+    # populate table
+    print("Populating duplicates table...\n");
 
-        $sth = $dbh->prepare("SELECT longdescs.bug_id, thetext FROM longdescs left JOIN bugs using(bug_id) WHERE (thetext " . 
-                "regexp '[.*.]{3,3} This bug has been marked as a duplicate of [[:digit:]]{1,5} [.*.]{3,3}') AND (resolution = 'DUPLICATE') ORDER" .
-                        " BY longdescs.bug_when");
-        $sth->execute();
+    $sth = $dbh->prepare("SELECT longdescs.bug_id, thetext FROM longdescs left JOIN bugs using(bug_id) WHERE (thetext " .
+            " ~ '[.*.]{3,3} This bug has been marked as a duplicate of [[:digit:]]{1,5} [.*.]{3,3}') AND (resolution = 'DUPLICATE') ORDER" .
+            " BY longdescs.bug_when");
+    $sth->execute();
 
-        my %dupes;
-        my $key;
+    my %dupes;
+    my $key;
 
-        # Because of the way hashes work, this loop removes all but the last dupe
-        # resolution found for a given bug.
-        while (my ($dupe, $dupe_of) = $sth->fetchrow_array()) {
-                $dupes{$dupe} = $dupe_of;
-        }
+    # Because of the way hashes work, this loop removes all but the last dupe
+    # resolution found for a given bug.
+    while (my ($dupe, $dupe_of) = $sth->fetchrow_array()) {
+        $dupes{$dupe} = $dupe_of;
+    }
 
-        foreach $key (keys(%dupes))
-        {
-                $dupes{$key} =~ s/.*\*\*\* This bug has been marked as a duplicate of (\d{1,5}) \*\*\*.*?/$1/sm;
-                $dbh->do("INSERT INTO duplicates VALUES('$dupes{$key}', '$key')");
-                #                                        BugItsADupeOf   Dupe
-        }
+    foreach $key (keys(%dupes))
+    {
+        $dupes{$key} =~ s/.*\*\*\* This bug has been marked as a duplicate of (\d{1,5}) \*\*\*.*?/$1/sm;
+        $dbh->do("INSERT INTO duplicates VALUES('$dupes{$key}', '$key')");
+        #                    BugItsADupeOf   Dupe
+    }
 }
+
 
 # 2000-12-18.  Added an 'emailflags' field for storing preferences about
 # when email gets sent on a per-user basis.
 if (!GetFieldDef('profiles', 'emailflags')) {
-    AddField('profiles', 'emailflags', 'mediumtext');
+    AddField('profiles', 'emailflags', 'varchar(4000)');
 }
 
 # 2000-11-27 For Bugzilla 2.5 and later. Change table 'comments' to 
 # 'longdescs' - the new name of the comments table.
-if (&TableExists('comments')) {
-    RenameField ('comments', 'when', 'bug_when');
-    ChangeFieldType('comments', 'bug_id', 'mediumint not null');
-    ChangeFieldType('comments', 'who', 'mediumint not null');
-    ChangeFieldType('comments', 'bug_when', 'datetime not null');
-    RenameField('comments','comment','thetext');
+#if (&TableExists('comments')) {
+#    RenameField ('comments', 'when', 'bug_when');
+ #   ChangeFieldType('comments', 'bug_id', 'integer not null');
+ #   ChangeFieldType('comments', 'who', 'integer not null');
+ #   ChangeFieldType('comments', 'bug_when', 'timestamp not null');
+ #   RenameField('comments','comment','thetext');
     # Here we rename comments to longdescs
-    $dbh->do("DROP TABLE longdescs");
-    $dbh->do("ALTER TABLE comments RENAME longdescs");
-}
+#    $dbh->do("DROP TABLE longdescs");
+#    $dbh->do("ALTER TABLE comments RENAME longdescs");
+#}
 
 # 2001-04-08 Added a special directory for the duplicates stats.
 unless (-d 'data/duplicates') {
@@ -2810,13 +2677,13 @@ unless (-d 'data/duplicates') {
 # without enabling them to extend the life of the group by adding bugs to it.
 # http://bugzilla.mozilla.org/show_bug.cgi?id=75482
 #
-AddField('groups', 'isactive', 'tinyint not null default 1');
+#AddField('groups', 'isactive', 'integer not null default 1');
 
 #
 # 2001-06-15 myk@mozilla.org:
 # isobsolete determines whether or not an attachment is pertinent/relevant/valid.
 #
-AddField('attachments', 'isobsolete', 'tinyint not null default 0');
+#AddField('attachments', 'isobsolete', 'integer not null default 0');
 
 # 2001-04-29 jake@acutex.net - Remove oldemailtech
 #   http://bugzilla.mozilla.org/show_bugs.cgi?id=71552
@@ -2829,34 +2696,35 @@ if (-d 'shadow') {
 DropField("profiles", "emailnotification");
 DropField("profiles", "newemailtech");
 
+
 # 2001-06-12; myk@mozilla.org; bugs 74032, 77473:
 # Recrypt passwords using Perl &crypt instead of the mysql equivalent
 # and delete plaintext passwords from the database.
 if ( GetFieldDef('profiles', 'password') ) {
-    
+
     print <<ENDTEXT;
-Your current installation of Bugzilla stores passwords in plaintext 
-in the database and uses mysql's encrypt function instead of Perl's 
-crypt function to crypt passwords.  Passwords are now going to be 
-re-crypted with the Perl function, and plaintext passwords will be 
-deleted from the database.  This could take a while if your  
-installation has many users. 
+Your current installation of Bugzilla stores passwords in plaintext
+in the database and uses mysql's encrypt function instead of Perl's
+crypt function to crypt passwords.  Passwords are now going to be
+re-crypted with the Perl function, and plaintext passwords will be
+deleted from the database.  This could take a while if your
+installation has many users.
 ENDTEXT
 
     # Re-crypt everyone's password.
-    my $sth = $dbh->prepare("SELECT userid, password FROM profiles");
-    $sth->execute();
+      my $sth = $dbh->prepare("SELECT userid, password FROM profiles");
+      $sth->execute();
 
     my $i = 1;
 
     print "Fixing password #1... ";
-    while (my ($userid, $password) = $sth->fetchrow_array()) {
+      while (my ($userid, $password) = $sth->fetchrow_array()) {
         my $cryptpassword = $dbh->quote(Crypt($password));
         $dbh->do("UPDATE profiles SET cryptpassword = $cryptpassword WHERE userid = $userid");
         ++$i;
         # Let the user know where we are at every 500 records.
         print "$i... " if !($i%500);
-    }
+      }
     print "$i... Done.\n";
 
     # Drop the plaintext password field and resize the cryptpassword field.
@@ -2870,20 +2738,20 @@ ENDTEXT
 # There was no index on the 'who' column in the long descriptions table.
 # This caused queries by who posted comments to take a LONG time.
 #   http://bugzilla.mozilla.org/show_bug.cgi?id=57350
-if (!defined GetIndexDef('longdescs','who')) {
-    print "Adding index for who column in longdescs table...\n";
-    $dbh->do('ALTER TABLE longdescs ADD INDEX (who)');
-}
+#if (!defined GetIndexDef('longdescs','who')) {
+#    print "Adding index for who column in longdescs table...\n";
+#    $dbh->do('ALTER TABLE longdescs ADD INDEX (who)');
+#}
 
 # 2001-06-15 kiko@async.com.br - Change bug:version size to avoid
 # truncates re http://bugzilla.mozilla.org/show_bug.cgi?id=9352
-ChangeFieldType('bugs', 'version','varchar(64) not null');
+#ChangeFieldType('bugs', 'version','varchar(64) not null');
 
 # 2001-07-20 jake@acutex.net - Change bugs_activity to only record changes
 #  http://bugzilla.mozilla.org/show_bug.cgi?id=55161
 if (GetFieldDef('bugs_activity', 'oldvalue')) {
-    AddField("bugs_activity", "removed", "tinytext");
-    AddField("bugs_activity", "added", "tinytext");
+    AddField("bugs_activity", "removed", "text");
+    AddField("bugs_activity", "added", "text");
 
     # Need to get fieldid's for the fields that have multipule values
     my @multi = ();
@@ -2892,7 +2760,7 @@ if (GetFieldDef('bugs_activity', 'oldvalue')) {
         $sth->execute();
         my ($fid) = $sth->fetchrow_array();
         push (@multi, $fid);
-    } 
+    }
 
     # Now we need to process the bugs_activity table and reformat the data
     my $i = 0;
@@ -2901,27 +2769,25 @@ if (GetFieldDef('bugs_activity', 'oldvalue')) {
                             oldvalue, newvalue FROM bugs_activity");
     $sth->execute;
     while (my ($bug_id, $who, $bug_when, $fieldid, $oldvalue, $newvalue) = $sth->fetchrow_array()) {
-        # print the iteration count every 500 records so the user knows we didn't die
-        print "$i..." if !($i++ % 500); 
+        # print a "." every 500 records so the user knows we didn't die
+        print "." if !($i++ % 500);
         # Make sure (old|new)value isn't null (to suppress warnings)
         $oldvalue ||= "";
         $newvalue ||= "";
         my ($added, $removed) = "";
-        if (grep ($_ eq $fieldid, @multi)) {
-            $oldvalue =~ s/[\s,]+/ /g;
-            $newvalue =~ s/[\s,]+/ /g;
-            my @old = split(" ", $oldvalue);
-            my @new = split(" ", $newvalue);
+        if (grep /^$fieldid$/, @multi) {
             my (@add, @remove) = ();
+            my @old = split(/[ ,]/, $oldvalue);
+            my @new = split(/[ ,]/, $newvalue);
             # Find values that were "added"
             foreach my $value(@new) {
-                if (! grep ($_ eq $value, @old)) {
+                if (! grep /^$value$/, @old) {
                     push (@add, $value);
                 }
             }
             # Find values that were removed
             foreach my $value(@old) {
-                if (! grep ($_ eq $value, @new)) {
+                if (! grep /^$value$/, @new) {
                     push (@remove, $value);
                 }
             }
@@ -2951,26 +2817,27 @@ if (GetFieldDef('bugs_activity', 'oldvalue')) {
     print ". Done.\n";
     DropField("bugs_activity", "oldvalue");
     DropField("bugs_activity", "newvalue");
-} 
+}
+
 
 # 2001-07-24 jake@acutex.net - disabledtext was being handled inconsitantly
 # http://bugzilla.mozilla.org/show_bug.cgi?id=90933
-ChangeFieldType("profiles", "disabledtext", "mediumtext not null");
+#ChangeFieldType("profiles", "disabledtext", "varchar(4000) not null");
+
 
 # 2001-07-26 myk@mozilla.org bug39816: 
 # Add fields to the bugs table that record whether or not the reporter,
 # assignee, QA contact, and users on the cc: list can see bugs even when
 # they are not members of groups to which the bugs are restricted.
-# 2002-02-06 bbaetz@student.usyd.edu.au - assignee/qa can always see the bug
-AddField("bugs", "reporter_accessible", "tinyint not null default 1");
-#AddField("bugs", "assignee_accessible", "tinyint not null default 1");
-#AddField("bugs", "qacontact_accessible", "tinyint not null default 1");
-AddField("bugs", "cclist_accessible", "tinyint not null default 1");
+#AddField("bugs", "reporter_accessible", "integer not null default 1");
+#AddField("bugs", "assignee_accessible", "integer not null default 1");
+#AddField("bugs", "qacontact_accessible", "integer not null default 1");
+#AddField("bugs", "cclist_accessible", "integer not null default 1");
 
 # 2001-08-21 myk@mozilla.org bug84338:
 # Add a field for the attachment ID to the bugs_activity table, so installations
 # using the attachment manager can record changes to attachments.
-AddField("bugs_activity", "attach_id", "mediumint null");
+#AddField("bugs_activity", "attach_id", "integer");
 
 # 2002-01-20 dkl@redhat.com 68022
 # Drop bit, groupset, blessgroupset fields from certain tables after converting 
@@ -2996,26 +2863,26 @@ if (GetFieldDef('groups', 'bit')) {
         $sth = $dbh->prepare("select userid from profiles where (groupset & $bit) != 0 order by userid");
         $sth->execute();
         while (my ($userid) = $sth->fetchrow_array()) {
-            $sth2 = $dbh->prepare("select user_id from user_group_map where " . 
+            $sth2 = $dbh->prepare("select user_id from user_group_map where " .
                                   "user_id = $userid and group_id = $bit_groups{$bit}");
             $sth2->execute();
             my ($result) = $sth2->fetchrow_array();
-            if (!$result) { 
+            if (!$result) {
                 $sth2 = $dbh->prepare("insert into user_group_map values ($userid, $bit_groups{$bit}, 0)");
                 $sth2->execute();
             }
-            $sth2->finish;   
+            $sth2->finish;
         }
         # Next fix bless group privileges
         $sth = $dbh->prepare("select userid from profiles where blessgroupset & $bit != 0 order by userid");
         $sth->execute();
         while (my ($userid) = $sth->fetchrow_array()) {
-            $sth2 = $dbh->prepare("select user_id from user_group_map " . 
+            $sth2 = $dbh->prepare("select user_id from user_group_map " .
                                   "where user_id = $userid and group_id = $bit_groups{$bit}");
             $sth2->execute();
             my ($result) = $sth->fetchrow_array();
             if (!$result) {
-                $sth2->prepare("update user_group_map set canbless = 1 where user_id = $userid " . 
+                $sth2->prepare("update user_group_map set canbless = 1 where user_id = $userid " .
                                "and group_id = $bit_groups{$bit}");
                 $sth2->execute();
             } else {
@@ -3026,7 +2893,7 @@ if (GetFieldDef('groups', 'bit')) {
         }
         $sth->finish;
     }
-    
+
     # Fix super users by adding 1 to admin column
     # We shouldn't need to add them to any groups since that would have been done earlier.
     print "Populating profile's admin column for super users...\n";
@@ -3040,7 +2907,7 @@ if (GetFieldDef('groups', 'bit')) {
     $sth->finish;
 
     # Fix bug groupsets
-    print "Populating bug_group_map table with bugs that are marked private...\n";   
+    print "Populating bug_group_map table with bugs that are marked private...\n";
     foreach my $bit (sort keys %bit_groups) {
         $sth = $dbh->prepare("select bug_id from bugs where (groupset & $bit) != 0 order by bug_id");
         $sth->execute();
@@ -3073,7 +2940,7 @@ if (!GetFieldDef('products', 'product_id')) {
     $sth->execute();
     my $currproductid = 1;
     while (my ($name) = $sth->fetchrow_array()) {
-        my $sth2 = $dbh->prepare("update products set product_id = $currproductid where product = " . 
+        my $sth2 = $dbh->prepare("update products set product_id = $currproductid where product = " .
                                  $dbh->quote($name));
         $sth2->execute();
         $sth2->finish;
@@ -3081,7 +2948,8 @@ if (!GetFieldDef('products', 'product_id')) {
     $sth->finish;
 }
 
-# 2001-01-17 bbaetz@student.usyd.edu.au bug 95732
+
+# 2002-02-04 bbaetz@student.usyd.edu.au bug 95732
 # Remove logincookies.cryptpassword, and delete entries which become
 # invalid
 if (GetFieldDef("logincookies", "cryptpassword")) {
@@ -3115,9 +2983,6 @@ if (GetFieldDef("bugs","qacontact_accessible")) {
 }
 
 # 2002-03-15 bbaetz@student.usyd.edu.au - bug 129466
-# 2002-05-13 preed@sigkill.com - bug 129446 patch backported to the 
-#  BUGZILLA-2_14_1-BRANCH as a security blocker for the 2.14.2 release
-# 
 # Use the ip, not the hostname, in the logincookies table
 if (GetFieldDef("logincookies", "hostname")) {
     # We've changed what we match against, so all entries are now invalid
@@ -3141,5 +3006,4 @@ if (GetFieldDef("logincookies", "hostname")) {
 # Final checks...
 
 unlink "data/versioncache";
-
 print "Reminder: Bugzilla now requires version 8.7 or later of sendmail.\n";

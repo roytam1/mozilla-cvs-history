@@ -29,8 +29,6 @@ use lib ".";
 
 require "CGI.pl";
 
-use vars qw($usergroupset);
-
 # Use global template variables
 use vars qw($template $vars);
 
@@ -47,13 +45,14 @@ ConnectToDatabase();
 my $action = $::FORM{'action'} || 
                                  ($::FORM{'bug_id'} ? "show_bug" : "show_user");
 
+my $userid = 0;
 if ($action eq "show_bug" ||
     ($action eq "show_user" && defined($::FORM{'user'}))) 
 {
-    quietly_check_login();
+    $userid = quietly_check_login();
 }
 else {
-    confirm_login();
+    $userid = confirm_login();
 }
 
 ################################################################################
@@ -63,7 +62,7 @@ else {
 # Make sure the bug ID is a positive integer representing an existing
 # bug that the user is authorized to access.
 if (defined $::FORM{'bug_id'}) {
-  ValidateBugID($::FORM{'bug_id'});
+  ValidateBugID($::FORM{'bug_id'}, $userid);
 }
 
 ################################################################################
@@ -188,7 +187,7 @@ sub show_user {
             # and they can see there are votes 'missing', but not on what bug
             # they are. This seems a reasonable compromise; the alternative is
             # to lie in the totals.
-            next if !CanSeeBug($id, $who, $usergroupset);            
+            next if !CanSeeBug($id, $who);            
             
             push (@bugs, { id => $id, 
                            summary => $summary,
@@ -253,7 +252,7 @@ sub record_votes {
     # a non-negative integer (a series of digits not preceded by a
     # minus sign).
     foreach my $id (@buglist) {
-      ValidateBugID($id);
+      ValidateBugID($id, $userid);
       detaint_natural($::FORM{$id})
         || DisplayError("Only use non-negative numbers for your bug votes.")
         && exit;

@@ -35,6 +35,7 @@
 use diagnostics;
 use strict;
 
+
 use lib qw(.);
 
 require "CGI.pl";
@@ -51,6 +52,7 @@ use vars qw(
   @legal_severity
   %MFORM
   %versions
+  %proddesc
 );
 
 # We have to connect to the database, even though we don't use it in this code,
@@ -59,24 +61,28 @@ use vars qw(
 ConnectToDatabase();
 
 # If we're using bug groups to restrict bug entry, we need to know who the 
+# user is right from the start.
+my $userid = confirm_login();
+
+# If we're using bug groups to restrict bug entry, we need to know who the 
 # user is right from the start. 
-confirm_login() if (Param("usebuggroupsentry"));
+$userid = confirm_login() if (Param("usebuggroupsentry"));
 
 if (!defined $::FORM{'product'}) {
     GetVersionTable();
-    quietly_check_login();
+    $userid = quietly_check_login();
 
     my %products;
 
     foreach my $p (@enterable_products) {
-        if (!(Param("usebuggroupsentry") 
-              && GroupExists($p) 
-              && !UserInGroup($p)))
+        if (!(Param("usebuggroupsentry")
+              && GroupExists($p)
+              && !UserInGroup($userid, $p)))
         {
             $products{$p} = $::proddesc{$p};
         }
     }
- 
+
     my $prodsize = scalar(keys %products);
     if ($prodsize == 0) {
         DisplayError("Either no products have been defined to enter bugs ".
@@ -220,16 +226,20 @@ sub pickos {
 # End of subroutines
 ##############################################################################
 
-confirm_login() if (!(Param("usebuggroupsentry")));
+##############################################################################
+# End of subroutines
+##############################################################################
+
+$userid = confirm_login() if (!(Param("usebuggroupsentry")));
 
 # If the usebuggroupsentry parameter is set, we need to check and make sure
 # that the user has permission to enter a bug against this product.
-if(Param("usebuggroupsentry") 
-   && GroupExists($product) 
-   && !UserInGroup($product)) 
+if(Param("usebuggroupsentry")
+   && GroupExists($product)
+   && !UserInGroup($userid, $product))  
 {
     DisplayError("Sorry; you do not have the permissions necessary to " .
-                 "enter a bug against this product.\n");         
+                 "enter a bug against this product.\n");
     exit;
 }
 
@@ -243,19 +253,16 @@ if (lsearch(\@::enterable_products, $product) == -1) {
 if (0 == @{$::components{$product}}) {
     my $error = "Sorry; there needs to be at least one component for this " .
                 "product in order to create a new bug. ";
-    if (UserInGroup('editcomponents')) {
+    if (UserInGroup($userid, 'editcomponents')) {
         $error .= "<a href=\"editcomponents.cgi\">" . 
                   "Create a new component</a>\n";
-    }
-    else {              
+    } else {              
         $error .= "Please contact " . Param("maintainer") . ", detailing " .
                   "the product in which you tried to create a new bug.\n";
-    }
-        
+    }    
     DisplayError($error);   
     exit;
-} 
-elsif (1 == @{$::components{$product}}) {
+} elsif (1 == @{$::components{$product}}) {
     # Only one component; just pick it.
     $::FORM{'component'} = $::components{$product}->[0];
 }
@@ -308,66 +315,66 @@ $default{'version'} = $vars->{'version'}->[$#{$vars->{'version'}}];
 # There must be at least one status in @status.
 my @status = "NEW";
 
-if (UserInGroup("editbugs") || UserInGroup("canconfirm")) {
-    SendSQL("SELECT votestoconfirm FROM products WHERE product = " . 
-            SqlQuote($product));
+if (UserInGroup($userid, "editbugs") || UserInGroup($userid, "canconfirm")) {
+    SendSQL("SELECT votestoconfirm FROM products WHERE product = " . SqlQuote($product));
     push(@status, $unconfirmedstate) if (FetchOneColumn());
 }
 
 $vars->{'bug_status'} = \@status; 
 $default{'bug_status'} = $status[0];
 
-# Select whether to restrict this bug to the product's bug group or not, 
-# if the usebuggroups parameter is set, and if this product has a bug group.
-if ($::usergroupset ne '0') {
+if ($userid) {
     # First we get the bit and description for the group.
-    my $group_bit = '0';
+    my $group_id = '0';
 
     if(Param("usebuggroups") && GroupExists($product)) {
-        SendSQL("SELECT bit FROM groups ".
+        SendSQL("SELECT group_id FROM groups ".
                 "WHERE name = " . SqlQuote($product) . " " .
                 "AND isbuggroup != 0");
-        ($group_bit) = FetchSQLData();
+        ($group_id) = FetchSQLData();
     }
 
-    SendSQL("SELECT bit, name, description FROM groups " .
-            "WHERE bit & $::usergroupset != 0 " .
-            "AND isbuggroup != 0 AND isactive = 1 ORDER BY description");
+    SendSQL("SELECT user_group_map.group_id, groups.name, groups.description " . 
+            "FROM user_group_map, groups " .
+            "WHERE user_group_map.group_id = groups.group_id " .
+            "AND user_group_map.user_id = $userid " . 
+            "AND groups.isbuggroup != 0 AND groups.isactive = 1 " . 
+            "ORDER BY description");
 
     my @groups;
 
     while (MoreSQLData()) {
-        my ($bit, $prodname, $description) = FetchSQLData();
+        my ($id, $prodname, $description) = FetchSQLData();
         # Don't want to include product groups other than this product.
-        next unless($prodname eq $product || 
+        next unless($prodname eq $product ||
                     !defined($::proddesc{$prodname}));
 
         my $check;
 
         # If this is the group for this product, make it checked.
-        if(formvalue("maketemplate") eq 
-                                   "Remember values as bookmarkable template") 
+        if(formvalue("maketemplate") eq
+                                   "Remember values as bookmarkable template")
         {
             # If this is a bookmarked template, then we only want to set the
             # bit for those bits set in the template.        
-            $check = formvalue("bit-$bit", 0);
+            $check = formvalue("group-$id", 0);
         }
         else {
             # $group_bit will only have a non-zero value if we're using
             # bug groups and have one for this product.
             # If $group_bit is 0, it won't match the current group, so compare 
             # it to the current bit instead of checking for non-zero.
-            $check = ($group_bit == $bit);
+            $check = ($group_id == $id);
         }
 
-        my $group = 
+        my $group =
         {
-            'bit' => $bit , 
-            'checked' => $check , 
-            'description' => $description 
+            'bit' => $id ,
+            'checked' => $check ,
+            'description' => $description
         };
 
-        push @groups, $group;        
+        push @groups, $group;
     }
 
     $vars->{'group'} = \@groups;

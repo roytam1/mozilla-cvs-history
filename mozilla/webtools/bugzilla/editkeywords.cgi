@@ -108,11 +108,11 @@ sub Validate ($$) {
 # Preliminary checks:
 #
 
-confirm_login();
+my $userid = confirm_login();
 
 print "Content-type: text/html\n\n";
 
-unless (UserInGroup("editkeywords")) {
+unless (UserInGroup($userid, "editkeywords")) {
     PutHeader("Not allowed");
     print "Sorry, you aren't a member of the 'editkeywords' group.\n";
     print "And so, you aren't allowed to add, modify or delete keywords.\n";
@@ -142,7 +142,7 @@ if ($action eq "") {
     SendSQL("SELECT keyworddefs.id, keyworddefs.name, keyworddefs.description,
                     COUNT(keywords.bug_id), keywords.bug_id
              FROM keyworddefs LEFT JOIN keywords ON keyworddefs.id = keywords.keywordid
-             GROUP BY keyworddefs.id
+             GROUP BY keyworddefs.id, keyworddefs.name, keyworddefs.description, keywords.bug_id
              ORDER BY keyworddefs.name");
     while (MoreSQLData()) {
         my ($id, $name, $description, $bugs, $onebug) = FetchSQLData();

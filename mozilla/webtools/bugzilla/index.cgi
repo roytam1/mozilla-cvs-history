@@ -45,9 +45,8 @@ use vars qw(
 # Establish a connection to the database backend.
 ConnectToDatabase();
 
-# Check whether or not the user is logged in and, if so, set the $::userid 
-# and $::usergroupset variables.
-quietly_check_login();
+# Check whether or not the user is logged in
+my $userid = quietly_check_login();
 
 ###############################################################################
 # Main Body Execution

@@ -80,7 +80,7 @@ if ( !defined $::FORM{'buglist'} ) {
   exit;
 }
 
-confirm_login();
+my $userid = confirm_login();
 my $exporter = $::COOKIE{"Bugzilla_login"};
 my $movers = Param("movers");
 $movers =~ s/\w?,\w?/|/g;
@@ -98,7 +98,7 @@ $xml .= Bug::XML_Header( Param("urlbase"), $::param{'version'},
                          Param("maintainer"), $exporter );
 print "<P>\n";
 foreach my $id (split(/:/, $::FORM{'buglist'})) {
-  my $bug = new Bug($id, $::userid);
+  my $bug = new Bug($id, $userid);
   $xml .= $bug->emitXML;
   if (!$bug->error) {
     my $exporterid = DBNameToIdAndCheck($exporter);

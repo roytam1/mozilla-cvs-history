@@ -30,9 +30,9 @@ require "CGI.pl";
 
 ConnectToDatabase();
 
-quietly_check_login();
+my $userid = quietly_check_login();
 
-use vars qw($template $vars $userid $usergroupset);
+use vars qw($template $vars $userid);
 
 my %seen;
 my %edgesdone;
@@ -99,7 +99,7 @@ if ($::FORM{'doall'}) {
 } else {
     foreach my $i (split('[\s,]+', $::FORM{'id'})) {
         $i = trim($i);
-        ValidateBugID($i);
+        ValidateBugID($i, $userid);
         $baselist{$i} = 1;
     }
 
@@ -127,14 +127,18 @@ if ($::FORM{'doall'}) {
     }
 }
 
+# Determine which bugs we can see or not
+my @canseebugs = keys %seen;
+my $canseeref = CanSeeBug(\@canseebugs, $userid);
+
 foreach my $k (keys(%seen)) {
+    # Skip this bug if we cannot see it
+    next if !$canseeref->{$k};
+
     my $summary = "";
     my $stat;
     if ($::FORM{'showsummary'}) {
-        SendSQL(SelectVisible("SELECT bug_status, short_desc FROM bugs " .
-                              "WHERE bugs.bug_id = $k",
-                              $::userid,
-                              $::usergroupset));
+        SendSQL("SELECT bug_status, short_desc FROM bugs WHERE bugs.bug_id = $k");
         ($stat, $summary) = FetchSQLData();
         $stat = "NEW" if !defined $stat;
         $summary = "" if !defined $summary;
@@ -144,9 +148,8 @@ foreach my $k (keys(%seen)) {
     }
     my @params;
 
-    if ($summary ne "") {
-        $summary =~ s/([\\\"])/\\$1/g;
-        push(@params, qq{label="$k\\n$summary"});
+    foreach my $k (keys(%baselist)) {
+        $seen{$k} = 1;
     }
 
     if (exists $baselist{$k}) {

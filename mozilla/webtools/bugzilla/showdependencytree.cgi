@@ -36,11 +36,10 @@ use vars %::FORM;
 
 ConnectToDatabase();
 
-quietly_check_login();
+my $userid = quietly_check_login();
 
 # More warning suppression silliness.
 $::userid = $::userid;
-$::usergroupset = $::usergroupset;
 
 ################################################################################
 # Data/Security Validation                                                     #
@@ -48,7 +47,7 @@ $::usergroupset = $::usergroupset;
 
 # Make sure the bug ID is a positive integer representing an existing
 # bug that the user is authorized to access.
-ValidateBugID($::FORM{'id'});
+ValidateBugID($::FORM{'id'}, $userid);
 my $id = $::FORM{'id'};
 
 my $hide_resolved = $::FORM{'hide_resolved'} ? 1 : 0;
@@ -91,7 +90,7 @@ $vars->{'realdepth'}      = $realdepth;
 $vars->{'bugid'}          = $id;
 $vars->{'maxdepth'}       = $maxdepth;
 $vars->{'hide_resolved'}  = $hide_resolved;
-$vars->{'canedit'}        = UserInGroup("editbugs");
+$vars->{'canedit'}        = UserInGroup($userid, "editbugs");
 
 print "Content-Type: text/html\n\n";
 $template->process("bug/dependency-tree.html.tmpl", $vars)
@@ -144,18 +143,18 @@ sub GetBug {
     # Retrieves the necessary information about a bug, stores it in the bug cache,
     # and returns it to the calling code.
     my ($id) = @_;
-    
-    SendSQL(SelectVisible("SELECT 1, 
-                                  bug_status, 
-                                  short_desc, 
-                                  $milestone_column, 
-                                  assignee.userid, 
-                                  assignee.login_name
-                             FROM bugs, profiles AS assignee
-                            WHERE bugs.bug_id = $id
-                              AND bugs.assigned_to = assignee.userid", 
-                          $::userid, 
-                          $::usergroupset));
+   
+    return {} if !CanSeeBug($id, $userid);
+ 
+    SendSQL("SELECT 1, 
+                 bug_status, 
+                 short_desc, 
+                 $milestone_column, 
+                 assignee.userid, 
+                 assignee.login_name
+             FROM bugs, profiles AS assignee
+             WHERE bugs.bug_id = $id
+                 AND bugs.assigned_to = assignee.userid"); 
     
     my $bug = {};
     
@@ -167,7 +166,7 @@ sub GetBug {
      $bug->{'assignee_email'}) = FetchSQLData();
     
     $bug->{'open'} = IsOpenedState($bug->{'status'});
-    $bug->{'dependencies'} = [];
+    $bug->{'dependencies'} = ();
     
     return $bug;
 }

@@ -123,13 +123,13 @@ sub IssuePasswordToken {
     # Generate a unique token and insert it into the tokens table.
     # We have to lock the tokens table before generating the token, 
     # since the database must be queried for token uniqueness.
-    &::SendSQL("LOCK TABLES tokens WRITE");
+    &::SendSQL("LOCK TABLE tokens WRITE") if $::driver eq 'mysql';
     my $token = GenerateUniqueToken();
     my $quotedtoken = &::SqlQuote($token);
     my $quotedipaddr = &::SqlQuote($::ENV{'REMOTE_ADDR'});
     &::SendSQL("INSERT INTO tokens ( userid , issuedate , token , tokentype , eventdata )
                 VALUES      ( $userid , '$issuedate' , $quotedtoken , 'password' , $quotedipaddr )");
-    &::SendSQL("UNLOCK TABLES");
+    &::SendSQL("UNLOCK TABLES") if $::driver eq 'mysql';
 
     # Mail the user the token along with instructions for using it.
     
@@ -155,10 +155,13 @@ sub IssuePasswordToken {
 
 
 sub CleanTokenTable {
-    &::SendSQL("LOCK TABLES tokens WRITE");
-    &::SendSQL("DELETE FROM tokens 
-                WHERE TO_DAYS(NOW()) - TO_DAYS(issuedate) >= " . $maxtokenage);
-    &::SendSQL("UNLOCK TABLES");
+    &::SendSQL("LOCK TABLES tokens WRITE") if $::driver eq 'mysql';
+    if ($::driver eq 'mysql') {
+        &::SendSQL("DELETE FROM tokens WHERE TO_DAYS(NOW()) - TO_DAYS(issuedate) >= " . $maxtokenage);
+    } elsif ($::driver eq 'Pg') {
+        &::SendSQL("DELETE FROM tokens WHERE now() - issuedate >= '$maxtokenage days'");
+    }
+    &::SendSQL("UNLOCK TABLES") if $::driver eq 'mysql';
 }
 
 
@@ -235,9 +238,9 @@ sub Cancel {
     close SENDMAIL;
 
     # Delete the token from the database.
-    &::SendSQL("LOCK TABLES tokens WRITE");
+    &::SendSQL("LOCK TABLE tokens WRITE") if $::driver eq 'mysql';
     &::SendSQL("DELETE FROM tokens WHERE token = $quotedtoken");
-    &::SendSQL("UNLOCK TABLES");
+    &::SendSQL("UNLOCK TABLES") if $::driver eq 'mysql';
 }
 
 sub HasPasswordToken {

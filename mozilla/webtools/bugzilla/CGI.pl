@@ -254,35 +254,42 @@ sub ValidateBugID {
     # database, and that the user is authorized to access that bug.
     # We detaint the number here, too
 
+    # Make sure the bug number is a positive integer.
+    # Whitespace can be ignored because the SQL server will ignore it.
     $_[0] = trim($_[0]); # Allow whitespace arround the number
     detaint_natural($_[0])
-      || DisplayError("The bug number is invalid. If you are trying to use " .
+        || DisplayError("The bug number is invalid. If you are trying to use " .
                       "QuickSearch, you need to enable JavaScript in your " .
                       "browser. To help us fix this limitation, look " .
                       "<a href=\"http://bugzilla.mozilla.org/show_bug.cgi?id=70907\">here</a>.") 
       && exit;
 
-    my ($id) = @_;
+    # Only assign vars here, because we ahve to detaint the reference so that
+    # it passses taint checks in the caller
+    my ($id, $userid) = @_;
 
-    # Get the values of the usergroupset and userid global variables
-    # and write them to local variables for use within this function,
-    # setting those local variables to the default value of zero if
-    # the global variables are undefined.
+    # Users are authorized to access bugs if they are a member of one of
+    # groups to which the bug is restricted.    
+    # A user is also authorized to access a bug if she is the reporter, 
+    # assignee, QA contact, or member of the cc: list of the bug and the bug 
+    # allows users in those roles to see the bug.  The boolean fields 
+    # reporter_accessible, assignee_accessible, qacontact_accessible, and 
+    # cclist_accessible identify whether or not those roles can see the bug.
 
     # First check that the bug exists
     SendSQL("SELECT bug_id FROM bugs WHERE bug_id = $id");
 
     FetchOneColumn()
       || DisplayError("Bug #$id does not exist.")
-        && exit;
+      && exit;
 
-    return if CanSeeBug($id, $::userid, $::usergroupset);
+    return if CanSeeBug($id, $userid);
 
     # The user did not pass any of the authorization tests, which means they
     # are not authorized to see the bug.  Display an error and stop execution.
     # The error the user sees depends on whether or not they are logged in
     # (i.e. $::userid contains the user's positive integer ID).
-    if ($::userid) {
+    if ($userid) {
         DisplayError("You are not authorized to access bug #$id.");
     } else {
         DisplayError(
@@ -292,7 +299,6 @@ sub ValidateBugID {
         );
     }
     exit;
-
 }
 
 sub ValidateComment {
@@ -435,15 +441,14 @@ sub PasswordForLogin {
     return $result;
 }
 
-sub quietly_check_login() {
-    $::usergroupset = '0';
-    my $loginok = 0;
+sub quietly_check_login {
+    my ($userid, $loginname, $ok, $disabledtext);
+    $userid = 0;
     $::disabledreason = '';
-    $::userid = 0;
     if (defined $::COOKIE{"Bugzilla_login"} &&
         defined $::COOKIE{"Bugzilla_logincookie"}) {
         ConnectToDatabase();
-        SendSQL("SELECT profiles.userid, profiles.groupset, " .
+        SendSQL("SELECT profiles.userid, " .
                 "profiles.login_name, " .
                 "profiles.login_name = " .
                 SqlQuote($::COOKIE{"Bugzilla_login"}) .
@@ -455,21 +460,21 @@ sub quietly_check_login() {
                 " AND profiles.userid = logincookies.userid");
         my @row;
         if (@row = FetchSQLData()) {
-            my ($userid, $groupset, $loginname, $ok, $disabledtext) = (@row);
+            ($userid, $loginname, $ok, $disabledtext) = (@row);
             if ($ok) {
                 if ($disabledtext eq '') {
-                    $loginok = 1;
-                    $::userid = $userid;
-                    $::usergroupset = $groupset;
                     $::COOKIE{"Bugzilla_login"} = $loginname; # Makes sure case
                                                               # is in
                                                               # canonical form.
                     # We've just verified that this is ok
                     detaint_natural($::COOKIE{"Bugzilla_logincookie"});
                 } else {
+                    $userid = 0;
                     $::disabledreason = $disabledtext;
                 }
-            }
+            } else {
+                $userid = 0;
+            } 
         }
     }
     # if 'who' is passed in, verify that it's a good value
@@ -477,13 +482,12 @@ sub quietly_check_login() {
         my $whoid = DBname_to_id($::FORM{'who'});
         delete $::FORM{'who'} unless $whoid;
     }
-    if (!$loginok) {
+    if (!$userid) {
         delete $::COOKIE{"Bugzilla_login"};
     }
-                    
-    $vars->{'user'} = GetUserInfo($::userid);
-    
-    return $loginok;
+
+    $vars->{'user'} = GetUserInfo($userid);
+    return $userid;
 }
 
 # Populate a hash with information about this user. 
@@ -499,9 +503,9 @@ sub GetUserInfo {
     $user{'login'} = $::COOKIE{"Bugzilla_login"};
     $user{'userid'} = $userid;
     
-    SendSQL("SELECT mybugslink, realname, groupset FROM profiles " . 
+    SendSQL("SELECT mybugslink, realname FROM profiles " . 
             "WHERE userid = $userid");
-    ($user{'showmybugslink'}, $user{'realname'}, $user{'groupset'}) =
+    ($user{'showmybugslink'}, $user{'realname'}) =
                                                                  FetchSQLData();
 
     SendSQL("SELECT name, query, linkinfooter FROM namedqueries " .
@@ -515,10 +519,12 @@ sub GetUserInfo {
 
     $user{'queries'} = \@queries;
 
-    SendSQL("select name, (bit & $user{'groupset'}) != 0 from groups");
+    SendSQL("SELECT groups.name FROM groups, user_group_map " . 
+            "WHERE groups.group_id = user_group_map.group_id " .
+            "AND user_group_map.user_id = $userid");
     while (MoreSQLData()) {
-        my ($name, $bit) = FetchSQLData();    
-        $groups{$name} = $bit;
+        my ($name) = FetchSQLData();
+        $groups{$name} = 1;
     }
 
     $user{'groups'} = \%groups;
@@ -760,8 +766,7 @@ sub confirm_login {
      if($enteredlogin ne "") {
        $::COOKIE{"Bugzilla_login"} = $enteredlogin;
        SendSQL("insert into logincookies (userid,ipaddr) values (@{[DBNameToIdAndCheck($enteredlogin)]}, @{[SqlQuote($ENV{'REMOTE_ADDR'})]})");
-       SendSQL("select LAST_INSERT_ID()");
-       my $logincookie = FetchOneColumn();
+       my $logincookie = CurrId("logincookies_cookie_seq");
 
        $::COOKIE{"Bugzilla_logincookie"} = $logincookie;
        my $cookiepath = Param("cookiepath");
@@ -769,9 +774,9 @@ sub confirm_login {
        print "Set-Cookie: Bugzilla_logincookie=$logincookie ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
     }
 
-    my $loginok = quietly_check_login();
+    my $userid = quietly_check_login();
 
-    if ($loginok != 1) {
+    if (!$userid) {
         if ($::disabledreason) {
             my $cookiepath = Param("cookiepath");
             print "Set-Cookie: Bugzilla_login= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:00:00 GMT
@@ -874,8 +879,13 @@ Content-type: text/html
         # crufty junk in the logincookies table.  Get rid of any entry
         # that hasn't been used in a month.
         if ($::dbwritesallowed) {
-            SendSQL("DELETE FROM logincookies " .
-                    "WHERE TO_DAYS(NOW()) - TO_DAYS(lastused) > 30");
+            if ($::driver eq 'mysql') {
+                SendSQL("DELETE FROM logincookies " .
+                        "WHERE TO_DAYS(NOW()) - TO_DAYS(lastused) > 30");
+            } elsif ($::driver eq 'Pg') {
+                 SendSQL("DELETE FROM logincookies " .
+                         "WHERE NOW() - lastused > 30");
+            }
         }
 
         
@@ -885,10 +895,10 @@ Content-type: text/html
 
     # Update the timestamp on our logincookie, so it'll keep on working.
     if ($::dbwritesallowed) {
-        SendSQL("UPDATE logincookies SET lastused = null " .
+        SendSQL("UPDATE logincookies SET lastused = NULL " .
                 "WHERE cookie = $::COOKIE{'Bugzilla_logincookie'}");
     }
-    return $::userid;
+    return $userid;
 }
 
 sub PutHeader {
@@ -929,7 +939,7 @@ sub ThrowCodeError {
   ($vars->{'error'}, $vars->{'variables'}, my $unlock_tables) = (@_);
   $vars->{'title'} = "Code Error";
 
-  SendSQL("UNLOCK TABLES") if $unlock_tables;
+  SendSQL("UNLOCK TABLES") if $unlock_tables && $::driver eq 'mysql';
   
   # We may optionally log something to file here.
   
@@ -945,7 +955,7 @@ sub ThrowUserError {
   ($vars->{'error'}, $vars->{'title'}, my $unlock_tables) = (@_);
   $vars->{'title'} ||= "Error";
 
-  SendSQL("UNLOCK TABLES") if $unlock_tables;
+  SendSQL("UNLOCK TABLES") if $unlock_tables && $::driver eq 'mysql';
   
   print "Content-type: text/html\n\n" if !$vars->{'header_done'};
   $template->process("global/user-error.html.tmpl", $vars)
@@ -1028,25 +1038,42 @@ sub CheckIfVotedConfirmed {
 sub GetBugActivity {
     my ($id, $starttime) = (@_);
     my $datepart = "";
+    my $query = "";
 
     die "Invalid id: $id" unless $id=~/^\s*\d+\s*$/;
 
     if (defined $starttime) {
         $datepart = "and bugs_activity.bug_when > " . SqlQuote($starttime);
     }
-    
-    my $query = "
-        SELECT IFNULL(fielddefs.description, bugs_activity.fieldid),
-                bugs_activity.attach_id,
-                bugs_activity.bug_when,
-                bugs_activity.removed, bugs_activity.added,
-                profiles.login_name
-        FROM bugs_activity LEFT JOIN fielddefs ON 
-                                     bugs_activity.fieldid = fielddefs.fieldid,
-             profiles
-        WHERE bugs_activity.bug_id = $id $datepart
-              AND profiles.userid = bugs_activity.who
-        ORDER BY bugs_activity.bug_when";
+        
+    if ($::driver eq 'mysql') {
+        $query = "
+        SELECT 
+            IFNULL(fielddefs.name, bugs_activity.fieldid), 
+            bugs_activity.attach_id,
+            bugs_activity.bug_when, ";
+
+    } elsif ($::driver eq 'Pg') {
+        $query = "
+        SELECT 
+            COALESCE(fielddefs.name, chr(bugs_activity.fieldid)), 
+            bugs_activity.attach_id,
+            TO_CHAR(bugs_activity.bug_when, 'YYYY-MM-DD'), ";
+    }
+
+    $query .= "
+            bugs_activity.removed,
+            bugs_activity.added,
+            profiles.login_name
+        FROM 
+            bugs_activity LEFT JOIN fielddefs ON 
+            bugs_activity.fieldid = fielddefs.fieldid,
+            profiles
+        WHERE 
+            bugs_activity.bug_id = $id $datepart
+            AND profiles.userid = bugs_activity.who
+        ORDER BY 
+            bugs_activity.bug_when";
 
     SendSQL($query);
     

@@ -27,50 +27,57 @@ use lib qw(.);
 
 require "CGI.pl";
 
-use vars qw($userid $usergroupset @legal_keywords %FORM);
+use vars qw($userid @legal_keywords %FORM);
 
 # Use global template variables.
 use vars qw($template $vars);
 
 ConnectToDatabase();
-
-quietly_check_login();
+my $userid = quietly_check_login();
 
 GetVersionTable();
 
-my $generic_query = "
-  SELECT 
-    bugs.bug_id, 
-    bugs.product, 
-    bugs.version, 
-    bugs.rep_platform,
-    bugs.op_sys, 
-    bugs.bug_status, 
-    bugs.resolution, 
-    bugs.priority,
-    bugs.bug_severity, 
-    bugs.component, 
-    assign.login_name, 
-    report.login_name,
-    bugs.bug_file_loc, 
-    bugs.short_desc, 
-    bugs.target_milestone,
-    bugs.qa_contact, 
-    bugs.status_whiteboard, 
-    bugs.keywords
-  FROM bugs,profiles assign,profiles report
-  WHERE assign.userid = bugs.assigned_to AND report.userid = bugs.reporter";
+my $generic_query  = "
+select
+  bugs.bug_id,
+  bugs.product,
+  bugs.version,
+  bugs.rep_platform,
+  bugs.op_sys,
+  bugs.bug_status,
+  bugs.bug_severity,
+  bugs.priority,
+  bugs.resolution,
+  assign.login_name,
+  report.login_name,
+  bugs.component,
+  bugs.bug_file_loc,
+  bugs.short_desc,
+  bugs.target_milestone,
+  bugs.qa_contact,
+  bugs.status_whiteboard,
+  bugs.keywords
+from bugs,profiles assign,profiles report
+where assign.userid = bugs.assigned_to and report.userid = bugs.reporter";
 
 my $buglist = $::FORM{'buglist'} || 
               $::FORM{'bug_id'}  || 
               $::FORM{'id'}      || "";
 
+my @buglist = ();
+foreach my $bug (split(/[:,]/, $buglist)) {
+    detaint_natural($bug) || next;
+    push(@buglist, $bug);
+}
+
+my $canseeref = CanSeeBug(\@buglist, $userid);
+
 my @bugs;
 
-foreach my $bug_id (split(/[:,]/, $buglist)) {
-    detaint_natural($bug_id) || next;
-    SendSQL(SelectVisible("$generic_query AND bugs.bug_id = $bug_id",
-                          $::userid, $::usergroupset));
+foreach my $bug_id (@buglist) {
+    next if !$canseeref->{$bug_id};
+
+    SendSQL("$generic_query AND bugs.bug_id = $bug_id");
 
     my %bug;
     my @row = FetchSQLData();
