@@ -149,6 +149,7 @@ sub parse_args {
   set_static_vars();
   get_env();
   parse_args();
+  chk_security();
 
   print "Content-type: text/html\n\n";
 

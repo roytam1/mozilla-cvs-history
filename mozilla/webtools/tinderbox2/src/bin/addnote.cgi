@@ -263,6 +263,7 @@ sub make_all_changes {
 {
   set_static_vars();
   get_env();
+  chk_security();
   
   get_params();
 

@@ -537,6 +537,7 @@ sub write_stats {
 
   my ($daemon_mode, $times_vec, $tree, ) =  
     parse_args();
+  chk_security();
   
   if ($daemon_mode) {
     daemon_main($times_vec, $tree, );

@@ -1102,6 +1102,7 @@ sub assemble_files {
   set_static_vars();
   get_env();
   MailProcess::parse_mailprocess_args();
+  chk_security();
 
   $SIG{'__DIE__'} = \&MailProcess::fatal_mailprocessing_error;
 

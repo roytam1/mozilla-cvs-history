@@ -136,6 +136,7 @@ sub rm_old_logs {
 {
   set_static_vars();
   get_env();
+  chk_security();
 
   rm_old_logs('full-log', $FULL_TRIM);
   rm_old_logs('brief-log', $BRIEF_TRIM);
