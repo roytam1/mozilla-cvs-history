@@ -106,9 +106,11 @@ $fullname{'133'} = 'Java Utility Classes';
 $mode{'129'} = 'Open';
 $branch{'129'} = 'HEAD';
 $fullname{'129'} = 'Java-Implemented Plugins';
-$mode{'70'} = 'Open';
+$mode{'70'} = 'Restricted';
 $branch{'70'} = 'HEAD';
 $fullname{'70'} = 'JavaScript';
+$blessed{'70'} = ['bratell%lysator.liu.se','cls%seawood.org','mike+mozilla%meer.net','timeless%mac.com',];
+$super{'70'} = ['shaver%mozilla.org','rogerl%netscape.com','khanson%netscape.com','jband%netscape.com','brendan%mozilla.org',];
 $mode{'71'} = 'Open';
 $branch{'71'} = 'HEAD';
 $fullname{'71'} = 'JavaScript Debugger';
@@ -317,7 +319,11 @@ if (m:^mozilla/nav-java/.*$:) {return '68';}
 if (m:^mozilla/sun-java/.*$:) {return '68';}
 if (m:^mozilla/caps/.*$:) {return '69';}
 if (m:^js/src/*\.c$:) {return '70';}
+if (m:^js/src/*\.def$:) {return '70';}
 if (m:^js/src/*\.h$:) {return '70';}
+if (m:^js/src/*\.m*k$:) {return '70';}
+if (m:^js/src/*\.tbl$:) {return '70';}
+if (m:^js/src/*akefile.*$:) {return '70';}
 if (m:^mozilla/extensions/jsd/.*$:) {return '71';}
 if (m:^mozilla/js/jsd/.*$:) {return '71';}
 if (m:^js/src/liveconnect/.*$:) {return '72';}
