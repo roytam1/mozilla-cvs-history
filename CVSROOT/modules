@@ -42,6 +42,7 @@ MozillaSourceCommon -a \
     mozilla/CHANGES.html  \
     mozilla/build  \
     mozilla/include  \
+    mozilla/caps  \
     mozilla/jpeg  \
     mozilla/js  \
     mozilla/lib/htmldlgs  \
