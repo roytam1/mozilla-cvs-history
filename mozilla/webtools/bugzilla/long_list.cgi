@@ -73,6 +73,7 @@ bugs.groupset & $::usergroupset = bugs.groupset and";
 
 $::FORM{'buglist'} = "" unless exists $::FORM{'buglist'};
 foreach my $bug (split(/:/, $::FORM{'buglist'})) {
+    detaint_natural($bug) || next;
     SendSQL("$generic_query bugs.bug_id = $bug");
 
     my @row;
