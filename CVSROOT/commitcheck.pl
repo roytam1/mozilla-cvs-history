@@ -189,6 +189,9 @@ $fullname{'120'} = 'Profile Manager';
 $mode{'83'} = 'Open';
 $branch{'83'} = 'HEAD';
 $fullname{'83'} = 'Progress Window';
+$mode{'161'} = 'Open';
+$branch{'161'} = 'HEAD';
+$fullname{'161'} = 'Qt-based gfx and widget';
 $mode{'84'} = 'Open';
 $branch{'84'} = 'HEAD';
 $fullname{'84'} = 'Registry';
@@ -373,6 +376,8 @@ if (m:^mozilla/extensions/vixen/.*$:) {return '156';}
 if (m:^mozilla/mailnews/movemail$:) {return '157';}
 if (m:^mozilla/uriloader/.*$:) {return '158';}
 if (m:^mozilla/string/.*$:) {return '160';}
+if (m:^mozilla/gfx/src/qt/.*$:) {return '161';}
+if (m:^mozilla/widget/src/qt/.*$:) {return '161';}
 }
 if ($b eq 'NSPRPUB_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
