@@ -508,10 +508,15 @@ sub ChangeStatus {
     }
 }
 
-sub ChangeResolution {
+sub ChangeResolution ($) {
     my ($id) = (@_);
     DoComma();
     $::query .= "resolution_id = $id";
+}
+
+sub ClearResolution () {
+    DoComma();
+    $::query .= "resolution_id = NULL";
 }
 
 #
@@ -705,14 +710,14 @@ SWITCH: for ($::FORM{'knob'}) {
         last SWITCH;
     };
     /^clearresolution$/ && CheckonComment( "clearresolution" ) && do {
-        ChangeResolution(0);
+        ClearResolution();
         last SWITCH;
     };
     /^resolve$/ && CheckonComment( "resolve" ) && do {
         my $resolution_id = ResolutionNameToID($::FORM{'resolution'});
         if ($resolution_id == 0) {
-            PuntTryAgain("Whoops!  Something went wrong - I can't find
-                          the resolution \"$::FORM{'resolution'}\".");
+            PuntTryAgain(qq{Whoops!  Something went wrong - I can't find the resolution "} .
+                         html_quote($::FORM{'resolution'}) . qq{".});
         } else {
             ChangeStatus('RESOLVED');
             ChangeResolution($resolution_id);
@@ -775,7 +780,7 @@ SWITCH: for ($::FORM{'knob'}) {
                 "WHERE bug_id = $::FORM{'id'} " .
                 "AND bugs.resolution_id = resolutions.id");
         ChangeStatus('REOPENED');
-        ChangeResolution(0);
+        ClearResolution();
         if (FetchOneColumn() == $::duperestype) {
             SendSQL("DELETE FROM duplicates WHERE dupe = $::FORM{'id'}");
         }
@@ -792,8 +797,8 @@ SWITCH: for ($::FORM{'knob'}) {
     /^duplicate$/ && CheckonComment( "duplicate" ) && do {
         my $resolution_id = ResolutionNameToID($::FORM{'dupe_resolution'});
         if ($resolution_id == 0) {
-            PuntTryAgain("Whoops!  Something went wrong - I can't find
-                          the resolution \"$::FORM{'resolution'}\".");
+            PuntTryAgain(qq{Whoops!  Something went wrong - I can't find the resolution "} .
+                         html_quote($::FORM{'resolution'}) . qq{".});
         } else {
             ChangeStatus('RESOLVED');
             ChangeResolution($resolution_id);

@@ -120,7 +120,7 @@ foreach my $id (split(/:/, $::FORM{'buglist'})) {
 
     $fieldid = GetFieldID("resolution");
     my $new_res_name = $::FORM{'move_resolution'};
-    my $new_res_id = ResolutionNameToID($new_res_name);
+    my $new_res_id_sql = ResolutionNameToSQL($new_res_name);
     my $cur_res_id = $bug->resolution_id;
     my $cur_res_name = ResolutionIDToName($cur_res_id);
 
@@ -131,7 +131,7 @@ foreach my $id (split(/:/, $::FORM{'buglist'})) {
             SqlQuote($new_res_name) . ')');
 
     SendSQL("UPDATE bugs SET bug_status = 'RESOLVED' WHERE bug_id = $id");
-    SendSQL("UPDATE bugs SET resolution_id = $new_res_id WHERE bug_id = $id");
+    SendSQL("UPDATE bugs SET resolution_id = $new_res_id_sql WHERE bug_id = $id");
 
     my $comment = "Bug moved to " . Param("move-to-url") . ".\n\n";
     $comment .= "If the move succeeded, $exporter will receive a mail\n";

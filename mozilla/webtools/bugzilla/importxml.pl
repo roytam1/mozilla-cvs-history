@@ -523,7 +523,7 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
   my @resolution;
   if (defined ($bug_fields{'resolution'}) &&
        (@resolution= grep /^$bug_fields{'resolution'}$/i, @::active_resolution) ){
-    push (@values, ResolutionNameToID($resolution[0]));
+    push (@values, ResolutionNameToSQL($resolution[0]));
     push (@query, "resolution_id");
   } elsif ( (defined $bug_fields{'resolution'}) && (!$resolution[0]) ){
     $err .= "Unknown resolution \"$bug_fields{'resolution'}\".\n";

@@ -161,11 +161,11 @@ sub GenerateSQL {
             ("profiles map_assigned_to",
              "profiles map_reporter",
              "LEFT JOIN profiles map_qa_contact ON bugs.qa_contact = map_qa_contact.userid",
-             "resolutions map_resolution"));
+             "LEFT JOIN resolutions ON bugs.resolution_id = resolutions.id"));
+
     unshift(@wherepart,
             ("bugs.assigned_to = map_assigned_to.userid",
-             "bugs.reporter = map_reporter.userid",
-             "bugs.resolution_id = map_resolution.id"));
+             "bugs.reporter = map_reporter.userid"));
 
     my $minvotes;
     if (defined $F{'votes'}) {
@@ -207,25 +207,18 @@ sub GenerateSQL {
     }
 
     if ($M{'resolution'}) {
-        my @resolution_ids;
+        my @resolution_sql;
 
         foreach my $resolution (@{$M{resolution}}) {
-            warn $resolution;
-            my $resolution_id = ResolutionNameToID($resolution);
-            warn $resolution_id;
-
-            if ($resolution_id != 0) {
-                push(@resolution_ids,$resolution_id);
+            if ($resolution eq '---') {
+                push(@resolution_sql,'bugs.resolution_id IS NULL');
+            }
+            else {
+                push(@resolution_sql, "resolutions.name = " . SqlQuote($resolution));
             }
         }
 
-        if (@resolution_ids == 0) {
-            push(@wherepart, "0");
-        } else {
-            push(@specialchart, ["resolution_id", "anyexact",
-                                 join(',', @resolution_ids)]);
-        }
-
+        push(@wherepart, '( ' . join(' OR ', @resolution_sql) . ' )');
     }
 
     # Should use the above resolutions code? Wouldn't use keyword cache ...
@@ -1009,7 +1002,7 @@ DefCol("reporter", "map_reporter.login_name", "Reporter",
        "map_reporter.login_name");
 DefCol("qa_contact", "map_qa_contact.login_name", "QAContact", "map_qa_contact.login_name");
 DefCol("status", "substring(bugs.bug_status,1,4)", "State", "bugs.bug_status");
-DefCol("resolution", "substring(map_resolution.name,1,4)", "Result",
+DefCol("resolution", "substring(resolutions.name,1,4)", "Result",
        "bugs.resolution");
 DefCol("summary", "substring(bugs.short_desc, 1, 60)", "Summary", "bugs.short_desc", 1);
 DefCol("summaryfull", "bugs.short_desc", "Summary", "bugs.short_desc", 1);

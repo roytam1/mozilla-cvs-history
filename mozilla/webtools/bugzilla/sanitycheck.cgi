@@ -187,6 +187,8 @@ CrossCheck("products", "product",
            ["versions", "program", "value"],
            ["attachstatusdefs", "product", "name"]);
 
+CrossCheck("resolutions", "id",
+           ["bugs", "resolution_id", "bug_id"]);
 
 Status("Checking groups");
 SendSQL("select bit from groups where bit != pow(2, round(log(bit) / log(2)))");
@@ -489,7 +491,7 @@ my $open_states = join(', ', @open_states);
 
 SendSQL("SELECT   bug_id FROM bugs " .
         "WHERE    bug_status IN ($open_states) " .
-        "AND      resolution_id != 0 " .
+        "AND      resolution_id IS NOT NULL " .
         "ORDER BY bug_id");
 
 while (@row = FetchSQLData()) {
@@ -506,7 +508,7 @@ if (@badbugs > 0) {
 
 SendSQL("SELECT   bug_id FROM bugs " .
         "WHERE    bug_status NOT IN ($open_states) " .
-        "AND      resolution_id = 0 " .
+        "AND      resolution_id IS NULL " .
         "ORDER BY bug_id");
 
 while (@row = FetchSQLData()) {

@@ -526,13 +526,14 @@ sub GenerateVersionTable {
     @::legal_opsys = SplitEnumType($cols->{"op_sys,type"});
     @::legal_bug_status = SplitEnumType($cols->{"bug_status,type"});
 
-    SendSQL("SELECT resolutions.name, resolutions.isactive, resolutions.restype, bugs.bug_id IS NOT NULL " .
+    SendSQL("SELECT resolutions.name, resolutions.isactive, resolutions.restype, " .
+            "       bugs.bug_id IS NOT NULL " .
             "FROM resolutions LEFT JOIN bugs ON resolutions.id = bugs.resolution_id ".
             "GROUP BY resolutions.name " .
             "ORDER BY resolutions.sortkey, resolutions.name");
 
     while (MoreSQLData()) {
-        my ($name, $isactive, $restype, $isused ) = FetchSQLData();
+        my ($name, $isactive, $restype, $isused) = FetchSQLData();
         push(@::queryable_resolution, $name) if ($isactive | $isused);
         if ($isactive) {
             if ($restype == $::duperestype) {
@@ -956,7 +957,7 @@ sub DBNameToIdAndCheck {
 
 
 sub ResolutionIDToName ($) {
-    my ($id) = (@_);
+    my ($id) = @_;
 
     if ($id == 0) {
         return "";
@@ -980,7 +981,7 @@ sub ResolutionIDToName ($) {
 }
 
 sub ResolutionNameToID ($) {
-    my ($name) = (@_);
+    my ($name) = @_;
     my $id;
 
     PushGlobalSQLState();
@@ -999,6 +1000,11 @@ sub ResolutionNameToID ($) {
 
 }
 
+sub ResolutionNameToSQL ($) {
+    my $sql = ResolutionNameToID (@_);
+    $sql = 'NULL' if ($sql == 0);
+    return $sql;
+}
 
 # Use trick_taint() when you know that there is no way that the data
 # in a scalar can be tainted, but taint mode still bails on it.

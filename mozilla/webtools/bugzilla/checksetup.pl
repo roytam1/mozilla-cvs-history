@@ -956,7 +956,7 @@ $table{bugs} =
     reporter mediumint not null,
     version varchar(64) not null,
     component varchar(50) not null,
-    resolution_id mediumint not null,
+    resolution_id mediumint,
     target_milestone varchar(20) not null default "---",
     qa_contact mediumint not null,
     status_whiteboard mediumtext not null,
@@ -2699,7 +2699,7 @@ AddField("bugs_activity", "attach_id", "mediumint null");
 my $resolutionfieldref = GetFieldDef('bugs', 'resolution');
 
 if ($resolutionfieldref) {
-    AddField('bugs', 'resolution_id', 'mediumint not null');
+    AddField('bugs', 'resolution_id', 'mediumint');
 
     if (RecordExists("bugs")) {
         my @resolutions = SplitEnumType($$resolutionfieldref[1]);
@@ -2712,6 +2712,9 @@ if ($resolutionfieldref) {
             $dbh->do("UPDATE bugs SET resolution_id = $id " .
                      "WHERE resolution = " . SqlQuote($resolution));
         }
+
+        $dbh->do("UPDATE bugs SET resolution_id = NULL " .
+                 "WHERE resolution = ''");
 
     }
     
