@@ -638,18 +638,12 @@ sub CanSeeBug {
     # represents whether or not the user is authorized to access the bug.
 
     # if no groups are found --> user is permitted to access
-    # if no user is found for a group --> user is not permitted to access
-    # Note: Since this needs to establish if a user is absent for ANY of
-    #   the groups the bug requires, the result of the JOIN is sorted 
-    #   by the user_id.  Since MySQL places NULLs ahead of numbers in sorts
-    #   (specified in the MySQL documentation) and postgreSQL places NULLs
-    #   ahead of number in descending sorts, this needs to change for Postgres 
-    #   the first row contain the NULL value if there is going to be one.  
+    # if no user is found for any group --> user is not permitted to access
     my $query = "SELECT bugs.bug_id, reporter, assigned_to, qa_contact," .
         " reporter_accessible, cclist_accessible," .
         " cc.who IS NOT NULL," .
-        " bug_group_map.group_id IS NOT NULL," .
-        " user_group_map.user_id IS NOT NULL" .
+        " COUNT(DISTINCT(bug_group_map.group_id)) as cntbugingroups," .
+        " COUNT(DISTINCT(user_group_map.user_id)) as cntuseringroups" .
         " FROM bugs" .
         " LEFT JOIN cc ON bugs.bug_id = cc.bug_id" .
         " AND cc.who = $userid" .
@@ -658,19 +652,19 @@ sub CanSeeBug {
         " user_group_map.group_id = bug_group_map.group_id" .
         " AND user_group_map.isbless = 0" .
         " AND user_group_map.user_id = $userid" .
-        " WHERE bugs.bug_id = $id ORDER BY user_group_map.user_id";
+        " WHERE bugs.bug_id = $id GROUP BY bugs.bug_id";
     PushGlobalSQLState();
     SendSQL($query);
     my ($found_id, $reporter, $assigned_to, $qa_contact,
         $rep_access, $cc_access,
-        $found_cc, $found_group, $found_member) 
+        $found_cc, $found_groups, $found_members) 
         = FetchSQLData();
     PopGlobalSQLState();
-    return (!$found_group || ($userid && (($assigned_to == $userid) 
+    return (($found_groups == 0) || ($userid && (($assigned_to == $userid) 
                || ($qa_contact == $userid)
                || (($reporter == $userid) && $rep_access) 
                || ($found_cc && $cc_access) 
-               || $found_member)));
+               || ($found_groups == $found_members))));
 }
 
 sub ValidatePassword {
