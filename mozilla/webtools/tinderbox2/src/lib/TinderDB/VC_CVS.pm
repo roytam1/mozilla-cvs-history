@@ -743,7 +743,7 @@ sub status_table_row {
   } else {
     
     @outrow = ("\t<!-- skipping: VC: tree: $tree -->".
-               "<td align=center $cell_color>$HTMLPopUp::EMPTY_TABLE_CELL</td>\n");
+               "<td align=center $cell_color>$text_browser_color_string</td>\n");
   }
   
   
