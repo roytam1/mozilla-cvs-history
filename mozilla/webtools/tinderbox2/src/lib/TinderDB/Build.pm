@@ -379,7 +379,7 @@ sub compute_metadata {
   # order is important for these operations.
   my ($ignore_builds) = TinderHeader::gettree_header('IgnoreBuilds', $tree);
 
-  foreach $buildname (split(/\s+/, $ignore_builds)) {
+  foreach $buildname (split(/,/, $ignore_builds)) {
     $IGNORE_BUILDS{$tree}{$buildname} = 1;
   }
 

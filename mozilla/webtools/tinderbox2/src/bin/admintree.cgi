@@ -198,7 +198,7 @@ sub get_current_ignore_builds  {
   my (@ignore_builds) = ();
 
   @ignore_builds = split(
-                         /\s+/, 
+                         /,/, 
                          TinderHeader::gettree_header('IgnoreBuilds', $TREE)
                         );
   
@@ -449,7 +449,8 @@ sub change_ignore_builds {
   ("@NEW_IGNORE_BUILDS" eq "@CURRENT_IGNORE_BUILDS") &&
     return ;
 
-  TinderHeader::savetree_header('IgnoreBuilds', $TREE, "@NEW_IGNORE_BUILDS");
+  $ignore_builds = join(',', @NEW_IGNORE_BUILDS);
+  TinderHeader::savetree_header('IgnoreBuilds', $TREE, $ignore_builds);
 
   push @results, "ignore_builds changed: @NEW_IGNORE_BUILDS \n";
 
