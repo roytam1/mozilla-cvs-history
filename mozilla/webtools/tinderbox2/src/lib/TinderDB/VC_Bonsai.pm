@@ -501,7 +501,7 @@ sub status_table_row {
                      "$EMPTY_TABLE_CELL</td>\n");
 
       $NEXT_ROW{$tree} = $row_index + $rowspan;
-      $NEXT_DB{$tree}++
+      $NEXT_DB{$tree}++;
 
       return @outrow;
   }
