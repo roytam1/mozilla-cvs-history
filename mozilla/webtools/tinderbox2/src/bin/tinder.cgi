@@ -333,7 +333,7 @@ sub HTML_status_page {
   my ($display_8hours) = min($display_hours*8, $MAX_DISPLAY_HOURS);
   my ($links) = 
     HTMLPopUp::Link(
-                    "linktxt"=>"Show next $display_hours hours", 
+                    "linktxt"=>"Show previous $display_hours hours", 
                     "href"=>("$FileStructure::URLS{'tinderd'}".
                              "\?".
                              "tree=$tree\&".
@@ -342,7 +342,7 @@ sub HTML_status_page {
                    ).
    "<br>\n".
     HTMLPopUp::Link(
-                    "linktxt"=>"Show next $display_2hours hours", 
+                    "linktxt"=>"Show previous $display_2hours hours", 
                     "href"=>("$FileStructure::URLS{'tinderd'}".
                              "\?".
                              "tree=$tree\&".
@@ -351,7 +351,7 @@ sub HTML_status_page {
                    ).
    "<br>\n".
     HTMLPopUp::Link(
-                    "linktxt"=>"Show next $display_4hours hours", 
+                    "linktxt"=>"Show previous $display_4hours hours", 
                     "href"=>("$FileStructure::URLS{'tinderd'}".
                              "\?".
                              "tree=$tree\&".
@@ -360,7 +360,7 @@ sub HTML_status_page {
                    ).
    "<br>\n".
     HTMLPopUp::Link(
-                    "linktxt"=>"Show next $display_8hours hours", 
+                    "linktxt"=>"Show previous $display_8hours hours", 
                     "href"=>("$FileStructure::URLS{'tinderd'}".
                              "\?".
                              "tree=$tree\&".
