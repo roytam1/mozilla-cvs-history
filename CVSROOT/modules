@@ -28,7 +28,7 @@
 MozillaSource -a \
 	MozillaSourceWin \
 	MozillaSourceMac \
-	MozillaSourceUnix \
+	MozillaSourceUnix
 
 MozillaSourceWin -a MozillaSourceCommon MozillaSourceWinOnly
 
