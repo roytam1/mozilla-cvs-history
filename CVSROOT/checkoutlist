@@ -14,3 +14,6 @@
 passwd
 readers
 commitcheck.pl
+dolog.pl
+FilesToNotExport
+
