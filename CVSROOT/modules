@@ -24,3 +24,195 @@
 # character to interpose another module into the current module.  This
 # can be useful for creating a module that consists of many directories
 # spread out over the entire source repository.
+
+ClientSourceProduct -a \
+	ClientSourceProductWin \
+	ClientSourceProductMac \
+	ClientSourceProductUnix \
+	ns/nsprpub \
+	ns/modules/schedulr
+
+ClientSourceProductWin -a MozillaCommon MozillaWinOnly
+
+ClientSourceProductMac -a MozillaCommon MozillaMacOnly
+
+ClientSourceProductUnix -a MozillaCommon MozillaUnixOnly
+
+MozillaCommon -a \
+    ns/build  \
+    ns/include  \
+    ns/jpeg  \
+    ns/js  \
+    ns/lib/htmldlgs  \
+    ns/lib/layout  \
+    ns/lib/libcnv  \
+    ns/lib/libi18n  \
+    ns/lib/liblayer  \
+    ns/lib/libmisc  \
+    ns/lib/libmocha LOCAL  \
+    ns/lib/libnet  \
+    ns/lib/libparse  \
+    ns/lib/libpics  \
+    ns/lib/libpwcac  \
+    ns/lib/libstyle  \
+    ns/lib/plugin  \
+    ns/lib/xlate \
+    ns/lib/xp  \
+    ns/modules/edtplug/src  \
+    ns/modules/libfont/classes  \
+    ns/modules/libfont/public  \
+    ns/modules/libfont/src  \
+    ns/modules/libhook  \
+    ns/modules/libimg  \
+    ns/modules/libpref  \
+    ns/modules/libreg  \
+    ns/modules/libutil  \
+    ns/modules/progress/src  \
+    ns/modules/rdf  \
+    ns/modules/schedulr  \
+    ns/modules/security/freenav  \
+    ns/modules/zlib/src  \
+    ns/nav-java/stubs  \
+    ns/nsprpub  \
+    ns/xpcom \
+    ns/l10n
+
+MozillaWinOnly -a \
+    ns/client.mak  \
+    ns/cmd/makefile.win  \
+    ns/cmd/wincom  \
+    ns/cmd/winfe  \
+    ns/config  \
+    ns/lib/makefile.win  \
+    ns/modules/coreincl  \
+    ns/modules/edtplug/include  \
+    ns/modules/edtplug/makefile.win  \
+    ns/makefile.win  \
+    ns/modules/libfont/jmcgen  \
+    ns/modules/libfont/makefile.win  \
+    ns/modules/libfont/producers/makefile.win  \
+    ns/modules/libfont/producers/win  \
+    ns/modules/libfont/producers/win/classes  \
+    ns/modules/libfont/producers/win/classes/netscape  \
+    ns/modules/libfont/producers/win/classes/netscape/fonts  \
+    ns/modules/libfont/producers/win/src  \
+    ns/modules/makefile.win  \
+    ns/modules/progress/makefile.win  \
+    ns/modules/progress/public  \
+    ns/modules/security/makefile.win  \
+    ns/modules/zlib/makefile.win  \
+    ns/nav-java/makefile.win  \
+
+
+MozillaUnixOnly -a \
+    ns/client.mk  \
+    ns/cmd/Makefile  \
+    ns/cmd/stubfe  \
+    ns/cmd/xfe  \
+    ns/config/.cvsignore  \
+    ns/config/AIX.mk  \
+    ns/config/BSD_OS.mk  \
+    ns/config/bsdecho.c  \
+    ns/config/bsdecho.c  \
+    ns/config/clobber_miss.pl  \
+    ns/config/clobber_miss.pl  \
+    ns/config/common.mk  \
+    ns/config/common.mk  \
+    ns/config/config.guess  \
+    ns/config/config.mk  \
+    ns/config/coreconf.mk  \
+    ns/config/coreconf.mk  \
+    ns/config/cvsco.pl  \
+    ns/config/cvsco.pl  \
+    ns/config/fastcwd.pl  \
+    ns/config/fastcwd.pl  \
+    ns/config/FreeBSD.mk  \
+    ns/config/gtscc.c  \
+    ns/config/HP-UX.mk  \
+    ns/config/IRIX.mk  \
+    ns/config/Linux.mk  \
+    ns/config/makecopy.c  \
+    ns/config/makecopy.c  \
+    ns/config/Makefile  \
+    ns/config/Makefile  \
+    ns/config/mangle.c  \
+    ns/config/mangle.c  \
+    ns/config/mantomak.c  \
+    ns/config/mantomak.c  \
+    ns/config/mkdepend  \
+    ns/config/NCR.mk  \
+    ns/config/NEC.mk  \
+    ns/config/NEWS-OS.mk  \
+    ns/config/NEXTSTEP.mk  \
+    ns/config/nfspwd.pl  \
+    ns/config/nfspwd.pl  \
+    ns/config/nodl.pl  \
+    ns/config/nodl.pl  \
+    ns/config/nsinstall.c  \
+    ns/config/nsinstall.c  \
+    ns/config/OSF1.mk  \
+    ns/config/outofdate.pl  \
+    ns/config/outofdate.pl  \
+    ns/config/pathsub.c  \
+    ns/config/pathsub.c  \
+    ns/config/pathsub.h  \
+    ns/config/pathsub.h  \
+    ns/config/pkg2dpth.pl  \
+    ns/config/pkg2dpth.pl  \
+    ns/config/ports  \
+    ns/config/revdepth.pl  \
+    ns/config/revdepth.pl  \
+    ns/config/Rhapsody.mk  \
+    ns/config/rules.mk  \
+    ns/config/SCOOS.mk  \
+    ns/config/SINIX.mk  \
+    ns/config/sj.pl  \
+    ns/config/sj.pl  \
+    ns/config/SunOS.mk  \
+    ns/config/SunOS4.mk  \
+    ns/config/SunOS5.mk  \
+    ns/config/UNIXWARE.mk  \
+    ns/config/xmversion.sh  \
+    ns/lib/Makefile  \
+    ns/Makefile  \
+    ns/modules/edtplug/Makefile  \
+    ns/modules/libfont/jmcgen  \
+    ns/modules/libfont/Makefile  \
+    ns/modules/libfont/producers/Makefile  \
+    ns/modules/Makefile  \
+    ns/modules/progress/Makefile  \
+    ns/modules/progress/public  \
+    ns/modules/security/Makefile  \
+    ns/modules/softupdt/Makefile  \
+    ns/modules/zlib/Makefile  \
+    ns/nav-java/Makefile  \
+    ns/lib/mariner  
+
+
+MozillaMacOnly
+    ns/cmd/macfe \
+    ns/lib/mac/AutoAdmin  \
+    ns/lib/mac/Includes  \
+    ns/lib/mac/MacMemoryAllocator  \
+    ns/lib/mac/Misc  \
+    ns/lib/mac/MoreFiles  \
+    ns/lib/mac/NSRuntime  \
+    ns/lib/mac/NSStdLib  \
+    ns/lib/mac/patches  \
+    ns/lib/mac/PowerPlant  \
+    ns/lib/mac/UserInterface  \
+    ns/modules/coreincl  \
+    ns/modules/edtplug/classes  \
+    ns/modules/edtplug/macbuild  \
+    ns/modules/libfont/jmcgen/include  \
+    ns/modules/libfont/jmcgen/src  \
+    ns/modules/libfont/macbuild  \
+    ns/modules/progress/macbuild  \
+    ns/modules/progress/public  \
+    ns/modules/zlib/macbuild  \
+    ns/lib/mariner  
+
+
+
+
+
