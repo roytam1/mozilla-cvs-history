@@ -346,10 +346,8 @@ sub DuplicateUserConfirm {
     
     SendSQL("SELECT reporter FROM bugs WHERE bug_id = " . SqlQuote($dupe));
     my $reporter = FetchOneColumn();
-    SendSQL("SELECT profiles.groupset FROM profiles WHERE profiles.userid =".SqlQuote($reporter));
-    my $reportergroupset = FetchOneColumn();
 
-    if (CanSeeBug($original, $reporter, $reportergroupset)) {
+    if (CanSeeBug($original, $reporter)) {
         $::FORM{'confirm_add_duplicate'} = "1";
         return;
     }
@@ -474,32 +472,26 @@ sub ChangeResolution {
 # operations
 # If the form element isn't present, or the user isn't in the group, leave
 # it as-is
-if($::usergroupset ne '0') {
-    my $groupAdd = "0";
-    my $groupDel = "0";
+my @groupAdd = ();
+my @groupDel = ();
 
-    SendSQL("SELECT bit, isactive FROM groups WHERE " .
-            "isbuggroup != 0 AND bit & $::usergroupset != 0 ORDER BY bit");
-    while (my ($b, $isactive) = FetchSQLData()) {
-        # The multiple change page may not show all groups a bug is in
-        # (eg product groups when listing more than one product)
-        # Only consider groups which were present on the form. We can't do this
-        # for single bug changes because non-checked checkboxes aren't present.
-        # All the checkboxes should be shown in that case, though, so its not
-        # an issue there
-        if ($::FORM{'id'} || exists $::FORM{"bit-$b"}) {
-            if (!$::FORM{"bit-$b"}) {
-                $groupDel .= "+$b";
-            } elsif ($::FORM{"bit-$b"} == 1 && $isactive) {
-                $groupAdd .= "+$b";
-            }
+SendSQL("SELECT groups.group_id, isactive FROM groups, member_group_map WHERE " .
+        "groups.group_id = member_group_map.group_id AND " .
+        "member_group_map.maptype = 0 AND " .
+        "isbuggroup != 0");
+while (my ($b, $isactive) = FetchSQLData()) {
+    # The multiple change page may not show all groups a bug is in
+    # (eg product groups when listing more than one product)
+    # Only consider groups which were present on the form. We can't do this
+    # for single bug changes because non-checked checkboxes aren't present.
+    # All the checkboxes should be shown in that case, though, so its not
+    # an issue there
+    if ($::FORM{'id'} || exists $::FORM{"bit-$b"}) {
+        if (!$::FORM{"bit-$b"}) {
+            push(@groupDel, $b);
+        } elsif ($::FORM{"bit-$b"} == 1 && $isactive) {
+            push(@groupAdd, $b);
         }
-    }
-    if ($groupAdd ne "0" || $groupDel ne "0") {
-        DoComma();
-        # mysql < 3.23.5 doesn't support the ~ operator, even though
-        # the docs say that it does
-        $::query .= "groupset = ((groupset & ($::superusergroupset - ($groupDel))) | ($groupAdd))";
     }
 }
 
@@ -592,9 +584,9 @@ if (defined $::FORM{'qa_contact'}) {
 # and cc list can see the bug even if they are not members of all groups 
 # to which the bug is restricted.
 if ( $::FORM{'id'} ) {
-    SendSQL("SELECT groupset FROM bugs WHERE bug_id = $::FORM{'id'}");
-    my ($groupset) = FetchSQLData();
-    if ( $groupset ) {
+    SendSQL("SELECT group_id FROM bug_group_map WHERE bug_id = $::FORM{'id'}");
+    my ($havegroup) = FetchSQLData();
+    if ( $havegroup ) {
         DoComma();
         $::FORM{'reporter_accessible'} = $::FORM{'reporter_accessible'} ? '1' : '0';
         $::query .= "reporter_accessible = $::FORM{'reporter_accessible'}";
@@ -925,6 +917,8 @@ foreach my $id (@idlist) {
             "cc AS selectVisible_cc $write, " .
             "profiles $write, dependencies $write, votes $write, " .
             "keywords $write, longdescs $write, fielddefs $write, " .
+            "bug_group_map $write, " .
+            "member_group_map READ, " .
             "keyworddefs READ, groups READ, attachments READ, products READ");
     my @oldvalues = SnapShotBug($id);
     my %oldhash;
@@ -1090,6 +1084,15 @@ foreach my $id (@idlist) {
     
     if ($::comma ne "") {
         SendSQL($query);
+    }
+
+    foreach my $grouptoadd (@groupAdd) {
+        SendSQL("INSERT IGNORE INTO bug_group_map (bug_id, group_id) 
+                 VALUES ($id, $grouptoadd)");
+    }
+    foreach my $grouptodel (@groupDel) {
+        SendSQL("DELETE FROM bug_group_map 
+                 WHERE bug_id = $id AND  group_id = $grouptodel");
     }
     SendSQL("select now()");
     $timestamp = FetchOneColumn();
@@ -1394,7 +1397,7 @@ if ($::COOKIE{"BUGLIST"} && $::FORM{'id'}) {
     my $cur = lsearch(\@bugs, $::FORM{"id"});
     if ($cur >= 0 && $cur < $#bugs) {
         my $next_bug = $bugs[$cur + 1];
-        if (detaint_natural($next_bug) && CanSeeBug($next_bug)) {
+        if (detaint_natural($next_bug) && CanSeeBug($next_bug, $::userid)) {
             $::FORM{'id'} = $next_bug;
             
             $vars->{'next_id'} = $next_bug;

@@ -327,23 +327,26 @@ $default{'bug_status'} = $status[0];
 # if the usebuggroups parameter is set, and if this product has a bug group.
 if ($::usergroupset ne '0') {
     # First we get the bit and description for the group.
-    my $group_bit = '0';
+    my $group_id = '0';
 
     if(Param("usebuggroups") && GroupExists($product)) {
-        SendSQL("SELECT bit FROM groups ".
+        SendSQL("SELECT group_id FROM groups ".
                 "WHERE name = " . SqlQuote($product) . " " .
                 "AND isbuggroup != 0");
-        ($group_bit) = FetchSQLData();
+        ($group_id) = FetchSQLData();
     }
 
-    SendSQL("SELECT bit, name, description FROM groups " .
-            "WHERE bit & $::usergroupset != 0 " .
+    SendSQL("SELECT groups.group_id, groups.name, groups.description " .
+            "FROM groups, member_group_map " .
+            "WHERE member_group_map.group_id = groups.group_id " .
+            "AND member_group_map.member_id = $::userid " .
+            "AND member_group_map.maptype = 0 " .
             "AND isbuggroup != 0 AND isactive = 1 ORDER BY description");
 
     my @groups;
 
     while (MoreSQLData()) {
-        my ($bit, $prodname, $description) = FetchSQLData();
+        my ($id, $prodname, $description) = FetchSQLData();
         # Don't want to include product groups other than this product.
         next unless($prodname eq $product || 
                     !defined($::proddesc{$prodname}));
@@ -356,19 +359,19 @@ if ($::usergroupset ne '0') {
         {
             # If this is a bookmarked template, then we only want to set the
             # bit for those bits set in the template.        
-            $check = formvalue("bit-$bit", 0);
+            $check = formvalue("bit-$id", 0);
         }
         else {
             # $group_bit will only have a non-zero value if we're using
             # bug groups and have one for this product.
             # If $group_bit is 0, it won't match the current group, so compare 
             # it to the current bit instead of checking for non-zero.
-            $check = ($group_bit == $bit);
+            $check = ($group_id == $id);
         }
 
         my $group = 
         {
-            'bit' => $bit , 
+            'bit' => $id , 
             'checked' => $check , 
             'description' => $description 
         };

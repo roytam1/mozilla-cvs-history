@@ -633,14 +633,13 @@ sub NewProcessOnePerson ($$$$$$$$$$$$) {
     }
 
         
-    SendSQL("SELECT userid, groupset " .
+    SendSQL("SELECT userid" .
             "FROM profiles WHERE login_name = " . SqlQuote($person));
-    my ($userid, $groupset) =  (FetchSQLData());
+    my ($userid) =  (FetchSQLData());
 
     $seen{$person} = 1;
 
     detaint_natural($userid);
-    detaint_natural($groupset);
 
     # if this person doesn't have permission to see info on this bug, 
     # return.
@@ -650,7 +649,7 @@ sub NewProcessOnePerson ($$$$$$$$$$$$) {
     # see the action of restricting the bug itself; the bug will just 
     # quietly disappear from their radar.
     #
-    return unless CanSeeBug($id, $userid, $groupset);
+    return unless CanSeeBug($id, $userid);
     
     # We shouldn't send changedmail if this is a dependency mail, and any of 
     # the depending bugs is not visible to the user.
@@ -658,7 +657,7 @@ sub NewProcessOnePerson ($$$$$$$$$$$$) {
         my $save_id = $dep_id;
         detaint_natural($dep_id) || warn("Unexpected Error: \@depbugs contains a non-numeric value: '$save_id'")
                                  && return;
-        return unless CanSeeBug($dep_id, $userid, $groupset);
+        return unless CanSeeBug($dep_id, $userid);
     }
 
     my %mailhead = %defmailhead;

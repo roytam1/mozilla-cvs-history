@@ -1020,12 +1020,12 @@ sub GetBugLink {
         # is saved off rather than overwritten
         PushGlobalSQLState();
 
-        SendSQL("SELECT bugs.bug_status, resolution, short_desc, groupset " .
+        SendSQL("SELECT bugs.bug_status, resolution, short_desc " .
                 "FROM bugs WHERE bugs.bug_id = $bug_num");
 
         # If the bug exists, save its data off for use later in the sub
         if (MoreSQLData()) {
-            my ($bug_state, $bug_res, $bug_desc, $bug_grp) = FetchSQLData();
+            my ($bug_state, $bug_res, $bug_desc) = FetchSQLData();
             # Initialize these variables to be "" so that we don't get warnings
             # if we don't change them below (which is highly likely).
             my ($pre, $title, $post) = ("", "", "");
@@ -1040,7 +1040,7 @@ sub GetBugLink {
                 $title .= " $bug_res";
                 $post = "</strike>";
             }
-            if ($bug_grp == 0 || CanSeeBug($bug_num, $::userid)) {
+            if (CanSeeBug($bug_num, $::userid)) {
                 $title .= " - $bug_desc";
             }
             $::buglink{$bug_num} = [$pre, value_quote($title), $post];
@@ -1205,9 +1205,11 @@ sub UserInGroup {
 
 sub BugInGroup {
     my ($bugid, $groupname) = (@_);
-    my $groupbit = GroupNameToBit($groupname);
     PushGlobalSQLState();
-    SendSQL("SELECT (bugs.groupset & $groupbit) != 0 FROM bugs WHERE bugs.bug_id = $bugid");
+    SendSQL("SELECT bug_group_map.bug_id != 0 FROM bug_group_map, groups 
+            WHERE bug_group_map.bug_id = $bugid
+            AND bug_group_map.group_id = groups.group_id
+            AND groups.name = SqlQuote($groupname)");
     my $bugingroup = FetchOneColumn();
     PopGlobalSQLState();
     return $bugingroup;
@@ -1222,17 +1224,6 @@ sub GroupExists {
     return $count;
 }
 
-# Given the name of an existing group, returns the bit associated with it.
-# If the group does not exist, returns 0.
-# !!! Remove this function when the new group system is implemented!
-sub GroupNameToBit {
-    my ($groupname) = (@_);
-    PushGlobalSQLState();
-    SendSQL("SELECT bit FROM groups WHERE name = " . SqlQuote($groupname));
-    my $bit = FetchOneColumn() || 0;
-    PopGlobalSQLState();
-    return $bit;
-}
 
 # Determines whether or not a group is active by checking 
 # the "isactive" column for the group in the "groups" table.

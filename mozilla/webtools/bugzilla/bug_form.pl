@@ -203,23 +203,32 @@ sub show_bug {
 
     # Groups
     my @groups;
-    if (0) { #FIXME
-        # FIXME if ($::usergroupset ne '0' || $bug{'groupset'} ne '0') {
+        if ($bug{'groupset'} ne '0') {
         my $bug_groupset = $bug{'groupset'};
 
-        SendSQL("SELECT bit, name, description, (bit & $bug_groupset != 0),
-                 (bit & $::usergroupset != 0) FROM groups 
-                 WHERE isbuggroup != 0 " .
-                 # Include active groups as well as inactive groups to which
+        SendSQL("SELECT groups.group_id, name, description, 
+                 ISNULL(bug_group_map.group_id) = 0,
+                 ISNULL(member_group_map.group_id) = 0
+                 FROM groups 
+                 LEFT JOIN bug_group_map 
+                 ON bug_group_map.group_id = groups.group_id
+                 AND bug_group_map.bug_id = $bug{'bug_id'}
+                 LEFT JOIN member_group_map 
+                 ON member_group_map.group_id = groups.group_id
+                 AND member_group_map.member_id = $::userid
+                 AND member_group_map.maptype = 0
+                 WHERE isbuggroup != 0 ");
+                 # FIXME Include active groups as well as inactive groups to which
                  # the bug already belongs.  This way the bug can be removed
                  # from an inactive group but can only be added to active ones.
-                "AND ((isactive = 1 AND (bit & $::usergroupset != 0)) OR
-                 (bit & $bug_groupset != 0))");
+                 #
+                 #"AND ((isactive = 1 AND (bit & $::usergroupset != 0)) OR
+                 # (bit & $bug_groupset != 0))");
 
         $user{'inallgroups'} = 1;
 
         while (MoreSQLData()) {
-            my ($bit, $name, $description, $ison, $ingroup) = FetchSQLData();
+            my ($groupid, $name, $description, $ison, $ingroup) = FetchSQLData();
             # For product groups, we only want to display the checkbox if either
             # (1) The bit is already set, or
             # (2) The user is in the group, but either:
@@ -233,7 +242,7 @@ sub show_bug {
             {
                 $user{'inallgroups'} &= $ingroup;
 
-                push (@groups, { "bit" => $bit,
+                push (@groups, { "bit" => $groupid,
                                  "ison" => $ison,
                                  "ingroup" => $ingroup,
                                  "description" => $description });            
