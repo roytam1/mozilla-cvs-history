@@ -91,9 +91,6 @@ $fullname{'12'} = 'jpeg';
 $mode{'64'} = 'Open';
 $branch{'64'} = 'HEAD';
 $fullname{'64'} = 'JPEG Image Handling';
-$mode{'73'} = 'Open';
-$branch{'73'} = 'HEAD';
-$fullname{'73'} = 'Layout';
 $mode{'74'} = 'Open';
 $branch{'74'} = 'HEAD';
 $fullname{'74'} = 'LibMocha';
@@ -241,9 +238,6 @@ if (m:^mozilla/js/ref/.*$:) {return '70';}
 if (m:^mozilla/js/src/.*$:) {return '70';}
 if (m:^mozilla/js/jsd/.*$:) {return '71';}
 if (m:^mozilla/js/jsj/.*$:) {return '72';}
-if (m:^mozilla/include/lo_ele\.h/.*$:) {return '73';}
-if (m:^mozilla/lib/libparse/.*$:) {return '73';}
-if (m:^mozilla/lib/libstyle/.*$:) {return '73';}
 if (m:^mozilla/include/libevent\.h/.*$:) {return '74';}
 if (m:^mozilla/include/libmocha\.h/.*$:) {return '74';}
 if (m:^mozilla/lib/libmocha/.*$:) {return '74';}
