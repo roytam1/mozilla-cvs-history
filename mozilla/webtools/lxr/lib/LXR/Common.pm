@@ -320,7 +320,12 @@ sub markupfile {
 
 	    &$outfun("</PRE>");
 	    &$outfun("<UL><B>Binary File: ");
-	    &$outfun("<A HREF=\"$Conf->{virtroot}/source".$virtp.$fname.
+
+            # jwz: URL-quote any special characters.
+            my $uname = $fname;
+            $uname =~ s|([^-a-zA-Z0-9.\@/_\r\n])|sprintf("%%%02X", ord($1))|ge;
+
+	    &$outfun("<A HREF=\"$Conf->{virtroot}/source".$virtp.$uname.
 		     &urlargs("raw=1")."\">");
 	    &$outfun("$fname</A></B>");
 	    &$outfun("</UL><PRE>");
