@@ -36,10 +36,11 @@ sub ForkAndWait($$$) {
     my ($dir, $app, $timeout) = @_;
     my $pid = fork;
 
-    if (! $pid) {
+    if ($pid == 0) {
         open(STDOUT, ">/dev/null");
         open(STDERR, ">/dev/null");
-        exec("cd $dir ; $app");
+        chdir($::opt_dir);
+        exec("$app");
         # bye!
     }
 
