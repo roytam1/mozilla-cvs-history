@@ -32,7 +32,7 @@ $mode{'24'} = 'Restricted';
 $branch{'24'} = 'HEAD';
 $fullname{'24'} = 'nsprpub';
 $blessed{'24'} = [];
-$super{'24'} = ['wtc%netscape.com',];
+$super{'24'} = ['srinivas%netscape.com','larryh%netscape.com','wtc%netscape.com',];
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'ColorSync_19980824_BRANCH') {
