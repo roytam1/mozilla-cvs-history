@@ -571,7 +571,7 @@ sub status_table_row {
       
       my ($vc_info);
 
-      my $filespec = TreeData::Tree2Filespec($treename);
+      my $filespec = TreeData::Tree2Filespec($tree);
       $vc_info .= "Filespec: $filespec <br>\n";
 
       $vc_info .= "Changes: @change_nums <br>\n";
@@ -910,7 +910,7 @@ sub get_new_change_sets {
   # use this command to pick a starting changeset
   # p4 changes -s submitted @2003/05/10,@now //...
 
-  $filespec = TreeData::Tree2Filespec($treename);
+  $filespec = TreeData::Tree2Filespec($tree);
   my (@cmd) = (
                'p4', 'changes', '-s', 
                '@'.$date_str.',@now', 

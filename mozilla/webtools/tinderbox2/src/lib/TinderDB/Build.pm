@@ -1259,7 +1259,7 @@ sub buildcell_links {
     # Binary file Link
     
     if ($current_rec->{'binaryname'}) {
-          $index_links.= "\t\t\t".HTMLPopup::Link(
+          $index_links.= "\t\t\t".HTMLPopUp::Link(
                                               "linktxt"=>"Get Binary File",
                                               "href"=>$current_rec->{'binaryname'},
                                               )."<br>\n";
@@ -1314,14 +1314,19 @@ sub buildcell_links {
   }
     
     # Binary file Link
-    
+    my $binary_ref = (
+                      FileStructure::get_filename($tree, build_din_dir) . 
+                      $current_rec->{'binaryname'}
+                      );
+
     if ($current_rec->{'binaryname'}) {
-      $links.= "\t\t\t".HTMLPopup::Link(
-                                 "linktxt"=>"B",
-                                 "href"=>$current_rec->{'binaryname'},
-                                 "windowtxt"=>$current_rec->{'info'}.$index_links, 
-                                 "windowtitle" =>$title,
-                                )."\n";
+        $links.= "\t\t\t".
+            HTMLPopUp::Link(
+                            "linktxt"=>"B",
+                            "href"=> $binary_ref,
+                            "windowtxt"=>$current_rec->{'info'}.$index_links, 
+                            "windowtitle" =>$title,
+                            )."\n";
     }
     
     # Bloat Data Link
