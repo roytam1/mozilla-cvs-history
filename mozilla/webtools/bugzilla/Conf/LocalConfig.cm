@@ -20,7 +20,7 @@ What text editor would you like to use?
 END
 
 
-do pathfix('Conf/Supplies/localconfig'); #path fix so it works on win
+do pathfix('Conf/Supplies/localconfig'); #pathfix so it works on win
 do pathfix('Conf/Supplies/localconfig.vars'); #read in the vars which are in another file
 
 if ($newstuff == "") {
