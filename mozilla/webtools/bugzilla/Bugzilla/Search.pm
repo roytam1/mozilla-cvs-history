@@ -813,12 +813,12 @@ sub init {
         }
     }
     my $query =  ("SELECT DISTINCT " . 
-                  " COUNT(DISTINCT ugmap.user_id) AS cntuseringroups, " .
+                    join(', ', @fields) .
+                  ", COUNT(DISTINCT ugmap.user_id) AS cntuseringroups, " .
                   " COUNT(DISTINCT bgmap.group_id) AS cntbugingroups, " .
                   " ((COUNT(DISTINCT ccmap.who) AND cclist_accessible) " .
                   "  OR ((bugs.reporter = $::userid) AND bugs.reporter_accessible) " .
-                  "  OR bugs.assigned_to = $::userid ) AS canseeanyway, " .
-                    join(', ', @fields) .
+                  "  OR bugs.assigned_to = $::userid ) AS canseeanyway " .
                   " FROM $suppstring" .
                   " LEFT JOIN bug_group_map AS bgmap " .
                   " ON bgmap.bug_id = bugs.bug_id " .
