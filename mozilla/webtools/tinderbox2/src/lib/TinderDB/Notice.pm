@@ -258,8 +258,8 @@ sub render_notice {
                              "\t\t\t[<b>".
                              HTMLPopUp::Link(
                                              "linktxt"=>$mailaddr,
-                                             "href"=>"mailto:$mailaddr",
-                                             "name"=>"$time/$mailaddr",
+                                             "href"=>"mailto:$mailaddr?subject=\"Tinderbox Notice\"",
+                                             "name"=>"$time\.$mailaddr",
                                              ).
                            " - ".
                            HTMLPopUp::Link(
@@ -351,7 +351,7 @@ sub status_table_row {
   # menus can view the notice.
 
   my $href = (FileStructure::get_filename($tree, 'tree_URL').
-              "/all_notices.html#$first_notice_time");
+              "/all_notices.html\#$first_notice_time");
 
   if ($rendered_notice) {
 
