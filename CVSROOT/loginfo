@@ -24,7 +24,7 @@
 #DEFAULT (echo ""; id; echo %s; date; cat) >> $CVSROOT/CVSROOT/commitlog
 # or
 #DEFAULT (echo ""; id; echo %{sVv}; date; cat) >> $CVSROOT/CVSROOT/commitlog
-ALL			$CVSROOT/CVSROOT/dolog.pl -h 127.0.0.1 -r /m/mozilla-mirror bonsai-new-checkin-daemon@warp.mcom.com
+# ALL			$CVSROOT/CVSROOT/dolog.pl -h 127.0.0.1 -r /m/mozilla-mirror bonsai-new-checkin-daemon@warp.mcom.com
 ALL			$CVSROOT/CVSROOT/dolog.pl -h 127.0.0.1 -r /cvsroot bonsai-new-checkin-daemon@lounge.mozilla.org
 # ALL			$CVSROOT/CVSROOT/dolog.pl -h 127.0.0.1 -r /cvsroot bonsai@tinderbox.seawood.org
 # mozilla/webtools	$CVSROOT/CVSROOT/dolog.pl -h 127.0.0.1 -r /cvsroot webtools-changed@warp.mcom.com
