@@ -14,7 +14,7 @@
 passwd
 readers
 commitcheck.pl
-# dolog.pl #comment this out during dmose 10K+ file licence megawackage
+dolog.pl
 FilesToNotExport
 cvsmailfilter.pl
 sendnotification.pl
