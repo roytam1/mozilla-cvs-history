@@ -40,6 +40,11 @@
 # Contributor(s): 
 
 
+# $Revision$ 
+# $Date$ 
+# $Author$ 
+# $Source$ 
+# $Name$ 
 
 
 
@@ -561,7 +566,7 @@ sub status_table_row {
       my $cell_contents = $text_browser_color_string ||
           $HTMLPopUp::EMPTY_TABLE_CELL;
 
-    @outrow = ("\t<!-- skipping: VC: tree: $tree -->".
+    @outrow = ("\t<!-- skipping: VC_Bonsai: tree: $tree -->".
                "<td align=center $cell_options>$cell_contents</td>\n");
   }
   
