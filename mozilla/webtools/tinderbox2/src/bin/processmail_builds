@@ -980,7 +980,9 @@ sub parse_mail_body {
   print ERROR_PICK "\n";
   print ERROR_PICK "<!-- end error pick menu -->\n";
   print ERROR_PICK "\n";
-  print ERROR_PICK "<H2>Build Log</H2>\n\n";
+  print ERROR_PICK "<H2>Build Log</H2>\n";
+  print ERROR_PICK "<pre>\n";
+  print ERROR_PICK "\n\n";
 
   close(BINARY) ||
     die("Could not close file: '$TMP_FILE{'binaryfile'}'. $!\n");
