@@ -752,7 +752,6 @@ MozillaTinderboxAll -a \
 	SeaMonkeyAll \
         mozilla/security/psm \
         mozilla/accessible \
-        mozilla/gfx2 \
         mozilla/security/manager \
         mozilla/tools/trace-malloc \
         mozilla/modules/libpr0n
