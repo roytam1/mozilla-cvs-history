@@ -254,7 +254,7 @@ echo"<A HREF=\"install.php?id=$id&vid=$vid\" TITLE=\"Download $name $version\"><
 } else {
 //Make Theme Install work again, Bug 246754
 //echo"<A HREF=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'install.php/$filename?id=$id&vid=$vid','$name'))\"";
-echo"<A HREF=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'$uri','$name'))\" TITLE=\"Install $name $version (Right-Click to Download)\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" ALT=\"\">&nbsp;( Install Now )</A><BR>";
+echo"<A HREF=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'$uri','$name $version'))\" TITLE=\"Install $name $version (Right-Click to Download)\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" ALT=\"\">&nbsp;( Install Now )</A><BR>";
 }
 echo"
 <SPAN class=\"filesize\">&nbsp;&nbsp;$filesize KB, ($time @ $speed"."k)</SPAN></DIV>
@@ -374,7 +374,7 @@ echo"<DIV class=\"iconbar\" style=\"width: 100px;\">";
 if ($type=="T") {
 //Make Theme Install work again, Bug 246754
 //echo"<A HREF=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'install.php?id=$id&vid=$vid','$name'))\">";
-echo"<A HREF=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'$uri','$name'))\">";
+echo"<A HREF=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'$uri','$name $version'))\">";
 } else {
 echo"<A HREF=\"install.php?id=$id&vid=$vid\">";
 }

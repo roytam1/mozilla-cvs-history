@@ -255,7 +255,8 @@ echo"
 if ($appname=="Thunderbird") { 
 echo"<A HREF=\"install.php?id=$id&vid=$vid\" TITLE=\"Download $name $version (Right-Click to Download)\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" ALT=\"\">&nbsp;( Download Now )</A><BR>";
 } else {
-echo"<A HREF=\"install.php/$filename?id=$id&vid=$vid\" TITLE=\"Install $name $version (Right-Click to Download)\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" ALT=\"\">&nbsp;( Install Now )</A><BR>";
+echo"<A HREF=\"javascript:void(InstallTrigger.install({'$name $version':'$uri'}))\" TITLE=\"Install $name $version\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" ALT=\"\">&nbsp;( Install Now )</A><BR>";
+//echo"<A HREF=\"install.php/$filename?id=$id&vid=$vid\" TITLE=\"Install $name $version (Right-Click to Download)\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" ALT=\"\">&nbsp;( Install Now )</A><BR>";
 }
 echo"
 <SPAN class=\"filesize\">&nbsp;&nbsp;$filesize KB, ($time @ $speed"."k)</SPAN></DIV>
@@ -371,7 +372,8 @@ echo"</SPAN>\n";
 
 //Icon Bar Modules
 echo"<DIV style=\"height: 34px\">";
-echo"<DIV class=\"iconbar\" style=\"width: 100px;\"><A HREF=\"install.php/$filename?id=$id&vid=$vid\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" TITLE=\"Install $name (Right-Click to Download)\" ALT=\"\">Install</A><BR><SPAN class=\"filesize\">Size: $filesize kb</SPAN></DIV>";
+echo"<DIV class=\"iconbar\" style=\"width: 100px;\"><A HREF=\"javascript:void(InstallTrigger.install({'$name $version':'$uri'}))\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" TITLE=\"Install $name (Right-Click to Download)\" ALT=\"\">Install</A><BR><SPAN class=\"filesize\">Size: $filesize kb</SPAN></DIV>";
+//echo"<DIV class=\"iconbar\" style=\"width: 100px;\"><A HREF=\"install.php/$filename?id=$id&vid=$vid\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" TITLE=\"Install $name (Right-Click to Download)\" ALT=\"\">Install</A><BR><SPAN class=\"filesize\">Size: $filesize kb</SPAN></DIV>";
 echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($appname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float: left\" ALT=\"$appname\">&nbsp;Works with:<BR>&nbsp;&nbsp;$minappver - $maxappver</DIV>";
 echo"<DIV class=\"iconbar\" style=\"width: 90px;\"><IMG SRC=\"/images/".strtolower($osname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float: left\" ALT=\"\">OS:<BR>"; if($osname=="ALL") {echo"All OSes";} else {echo"$osname";} echo"</DIV>";
 echo"</DIV>";

@@ -44,6 +44,11 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
  $row = mysql_fetch_array($sql_result);
 $uri=$row["URI"]; 
 
+header("Location: $uri")
+exit;
+
+//XXX This codepath sucks performance wise and has been disabled. See Bug 267822.
+
 // New DownloadCount management Code..
 //Check for user, to see if they recently accessed this file (filters duplicate/triplicate+ requests in a short period).
   $maxlife = date("YmdHis", mktime(date("H"), date("i")-10, date("s"), date("m"), date("d"), date("Y")));
