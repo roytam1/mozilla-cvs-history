@@ -185,14 +185,14 @@ if (!$category) {$categoryname="All"; } else {$categoryname = $category;}
 echo"<DIV class=\"pagenum\" "; if ($application!="mozilla") {echo" style=\"margin-right: 95px;\""; } echo">";
 $previd=$pageid-1;
 if ($previd >"0") {
-echo"<a href=\"?pageid=$previd\">&#171; Previous</A> · ";
+echo"<a href=\"?pageid=$previd\">&#171; Previous</A> &bull; ";
 }
 echo"Page $pageid of $num_pages";
 
 
 $nextid=$pageid+1;
 if ($pageid <$num_pages) {
-echo" · <a href=\"?pageid=$nextid\">Next &#187;</a>";
+echo" &bull; <a href=\"?pageid=$nextid\">Next &#187;</a>";
 }
 
 echo"</DIV>\n";
@@ -408,7 +408,7 @@ echo"<A HREF=\"moreinfo.php?id=$id&vid=$vid\"><IMG SRC=\"/images/download.png\" 
 } else {
 //Make Theme Install work again, Bug 246754
 //echo"<A HREF=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'install.php?id=$id&vid=$vid','$name'))\">";
-echo"<A HREF=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'$uri','$name'))\">";
+echo"<A HREF=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'$uri','$name $version'))\">";
 echo"<IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" TITLE=\"Install $name\" ALT=\"\">Install</A>";
 }
 echo"<BR><SPAN class=\"filesize\">Size: $filesize kb</SPAN></DIV>";
@@ -445,14 +445,14 @@ echo"<DIV id=\"listnav\">";
 echo"<DIV class=\"pagenum\">";
 $previd=$pageid-1;
 if ($previd >"0") {
-echo"<a href=\"?pageid=$previd\">&#171; Previous</A> · ";
+echo"<a href=\"?pageid=$previd\">&#171; Previous</A> &bull; ";
 }
 echo"Page $pageid of $num_pages";
 
 
 $nextid=$pageid+1;
 if ($pageid <$num_pages) {
-echo" · <a href=\"?pageid=$nextid\">Next &#187;</a>";
+echo" &bull; <a href=\"?pageid=$nextid\">Next &#187;</a>";
 }
 echo"<BR>\n";
 

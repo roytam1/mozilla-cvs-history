@@ -41,8 +41,8 @@
 <DIV class="contentbox" style="margin-left: 2px; border-color: #00E;">
 <DIV class="boxheader">Firefox 1.0 Preview Release and Thunderbird 0.8 Released!</DIV>
 <SPAN class="itemdescription">
-<P>The Firefox 1.0 Preview Release is now available. Three large new features — Live Bookmarks, the Find bar and a new plugin
-installer — have landed since 0.9, along with a host of critical bugfixes.</P>
+<P>The Firefox 1.0 Preview Release is now available. Three large new features - Live Bookmarks, the Find bar and a new plugin
+installer - have landed since 0.9, along with a host of critical bugfixes.</P>
 
 <P>Mozilla Thunderbird 0.8 has just been released! This latest milestone adds a frequently requested feature: support for
 filtering all POP mail into a Global Inbox under Local Folders. In addition, this release sees the debut of
