@@ -41,7 +41,7 @@ use Conf;
 # runconf() will handle the path mapping for XP purposes
 
 sub runconf {
-	my ($path) = @_;
-	my @pathlist = split('/',$path);
-	require File::Spec->catfile(@pathlist);
+    my ($path) = @_;
+    my @pathlist = split('/',$path);
+    require File::Spec->catfile(@pathlist);
 }

@@ -43,43 +43,43 @@ eval "use Conf::Supplies::Config";
 # call me like this:
 # ask('questionname','question?','default answer');
 sub ask {
-	my ($name, $question) = @_;
-	$default = $PConfig{$name};
-	print "$question [$default]";
-	$answer = <STDIN>;
-	$answer = chomp($answer);
-	$main::c{$name} = $answer;
+    my ($name, $question) = @_;
+    $default = $PConfig{$name};
+    print "$question [$default]";
+    $answer = <STDIN>;
+    $answer = chomp($answer);
+    $main::c{$name} = $answer;
 } 
 
 sub output {
-	my ($output, $loud) = @_;
-	no warnings; # shut up the stupid warning
-	unless (getParam("quiet") == 1||undef && $loud == 0||undef) {
-	   print $output;
-	}
+    my ($output, $loud) = @_;
+    no warnings; # shut up the stupid warning
+    unless (getParam("quiet") == 1||undef && $loud == 0||undef) {
+       print $output;
+    }
 }
 
 sub setConf($$) {
-	my ($name, $value) = @_;
-	$main::c{$name} = $value; # and set it
+    my ($name, $value) = @_;
+    $main::c{$name} = $value; # and set it
 }
 
 sub getConf($) { # not sure why we need this, but...
-	my $param = @_;
-	return $main::c{$param}; # return the param
+    my $param = @_;
+    return $main::c{$param}; # return the param
 }
 
 
 # ask for the param name
 sub getParam($) {
-	my $param = @_;
-	return $params{$param}; # return the param
+    my $param = @_;
+    return $params{$param}; # return the param
 }
 
 # set a param
 sub setParam($$) {
-	my ($name, $value) = @_;
-	$params{$name} = $value; # and set it
+    my ($name, $value) = @_;
+    $params{$name} = $value; # and set it
 }
 
 1;
