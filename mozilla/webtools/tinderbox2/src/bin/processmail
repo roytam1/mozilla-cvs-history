@@ -407,7 +407,7 @@ sub check_required_vars {
     # Keep the spacing between builds greater then our minumum HTML
     # grid spacing.  There can be very frequent updates but different
     # builds must be spaced apart.
-    my $safe_min = TinderDB::MIN_TABLE_SPACING + ($main::SECONDS_PER_MINUTE*2);
+    my $safe_min = TinderDB::TABLE_SPACING + ($main::SECONDS_PER_MINUTE*2);
     ($build_start > $safe_min) ||
        die("New build started too frequently.  Builds must start".
            "at least ".($safe_min).
