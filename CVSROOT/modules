@@ -427,7 +427,7 @@ RaptorAll -a \
 TransformiixStandalone -a \
 	mozilla/config \
 	mozilla/expat \
-	mozilla/extentions/transformiix
+	mozilla/extensions/transformiix
 
 #######################################################################
 # Modules for the Directory SDK.  There are two users of the libldap
