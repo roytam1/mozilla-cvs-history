@@ -1274,7 +1274,7 @@ sub buildcell_links {
       $index_links .= (
                  "\t\t\t". 
                  VCDisplay::query(
-                                   'linktxt'=> "Changes since last build",
+                                   'linktxt'=> "Check-ins since last build",
                                    'tree' => $tree,
                                    'mindate' => $mindate,
                                    'maxdate' => $maxdate,
