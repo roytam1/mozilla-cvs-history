@@ -54,8 +54,6 @@ print qq{
 
 <br><center><img width="329" height="220" src="ant.jpg" border="2" alt="Da Ant"></center>
 
-<p><b>Notice:</b> This was written for the new query page that will probably be added in a version later than Bugzilla 2.12 in order to fix some regressions. Therefore, the layout of the forms shown in captions might not be exactly as they appear on the query page. The number of fields, though, is the same and you should be able to locate the fields on the current query.cgi without much problem.
-
 <p><br><center><h3>The Sections</h3></center>
 
 <p>The query page is broken down into the following sections:
