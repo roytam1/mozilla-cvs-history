@@ -566,6 +566,7 @@ SeaMonkeyCore -a \
 	mozilla/xpcom/.cvsignore \
 	mozilla/xpcom/Makefile.in \
 	mozilla/xpcom/makefile.win \
+	mozilla/xpcom/appshell \
 	mozilla/xpcom/base \
 	mozilla/xpcom/build \
 	mozilla/xpcom/components \
