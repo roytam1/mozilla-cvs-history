@@ -23,6 +23,7 @@
 
 use diagnostics;
 use strict;
+use lib ".";
 
 require "CGI.pl";
 require "defparams.pl";
@@ -31,6 +32,7 @@ require "defparams.pl";
 use vars @::param_desc,
     @::param_list;
 
+ConnectToDatabase();
 confirm_login();
 
 print "Content-type: text/html\n\n";

@@ -25,9 +25,11 @@
 
 use diagnostics;
 use strict;
+use lib ".";
 
 require "CGI.pl";
 
+ConnectToDatabase();
 confirm_login();
 
 print "Content-type: text/html\n\n";
@@ -141,8 +143,7 @@ unless ($action) {
     print "<p>";
     print "<b>Name</b> is what is used with the UserInGroup() function in any
 customized cgi files you write that use a given group.  It can also be used by
-people submitting bugs by email to limit a bug to a certain groupset.  It
-may not contain any spaces.<p>";
+people submitting bugs by email to limit a bug to a certain groupset. <p>";
     print "<b>Description</b> is what will be shown in the bug reports to
 members of the group where they can choose whether the bug will be restricted
 to others in the same group.<p>";
@@ -519,7 +520,7 @@ if ($action eq 'delete') {
     }
     SendSQL("SELECT bug_id FROM bugs WHERE (groupset & $bit)");
     if (FetchOneColumn()) {
-      SendSQL("UPDATE bugs SET groupset=(groupset-$bit) " .
+      SendSQL("UPDATE bugs SET groupset=(groupset-$bit), delta_ts=delta_ts " .
               "WHERE (groupset & $bit)");
       print "All bugs have had group bit $bit cleared.  Any of these " .
             "bugs that were not also in another group are now " .
