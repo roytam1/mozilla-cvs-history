@@ -54,8 +54,18 @@ use FileStructure;
 
 #       Main        
 {
+    my (%form) = HTMLPopUp::split_cgi_args(
+                                           'cgi_remove_args' => ['daemon-mode'],
+                                           );
+
+    my ($tree) = $form{'tree'};
+
     $tree = 'SeaMonkey';
-    $url = FileStructure::get_filename($tree, 'tree_URL');
+    $url = (
+            FileStructure::get_filename($tree, 'tree_URL').
+            '/'.
+            $FileStructure::DEFAULT_HTML_PAGE
+            );
 
     HTMLPopUp::regenerate_HTML_pages();
 
