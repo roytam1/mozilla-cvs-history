@@ -33,7 +33,7 @@
 
 # complete rewrite by Ken Estes:
 #	 kestes@staff.mail.com Old work.
-#	 kestes@tradinglinx.com New work.
+#	 kestes@ReefEdge.com New work.
 #	 kestes@walrus.com Home.
 # Contributor(s): 
 
