@@ -172,6 +172,8 @@ $DB_TRIM_SECONDS = (60 * 60 * 24 * 8);
 	       # control system.
 	       
 	       'TinderHeader::TreeState',
+	       'TinderHeader::TreeState_Bonsai',
+
 	      );
 
 # Each of the TinderHeader method appears on the left side of this
