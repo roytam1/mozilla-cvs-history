@@ -10,6 +10,7 @@ $super{'15'} = ['ebb3%apple.com','pinkerton%netscape.com','pnunn%netscape.com','
 $mode{'4'} = 'Open';
 $branch{'4'} = 'HEAD';
 $fullname{'4'} = 'default';
+$defaultid = '4';
 $mode{'3'} = 'Closed';
 $branch{'3'} = 'HEAD';
 $fullname{'3'} = 'despotaccess';
