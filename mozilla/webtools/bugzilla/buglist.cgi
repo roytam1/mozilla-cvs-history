@@ -47,7 +47,7 @@ sub sillyness {
     $zz = @::legal_severity;
     $zz = @::versions;
     $zz = @::target_milestone;
-#    $zz = %::proddesc;
+    $zz = %::proddesc;
 };
 
 my $serverpush = 0;
@@ -816,8 +816,6 @@ sub GenerateSQL {
                   " FROM $suppstring" .
                   " WHERE " . join(' AND ', (@wherepart, @andlist)) .
                   " GROUP BY bugs.bug_id");
-
-    # $query = SelectVisible($query, $userid);
 
     if ($debug) {
         print "<P><CODE>" . value_quote($query) . "</CODE><P>\n";
@@ -1652,58 +1650,61 @@ document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCh
 <BR>
 <TEXTAREA WRAP=HARD NAME=comment ROWS=5 COLS=80></TEXTAREA><BR>";
 
-#if($::usergroupset ne '0') {
-#    SendSQL("select bit, name, description, isactive ".
-#            "from groups where bit & $::usergroupset != 0 ".
-#            "and isbuggroup != 0 ".
-#            "order by description");
-#    # We only print out a header bit for this section if there are any
-#    # results.
-#    my $groupFound = 0;
-#    my $inactiveFound = 0;
-#    while (MoreSQLData()) {
-#        my ($bit, $groupname, $description, $isactive) = (FetchSQLData());
-#        if(($prodhash{$groupname}) || (!defined($::proddesc{$groupname}))) {
-#          if(!$groupFound) {
-#            print "<B>Groupset:</B><BR>\n";
-#            print "<TABLE BORDER=1><TR>\n";
-#            print "<TH ALIGN=center VALIGN=middle>Don't<br>change<br>this group<br>restriction</TD>\n";
-#            print "<TH ALIGN=center VALIGN=middle>Remove<br>bugs<br>from this<br>group</TD>\n";
-#            print "<TH ALIGN=center VALIGN=middle>Add<br>bugs<br>to this<br>group</TD>\n";
-#            print "<TH ALIGN=left VALIGN=middle>Group name:</TD></TR>\n";
-#            $groupFound = 1;
-#          }
-#          # Modifying this to use radio buttons instead
-#          print "<TR>";
-#          print "<TD ALIGN=center><input type=radio name=\"bit-$bit\" value=\"-1\" checked></TD>\n";
-#          print "<TD ALIGN=center><input type=radio name=\"bit-$bit\" value=\"0\"></TD>\n";
-#          if ($isactive) {
-#            print "<TD ALIGN=center><input type=radio name=\"bit-$bit\" value=\"1\"></TD>\n";
-#          } else {
-#            $inactiveFound = 1;
-#            print "<TD>&nbsp;</TD>\n";
-#          }
-#          print "<TD>";
-#          if(!$isactive) {
-#            print "<I>";
-#          }
-#          print "$description";
-#          if(!$isactive) {
-#            print "</I>";
-#          }
-#          print "</TD></TR>\n";
-#        }
-#    }
-#    # Add in some blank space for legibility
-#    if($groupFound) {
-#      print "</TABLE>\n";
-#      if ($inactiveFound) {
-#        print "<FONT SIZE=\"-1\">(Note: Bugs may not be added to inactive groups (<I>italicized</I>), only removed)</FONT><BR>\n";
-#      }
-#      print "<BR><BR>\n";
-#    }
-#}
-#
+SendSQL("SELECT COUNT(*) FROM user_group_map WHERE user_id = $userid");
+my $usergroupset = FetchOneColumn();
+
+if($usergroupset) {
+    SendSQL("select groups.group_id, name, description, isactive ".
+            "from groups, user_group_map where groups.group_id = user_group_map.group_id ".
+            "and user_group_map.user_id = $userid and isbuggroup != 0 ".
+            "order by description");
+    # We only print out a header bit for this section if there are any
+    # results.
+    my $groupFound = 0;
+    my $inactiveFound = 0;
+    while (MoreSQLData()) {
+        my ($groupid, $groupname, $description, $isactive) = (FetchSQLData());
+        if(($prodhash{$groupname}) || (!defined($::proddesc{$groupname}))) {
+          if(!$groupFound) {
+            print "<B>Groupset:</B><BR>\n";
+            print "<TABLE BORDER=1><TR>\n";
+            print "<TH ALIGN=center VALIGN=middle>Don't<br>change<br>this group<br>restriction</TD>\n";
+            print "<TH ALIGN=center VALIGN=middle>Remove<br>bugs<br>from this<br>group</TD>\n";
+            print "<TH ALIGN=center VALIGN=middle>Add<br>bugs<br>to this<br>group</TD>\n";
+            print "<TH ALIGN=left VALIGN=middle>Group name:</TD></TR>\n";
+            $groupFound = 1;
+          }
+          # Modifying this to use radio buttons instead
+          print "<TR>";
+          print "<TD ALIGN=center><input type=radio name=\"group-$groupid\" value=\"-1\" checked></TD>\n";
+          print "<TD ALIGN=center><input type=radio name=\"group-$groupid\" value=\"0\"></TD>\n";
+          if ($isactive) {
+            print "<TD ALIGN=center><input type=radio name=\"group-$groupid\" value=\"1\"></TD>\n";
+          } else {
+            $inactiveFound = 1;
+            print "<TD>&nbsp;</TD>\n";
+          }
+          print "<TD>";
+          if(!$isactive) {
+            print "<I>";
+          }
+          print "$description";
+          if(!$isactive) {
+            print "</I>";
+          }
+          print "</TD></TR>\n";
+        }
+    }
+    # Add in some blank space for legibility
+    if($groupFound) {
+      print "</TABLE>\n";
+      if ($inactiveFound) {
+        print "<FONT SIZE=\"-1\">(Note: Bugs may not be added to inactive groups (<I>italicized</I>), only removed)</FONT><BR>\n";
+      }
+      print "<BR><BR>\n";
+    }
+}
+
 
 
 

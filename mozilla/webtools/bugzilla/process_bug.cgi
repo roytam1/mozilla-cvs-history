@@ -537,54 +537,6 @@ sub CheckonComment( $ ) {
     return( ! $ret ); # Return val has to be inverted
 }
 
-# Changing this so that it will process groups from checkboxes instead of
-# select lists.  This means that instead of looking for the group-X values in
-# the form, we need to loop through all the bug groups this user has access
-# to, and for each one, see if it's selected.
-# In addition, adding a little extra work so that we don't clobber groupsets
-# for bugs where the user doesn't have access to the group, but does to the
-# bug (as with the proposed reporter access patch.)
-if($whoid ne '0') {
-    # First, find out what groups this bug is currently private to.
-    SendSQL("select group_id from bug_group_map where bug_id = $::FORM{id}");
-    my %buggroups = ();
-    while ( my @row = FetchSQLData() ) {
-        $buggroups{$row[0]} = 1 if $row[0];
-    }
-
-    # Second, find out what groups this person is a member of.
-    SendSQL("select group_id from user_group_map where user_id = $whoid");
-    my @mygroups = ();
-    while ( my @row = FetchSQLData() ) {
-        push (@mygroups, $row[0]) if $row[0];
-    }
-
-    # Third, find out which ones were checked.
-    my %checked = ();
-    foreach my $b ( grep(/^group-.*$/, keys %::FORM) ) {
-       if ( $::FORM{$b} ) {
-            $b =~ s/^group-//;
-            $checked{$b} = 1;
-       }
-    }
-
-    # Create an effective list of groups for insertion
-    foreach my $group ( @mygroups ) {
-        if ( $checked{$group} ) {
-            $buggroups{$group} = 1; 
-        } else {
-            $buggroups{$group} = 0;
-        }
-    }
-
-    # Update the bug_group table with new group values.
-    SendSQL("delete from bug_group_map where bug_id = $::FORM{id}");
-    foreach my $group ( keys %buggroups ) {
-        next if $buggroups{$group} != 1;
-        SendSQL("INSERT INTO bug_group_map VALUES ($::FORM{id}, $group)");
-    }
-}
-
 foreach my $field ("rep_platform", "priority", "bug_severity",          
                    "summary", "component", "bug_file_loc", "short_desc",
                    "product", "version", "op_sys",
@@ -958,11 +910,10 @@ foreach my $id (@idlist) {
     my $write = "WRITE";        # Might want to make a param to control
                                 # whether we do LOW_PRIORITY ...
     SendSQL("LOCK TABLES bugs $write, bugs_activity $write, cc $write, " .
-            "cc AS selectVisible_cc $write, " .
             "profiles $write, dependencies $write, votes $write, " .
             "keywords $write, longdescs $write, fielddefs $write, " .
             "keyworddefs READ, groups READ, attachments READ, products READ, " .
-            "user_group_map READ, bug_group_map READ");
+            "user_group_map READ, bug_group_map WRITE");
     my @oldvalues = SnapShotBug($id);
     my %oldhash;
     my $i = 0;
@@ -1364,6 +1315,45 @@ The changes made were:
     if ($bug_changed) {
         SendSQL("UPDATE bugs SET delta_ts = " . SqlQuote($timestamp) . " WHERE bug_id = $id");
     }
+
+    # Make necessary group membership changes
+    # Changing this so that it will process groups from checkboxes instead of
+    # select lists.  This means that instead of looking for the group-X values in
+    # the form, we need to loop through all the bug groups this user has access
+    # to, and for each one, see if it's selected.
+    # In addition, adding a little extra work so that we don't clobber groupsets
+    # for bugs where the user doesn't have access to the group, but does to the
+    # bug (as with the proposed reporter access patch.)
+    if ($whoid) {
+        my %buggroups = ();
+
+        # First, find out what groups this bug is currently private to.
+        SendSQL("SELECT group_id FROM bug_group_map WHERE bug_id = $id");
+        while (my ($groupid) = FetchSQLData()) {
+            $buggroups{$groupid} = 1;
+        }
+
+        # Second, find out what groups this person is a member of and see if they made changes.
+        SendSQL("SELECT groups.group_id, groups.isactive FROM groups, user_group_map WHERE " . 
+                "groups.group_id = user_group_map.group_id AND user_group_map.user_id = $whoid");
+        while (my ($groupid, $isactive) = FetchSQLData()) {
+            # Box not checked so remove from group
+            if (!$::FORM{"group-$groupid"}) {  
+                $buggroups{$groupid} = 0;
+            # Box checked and is active so add to group
+            } elsif ($::FORM{"group-$groupid"} == 1 && $isactive) {
+                $buggroups{$groupid} = 1;
+            }  # Else leave alone
+        }
+
+        # Update the bug_group table with new group values.
+        SendSQL("DELETE FROM bug_group_map WHERE bug_id = $id");
+        foreach my $group (keys %buggroups) {
+            next if !$buggroups{$group};
+            SendSQL("INSERT INTO bug_group_map VALUES ($id, $group)");
+        }
+    }   
+
     print "<TABLE BORDER=1><TD><H2>Changes to bug $id submitted</H2>\n";
     SendSQL("unlock tables");
 
