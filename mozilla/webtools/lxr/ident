@@ -43,10 +43,9 @@ use DB_File;
 sub ident {
 
     print("<P ALIGN=CENTER>\n",
-	  "Free-text search for an identifier (function name, variable ",
-	  "name, typedef, etc.).\n",
-	  "<BR>(Need some <A HREF=\"search-help.html\">Hints</A> ",
-	  "on performing searches?)\n");
+	  "Type the full name of an identifier to summarize",
+	  "<BR>(a function name, variable name, typedef, etc.)\n",
+	  "<BR>Matches are case-sensitive.\n");
 
     print("<form method=get action=\"ident\">\n");
 
