@@ -59,6 +59,7 @@ MozillaCommon -a \
     ns/lib/plugin  \
     ns/lib/xlate \
     ns/lib/xp  \
+    ns/modules/edtplug/classes  \
     ns/modules/edtplug/src  \
     ns/modules/edtplug/include \
     ns/modules/libfont/classes  \
@@ -187,7 +188,6 @@ MozillaUnixOnly -a \
     ns/modules/progress/Makefile  \
     ns/modules/progress/public  \
     ns/modules/security/Makefile  \
-    ns/modules/softupdt/Makefile  \
     ns/modules/zlib/Makefile  \
     ns/nav-java/Makefile  \
     ns/lib/mariner  \
@@ -207,7 +207,6 @@ MozillaMacOnly -a \
     ns/lib/mac/PowerPlant  \
     ns/lib/mac/UserInterface  \
     ns/modules/coreincl  \
-    ns/modules/edtplug/classes  \
     ns/modules/edtplug/macbuild  \
     ns/modules/libfont/jmcgen/include  \
     ns/modules/libfont/jmcgen/src  \
