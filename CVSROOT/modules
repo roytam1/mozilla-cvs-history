@@ -556,6 +556,7 @@ SeaMonkeyCore -a \
 	mozilla/modules/zlib \
 	mozilla/nav-java \
 	mozilla/network \
+	mozilla/netwerk \
 	mozilla/nglayout.mk \
 	mozilla/nsprpub \
 	mozilla/profile \
