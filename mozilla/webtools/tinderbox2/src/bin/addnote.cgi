@@ -192,6 +192,8 @@ sub save_note {
   push @out, "posted notice: \n",p().
     pre($NOTE);
 
+  HTMLPopUp::regenerate_HTML_pages();
+
   return @out;
 }
 

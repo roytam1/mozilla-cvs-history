@@ -265,7 +265,7 @@ sub format_input_page {
               password_field(-name=>'passwd', -size=>8,),
               p(),
               checkbox( -label=>("If correct, ".
-                                 "remember password and email ".
+                                 "remember password and email field".
                                  "as a cookie"),
                         -name=>'use_cookie'),
               p(),
@@ -534,12 +534,8 @@ sub make_all_changes {
                       "different administrators can change ".
                       "the settings at the same time.");
 
-      # I believe this will work, it is too hard to get the full
-      # pathname of tinder.cgi into the script. However the webserver
-      # may play strange games with our ARGV and prevent us from
-      # updating the state.
+      HTMLPopUp::regenerate_HTML_pages();
 
-      system( (basename($0).'/tinder.cgi'), '--daemon-mode' );
     } else {
       push @results, "No changes attempted due to security issues.";
     }
