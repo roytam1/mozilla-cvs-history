@@ -3213,6 +3213,8 @@ if (GetFieldDef("profiles", "groupset")) {
                           FROM bugs_activity WHERE fieldid = $gsid");
     $sth->execute();
     while (my ($bid, $bwhen, $bwho, $added, $removed) = $sth->fetchrow_array) {
+        $added ||= 0;
+        $removed ||= 0;
         my $sth2 = $dbh->prepare("SELECT name FROM groups WHERE (bit & $added) != 0 AND (bit & $removed) = 0");
         $sth2->execute();
         my @logadd = ();
