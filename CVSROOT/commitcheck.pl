@@ -310,6 +310,8 @@ $fullname{'93'} = 'Zlib';
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'HEAD') {
+if (m:^mozilla/xpcom/.*$:) {return '89';}
+if (m:^xpcom/io$:) {return '90';}
 if (m:^mozilla/modules/zlib/.*$:) {return '93';}
 if (m:^gfx/src/xprint$:) {return '179';}
 if (m:^mozilla/view/.*$:) {return '96';}
@@ -449,8 +451,6 @@ if (m:^mozilla/modules/softupdt/.*$:) {return '87';}
 if (m:^mozilla/content/xml/.*$:) {return '88';}
 if (m:^mozilla/expat/.*$:) {return '88';}
 if (m:^mozilla/extensions/xmlextras/.*$:) {return '88';}
-if (m:^mozilla/xpcom/.*$:) {return '89';}
-if (m:^xpcom/io$:) {return '90';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
