@@ -142,11 +142,9 @@ unless ($action) {
         print "</td>\n";
         print "<input type=hidden name=\"oldgroup_type-$groupid\" value=\"$group_type\"></td>\n";
         print "<td align=center valign=middle>
-               <a href=\"editgroups.cgi?action=changeform&group=$groupid\">Edit</a>
-               |
-               <a href=\"editgroups.cgi?action=del&group=$groupid\">Delete</a>
-               </td>\n";
-        print "</tr>\n";
+               <a href=\"editgroups.cgi?action=changeform&group=$groupid\">Edit</a>";
+        print " | <a href=\"editgroups.cgi?action=del&group=$groupid\">Delete</a>" if ($group_type != 0);
+        print "</td></tr>\n";
     }
 
     print "<tr>\n";
