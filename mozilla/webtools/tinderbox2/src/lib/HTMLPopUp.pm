@@ -2,8 +2,10 @@
 
 # HTML.pm - a lightweight replacement for cgi.pm and general html/cgi
 # processing.  This provides popup windows and a more highly
-# structured interface for linking then CGI.pm does.  The parts of
-# tinderbox which need user input via forms all use the real CGI.pm
+# structured interface for linking then CGI.pm does.  The popup window
+# code is easily changed to use different technology if needed.  The
+# parts of tinderbox which need user input via forms all use the
+# standard perl library CGI.pm.
 
 # Each function here builds an $out string.  If there are bugs in the
 # code you can put your breakpoint on the return statement and look at
@@ -57,6 +59,19 @@ $IMPLS = ( ($TinderConfig::PopUpImpl) ||
          );
 
 main::require_modules($IMPLS);
+
+
+# The code at these sites look interesting.  Perhaps I will add them as
+# an alternative implementation someday.
+
+
+# 1) http://www.webreference.com/dhtml/hiermenus/
+
+# 2) Top Navigational Bar II
+#    from Dynamic Drive DHTML code library (http://dynamicdrive.com)
+#    including navbar.js and dhtmllib.js
+#    Copyright 1999 by Mike Hall.
+#    Web address: http://www.brainjar.com
 
 
 
