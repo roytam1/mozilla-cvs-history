@@ -70,9 +70,9 @@ $GLOBAL_INDEX_FILE = "index.html";
 # Error log filename:
 
 $ERROR_LOG = "/var/log/tinderbox/log";
-
+  
 # Where the daemon mode lock (for all trees) is placed
-$LOCK_FILE = "/usr/apache/cgibin/webtools/tinderbox/tinderd.lock";
+$LOCK_FILE = $TINDERBOX_DATA_DIR."/tinderd.lock";
 
 # The time between auto refreshes for all pages in seconds.
 
@@ -180,8 +180,9 @@ $VCDisplayImpl = (
 
 
 # Pick one method for storting data, Data::Dumper is slow but text
-# files allows great debugging capabilities and Storable (not yet
-# tested) which is much faster but binary format.
+# files allows great debugging capabilities and Storable, availible
+# from CPAN, (not yet fully implemented or tested) which is a much
+# faster binary format.
 
 $PersistenceImpl = (
                     'Persistence::Dumper',
