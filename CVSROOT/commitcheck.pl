@@ -300,7 +300,7 @@ if (m:^js/src/*\.c$:) {return '70';}
 if (m:^js/src/*\.h$:) {return '70';}
 if (m:^mozilla/extensions/jsd/.*$:) {return '71';}
 if (m:^mozilla/js/jsd/.*$:) {return '71';}
-if (m:^mozilla/js/src/liveconnect/.*$:) {return '72';}
+if (m:^js/src/liveconnect/.*$:) {return '72';}
 if (m:^mozilla/cck/.*$:) {return '108';}
 if (m:^mozilla/network/.*$:) {return '77';}
 if (m:^mozilla/nsprpub/.*$:) {return '78';}
