@@ -34,8 +34,10 @@ sub show_bug {
     sub bug_form_pl_sillyness {
         my $zz;
         $zz = %::FORM;
-        $zz = %::proddesc;
+        #$zz = %::proddesc;
         $zz = %::prodmaxvotes;
+        $zz = %::Tmaptype;
+        $zz = %::Tgroup_type;
         $zz = @::enterable_products;                                            
         $zz = @::settable_resolution;
         $zz = $::unconfirmedstate;
@@ -227,7 +229,6 @@ sub show_bug {
              AND isactive = 1 
              ORDER BY description");
     
-    my @groups;
     
     while (MoreSQLData()) {
         my ($groupid, $prodname, $description, $dflag, $pflag, $rflag, 

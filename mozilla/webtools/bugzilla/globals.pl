@@ -57,6 +57,8 @@ sub globals_pl_sillyness {
     $zz = $main::template;
     $zz = $main::userid;
     $zz = $main::vars;
+    $zz = %main::Tmaptype;
+    $zz = %main::Tgroup_type;
 }
 
 #

@@ -44,6 +44,8 @@ sub sillyness {
     $zz = @::legal_product;
     $zz = @::legal_severity;
     $zz = %::target_milestone;
+    $zz = %::Tgroup_type;
+    $zz = %::Tmaptype;
 }
 
 # Use global template variables.

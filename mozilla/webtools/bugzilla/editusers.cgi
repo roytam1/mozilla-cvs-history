@@ -39,7 +39,7 @@ require "globals.pl";
 
 sub sillyness {
     my $zz;
-    $zz = $::userid;
+    #$zz = $::userid;
 }
 
 my $editall;

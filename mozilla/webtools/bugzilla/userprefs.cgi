@@ -33,6 +33,7 @@ use RelationSet;
 # doesn't work for me.
 sub sillyness {
     my $zz;
+    $zz = %::Tmaptype;
     $zz = $::defaultqueryname;
 }
 

@@ -46,6 +46,7 @@ sub CGI_pl_sillyness {
     my $zz;
     $zz = %::MFORM;
     $zz = %::dontchange;
+    $zz = %::Tmaptype;
 }
 
 use CGI::Carp qw(fatalsToBrowser);

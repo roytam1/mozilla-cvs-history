@@ -54,6 +54,14 @@ use vars qw(
   %versions
 );
 
+sub sillyness {
+    my $zz;
+    $zz = %::Tmaptype;
+    $zz = %::Tgroup_type;
+    $zz = %::proddesc;
+    $zz = $::userid;
+};
+
 # We have to connect to the database, even though we don't use it in this code,
 # because we might occasionally rebuild the version cache, which causes tokens
 # to get deleted from the database, which needs a database connection.
