@@ -104,11 +104,7 @@ $VERSION = '#tinder_version#';
 # HTML standard says to use "&nbsp;" to signify an empty cell but I
 # find this hard to ready so I set a variable.
 
-if (defined($TinderConfig::EMPTY_TABLE_CELL)) {
-    $EMPTY_TABLE_CELL = $TinderConfig::EMPTY_TABLE_CELL;
-} else {
-    $EMPTY_TABLE_CELL ="&nbsp;";
-}
+$EMPTY_TABLE_CELL ="&nbsp;";
 
 # default settings for the popup_windows in HTML.pm
 
