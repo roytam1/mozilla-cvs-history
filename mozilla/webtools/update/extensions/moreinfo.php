@@ -507,6 +507,7 @@ Your comment submission had the following error(s), please fix these errors and 
 <FORM NAME="opinon" METHOD="POST" ACTION="../core/postfeedback.php">
 <INPUT NAME="id" TYPE="HIDDEN" VALUE="<?php echo"$id"; ?>">
 <INPUT NAME="vid" TYPE="HIDDEN" VALUE="<?php echo"$vid"; ?>">
+<INPUT NAME="type" TYPE="HIDDEN" value="E">
 Your Name:<BR>
 <INPUT NAME="name" TYPE="TEXT" SIZE=30 MAXLENGTH=30><BR>
 

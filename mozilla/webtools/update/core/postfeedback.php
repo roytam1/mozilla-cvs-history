@@ -85,7 +85,13 @@ $sql = "UPDATE `t_main` SET `Rating`='$rating' WHERE `ID`='$id' LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 
 
-$return_path="extensions/moreinfo.php?id=$_POST[id]&vid=$_POST[vid]&page=comments&action=postsuccessfull";
+if ($_POST["type"]=="E") {
+    $type="extensions";
+} else if ($_POST["type"]=="T") {
+    $type="themes";
+}
+
+$return_path="$type/moreinfo.php?id=$_POST[id]&vid=$_POST[vid]&page=comments&action=postsuccessfull";
 header("Location: http://$sitehostname/$return_path");
 exit;
 ?>
