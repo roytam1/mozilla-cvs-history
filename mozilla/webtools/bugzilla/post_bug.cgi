@@ -104,7 +104,7 @@ if(Param("usebuggroupsentry") && GroupExists($product)) {
     }
 }
 
-my $component_id = get_component_id($product, $::FORM{component});
+my $component_id = get_component_id($product_id, $::FORM{component});
 if (!$component_id) {
     DisplayError("You must choose a component that corresponds to this bug.
                   If necessary, just guess.");

@@ -52,6 +52,7 @@ sub globals_pl_sillyness {
     $zz = @main::legal_target_milestone;
     $zz = @main::legal_versions;
     $zz = @main::milestoneurl;
+    $zz = %main::param_type;
     $zz = %main::proddesc;
     $zz = @main::prodmaxvotes;
     $zz = $main::template;
@@ -344,12 +345,7 @@ sub GetFieldID {
     my ($f) = (@_);
     SendSQL("SELECT fieldid FROM fielddefs WHERE name = " . SqlQuote($f));
     my $fieldid = FetchOneColumn();
-    if (!$fieldid) {
-        my $q = SqlQuote($f);
-        SendSQL("REPLACE INTO fielddefs (name, description) VALUES ($q, $q)");
-        SendSQL("SELECT LAST_INSERT_ID()");
-        $fieldid = FetchOneColumn();
-    }
+    die "Unknown field id: $f" if !$fieldid;
     return $fieldid;
 }
         
@@ -951,19 +947,22 @@ sub DBNameToIdAndCheck {
                     registered for a Bugzilla account.");
 }
 
+
+
+
 sub get_product_id {
     my ($prod) = @_;
     PushGlobalSQLState();
     SendSQL("SELECT id FROM products WHERE name = " . SqlQuote($prod));
     my ($prod_id) = FetchSQLData();
     PopGlobalSQLState();
-    detaint_natural($prod_id) || die "get_product_id() returned a non-integer";
     return $prod_id;
 }
 
 sub get_product_name {
     my ($prod_id) = @_;
-    detaint_natural($prod_id) || die "get_product_name() was called with a non-integer paramater";
+    die "non-numeric prod_id '$prod_id' passed to get_product_name"
+      unless ($prod_id =~ /^\d+$/);
     PushGlobalSQLState();
     SendSQL("SELECT name FROM products WHERE id = $prod_id");
     my ($prod) = FetchSQLData();
@@ -972,22 +971,21 @@ sub get_product_name {
 }
 
 sub get_component_id {
-    my ($prod, $comp) = @_;
+    my ($prod_id, $comp) = @_;
+    die "non-numeric prod_id '$prod_id' passed to get_component_id"
+      unless ($prod_id =~ /^\d+$/);
     PushGlobalSQLState();
-    SendSQL("SELECT components.id " .
-            "FROM components, products " .
-            "WHERE products.id = components.product_id " .
-            " AND products.name = " . SqlQuote($prod) .
-            " AND components.name = " . SqlQuote($comp));
+    SendSQL("SELECT id FROM components " .
+            "WHERE product_id = $prod_id AND name = " . SqlQuote($comp));
     my ($comp_id) = FetchSQLData();
     PopGlobalSQLState();
-    detaint_natural($comp_id); 
     return $comp_id;
 }
 
 sub get_component_name {
     my ($comp_id) = @_;
-    detaint_natural($comp_id) || die "get_component_name() was called with a non-integer paramater";
+    die "non-numeric comp_id '$comp_id' passed to get_component_name"
+      unless ($comp_id =~ /^\d+$/);
     PushGlobalSQLState();
     SendSQL("SELECT name FROM components WHERE id = $comp_id");
     my ($comp) = FetchSQLData();
@@ -1574,36 +1572,46 @@ sub RemoveVotes {
     }
 }
 
-
 sub Param ($) {
     my ($value) = (@_);
-    if (defined $::param{$value}) {
-        return $::param{$value};
+    if (! defined $::param{$value}) {
+        # Um, maybe we haven't sourced in the params at all yet.
+        if (stat("data/params")) {
+            # Write down and restore the version # here.  That way, we get 
+            # around anyone who maliciously tries to tweak the version number
+            # by editing the params file.  Not to mention that in 2.0, there 
+            # was a bug that wrote the version number out to the params file...
+            my $v = $::param{'version'};
+            require "data/params";
+            $::param{'version'} = $v;
+        }
     }
 
-    # Um, maybe we haven't sourced in the params at all yet.
-    if (stat("data/params")) {
-        # Write down and restore the version # here.  That way, we get around
-        # anyone who maliciously tries to tweak the version number by editing
-        # the params file.  Not to mention that in 2.0, there was a bug that
-        # wrote the version number out to the params file...
-        my $v = $::param{'version'};
-        require "data/params";
-        $::param{'version'} = $v;
+    if (! defined $::param{$value}) {
+        # Well, that didn't help.  Maybe it's a new param, and the user
+        # hasn't defined anything for it.  Try and load a default value
+        # for it.
+        require "defparams.pl";
+        WriteParams();
     }
-    if (defined $::param{$value}) {
+
+    # If it's still not defined, we're pimped.
+    die "Can't find param named $value" if (! defined $::param{$value});
+
+    ## Check to make sure the entry in $::param_type is there; if we don't, we
+    ## get 'use of uninitialized constant' errors (see bug 162217). 
+    ## Interestingly  enough, placing this check in the die above causes 
+    ## deaths on some params (the "languages" param?) because they don't have
+    ## a type? Odd... seems like a bug to me... but what do I know? -jpr
+
+    if (defined $::param_type{$value} && $::param_type{$value} eq "m") {
+        my $valueList = eval($::param{$value});
+        return $valueList if (!($@) && ref($valueList) eq "ARRAY");
+        die "Multi-list param '$value' eval() failure ('$@'); data/params is horked";
+    }
+    else {
         return $::param{$value};
     }
-    # Well, that didn't help.  Maybe it's a new param, and the user
-    # hasn't defined anything for it.  Try and load a default value
-    # for it.
-    require "defparams.pl";
-    WriteParams();
-    if (defined $::param{$value}) {
-        return $::param{$value};
-    }
-    # We're pimped.
-    die "Can't find param named $value";
 }
 
 # Take two comma or space separated strings and return what
@@ -1667,6 +1675,54 @@ sub trim {
     return $str;
 }
 
+# Make an ordered list out of a HTTP Accept-Language header see RFC 2616, 14.4
+# We ignore '*' and <language-range>;q=0
+# For languages with the same priority q the order remains unchanged.
+sub sortAcceptLanguage {
+    sub sortQvalue { $b->{'qvalue'} <=> $a->{'qvalue'} }
+    my $accept_language = $_[0];
+
+    # clean up string.
+    $accept_language =~ s/[^A-Za-z;q=0-9\.\-,]//g;
+    my @qlanguages;
+    my @languages;
+    foreach(split /,/, $accept_language) {
+        my ($lang, $qvalue) = split /;q=/;
+        next if not defined $lang;
+        $qvalue = 1 if not defined $qvalue;
+        next if $qvalue == 0;
+        $qvalue = 1 if $qvalue > 1;
+        push(@qlanguages, {'qvalue' => $qvalue, 'language' => $lang});
+    }
+
+    return map($_->{'language'}, (sort sortQvalue @qlanguages));
+}
+
+# Returns the path to the templates based on the Accept-Language
+# settings of the user and of the available languages
+# If no Accept-Language is present it uses the defined default
+sub getTemplateIncludePath () {
+    my @languages       = sortAcceptLanguage(Param('languages'));
+    my @accept_language = sortAcceptLanguage($ENV{'HTTP_ACCEPT_LANGUAGE'} || "");
+    my @usedlanguages;
+    foreach my $lang (@accept_language) {
+        # match exactly (case insensitive)
+        if(my @found = grep /^$lang$/i, @languages) {
+            push (@usedlanguages, $found[0]);
+        }
+        # Per RFC 1766 and RFC 2616 any language tag matches also its 
+        # primary tag. That is en-gb matches also en but not en-uk
+        $lang =~ s/(-.*)//;
+        if($1) {
+            if(my @found = grep /^$lang$/i, @languages) {
+                push (@usedlanguages, $found[0]);
+            }
+        }
+    }
+    push(@usedlanguages, Param('defaultlanguage'));
+    return join(':', map("template/$_/custom:template/$_/default",@usedlanguages)); 
+}
+
 ###############################################################################
 # Global Templatization Code
 
@@ -1684,7 +1740,7 @@ use Template;
 $::template ||= Template->new(
   {
     # Colon-separated list of directories containing templates.
-    INCLUDE_PATH => "template/en/custom:template/en/default" ,
+    INCLUDE_PATH => getTemplateIncludePath() ,
 
     # Remove white-space before template directives (PRE_CHOMP) and at the
     # beginning and end of templates and template blocks (TRIM) for better 

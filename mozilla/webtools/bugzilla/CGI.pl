@@ -552,7 +552,7 @@ sub GetUserInfo {
 sub CheckEmailSyntax {
     my ($addr) = (@_);
     my $match = Param('emailregexp');
-    if ($addr !~ /$match/ || $addr =~ /[\\\(\)<>&,;:\"\[\] \t\r\n]/) {
+    if ($addr !~ /$match/ || $addr =~ /[\\\(\)<>&,;:"\[\] \t\r\n]/) {
         ThrowUserError("The e-mail address you entered(<b>" .
         html_quote($addr) . "</b>) didn't pass our syntax checking 
         for a legal email address. " . Param('emailregexpdesc') .

@@ -69,6 +69,8 @@ sub collect_stats {
     my $when = localtime (time);
     my $product_id = get_product_id($product) unless $product eq '-All-';
 
+    die "Unknown product $product" unless ($product_id or $product eq '-All-');
+
     # NB: Need to mangle the product for the filename, but use the real
     # product name in the query
     my $file_product = $product;

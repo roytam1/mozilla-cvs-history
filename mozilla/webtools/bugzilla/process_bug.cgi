@@ -529,7 +529,7 @@ if ($::FORM{'component'} ne $::dontchange) {
         ThrowUserError("You cannot change the component from a list of bugs " .
                        "covering more than one product");
     }
-    $comp_id = get_component_id(get_product_name($prod_id),
+    $comp_id = get_component_id($prod_id,
                                 $::FORM{'component'});
     if (! $comp_id) {
         DisplayError("The <tt>" . html_quote($::FORM{'component'}) .
@@ -1324,10 +1324,12 @@ foreach my $id (@idlist) {
             if ($col eq 'product_id') {
                 $old = get_product_name($old);
                 $new = get_product_name($new);
+                $col = 'product';
             }
             if ($col eq 'component_id') {
                 $old = get_component_name($old);
                 $new = get_component_name($new);
+                $col = 'component';
             }
 
             # save off the old value for passing to processmail so the old

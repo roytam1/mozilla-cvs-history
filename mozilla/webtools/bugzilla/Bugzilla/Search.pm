@@ -815,8 +815,6 @@ sub init {
                   " FROM $suppstring" .
                   " WHERE " . join(' AND ', (@wherepart, @andlist)));
 
-    $query = &::SelectVisible($query, $::userid, $::usergroupset);
-
     if ($debug) {
         print "<p><code>" . &::value_quote($query) . "</code></p>\n";
         exit;

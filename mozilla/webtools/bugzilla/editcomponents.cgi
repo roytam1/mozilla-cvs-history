@@ -458,7 +458,7 @@ if ($action eq 'new') {
 if ($action eq 'del') {
     PutHeader("Delete component of $product");
     CheckComponent($product, $component);
-    my $component_id = get_component_id($product, $component);
+    my $component_id = get_component_id(get_product_id($product), $component);
 
     # display some data about the component
     SendSQL("SELECT products.name,products.description,
@@ -574,7 +574,7 @@ one.";
 if ($action eq 'delete') {
     PutHeader("Deleting component of $product");
     CheckComponent($product,$component);
-    my $component_id = get_component_id($product,$component);
+    my $component_id = get_component_id(get_product_id($product),$component);
 
     # lock the tables before we start to change everything:
 
@@ -632,7 +632,7 @@ if ($action eq 'delete') {
 if ($action eq 'edit') {
     PutHeader("Edit component of $product");
     CheckComponent($product,$component);
-    my $component_id = get_component_id($product,$component);
+    my $component_id = get_component_id(get_product_id($product),$component);
 
     # get data of component
     SendSQL("SELECT products.name,products.description,
@@ -708,7 +708,8 @@ if ($action eq 'update') {
 
     SendSQL("LOCK TABLES components WRITE, products READ, profiles READ");
     CheckComponent($product,$componentold);
-    my $component_id = get_component_id($product,$componentold);
+    my $component_id = get_component_id(get_product_id($product),
+                                        $componentold);
 
     if ($description ne $descriptionold) {
         unless ($description) {

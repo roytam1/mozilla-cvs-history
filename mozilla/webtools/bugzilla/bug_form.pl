@@ -87,11 +87,11 @@ sub show_bug {
     FROM bugs LEFT JOIN votes USING(bug_id), products, components
     WHERE bugs.bug_id = $id
         AND bugs.product_id = products.id
-        AND bugs.component_id = components.id 
+        AND bugs.component_id = components.id
     GROUP BY bugs.bug_id";
 
     SendSQL($query);
- 
+
     # The caller is meant to have checked this. Abort here so that
     # we don't get obscure SQL errors, below
     if (!MoreSQLData()) {

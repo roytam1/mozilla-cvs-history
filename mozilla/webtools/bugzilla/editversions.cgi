@@ -217,8 +217,6 @@ unless ($product) {
     exit;
 }
 
-my $product_id = get_product_id($product);
-
 #
 # action='' -> Show nice list of versions
 #
@@ -226,6 +224,7 @@ my $product_id = get_product_id($product);
 unless ($action) {
     PutHeader("Select version of $product");
     CheckProduct($product);
+    my $product_id = get_product_id($product);
 
     SendSQL("SELECT value
              FROM versions
@@ -266,6 +265,7 @@ unless ($action) {
 if ($action eq 'add') {
     PutHeader("Add version of $product");
     CheckProduct($product);
+    my $product_id = get_product_id($product);
 
     #print "This page lets you add a new version to a bugzilla-tracked product.\n";
 
@@ -294,6 +294,7 @@ if ($action eq 'add') {
 if ($action eq 'new') {
     PutHeader("Adding new version");
     CheckProduct($product);
+    my $product_id = get_product_id($product);
 
     # Cleanups and valididy checks
 
@@ -336,6 +337,7 @@ if ($action eq 'new') {
 if ($action eq 'del') {
     PutHeader("Delete version of $product");
     CheckVersion($product, $version);
+    my $product_id = get_product_id($product);
 
     SendSQL("SELECT count(bug_id)
              FROM bugs
@@ -399,6 +401,7 @@ one.";
 if ($action eq 'delete') {
     PutHeader("Deleting version of $product");
     CheckVersion($product,$version);
+    my $product_id = get_product_id($product);
 
     # lock the tables before we start to change everything:
 
@@ -460,6 +463,7 @@ if ($action eq 'delete') {
 if ($action eq 'edit') {
     PutHeader("Edit version of $product");
     CheckVersion($product,$version);
+    my $product_id = get_product_id($product);
 
     print "<FORM METHOD=POST ACTION=editversions.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
@@ -493,6 +497,7 @@ if ($action eq 'update') {
     my $versionold = trim($::FORM{versionold} || '');
 
     CheckVersion($product,$versionold);
+    my $product_id = get_product_id($product);
 
     # Note that the order of this tests is important. If you change
     # them, be sure to test for WHERE='$version' or WHERE='$versionold'

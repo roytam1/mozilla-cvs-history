@@ -1817,6 +1817,9 @@ sub AddFDef ($$$) {
 }
 
 
+# Note that all of these entries are unconditional, from when GetFieldID
+# used to create an entry if it wasn't found. New fielddef columns should
+# be created with their associated schema change.
 AddFDef("bug_id", "Bug \#", 1);
 AddFDef("short_desc", "Summary", 1);
 AddFDef("product", "Product", 1);
@@ -1850,10 +1853,11 @@ AddFDef("(to_days(now()) - to_days(bugs.delta_ts))", "Days since bug changed",
         0);
 AddFDef("longdesc", "Comment", 0);
 AddFDef("alias", "Alias", 0);
+AddFDef("everconfirmed", "Ever Confirmed", 0);
+AddFDef("groupset", "Groupset", 0);
+AddFDef("reporter_accessible", "Reporter Accessible", 0);
+AddFDef("cc_accessible", "CC Accessible", 0);
 AddFDef("bug_group_map.group_id", "Bug Group", 0);
-    
-    
-
 
 ###########################################################################
 # Detect changed local settings
@@ -3119,6 +3123,61 @@ if (!GetFieldDef("bugs", "alias")) {
     $dbh->do("ALTER TABLE bugs ADD UNIQUE (alias)");
 }
 
+#
+# If the whole groups system is new, but the installation isn't, 
+# convert all the old groupset groups, etc...
+if (GetFieldDef("profiles", "groupset")) {
+    AddField('groups', 'group_when', 'datetime not null');
+    AddField('products', 'id', 
+        'mediumint primary key auto_increment not null');
+    AddField('profiles', 'profile_when', 'datetime not null');
+    AddField('profiles', 'refreshed_when', 'datetime not null');
+
+    $sth = $dbh->prepare("SELECT bit, group_id FROM groups
+                WHERE bit > 0");
+    $sth->execute();
+    while (my ($bit, $gid) = $sth->fetchrow_array) {
+        # create u2g memberships for old groupsets
+        my $sth2 = $dbh->prepare("SELECT userid FROM profiles
+                   WHERE (groupset & $bit) != 0");
+        $sth2->execute();
+        while (my ($uid) = $sth2->fetchrow_array) {
+            my $query = "SELECT user_id FROM user_group_map 
+                WHERE group_id = $gid AND user_id = $uid 
+                AND isbless = 0"; 
+            my $sth3 = $dbh->prepare($query);
+            $sth3->execute();
+            if ( !$sth3->fetchrow_array() ) {
+                $dbh->do("INSERT INTO user_group_map
+                       (user_id, group_id, isbless, isderived)
+                       VALUES($uid, $gid, 0, 0)");
+            }
+        }
+        # create uBg memberships for old groupsets
+        $sth2 = $dbh->prepare("SELECT userid FROM profiles
+                   WHERE (blessgroupset & $bit) != 0");
+        $sth2->execute();
+        while (my ($uid) = $sth2->fetchrow_array) {
+            $dbh->do("INSERT INTO user_group_map
+                   (user_id, group_id, isbless, isderived)
+                   VALUES($uid, $gid, 1, 0)");
+        }
+        # create bug_group_map records for old groupsets
+        $sth2 = $dbh->prepare("SELECT bug_id FROM bugs
+                   WHERE (groupset & $bit) != 0");
+        $sth2->execute();
+        while (my ($bid) = $sth2->fetchrow_array) {
+            $dbh->do("INSERT INTO bug_group_map
+                   (bug_id, group_id)
+                   VALUES($bid, $gid)");
+        }
+    }
+    DropField('profiles','groupset');
+    DropField('profiles','blessgroupset');
+    DropField('bugs','groupset');
+    DropField('groups','bit');
+}
+
 # 2002-07-15 davef@tetsubo.com - bug 67950
 # Move quips to the db.
 my $renamed_comments_file = 0;
@@ -3152,7 +3211,7 @@ if (GetFieldDef("namedqueries", "watchfordiffs")) {
     DropField("namedqueries", "watchfordiffs");
 }
 
-# 2002-08-?? jake@acutex.net/bbaetz@student.usyd.edu.au - bug 43600
+# 2002-08-12 jake@acutex.net/bbaetz@student.usyd.edu.au - bug 43600
 # Use integer IDs for products and components.
 if (GetFieldDef("products", "product")) {
     print "Updating database to use product IDs.\n";
@@ -3219,9 +3278,6 @@ if (GetFieldDef("products", "product")) {
     $dbh->do("ALTER TABLE bugs ADD INDEX (product_id)");
     $dbh->do("ALTER TABLE bugs DROP INDEX component");
     $dbh->do("ALTER TABLE bugs ADD INDEX (component_id)");
-    print "Fixing fielddefs table.\n";
-    $dbh->do("UPDATE fielddefs SET name = 'product_id' WHERE name = 'product'");
-    $dbh->do("UPDATE fielddefs SET name = 'component_id' WHERE name = 'component'");
 
     print "Removing, renaming, and retyping old product and component fields.\n";
     DropField("components", "program");
@@ -3240,61 +3296,6 @@ if (GetFieldDef("products", "product")) {
     $dbh->do("ALTER TABLE components ADD UNIQUE (product_id, name)");
     $dbh->do("ALTER TABLE components ADD INDEX (name)");
 }
-
-
-#
-# If the whole groups system is new, but the installation isn't, 
-# convert all the old groupset groups, etc...
-if (GetFieldDef("profiles", "groupset")) {
-    AddField('groups', 'group_when', 'datetime not null');
-    AddField('profiles', 'profile_when', 'datetime not null');
-    AddField('profiles', 'refreshed_when', 'datetime not null');
-
-    $sth = $dbh->prepare("SELECT bit, group_id FROM groups
-                WHERE bit > 0");
-    $sth->execute();
-    while (my ($bit, $gid) = $sth->fetchrow_array) {
-        # create u2g memberships for old groupsets
-        my $sth2 = $dbh->prepare("SELECT userid FROM profiles
-                   WHERE (groupset & $bit) != 0");
-        $sth2->execute();
-        while (my ($uid) = $sth2->fetchrow_array) {
-            my $query = "SELECT user_id FROM user_group_map 
-                WHERE group_id = $gid AND user_id = $uid 
-                AND isbless = 0"; 
-            my $sth3 = $dbh->prepare($query);
-            $sth3->execute();
-            if ( !$sth3->fetchrow_array() ) {
-                $dbh->do("INSERT INTO user_group_map
-                       (user_id, group_id, isbless, isderived)
-                       VALUES($uid, $gid, 0, 0)");
-            }
-        }
-        # create uBg memberships for old groupsets
-        $sth2 = $dbh->prepare("SELECT userid FROM profiles
-                   WHERE (blessgroupset & $bit) != 0");
-        $sth2->execute();
-        while (my ($uid) = $sth2->fetchrow_array) {
-            $dbh->do("INSERT INTO user_group_map
-                   (user_id, group_id, isbless, isderived)
-                   VALUES($uid, $gid, 1, 0)");
-        }
-        # create bug_group_map records for old groupsets
-        $sth2 = $dbh->prepare("SELECT bug_id FROM bugs
-                   WHERE (groupset & $bit) != 0");
-        $sth2->execute();
-        while (my ($bid) = $sth2->fetchrow_array) {
-            $dbh->do("INSERT INTO bug_group_map
-                   (bug_id, group_id)
-                   VALUES($bid, $gid)");
-        }
-    }
-    DropField('profiles','groupset');
-    DropField('profiles','blessgroupset');
-    DropField('bugs','groupset');
-    DropField('groups','bit');
-}
-
         
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.

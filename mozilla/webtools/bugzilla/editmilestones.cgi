@@ -164,7 +164,6 @@ unless (UserInGroup("editcomponents")) {
 # often used variables
 #
 my $product = trim($::FORM{product} || '');
-my $product_id = get_product_id($product);
 my $milestone = trim($::FORM{milestone} || '');
 my $sortkey = trim($::FORM{sortkey} || '0');
 my $action  = trim($::FORM{action}  || '');
@@ -217,6 +216,7 @@ unless ($product) {
 unless ($action) {
     PutHeader("Select milestone for $product");
     CheckProduct($product);
+    my $product_id = get_product_id($product);
 
     SendSQL("SELECT value,sortkey
              FROM milestones
@@ -260,6 +260,7 @@ unless ($action) {
 if ($action eq 'add') {
     PutHeader("Add milestone for $product");
     CheckProduct($product);
+    my $product_id = get_product_id($product);
 
     #print "This page lets you add a new milestone to a $::bugzilla_name tracked product.\n";
 
@@ -288,6 +289,7 @@ if ($action eq 'add') {
 if ($action eq 'new') {
     PutHeader("Adding new milestone for $product");
     CheckProduct($product);
+    my $product_id = get_product_id($product);
 
     # Cleanups and valididy checks
 
@@ -330,6 +332,7 @@ if ($action eq 'new') {
 if ($action eq 'del') {
     PutHeader("Delete milestone of $product");
     CheckMilestone($product, $milestone);
+    my $product_id = get_product_id($product);
 
     SendSQL("SELECT count(bug_id), product_id, target_milestone
              FROM bugs
@@ -405,6 +408,7 @@ one.";
 if ($action eq 'delete') {
     PutHeader("Deleting milestone of $product");
     CheckMilestone($product,$milestone);
+    my $product_id = get_product_id($product);
 
     # lock the tables before we start to change everything:
 
@@ -466,6 +470,7 @@ if ($action eq 'delete') {
 if ($action eq 'edit') {
     PutHeader("Edit milestone of $product");
     CheckMilestone($product,$milestone);
+    my $product_id = get_product_id($product);
 
     SendSQL("SELECT sortkey FROM milestones WHERE product_id=$product_id " .
             " AND value = " . SqlQuote($milestone));
@@ -506,6 +511,7 @@ if ($action eq 'update') {
     my $sortkeyold = trim($::FORM{sortkeyold} || '0');
 
     CheckMilestone($product,$milestoneold);
+    my $product_id = get_product_id($product);
 
     SendSQL("LOCK TABLES bugs WRITE,
                          milestones WRITE,

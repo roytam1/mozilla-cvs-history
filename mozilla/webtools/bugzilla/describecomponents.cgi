@@ -23,6 +23,7 @@
 
 use vars qw(
   %FORM
+  %legal_product
   $userid
 );
 
@@ -85,11 +86,9 @@ my $product = $::FORM{'product'};
 # which could enable people guessing product names to determine
 # whether or not certain products exist in Bugzilla, even if they
 # cannot get any other information about that product.
-grep($product eq $_ , @::legal_product)
-  || DisplayError("The product name is invalid.")
-  && exit;
-
 my $product_id = get_product_id($product);
+
+ThrowUserError("The product name is invalid.") unless $product_id;
 
 # Make sure the user is authorized to access this product.
 if (Param("usebuggroups") && GroupExists($product)) {
