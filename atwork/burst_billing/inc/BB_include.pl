@@ -36,8 +36,7 @@ $MAX_RECOVER_DAYS = 500;
 use vars qw{$BILLING_HOME $RRD_DIR $REPORT_HOME $LOG_DIR $LOG_ARCHIVE_DIR
             $BIN_DIR $INC_DIR};
 
-#$BILLING_HOME = "/usr/local/root/apache/cgi-bin/Burstable";
-$BILLING_HOME = "/home/kevinmc/excite/burst_billing/code";
+$BILLING_HOME = "/usr/local/root/apache/cgi-bin/Burstable";
 
 $RRD_DIR = "/usr/local/nme/polling/www";
 
