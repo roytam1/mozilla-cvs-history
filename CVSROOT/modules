@@ -311,4 +311,5 @@ DirectorySDKSourceCommon -a \
        mozilla/directory/c-sdk
  
 DirectorySDKSourceBuild -a \
+       mozilla/cmd/winfe/mkfiles32 \ 
        mozilla/config
