@@ -87,6 +87,8 @@ sub save_structure {
 sub load_structure {
   my ($data_file,) = @_;
 
+  $data_file = main::extract_filename_chars($data_file);
+
   (-r $data_file) || (-R $data_file) ||
     die("data file: $data_file is not readable\n");
 
