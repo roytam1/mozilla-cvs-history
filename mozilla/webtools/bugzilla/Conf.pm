@@ -63,6 +63,10 @@ sub ask {
     }
     my $answer = _ask($name,$question,$default);
     if ($answer eq "") { $answer = $default; } # handle the default
+    elsif ($answer eq /stop/i) { # they want to stop
+    	saveConf(); # save
+    	exit; # and exit	
+    }
     $main::c{$name} = $answer;
 } 
 
@@ -104,6 +108,8 @@ sub storeData() {
 	use Data::Dumper;
 	unlink('Conf/Supplies/config.pl');
 	open(CONFIG,">Conf/Supplies/config.pl");
+	# chmod the config file, it will hold db passwords and needs to be secure
+	chmod(0600,'Conf/Supplies/config.pl');
 	print CONFIG Data::Dumper->Dump([\%main::c],['*main::c']);
 	close(CONFIG);
 }
