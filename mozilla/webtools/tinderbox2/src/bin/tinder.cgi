@@ -494,8 +494,10 @@ sub cgi_main {
 sub write_stats {
 
  my ($end_time) = time();
- my ($run_time) = sprintf ("%.2f",         # round
-                           ($end_time - $TIME)/$main::SECONDS_PER_MINUTE);
+ my ($run_time) = main::round (
+                               ($end_time - $TIME)/
+                               $main::SECONDS_PER_MINUTE
+                               );
 
  if ($TinderConfig::LOG_PERFORMANCE) {
    print LOG "run_time: $run_time num_updates: $NUM_UPDATES\n";
