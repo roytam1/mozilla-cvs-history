@@ -18,6 +18,7 @@ use lib qw(.);
 
 require "globals.pl";
 use Bugzilla::BugMail;
+use Bugzilla::User;
 
 sub usage {
     print STDERR "Usage: $0 bug_id user_email\n";
@@ -53,7 +54,7 @@ if ($changer !~ /$match/) {
     print STDERR "Changer \"$changer\" doesn't match email regular expression.\n";
     usage();
 }
-if(!DBname_to_id($changer)) {
+if(!login_to_id($changer)) {
     print STDERR "\"$changer\" is not a login ID.\n";
     usage();
 }
