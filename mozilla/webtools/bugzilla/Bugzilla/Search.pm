@@ -31,7 +31,7 @@ use strict;
 require "globals.pl";
 require "CGI.pl";
 
-use vars qw($userid $usergroupset);
+use vars qw($userid );
 
 package Bugzilla::Search;
 
@@ -115,7 +115,7 @@ sub init {
     my @legal_fields = ("product", "version", "rep_platform", "op_sys",
                         "bug_status", "resolution", "priority", "bug_severity",
                         "assigned_to", "reporter", "component",
-                        "target_milestone", "groupset");
+                        "target_milestone", "bug_group");
 
     foreach my $field (keys %F) {
         if (&::lsearch(\@legal_fields, $field) != -1) {
@@ -317,6 +317,12 @@ sub init {
              push(@supptables, "longdescs $table");
              push(@wherepart, "$table.bug_id = bugs.bug_id");
              $f = "$table.thetext";
+         },
+         "^bug_group," => sub {
+            push(@supptables, "LEFT JOIN bug_group_map bug_group_map_$chartid ON bugs.bug_id = bug_group_map_$chartid.bug_id");
+
+            push(@supptables, "LEFT JOIN groups groups_$chartid ON groups_$chartid.id = bug_group_map_$chartid.group_id");
+            $f = "groups_$chartid.name";
          },
          "^attachments\..*," => sub {
              my $table = "attachments_$chartid";

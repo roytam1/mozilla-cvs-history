@@ -1136,7 +1136,7 @@ foreach my $id (@idlist) {
 
     $groupDelNames =~ s/ $//;
     $groupAddNames =~ s/ $//;
-    LogActivityEntry($id,"bug_group_map.group_id",$groupDelNames,$groupAddNames); 
+    LogActivityEntry($id,"bug_group",$groupDelNames,$groupAddNames); 
     if (defined $::FORM{'comment'}) {
         AppendComment($id, $::COOKIE{'Bugzilla_login'}, $::FORM{'comment'});
     }

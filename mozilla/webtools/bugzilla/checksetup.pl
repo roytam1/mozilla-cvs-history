@@ -1821,7 +1821,6 @@ AddFDef("alias", "Alias", 0);
 AddFDef("everconfirmed", "Ever Confirmed", 0);
 AddFDef("reporter_accessible", "Reporter Accessible", 0);
 AddFDef("cc_accessible", "CC Accessible", 0);
-AddFDef("bug_group_map.group_id", "Bug Group", 0);
 
 ###########################################################################
 # Detect changed local settings
@@ -1946,10 +1945,12 @@ sub bailout {   # this is just in case we get interrupted while getting passwd
 }
 
 if (GetFieldDef('profiles', 'groupset')) {
+    # identify admin group
     my $sth = $dbh->prepare("SELECT id FROM groups 
                 WHERE name = 'admin'");
     $sth->execute();
     my ($adminid) = $sth->fetchrow_array();
+    # find existing admins
     # Don't lose admins from DBs where Bug 157704 applies
     $sth = $dbh->prepare("SELECT userid FROM profiles 
                 WHERE (groupset | 65536) = 9223372036854775807");
@@ -3173,10 +3174,42 @@ if (GetFieldDef("profiles", "groupset")) {
                    VALUES($bid, $gid)");
         }
     }
+    # replace old activity log groupset records with groups
+    AddFDef("bug_group", "Bug Group", 0);
+    $sth = $dbh->prepare("SELECT fieldid FROM fielddefs WHERE name = " . $dbh->quote('bug_group'));
+    $sth->execute();
+    my ($bgfid) = $sth->fetchrow_array;
+    $sth = $dbh->prepare("SELECT fieldid FROM fielddefs WHERE name = " . $dbh->quote('groupset'));
+    $sth->execute();
+    my ($gsid) = $sth->fetchrow_array;
+    $sth = $dbh->prepare("SELECT bug_id, bug_when, who, added, removed
+                          FROM bugs_activity WHERE fieldid = $gsid");
+    $sth->execute();
+    while (my ($bid, $bwhen, $bwho, $added, $removed) = $sth->fetchrow_array) {
+        my $sth2 = $dbh->prepare("SELECT name FROM groups WHERE (bit & $added) != 0 AND (bit & $removed) = 0");
+        $sth2->execute();
+        my @logadd = ();
+        while (my ($n) = $sth2->fetchrow_array) {
+            push @logadd, $n;
+        }
+        $sth2 = $dbh->prepare("SELECT name FROM groups WHERE (bit & $removed) != 0 AND (bit & $added) = 0");
+        $sth2->execute();
+        my @logrem = ();
+        while (my ($n) = $sth2->fetchrow_array) {
+            push @logrem, $n;
+        }
+        $dbh->do("UPDATE bugs_activity SET fieldid = $bgfid, added = " .
+                  $dbh->quote(join(", ", @logadd)) . ", removed = " . 
+                  $dbh->quote(join(", ", @logrem)) .
+                  " WHERE bug_id = $bid AND bug_when = " . $dbh->quote($bwhen) .
+                  " AND who = $bwho AND fieldid = $gsid");
+
+    }
     DropField('profiles','groupset');
     DropField('profiles','blessgroupset');
     DropField('bugs','groupset');
     DropField('groups','bit');
+    $dbh->do("DELETE FROM fielddefs WHERE name = " . $dbh->quote('groupset'));
 }
 
 # 2002-07-15 davef@tetsubo.com - bug 67950
