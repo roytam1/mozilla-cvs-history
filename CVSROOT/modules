@@ -492,6 +492,7 @@ JSClient -a \
 	mozilla/js/makefile.win \
 	mozilla/js/macbuild \
 	mozilla/js/src \
+	mozilla/js/.cvsignore \
 	!mozilla/js/src/config \
 	!mozilla/js/src/editline \
 	!mozilla/js/src/liveconnect/config \
