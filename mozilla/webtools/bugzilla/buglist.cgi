@@ -104,7 +104,7 @@ sub GetByWordList {
             $word =~ s/^'//;
             $word =~ s/'$//;
             $word = '(^|[^a-z0-9])' . $word . '($|[^a-z0-9])';
-			push(@list, SqlRegEx($field, SqlQuote($word)));
+            push(@list, SqlRegEx($field, SqlQuote($word)));
         }
     }
 
@@ -120,7 +120,7 @@ sub GetByWordListSubstr {
 
     foreach my $word (split(/[\s,]+/, $strs)) {
         if ($word ne "") {
-			push(@list, SqlStrSearch($field, SqlQuote($word), "lower"));
+            push(@list, SqlStrSearch($field, SqlQuote($word), "lower"));
         }
     }
 
@@ -144,11 +144,11 @@ sub GenerateSQL {
     my $debug = 0;
     my ($fieldsref, $supptablesref, $wherepartref, $urlstr, $groupbyref) = (@_);
     my @fields;
-	my @groupbylist;
+    my @groupbylist;
     my @supptables;
     my @wherepart;
     @fields = @$fieldsref if $fieldsref;
-	@groupbylist = @$groupbyref if $groupbyref;
+    @groupbylist = @$groupbyref if $groupbyref;
     @supptables = @$supptablesref if $supptablesref;
     @wherepart = @$wherepartref if $wherepartref;
     my %F;
@@ -161,7 +161,7 @@ sub GenerateSQL {
 
     unshift(@supptables,
             ("profiles map_assigned_to",
-			 "profiles map_reporter"));
+             "profiles map_reporter"));
 
 #    unshift(@supptables,
 #                "profiles map_qa_contact LEFT JOIN map_qa_contact ON " . 
@@ -526,19 +526,19 @@ sub GenerateSQL {
              $term = "$ff != $q";
          },
          ",casesubstring" => sub {
-			$term = SqlStrSearch($ff, $q);
+            $term = SqlStrSearch($ff, $q);
          },
          ",(substring|substr)" => sub {
-			$term = SqlStrSearch($ff, $q, "lower", "not");
+            $term = SqlStrSearch($ff, $q, "lower", "not");
          },
          ",notsubstring" => sub {
-			$term = SqlStrSearch($ff, $q, "lower");
+            $term = SqlStrSearch($ff, $q, "lower");
          },
          ",regexp" => sub {
-			$term = SqlRegEx($ff, $q);
+            $term = SqlRegEx($ff, $q);
          },
-         ",notregexp" => sub {	
-			$term = SqlRegEx($ff, $q);
+         ",notregexp" => sub {    
+            $term = SqlRegEx($ff, $q);
          },
          ",lessthan" => sub {
              $term = "$ff < $q";
@@ -886,23 +886,23 @@ OK, the <B>$::FORM{'namedcmd'}</B> query is gone.
         confirm_login();
         my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
         print "Content-type: text/html\n\n";
-		if ($::driver eq 'mysql') {
-	        SendSQL("REPLACE INTO namedqueries (userid, name, query) VALUES " .
-    	            "($userid, '$::defaultqueryname'," .
-        	        SqlQuote($::buffer) . ")");
-		} elsif ($::driver eq 'Pg') {
-			SendSQL("SELECT userid FROM namedqueries WHERE userid = $userid " .
-					"AND name = '$::defaultqueryname'");
-			my $result = FetchOneColumn();
-			if ( $result ) {
-				SendSQL("UPDATE namedqueries SET query = " . SqlQuote($::buffer) . 
-						" WHERE userid = $userid AND name = '$::defaultqueryname'");
-			} else {	
-				SendSQL("INSERT INTO namedqueries (userid, name, query, watchfordiffs, linkinfooter) VALUES " .
-	                    "($userid, '$::defaultqueryname'," .
-    	                SqlQuote($::buffer) . ", '', '')");
-			}		
-		}
+        if ($::driver eq 'mysql') {
+            SendSQL("REPLACE INTO namedqueries (userid, name, query) VALUES " .
+                    "($userid, '$::defaultqueryname'," .
+                    SqlQuote($::buffer) . ")");
+        } elsif ($::driver eq 'Pg') {
+            SendSQL("SELECT userid FROM namedqueries WHERE userid = $userid " .
+                    "AND name = '$::defaultqueryname'");
+            my $result = FetchOneColumn();
+            if ( $result ) {
+                SendSQL("UPDATE namedqueries SET query = " . SqlQuote($::buffer) . 
+                        " WHERE userid = $userid AND name = '$::defaultqueryname'");
+            } else {    
+                SendSQL("INSERT INTO namedqueries (userid, name, query, watchfordiffs, linkinfooter) VALUES " .
+                        "($userid, '$::defaultqueryname'," .
+                        SqlQuote($::buffer) . ", '', '')");
+            }        
+        }
         PutHeader("OK, default is set");
         print qq{
 OK, you now have a new default query.  You may also bookmark the result of any
@@ -991,30 +991,30 @@ sub DefCol {
 }
 
 if ($::driver eq 'mysql') {
-	DefCol("opendate", "unix_timestamp(bugs.creation_ts)", "Opened",
-    	   "bugs.creation_ts");
-	DefCol("changeddate", "unix_timestamp(bugs.delta_ts)", "Changed",
-	       "bugs.delta_ts");
+    DefCol("opendate", "unix_timestamp(bugs.creation_ts)", "Opened",
+           "bugs.creation_ts");
+    DefCol("changeddate", "unix_timestamp(bugs.delta_ts)", "Changed",
+           "bugs.delta_ts");
 } elsif ($::driver eq 'Pg') {
-	DefCol("opendate", "bugs.creation_ts", "Opened",
+    DefCol("opendate", "bugs.creation_ts", "Opened",
            "bugs.creation_ts");
     DefCol("changeddate", "bugs.delta_ts", "Changed",
            "bugs.delta_ts");
 }
 
 DefCol("severity", "substring(bugs.bug_severity, 1, 3)", "Sev",
-	   "bugs.bug_severity");
+       "bugs.bug_severity");
 DefCol("priority", "substring(bugs.priority, 1, 3)", "Pri", "bugs.priority");
 DefCol("platform", "substring(bugs.rep_platform, 1, 3)", "Plt",
-	   "bugs.rep_platform");
+       "bugs.rep_platform");
 DefCol("owner", "map_assigned_to.login_name", "Owner",
-	   "map_assigned_to.login_name");
+       "map_assigned_to.login_name");
 DefCol("reporter", "map_reporter.login_name", "Reporter",
-	   "map_reporter.login_name");
+       "map_reporter.login_name");
 DefCol("qa_contact", "map_qa_contact.login_name", "QAContact", "map_qa_contact.login_name");
 DefCol("status", "substring(bugs.bug_status,1,4)", "State", "bugs.bug_status");
 DefCol("resolution", "substring(bugs.resolution,1,4)", "Result",
-	   "bugs.resolution");
+       "bugs.resolution");
 DefCol("summary", "substring(bugs.short_desc, 1, 60)", "Summary", "bugs.short_desc", 1);
 DefCol("summaryfull", "bugs.short_desc", "Summary", "bugs.short_desc", 1);
 DefCol("status_whiteboard", "bugs.status_whiteboard", "StatusSummary", "bugs.status_whiteboard", 1);
@@ -1024,7 +1024,7 @@ DefCol("product", "substring(bugs.product, 1, 8)", "Product", "bugs.product");
 DefCol("version", "substring(bugs.version, 1, 5)", "Vers", "bugs.version");
 DefCol("os", "substring(bugs.op_sys, 1, 4)", "OS", "bugs.op_sys");
 DefCol("target_milestone", "bugs.target_milestone", "TargetM",
-	   "bugs.target_milestone");
+       "bugs.target_milestone");
 DefCol("votes", "bugs.votes", "Votes", "bugs.votes");
 DefCol("keywords", "bugs.keywords", "Keywords", "bugs.keywords", 5);
 
@@ -1068,14 +1068,14 @@ my @groupbylist = ("bugs.bug_id", "bugs.groupset");
 foreach my $c (@collist) {
     if (exists $::needquote{$c}) {
         push(@fields, "$::key{$c}");
-		push(@groupbylist, "$::sortkey{$c}");
+        push(@groupbylist, "$::sortkey{$c}");
     }
 }
 
 
 if ($dotweak) {
     push(@fields, "bugs.product", "bugs.bug_status");
-	push(@groupbylist, "bugs.product", "bugs.bug_status");
+    push(@groupbylist, "bugs.product", "bugs.bug_status");
 }
 
 
@@ -1163,9 +1163,9 @@ if ($::FORM{'debug'} && $serverpush) {
 
 
 if (Param('expectbigqueries')) {
-	if ($::driver eq 'mysql') {
-	    SendSQL("set option SQL_BIG_TABLES=1");
-	}	
+    if ($::driver eq 'mysql') {
+        SendSQL("set option SQL_BIG_TABLES=1");
+    }    
 }
 
 SendSQL($query);
@@ -1558,17 +1558,17 @@ document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCh
 <TEXTAREA WRAP=HARD NAME=comment ROWS=5 COLS=80></TEXTAREA><BR>";
 
 if($::usergroupset ne '0') {
-	if ($::driver eq 'mysql') {
-	    SendSQL("select bit, name, description, isactive ".
-    	        "from groups where (bit & $::usergroupset) != 0 ".
-        	    "and isbuggroup != 0 ".
-            	"order by description");
-	} elsif ($::driver eq 'Pg') {
+    if ($::driver eq 'mysql') {
+        SendSQL("select bit, name, description, isactive ".
+                "from groups where (bit & $::usergroupset) != 0 ".
+                "and isbuggroup != 0 ".
+                "order by description");
+    } elsif ($::driver eq 'Pg') {
         SendSQL("select group_bit, name, description, isactive ".
                 "from groups where (group_bit & int8($::usergroupset)) != 0 ".
                 "and isbuggroup != 0 ".
                 "order by description");
-	}
+    }
 
     # We only print out a header bit for this section if there are any
     # results.
@@ -1757,7 +1757,7 @@ if ($count > 0) {
 # so that PutFooter() can determine the current user even if
 # the "logincookies" table is corrupted in the shadow database.
 if ($::driver eq 'mysql') {
-	SendSQL("USE $::db_name");
+    SendSQL("USE $::db_name");
 }
 
 PutFooter();

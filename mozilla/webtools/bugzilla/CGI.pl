@@ -937,10 +937,10 @@ sub confirm_login {
        if (!defined $ENV{'REMOTE_HOST'}) {
          $ENV{'REMOTE_HOST'} = $ENV{'REMOTE_ADDR'};
        }
-	   SendSQL("insert into logincookies (userid,cryptpassword,hostname) " . 
-			   "values (@{[DBNameToIdAndCheck($enteredlogin)]}, " .
-			   "@{[SqlQuote($realcryptpwd)]}, @{[SqlQuote($ENV{'REMOTE_HOST'})]})");
-		my $logincookie = CurrId("logincookies_cookie_seq");
+       SendSQL("insert into logincookies (userid,cryptpassword,hostname) " . 
+               "values (@{[DBNameToIdAndCheck($enteredlogin)]}, " .
+               "@{[SqlQuote($realcryptpwd)]}, @{[SqlQuote($ENV{'REMOTE_HOST'})]})");
+        my $logincookie = CurrId("logincookies_cookie_seq");
 
        $::COOKIE{"Bugzilla_logincookie"} = $logincookie;
        my $cookiepath = Param("cookiepath");
@@ -1063,13 +1063,13 @@ Content-type: text/html
         # crufty junk in the logincookies table.  Get rid of any entry
         # that hasn't been used in a month.
         if ($::dbwritesallowed) {
-			if ($::driver eq 'mysql') {
-	            SendSQL("DELETE FROM logincookies " .
-    	                "WHERE TO_DAYS(NOW()) - TO_DAYS(lastused) > 30");
-			} elsif ($::driver eq 'Pg') {
-				 SendSQL("DELETE FROM logincookies " .
+            if ($::driver eq 'mysql') {
+                SendSQL("DELETE FROM logincookies " .
+                        "WHERE TO_DAYS(NOW()) - TO_DAYS(lastused) > 30");
+            } elsif ($::driver eq 'Pg') {
+                 SendSQL("DELETE FROM logincookies " .
                          "WHERE NOW() - lastused > 30");
-			}
+            }
         }
 
         
@@ -1100,12 +1100,12 @@ sub PutHeader {
     }
     $jscript ||= "";
 
-	my $header_info = {};
-	$header_info->{login} = $::COOKIE{Bugzilla_login};
-	$header_info->{date} = `date`;
-	$header_info->{header} = "$h1 $h2";
+    my $header_info = {};
+    $header_info->{login} = $::COOKIE{Bugzilla_login};
+    $header_info->{date} = `date`;
+    $header_info->{header} = "$h1 $h2";
     
-	# If we are shutdown, we want a very basic page to give that
+    # If we are shutdown, we want a very basic page to give that
     # information.  Also, the page title should indicate that
     # we are down.  
     if (Param('shutdownhtml')) {
@@ -1191,8 +1191,8 @@ sub PuntTryAgain ($) {
     print PerformSubsts(Param("errorhtml"),
                         {errormsg => $str});
     if ($::driver eq 'mysql') {
-		SendSQL("UNLOCK TABLES");
-	} 
+        SendSQL("UNLOCK TABLES");
+    } 
     PutFooter();
     exit;
 }
@@ -1232,27 +1232,27 @@ sub CheckIfVotedConfirmed {
 sub DumpBugActivity {
     my ($id, $starttime) = (@_);
     my $datepart = "";
-	my $query = "";
+    my $query = "";
 
     die "Invalid id: $id" unless $id=~/^\s*\d+\s*$/;
 
     if (defined $starttime) {
         $datepart = "and bugs_activity.bug_when >= '$starttime'";
     }
-		
-	if ($::driver eq 'mysql') {
-	    $query = "
-    	SELECT 
+        
+    if ($::driver eq 'mysql') {
+        $query = "
+        SELECT 
             IFNULL(fielddefs.name, bugs_activity.fieldid), ";
-	} elsif ($::driver eq 'Pg') {
+    } elsif ($::driver eq 'Pg') {
         $query = "
         SELECT 
             COALESCE(fielddefs.name, chr(bugs_activity.fieldid)), ";
-	}
+    }
 
-	$query .= "
+    $query .= "
             bugs_activity.attach_id,
-        	bugs_activity.bug_when,
+            bugs_activity.bug_when,
             bugs_activity.removed, bugs_activity.added,
             profiles.login_name
         FROM 

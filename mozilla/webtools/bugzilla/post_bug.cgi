@@ -121,7 +121,7 @@ if (Param("useqacontact")) {
         push(@bug_fields, "qa_contact");
     }
 } else {
-	$::FORM{'qa_contact'} = "0";
+    $::FORM{'qa_contact'} = "0";
 }
 
 if (exists $::FORM{'bug_status'}) {
@@ -207,9 +207,9 @@ $comment = trim($comment);
 $comment = $comment ? $comment : " ";
 
 if ($::driver eq 'mysql') {
-	$query .= "now(), (0";
+    $query .= "now(), (0";
 } elsif ($::driver eq 'Pg') {
-	$query .= "now(), (int8(0)";
+    $query .= "now(), (int8(0)";
 }
 
 foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
@@ -234,9 +234,9 @@ foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
 
 
 if ($::driver eq 'mysql') {
-	$query .= ") & $::usergroupset)\n";
+    $query .= ") & $::usergroupset)\n";
 } elsif ($::driver eq 'Pg') {
-	$query .= " & int8($::usergroupset)))\n";
+    $query .= " & int8($::usergroupset)))\n";
 }
 
 

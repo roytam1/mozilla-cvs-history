@@ -103,13 +103,13 @@ sub ProcessOneBug {
         $defmailhead{$field} = $mailhead;
         $fielddescription{$field} = $description;
     }
-	if ($::driver eq 'mysql') {
-    	SendSQL("SELECT " . join(',', @::log_columns) . ", lastdiffed, " . 
-				"now() FROM bugs WHERE bug_id = $id");
-	} elsif ($::driver eq 'Pg') {
-		SendSQL("SELECT " . join(',', @::log_columns) . ", to_char(lastdiffed, 'YYYYMMDDHH24MISS'), " .
+    if ($::driver eq 'mysql') {
+        SendSQL("SELECT " . join(',', @::log_columns) . ", lastdiffed, " . 
+                "now() FROM bugs WHERE bug_id = $id");
+    } elsif ($::driver eq 'Pg') {
+        SendSQL("SELECT " . join(',', @::log_columns) . ", to_char(lastdiffed, 'YYYYMMDDHH24MISS'), " .
                 "to_char(now(), 'YYYYMMDDHH24MISS') FROM bugs WHERE bug_id = $id");
-	}
+    }
     my @row = FetchSQLData();
     foreach my $i (@::log_columns) {
         $values{$i} = shift(@row);
@@ -137,27 +137,27 @@ sub ProcessOneBug {
     }
 
     my @diffs;
-	my $datepart = "";
-		
-	if ($::driver eq 'mysql') {
-		$datepart = "  AND bug_when > '$start' AND bug_when <= '$end' ";
-	} elsif ($::driver eq 'Pg') {
-		$datepart = "  AND to_char(bug_when, 'YYYYMMDDHH24MISS') >= '$start' " .
-	             	"  AND to_char(bug_when, 'YYYYMMDDHH24MISS') <= '$end' ";
-	}
+    my $datepart = "";
+        
+    if ($::driver eq 'mysql') {
+        $datepart = "  AND bug_when > '$start' AND bug_when <= '$end' ";
+    } elsif ($::driver eq 'Pg') {
+        $datepart = "  AND to_char(bug_when, 'YYYYMMDDHH24MISS') >= '$start' " .
+                     "  AND to_char(bug_when, 'YYYYMMDDHH24MISS') <= '$end' ";
+    }
 
-	if ( !$start ) {
-		$start = '00000000000000';
-	}
+    if ( !$start ) {
+        $start = '00000000000000';
+    }
     SendSQL("SELECT profiles.login_name, fielddefs.description, " .
-        	"       bug_when, removed, added, attach_id " .
+            "       bug_when, removed, added, attach_id " .
             "FROM bugs_activity, fielddefs, profiles " .
-	        "WHERE bug_id = $id " .
-    	    "  AND fielddefs.fieldid = bugs_activity.fieldid " .
-        	"  AND profiles.userid = who " . 
-			$datepart .
-			"ORDER BY bug_when");
-	        
+            "WHERE bug_id = $id " .
+            "  AND fielddefs.fieldid = bugs_activity.fieldid " .
+            "  AND profiles.userid = who " . 
+            $datepart .
+            "ORDER BY bug_when");
+            
     while (MoreSQLData()) {
         my @row = FetchSQLData();
         push(@diffs, \@row);
@@ -183,17 +183,17 @@ sub ProcessOneBug {
 
     my $resid = "";
 
-	SendSQL("SELECT bugs_activity.bug_id, bugs.short_desc, fielddefs.name, " .
-    	    "       removed, added " .
-        	"FROM bugs_activity, bugs, dependencies, fielddefs ".
+    SendSQL("SELECT bugs_activity.bug_id, bugs.short_desc, fielddefs.name, " .
+            "       removed, added " .
+            "FROM bugs_activity, bugs, dependencies, fielddefs ".
             "WHERE bugs_activity.bug_id = dependencies.dependson " .
-	        "  AND bugs.bug_id = bugs_activity.bug_id ".
-    	    "  AND dependencies.blocked = $id " .
-        	"  AND fielddefs.fieldid = bugs_activity.fieldid" .
+            "  AND bugs.bug_id = bugs_activity.bug_id ".
+            "  AND dependencies.blocked = $id " .
+            "  AND fielddefs.fieldid = bugs_activity.fieldid" .
             "  AND (fielddefs.name = 'bug_status' " .
-	        "    OR fielddefs.name = 'resolution') " .
-    	    $datepart .
-	        "ORDER BY bug_when, bug_id");
+            "    OR fielddefs.name = 'resolution') " .
+            $datepart .
+            "ORDER BY bug_when, bug_id");
 
     my $thisdiff = "";
     my $lastbug = "";
@@ -314,7 +314,7 @@ sub ProcessOneBug {
 
 #    SendSQL("UPDATE bugs SET lastdiffed = '$end', delta_ts = now()" .
 #            "WHERE bug_id = $id");
-	SendSQL("UPDATE bugs SET lastdiffed = now(), delta_ts = now()" .
+    SendSQL("UPDATE bugs SET lastdiffed = now(), delta_ts = now()" .
             "WHERE bug_id = $id");
 
     # Filter the exclude list for dupes one last time
@@ -491,18 +491,18 @@ sub filterEmailGroup ($$$) {
     # relationship to the bug of the person they are watching (if the person they
     # are watching is an owner, their mail is filtered as if they were the owner).
     if (Param("supportwatchers")) {
-		my @watchers;
-		foreach my $person(@emailList) {
-	    	my $personId = DBname_to_id($person);
-	    	SendSQL("SELECT watcher FROM watch WHERE watched = $personId");
-	    	while(MoreSQLData()) {
-	        	my ($watcher) = FetchSQLData();
-	        	if ($watcher) {
-	            	push (@watchers, DBID_to_name($watcher));
-	        	}
-	    	}
-		}
-		push(@emailList, @watchers);
+        my @watchers;
+        foreach my $person(@emailList) {
+            my $personId = DBname_to_id($person);
+            SendSQL("SELECT watcher FROM watch WHERE watched = $personId");
+            while(MoreSQLData()) {
+                my ($watcher) = FetchSQLData();
+                if ($watcher) {
+                    push (@watchers, DBID_to_name($watcher));
+                }
+            }
+        }
+        push(@emailList, @watchers);
     }
 
 
@@ -765,11 +765,11 @@ sub NewProcessOnePerson ($$$$$$$$$$$) {
     }
 
     if ($enableSendMail == 1) {
-	    open(SENDMAIL, "|/usr/lib/sendmail $sendmailparam -t") ||
-    	  	die "Can't open sendmail";
+        open(SENDMAIL, "|/usr/lib/sendmail $sendmailparam -t") ||
+              die "Can't open sendmail";
     
-    	print SENDMAIL trim($msg) . "\n";
-    	close SENDMAIL;
+        print SENDMAIL trim($msg) . "\n";
+        close SENDMAIL;
     }
     push(@sentlist, $person);
     return 1;
@@ -826,7 +826,7 @@ if ($#ARGV == 1) {
 
 if ($ARGV[0] eq "rescanall") {
     print "<br> Collecting bug ids...\n";
-	if ($::driver eq 'mysql') {
+    if ($::driver eq 'mysql') {
         SendSQL("select bug_id from bugs where to_days(now()) - to_days(delta_ts) <= 2 order by bug_id");
     } elsif ($::driver eq 'Pg') {
         SendSQL("select bug_id from bugs where now() - delta_ts <= '2 days' order by bug_id");

@@ -392,16 +392,16 @@ print "
 
 
 if ($::usergroupset ne '0') {
-	if ($::driver eq 'mysql') {
-	    SendSQL("select bit, name, description, (bit & $bug{'groupset'} != 0) " . 
-    	        "from groups where (bit & $::usergroupset) != 0 " . 
-        	    "and isbuggroup != 0 " . 
-            	# Include active groups as well as inactive groups to which
-	            # the bug already belongs.  This way the bug can be removed
-    	        # from an inactive group but can only be added to active ones.
-        	    "and (isactive = 1 or (bit & $bug{'groupset'} != 0)) " . 
-            	"order by description");
-	} elsif ($::driver eq 'Pg') {
+    if ($::driver eq 'mysql') {
+        SendSQL("select bit, name, description, (bit & $bug{'groupset'} != 0) " . 
+                "from groups where (bit & $::usergroupset) != 0 " . 
+                "and isbuggroup != 0 " . 
+                # Include active groups as well as inactive groups to which
+                # the bug already belongs.  This way the bug can be removed
+                # from an inactive group but can only be added to active ones.
+                "and (isactive = 1 or (bit & $bug{'groupset'} != 0)) " . 
+                "order by description");
+    } elsif ($::driver eq 'Pg') {
         SendSQL("select group_bit, name, description, (group_bit & int8($bug{'groupset'})) != 0 " .
                 "from groups where (group_bit & int8($::usergroupset)) != 0 " .
                 "and isbuggroup != 0 " .
@@ -410,7 +410,7 @@ if ($::usergroupset ne '0') {
                 # from an inactive group but can only be added to active ones.
                 "and (isactive = 1 or (group_bit & int8($bug{'groupset'}) != 0)) " .
                 "order by description");
-	}
+    }
     # We only print out a header bit for this section if there are any
     # results.
     my $groupFound = 0;

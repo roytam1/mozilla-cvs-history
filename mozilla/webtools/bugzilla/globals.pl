@@ -109,25 +109,25 @@ sub ConnectToDatabase {
             $name = Param("shadowdb");
             $::dbwritesallowed = 0;
         }
-		if ($::driver eq 'mysql') {
-			$::db = DBI->connect("DBI:mysql:host=$::db_host;database=$name", $::db_user, $::db_pass)
+        if ($::driver eq 'mysql') {
+            $::db = DBI->connect("DBI:mysql:host=$::db_host;database=$name", $::db_user, $::db_pass)
             || die "Bugzilla is currently broken. Please try again later. " . 
-      			   "If the problem persists, please contact " . Param("maintainer") .
-      			   ". The error you should quote is: " . $DBI::errstr;
-		} elsif ($::driver eq 'Pg') {
-			$::db = DBI->connect("DBI:$::driver:dbname=$name", $::db_user, $::db_pass)
-		    	|| die "Bugzilla is currently broken. Please try again later. " . 
-      				   "If the problem persists, please contact " . Param("maintainer") .
-      				    ". The error you should quote is: " . $DBI::errstr;
-		}
+                     "If the problem persists, please contact " . Param("maintainer") .
+                     ". The error you should quote is: " . $DBI::errstr;
+        } elsif ($::driver eq 'Pg') {
+            $::db = DBI->connect("DBI:$::driver:dbname=$name", $::db_user, $::db_pass)
+                || die "Bugzilla is currently broken. Please try again later. " . 
+                         "If the problem persists, please contact " . Param("maintainer") .
+                          ". The error you should quote is: " . $DBI::errstr;
+        }
     }
 }
 
 sub ReconnectToShadowDatabase {
     if (Param("shadowdb") && Param("queryagainstshadowdb")) {
-		if ($::driver eq 'mysql') {
-        	SendSQL("USE " . Param("shadowdb"));
-		}
+        if ($::driver eq 'mysql') {
+            SendSQL("USE " . Param("shadowdb"));
+        }
         $::dbwritesallowed = 0;
     }
 }
@@ -292,20 +292,20 @@ sub FetchOneColumn {
 # Returns:     formatted SQL for regular expression search (scalar)
 
 sub SqlRegEx {
-	my ($field, $pattern, $not) = @_;
-	if ($::driver eq 'mysql') {
-		if (!$not) {
-			return " LOWER($field) REGEXP $pattern ";	
-		} else {
-			return " LOWER($field) NOT REGEXP $pattern ";
-		}
-	} elsif ($::driver eq 'Pg') {
-		if (!$not) {
+    my ($field, $pattern, $not) = @_;
+    if ($::driver eq 'mysql') {
+        if (!$not) {
+            return " LOWER($field) REGEXP $pattern ";    
+        } else {
+            return " LOWER($field) NOT REGEXP $pattern ";
+        }
+    } elsif ($::driver eq 'Pg') {
+        if (!$not) {
             return " LOWER($field) ~ $pattern ";
         } else {
             return " LOWER($field) !~ $pattern ";
         }
-	} 
+    } 
 }
 
 # subroutine:  SqlStrSearch
@@ -318,36 +318,36 @@ sub SqlRegEx {
 # Returns:     formatted SQL for regular expression search (scalar)
 
 sub SqlStrSearch {
-	my ($field, $str, $lower, $not) = @_;
-	if ($::driver eq 'mysql') {
-		if (!$lower) {
-			if (!$not) {
-		        return " INSTR($field, $str) != 0 ";
-			} else {
-				return " INSTR($field, $str) = 0 ";
-			}
-		} else {
-			if (!$not) {
-				return " INSTR(LOWER($field), " . lc($str) . ") != 0 ";
-			} else {
-				return " INSTR(LOWER($field), " . lc($str) . ") = 0 ";
-			}
-		}
+    my ($field, $str, $lower, $not) = @_;
+    if ($::driver eq 'mysql') {
+        if (!$lower) {
+            if (!$not) {
+                return " INSTR($field, $str) != 0 ";
+            } else {
+                return " INSTR($field, $str) = 0 ";
+            }
+        } else {
+            if (!$not) {
+                return " INSTR(LOWER($field), " . lc($str) . ") != 0 ";
+            } else {
+                return " INSTR(LOWER($field), " . lc($str) . ") = 0 ";
+            }
+        }
     } elsif ($::driver eq 'Pg') {
-		if (!$lower) {
-			if (!$not) {
-				return " STRPOS($field, $str) != 0 ";
-			} else {
-				return " STRPOS($field, $str) = 0 ";
-			}
-		} else {
-			if (!$not) {
-		        return " STRPOS(LOWER($field), " . lc($str) . ") != 0 ";
-			} else {
-				return " STRPOS(LOWER($field), " . lc($str) . ") = 0 ";
-			}
-		}
-    }	
+        if (!$lower) {
+            if (!$not) {
+                return " STRPOS($field, $str) != 0 ";
+            } else {
+                return " STRPOS($field, $str) = 0 ";
+            }
+        } else {
+            if (!$not) {
+                return " STRPOS(LOWER($field), " . lc($str) . ") != 0 ";
+            } else {
+                return " STRPOS(LOWER($field), " . lc($str) . ") = 0 ";
+            }
+        }
+    }    
 }
 
     
@@ -376,13 +376,13 @@ sub GetFieldID {
     my $fieldid = FetchOneColumn();
     if (!$fieldid) {
         my $q = SqlQuote($f);
-		if ($::driver eq 'mysql') {
-	        SendSQL("REPLACE INTO fielddefs (name, description) VALUES ($q, $q)");
+        if ($::driver eq 'mysql') {
+            SendSQL("REPLACE INTO fielddefs (name, description) VALUES ($q, $q)");
         } elsif ($::driver eq 'Pg') {
-			SendSQL("INSERT INTO fielddefs (name, description, sortkey) " . 
+            SendSQL("INSERT INTO fielddefs (name, description, sortkey) " . 
                     "VALUES ($q, $q, 1)");
-		}
-		$fieldid = CurrId("fielddefs_fieldid_seq");
+        }
+        $fieldid = CurrId("fielddefs_fieldid_seq");
     }
     return $fieldid;
 }
@@ -585,21 +585,21 @@ sub GenerateVersionTable {
     }
     @::log_columns = (sort(@::log_columns));
 
-	if ($::driver eq 'mysql') {
-	    @::legal_priority = SplitEnumType($cols->{"priority,type"});
-   		@::legal_severity = SplitEnumType($cols->{"bug_severity,type"});
-    	@::legal_platform = SplitEnumType($cols->{"rep_platform,type"});
-    	@::legal_opsys = SplitEnumType($cols->{"op_sys,type"});
-    	@::legal_bug_status = SplitEnumType($cols->{"bug_status,type"});
-    	@::legal_resolution = SplitEnumType($cols->{"resolution,type"});
-	} elsif ($::driver eq 'Pg') {
+    if ($::driver eq 'mysql') {
+        @::legal_priority = SplitEnumType($cols->{"priority,type"});
+           @::legal_severity = SplitEnumType($cols->{"bug_severity,type"});
+        @::legal_platform = SplitEnumType($cols->{"rep_platform,type"});
+        @::legal_opsys = SplitEnumType($cols->{"op_sys,type"});
+        @::legal_bug_status = SplitEnumType($cols->{"bug_status,type"});
+        @::legal_resolution = SplitEnumType($cols->{"resolution,type"});
+    } elsif ($::driver eq 'Pg') {
         @::legal_priority = SplitTableValues("priority");
-		@::legal_severity = SplitTableValues("bug_severity");
+        @::legal_severity = SplitTableValues("bug_severity");
         @::legal_platform = SplitTableValues("rep_platform");
         @::legal_opsys = SplitTableValues("op_sys");
         @::legal_bug_status = SplitTableValues("bug_status");
         @::legal_resolution = SplitTableValues("resolution");
-	}
+    }
 
     # 'settable_resolution' is the list of resolutions that may be set 
     # directly by hand in the bug form. Start with the list of legal 
@@ -763,13 +763,13 @@ sub InsertNewUser {
         }
     }
         
-	my $encrypted = crypt($password, substr($password, 0, 2));
-	$encrypted = SqlQuote($encrypted);    
+    my $encrypted = crypt($password, substr($password, 0, 2));
+    $encrypted = SqlQuote($encrypted);    
 
     # Insert the new user record into the database.            
     $username = SqlQuote($username);
     $realname = SqlQuote($realname);
-	SendSQL("insert into profiles (login_name, realname, cryptpassword, groupset) " . 
+    SendSQL("insert into profiles (login_name, realname, cryptpassword, groupset) " . 
             "values ($username, $realname, $encrypted, $groupset)");
     PopGlobalSQLState();
 
@@ -854,11 +854,11 @@ sub SelectVisible {
                      selectVisible_cc.who = $userid "
     }
 
-	if ($::driver eq 'mysql') {
-	    $replace .= "WHERE ((bugs.groupset & $usergroupset) = bugs.groupset ";
-	} elsif ($::driver eq 'Pg') {
-		$replace .= "WHERE ((bugs.groupset & int8($usergroupset)) = bugs.groupset ";
-	}
+    if ($::driver eq 'mysql') {
+        $replace .= "WHERE ((bugs.groupset & $usergroupset) = bugs.groupset ";
+    } elsif ($::driver eq 'Pg') {
+        $replace .= "WHERE ((bugs.groupset & int8($usergroupset)) = bugs.groupset ";
+    }
     if ($userid) {
         # There is a mysql bug affecting v3.22 and 3.23 (at least), where this will
         # cause all rows to be returned! We work arround this by adding an not isnull
@@ -868,7 +868,7 @@ sub SelectVisible {
 #                   OR (bugs.assignee_accessible = 1 AND bugs.assigned_to = $userid) 
 #                   OR (bugs.qacontact_accessible = 1 AND bugs.qa_contact = $userid) 
 #                   OR (bugs.cclist_accessible = 1 AND selectVisible_cc.who = $userid AND not isnull(selectVisible_cc.who))";
-		$replace .= "OR (bugs.reporter_accessible = 1 AND bugs.reporter = $userid) 
+        $replace .= "OR (bugs.reporter_accessible = 1 AND bugs.reporter = $userid) 
                    OR (bugs.assignee_accessible = 1 AND bugs.assigned_to = $userid) 
                    OR (bugs.qacontact_accessible = 1 AND bugs.qa_contact = $userid) 
                    OR (selectVisible_bugs.cclist_accessible = 1 AND selectVisible_cc.who = $userid AND selectVisible_cc.who IS NOT NULL)";
@@ -1227,19 +1227,19 @@ sub GetLongDescriptionAsText {
     if ($start && $start =~ /[1-9]/) {
         # If the start is all zeros, then don't do this (because we want to
         # not emit a leading "Additional Comments" line in that case.)
-		if ($::driver eq 'mysql') {
-    	    $query .= "AND longdescs.bug_when > '$start' ";
-		} elsif ($::driver eq 'Pg') {
-			$query .= "AND TO_CHAR(longdescs.bug_when, 'YYYYMMDDHH24MISS') >= '$start' ";
-		}
+        if ($::driver eq 'mysql') {
+            $query .= "AND longdescs.bug_when > '$start' ";
+        } elsif ($::driver eq 'Pg') {
+            $query .= "AND TO_CHAR(longdescs.bug_when, 'YYYYMMDDHH24MISS') >= '$start' ";
+        }
         $count = 1;
     }
     if ($end) {
-		if ($::driver eq 'mysql') {
-	        $query .= "AND longdescs.bug_when <= '$end' ";
-		} elsif ($::driver eq 'Pg') {
-			$query .= "AND TO_CHAR(longdescs.bug_when, 'YYYYMMDDHH24MISS') <= '$end' ";
-		}
+        if ($::driver eq 'mysql') {
+            $query .= "AND longdescs.bug_when <= '$end' ";
+        } elsif ($::driver eq 'Pg') {
+            $query .= "AND TO_CHAR(longdescs.bug_when, 'YYYYMMDDHH24MISS') <= '$end' ";
+        }
     }
 
     $query .= "ORDER BY longdescs.bug_when";
@@ -1337,24 +1337,24 @@ sub GetLongDescriptionAsHTML {
 sub LearnAboutColumns {
     my ($table) = (@_);
     my %a;
-	my @list = ();
-	if ($::driver eq 'mysql') {
-	    SendSQL("show columns from $table");
-		while ( my @row = FetchSQLData() ) {
-        	my ($name,$type) = (@row);
-        	$a{"$name,type"} = $type;
-        	push (@list, $name);
-    	}
-	} elsif ($::driver eq 'Pg') {
-		my $ref = $::db->func($table, "table_attributes");
-		for my $index ( 0..@{$ref} ) {
-			next if !$ref->[$index]->{'NAME'};
-	        my $name = $ref->[$index]->{'NAME'};
-    	    my $type = $ref->[$index]->{'TYPE'};
-			$a{"$name,type"} = $type;
+    my @list = ();
+    if ($::driver eq 'mysql') {
+        SendSQL("show columns from $table");
+        while ( my @row = FetchSQLData() ) {
+            my ($name,$type) = (@row);
+            $a{"$name,type"} = $type;
             push (@list, $name);
-		}
-	}
+        }
+    } elsif ($::driver eq 'Pg') {
+        my $ref = $::db->func($table, "table_attributes");
+        for my $index ( 0..@{$ref} ) {
+            next if !$ref->[$index]->{'NAME'};
+            my $name = $ref->[$index]->{'NAME'};
+            my $type = $ref->[$index]->{'TYPE'};
+            $a{"$name,type"} = $type;
+            push (@list, $name);
+        }
+    }
     $a{"-list-"} = \@list;
     return \%a;
 }
@@ -1372,7 +1372,7 @@ sub SplitEnumType {
         while ($guts =~ /^\'([^\']*)\',(.*)$/) {
             push @result, $1;
             $guts = $2;
-		}
+        }
     }
     return @result;
 }
@@ -1415,14 +1415,14 @@ sub UserInGroup {
         return 0;
     }
     ConnectToDatabase();
-	if ($::driver eq 'mysql') {
-    	SendSQL("select (group_bit & $::usergroupset) != 0 " . 
-				"from groups where name = " . SqlQuote($groupname));
-	} elsif ($::driver eq 'Pg') {
-		SendSQL("select (group_bit & int8($::usergroupset)) != 0 " . 
-				"from groups where name = " . SqlQuote($groupname));
-	}
-	my $bit = FetchOneColumn();
+    if ($::driver eq 'mysql') {
+        SendSQL("select (group_bit & $::usergroupset) != 0 " . 
+                "from groups where name = " . SqlQuote($groupname));
+    } elsif ($::driver eq 'Pg') {
+        SendSQL("select (group_bit & int8($::usergroupset)) != 0 " . 
+                "from groups where name = " . SqlQuote($groupname));
+    }
+    my $bit = FetchOneColumn();
     if ($bit) {
         return 1;
     }
@@ -1454,11 +1454,11 @@ sub GroupNameToBit {
     my ($groupname) = (@_);
     ConnectToDatabase();
     PushGlobalSQLState();
-	if ($::driver eq 'mysql') {
-	    SendSQL("SELECT bit FROM groups WHERE name = " . SqlQuote($groupname));
-	} elsif ($::driver eq 'Pg') {
-		SendSQL("SELECT group_bit FROM groups WHERE name = " . SqlQuote($groupname));
-	}
+    if ($::driver eq 'mysql') {
+        SendSQL("SELECT bit FROM groups WHERE name = " . SqlQuote($groupname));
+    } elsif ($::driver eq 'Pg') {
+        SendSQL("SELECT group_bit FROM groups WHERE name = " . SqlQuote($groupname));
+    }
     my $bit = FetchOneColumn() || 0;
     PopGlobalSQLState();
     return $bit;
@@ -1680,22 +1680,22 @@ sub trim {
 # Returns current value from a given sequence or auto_increment depending
 # on the database being used.
 sub CurrId {
-	my $seqname = shift;
+    my $seqname = shift;
     if ($::driver eq 'mysql') {
-		SendSQL("select LAST_INSERT_ID()");
-		return FetchOneColumn();		
+        SendSQL("select LAST_INSERT_ID()");
+        return FetchOneColumn();        
     } elsif ($::driver eq 'Pg') {
-		if ( !$seqname ) {
-			return 0;
-		}
-		SendSQL("SELECT last_value FROM $seqname");	
-		return FetchOneColumn();
+        if ( !$seqname ) {
+            return 0;
+        }
+        SendSQL("SELECT last_value FROM $seqname");    
+        return FetchOneColumn();
     } elsif ($::driver eq 'Oracle') {
-		if (!$seqname) {
-			return 0;
-		}
-		SendSQL("select $seqname.currval from dual");
-		return FetchOneColumn();
+        if (!$seqname) {
+            return 0;
+        }
+        SendSQL("select $seqname.currval from dual");
+        return FetchOneColumn();
     } else {
         return 0;
     }

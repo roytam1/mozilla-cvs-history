@@ -209,7 +209,7 @@ unless ($action) {
              FROM products LEFT JOIN bugs
                ON products.product=bugs.product
              GROUP BY products.product,description,disallownew,
-					  votesperuser,maxvotesperbug,votestoconfirm
+                      votesperuser,maxvotesperbug,votestoconfirm
              ORDER BY products.product");
     print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR BGCOLOR=\"#6666FF\">\n";
     print "  <TH ALIGN=\"left\">Edit product ...</TH>\n";
@@ -388,15 +388,15 @@ if ($action eq 'new') {
         # find matching users with a much simpler statement that lets the
         # mySQL database do the work.
         unless($userregexp eq "") {
-			if ($::driver eq 'mysql') {
-				SendSQL("UPDATE profiles ".
+            if ($::driver eq 'mysql') {
+                SendSQL("UPDATE profiles ".
                         "SET groupset = groupset | " . $bit . " " .
                         "WHERE " . SqlRegEx("login_name", SqlQuote($userregexp)));
-			} elsif ($::driver eq 'Pg') {
-				SendSQL("UPDATE profiles ".
+            } elsif ($::driver eq 'Pg') {
+                SendSQL("UPDATE profiles ".
                         "SET groupset = groupset | int8(" . $bit . ") " .
                         "WHERE " . SqlRegEx("login_name", SqlQuote($userregexp)));
-			}
+            }
         }
     }
 
@@ -585,8 +585,8 @@ if ($action eq 'delete') {
     CheckProduct($product);
 
     # lock the tables before we start to change everything:
-	if ($::driver eq 'mysql') {
-	    SendSQL("LOCK TABLES attachments WRITE,
+    if ($::driver eq 'mysql') {
+        SendSQL("LOCK TABLES attachments WRITE,
                 bugs WRITE,
                 bugs_activity WRITE,
                 components WRITE,
@@ -596,7 +596,7 @@ if ($action eq 'delete') {
                 groups WRITE,
                 profiles WRITE,
                 milestones WRITE");
-	}
+    }
 
     # According to MySQL doc I cannot do a DELETE x.* FROM x JOIN Y,
     # so I have to iterate over bugs and delete all the indivial entries
@@ -655,17 +655,17 @@ if ($action eq 'delete') {
             # I'm kludging a bit so that I don't break superuser access;
             # I'm merely checking to make sure that the groupset is not
             # the superuser groupset in doing this update...
-			if ($::driver eq 'mysql') {
-            	SendSQL("UPDATE profiles " .
-                	    "SET groupset = groupset - $bit " .
-                    	"WHERE (groupset & $bit) " .
-                    	"AND (groupset != 9223372036854710271)");
-			} elsif ($::driver eq 'Pg') {
-				SendSQL("UPDATE profiles " .
-                    	"SET groupset = groupset - $bit " .
-                    	"WHERE (groupset & int8($bit)) " .
-                    	"AND (groupset != int8(9223372036854710271))");
-			}
+            if ($::driver eq 'mysql') {
+                SendSQL("UPDATE profiles " .
+                        "SET groupset = groupset - $bit " .
+                        "WHERE (groupset & $bit) " .
+                        "AND (groupset != 9223372036854710271)");
+            } elsif ($::driver eq 'Pg') {
+                SendSQL("UPDATE profiles " .
+                        "SET groupset = groupset - $bit " .
+                        "WHERE (groupset & int8($bit)) " .
+                        "AND (groupset != int8(9223372036854710271))");
+            }
             print "Users dropped from group '$group_desc'.<BR>\n";
 
             SendSQL("DELETE FROM groups " .
@@ -673,10 +673,10 @@ if ($action eq 'delete') {
             print "Group '$group_desc' deleted.<BR>\n";
         }
     }
-	if ($::driver eq 'mysql') {
-	    SendSQL("UNLOCK TABLES");
-	}
-	
+    if ($::driver eq 'mysql') {
+        SendSQL("UNLOCK TABLES");
+    }
+    
     unlink "data/versioncache";
     PutTrailer($localtrailer);
     exit;
@@ -860,15 +860,15 @@ if ($action eq 'update') {
 
     # Note that the order of this tests is important. If you change
     # them, be sure to test for WHERE='$product' or WHERE='$productold'
-	if ($::driver eq 'mysql') {
-	    SendSQL("LOCK TABLES bugs WRITE,
+    if ($::driver eq 'mysql') {
+        SendSQL("LOCK TABLES bugs WRITE,
                 components WRITE,
                 products WRITE,
                 versions WRITE,
                 groups WRITE,
                 profiles WRITE,
                 milestones WRITE");
-	}
+    }
 
     if ($disallownew ne $disallownewold) {
         $disallownew ||= 0;
@@ -881,9 +881,9 @@ if ($action eq 'update') {
     if ($description ne $descriptionold) {
         unless ($description) {
             print "Sorry, I can't delete the description.";
-			if ($::driver eq 'mysql') {
-	            SendSQL("UNLOCK TABLES");
-			}
+            if ($::driver eq 'mysql') {
+                SendSQL("UNLOCK TABLES");
+            }
             PutTrailer($localtrailer);
             exit;
         }
@@ -952,15 +952,15 @@ if ($action eq 'update') {
         my $updated_profiles = 0;
         foreach $this_login (@login_list) {
             if($this_login =~ /$userregexp/) {
-				if ($::driver eq 'mysql') {
-    	            SendSQL("UPDATE profiles " .
-	                        "SET groupset = groupset | " . $bit . " " .
-        	                "WHERE login_name = " . SqlQuote($this_login));
-				} elsif ($::driver eq 'Pg') {
-					SendSQL("UPDATE profiles " .
+                if ($::driver eq 'mysql') {
+                    SendSQL("UPDATE profiles " .
+                            "SET groupset = groupset | " . $bit . " " .
+                            "WHERE login_name = " . SqlQuote($this_login));
+                } elsif ($::driver eq 'Pg') {
+                    SendSQL("UPDATE profiles " .
                             "SET groupset = groupset | int8(" . $bit . ") " .
                             "WHERE login_name = " . SqlQuote($this_login));
-				}
+                }
                 $updated_profiles = 1;
             }
         }
@@ -1002,10 +1002,10 @@ if ($action eq 'update') {
                 "  AND product = " . SqlQuote($productold));
         if (!FetchOneColumn()) {
             print "Sorry, the milestone $defaultmilestone must be defined first.";
-			if ($::driver eq 'mysql') {
-	            SendSQL("UNLOCK TABLES");
-    		}
-	        PutTrailer($localtrailer);
+            if ($::driver eq 'mysql') {
+                SendSQL("UNLOCK TABLES");
+            }
+            PutTrailer($localtrailer);
             exit;
         }
         SendSQL("UPDATE products " .
@@ -1021,17 +1021,17 @@ if ($action eq 'update') {
         unless ($product) {
             print "Sorry, I can't delete the product name.";
             if ($::driver eq 'mysql') {
-				SendSQL("UNLOCK TABLES");
-    		}
-	        PutTrailer($localtrailer);
+                SendSQL("UNLOCK TABLES");
+            }
+            PutTrailer($localtrailer);
             exit;
         }
         if (TestProduct($product)) {
             print "Sorry, product name '$product' is already in use.";
-			if ($::driver eq 'mysql') {
-	            SendSQL("UNLOCK TABLES");
+            if ($::driver eq 'mysql') {
+                SendSQL("UNLOCK TABLES");
             }
-			PutTrailer($localtrailer);
+            PutTrailer($localtrailer);
             exit;
         }
 
@@ -1052,9 +1052,9 @@ if ($action eq 'update') {
         print "Updated product name.<BR>\n";
     }
     unlink "data/versioncache";
-	if ($::driver eq 'mysql') {
-	    SendSQL("UNLOCK TABLES");
-	}
+    if ($::driver eq 'mysql') {
+        SendSQL("UNLOCK TABLES");
+    }
 
     if ($checkvotes) {
         print "Checking existing votes in this product for anybody who now has too many votes.";

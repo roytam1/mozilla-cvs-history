@@ -134,19 +134,19 @@ sub EmitFormElements ($$$$$)
     
     if($user ne "") {
         print "</TR><TR><TH VALIGN=TOP ALIGN=RIGHT>Group Access:</TH><TD><TABLE><TR>";
-		if ($::driver eq 'mysql') {
-		    SendSQL("SELECT group_bit, name, description, (group_bit & $groupset) != 0, " .
-    		        "       (group_bit & $blessgroupset) != 0 " .
-				    "FROM groups " .
-            		"WHERE (group_bit & $opblessgroupset) != 0 AND isbuggroup != 0 " .
-                	"ORDER BY name");
-		} elsif ($::driver eq 'Pg') {
-        	SendSQL("SELECT group_bit, name, description, (group_bit & int8($groupset)) != 0, " .
-            	    "       (group_bit & int8($blessgroupset)) != 0 " .
-                	"FROM groups " .
-                	"WHERE (group_bit & int8($opblessgroupset)) != 0 AND isbuggroup != 0 " .
-                	"ORDER BY name");
-		}
+        if ($::driver eq 'mysql') {
+            SendSQL("SELECT group_bit, name, description, (group_bit & $groupset) != 0, " .
+                    "       (group_bit & $blessgroupset) != 0 " .
+                    "FROM groups " .
+                    "WHERE (group_bit & $opblessgroupset) != 0 AND isbuggroup != 0 " .
+                    "ORDER BY name");
+        } elsif ($::driver eq 'Pg') {
+            SendSQL("SELECT group_bit, name, description, (group_bit & int8($groupset)) != 0, " .
+                    "       (group_bit & int8($blessgroupset)) != 0 " .
+                    "FROM groups " .
+                    "WHERE (group_bit & int8($opblessgroupset)) != 0 AND isbuggroup != 0 " .
+                    "ORDER BY name");
+        }
         if (MoreSQLData()) {
             if ($editall) {
                 print "<TD COLSPAN=3 ALIGN=LEFT><B>Can turn this bit on for other users</B></TD>\n";
@@ -168,19 +168,19 @@ sub EmitFormElements ($$$$$)
         print "</TR></TABLE></TD>\n";
     
         print "</TR><TR><TH VALIGN=TOP ALIGN=RIGHT>Privileges:</TH><TD><TABLE><TR>";
-		if ($::driver eq 'mysql') {
-		    SendSQL("SELECT group_bit, name, description, (group_bit & $groupset) != 0, " .
-    		        "       (group_bit & $blessgroupset) != 0 " .
-        		    "FROM groups " .
-            		"WHERE (group_bit & $opblessgroupset) != 0 AND isbuggroup = 0 " .
-                	"ORDER BY name");
-		} elsif ($::driver eq 'Pg') {
+        if ($::driver eq 'mysql') {
+            SendSQL("SELECT group_bit, name, description, (group_bit & $groupset) != 0, " .
+                    "       (group_bit & $blessgroupset) != 0 " .
+                    "FROM groups " .
+                    "WHERE (group_bit & $opblessgroupset) != 0 AND isbuggroup = 0 " .
+                    "ORDER BY name");
+        } elsif ($::driver eq 'Pg') {
             SendSQL("SELECT group_bit, name, description, (group_bit & int8($groupset)) != 0, " .
                     "       (group_bit & int8($blessgroupset)) != 0 " .
                     "FROM groups " .
                     "WHERE (group_bit & int8($opblessgroupset)) != 0 AND isbuggroup = 0 " .
                     "ORDER BY name");
-		}
+        }
         if (MoreSQLData()) {
             if ($editall) {
                 print "<TD COLSPAN=3 ALIGN=LEFT><B>Can turn this bit on for other users</B></TD>\n";
@@ -316,9 +316,9 @@ if ($action eq 'list') {
       if ($::FORM{'matchtype'} eq 'substr') {
           $query .= "login_name like '%" . $::FORM{'matchstr'} . "%'";
       } elsif ($::FORM{'matchtype'} eq 'regexp') {
-		  $query .= SqlRegEx("login_name", SqlQuote($::FORM{'matchstr'}));
+          $query .= SqlRegEx("login_name", SqlQuote($::FORM{'matchstr'}));
       } elsif ($::FORM{'matchtype'} eq 'notregexp') {
-		  $query .= SqlRegEx("login_name", SqlQuote($::FORM{'matchstr'}), "not");
+          $query .= SqlRegEx("login_name", SqlQuote($::FORM{'matchstr'}), "not");
       } else {
           die "Unknown match type";
       }
@@ -494,13 +494,13 @@ if ($action eq 'new') {
     }
 
     # Add the new user
-	my $encrypted = crypt($password, substr($password, 0, 2));
-	SendSQL("INSERT INTO profiles ( " .
-    	    "login_name, cryptpassword, realname, groupset, " .
-        	"disabledtext" .
-	        " ) VALUES (" .
-    	    SqlQuote($user) . "," .
-        	SqlQuote($encrypted) . "," .
+    my $encrypted = crypt($password, substr($password, 0, 2));
+    SendSQL("INSERT INTO profiles ( " .
+            "login_name, cryptpassword, realname, groupset, " .
+            "disabledtext" .
+            " ) VALUES (" .
+            SqlQuote($user) . "," .
+            SqlQuote($encrypted) . "," .
             SqlQuote($realname) . "," .
             $bits . "," .
             SqlQuote($disabledtext) . ")" );
@@ -570,17 +570,17 @@ if ($action eq 'del') {
     print "</TR><TR>\n";
     print "  <TD VALIGN=\"top\">Group set:</TD>\n";
     print "  <TD VALIGN=\"top\">";
-	if ($::driver eq 'mysql') {
-		SendSQL("SELECT name
-				FROM groups
-             	WHERE bit & $groupset = bit
-             	ORDER BY isbuggroup, name");
-	} elsif ($::driver eq 'Pg') {
-    	SendSQL("SELECT name
-	     		FROM groups
-             	WHERE group_bit & $groupset = group_bit
-	     		ORDER BY isbuggroup, name");
-	}
+    if ($::driver eq 'mysql') {
+        SendSQL("SELECT name
+                FROM groups
+                 WHERE bit & $groupset = bit
+                 ORDER BY isbuggroup, name");
+    } elsif ($::driver eq 'Pg') {
+        SendSQL("SELECT name
+                 FROM groups
+                 WHERE group_bit & $groupset = group_bit
+                 ORDER BY isbuggroup, name");
+    }
     my $found = 0;
     while ( MoreSQLData() ) {
         my ($name) = FetchSQLData();
@@ -784,17 +784,17 @@ if ($action eq 'update') {
         if($groupsetold eq $::superusergroupset) {
           print "Cannot change permissions of superuser.\n";
         } else {
-			if ($::driver eq 'mysql') {
-	           SendSQL("UPDATE profiles
-    	                SET groupset =
-        	                 groupset - (groupset & $opblessgroupset) + $groupset
-            	        WHERE login_name=" . SqlQuote($userold));
-			} elsif ($::driver eq 'Pg') {
+            if ($::driver eq 'mysql') {
+               SendSQL("UPDATE profiles
+                        SET groupset =
+                             groupset - (groupset & $opblessgroupset) + $groupset
+                        WHERE login_name=" . SqlQuote($userold));
+            } elsif ($::driver eq 'Pg') {
                SendSQL("UPDATE profiles
                         SET groupset =
                              groupset - (groupset & int8($opblessgroupset)) + $groupset
                         WHERE login_name=" . SqlQuote($userold));
-			}
+            }
            # I'm paranoid that someone who I give the ability to bless people
            # will start misusing it.  Let's log who blesses who (even though
            # nothing actually uses this log right now).

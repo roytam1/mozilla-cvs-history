@@ -410,15 +410,15 @@ print "
 ";
 
 if ($::usergroupset ne '0') {
-	if ($::driver eq 'mysql') {
-	    SendSQL("SELECT bit, description FROM groups " .
-    	        "WHERE (bit & $::usergroupset) != 0 " .
-				"  AND isbuggroup != 0 AND isactive = 1 ORDER BY description");
-	} elsif ($::driver eq 'Pg') {
-		SendSQL("SELECT group_bit, name, description FROM groups " .
-            	"WHERE (group_bit & int8($::usergroupset)) != 0 " .
-				"  AND isbuggroup != 0 AND isactive = 1 ORDER BY description");
-	}
+    if ($::driver eq 'mysql') {
+        SendSQL("SELECT bit, description FROM groups " .
+                "WHERE (bit & $::usergroupset) != 0 " .
+                "  AND isbuggroup != 0 AND isactive = 1 ORDER BY description");
+    } elsif ($::driver eq 'Pg') {
+        SendSQL("SELECT group_bit, name, description FROM groups " .
+                "WHERE (group_bit & int8($::usergroupset)) != 0 " .
+                "  AND isbuggroup != 0 AND isactive = 1 ORDER BY description");
+    }
     # We only print out a header bit for this section if there are any
     # results.
     my $groupFound = 0;

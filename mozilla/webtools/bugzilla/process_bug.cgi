@@ -335,9 +335,9 @@ sub CheckCanChangeField {
              $qacontactid eq $whoid) {
         return 1;
     }
-	if ($::driver eq 'mysql') {
-	    SendSQL("UNLOCK TABLES");
-	}
+    if ($::driver eq 'mysql') {
+        SendSQL("UNLOCK TABLES");
+    }
     $oldvalue = value_quote($oldvalue);
     $newvalue = value_quote($newvalue);
     print PuntTryAgain(qq{
@@ -498,19 +498,19 @@ sub ChangeStatus {
             # to handle that.
             my @open_state = map(SqlQuote($_), OpenStates());
             my $open_state = join(", ", @open_state);
-			if ($::driver eq 'mysql') {
-	            $::query .= "bug_status = IF(bug_status IN ($open_state), '$str', bug_status)";
-			} elsif ($::driver eq 'Pg') {
-				$::query .= "bug_status = CASE WHEN bug_status IN ($open_state) " . 
-							"THEN '$str' ELSE bug_status END ";
-			}
+            if ($::driver eq 'mysql') {
+                $::query .= "bug_status = IF(bug_status IN ($open_state), '$str', bug_status)";
+            } elsif ($::driver eq 'Pg') {
+                $::query .= "bug_status = CASE WHEN bug_status IN ($open_state) " . 
+                            "THEN '$str' ELSE bug_status END ";
+            }
         } elsif (IsOpenedState($str)) {
-			if ($::driver eq 'mysql') {
-	            $::query .= "bug_status = IF(everconfirmed = 1, '$str', '$::unconfirmedstate')";
-			} elsif ($::driver eq 'Pg') {
-				$::query .= "bug_status = CASE WHEN (select everconfirmed from bugs where bug_id = $::FORM{'id'}) = 1 " . 
-							"THEN '$str' ELSE '$::unconfirmedstate' END ";
-			}
+            if ($::driver eq 'mysql') {
+                $::query .= "bug_status = IF(everconfirmed = 1, '$str', '$::unconfirmedstate')";
+            } elsif ($::driver eq 'Pg') {
+                $::query .= "bug_status = CASE WHEN (select everconfirmed from bugs where bug_id = $::FORM{'id'}) = 1 " . 
+                            "THEN '$str' ELSE '$::unconfirmedstate' END ";
+            }
         } else {
             $::query .= "bug_status = '$str'";
         }
@@ -571,21 +571,21 @@ if($::usergroupset ne '0') {
 #  DoComma();
 #  $::query .= "groupset = 0";
 #  my ($id) = (@idlist);
-#	if ($::driver eq 'mysql') {
-#	  SendSQL(<<_EOQ_);
+#    if ($::driver eq 'mysql') {
+#      SendSQL(<<_EOQ_);
 #    SELECT bit, bit & $::usergroupset != 0, bit & bugs.groupset != 0
 #    FROM groups, bugs
 #    WHERE isbuggroup != 0 AND bug_id = $id
 #    ORDER BY bit
 #_EOQ_
-#	} elsif ($::driver eq 'Pg') {
+#    } elsif ($::driver eq 'Pg') {
 #      SendSQL(<<_EOQ_);
 #    SELECT group_bit, (group_bit & int8($::usergroupset)) != 0, (group_bit & bugs.groupset) != 0
 #    FROM groups, bugs
 #    WHERE isbuggroup != 0 AND bug_id = $id
 #    ORDER BY group_bit
 #_EOQ_
-#	}
+#    }
 #  while (my ($b, $userhasgroup, $bughasgroup) = FetchSQLData()) {
 #    if (!$::FORM{"bit-$b"}) {
 #      # If we make it here, the item didn't exist on the form or the user
@@ -672,12 +672,12 @@ if (defined $::FORM{'qa_contact'}) {
 # to which the bug is restricted.
 if ( $::FORM{'id'} ) {
     if ($::driver eq 'mysql') {
-		SendSQL("SELECT bit FROM groups WHERE bit & $::usergroupset != 0 
+        SendSQL("SELECT bit FROM groups WHERE bit & $::usergroupset != 0 
              AND isbuggroup != 0 AND isactive = 1");
-	} elsif ($::driver eq 'Pg') {
-		SendSQL("SELECT group_bit FROM groups WHERE (group_bit & int8($::usergroupset)) != 0 
+    } elsif ($::driver eq 'Pg') {
+        SendSQL("SELECT group_bit FROM groups WHERE (group_bit & int8($::usergroupset)) != 0 
              AND isbuggroup != 0 AND isactive = 1");
-	}
+    }
     my ($groupbits) = FetchSQLData();
     if ( $groupbits ) {
         DoComma();
@@ -1019,13 +1019,13 @@ foreach my $id (@idlist) {
     my %dependencychanged;
     my $write = "WRITE";        # Might want to make a param to control
                                 # whether we do LOW_PRIORITY ...
-	if ($::driver eq 'mysql') {
-	    SendSQL("LOCK TABLES bugs $write, bugs_activity $write, cc $write, " .
-				"cc AS selectVisible_cc $write, " .
-    	        "profiles $write, dependencies $write, votes $write, " .
-        	    "keywords $write, longdescs $write, fielddefs $write, " .
-            	"keyworddefs READ, groups READ, attachments READ, products READ");
-	}
+    if ($::driver eq 'mysql') {
+        SendSQL("LOCK TABLES bugs $write, bugs_activity $write, cc $write, " .
+                "cc AS selectVisible_cc $write, " .
+                "profiles $write, dependencies $write, votes $write, " .
+                "keywords $write, longdescs $write, fielddefs $write, " .
+                "keyworddefs READ, groups READ, attachments READ, products READ");
+    }
     my @oldvalues = SnapShotBug($id);
     my %oldhash;
     my $i = 0;
@@ -1044,10 +1044,10 @@ foreach my $id (@idlist) {
         SendSQL("SELECT defaultmilestone FROM products WHERE product = " .
                 SqlQuote($oldhash{'product'}));
         if ($value eq FetchOneColumn()) {
-			if ($::driver eq 'mysql') {
-	            SendSQL("UNLOCK TABLES");
-    		}
-	        PuntTryAgain("You must determine a target milestone for bug $id " .
+            if ($::driver eq 'mysql') {
+                SendSQL("UNLOCK TABLES");
+            }
+            PuntTryAgain("You must determine a target milestone for bug $id " .
                          "if you are going to accept it.  (Part of " .
                          "accepting a bug is giving an estimate of when it " .
                          "will be fixed.)");
@@ -1070,9 +1070,9 @@ The changes made were:
             print substr($longdesc, $::FORM{'longdesclength'});
             print "</blockquote>\n";
         }
-		if ($::driver eq 'mysql') {
-	        SendSQL("unlock tables");
-		}
+        if ($::driver eq 'mysql') {
+            SendSQL("unlock tables");
+        }
         print "You have the following choices: <ul>\n";
         $::FORM{'delta_ts'} = $delta_ts;
         print "<li><form method=post>";
@@ -1356,11 +1356,11 @@ The changes made were:
         ) { 
             # Add the bug to the group associated with its new product.
             my $groupbit = GroupNameToBit($::FORM{'product'});
-			if ($::driver eq 'mysql') {
-            	SendSQL("UPDATE bugs SET groupset = groupset + $groupbit WHERE bug_id = $id");
-			} elsif ($::driver eq 'Pg') {
-				SendSQL("UPDATE bugs SET groupset = groupset + int8($groupbit) WHERE bug_id = $id");
-			}
+            if ($::driver eq 'mysql') {
+                SendSQL("UPDATE bugs SET groupset = groupset + $groupbit WHERE bug_id = $id");
+            } elsif ($::driver eq 'Pg') {
+                SendSQL("UPDATE bugs SET groupset = groupset + int8($groupbit) WHERE bug_id = $id");
+            }
         }
 
         if ( 
@@ -1372,11 +1372,11 @@ The changes made were:
         ) { 
             # Remove the bug from the group associated with its old product.
             my $groupbit = GroupNameToBit($oldhash{'product'});
-			if ($::driver eq 'mysql') {
-	            SendSQL("UPDATE bugs SET groupset = groupset - $groupbit WHERE bug_id = $id");
-			} elsif ($::driver eq 'Pg') {
-				SendSQL("UPDATE bugs SET groupset = groupset - int8($groupbit) WHERE bug_id = $id");
-			}
+            if ($::driver eq 'mysql') {
+                SendSQL("UPDATE bugs SET groupset = groupset - $groupbit WHERE bug_id = $id");
+            } elsif ($::driver eq 'Pg') {
+                SendSQL("UPDATE bugs SET groupset = groupset - int8($groupbit) WHERE bug_id = $id");
+            }
         }
 
         print qq|</p>|;
@@ -1438,9 +1438,9 @@ The changes made were:
     }
     
     print "<TABLE BORDER=1><TD><H2>Changes to bug $id submitted</H2>\n";
-	if ($::driver eq 'mysql') {
-	    SendSQL("unlock tables");
-	}
+    if ($::driver eq 'mysql') {
+        SendSQL("unlock tables");
+    }
 
     my @ARGLIST = ();
     if ( $removedCcString ne "" ) {

@@ -34,13 +34,13 @@ require "globals.pl";
 ConnectToDatabase();
 
 if ($::driver eq 'mysql') {
-	SendSQL("select bug_id,login_name from bugs,profiles where " .
+    SendSQL("select bug_id,login_name from bugs,profiles where " .
             "bug_status = 'NEW' and to_days(now()) - to_days(delta_ts) > " .
             Param('whinedays') . " and userid=assigned_to order by bug_id");
 } elsif ($::driver eq 'Pg') {
-	SendSQL("select bug_id,login_name from bugs,profiles where " .
-    	    "bug_status = 'NEW' and to_days(now()) - to_days(delta_ts) > '" .
-        	Param('whinedays') . " days' and userid=assigned_to order by bug_id");
+    SendSQL("select bug_id,login_name from bugs,profiles where " .
+            "bug_status = 'NEW' and to_days(now()) - to_days(delta_ts) > '" .
+            Param('whinedays') . " days' and userid=assigned_to order by bug_id");
 }
 
 my %bugs;

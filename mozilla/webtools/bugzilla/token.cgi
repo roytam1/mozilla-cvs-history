@@ -219,17 +219,17 @@ sub changePassword {
     
     # Update the user's password in the profiles table and delete the token
     # from the tokens table.
-	if ($::driver eq 'mysql') {
-	    SendSQL("LOCK TABLE profiles WRITE , tokens WRITE");
-	}
+    if ($::driver eq 'mysql') {
+        SendSQL("LOCK TABLE profiles WRITE , tokens WRITE");
+    }
     SendSQL("UPDATE   profiles
              SET      cryptpassword = $quotedpassword
              WHERE    userid = $userid");
     SendSQL("DELETE FROM tokens WHERE token = $::quotedtoken");
-	if ($::driver eq 'mysql') {
-    	SendSQL("UNLOCK TABLES");
-	}
-	
+    if ($::driver eq 'mysql') {
+        SendSQL("UNLOCK TABLES");
+    }
+    
     # Return HTTP response headers.
     print "Content-Type: text/html\n\n";
 

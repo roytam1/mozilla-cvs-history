@@ -22,7 +22,7 @@
 #                 Terry Weissman <terry@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Dave Miller <justdave@syndicomm.com>
-#				  David Lawrence <dkl@redhat.com>
+#                  David Lawrence <dkl@redhat.com>
 #
 # Direct any questions on this source code to
 #
@@ -190,9 +190,9 @@ sub have_vers {
 my @missing = ();
 unless (have_vers("DBI","1.13"))          { push @missing,"DBI" }
 unless (have_vers("Data::Dumper",0))      { push @missing,"Data::Dumper" }
-unless (have_vers("DBD::Pg",0)) 	  	  { push @missing,"DBD::Pg" }
+unless (have_vers("DBD::Pg",0))             { push @missing,"DBD::Pg" }
 unless (have_vers("Date::Parse",0))       { push @missing,"Date::Parse" }
-unless (have_vers("MIME::Base64",0))	  { push @missing, "MIME::Base64" }
+unless (have_vers("MIME::Base64",0))      { push @missing, "MIME::Base64" }
 unless (have_vers("AppConfig","1.52"))    { push @missing,"AppConfig" }
 unless (have_vers("Template","2.01"))     { push @missing,"Template" }
 unless (have_vers("Text::Wrap","2001.0131")) { push @missing,"Text::Wrap" }
@@ -378,7 +378,7 @@ LocalVar('opsys', '
         "Windows 95",
         "Windows 98",
         "Windows ME",  # Millenium Edition (upgrade of 98)
-	"Windows 2000",
+    "Windows 2000",
         "Windows NT",
         "Mac System 7",
         "Mac System 7.5",
@@ -386,8 +386,8 @@ LocalVar('opsys', '
         "Mac System 8.0",
         "Mac System 8.5",
         "Mac System 8.6",
-		"Mac System 9.0",
-		"MacOS X",
+        "Mac System 9.0",
+        "MacOS X",
         "Linux",
         "BSDI",
         "FreeBSD",
@@ -462,9 +462,9 @@ my @my_opsys = @{*{$main::{'opsys'}}{ARRAY}};
 
 unless (-d 'data') {
     print "Creating data directory ...\n";
-	# permissions for non-webservergroup are fixed later on
+    # permissions for non-webservergroup are fixed later on
     mkdir 'data', 0770;
-	mkdir 'data/mimedump-tmp', 01777;
+    mkdir 'data/mimedump-tmp', 01777;
     open FILE, '>>data/comments'; close FILE;
     open FILE, '>>data/nomail'; close FILE;
     open FILE, '>>data/mail'; close FILE;
@@ -754,8 +754,8 @@ if ($my_db_check) {
     my $sth = $dbh->prepare("SELECT VERSION()");
     $sth->execute;
     my ($sql_vers) = $sth->fetchrow_array;
-	$sql_vers =~ m/.*PostgreSQL +([\d.]+) +.*/;
-	$sql_vers = $1;
+    $sql_vers =~ m/.*PostgreSQL +([\d.]+) +.*/;
+    $sql_vers = $1;
     $sth->finish;
 
     my $sql_vok = (vers_cmp($sql_vers,$sql_want) > -1);
@@ -767,11 +767,11 @@ if ($my_db_check) {
           "   Please visit http://www.postgresql.org and download a newer version.\n";
     }
 
-	my $query = "select datname from pg_database where datname = 'bugs'";
-	$sth = $dbh->prepare($query);
-	$sth->execute() or die "Could not check for existing bugs database\n";
-	my ($database) = $sth->fetchrow_array();
-	$sth->finish;
+    my $query = "select datname from pg_database where datname = 'bugs'";
+    $sth = $dbh->prepare($query);
+    $sth->execute() or die "Could not check for existing bugs database\n";
+    my ($database) = $sth->fetchrow_array();
+    $sth->finish;
 
     if ( !$database ) {
        print "Creating database $my_db_name ...\n";
@@ -788,16 +788,16 @@ The '$my_db_name' database is not accessible. This might have several reasons:
 EOF
     }
 
-	# Check for the existence of the bugs user
-	$query = "select usename from pg_shadow where usename = 'bugs'";
-	$sth = $dbh->prepare($query);
+    # Check for the existence of the bugs user
+    $query = "select usename from pg_shadow where usename = 'bugs'";
+    $sth = $dbh->prepare($query);
     $sth->execute() or die "Could not check for bugs user\n";
     my ($usename) = $sth->fetchrow_array();
-	$sth->finish;
+    $sth->finish;
 
     if ( !$usename ) {
-		die "Please login as 'postgres' user and run 'createuser bugs' to create the default Bugzilla database user.\nThen run pgsetup.pl again\n";
-	}
+        die "Please login as 'postgres' user and run 'createuser bugs' to create the default Bugzilla database user.\nThen run pgsetup.pl again\n";
+    }
 
     $dbh->disconnect if $dbh;
 }
@@ -842,7 +842,7 @@ my %index;
 
 $table{bugs_activity} = 
    'bug_id integer not null,
-	attach_id integer,
+    attach_id integer,
     who integer not null,
     bug_when timestamp not null,
     fieldid integer not null,
@@ -850,9 +850,9 @@ $table{bugs_activity} =
     removed varchar(4000)';
 
 $index{bugs_activity} = [
-	'bug_id', 
-	'bug_when', 
-	'fieldid'
+    'bug_id', 
+    'bug_when', 
+    'fieldid'
 ];
 
 # FIXME Learn to use large object support in Pos
@@ -866,11 +866,11 @@ $table{attachments} =
     filename varchar(4000) not null,
     thedata text not null,
     submitter_id integer not null,
-	isobsolete integer not null default 0';
+    isobsolete integer not null default 0';
 
 $index{attachments} = [
-	'bug_id', 
-	'creation_ts'
+    'bug_id', 
+    'creation_ts'
 ];
 
 # 2001-05-05 myk@mozilla.org: Tables to support the attachment tracker.
@@ -926,21 +926,21 @@ $table{bugs} =
 # the real data comes from the keywords table.
 
 $index{bugs} = [
-	'assigned_to', 
-	'creation_ts', 
-	'delta_ts', 
-	'bug_severity', 
-	'bug_status', 
-	'op_sys', 
-	'priority',
-	'product',
-	'reporter',
-	'version',
-	'component',
-	'resolution',
-	'target_milestone',
-	'qa_contact',
-	'votes'
+    'assigned_to', 
+    'creation_ts', 
+    'delta_ts', 
+    'bug_severity', 
+    'bug_status', 
+    'op_sys', 
+    'priority',
+    'product',
+    'reporter',
+    'version',
+    'component',
+    'resolution',
+    'target_milestone',
+    'qa_contact',
+    'votes'
 ];
 
 
@@ -949,7 +949,7 @@ $table{cc} =
     who integer not null';
 
 $index{cc} = [
-	'who'
+    'who'
 ];
 
 
@@ -958,7 +958,7 @@ $table{watch} =
     watched integer not null';
 
 $index{watch} = [
-	'watched'
+    'watched'
 ];
 
 
@@ -969,9 +969,9 @@ $table{longdescs} =
     thetext text';
 
 $index{longdescs} = [
-	'bug_id',
-	'who',
-	'bug_when'
+    'bug_id',
+    'who',
+    'bug_when'
 ];
 
 $table{components} =
@@ -987,8 +987,8 @@ $table{dependencies} =
     dependson integer not null';
 
 $index{dependencies} = [
-	'blocked',
-	'dependson'
+    'blocked',
+    'dependson'
 ];
 
 # Group bits must be a power of two. Groups are identified by a bit; sets of
@@ -1010,8 +1010,8 @@ $index{dependencies} = [
 # http://bugzilla.mozilla.org/show_bug.cgi?id=75482
 
 $table{groups} =
-	'group_id serial,
-   	group_bit bigint not null,
+    'group_id serial,
+       group_bit bigint not null,
     name varchar(255) not null,
     description text not null,
     isbuggroup integer not null,
@@ -1029,13 +1029,13 @@ $table{logincookies} =
     lastused timestamp';
 
 $index{lastused} = [
-	'lastused'
+    'lastused'
 ];
 
 
 $table{products} =
-	'product_id serial,
-   	product varchar(64),
+    'product_id serial,
+       product varchar(64),
     description varchar(4000),
     milestoneurl varchar(2000) not null,
     disallownew integer not null,
@@ -1067,9 +1067,9 @@ $table{profiles_activity} =
     newvalue varchar(2000)';
 
 $index{profiles_activity} = [
-	'userid',
-	'profiles_when',
-	'fieldid'
+    'userid',
+    'profiles_when',
+    'fieldid'
 ];
 
 $table{namedqueries} =
@@ -1080,7 +1080,7 @@ $table{namedqueries} =
      query text not null';
 
 $index{namedqueries} = [
-	'watchfordiffs'
+    'watchfordiffs'
 ];
 
 
@@ -1102,7 +1102,7 @@ $table{fielddefs} =
     sortkey integer not null';
 
 $index{fielddefs} = [
-	'sortkey'
+    'sortkey'
 ];
 
 
@@ -1117,8 +1117,8 @@ $table{votes} =
     count integer not null';
 
 $index{votes} = [
-	'who',
-	'bug_id'
+    'who',
+    'bug_id'
 ];
 
 $table{keywords} =
@@ -1126,7 +1126,7 @@ $table{keywords} =
      keywordid integer not null';
 
 $index{keywords} = [
-	'keywordid'
+    'keywordid'
 ];
 
 
@@ -1149,7 +1149,7 @@ $table{shadowlog} =
      command text not null';
 
 $index{shadowlog} = [
-	'reflected'
+    'reflected'
 ];
 
 
@@ -1163,7 +1163,7 @@ $table{duplicates} =
 # Set single values to primary keys for use as foreign keys in
 # bugs table
 $table{bug_status} = 
-	'value varchar(255) primary key not null';
+    'value varchar(255) primary key not null';
 
 $table{rep_platform} =
     'value varchar(255) primary key not null';
@@ -1192,7 +1192,7 @@ $table{tokens} =
      eventdata text null';
 
 $index{tokens} = [
-	'userid'
+    'userid'
 ];
 
 
@@ -1215,10 +1215,10 @@ my @create_indexes;
 #my $my_platforms  = "'" . join("', '", @my_platforms)  . "'";
 
 my %enum_data = (
-	'bug_severity' 	=> \@my_severities,
-	'priorities'	=> \@my_priorities,
-	'rep_platform'	=> \@my_platforms,
-	'op_sys'		=> \@my_opsys
+    'bug_severity'     => \@my_severities,
+    'priorities'    => \@my_priorities,
+    'rep_platform'    => \@my_platforms,
+    'op_sys'        => \@my_opsys
 );
 
 # go throught our %table hash and create missing tables
@@ -1231,21 +1231,21 @@ while (my ($tabname, $fielddef) = each %table) {
     $dbh->do("CREATE TABLE $tabname (\n$fielddef\n)")
         or die "Could not create table '$tabname'. Please check your '$db_base' access.\n";
 
-	# Add this table name for possible creation of index
-	if ( $index{$tabname} ) {
-		AddIndex($tabname, $index{$tabname});
-	}
+    # Add this table name for possible creation of index
+    if ( $index{$tabname} ) {
+        AddIndex($tabname, $index{$tabname});
+    }
 
-	foreach my $enum ( keys %enum_data ) {
-		if ( $tabname =~ /$enum/ ) {
-			print "Adding values into $tabname.\n";
-			foreach my $value ( @{$enum_data{$enum}} ) {
-				print "insert into $tabname values ('$value')\n";
-				$dbh->do("insert into $tabname values ('$value')")
-					or die "Could not insert $value into $tabname.\n";
-			}
-		}
-	}
+    foreach my $enum ( keys %enum_data ) {
+        if ( $tabname =~ /$enum/ ) {
+            print "Adding values into $tabname.\n";
+            foreach my $value ( @{$enum_data{$enum}} ) {
+                print "insert into $tabname values ('$value')\n";
+                $dbh->do("insert into $tabname values ('$value')")
+                    or die "Could not insert $value into $tabname.\n";
+            }
+        }
+    }
 }
 
 ###########################################################################
@@ -1254,22 +1254,22 @@ while (my ($tabname, $fielddef) = each %table) {
 
 # go throught our @create_indexes array and create missing indexes
 sub AddIndex {
-	my ($tabname, $fielddef) = @_;
+    my ($tabname, $fielddef) = @_;
 
-	# Drop the old index if it exists
-	my $query = "select relname from pg_class where relkind = 'i' " . 
-				"and relname = " . $dbh->quote($tabname . "_index");
-	my $sth = $dbh->prepare($query);
-	$sth->execute();
-	my ($result) = $sth->fetchrow_array();
-	if ( $result ) {
-		print "Dropping index for $tabname ...\n";
-		$dbh->do("drop index $tabname" . "_index");
-	}
+    # Drop the old index if it exists
+    my $query = "select relname from pg_class where relkind = 'i' " . 
+                "and relname = " . $dbh->quote($tabname . "_index");
+    my $sth = $dbh->prepare($query);
+    $sth->execute();
+    my ($result) = $sth->fetchrow_array();
+    if ( $result ) {
+        print "Dropping index for $tabname ...\n";
+        $dbh->do("drop index $tabname" . "_index");
+    }
  
-	# Create the new index
+    # Create the new index
     print "Creating index for $tabname ...\n";
-	
+    
     my $create_string = "CREATE INDEX $tabname" . "_index on $tabname (\n" . join(",", @{$fielddef}) . "\n)";
     print $create_string . "\n";
     $dbh->do($create_string)
@@ -1377,19 +1377,19 @@ sub AddFDef ($$$) {
 
     my $sth = $dbh->prepare("SELECT fieldid FROM fielddefs " .
                             "WHERE name = $name");
-	# print "Name = $name\n";
+    # print "Name = $name\n";
     $sth->execute();
     my ($fieldid) = ($sth->fetchrow_array());
 
-	if ( !$fieldid ) {
-	    $dbh->do("INSERT INTO fielddefs " .
-				 "(name, description, mailhead, sortkey) VALUES " .
+    if ( !$fieldid ) {
+        $dbh->do("INSERT INTO fielddefs " .
+                 "(name, description, mailhead, sortkey) VALUES " .
                  "($name, $description, $mailhead, $headernum)");
-	} else {
-		$dbh->do("UPDATE fielddefs set name = $name, description = $description, " .
-				 "mailhead = $mailhead, sortkey = $headernum");
-	}
-	$headernum++;
+    } else {
+        $dbh->do("UPDATE fielddefs set name = $name, description = $description, " .
+                 "mailhead = $mailhead, sortkey = $headernum");
+    }
+    $headernum++;
 }
 
 
@@ -1434,45 +1434,45 @@ AddFDef("longdesc", "Comment", 0);
 sub GetFieldDef ($$)
 {
     my ($table, $field) = @_;
-	my $sth = $dbh->func($table, 'table_attributes');
+    my $sth = $dbh->func($table, 'table_attributes');
 
-	for my $index ( 0..@{$sth} ) {
-		my $ref = [];
-		$ref->[0] = $sth->[$index]->{NAME};
-		$ref->[1] = $sth->[$index]->{TYPE};
-		$ref->[2] = $sth->[$index]->{NULLIBLE};
-		$ref->[3] = $sth->[$index]->{PRIMARY_KEY};
-		$ref->[4] = $sth->[$index]->{DEFAULT};
+    for my $index ( 0..@{$sth} ) {
+        my $ref = [];
+        $ref->[0] = $sth->[$index]->{NAME};
+        $ref->[1] = $sth->[$index]->{TYPE};
+        $ref->[2] = $sth->[$index]->{NULLIBLE};
+        $ref->[3] = $sth->[$index]->{PRIMARY_KEY};
+        $ref->[4] = $sth->[$index]->{DEFAULT};
 
-		next if !$ref->[0] || $ref->[0] ne $field;
-		return $ref;
-	}
+        next if !$ref->[0] || $ref->[0] ne $field;
+        return $ref;
+    }
 }
 
 sub ChangeIndex {
-	my ($table, @fieldlist) = @_;
+    my ($table, @fieldlist) = @_;
 
-	if ( exists $index{$table} ) {
-		DropIndex($table);
-	}
+    if ( exists $index{$table} ) {
+        DropIndex($table);
+    }
 
-	my %templist = ();
-	foreach my $field ( @{$index{$table}}, @fieldlist ) {
-		$templist{$field} = 1;
-	}
+    my %templist = ();
+    foreach my $field ( @{$index{$table}}, @fieldlist ) {
+        $templist{$field} = 1;
+    }
 
-	print "Creating index for $table ...\n";
-	my $create_string = "create index $table" . "_index on $table (" . join(',', keys %templist) . ")";
-	$dbh->do($create_string) 
-		or die "Could not create index for $table: $!\n";
+    print "Creating index for $table ...\n";
+    my $create_string = "create index $table" . "_index on $table (" . join(',', keys %templist) . ")";
+    $dbh->do($create_string) 
+        or die "Could not create index for $table: $!\n";
 }
 
 sub DropIndexes ($)
 {
     my ($table) = @_;
-	
-	print "Dropping index for $table ...\n";
-	$dbh->do("drop index $table" . "_index");
+    
+    print "Dropping index for $table ...\n";
+    $dbh->do("drop index $table" . "_index");
 }
 
 #
@@ -1485,16 +1485,16 @@ sub CheckEnumField ($$@)
 {
     my ($table, $field, @against) = @_;
 
-	foreach my $value ( @against ) {
-		$value = $dbh->quote($value);
-		my $query = "select value from $table where value = $value";
-		my $sth = $dbh->prepare($query);
-		$sth->execute();
-		my ($result) = $sth->fetchrow_array();
-		next if $result;
-		print "Updating value $value in table $table ...\n";
-		$dbh->do("insert into $table values ($value)");
-	}
+    foreach my $value ( @against ) {
+        $value = $dbh->quote($value);
+        my $query = "select value from $table where value = $value";
+        my $sth = $dbh->prepare($query);
+        $sth->execute();
+        my ($result) = $sth->fetchrow_array();
+        next if $result;
+        print "Updating value $value in table $table ...\n";
+        $dbh->do("insert into $table values ($value)");
+    }
 }
 
 
@@ -1657,7 +1657,7 @@ _End_Of_SQL_
       }
     }
 
-	# Crypt the administrator's password
+    # Crypt the administrator's password
     my $cryptedpassword = Crypt($pass1);
 
     system("stty","echo"); # re-enable input echoing
@@ -1666,18 +1666,18 @@ _End_Of_SQL_
     $SIG{QUIT} = 'DEFAULT';
     $SIG{TERM} = 'DEFAULT';
 
-	$encrypted = crypt($pass1, substr($pass1, 0, 2));
+    $encrypted = crypt($pass1, substr($pass1, 0, 2));
     $realname = $dbh->quote($realname);
     $pass1 = $dbh->quote($pass1);
-	$cryptedpassword = $dbh->quote($cryptedpassword);
+    $cryptedpassword = $dbh->quote($cryptedpassword);
 
-	$dbh->do(<<_End_Of_SQL_);
+    $dbh->do(<<_End_Of_SQL_);
       INSERT INTO profiles
       (login_name, realname, cryptpassword, groupset)
       VALUES ($login, $realname, $cryptedpassword, '0')
 _End_Of_SQL_
-	
-	$dbh->do(<<_End_Of_SQL_);
+    
+    $dbh->do(<<_End_Of_SQL_);
       UPDATE profiles
       SET groupset = 9223372036854775807
       WHERE login_name = $login
@@ -1740,7 +1740,7 @@ $sth = $dbh->prepare("SELECT product FROM products");
 $sth->execute;
 unless ($sth->rows) {
     print "Creating initial dummy product 'TestProduct' ...\n";
-	$dbh->do("INSERT INTO products(product, description, milestoneurl, disallownew, " . 
+    $dbh->do("INSERT INTO products(product, description, milestoneurl, disallownew, " . 
              "votesperuser, votestoconfirm) VALUES ('TestProduct', " .
              "'This is a test product.  This ought to be blown away and " .
              "replaced with real stuff in a finished installation of " .
@@ -1776,7 +1776,7 @@ sub ChangeFieldType ($$$)
     #print "0: $$ref[0]   1: $$ref[1]   2: $$ref[2]   3: $$ref[3]  4: $$ref[4]\n";
 
     my $oldtype = $ref->[1];
-	if (! $ref->[2]) {
+    if (! $ref->[2]) {
         $oldtype .= qq{ not null};
     }
     if ($ref->[4]) {
@@ -1789,7 +1789,7 @@ sub ChangeFieldType ($$$)
         print "new: $newtype\n";
         $newtype .= " NOT NULL" if $$ref[3];
         # FIXME Not yet supported by PostgreSQL
-		#$dbh->do("ALTER TABLE $table
+        #$dbh->do("ALTER TABLE $table
         #          ALTER COLUMN $field
         #          $field $newtype");
     }
@@ -1833,18 +1833,18 @@ sub DropField ($$)
     return unless $ref; # already dropped?
 
     print "Deleting unused field $field from table $table ...\n";
-	# FIXME Not yet supported in postgresql
-	# $dbh->do("ALTER TABLE $table
-	# 		DROP COLUMN $field");
+    # FIXME Not yet supported in postgresql
+    # $dbh->do("ALTER TABLE $table
+    #         DROP COLUMN $field");
 }
 
 sub TableExists ($)
 {
-   	my ($table) = @_;
-   	my @tables = map { $_ =~ s/.*\.//; $_ } $dbh->tables;
+       my ($table) = @_;
+       my @tables = map { $_ =~ s/.*\.//; $_ } $dbh->tables;
 
-	return 1 if grep($_ eq $table, @tables);	
-	return 0;
+    return 1 if grep($_ eq $table, @tables);    
+    return 0;
 }   
 
 
@@ -2060,15 +2060,15 @@ if (GetFieldDef('bugs', 'long_desc')) {
                         # This username doesn't exist.  Maybe someone renamed
                         # him or something.  Invent a new profile entry,
                         # disabled, just to represent him.
-						my $cryptedpassword = Crypt('okthen');
-						$cryptedpassword = $dbh->quote($cryptedpassword);
+                        my $cryptedpassword = Crypt('okthen');
+                        $cryptedpassword = $dbh->quote($cryptedpassword);
                         $dbh->do("INSERT INTO profiles " .
                                  "(login_name, cryptpassword," .
                                  " disabledtext) VALUES (" .
                                  $dbh->quote($name) .
                                  ", $cryptedpassword, " .
                                  "'Account created only to maintain database integrity')");
-						$s2 = $dbh->prepare("SELECT last_value FROM profiles_userid_seq");
+                        $s2 = $dbh->prepare("SELECT last_value FROM profiles_userid_seq");
                         $s2->execute();
                         ($who) = ($s2->fetchrow_array());
                     }
@@ -2111,7 +2111,7 @@ if (GetFieldDef('bugs_activity', 'field')) {
         $s2->execute();
         my ($id) = ($s2->fetchrow_array());
         if (!$id) {
-			$dbh->do("INSERT INTO fielddefs (name, description) VALUES " .
+            $dbh->do("INSERT INTO fielddefs (name, description) VALUES " .
                      "($q, $q)");
             $s2 = $dbh->prepare("select last_value from fielddefs_fieldid_seq");
             $s2->execute();
@@ -2282,34 +2282,34 @@ AddField('profiles', 'blessgroupset', 'integer not null');
 $sth = $dbh->prepare("SELECT count(*) from milestones");
 $sth->execute();
 if (!($sth->fetchrow_arrayref()->[0])) {
-	print "Replacing blank milestones...\n";
-	$dbh->do("UPDATE bugs SET target_milestone = '---', delta_ts=delta_ts WHERE target_milestone = ''");
+    print "Replacing blank milestones...\n";
+    $dbh->do("UPDATE bugs SET target_milestone = '---', delta_ts=delta_ts WHERE target_milestone = ''");
 
-	# Populate milestone table with all exisiting values in database
-	$sth = $dbh->prepare("SELECT DISTINCT target_milestone, product FROM bugs");
-	$sth->execute();
+    # Populate milestone table with all exisiting values in database
+    $sth = $dbh->prepare("SELECT DISTINCT target_milestone, product FROM bugs");
+    $sth->execute();
 
-	print "Populating milestones table...\n";
+    print "Populating milestones table...\n";
 
-	my $value;
-	my $product;
-	while(($value, $product) = $sth->fetchrow_array()) {
-		# check if the value already exists
-		my $sortkey = substr($value, 1);
-		if ($sortkey !~ /^\d+$/) {
-			$sortkey = 0;
-		} else {
-			$sortkey *= 10;
-		}
-		$value = $dbh->quote($value);
-		$product = $dbh->quote($product);
-		my $s2 = $dbh->prepare("SELECT value FROM milestones WHERE value = $value AND product = $product");
-		$s2->execute();
+    my $value;
+    my $product;
+    while(($value, $product) = $sth->fetchrow_array()) {
+        # check if the value already exists
+        my $sortkey = substr($value, 1);
+        if ($sortkey !~ /^\d+$/) {
+            $sortkey = 0;
+        } else {
+            $sortkey *= 10;
+        }
+        $value = $dbh->quote($value);
+        $product = $dbh->quote($product);
+        my $s2 = $dbh->prepare("SELECT value FROM milestones WHERE value = $value AND product = $product");
+        $s2->execute();
 
-		if(!$s2->fetchrow_array()) {
-			$dbh->do("INSERT INTO milestones(value, product, sortkey) VALUES($value, $product, $sortkey)");
-		}
-	}
+        if(!$s2->fetchrow_array()) {
+            $dbh->do("INSERT INTO milestones(value, product, sortkey) VALUES($value, $product, $sortkey)");
+        }
+    }
 }
 
 # 2000-03-22 Changed the default value for target_milestone to be "---"

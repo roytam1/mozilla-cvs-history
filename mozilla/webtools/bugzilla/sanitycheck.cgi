@@ -49,7 +49,7 @@ print "Content-type: text/html\n";
 print "\n";
 
 if ($::driver eq 'mysql') {
-	SendSQL("set SQL_BIG_TABLES=1");
+    SendSQL("set SQL_BIG_TABLES=1");
 }
 
 my $offervotecacherebuild = 0;
@@ -124,9 +124,9 @@ PutHeader("Bugzilla Sanity Check");
 
 if (exists $::FORM{'rebuildvotecache'}) {
     Status("OK, now rebuilding vote cache.");
-	if ($::driver eq 'mysql') {
-	    SendSQL("lock tables bugs write, votes read");
-	}	
+    if ($::driver eq 'mysql') {
+        SendSQL("lock tables bugs write, votes read");
+    }    
     SendSQL("update bugs set votes = 0, delta_ts=now()");
     SendSQL("select bug_id, sum(count) from votes group by bug_id");
     my %votes;
@@ -137,9 +137,9 @@ if (exists $::FORM{'rebuildvotecache'}) {
     foreach my $id (keys %votes) {
         SendSQL("update bugs set votes = $votes{$id}, delta_ts=now() where bug_id = $id");
     }
-	if ($::driver eq 'mysql') {
-	    SendSQL("unlock tables");
-	}
+    if ($::driver eq 'mysql') {
+        SendSQL("unlock tables");
+    }
     Status("Vote cache has been rebuilt.");
 }
 
@@ -216,9 +216,9 @@ CrossCheck("products", "product",
 Status("Checking groups");
 SendSQL("select group_bit from groups");
 while (my $bit = FetchOneColumn()) {
-	if ( $bit != pow(2, int(log($bit) / log(2))) ) {
-	    Alert("Illegal bit number found in group table: $bit");
-	}
+    if ( $bit != pow(2, int(log($bit) / log(2))) ) {
+        Alert("Illegal bit number found in group table: $bit");
+    }
 }
     
 SendSQL("select sum(group_bit) from groups where isbuggroup != 0");
@@ -227,7 +227,7 @@ if (!defined $buggroupset || $buggroupset eq "") {
     $buggroupset = 0;
 }
 if ($::driver eq 'mysql') {
-	SendSQL("select bug_id, groupset from bugs where groupset & $buggroupset != groupset");
+    SendSQL("select bug_id, groupset from bugs where groupset & $buggroupset != groupset");
 } elsif ($::driver eq 'Pg') {
     SendSQL("select bug_id, groupset from bugs where (groupset & int8($buggroupset)) != groupset");
 }
@@ -316,7 +316,7 @@ Status("Checking profile logins");
 my $emailregexp = Param("emailregexp");
 $emailregexp =~ s/'/\\'/g;
 SendSQL("SELECT userid, login_name FROM profiles " .
-    	"WHERE " . SqlRegEx("login_name", SqlQuote($emailregexp), "not"));
+        "WHERE " . SqlRegEx("login_name", SqlQuote($emailregexp), "not"));
 
 while (my ($id,$email) = (FetchSQLData())) {
     Alert "Bad profile email address, id=$id,  &lt;$email&gt;."
@@ -399,9 +399,9 @@ Status("Checking cached keywords");
 my %realk;
 
 if (exists $::FORM{'rebuildkeywordcache'}) {
-	if ($::driver eq 'mysql') {
-	    SendSQL("LOCK TABLES bugs write, keywords read, keyworddefs read");
-	}
+    if ($::driver eq 'mysql') {
+        SendSQL("LOCK TABLES bugs write, keywords read, keyworddefs read");
+    }
 }
 
 SendSQL("SELECT keywords.bug_id, keyworddefs.name " .
@@ -454,9 +454,9 @@ if (@badbugs) {
                     SqlQuote($k) .
                     " WHERE bug_id = $b");
         }
-		if ($::driver eq 'mysql') {
-	        SendSQL("UNLOCK TABLES");
-		}
+        if ($::driver eq 'mysql') {
+            SendSQL("UNLOCK TABLES");
+        }
         Status("Keyword cache fixed.");
     } else {
         print qq{<a href="sanitycheck.cgi?rebuildkeywordcache=1">Click here to rebuild the keyword cache</a><p>\n};
