@@ -23,6 +23,23 @@
 
 use strict;
 
+#
+# Make sure the cwd is the location of the program
+#
+BEGIN
+{
+   my $cwd = $0;
+   if ( $cwd =~ /\// )
+   {
+      $cwd =~ s/\/[^\/]*$//;
+      if ( $cwd ne "" )
+      {
+         print "Changing directory to $cwd\n";
+         chdir "$cwd";
+      }
+   }
+}
+
 BEGIN {require '../inc/BB_include.pl';}
 require "$INC_DIR/BB_lib.pl";
 
