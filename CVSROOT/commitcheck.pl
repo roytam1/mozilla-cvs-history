@@ -122,9 +122,6 @@ $branch{'136'} = 'HEAD';
 $fullname{'136'} = 'Locked-Content';
 $blessed{'136'} = [];
 $super{'136'} = ['hyatt%netscape.com',];
-$mode{'47'} = 'Open';
-$branch{'47'} = 'HEAD';
-$fullname{'47'} = 'Macintosh FE';
 $mode{'123'} = 'Open';
 $branch{'123'} = 'HEAD';
 $fullname{'123'} = 'Mail/News';
@@ -284,7 +281,6 @@ if (m:^CVSROOT/commitcheck\.pl$:) {return '3';}
 if (m:^CVSROOT/passwd$:) {return '3';}
 if (m:^mozilla/security/.*$:) {return '145';}
 if (m:^mozilla/[^/]*$:) {return '19';}
-if (m:^mozilla/cmd/macfe/.*$:) {return '47';}
 if (m:^mozilla/gfx/src/xlib/.*$:) {return '121';}
 if (m:^mozilla/widget/src/xlib/.*$:) {return '121';}
 if (m:^mozilla/ef/.*$:) {return '46';}
