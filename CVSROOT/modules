@@ -321,11 +321,11 @@ Raptor -a \
 	RaptorLayout
 
 RaptorWin -a
-	Raptor
+	Raptor \
 	mozilla/nglayout.mak \
 
 RaptorUnix -a
-	Raptor
+	Raptor \
 	mozilla/nglayout.mk \
 
 RaptorMac -a
