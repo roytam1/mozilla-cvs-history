@@ -261,6 +261,13 @@ sub split_cgi_args {
 # Environmental variables are checked for security.
 
 sub regenerate_HTML_pages {
+
+    # When we get here set_static_vars() should have been run so we
+    # will Observe taint-mode for this system call
+
+    # we make sure to delete the HTTP server variables since we do not
+    # want our child to believe it was run by a webserver, even if we were.
+
     my $old_query_string =  $ENV{"QUERY_STRING"};
     my $old_request_method = $ENV{"REQUEST_METHOD"};
 
