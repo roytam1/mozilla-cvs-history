@@ -1209,10 +1209,20 @@ sub BugInGroup {
     SendSQL("SELECT bug_group_map.bug_id != 0 FROM bug_group_map, groups 
             WHERE bug_group_map.bug_id = $bugid
             AND bug_group_map.group_id = groups.group_id
-            AND groups.name = SqlQuote($groupname)");
+            AND groups.name = " . SqlQuote($groupname));
     my $bugingroup = FetchOneColumn();
     PopGlobalSQLState();
     return $bugingroup;
+}
+
+sub BugInAnyGroup {
+    my ($bugid) = (@_);
+    PushGlobalSQLState();
+    SendSQL("SELECT COUNT(bug_id) FROM bug_group_map
+            WHERE bug_id = $bugid"); 
+    my $buginanygroup = FetchOneColumn();
+    PopGlobalSQLState();
+    return $buginanygroup;
 }
 
 sub GroupExists {
@@ -1222,6 +1232,15 @@ sub GroupExists {
     my $count = FetchOneColumn();
     PopGlobalSQLState();
     return $count;
+}
+
+sub GroupNameToId {
+    my ($groupname) = (@_);
+    PushGlobalSQLState();
+    SendSQL("select group_id from groups where name=" . SqlQuote($groupname));
+    my $id = FetchOneColumn();
+    PopGlobalSQLState();
+    return $id;
 }
 
 

@@ -203,68 +203,67 @@ sub show_bug {
 
     # Groups
     my @groups;
-        if ($bug{'groupset'} ne '0') {
-        my $bug_groupset = $bug{'groupset'};
 
-        SendSQL("SELECT groups.group_id, name, description, 
-                 ISNULL(bug_group_map.group_id) = 0,
-                 ISNULL(member_group_map.group_id) = 0
-                 FROM groups 
-                 LEFT JOIN bug_group_map 
-                 ON bug_group_map.group_id = groups.group_id
-                 AND bug_group_map.bug_id = $bug{'bug_id'}
-                 LEFT JOIN member_group_map 
-                 ON member_group_map.group_id = groups.group_id
-                 AND member_group_map.member_id = $::userid
-                 AND member_group_map.maptype = 0
-                 WHERE isbuggroup != 0 ");
-                 # FIXME Include active groups as well as inactive groups to which
-                 # the bug already belongs.  This way the bug can be removed
-                 # from an inactive group but can only be added to active ones.
-                 #
-                 #"AND ((isactive = 1 AND (bit & $::usergroupset != 0)) OR
-                 # (bit & $bug_groupset != 0))");
+    SendSQL("SELECT groups.group_id, name, description, 
+             ISNULL(bug_group_map.group_id) = 0,
+             ISNULL(member_group_map.group_id) = 0,
+             isactive
+             FROM groups 
+             LEFT JOIN bug_group_map 
+             ON bug_group_map.group_id = groups.group_id
+             AND bug_group_map.bug_id = $bug{'bug_id'}
+             LEFT JOIN member_group_map 
+             ON member_group_map.group_id = groups.group_id
+             AND member_group_map.member_id = $::userid
+             AND member_group_map.maptype = 0
+             WHERE isbuggroup != 0 ");
+             # FIXME Include active groups as well as inactive groups to which
+             # the bug already belongs.  This way the bug can be removed
+             # from an inactive group but can only be added to active ones.
+             #
+             #"AND ((isactive = 1 AND (bit & $::usergroupset != 0)) OR
+             # (bit & $bug_groupset != 0))");
 
-        $user{'inallgroups'} = 1;
+    $user{'inallgroups'} = 1;
 
-        while (MoreSQLData()) {
-            my ($groupid, $name, $description, $ison, $ingroup) = FetchSQLData();
-            # For product groups, we only want to display the checkbox if either
-            # (1) The bit is already set, or
-            # (2) The user is in the group, but either:
-            #     (a) The group is a product group for the current product, or
-            #     (b) The group name isn't a product name
-            # This means that all product groups will be skipped, but 
-            # non-product bug groups will still be displayed.
-            if($ison || 
-               ($ingroup && (($name eq $bug{'product'}) ||
-                             (!defined $::proddesc{$name}))))
-            {
-                $user{'inallgroups'} &= $ingroup;
+    while (MoreSQLData()) {
+        my ($groupid, $name, $description, $ison, $ingroup, $isactive) 
+            = FetchSQLData();
+        # For product groups, we only want to display the checkbox if either
+        # (1) The bit is already set, or
+        # (2) The user is in the group, but either:
+        #     (a) The group is a product group for the current product, or
+        #     (b) The group name isn't a product name
+        # This means that all product groups will be skipped, but 
+        # non-product bug groups will still be displayed.
+        if($ison || 
+           ($isactive && ($ingroup && (($name eq $bug{'product'}) ||
+                         (!defined $::proddesc{$name})))))
+        {
+            $user{'inallgroups'} &= $ingroup;
 
-                push (@groups, { "bit" => $groupid,
-                                 "ison" => $ison,
-                                 "ingroup" => $ingroup,
-                                 "description" => $description });            
-            }
+            push (@groups, { "bit" => $groupid,
+                             "ison" => $ison,
+                             "ingroup" => $ingroup,
+                             "description" => $description });            
         }
+    }
 
-        # If the bug is restricted to a group, display checkboxes that allow
-        # the user to set whether or not the reporter 
-        # and cc list can see the bug even if they are not members of all 
-        # groups to which the bug is restricted.
-        if ($bug{'groupset'} != 0) {
-            $bug{'inagroup'} = 1;
+    # If the bug is restricted to a group, display checkboxes that allow
+    # the user to set whether or not the reporter 
+    # and cc list can see the bug even if they are not members of all 
+    # groups to which the bug is restricted.
+    if (BugInAnyGroup($id) != 0) {
+        $bug{'inagroup'} = 1;
 
-            # Determine whether or not the bug is always accessible by the
-            # reporter, QA contact, and/or users on the cc: list.
-            SendSQL("SELECT reporter_accessible, cclist_accessible
-                     FROM   bugs
-                     WHERE  bug_id = $id
-                    ");
-            ($bug{'reporter_accessible'}, 
-             $bug{'cclist_accessible'}) = FetchSQLData();        
-        }
+        # Determine whether or not the bug is always accessible by the
+        # reporter, QA contact, and/or users on the cc: list.
+        SendSQL("SELECT reporter_accessible, cclist_accessible
+                 FROM   bugs
+                 WHERE  bug_id = $id
+                ");
+        ($bug{'reporter_accessible'}, 
+         $bug{'cclist_accessible'}) = FetchSQLData();        
     }
     $vars->{'groups'} = \@groups;
 

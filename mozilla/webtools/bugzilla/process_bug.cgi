@@ -50,7 +50,6 @@ use vars qw(%versions
           %settable_resolution
           %target_milestone
           %legal_severity
-          %superusergroupset
           $next_bug);
 
 ConnectToDatabase();
@@ -1209,7 +1208,7 @@ foreach my $id (@idlist) {
           # the user wants to add the bug to the new product's group;
           ($::FORM{'addtonewgroup'} eq 'yes' 
             || ($::FORM{'addtonewgroup'} eq 'yesifinold' 
-                  && GroupNameToBit($oldhash{'product'}) & $oldhash{'groupset'})) 
+                  && BugInGroup($id, $oldhash{'product'})))  
 
           # the new product is associated with a group;
           && GroupExists($::FORM{'product'})
@@ -1231,11 +1230,11 @@ foreach my $id (@idlist) {
           && (UserInGroup($::FORM{'product'}) || !Param('usebuggroupsentry'))
 
           # the associated group is active, indicating it can accept new bugs;
-          && GroupIsActive(GroupNameToBit($::FORM{'product'}))
+          && GroupIsActive(GroupNameToId($::FORM{'product'}))
         ) { 
             # Add the bug to the group associated with its new product.
-            my $groupbit = GroupNameToBit($::FORM{'product'});
-            SendSQL("UPDATE bugs SET groupset = groupset + $groupbit WHERE bug_id = $id");
+            my $groupid = GroupNameToId($::FORM{'product'});
+            SendSQL("INSERT IGNORE INTO bug_group_map (bug_id, group_id) VALUES ($id, $groupid)");
         }
 
         if ( 
@@ -1246,8 +1245,8 @@ foreach my $id (@idlist) {
           && BugInGroup($id, $oldhash{'product'}) 
         ) { 
             # Remove the bug from the group associated with its old product.
-            my $groupbit = GroupNameToBit($oldhash{'product'});
-            SendSQL("UPDATE bugs SET groupset = groupset - $groupbit WHERE bug_id = $id");
+            my $groupid = GroupNameToId($oldhash{'product'});
+            SendSQL("DELETE FROM bug_group_map WHERE bug_id = $id AND group_id = $groupid");
         }
 
     }

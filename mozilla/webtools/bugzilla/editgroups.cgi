@@ -108,18 +108,19 @@ unless ($action) {
     print "<th>Description</th>";
     print "<th>User RegExp</th>";
     print "<th>Active</th>";
+    print "<th>Buggroup</th>";
     print "<th>Action</th>";
     print "</tr>\n";
 
-    SendSQL("SELECT group_id,name,description,userregexp,isactive " .
+    SendSQL("SELECT group_id,name,description,userregexp,isactive,isbuggroup " .
             "FROM groups " .
             "ORDER BY group_id");
 
     while (MoreSQLData()) {
-        my ($groupid, $name, $desc, $regexp, $isactive) = FetchSQLData();
+        my ($groupid, $name, $desc, $regexp, $isactive, $isbuggroup) = FetchSQLData();
         print "<tr>\n";
         print "<td valign=middle>$groupid</td>\n";
-        print "<td>$groupid\n";
+        print "<td><input size=20 name=\"name-$groupid\" value=\"$name\">\n";
         print "<input type=hidden name=\"oldname-$groupid\" value=\"$name\"></td>\n";
         print "<td><input size=40 name=\"desc-$groupid\" value=\"$desc\">\n";
         print "<input type=hidden name=\"olddesc-$groupid\" value=\"$desc\"></td>\n";
@@ -127,6 +128,8 @@ unless ($action) {
         print "<input type=hidden name=\"oldregexp-$groupid\" value=\"$regexp\"></td>\n";
         print "<td><input type=\"checkbox\" name=\"isactive-$groupid\" value=\"1\"" . ($isactive ? " checked" : "") . ">\n";
         print "<input type=hidden name=\"oldisactive-$groupid\" value=\"$isactive\"></td>\n";
+        print "<td><input type=\"checkbox\" name=\"isbuggroup-$groupid\" value=\"1\"" . ($isbuggroup ? " checked" : "") . ">\n";
+        print "<input type=hidden name=\"oldisbuggroup-$groupid\" value=\"$isbuggroup\"></td>\n";
         print "<td align=center valign=middle><a href=\"editgroups.cgi?action=del&group=$groupid\">Delete</a></td>\n";
         print "</tr>\n";
     }
@@ -178,11 +181,13 @@ if ($action eq 'add') {
     print "<th>New Description</th>";
     print "<th>New User RegExp</th>";
     print "<th>Active</th>";
+    print "<th>Buggroup</th>";
     print "</tr><tr>";
     print "<td><input size=20 name=\"name\"></td>\n";
     print "<td><input size=40 name=\"desc\"></td>\n";
     print "<td><input size=30 name=\"regexp\"></td>\n";
     print "<td><input type=\"checkbox\" name=\"isactive\" value=\"1\" checked></td>\n";
+    print "<td><input type=\"checkbox\" name=\"isbuggroup\" value=\"1\" checked></td>\n";
     print "</TR></TABLE>\n<HR>\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Add\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"new\">\n";
@@ -227,6 +232,7 @@ if ($action eq 'new') {
     # (this occurs when the inactive checkbox is not checked
     # and the browser does not send the field to the server)
     my $isactive = $::FORM{isactive} || 0;
+    my $isbuggroup = $::FORM{isbuggroup} || 0;
 
     unless ($name) {
         ShowError("You must enter a name for the new group.<BR>" .
@@ -261,7 +267,7 @@ if ($action eq 'new') {
             " ) VALUES ( " .
             SqlQuote($name) . "," .
             SqlQuote($desc) . "," .
-            "1," .
+            "$isbuggroup," .
             SqlQuote($regexp) . "," . 
             $isactive . ", NOW())" );
 
@@ -279,14 +285,14 @@ if ($action eq 'new') {
 
 if ($action eq 'del') {
     PutHeader("Delete group");
-    my $bit = trim($::FORM{group} || '');
-    unless ($bit) {
+    my $gid = trim($::FORM{group} || '');
+    unless ($gid) {
         ShowError("No group specified.<BR>" .
                   "Click the <b>Back</b> button and try again.");
         PutFooter();
         exit;
     }
-    SendSQL("SELECT bit FROM groups WHERE bit=" . SqlQuote($bit));
+    SendSQL("SELECT group_id FROM groups WHERE group_id=" . SqlQuote($gid));
     if (!FetchOneColumn()) {
         ShowError("That group doesn't exist.<BR>" .
                   "Click the <b>Back</b> button and try again.");
@@ -295,17 +301,17 @@ if ($action eq 'del') {
     }
     SendSQL("SELECT name,description " .
             "FROM groups " .
-            "WHERE bit = " . SqlQuote($bit));
+            "WHERE group_id = " . SqlQuote($gid));
 
     my ($name, $desc) = FetchSQLData();
     print "<table border=1>\n";
     print "<tr>";
-    print "<th>Bit</th>";
+    print "<th>Id</th>";
     print "<th>Name</th>";
     print "<th>Description</th>";
     print "</tr>\n";
     print "<tr>\n";
-    print "<td>$bit</td>\n";
+    print "<td>$gid</td>\n";
     print "<td>$name</td>\n";
     print "<td>$desc</td>\n";
     print "</tr>\n";
@@ -313,19 +319,22 @@ if ($action eq 'del') {
 
     print "<FORM METHOD=POST ACTION=editgroups.cgi>\n";
     my $cantdelete = 0;
-    SendSQL("SELECT login_name FROM profiles WHERE " .
-            "(groupset & $bit) OR (blessgroupset & $bit)");
+    SendSQL("SELECT login_name FROM profiles, member_group_map 
+             WHERE profiles.userid = member_group_map.member_id
+             AND member_group_map.group_id = $gid
+             AND member_group_map.maptype = 0 
+             AND member_group_map.isderived = 0");
     if (!FetchOneColumn()) {} else {
        $cantdelete = 1;
        print "
 <B>One or more users belong to this group. You cannot delete this group while
 there are users in it.</B><BR>
 <A HREF=\"editusers.cgi?action=list&query=" .
-url_quote("(groupset & $bit) OR (blessgroupset & $bit)") . "\">Show me which users.</A> - <INPUT TYPE=CHECKBOX NAME=\"removeusers\">Remove all users from
+url_quote("(groupset & \$bit) OR (blessgroupset & \$bit)") . "\">Show me which users.</A> - <INPUT TYPE=CHECKBOX NAME=\"removeusers\">Remove all users from
 this group for me<P>
 ";
     }
-    SendSQL("SELECT bug_id FROM bugs WHERE (groupset & $bit)");
+    SendSQL("SELECT bug_id FROM bugs WHERE (groupset & \$bit)");
     if (MoreSQLData()) {
        $cantdelete = 1;
        my $buglist = "0";
@@ -363,7 +372,7 @@ You cannot delete this group while it is tied to a product.</B><BR>
     }
     print "<P><INPUT TYPE=SUBMIT VALUE=\"Yes, delete\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"delete\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"group\" VALUE=\"$bit\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"group\" VALUE=\"$gid\">\n";
     print "</FORM>";
 
     PutTrailer("<a href=editgroups.cgi>No, go back to the group list</a>");
@@ -494,7 +503,7 @@ if ($action eq 'update') {
                     } else {
                         SendSQL("UPDATE groups SET name=" .
                                 SqlQuote($::FORM{"name-$v"}) .
-                                " WHERE bit=" . SqlQuote($v));
+                                " WHERE group_id=" . SqlQuote($v));
                         print "Group $v name updated.<br>\n";
                     }
                 } else {
@@ -510,7 +519,7 @@ if ($action eq 'update') {
                 if (!FetchOneColumn()) {
                     SendSQL("UPDATE groups SET description=" .
                             SqlQuote($::FORM{"desc-$v"}) .
-                            " WHERE bit=" . SqlQuote($v));
+                            " WHERE group_id=" . SqlQuote($v));
                     print "Group $v description updated.<br>\n";
                 } else {
                     ShowError("Duplicate description '" . $::FORM{"desc-$v"} .
@@ -522,7 +531,8 @@ if ($action eq 'update') {
                 $chgs = 1;
                 SendSQL("UPDATE groups SET userregexp=" .
                         SqlQuote($::FORM{"regexp-$v"}) .
-                        " WHERE bit=" . SqlQuote($v));
+                        " , group_when = NOW() " .
+                        " WHERE group_id=" . SqlQuote($v));
                 print "Group $v user regexp updated.<br>\n";
             }
             # convert an undefined value in the inactive field to zero
@@ -532,8 +542,9 @@ if ($action eq 'update') {
             if ($::FORM{"oldisactive-$v"} != $isactive) {
                 $chgs = 1;
                 if ($isactive == 0 || $isactive == 1) {
-                    SendSQL("UPDATE groups SET isactive=$isactive" .
-                            " WHERE bit=" . SqlQuote($v));
+                    SendSQL("UPDATE groups SET isactive=$isactive, " .
+                            " group_when = NOW() " .
+                            " WHERE group_id=" . SqlQuote($v));
                     print "Group $v active flag updated.<br>\n";
                 } else {
                     ShowError("The value '" . $isactive .
@@ -542,6 +553,26 @@ if ($action eq 'update') {
                               "Update of active flag for group $v skipped.");
                 }
             }
+            # convert an undefined value in the isbuggroup field to zero
+            # (this occurs when the inactive checkbox is not checked 
+            # and the browser does not send the field to the server)
+            my $isbuggroup = $::FORM{"isbuggroup-$v"} || 0;
+            if ($::FORM{"oldisbuggroup-$v"} != $isbuggroup) {
+                $chgs = 1;
+                if ($isbuggroup == 0 || $isbuggroup == 1) {
+                    SendSQL("UPDATE groups SET isbuggroup=$isbuggroup, " .
+                            " group_when = NOW() " .
+                            " WHERE group_id=" . SqlQuote($v));
+                    print "Group $v buggroup flag updated.<br>\n";
+                } else {
+                    ShowError("The value '" . $isbuggroup .
+                              "' is not a valid value for the buggroup flag.<BR>" .
+                              "There may be a problem with Bugzilla or a bug in your browser.<br>" . 
+                              "Update of buggroup flag for group $v skipped.");
+                }
+            }
+        SendSQL("UPDATE groups SET group_when = NOW()
+                 WHERE group_id=" . SqlQuote($v));
         }
     }
     if (!$chgs) {

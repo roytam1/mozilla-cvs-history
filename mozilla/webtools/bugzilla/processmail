@@ -633,7 +633,7 @@ sub NewProcessOnePerson ($$$$$$$$$$$$) {
     }
 
         
-    SendSQL("SELECT userid" .
+    SendSQL("SELECT userid " .
             "FROM profiles WHERE login_name = " . SqlQuote($person));
     my ($userid) =  (FetchSQLData());
 
