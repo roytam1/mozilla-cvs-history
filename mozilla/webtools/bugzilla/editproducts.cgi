@@ -29,6 +29,7 @@
 
 use diagnostics;
 use strict;
+use lib ".";
 
 require "CGI.pl";
 require "globals.pl";
@@ -99,7 +100,7 @@ sub EmitFormElements ($$$$$$$$$)
     if (Param('usetargetmilestone')) {
         $milestoneurl = value_quote($milestoneurl);
         print "</TR><TR>\n";
-        print "  <TH ALIGN=\"right\">Milestone URL:</TH>\n";
+        print "  <TH ALIGN=\"right\">URL describing milestones for this product:</TH>\n";
         print "  <TD><INPUT TYPE=TEXT SIZE=64 MAXLENGTH=255 NAME=\"milestoneurl\" VALUE=\"$milestoneurl\"></TD>\n";
 
         print "</TR><TR>\n";
@@ -174,6 +175,7 @@ sub PutTrailer (@)
 # Preliminary checks:
 #
 
+ConnectToDatabase();
 confirm_login();
 
 print "Content-type: text/html\n\n";
@@ -692,7 +694,7 @@ if ($action eq 'edit') {
         SendSQL("SELECT userregexp
                  FROM groups
                  WHERE name=" . SqlQuote($product));
-        $userregexp = FetchOneColumn();
+        $userregexp = FetchOneColumn() || "";
     }
 
     print "<FORM METHOD=POST ACTION=editproducts.cgi>\n";
@@ -1004,7 +1006,7 @@ if ($action eq 'update') {
             exit;
         }
 
-        SendSQL("UPDATE bugs SET product=$qp WHERE product=$qpold");
+        SendSQL("UPDATE bugs SET product=$qp, delta_ts=delta_ts WHERE product=$qpold");
         SendSQL("UPDATE components SET program=$qp WHERE program=$qpold");
         SendSQL("UPDATE products SET product=$qp WHERE product=$qpold");
         SendSQL("UPDATE versions SET program=$qp WHERE program=$qpold");
