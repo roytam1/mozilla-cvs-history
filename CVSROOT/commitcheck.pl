@@ -5,11 +5,9 @@
 $mode{'95'} = 'Open';
 $branch{'95'} = 'HEAD';
 $fullname{'95'} = '2-D Graphics';
-$mode{'52'} = 'Restricted';
+$mode{'52'} = 'Open';
 $branch{'52'} = 'HEAD';
 $fullname{'52'} = 'Aurora/RDF BE';
-$blessed{'52'} = [];
-$super{'52'} = ['waterson%maubi.net','tingley%sundell.net','shaver%mozilla.org','myk%mozilla.org','rjc%rjcdb.com',];
 $mode{'172'} = 'Open';
 $branch{'172'} = 'HEAD';
 $fullname{'172'} = 'BeOS-based gfx and widget';
