@@ -533,7 +533,7 @@ sub write_stats {
  my ($run_time) = sprintf ("%.2f",         # round
                            ($end_time - $TIME)/60);
 
- print LOG "run_time: $run_time num_updates: $NUM_UPDATES\n";
+# print LOG "run_time: $run_time num_updates: $NUM_UPDATES\n";
 
  return ;
 }
