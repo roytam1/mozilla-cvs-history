@@ -298,8 +298,8 @@ if ($action eq 'new') {
             $isactive . ")" );
 
     print "OK, done.<p>\n";
-	  SendSQL("SELECT group_id FROM groups where name = " . SqlQuote($name));
-	  my $id = FetchOneColumn();
+      SendSQL("SELECT group_id FROM groups where name = " . SqlQuote($name));
+      my $id = FetchOneColumn();
     print "Your new group was assigned id # $id.<p>";
     
     # Add each user designated as an Admin to the new group
@@ -332,7 +332,7 @@ if ($action eq 'del') {
         exit;
     }
     SendSQL("SELECT group_id FROM groups WHERE group_id = " . SqlQuote($id));
-    if (!FetchOneColumn()) {	
+    if (!FetchOneColumn()) {    
         ShowError("That group doesn't exist.<BR>" .
                   "Click the <b>Back</b> button and try again.");
         PutFooter();
@@ -359,8 +359,8 @@ if ($action eq 'del') {
     print "<FORM METHOD=POST ACTION=editgroups.cgi>\n";
     my $cantdelete = 0;
     SendSQL("SELECT COUNT(user_id) FROM user_group_map WHERE group_id = $id");
-	my $usergroupcount = FetchOneColumn();
-	SendSQL("SELECT COUNT(DISTINCT user_id) FROM bless_group_map WHERE group_id = $id");
+    my $usergroupcount = FetchOneColumn();
+    SendSQL("SELECT COUNT(DISTINCT user_id) FROM bless_group_map WHERE group_id = $id");
     my $blessgroupcount = FetchOneColumn();
     if ($usergroupcount || $blessgroupcount) {
        $cantdelete = 1;

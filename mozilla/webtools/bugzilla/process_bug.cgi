@@ -959,7 +959,7 @@ foreach my $id (@idlist) {
             "profiles $write, dependencies $write, votes $write, " .
             "keywords $write, longdescs $write, fielddefs $write, " .
             "keyworddefs READ, groups READ, attachments READ, products READ, " .
-			"user_group_map READ, bug_group_map READ");
+            "user_group_map READ, bug_group_map READ");
     my @oldvalues = SnapShotBug($id);
     my %oldhash;
     my $i = 0;

@@ -1263,10 +1263,10 @@ sub UserInGroup {
         return 0;
     }
     ConnectToDatabase();
-	SendSQL("SELECT user_id FROM user_group_map, groups
-			WHERE user_group_map.group_id = groups.group_id 
-			AND groups.name = '$groupname'
-			AND user_id = $userid");
+    SendSQL("SELECT user_id FROM user_group_map, groups
+            WHERE user_group_map.group_id = groups.group_id 
+            AND groups.name = '$groupname'
+            AND user_id = $userid");
     my $result = FetchOneColumn();
     if ($result) {
         return 1;
@@ -1278,10 +1278,10 @@ sub BugInGroup {
     my ($bugid, $groupname) = (@_);
     my $groupid = GroupNameToId($groupname);
     PushGlobalSQLState();
-	SendSQL("SELECT bug_id FROM bug_group_map 
-			WHERE bug_group_map.group_id = groups.group_id
-			AND groups.name = '$groupname'
-			AND bug_id = $bugid");
+    SendSQL("SELECT bug_id FROM bug_group_map 
+            WHERE bug_group_map.group_id = groups.group_id
+            AND groups.name = '$groupname'
+            AND bug_id = $bugid");
     my $bugingroup = FetchOneColumn();
     PopGlobalSQLState();
     return $bugingroup;

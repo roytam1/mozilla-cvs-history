@@ -359,42 +359,42 @@ print "
 
 if ( $userid ne 0 ) {
     # Find out which groups we are a member of and form radio buttons
-	SendSQL("SELECT groups.group_id, groups.name, groups.description " .
+    SendSQL("SELECT groups.group_id, groups.name, groups.description " .
             "FROM user_group_map, groups " .
             "WHERE user_group_map.group_id = groups.group_id " .
             "AND user_group_map.user_id = $userid " .
-			"AND groups.isbuggroup != 0 " .
-			"ORDER BY groups.group_id");
+            "AND groups.isbuggroup != 0 " .
+            "ORDER BY groups.group_id");
     my %usergroups;
-	my %groupnames;
-	my $groupFound = 0;
-	while ( MoreSQLData() ) {
-		my ($group_id, $name, $description) = FetchSQLData();
-		$groupnames{$group_id} = $name;
-		$usergroups{$group_id} = $description;
-		$groupFound = 1;
-	}
+    my %groupnames;
+    my $groupFound = 0;
+    while ( MoreSQLData() ) {
+        my ($group_id, $name, $description) = FetchSQLData();
+        $groupnames{$group_id} = $name;
+        $usergroups{$group_id} = $description;
+        $groupFound = 1;
+    }
 
     if ( $groupFound ) {
         print "<br><b>Only users in the selected groups can view this bug:</b><br>\n";
         print "<font size=\"-1\">(Leave all boxes unchecked to make this a public bug.)</font><br><br>\n";
 
-		# Find out if this bug is private to any of the groups the user belongs to
-		my %buggroups;
+        # Find out if this bug is private to any of the groups the user belongs to
+        my %buggroups;
         SendSQL("SELECT group_id FROM bug_group_map WHERE bug_id = $id");
         while (@row = FetchSQLData()) {
-			$buggroups{$row[0]} = 1;
+            $buggroups{$row[0]} = 1;
         }
 
         foreach my $group_id ( keys %usergroups ) {
             my $checked = $buggroups{$group_id} ? "CHECKED" : "";
-			      print "&nbsp;&nbsp;&nbsp;&nbsp;";
+                  print "&nbsp;&nbsp;&nbsp;&nbsp;";
             print "<input type=checkbox name=\"group-$group_id\" value=1 $checked>\n";
             print "$usergroups{$group_id}<br>\n";
         }
     }
-	
-	# If the bug is restricted to a group, display checkboxes that allow
+    
+    # If the bug is restricted to a group, display checkboxes that allow
     # the user to set whether or not the reporter, assignee, QA contact, 
     # and cc list can see the bug even if they are not members of all 
     # groups to which the bug is restricted.

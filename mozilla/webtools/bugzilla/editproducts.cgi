@@ -372,14 +372,14 @@ if ($action eq 'new') {
         # the bug group.  As is, it was adding all users, since they all
         # matched the empty pattern.
         unless($userregexp eq "") {
-			SendSQL("SELECT group_id FROM groups WHERE name = " . SqlQuote($product));
-			my $groupid = FetchOneColumn();
-			SendSQL("SELECT userid FROM profiles " . 
-					"WHERE LOWER(login_name) REGEXP LOWER(" . SqlQuote($userregexp) . ")" . 
-					" OR admin = 1");
-			while ( my @row = FetchSQLData() ) {
-				$::db->do("INSERT INTO user_group_map VALUES ($row[0], $groupid)");
-			}
+            SendSQL("SELECT group_id FROM groups WHERE name = " . SqlQuote($product));
+            my $groupid = FetchOneColumn();
+            SendSQL("SELECT userid FROM profiles " . 
+                    "WHERE LOWER(login_name) REGEXP LOWER(" . SqlQuote($userregexp) . ")" . 
+                    " OR admin = 1");
+            while ( my @row = FetchSQLData() ) {
+                $::db->do("INSERT INTO user_group_map VALUES ($row[0], $groupid)");
+            }
         }
     }
 
@@ -579,7 +579,7 @@ if ($action eq 'delete') {
                          groups WRITE,
                          profiles WRITE,
                          milestones WRITE,
-						 user_group_map WRITE");
+                         user_group_map WRITE");
 
     # According to MySQL doc I cannot do a DELETE x.* FROM x JOIN Y,
     # so I have to iterate over bugs and delete all the indivial entries
@@ -635,7 +635,7 @@ if ($action eq 'delete') {
 
         # Make sure there is a group before we try to do any deleting...
         if ($groupid) {
-			SendSQL("DELETE FROM user_group_map WHERE group_id = $groupid");
+            SendSQL("DELETE FROM user_group_map WHERE group_id = $groupid");
             print "Users dropped from group '$group_desc'.<BR>\n";
 
             SendSQL("DELETE FROM groups " .
@@ -837,7 +837,7 @@ if ($action eq 'update') {
                          groups WRITE,
                          profiles WRITE,
                          milestones WRITE,
-						 user_group_map WRITE");
+                         user_group_map WRITE");
 
     if ($disallownew ne $disallownewold) {
         $disallownew ||= 0;
@@ -903,13 +903,13 @@ if ($action eq 'update') {
         # users who matched the old regexp and not the new one;  that would
         # be insanely messy.  Use the group administration page for that
         # instead.
-		if ( !$groupid ) {
-			SendSQL("SELECT group_id FROM groups WHERE name = " . SqlQuote($productold));
-			$groupid = FetchOneColumn();
-		}
-		SendSQL("SELECT userid FROM profiles " .
+        if ( !$groupid ) {
+            SendSQL("SELECT group_id FROM groups WHERE name = " . SqlQuote($productold));
+            $groupid = FetchOneColumn();
+        }
+        SendSQL("SELECT userid FROM profiles " .
                 "WHERE LOWER(login_name) REGEXP LOWER(" . SqlQuote($userregexp) . ")" . 
-				" OR admin = 1");
+                " OR admin = 1");
         my $updated_profiles = 0;
         while ( my @row = FetchSQLData() ) {
             $::db->do("INSERT INTO user_group_map VALUES ($row[0], $groupid)");

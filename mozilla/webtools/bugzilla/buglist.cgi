@@ -1028,7 +1028,7 @@ at once.
     }
 } else {
     quietly_check_login();
-	$userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
+    $userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
 }
 
 

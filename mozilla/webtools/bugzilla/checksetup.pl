@@ -1015,14 +1015,14 @@ $table{dependencies} =
 # http://bugzilla.mozilla.org/show_bug.cgi?id=75482
 
 $table{groups} =
-	'group_id mediumint not null auto_increment primary key,
+    'group_id mediumint not null auto_increment primary key,
     name varchar(255) not null,
     description text not null,
     isbuggroup tinyint not null,
     userregexp tinytext not null,
     isactive tinyint not null default 1,
 
-	unique(group_id),
+    unique(group_id),
     unique(name)';
 
 
@@ -1056,7 +1056,7 @@ $table{profiles} =
     disabledtext mediumtext not null,
     mybugslink tinyint not null default 1,
     emailflags mediumtext,
-	admin tinyint not null default 0,
+    admin tinyint not null default 0,
 
     unique(login_name)';
 
@@ -1168,8 +1168,8 @@ $table{tokens} =
 
 # This table determines the groups that a user belongs to
 $table{user_group_map} = 
-	'user_id mediumint not null,
-	 group_id mediumint not null';
+    'user_id mediumint not null,
+     group_id mediumint not null';
 
 # This table determines which groups have permission to see a bug
 $table{bug_group_map} =
@@ -1183,8 +1183,8 @@ $table{product_group_map} =
 
 # This table determines which groups a user can put another user into
 $table{bless_group_map} = 
-	'user_id mediumint not null,
-	 group_id mediumint not null';
+    'user_id mediumint not null,
+     group_id mediumint not null';
 
 ###########################################################################
 # Create tables
@@ -1255,9 +1255,9 @@ sub AddGroup {
                           VALUES (?, ?, ?, ?)');
     $sth->execute($name, $desc, $userregexp, 0);
 
-	$sth = $dbh->prepare("select last_insert_id()");
-	$sth->execute();
-	my ($last) = $sth->fetchrow_array();
+    $sth = $dbh->prepare("select last_insert_id()");
+    $sth->execute();
+    my ($last) = $sth->fetchrow_array();
 
     return $last;
 }
@@ -1275,16 +1275,16 @@ AddGroup 'editkeywords',   'Can create, destroy, and edit keywords.';
 
 if (!GroupExists("editbugs")) {
     my $id = AddGroup('editbugs',  'Can edit all aspects of any bug.', ".*");
-	my $sth = $dbh->prepare("SELECT userid FROM profiles ORDER BY userid");
-	$sth->execute();
-	while ( my ($userid) = $sth->fetchrow_array() ) {
-	    $dbh->do("INSERT INTO user_group_map VALUES ($userid, $id)");
-	}
+    my $sth = $dbh->prepare("SELECT userid FROM profiles ORDER BY userid");
+    $sth->execute();
+    while ( my ($userid) = $sth->fetchrow_array() ) {
+        $dbh->do("INSERT INTO user_group_map VALUES ($userid, $id)");
+    }
 }
 
 if (!GroupExists("canconfirm")) {
     my $id = AddGroup('canconfirm',  'Can confirm a bug.', ".*");
-	my $sth = $dbh->prepare("SELECT userid FROM profiles ORDER BY userid");
+    my $sth = $dbh->prepare("SELECT userid FROM profiles ORDER BY userid");
     $sth->execute();
     while ( my ($userid) = $sth->fetchrow_array() ) {
         $dbh->do("INSERT INTO user_group_map VALUES ($userid, $id)");
@@ -1628,27 +1628,27 @@ _End_Of_SQL_
       VALUES ($login, $realname, $cryptedpassword, 1)
 _End_Of_SQL_
 
-	# Put the admin in each group if not already	
-	my $query = "select userid from profiles where login_name = $login";	
-	$sth = $dbh->prepare($query); 
-	$sth->execute();
-	my ($userid) = $sth->fetchrow_array();
+    # Put the admin in each group if not already    
+    my $query = "select userid from profiles where login_name = $login";    
+    $sth = $dbh->prepare($query); 
+    $sth->execute();
+    my ($userid) = $sth->fetchrow_array();
 
-	foreach my $group ( @groups ) {
-		my $query = "select 
+    foreach my $group ( @groups ) {
+        my $query = "select 
             user_id 
         from 
             user_group_map 
         where 
             group_id = $group
             and user_id = $userid";
-		$sth = $dbh->prepare($query);
-		$sth->execute();
+        $sth = $dbh->prepare($query);
+        $sth->execute();
 
-		if ( !$sth->fetchrow_array() ) {
-			$sth = $dbh->do("insert into user_group_map values ($userid, $group)");
-		}
-	}
+        if ( !$sth->fetchrow_array() ) {
+            $sth = $dbh->do("insert into user_group_map values ($userid, $group)");
+        }
+    }
 
   } else {
     $dbh->do(<<_End_Of_SQL_);
@@ -1657,14 +1657,14 @@ _End_Of_SQL_
       WHERE login_name=$login
 _End_Of_SQL_
 
-	# Put the admin in each group if not already    
-	my $query = "select userid from profiles where login_name = $login";
-	$sth = $dbh->prepare($query);
+    # Put the admin in each group if not already    
+    my $query = "select userid from profiles where login_name = $login";
+    $sth = $dbh->prepare($query);
     $sth->execute();
     my ($userid) = $sth->fetchrow_array();
     
-	foreach my $group ( @groups ) {
-		my $query = "select 
+    foreach my $group ( @groups ) {
+        my $query = "select 
             user_id 
         from 
             user_group_map 
@@ -1678,7 +1678,6 @@ _End_Of_SQL_
             $dbh->do("insert into user_group_map values ( $userid, $group)");
         }
     }
-
   }
   print "\n$login is now set up as the administrator account.\n";
 }

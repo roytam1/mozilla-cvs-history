@@ -509,7 +509,7 @@ sub insert
   # special syntax of the "open" and "exec" commands to capture the output of 
   # "processmail", which "system" doesn't allow, without running the command 
   # through a shell, which backticks (``) do.
-  #system ("./processmail", $bugid , $::userid);
+  #system ("./processmail", $bugid , $userid);
   #my $mailresults = `./processmail $bugid $::userid`;
   my $mailresults = '';
   open(PMAIL, "-|") or exec('./processmail', $::FORM{'bugid'}, $::COOKIE{'Bugzilla_login'});
@@ -690,7 +690,7 @@ sub update
     my $quotedoldcontenttype = SqlQuote($oldcontenttype);
     my $fieldid = GetFieldID('attachments.mimetype');
     SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
-             VALUES ($bugid, $::FORM{'id'}, $userid, NOW(), $fieldid, $quotedoldmimetype, $quotedmimetype)");
+             VALUES ($bugid, $::FORM{'id'}, $userid, NOW(), $fieldid, $quotedoldcontenttype, $quotedcontenttype)");
   }
   if ($oldispatch ne $::FORM{'ispatch'}) {
     my $fieldid = GetFieldID('attachments.ispatch');

@@ -27,11 +27,9 @@ require "CGI.pl";
 
 ConnectToDatabase();
 
+my $userid = 0;
 quietly_check_login();
-
-# More warning suppression silliness.
-$::userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
-$::usergroupset = $::usergroupset;
+$userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
 
 ######################################################################
 # Begin Data/Security Validation
@@ -125,8 +123,7 @@ node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
         my $stat;
         if ($::FORM{'showsummary'}) {
             SendSQL(SelectVisible("select bug_status, short_desc from bugs where bug_id = $k",
-                                  $::userid,
-                                  $::usergroupset));
+                                  $userid));
             ($stat, $summary) = (FetchSQLData());
             $stat = "NEW" if !defined $stat;
             $summary = "" if !defined $summary;
@@ -134,9 +131,9 @@ node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
             SendSQL("select bug_status from bugs where bug_id = $k");
             $stat = FetchOneColumn();
         }
-		if ( !ValidateBugID($k, $userid) ) {
-			next;
-		}
+        if ( !ValidateBugID($k, $userid) ) {
+            next;
+        }
         my @params;
 #        print DOT "$k [URL" . qq{="${urlbase}show_bug.cgi?id=$k"};
         if ($summary ne "") {

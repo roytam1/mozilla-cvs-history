@@ -271,7 +271,7 @@ sub ValidateBugID {
 
     # Users are authorized to access bugs if they are a member of one of
     # groups to which the bug is restricted.    
-	# A user is also authorized to access a bug if she is the reporter, 
+    # A user is also authorized to access a bug if she is the reporter, 
     # assignee, QA contact, or member of the cc: list of the bug and the bug 
     # allows users in those roles to see the bug.  The boolean fields 
     # reporter_accessible, assignee_accessible, qacontact_accessible, and 
@@ -1276,13 +1276,13 @@ sub DumpBugActivity {
 
 sub GetCommandMenu {
     my $loggedin = quietly_check_login();
-	my $userid = 0;
-	if ( $::COOKIE{'Bugzilla_login'} ) {
-		$userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
-	} else {
-		$userid = 0;
-	}   
- 	if (!defined $::anyvotesallowed) {
+    my $userid = 0;
+    if ( $::COOKIE{'Bugzilla_login'} ) {
+        $userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
+    } else {
+        $userid = 0;
+    }   
+    if (!defined $::anyvotesallowed) {
         GetVersionTable();
     }
     my $html = qq {

@@ -58,7 +58,7 @@ sub sillyness {
 my $userid = 0;
 if (Param("usebuggroupsentry")) {
     confirm_login();
-	$userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
+    $userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
 }
 
 if (!defined $::FORM{'product'}) {
@@ -455,7 +455,7 @@ print "
 if ($userid ne '0') {
     SendSQL("SELECT groups.group_id, name, description FROM groups, user_group_map " .
             "WHERE groups.group_id = user_group_map.group_id " .
-			"AND user_group_map.user_id = $userid " . 
+            "AND user_group_map.user_id = $userid " . 
             "AND isbuggroup != 0 AND isactive = 1 ORDER BY description");
     # We only print out a header bit for this section if there are any
     # results.

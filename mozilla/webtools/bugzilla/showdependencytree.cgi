@@ -32,11 +32,9 @@ use vars %::FORM;
 
 ConnectToDatabase();
 
+my $userid = 0;
 quietly_check_login();
-
-# More warning suppression silliness.
-$::userid = DBname_to_id($::COOKIE{'Bugzilla_login'}); 
-$::usergroupset = $::usergroupset;
+$userid = DBname_to_id($::COOKIE{'Bugzilla_login'}); 
 
 ######################################################################
 # Begin Data/Security Validation
@@ -130,16 +128,16 @@ sub DumpKids {
             my ($bugid, $stat, $milestone) = ("", "", "");
             my ($userid, $short_desc) = ("", "");
             if (Param('usetargetmilestone')) {
-                SendSQL(SelectVisible("select bugs.bug_id, bug_status, target_milestone, assigned_to, short_desc from bugs where bugs.bug_id = $kid", $::userid, $::usergroupset));
+                SendSQL(SelectVisible("select bugs.bug_id, bug_status, target_milestone, assigned_to, short_desc from bugs where bugs.bug_id = $kid", $userid));
                 ($bugid, $stat, $milestone, $userid, $short_desc) = (FetchSQLData());
             } else {
-                SendSQL(SelectVisible("select bugs.bug_id, bug_status, assigned_to, short_desc from bugs where bugs.bug_id = $kid", $::userid, $::usergroupset));
+                SendSQL(SelectVisible("select bugs.bug_id, bug_status, assigned_to, short_desc from bugs where bugs.bug_id = $kid", $userid));
                 ($bugid, $stat, $userid, $short_desc) = (FetchSQLData());
 
             }
-			      #if ( !ValidateBugID($kid, $userid) ) {
-				    #    next;
-			      #}
+                  #if ( !ValidateBugID($kid, $userid) ) {
+                    #    next;
+                  #}
             if (! defined $bugid) { next; }
             my $opened = IsOpenedState($stat);
             if ($hide_resolved && ! $opened) { next; }

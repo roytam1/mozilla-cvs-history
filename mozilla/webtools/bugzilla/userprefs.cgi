@@ -507,7 +507,7 @@ sub ShowPermissions {
     my $found = 0;
     SendSQL("SELECT description FROM groups, user_group_map " .
             "WHERE groups.group_id = user_group_map.group_id " .
-			"AND user_group_map.user_id = $userid " .
+            "AND user_group_map.user_id = $userid " .
             "ORDER BY description");
     while (MoreSQLData()) {
         my ($description) = (FetchSQLData());
@@ -518,23 +518,23 @@ sub ShowPermissions {
         print "<LI>(No extra permission bits have been set).\n";
     }
     print "</UL>\n";
-	  SendSQL("SELECT COUNT(group_id) FROM bless_group_map WHERE user_id = $userid");
-	  my $blessgroupset = FetchOneColumn();
-	  if ( $blessgroupset ) {
-	   	  print "And you can turn on or off the following bits for\n";
-    	  print qq{<A HREF="editusers.cgi">other users</A>:\n};
-	   	  print "<P><UL>\n";
-    	  SendSQL("SELECT description FROM groups, bless_group_map " .
-              	"WHERE groups.group_id = bless_group_map.group_id " .
-				        "AND bless_group_map.user_id = $userid " .
-              	"ORDER BY description");
-	      while (MoreSQLData()) {
-    	      my ($description) = (FetchSQLData());
-        	  print "<LI>$description\n";
-	      }
+      SendSQL("SELECT COUNT(group_id) FROM bless_group_map WHERE user_id = $userid");
+      my $blessgroupset = FetchOneColumn();
+      if ( $blessgroupset ) {
+             print "And you can turn on or off the following bits for\n";
+          print qq{<A HREF="editusers.cgi">other users</A>:\n};
+             print "<P><UL>\n";
+          SendSQL("SELECT description FROM groups, bless_group_map " .
+                  "WHERE groups.group_id = bless_group_map.group_id " .
+                        "AND bless_group_map.user_id = $userid " .
+                  "ORDER BY description");
+          while (MoreSQLData()) {
+              my ($description) = (FetchSQLData());
+              print "<LI>$description\n";
+          }
         print "</UL>\n";
-	  }
-	  print "</TR></TD>\n";
+      }
+      print "</TR></TD>\n";
 }
         
 

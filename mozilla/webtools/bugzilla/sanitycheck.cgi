@@ -192,7 +192,7 @@ Status("Checking groups");
 my %legal_groups = ();
 SendSQL("select group_id from groups order by group_id");
 while ( my @row = FetchSQLData() ) {
-	$legal_groups{$row[0]} = 1;
+    $legal_groups{$row[0]} = 1;
 }
 SendSQL("select distinct group_id from user_group_map order by group_id");
 while ( my @row = FetchSQLData() ) {
