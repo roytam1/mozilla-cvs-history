@@ -94,7 +94,7 @@ sub savetree_header {
 
   # Don't save the Bonsai States
 
-  $value = egrep { !/^((Open)|(Closed))$/ } $value;
+  $value = grep { !/^((Open)|(Closed))$/ } $value;
 
   $self->SUPER::savetree_header($tree, $value);
 
@@ -103,8 +103,11 @@ sub savetree_header {
 
 sub get_all_sorted_setable_tree_states {
 
-    my @valid_states = egrep { !/^((Open)|(Closed))$/ } 
-  		TreeData::get_all_sorted_tree_states();
+    my @valid_states =( '', (
+                             grep { !/^((Open)|(Closed))$/ } 
+                           TreeData::get_all_sorted_tree_states()
+                             )
+                        );
 
   return @valid_states;
 }
