@@ -540,5 +540,21 @@ SeaMonkeyMailNews -a \
 
 SeaMonkeyEditor -a \
 	SeaMonkeyBrowser \
-	editor
+	mozilla/editor
+
+#############################################################
+# This module is the whole banana, and this
+# is the module that tinderbox and bonsai should 
+# track. 
+#
+# Right now Editor pulls Browser which pulls XPToolKit
+# which pulls Layout which pulls Core. But eventually,
+# there will be more differentiation and uniqueness so
+# All will need to contain more than Editor. Perhaps it 
+# will contain SeaMonkeyUnix, SeaMonkeyMac, SeaMonkeyWin
+# et cetera, et cetera, et cetera. But that is in the 
+# future. --sarah
+
+SeaMonkeyAll -a \
+	SeaMonkeyEditor
 
