@@ -237,14 +237,25 @@ sub render_bug {
               $table.
               "");
     
+    # a link to the cgibin page which displays the bug
+    
+    my ($bug_href) = BTData::rec2bug_url($rec);
+
+    my $link_choices;
+    $link_choices .= "<br>";
+    $link_choices .= 
+      HTMLPopUp::Link(
+                      "href" => $bug_href,
+                      "linktxt" => "Visit ticket: $bug_id",
+                      );
+    
+    $link_choices .= "<br>";
+
     # fix the size so that long summaries do not cause our window
     # to get too large.
     
     $max_length = 40;
     
-    # a link to the cgibin page which displays the bug
-    
-    my ($href) = BTData::rec2bug_url($rec);
     my ($window_title) = "$BT_NAME Info bug_id: $bug_id";
     
     # we display the list of names in 'teletype font' so that the
@@ -255,9 +266,9 @@ sub render_bug {
     my ($query_link) = 
       HTMLPopUp::Link(
                       "linktxt" => "<tt>$bug_id</tt>",
-                      "href" => $href,
+                      "href" => $bug_href,
                       
-                      "windowtxt" => $table,
+                      "windowtxt" => $table.$link_choices,
                       "windowtitle" => $window_title,
                       "windowheight" => ($num_rows * 25) + 100,
                       "windowwidth" => ($max_length * 15) + 100,
