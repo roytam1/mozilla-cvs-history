@@ -510,6 +510,10 @@ SeaMonkeyCore -a \
 	mozilla/modules/zlib \
 	mozilla/nav-java \
 	mozilla/network \
+	mozilla/nglayout.mak \
+	mozilla/nglayout.mk \
+	mozilla/Makefile.in \
+	mozilla/configure.in \
 	mozilla/rdf \
 	mozilla/sun-java \
 	mozilla/xpcom
