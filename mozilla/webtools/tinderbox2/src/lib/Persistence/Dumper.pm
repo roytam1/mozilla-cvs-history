@@ -87,6 +87,7 @@ sub save_structure {
 sub load_structure {
   my ($data_file,) = @_;
 
+  # This may be the output of a glob, make it taint safe.
   $data_file = main::extract_filename_chars($data_file);
 
   (-r $data_file) || (-R $data_file) ||
