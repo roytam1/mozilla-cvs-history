@@ -58,9 +58,6 @@ $fullname{'101'} = 'Embeddable Web Browser';
 $mode{'49'} = 'Open';
 $branch{'49'} = 'HEAD';
 $fullname{'49'} = 'GTK';
-$mode{'61'} = 'Open';
-$branch{'61'} = 'HEAD';
-$fullname{'61'} = 'HTML Dialogs';
 $mode{'62'} = 'Open';
 $branch{'62'} = 'HEAD';
 $fullname{'62'} = 'HTML to Text/PostScript Translation';
@@ -223,7 +220,6 @@ if (m:^mozilla/lib/layout/.*$:) {return '56';}
 if (m:^mozilla/modules/edtplug/.*$:) {return '56';}
 if (m:^mozilla/cmd/dialup/.*$:) {return '58';}
 if (m:^mozilla/directory/.*$:) {return '59';}
-if (m:^mozilla/lib/htmldlgs/.*$:) {return '61';}
 if (m:^mozilla/include/xlate\.h/.*$:) {return '62';}
 if (m:^mozilla/lib/xlate/.*$:) {return '62';}
 if (m:^mozilla/modules/libimg/.*$:) {return '63';}
