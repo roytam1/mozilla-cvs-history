@@ -422,8 +422,8 @@ sub status_table_row {
        if (
            ($cell_color !~ m/white/) &&
            (!($text_browser_color_string)) &&
-           (!($empty_cell_contents) &&
-            ) {
+           (!($empty_cell_contents)) &&
+           ) {
                $empty_cell_contents = "&nbsp;";
            }
   }
