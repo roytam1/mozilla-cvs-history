@@ -49,7 +49,7 @@ MozillaCommon -a \
     ns/lib/libi18n  \
     ns/lib/liblayer  \
     ns/lib/libmisc  \
-    ns/lib/libmocha LOCAL  \
+    ns/lib/libmocha \
     ns/lib/libnet  \
     ns/lib/libparse  \
     ns/lib/libpics  \
