@@ -28,6 +28,7 @@
 
 use diagnostics;
 use strict;
+use lib ".";
 
 require "CGI.pl";
 require "globals.pl";
@@ -154,6 +155,7 @@ sub PutTrailer (@)
 # Preliminary checks:
 #
 
+ConnectToDatabase();
 confirm_login();
 
 print "Content-type: text/html\n\n";
@@ -529,7 +531,8 @@ if ($action eq 'update') {
             exit;
         }
         SendSQL("UPDATE bugs
-                 SET version=" . SqlQuote($version) . "
+                 SET version=" . SqlQuote($version) . ",
+                 delta_ts = delta_ts
                  WHERE version=" . SqlQuote($versionold) . "
                    AND product=" . SqlQuote($product));
         SendSQL("UPDATE versions
