@@ -44,6 +44,7 @@ use Getopt::Long;
 use File::Copy;
 
 GetOptions("datadir=s");
+chdir('/tmp');
 
 LINE: while (<>) {
     if (/^begin \d\d\d (.*)/) {
