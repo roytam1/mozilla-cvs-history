@@ -326,6 +326,7 @@ if (m:^xpcom/reflect/xptcall$:) {return '118';}
 if (m:^xpcom/reflect/xptinfo$:) {return '118';}
 if (m:^mozilla/mailnews/news/.*$:) {return '122';}
 if (m:^mozilla/mailnews/[^/]*$:) {return '123';}
+if (m:^mozilla/mailnews/mime/[^/]*$:) {return '124';}
 if (m:^mozilla/java/xpcom/.*$:) {return '128';}
 if (m:^mozilla/java/plugins/.*$:) {return '129';}
 if (m:^mozilla/java/webclient/.*$:) {return '127';}
