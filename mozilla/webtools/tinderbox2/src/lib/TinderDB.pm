@@ -44,7 +44,8 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
+# complete rewrite by Ken Estes for contact info see the
+#     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
 
@@ -852,7 +853,7 @@ not green.
 
 =head1 AUTHOR
 
-Ken Estes (kestes@staff.mail.com)
+Ken Estes
 
 
 =cut
