@@ -331,17 +331,17 @@ sub SaveFooter {
 sub DoPermissions {
     my (@has_bits, @set_bits);
     
-    SendSQL("SELECT description FROM groups, user_group_map " .
+    SendSQL("SELECT DISTINCT description FROM groups, user_group_map " .
             "WHERE user_group_map.group_id = groups.id " .
             "AND user_id = $::userid " .
             "AND isbless = 0 " .
-            "ORDER BY groups.id");
+            "ORDER BY name");
     while (MoreSQLData()) {
         push(@has_bits, FetchSQLData());
     }
     my @set_ids = ();
-    SendSQL("SELECT name, description FROM groups " .
-            "ORDER BY group_id");
+    SendSQL("SELECT DISTINCT name, description FROM groups " .
+            "ORDER BY name");
     while (MoreSQLData()) {
         my ($nam, $desc) = FetchSQLData();
         if (UserCanBlessGroup($nam)) {

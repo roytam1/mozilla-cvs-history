@@ -134,14 +134,14 @@ sub EmitFormElements ($$$$)
     if($user ne "") {
         print "</TR><TR><TH VALIGN=TOP ALIGN=RIGHT>Group Access:</TH><TD><TABLE><TR>";
         SendSQL("SELECT groups.id, groups.name, groups.description, " .
-                "ISNULL(user_id) = 0, " .
-                "isderived " .
+                "COUNT(user_id), " .
+                "MAX(isderived) " .
                 "FROM groups " .
                 "LEFT JOIN user_group_map " .
                 "ON user_group_map.group_id = groups.id " .
                 "AND isbless = 0 " .
                 "AND user_id = $user_id " .
-                "ORDER BY groups.name");
+                "GROUP BY groups.name ");
         if (MoreSQLData()) {
             if ($editall) {
                 print "<TD COLSPAN=3 ALIGN=LEFT><B>Can turn this bit on for other users</B></TD>\n";
@@ -152,7 +152,7 @@ sub EmitFormElements ($$$$)
                 my ($groupid, $name, $description, $member, $isderived) = FetchSQLData();
                 next if (!$editall && !UserCanBlessGroup($name));
                 $isderived = $isderived || 0;
-                my $checked = ($member && ($isderived == 1)) ? 1 : 0;
+                my $checked = $member - $isderived;
                 PushGlobalSQLState();
                 SendSQL("SELECT user_id " .
                         "FROM user_group_map " .
@@ -161,14 +161,14 @@ sub EmitFormElements ($$$$)
                         "AND group_id = $groupid");
                 my ($blchecked) = FetchSQLData() ? 1 : 0;
                 PopGlobalSQLState();
-                print "<INPUT TYPE=HIDDEN NAME=\"oldgroup_$groupid\" VALUE=\"$checked\">\n";
-                print "<INPUT TYPE=HIDDEN NAME=\"oldbless_$groupid\" VALUE=\"$blchecked\">\n";
                 print "</TR><TR";
                 print ' bgcolor=#cccccc' if ($isderived);
                 print ">\n";
+                print "<INPUT TYPE=HIDDEN NAME=\"oldgroup_$groupid\" VALUE=\"$checked\">\n";
+                print "<INPUT TYPE=HIDDEN NAME=\"oldbless_$groupid\" VALUE=\"$blchecked\">\n";
                 if ($editall) {
                     $blchecked = ($blchecked) ? "CHECKED" : "";
-                    print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"bless_$groupid\" $blchecked VALUE=\"$groupid\"></TD>";
+                    print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"bless_$groupid\" $blchecked VALUE=\"$groupid\"></TD>\n";
                 }
                 $checked = ($checked) ? "CHECKED" : "";
                 print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"group_$groupid\" $checked VALUE=\"$groupid\"></TD>";
@@ -715,7 +715,7 @@ if ($action eq 'update') {
              WHERE login_name=" . SqlQuote($userold));
     my ($thisuserid) = FetchSQLData();
 
-    SendSQL("SELECT group_id, name FROM groups");
+    SendSQL("SELECT id, name FROM groups");
     while (MoreSQLData()) {
         my ($groupid, $name) = FetchSQLData();
         if ($::FORM{"oldgroup_$groupid"} != ($::FORM{"group_$groupid"} ? 1 : 0)) {

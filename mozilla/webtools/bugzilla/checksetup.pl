@@ -1819,7 +1819,6 @@ AddFDef("(to_days(now()) - to_days(bugs.delta_ts))", "Days since bug changed",
 AddFDef("longdesc", "Comment", 0);
 AddFDef("alias", "Alias", 0);
 AddFDef("everconfirmed", "Ever Confirmed", 0);
-AddFDef("groupset", "Groupset", 0);
 AddFDef("reporter_accessible", "Reporter Accessible", 0);
 AddFDef("cc_accessible", "CC Accessible", 0);
 AddFDef("bug_group_map.group_id", "Bug Group", 0);

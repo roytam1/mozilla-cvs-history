@@ -146,7 +146,7 @@ members of the group where they can choose whether the bug will be restricted
 to others in the same group.<p>";
     print "<b>User RegExp</b> is optional, and if filled in, will automatically
 grant membership to this group to anyone creating a new account with an
-email address that matches this regular expression. Do not forget the trailing \'\$\'.  Example \'\@mycompany.com\$\'<p>";
+email address that matches this perl regular expression. Do not forget the trailing \'\$\'.  Example \'\@mycompany.com\$\'<p>";
     print "The <b>Use For Bugs</b> flag determines whether or not the group is eligable to be used for bugs.
 If you deactivate a group it will no longer be possible for users to add bugs
 to that group, although bugs already in the group will remain in the group.
@@ -379,6 +379,8 @@ if ($action eq 'new') {
     my $gid = FetchOneColumn();
     my $admin = GroupNameToId('admin');
     SendSQL("INSERT INTO group_group_map (child_id, parent_id, isbless)
+             VALUES ($admin, $gid, 0)");
+    SendSQL("INSERT INTO group_group_map (child_id, parent_id, isbless)
              VALUES ($admin, $gid, 1)");
     print "OK, done.<p>\n";
     PutTrailer("<a href=\"editgroups.cgi?action=add\">Add another group</a>",
@@ -594,7 +596,6 @@ if ($action eq 'postchanges') {
     foreach my $b (grep(/^oldgrp-\d*$/, keys %::FORM)) {
         if (defined($::FORM{$b})) {
             my $v = substr($b, 7);
-            print "checking $v<P>\n";
             my $grp = $::FORM{"grp-$v"} || 0;
             if ($::FORM{"oldgrp-$v"} != $grp) {
                 $chgs = 1;
