@@ -127,7 +127,7 @@ DefParam("contract",
 DefParam("templatepath",
 	 "The path to your html template files",
 	 "t",
-	 "/var/httpd/html/newzilla/templates");
+	 "templates");
 
 DefParam("maintainer",
 	 "The email address of the person who maintains this installation of Bugzilla.",
@@ -137,7 +137,7 @@ DefParam("maintainer",
 DefParam("urlbase",
 	 "The URL that is the common initial leading part of all Bugzilla URLs.",
 	 "t",
-	 "http://cvs-mirror.mozilla.org/webtools/bugzilla/",
+	 "http://bugzilla.redhat.com/bugzilla2/",
 	 \&check_urlbase);
 
 sub check_urlbase {
@@ -419,7 +419,7 @@ sub check_priority {
 DefParam("defaultpriority",
          "This is the priority that newly entered bugs are set to.",
          "t",
-         "P2",
+         "normal",
          \&check_priority);
 
 

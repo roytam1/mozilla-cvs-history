@@ -106,7 +106,15 @@ node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
         my $summary = "";
         my $stat;
         if ($::FORM{'showsummary'}) {
-            SendSQL("select bug_status, short_desc from bugs where bug_id = $k and bugs.groupset & $::usergroupset = bugs.groupset");
+			if ($::driver eq 'mysql') {
+            	SendSQL("select bug_status, short_desc from bugs where bug_id = $k " .
+						"and bugs.groupset & $::usergroupset = bugs.groupset");
+			} else {
+				my $userid = DBNameToIdAndCheck($::COOKIE{'Bugzilla_login'});
+				if (CanISee($k, $userid)) {
+					SendSQL("select bug_status, short_desc from bugs where bug_id = $k");
+				}
+			}
             ($stat, $summary) = (FetchSQLData());
             $stat = "NEW" if !defined $stat;
             $summary = "" if !defined $summary;
@@ -142,7 +150,7 @@ node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
     
     my $url = PerformSubsts(Param("webdotbase")) . $filename;
 
-    print qq{<a href="$url.map"> <img src="$url.gif" ismap> </a><hr>\n};
+    print qq{<CENTER><a href="$url.map"> <img src="$url.gif" ismap> </a><CENTER><HR ALIGN=center WIDTH=700>\n};
 
     # Cleanup any old .dot files created from previous runs.
     my $since = time() - 24 * 60 * 60;
@@ -158,27 +166,29 @@ node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
 }    
 
 print "
-<form>
-<table>
-<tr>
-<th align=right>Bug numbers:</th>
-<td><input name=id value=\"" . value_quote($::FORM{'id'}) . "\"></td>
-<td><input type=checkbox name=doall" . ($::FORM{'doall'} ? " checked" : "") .
-">Show <b>every</b> bug in the system with 
-dependencies</td>
-</tr>
-<tr><td colspan=3><input type=checkbox name=showsummary" .
-($::FORM{'showsummary'} ? " checked" : "") . ">Show the summary of all bugs
-</tr>
-<tr><td colspan=3><select name=rankdir>
-<option value=\"TB\"" . ($::FORM{'rankdir'} eq 'TB' ? 'selected' : '') .
-">Orient top-to-bottom
-<option value=\"LR\"" . ($::FORM{'rankdir'} eq 'LR' ? 'selected' : '') .
-">Orient left-to-right
-</select></td></tr>
-</table>
-<input type=submit value=\"Submit\">
-</form>
+<FORM>
+<TABLE ALIGN=center>
+<TR>
+	<TH ALIGN=right>Bug numbers:</TH>
+	<TD><INPUT NAME=id VALUE=\"" . value_quote($::FORM{'id'}) . "\"></TD>
+	<TD><INPUT TYPE=checkbox NAME=doall" . ($::FORM{'doall'} ? " checked" : "") .
+	">Show <B>every</B> bug in the system with 
+	dependencies</TD>
+</TR><TR>
+	<TD COLSPAN=3><INPUT TYPE=checkbox NAME=showsummary" .
+	($::FORM{'showsummary'} ? " checked" : "") . ">Show the summary of all bugs
+</TR><TR>
+	<TD COLSPAN=3>
+	<SELECT NAME=rankdir>
+	<OPTION VALUE=\"TB\"" . ($::FORM{'rankdir'} eq 'TB' ? 'selected' : '') .
+	">Orient top-to-bottom
+	<OPTION VALUE=\"LR\"" . ($::FORM{'rankdir'} eq 'LR' ? 'selected' : '') .
+	">Orient left-to-right
+	</SELECT></TD>
+</TR>
+</TABLE>
+<CENTER><INPUT TYPE=SUBMIT VALUE=\"Submit\"></CENTER>
+</FORM>
  ";
 
 PutFooter();

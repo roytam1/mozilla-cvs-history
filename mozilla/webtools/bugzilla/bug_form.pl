@@ -18,6 +18,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+# 				  David Lawrence <dkl@redhat.com>
 
 use diagnostics;
 use strict;
@@ -38,14 +39,23 @@ sub bug_form_pl_sillyness {
     $zz = @::legal_priority;
     $zz = @::legal_resolution_no_dup;
     $zz = @::legal_severity;
-    $zz = %::target_milestone;
+	$zz = %::target_milestone;
 }
+
+my $userid = 0;			# user id of current member
+my $changeable = 0;		# whether the user can edit attributes of this bug
 
 my $loginok = quietly_check_login();
 
-my $id = $::FORM{'id'};
+if ($loginok) {
+	$userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
+}
 
-my $query = "
+my $id = $::FORM{'id'}; # id number of current bug
+
+my $query = "";
+if ($::driver eq 'mysql') {
+	$query = "
 select
         bugs.bug_id,
         product,
@@ -61,17 +71,47 @@ select
         reporter,
         bug_file_loc,
         short_desc,
-	target_milestone,
-	qa_contact,
-	status_whiteboard,
+		target_milestone,
+		qa_contact,
+		status_whiteboard,
         date_format(creation_ts,'%Y-%m-%d %H:%i'),
         groupset,
-	delta_ts,
-	sum(votes.count)
-from bugs left join votes using(bug_id)
-where bugs.bug_id = $id
-and bugs.groupset & $::usergroupset = bugs.groupset
-group by bugs.bug_id";
+		delta_ts,
+		sum(votes.count)
+from 	bugs left join votes using(bug_id)
+where 	bugs.bug_id = $id
+and 	bugs.groupset & $::usergroupset = bugs.groupset
+		group by bugs.bug_id";
+
+} else {
+    $query = "
+select
+    bugs.bug_id,
+    product,
+    version,
+    rep_platform,
+    op_sys,
+    bug_status,
+    resolution,
+    priority,
+    bug_severity,
+    component,
+    assigned_to,
+    reporter,
+    bug_file_loc,
+    short_desc,
+    target_milestone,
+    qa_contact,
+    status_whiteboard,
+    TO_CHAR(creation_ts, 'YYYY-MM-DD HH:MI:SS'), 
+    groupset,
+    TO_CHAR(delta_ts, 'YYYYMMDDHH24MISS')
+from
+    bugs
+where 
+    bugs.bug_id = $id";
+
+}
 
 SendSQL($query);
 my %bug;
@@ -82,34 +122,64 @@ if (@row = FetchSQLData()) {
 		       "op_sys", "bug_status", "resolution", "priority",
 		       "bug_severity", "component", "assigned_to", "reporter",
 		       "bug_file_loc", "short_desc", "target_milestone",
-                       "qa_contact", "status_whiteboard", "creation_ts",
-                       "groupset", "delta_ts", "votes") {
-	$bug{$field} = shift @row;
-	if (!defined $bug{$field}) {
-	    $bug{$field} = "";
-	}
-	$count++;
+               "qa_contact", "status_whiteboard", "creation_ts",
+               "groupset", "delta_ts", "votes") {
+		$bug{$field} = shift @row;
+		if (!defined $bug{$field}) {
+	    	$bug{$field} = "";
+		}
+		$count++;
     }
 } else {
-    SendSQL("select groupset from bugs where bug_id = $id");
-    if (@row = FetchSQLData()) {
-        print "<H1>Permission denied.</H1>\n";
-        if ($loginok) {
-            print "Sorry; you do not have the permissions necessary to see\n";
-            print "bug $id.\n";
-        } else {
-            print "Sorry; bug $id can only be viewed when logged\n";
-            print "into an account with the appropriate permissions.  To\n";
-            print "see this bug, you must first\n";
-            print "<a href=\"show_bug.cgi?id=$id&GoAheadAndLogIn=1\">";
-            print "log in</a>.";
-        }
-    } else {
-        print "<H1>Bug not found</H1>\n";
-        print "There does not seem to be a bug numbered $id.\n";
-    }
-    PutFooter();
-    exit;
+	if ($::driver eq 'mysql') {
+	    SendSQL("select groupset from bugs where bug_id = $id");
+	    if (@row = FetchSQLData()) {
+    	    print "<H1>Permission denied.</H1>\n";
+        	if ($loginok) {
+            	print "Sorry; you do not have the permissions necessary to see\n";
+            	print "bug $id.\n";
+				PutFooter();
+				exit;
+        	} else {
+            	print "Sorry; bug $id can only be viewed when logged\n";
+            	print "into an account with the appropriate permissions.  To\n";
+            	print "see this bug, you must first\n";
+            	print "<a href=\"show_bug.cgi?id=$id&GoAheadAndLogIn=1\">";
+            	print "log in</a>.";
+				PutFooter();
+				exit;
+        	}
+		}
+	}
+    PutError("<H1>Bug not found</H1>\n" .
+    	 	 "There does not seem to be a bug numbered $id.\n");
+}
+
+if ($::driver ne 'mysql') {
+	# If this bug has been set to private, lets see if we can view it.
+	if (!CanISee($id, $userid)) {
+    	my $error = "<H1>Permission denied.</H1>\n";
+    	if ($loginok) {
+        	$error .= "Sorry; you do not have the permissions necessary to see\n";
+        	$error .= "bug $id.\n";
+    	} else {
+        	$error .= "Sorry; bug $id can only be viewed when logged\n";
+        	$error .= "into an account with the appropriate permissions.  To\n";
+        	$error .= "see this bug, you must first\n";
+        	$error .= "<a href=\"show_bug.cgi?id=$id&GoAheadAndLogIn=1\">";
+        	$error .= "log in</a>.";
+    	}
+		PutError($error);
+	}
+}
+
+# If changeable is true then changes to bug's attributes are allowed
+if ($::driver ne 'mysql') {
+	if (CanIChange($id, $::COOKIE{'Bugzilla_login'}, $bug{'reporter'}, $bug{'assigned_to'})) {
+    	$changeable = 1;
+	} else {
+    	$changeable = 0;
+	}
 }
 
 my $assignedtoid = $bug{'assigned_to'};
@@ -126,135 +196,151 @@ print qq{<FORM NAME="changeform" METHOD="POST" ACTION="process_bug.cgi">\n};
 #      print qq{<INPUT TYPE="HIDDEN" NAME="orig-$i" VALUE="$q">\n};
 #  }
 
-$bug{'long_desc'} = GetLongDescriptionAsHTML($id);
-my $longdesclength = length($bug{'long_desc'});
+$::bug_form{'long_desc'} = GetLongDescriptionAsHTML($id);
+$::bug_form{'longdesclength'} = length($::bug_form{'long_desc'});
 
 GetVersionTable();
-
-
 
 #
 # These should be read from the database ...
 #
+$::bug_form{'platform_popup'} = "";
+$::bug_form{'priority_popup'} = "";
+$::bug_form{'sev_popup'} = "";
+$::bug_form{'component_popup'} = "";
+$::bug_form{'component_text'} = "";
+$::bug_form{'cc_element'} = "";
+$::bug_form{'version_popup'} = "";
+$::bug_form{'product_popup'} = "";
+$::bug_form{'opsys_popup'} = "";
 
-my $resolution_popup = make_options(\@::legal_resolution_no_dup,
+if ($changeable) {
+    $::bug_form{'platform_popup'} = "<SELECT NAME=rep_platform>\n" .
+                      make_options(\@::legal_platform, $bug{'rep_platform'}) . 
+                      "\n</SELECT>\n";
+
+    # Added by Red Hat for contract customer support 
+    if (Param('contract')) {
+        if (UserInContract($userid) && UserInGroup('setcontract')) {
+            $::bug_form{'priority_popup'} = "<SELECT NAME=priority>\n" . 
+                          make_options(\@::legal_priority_contract, $bug{'priority'}) . 
+                              "\n</SELECT>\n";
+        } elsif (UserInContract($userid) && $bug{'priority'} eq 'contract') {
+            $::bug_form{'priority_popup'} = "contract<BR>" . 
+                              "<SELECT NAME=priority>\n" . 
+                              make_options(\@::legal_priority, $bug{'priority'}) . 
+                              "\n</SELECT>\n";
+        } else {
+            $::bug_form{'priority_popup'} = "<SELECT NAME=priority>\n" . 
+                          make_options(\@::legal_priority, $bug{'priority'}) . 
+                          "\n</SELECT>\n";
+        }
+    } else {
+        $::bug_form{'priority_popup'} = "<SELECT NAME=priority>\n" . 
+                          make_options(\@::legal_priority, $bug{'priority'}) . 
+                          "\n</SELECT>\n";
+    }
+
+    $::bug_form{'severity_popup'} = "<SELECT NAME=bug_severity>\n" .
+                               make_options(\@::legal_severity, $bug{'bug_severity'}) .
+                               "\n</SELECT>\n";
+
+    $::bug_form{'component_popup'} = "<B><A HREF=\"describecomponents.cgi?product=$bug{'product'}\">Component:</A></B>" .
+                                     "<BR><B>$bug{'component'}</B></TD>\n<TD ROWSPAN=3 VALIGN=top>" .
+                                     make_popup('component', $::components{$bug{'product'}}, $bug{'component'}, 1, 0);
+
+#   $::bug_form{'component_text'} = "<INPUT NAME=component_text SIZE=20 VALUE=\"\">"; 
+    $::bug_form{'component_text'} = "(Coming Soon)";
+
+    $::bug_form{'cc_element'} = "Cc:</TH><TD ALIGN=left><INPUT NAME=cc SIZE=60 VALUE=\"" . ShowCcList($id) . "\">"; 
+
+    $::bug_form{'version_popup'} = "<SELECT NAME=version>\n" .
+                                    make_options($::versions{$bug{'product'}}, $bug{'version'}) .
+                                    "\n</SELECT>\n";
+
+    $::bug_form{'product_popup'} = "<SELECT NAME=product>\n" .
+                                    make_options(\@::legal_product, $bug{'product'}) .
+                                    "\n</SELECT>\n";
+	$::bug_form{'opsys_popup'} = "<SELECT NAME=op_sys>\n" .
+            						make_options(\@::legal_opsys, $bug{'op_sys'}) .
+            						"</SELECT>\n";
+
+} else {
+    $::bug_form{'platform_popup'} = $bug{'rep_platform'};
+    $::bug_form{'priority_popup'} = $bug{'priority'};
+    $::bug_form{'sev_popup'} = $bug{'bug_severity'};
+    $::bug_form{'component_popup'} = "<B><A HREF=\"describecomponents.cgi?product=$bug{'product'}\">Component:</A></B>" .
+                                     "</TD><TD ROWSPAN=3 VALIGN=top>" . $bug{'component'};
+    $::bug_form{'component_text'} = "";
+    $::bug_form{'cc_element'} = "Cc:</TH><TD ALIGN=left>" . ShowCcList($id);
+    $::bug_form{'version_popup'} = $bug{'version'};
+    $::bug_form{'product_popup'} = $bug{'product'};
+	$::bug_form{'opsys_popup'} = $bug{'op_sys'};
+}
+
+
+$::bug_form{'resolution_popup'} = make_options(\@::legal_resolution_no_dup,
 				    $bug{'resolution'});
-my $platform_popup = make_options(\@::legal_platform, $bug{'rep_platform'});
-my $priority_popup = make_options(\@::legal_priority, $bug{'priority'});
-my $sev_popup = make_options(\@::legal_severity, $bug{'bug_severity'});
-
-
-my $component_popup = make_options($::components{$bug{'product'}},
-				   $bug{'component'});
-
-my $cc_element = '<INPUT NAME=cc SIZE=30 VALUE="' .
-    ShowCcList($id) . '">';
-
 
 my $URL = $bug{'bug_file_loc'};
-
-if (defined $URL && $URL ne "none" && $URL ne "NULL" && $URL ne "") {
-    $URL = "<B><A HREF=\"$URL\">URL:</A></B>";
+if (defined $URL && $URL ne "none" && $URL ne "NULL" && $URL ne "") {		
+	$URL = "<B><A HREF=\"$URL\">URL:</A></B>";
 } else {
-    $URL = "<B>URL:</B>";
+	$URL = "<B>URL:</B>";
 }
-
-print "
-<INPUT TYPE=HIDDEN NAME=\"delta_ts\" VALUE=\"$bug{'delta_ts'}\">
-<INPUT TYPE=HIDDEN NAME=\"longdesclength\" VALUE=\"$longdesclength\">
-<INPUT TYPE=HIDDEN NAME=\"id\" VALUE=$id>
-  <TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0><TR>
-    <TD ALIGN=RIGHT><B>Bug#:</B></TD><TD><A HREF=\"show_bug.cgi?id=$bug{'bug_id'}\">$bug{'bug_id'}</A></TD>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#rep_platform\">Platform:</A></B></TD>
-    <TD><SELECT NAME=rep_platform>$platform_popup</SELECT></TD>
-    <TD ALIGN=RIGHT><B>Version:</B></TD>
-    <TD><SELECT NAME=version>" .
-    make_options($::versions{$bug{'product'}}, $bug{'version'}) .
-    "</SELECT></TD>
-  </TR><TR>
-    <TD ALIGN=RIGHT><B>Product:</B></TD>
-    <TD><SELECT NAME=product>" .
-    make_options(\@::legal_product, $bug{'product'}) .
-    "</SELECT></TD>
-    <TD ALIGN=RIGHT><B>OS:</B></TD>
-    <TD><SELECT NAME=op_sys>" .
-    make_options(\@::legal_opsys, $bug{'op_sys'}) .
-    "</SELECT><TD ALIGN=RIGHT><B>Reporter:</B></TD><TD>$bug{'reporter'}</TD>
-  </TR><TR>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html\">Status:</A></B></TD>
-      <TD>$bug{'bug_status'}</TD>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#priority\">Priority:</A></B></TD>
-      <TD><SELECT NAME=priority>$priority_popup</SELECT></TD>
-    <TD ALIGN=RIGHT><B>Cc:</B></TD>
-      <TD> $cc_element </TD>
-  </TR><TR>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html\">Resolution:</A></B></TD>
-      <TD>$bug{'resolution'}</TD>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#severity\">Severity:</A></B></TD>
-      <TD><SELECT NAME=bug_severity>$sev_popup</SELECT></TD>
-    <TD ALIGN=RIGHT><B><A HREF=\"describecomponents.cgi?product=" .
-    url_quote($bug{'product'}) . "\">Component:</A></B></TD>
-      <TD><SELECT NAME=component>$component_popup</SELECT></TD>
-  </TR><TR>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#assigned_to\">Assigned&nbsp;To:
-        </A></B></TD>
-      <TD>$bug{'assigned_to'}</TD>";
 
 if (Param("usetargetmilestone")) {
-    my $url = "";
-    if (defined $::milestoneurl{$bug{'product'}}) {
-        $url = $::milestoneurl{$bug{'product'}};
-    }
-    if ($url eq "") {
-        $url = "notargetmilestone.html";
-    }
-
-    print "
-<TD ALIGN=RIGHT><A href=\"$url\"><B>Target Milestone:</B></A></TD>
-<TD><SELECT NAME=target_milestone>" .
-    make_options($::target_milestone{$bug{'product'}},
-                 $bug{'target_milestone'}) .
-                     "</SELECT></TD>";
+	my $url = "";
+	if (defined $::milestoneurl{$bug{'product'}}) {
+		$url = $::milestoneurl{$bug{'product'}};
+	}
+	if ($url eq "") {
+		$url = "notargetmilestone.html";
+	}
+	if ($bug{'target_milestone'} eq "") {
+		$bug{'target_milestone'} = " ";
+	}
+	push(@::legal_target_milestone, " ");
+	$::bug_form{'milestone_popup'} = "
+<A href=\"$url\"><B>Target Milestone:</B></A></TD>
+<TD><SELECT NAME=target_milestone>\n" .
+make_options(\@::legal_target_milestone,
+$bug{'target_milestone'}) .
+"</SELECT>\n";
 }
-
-print "
-</TR>";
 
 if (Param("useqacontact")) {
-    my $name = $bug{'qa_contact'} > 0 ? DBID_to_name($bug{'qa_contact'}) : "";
-    print "
-  <TR>
-    <TD ALIGN=\"RIGHT\"><B>QA Contact:</B>
-    <TD COLSPAN=6>
-      <INPUT NAME=qa_contact VALUE=\"" .
-    value_quote($name) .
-    "\" SIZE=60></
-  </TR>";
+	my $name = $bug{'qa_contact'} > 0 ? DBID_to_name($bug{'qa_contact'}) : "";
+	if ($changeable) {
+	    $::bug_form{'qacontact_element'} = "QA Contact:</TH><TD ALIGN=left><INPUT NAME=qa_contact VALUE=\"" .
+									   value_quote($name) . "\" SIZE=60>";
+	} else {
+		$::bug_form{'qacontact_element'} = "QA Contact:</TH><TD ALIGN=left>" . value_quote($name);
+	}
 }
 
+if ($changeable) {
+	$::bug_form{'url_element'} = "$URL</TH><TD ALIGN=left><INPUT NAME=bug_file_loc VALUE=\"$bug{'bug_file_loc'}\" SIZE=60>";
+} else {
+    $::bug_form{'url_element'} = "$URL</TH><TD ALIGN=left>$bug{'bug_file_loc'}";
+}
 
-print "
-  <TR>
-    <TD ALIGN=\"RIGHT\">$URL
-    <TD COLSPAN=6>
-      <INPUT NAME=bug_file_loc VALUE=\"$bug{'bug_file_loc'}\" SIZE=60></TD>
-  </TR><TR>
-    <TD ALIGN=\"RIGHT\"><B>Summary:</B>
-    <TD COLSPAN=6>
-      <INPUT NAME=short_desc VALUE=\"" .
-    value_quote($bug{'short_desc'}) .
-    "\" SIZE=60></TD>
-  </TR>";
+if ($changeable) {
+    $::bug_form{'summary_element'} = "Summary:</TH><TD COLSPAN=2 ALIGN=left><INPUT NAME=short_desc VALUE=\"" .
+									 value_quote($bug{'short_desc'}) . "\" SIZE=60>";
+} else {
+    $::bug_form{'summary_element'} = "Summary:</TH><TD ALIGN=left>$bug{'short_desc'}";
+}
 
 if (Param("usestatuswhiteboard")) {
-    print "
-  <TR>
-    <TD ALIGN=\"RIGHT\"><B>Status Whiteboard:</B>
-    <TD COLSPAN=6>
-      <INPUT NAME=status_whiteboard VALUE=\"" .
-    value_quote($bug{'status_whiteboard'}) .
-    "\" SIZE=60></
-  </TR>";
+    if ($changeable) {
+    	$::bug_form{'whiteboard_element'} = "Status Whiteboard:</TH>" . 
+			"<TD ALIGN=left><INPUT NAME=status_whiteboard VALUE=\"" .
+			value_quote($bug{'status_whiteboard'}) . "\" SIZE=60>";
+    } else {
+    	$::bug_form{'whiteboard_element'} = "Status Whiteboard:</TH>" .
+			"<TD ALIGN=left>$bug{'status_whiteboard'}";
+    }
 }
 
 if (@::legal_keywords) {
@@ -267,214 +353,342 @@ if (@::legal_keywords) {
         push(@list, FetchOneColumn());
     }
     my $value = value_quote(join(', ', @list));
-    print qq{
-<TR>
-<TD ALIGN=right><B><A HREF="describekeywords.cgi">Keywords</A>:</B>
-<TD COLSPAN=6><INPUT NAME="keywords" VALUE="$value" SIZE=60></TD>
-</TR>
+    $::bug_form{'keywords_element'} = "
+	<TD ALIGN=right><B><A HREF=\"describekeywords.cgi\">Keywords</A>:</B>
+	<TD COLSPAN=6><INPUT NAME=\"keywords\" VALUE=\"$value\" SIZE=60></TD>\n";
+}
+
+$::bug_form{'attachment_element'} = "<TABLE WIDTH=\"100%\">\n";
+
+if ($::driver eq 'mysql') {
+	SendSQL("select attach_id, filename, date_format(creation_ts, '%Y-%m-%d %h:%i:%s'), " . 
+			"description from attachments where bug_id = $id");
+} else {
+	SendSQL("select attach_id, filename, TO_CHAR(creation_ts, 'YYYY-MM-DD HH:MI:SS'), " . 
+			"description from attachments where bug_id = $id");
+}
+
+while (MoreSQLData()) {
+    my ($attachid, $filename, $date, $desc) = (FetchSQLData());
+#   if ($date =~ /^(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)$/) {
+#   	$date = "$3/$4/$2 $5:$6";
+#   }	
+    my $link = "showattachment.cgi?attach_id=$attachid";
+    $desc = value_quote($desc);
+    $::bug_form{'attachment_element'} .= qq{
+	<TR>
+		<TD>$date</TD><TD><A HREF="$link">$filename</A></TD><TD>$desc</TD>
+	</TR>
+};
+		
+}
+
+if ($changeable) {
+	$::bug_form{'attachment_element'} .= qq{
+	<TR>
+		<TD COLSPAN=6><A HREF="createattachment.cgi?id=$id"> 
+		Create a new attachment</A> (proposed patch, testcase, etc.)</TD>
+	</TR>
 };
 }
 
-print "<tr><td align=right><B>Attachments:</b></td>\n";
-SendSQL("select attach_id, creation_ts, description from attachments where bug_id = $id");
-while (MoreSQLData()) {
-    my ($attachid, $date, $desc) = (FetchSQLData());
-    if ($date =~ /^(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)$/) {
-        $date = "$3/$4/$2 $5:$6";
-    }
-    my $link = "showattachment.cgi?attach_id=$attachid";
-    $desc = value_quote($desc);
-    print qq{<td><a href="$link">$date</a></td><td colspan=4>$desc</td></tr><tr><td></td>};
-}
-print "<td colspan=6><a href=\"createattachment.cgi?id=$id\">Create a new attachment</a> (proposed patch, testcase, etc.)</td></tr></table>\n";
+$::bug_form{'attachment_element'} .= "</TABLE>\n";
 
 
 sub EmitDependList {
     my ($desc, $myfield, $targetfield) = (@_);
-    print "<th align=right>$desc:</th><td>";
+	my $depends;
+    $depends = "<TD ALIGN=right>$desc:</TD><TD>";
     my @list;
-    SendSQL("select dependencies.$targetfield, bugs.bug_status
- from dependencies, bugs
- where dependencies.$myfield = $id
-   and bugs.bug_id = dependencies.$targetfield
- order by dependencies.$targetfield");
+    SendSQL("select dependencies.$targetfield, bugs.bug_status " .
+ 			"from dependencies, bugs " . 
+ 			"where dependencies.$myfield = $id " .
+   			"and bugs.bug_id = dependencies.$targetfield " .
+			"order by dependencies.$targetfield");
     while (MoreSQLData()) {
         my ($i, $stat) = (FetchSQLData());
         push(@list, $i);
         my $opened = ($stat eq "NEW" || $stat eq "ASSIGNED" ||
                       $stat eq "REOPENED");
         if (!$opened) {
-            print "<strike>";
+            $depends .= "<STRIKE>";
         }
-        print qq{<a href="show_bug.cgi?id=$i">$i</a>};
+        $depends .= qq{<A HREF="show_bug.cgi?id=$i">$i</A>};
         if (!$opened) {
-            print "</strike>";
+            $depends .= "</STRIKE>";
         }
-        print " ";
+        $depends .= " ";
     }
-    print "</td><td><input name=$targetfield value=\"" .
-        join(',', @list) . "\"></td>\n";
+	if ($changeable) {
+	    $depends .= "</TD><TD><INPUT NAME=$targetfield VALUE=\"" .
+    			    join(',', @list) . "\"></TD>\n";
+	} else {
+		$depends .= "</TD>\n";
+	}	
+	return $depends;
 }
 
 if (Param("usedependencies")) {
-    print "<table><tr>\n";
-    EmitDependList("Bug $id depends on", "blocked", "dependson");
-    print qq{
-<td rowspan=2><a href="showdependencytree.cgi?id=$id">Show dependency tree</a>
+    $::bug_form{'depends_element'} = "<TABLE><TR>\n<TH ALIGN=right>Dependencies:</TH>\n";
+    $::bug_form{'depends_element'} .= EmitDependList("Bug $id depends on", "blocked", "dependson");
+    $::bug_form{'depends_element'} .= qq{
+<TD ROWSPAN=2><A HREF="showdependencytree.cgi?id=$id">Show dependency tree</A>
 };
     if (Param("webdotbase") ne "") {
-        print qq{
-<br><a href="showdependencygraph.cgi?id=$id">Show dependency graph</a>
+        $::bug_form{'depends_element'} .= qq{
+<BR><A HREF="showdependencygraph.cgi?id=$id">Show dependency graph</A>
 };
     }
-    print "</td></tr><tr>";
-    EmitDependList("Bug $id blocks", "dependson", "blocked");
-    print "</tr></table>\n";
+    $::bug_form{'depends_element'} .= "</TD></TR><TR><TD></TD>";
+    $::bug_form{'depends_element'} .= EmitDependList("Bug $id blocks", "dependson", "blocked");
+    $::bug_form{'depends_element'} .= "</TR></TABLE>\n";
 }
 
 if ($::prodmaxvotes{$bug{'product'}}) {
-    print qq{
-<table><tr>
-<th><a href="votehelp.html">Votes</a> for bug $id:</th><td>
-<a href="showvotes.cgi?bug_id=$id">$bug{'votes'}</a>
-&nbsp;&nbsp;&nbsp;<a href="showvotes.cgi?voteon=$id">Vote for this bug</a>
-</td></tr></table>
+    $::bug_form{'votes_element'} = qq{
+<TABLE><TR>
+<TH><A HREF="votehelp.html">Votes</A> for bug $id:</TH><TD>
+<A HREF="showvotes.cgi?bug_id=$id">$bug{'votes'}</A>
+&nbsp;&nbsp;&nbsp;<A HREF="showvotes.cgi?voteon=$id">Vote for this bug</A>
+</TD></TR></TABLE>
 };
 }
 
-print "
-<br>
-<B>Additional Comments:</B>
-<BR>
-<TEXTAREA WRAP=HARD NAME=comment ROWS=5 COLS=80></TEXTAREA><BR>";
-
-
-if ($::usergroupset ne '0') {
-    SendSQL("select bit, description, (bit & $bug{'groupset'} != 0) from groups where bit & $::usergroupset != 0 and isbuggroup != 0 order by bit");
-    while (MoreSQLData()) {
-        my ($bit, $description, $ison) = (FetchSQLData());
-        my $check0 = !$ison ? " SELECTED" : "";
-        my $check1 = $ison ? " SELECTED" : "";
-        print "<select name=bit-$bit><option value=0$check0>\n";
-        print "People not in the \"$description\" group can see this bug\n";
-        print "<option value=1$check1>\n";
-        print "Only people in the \"$description\" group can see this bug\n";
-        print "</select><br>\n";
-    }
-}
-
-print "<br>
-<INPUT TYPE=radio NAME=knob VALUE=none CHECKED>
-        Leave as <b>$bug{'bug_status'} $bug{'resolution'}</b><br>";
-
-
-# knum is which knob number we're generating, in javascript terms.
-
-my $knum = 1;
-
-my $status = $bug{'bug_status'};
-
-# In the below, if the person hasn't logged in ($::userid == 0), then
-# we treat them as if they can do anything.  That's because we don't
-# know why they haven't logged in; it may just be because they don't
-# use cookies.  Display everything as if they have all the permissions
-# in the world; their permissions will get checked when they log in
-# and actually try to make the change.
-
-my $canedit = UserInGroup("editbugs") || ($::userid == 0);
-my $canconfirm;
-
-if ($status eq $::unconfirmedstate) {
-    $canconfirm = UserInGroup("canconfirm") || ($::userid == 0);
-    if ($canedit || $canconfirm) {
-        print "<INPUT TYPE=radio NAME=knob VALUE=confirm>";
-	print "Confirm bug (change status to <b>NEW</b>)<br>";
-        $knum++;
-    }
+if ($::driver eq 'mysql') {
+	if ($::usergroupset ne '0') {
+    	SendSQL("select bit, description, (bit & $bug{'groupset'} != 0) from groups where bit & $::usergroupset != 0 and isbuggroup != 0 order by bit");
+    	while (MoreSQLData()) {
+        	my ($bit, $description, $ison) = (FetchSQLData());
+        	my $check0 = !$ison ? " SELECTED" : "";
+        	my $check1 = $ison ? " SELECTED" : "";
+        	print "<SELECT NAME=bit-$bit><OPTION VALUE=0$check0>\n";
+        	print "People not in the \"$description\" group can see this bug\n";
+        	print "<OPTION VALUE=1$check1>\n";
+        	print "Only people in the \"$description\" group can see this bug\n";
+        	print "</SELECT><BR>\n";
+    	}
+	}
 }
 
 
-if ($canedit || $::userid == $assignedtoid ||
-      $::userid == $reporterid || $::userid == $qacontactid) {
-    if (IsOpenedState($status)) {
+if ($changeable) {
+    # Find the default owner so user will know who assigning to
+    # if they choose the 'Assign to owner of selected component'
+    my $query = "select initialowner from components " .
+            "where program = " . SqlQuote($bug{'product'}) .
+            " and value = " . SqlQuote($bug{'component'});
+    SendSQL($query);
+    my $initial_owner = "(" . FetchOneColumn() . ")";
+
+    $::bug_form{'resolution_change'} = qq{
+    <TABLE CELLSPACING=0 CELLPADDING=3 BORDER=1 WIDTH=100%>
+    <TR BGCOLOR="#CFCFCF">
+        <TD ALIGN=left><B>Change State or Resolution</B>
+        <BR>(Allowed only by reporter and privileged members)</TD>
+    </TR><TR BGCOLOR="#ECECEC">
+        <TD ALIGN=left>
+        <INPUT TYPE=radio NAME=knob VALUE=none CHECKED>
+            Leave as <b>$bug{'bug_status'} $bug{'resolution'}</b><br>
+};
+
+	# knum is which knob number we're generating, in javascript terms.
+    my $knum = 1;
+
+    my $status = $bug{'bug_status'};
+
+    if ($status eq "NEW" || $status eq "ASSIGNED" || $status eq "REOPENED") {
         if ($status ne "ASSIGNED") {
-            print "<INPUT TYPE=radio NAME=knob VALUE=accept>";
-            my $extra = "";
-            if ($status eq $::unconfirmedstate && ($canconfirm || $canedit)) {
-                $extra = "confirm bug, ";
-            }
-            print "Accept bug (${extra}change status to <b>ASSIGNED</b>)<br>";
+            $::bug_form{'resolution_change'} .= "<INPUT TYPE=radio NAME=knob VALUE=accept>" .
+                  "Accept bug (change status to <b>ASSIGNED</b>)<br>";
             $knum++;
         }
         if ($bug{'resolution'} ne "") {
-            print "<INPUT TYPE=radio NAME=knob VALUE=clearresolution>\n";
-            print "Clear the resolution (remove the current resolution of\n";
-            print "<b>$bug{'resolution'}</b>)<br>\n";
+            $::bug_form{'resolution_change'} .= "<INPUT TYPE=radio NAME=knob VALUE=clearresolution>\n" .
+                "Clear the resolution (remove the current resolution of\n" .
+                "<b>$bug{'resolution'}</b>)<br>\n";
             $knum++;
         }
-        print "<INPUT TYPE=radio NAME=knob VALUE=resolve>
-        Resolve bug, changing <A HREF=\"bug_status.html\">resolution</A> to
-        <SELECT NAME=resolution
-          ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\">
-          $resolution_popup</SELECT><br>\n";
+        $::bug_form{'resolution_change'} .= "<INPUT TYPE=radio NAME=knob VALUE=resolve>" .
+               "Resolve bug, changing <A HREF=\"bug_status.cgi\">resolution</A> to " .
+               "<SELECT NAME=resolution " .
+               "ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\"> " .
+               $::bug_form{'resolution_popup'} . "</SELECT><br>\n";
         $knum++;
-        print "<INPUT TYPE=radio NAME=knob VALUE=duplicate>
-        Resolve bug, mark it as duplicate of bug # 
-        <INPUT NAME=dup_id SIZE=6 ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\"><br>\n";
+        $::bug_form{'resolution_change'} .= "<INPUT TYPE=radio NAME=knob VALUE=duplicate> " .
+            "Resolve bug, mark it as duplicate of bug # " .
+            "<INPUT NAME=dup_id SIZE=6 ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\">\n" .
+            "(<A HREF=\"buglist.cgi?component=$bug{'component'}\" target=\"new_window\">$bug{'component'} bugs</A>)<BR>\n";
         $knum++;
-        my $assign_element = "<INPUT NAME=\"assigned_to\" SIZE=32 ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\" VALUE=\"$bug{'assigned_to'}\">";
+        my $assign_element = "<INPUT NAME=\"assigned_to\" SIZE=25 MAXSIZE=50 ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\" VALUE=\"$bug{'assigned_to'}\">";
 
-        print "<INPUT TYPE=radio NAME=knob VALUE=reassign> 
-          <A HREF=\"bug_status.html#assigned_to\">Reassign</A> bug to
-          $assign_element
-        <br>\n";
-        if ($status eq $::unconfirmedstate && ($canconfirm || $canedit)) {
-            print "&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE=checkbox NAME=andconfirm> and confirm bug (change status to <b>NEW</b>)<BR>";
-        }
+        $::bug_form{'resolution_change'} .= "<INPUT TYPE=radio NAME=knob VALUE=assign> " .
+            "<A HREF=\"bug_status.cgi#assigned_to\">Assign</A> bug to $assign_element <BR>\n";
         $knum++;
-        print "<INPUT TYPE=radio NAME=knob VALUE=reassignbycomponent>
-          Reassign bug to owner of selected component<br>\n";
+        $::bug_form{'resolution_change'} .= "<INPUT TYPE=radio NAME=knob VALUE=assignbycomponent> " .
+            "Assign bug to owner of selected component &nbsp;$initial_owner<br>\n";
         $knum++;
     } else {
-        print "<INPUT TYPE=radio NAME=knob VALUE=reopen> Reopen bug<br>\n";
+        $::bug_form{'resolution_change'} .= "<INPUT TYPE=radio NAME=knob VALUE=reopen> Reopen bug<br>\n";
         $knum++;
         if ($status eq "RESOLVED") {
-            print "<INPUT TYPE=radio NAME=knob VALUE=verify>
-        Mark bug as <b>VERIFIED</b><br>\n";
+            $::bug_form{'resolution_change'} .= "<INPUT TYPE=radio NAME=knob VALUE=verify> " .
+                "Mark bug as <b>VERIFIED</b><br>\n";
             $knum++;
         }
         if ($status ne "CLOSED") {
-            print "<INPUT TYPE=radio NAME=knob VALUE=close>
-        Mark bug as <b>CLOSED</b><br>\n";
+            $::bug_form{'resolution_change'} .= "<INPUT TYPE=radio NAME=knob VALUE=close> " .
+                "Mark bug as <b>CLOSED</b><br>\n";
             $knum++;
         }
     }
-}
- 
-print "
-<INPUT TYPE=\"submit\" VALUE=\"Commit\">
-<INPUT TYPE=\"reset\" VALUE=\"Reset\">
-<INPUT TYPE=hidden name=form_name VALUE=process_bug>
-<BR>
-<FONT size=\"+1\"><B>
- <A HREF=\"show_activity.cgi?id=$id\">View Bug Activity</A>
- <A HREF=\"long_list.cgi?buglist=$id\">Format For Printing</A>
-</B></FONT><BR>
-</FORM>
-<table><tr><td align=left><B>Description:</B></td>
-<td align=right width=100%>Opened: $bug{'creation_ts'}</td></tr></table>
-<HR>
-";
-print $bug{'long_desc'};
-print "
-<HR>\n";
 
+    $::bug_form{'resolution_change'} .= "
+        </TD>
+    </TR>
+    </TABLE>
+";
+
+    # Find out which groups we are a member of and form radio buttons
+    SendSQL("select user_group.groupid, groups.description, groups.isbuggroup " .
+            "from user_group, groups " .
+            "where user_group.groupid = groups.groupid " .
+            "and user_group.userid = $userid order by groups.groupid");
+    my %grouplist;
+    my @buggrouplist;
+    my @row;
+    my $flag = 0;
+    while (@row = FetchSQLData()) {
+        if ($row[2] == 0) {
+            next;
+        }
+        $grouplist{$row[0]} = $row[1];
+        $flag = 1;
+    }
+
+    if ($flag) {
+        $::bug_form{'group_change'} = "
+    <TABLE CELLSPACING=0 CELLPADDING=3 BORDER=1>
+    <TR BGCOLOR=\"#CFCFCF\">
+        <TD ALIGN=left><B>Groups that can see this bug.</B><BR> 
+            (If all unchecked then same as everyone)</TD>
+    </TR><TR BGCOLOR=\"ECECEC\">
+        <TD ALIGN=left>
+";
+
+        SendSQL("select groupid from bug_group where bugid = $id");
+        while (@row = FetchSQLData()) {
+            push (@buggrouplist, $row[0]);
+        }
+
+        foreach my $group (keys %grouplist) {
+            my $checked = lsearch(\@buggrouplist, $group) >= 0 ? "CHECKED" : "";
+            $::bug_form{'group_change'} .= "<INPUT TYPE=checkbox NAME=group-$group $checked VALUE=1>\n" .
+                "Only <B>$grouplist{$group}</B> can see this bug.<BR>\n";
+        }
+
+        $::bug_form{'group_change'} .= "
+        </TD>
+    </TR>
+    </TABLE>
+";
+    }
+}
+
+# added <INPUT TYPE=hidden NAME=reporter VALUE=$bug{'reporter'}> to get the necessary
+# redhat changes in process_bug.cgi to work which disallows all users to make changes 
+
+if ($changeable) {
+    $::bug_form{'commit_change'} = "
+    <TABLE CELLSPACING=0 CELLPADDING=3 BORDER=1>
+    <TR BGCOLOR=\"#CFCFCF\">
+        <TD ALIGN=left><B>Private Changes</B><BR>
+        (Reporter, assigned, or privileged members only)</TD>
+    </TR><TR BGCOLOR=\"#ECECEC\">
+        <TD ALIGN=center>
+        <TABLE> 
+        <TR>
+            <TD ALIGN=center VALIGN=top>    
+            <INPUT TYPE=\"submit\" VALUE=\"Save Changes\">
+            </TD><TD ALIGN=center VALIGN=top>
+            <INPUT TYPE=\"reset\" VALUE=\"Reset\">
+            <INPUT TYPE=hidden name=form_name VALUE=process_bug>
+            <INPUT TYPE=hidden NAME=reporter VALUE=\"$bug{'reporter'}\">
+            </FORM>
+            </TD>
+";
+
+    if (UserInGroup("errata")) {
+        $::bug_form{'commit_change'} .= "
+        <TD ALIGN=center VALIGN=top>
+        <FORM ACTION=\"http://porkchop.redhat.com/bugzilla/createerrata.cgi\">
+        <INPUT TYPE=hidden NAME=product VALUE=\"$bug{'product'}\">
+        <INPUT TYPE=hidden NAME=synopsis VALUE=\"$bug{'component'}\">
+        <INPUT TYPE=hidden NAME=id_fixed VALUE=\"$::FORM{'id'}\">
+        <INPUT TYPE=hidden NAME=\"rep_platform-$bug{'rep_platform'}\" VALUE=\"$bug{'rep_platform'}\">
+        <INPUT TYPE=hidden NAME=\"release-$bug{'version'}\" VALUE=\"$bug{'version'}\">
+        <INPUT TYPE=submit NAME=action VALUE=\"New Errata\">
+        </FORM>
+        </TD>
+";
+    }
+    $::bug_form{'commit_change'} .= "
+    </TR>
+    </TABLE>
+";
+
+} else {
+    $::bug_form{'commit_change'} = "
+    <TABLE CELLSPACING=0 CELLPADDING=3 BORDER=1>
+    <TR BGCOLOR=\"CFCFCF\">
+        <TD ALIGN=left>
+        <B>Public Changes</B><BR>(Non-members will need to create account)</TD>
+    </TR><TR BGCOLOR=\"#ECECEC\"> 
+        <TD>
+        <TABLE CELLSPACING=0 CELLPADDING=0 WIDTH=\"100%\">
+        <TR>
+            <TD ALIGN=center VALIGN=center>
+            <INPUT TYPE=submit NAME=add_comment VALUE=\"Add Comment\">
+            </FORM></TD>
+            <TD ALIGN=center VALIGN=center> 
+            <FORM METHOD=post ACTION=process_bug.cgi>
+            <INPUT TYPE=hidden NAME=id VALUE=$id>
+            <INPUT TYPE=hidden NAME=product VALUE=\"$bug{'product'}\">
+            <INPUT TYPE=hidden NAME=version VALUE=\"$bug{'version'}\">
+            <INPUT TYPE=hidden NAME=component VALUE=\"$bug{'component'}\">
+            <INPUT TYPE=hidden name=knob VALUE=add_cc>
+            <INPUT TYPE=submit NAME=add_cc VALUE=\"Add Me to CC List\">
+            </FORM></TD>
+            <TD ALIGN=center VALIGN=center>
+            <FORM METHOD=post ACTION=process_bug.cgi>
+            <INPUT TYPE=hidden NAME=id VALUE=$id>
+            <INPUT TYPE=hidden NAME=product VALUE=\"$bug{'product'}\">
+            <INPUT TYPE=hidden NAME=version VALUE=\"$bug{'version'}\">
+            <INPUT TYPE=hidden NAME=component VALUE=\"$bug{'component'}\">
+            <INPUT TYPE=hidden name=knob VALUE=rem_cc>
+            <INPUT TYPE=submit NAME=add_cc VALUE=\"Remove Me from CC List\">
+            </FORM>
+            </TD>
+        </TR>
+        </TABLE>
+    </TR>
+    </TABLE>
+";
+}
+
+
+# We need to throw all remaining %bug variables into %::bug_form for display if needed
+foreach my $key (keys %bug) {
+    $::bug_form{$key} = $bug{$key};
+}
+foreach my $key (keys %::FORM) {
+    $::bug_form{$key} = $::FORM{$key};
+}
+
+# we can now fill in the bug form template
+print LoadTemplate('bugform_redhat.tmpl');
+ 
 # To add back option of editing the long description, insert after the above
 # long_list.cgi line:
 #  <A HREF=\"edit_desc.cgi?id=$id\">Edit Long Description</A>
-
-navigation_header();
-
-PutFooter();
 
 1;

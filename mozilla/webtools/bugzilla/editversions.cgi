@@ -1,25 +1,15 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bin/perl -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
-# The contents of this file are subject to the Mozilla Public
-# License Version 1.1 (the "License"); you may not use this file
-# except in compliance with the License. You may obtain a copy of
-# the License at http://www.mozilla.org/MPL/
-#
-# Software distributed under the License is distributed on an "AS
-# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-# implied. See the License for the specific language governing
-# rights and limitations under the License.
-#
-# The Original Code is mozilla.org code.
-#
-# The Initial Developer of the Original Code is Holger
-# Schurig. Portions created by Holger Schurig are
-# Copyright (C) 1999 Holger Schurig. All
-# Rights Reserved.
-#
-# Contributor(s): Holger Schurig <holgerschurig@nikocity.de>
-#               Terry Weissman <terry@mozilla.org>
+# The contents of this file are subject to the Mozilla Public License
+# Version 1.0 (the "License"); you may not use this file except in
+# compliance with the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations
+# under the License.
 #
 #
 # Direct any questions on this source code to
@@ -33,15 +23,12 @@ require "CGI.pl";
 require "globals.pl";
 
 
-
-
 # TestProduct:  just returns if the specified product does exists
 # CheckProduct: same check, optionally  emit an error text
 # TestVersion:  just returns if the specified product/version combination exists
 # CheckVersion: same check, optionally emit an error text
 
-sub TestProduct ($)
-{
+sub TestProduct ($) {
     my $prod = shift;
 
     # does the product exist?
@@ -51,8 +38,7 @@ sub TestProduct ($)
     return FetchOneColumn();
 }
 
-sub CheckProduct ($)
-{
+sub CheckProduct ($) {
     my $prod = shift;
 
     # do we have a product?
@@ -69,8 +55,7 @@ sub CheckProduct ($)
     }
 }
 
-sub TestVersion ($$)
-{
+sub TestVersion ($$) {
     my ($prod,$ver) = @_;
 
     # does the product exist?
@@ -80,8 +65,7 @@ sub TestVersion ($$)
     return FetchOneColumn();
 }
 
-sub CheckVersion ($$)
-{
+sub CheckVersion ($$) {
     my ($prod,$ver) = @_;
 
     # do we have the version?
@@ -105,15 +89,12 @@ sub CheckVersion ($$)
 # Displays the form to edit a version
 #
 
-sub EmitFormElements ($$)
-{
+sub EmitFormElements ($$) {
     my ($product, $version) = @_;
 
     print "  <TH ALIGN=\"right\">Version:</TH>\n";
-    print "  <TD><INPUT SIZE=64 MAXLENGTH=64 NAME=\"version\" VALUE=\"" .
-        value_quote($version) . "\">\n";
-    print "      <INPUT TYPE=HIDDEN NAME=\"product\" VALUE=\"" .
-        value_quote($product) . "\"></TD>\n";
+    print "  <TD><INPUT SIZE=64 MAXLENGTH=64 NAME=\"version\" VALUE=\"$version\">\n";
+    print "      <INPUT TYPE=HIDDEN NAME=\"product\" VALUE=\"$product\"></TD>\n";
 }
 
 
@@ -121,13 +102,12 @@ sub EmitFormElements ($$)
 # Displays a text like "a.", "a or b.", "a, b or c.", "a, b, c or d."
 #
 
-sub PutTrailer (@)
-{
+sub PutTrailer (@) {
     my (@links) = ("Back to the <A HREF=\"query.cgi\">query page</A>", @_);
 
     my $count = $#links;
     my $num = 0;
-    print "<P>\n";
+    print "<P>\n<CENTER>";
     foreach (@links) {
         print $_;
         if ($num == $count) {
@@ -141,13 +121,8 @@ sub PutTrailer (@)
         }
         $num++;
     }
-    PutFooter();
+    print "</CENTER>\n</BODY>\n</HTML>\n";
 }
-
-
-
-
-
 
 
 #
@@ -160,7 +135,7 @@ print "Content-type: text/html\n\n";
 
 unless (UserInGroup("editcomponents")) {
     PutHeader("Not allowed");
-    print "Sorry, you aren't a member of the 'editcomponents' group.\n";
+    print "Sorry, you aren't a member of the 'editproducts' group.\n";
     print "And so, you aren't allowed to add, modify or delete versions.\n";
     PutTrailer();
     exit;
@@ -188,30 +163,24 @@ if ($version) {
 
 unless ($product) {
     PutHeader("Select product");
+	print "<CENTER><H2>Edit Product Versions</H2></CENTER>\n";
 
-    SendSQL("SELECT products.product,products.description,'xyzzy'
-             FROM products 
-             GROUP BY products.product
-             ORDER BY products.product");
-    print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR BGCOLOR=\"#6666FF\">\n";
+    SendSQL("SELECT product, description FROM products " . 
+            "ORDER BY products.product");
+    print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0 ALIGN=center><TR BGCOLOR=\"#BFBFBF\">\n";
     print "  <TH ALIGN=\"left\">Edit versions of ...</TH>\n";
     print "  <TH ALIGN=\"left\">Description</TH>\n";
-    print "  <TH ALIGN=\"left\">Bugs</TH>\n";
-    #print "  <TH ALIGN=\"left\">Edit</TH>\n";
     print "</TR>";
     while ( MoreSQLData() ) {
-        my ($product, $description, $bugs) = FetchSQLData();
+        my ($product, $description) = FetchSQLData();
         $description ||= "<FONT COLOR=\"red\">missing</FONT>";
-        $bugs ||= "none";
-        print "<TR>\n";
-        print "  <TD VALIGN=\"top\"><A HREF=\"editversions.cgi?product=", url_quote($product), "\"><B>$product</B></A></TD>\n";
-        print "  <TD VALIGN=\"top\">$description</TD>\n";
-        print "  <TD VALIGN=\"top\">$bugs</TD>\n";
-        #print "  <TD VALIGN=\"top\"><A HREF=\"editversions.cgi?action=edit&product=", url_quote($product), "\">Edit</A></TD>\n";
+        print "<TR BGCOLOR=\"#ECECEC\">\n";
+        print "  <TH VALIGN=\"top\" ALIGN=left><A HREF=\"editversions.cgi?product=", url_quote($product), "\">$product</A></TH>\n";
+        print "  <TD VALIGN=\"top\" ALIGN=left>$description</TD>\n";
     }
     print "</TR></TABLE>\n";
 
-    PutTrailer();
+	PutFooter();
     exit;
 }
 
@@ -223,6 +192,8 @@ unless ($product) {
 
 unless ($action) {
     PutHeader("Select version");
+	print "<CENTER><H2>Edit $product Versions</H2></CENTER>\n";
+
     CheckProduct($product);
 
 =for me
@@ -231,12 +202,6 @@ unless ($action) {
     # angezeigt!  Schade. Ich würde gerne sehen, wieviel Bugs pro
     # Version angegeben sind ...
 
-    SendSQL("SELECT value,program,COUNT(bug_id)
-             FROM versions LEFT JOIN bugs
-               ON program=product AND value=version
-             WHERE program=" . SqlQuote($product) . "
-             GROUP BY value");
-
 =cut
 
     SendSQL("SELECT value,program
@@ -244,7 +209,7 @@ unless ($action) {
              WHERE program=" . SqlQuote($product) . "
              ORDER BY value");
 
-    print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR BGCOLOR=\"#6666FF\">\n";
+    print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0 ALIGN=center><TR BGCOLOR=\"#BFBFBF\">\n";
     print "  <TH ALIGN=\"left\">Edit version ...</TH>\n";
     #print "  <TH ALIGN=\"left\">Bugs</TH>\n";
     print "  <TH ALIGN=\"left\">Action</TH>\n";
@@ -252,18 +217,18 @@ unless ($action) {
     while ( MoreSQLData() ) {
         my ($version,$dummy,$bugs) = FetchSQLData();
         $bugs ||= 'none';
-        print "<TR>\n";
+        print "<TR BGCOLOR=\"#ECECEC\">\n";
         print "  <TD VALIGN=\"top\"><A HREF=\"editversions.cgi?product=", url_quote($product), "&version=", url_quote($version), "&action=edit\"><B>$version</B></A></TD>\n";
         #print "  <TD VALIGN=\"top\">$bugs</TD>\n";
         print "  <TD VALIGN=\"top\"><A HREF=\"editversions.cgi?product=", url_quote($product), "&version=", url_quote($version), "&action=del\"><B>Delete</B></A></TD>\n";
         print "</TR>";
     }
-    print "<TR>\n";
-    print "  <TD VALIGN=\"top\">Add a new version</TD>\n";
-    print "  <TD VALIGN=\"top\" ALIGN=\"middle\"><A HREF=\"editversions.cgi?product=", url_quote($product) . "&action=add\">Add</A></TD>\n";
+    print "<TR BGCOLOR=\"#ECECEC\">\n";
+    print "  <TH VALIGN=\"top\" COLSPAN=2><A HREF=\"editversions.cgi?product=", url_quote($product) . "&action=add\">";
+    print"Add a new version</A></TH>\n";
     print "</TR></TABLE>\n";
 
-    PutTrailer();
+	PutFooter();
     exit;
 }
 
@@ -283,18 +248,20 @@ if ($action eq 'add') {
     #print "This page lets you add a new version to a bugzilla-tracked product.\n";
 
     print "<FORM METHOD=POST ACTION=editversions.cgi>\n";
-    print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
+    print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0 ALIGN=center><TR>\n";
 
     EmitFormElements($product, $version);
 
-    print "</TABLE>\n<HR>\n";
-    print "<INPUT TYPE=SUBMIT VALUE=\"Add\">\n";
+    print "</TABLE>\n";
+    print "<CENTER>\n";
+	print "<INPUT TYPE=SUBMIT VALUE=\"Add\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"new\">\n";
-    print "</FORM>";
+    print "</FORM>\n</CENTER>\n";
 
     my $other = $localtrailer;
     $other =~ s/more/other/;
     PutTrailer($other);
+	PutFooter();
     exit;
 }
 
@@ -333,7 +300,7 @@ if ($action eq 'new') {
     # Make versioncache flush
     unlink "data/versioncache";
 
-    print "OK, done.<p>\n";
+    print "<CENTER>OK, done.</CENTER><P>\n";
     PutTrailer($localtrailer);
     exit;
 }
@@ -359,7 +326,7 @@ if ($action eq 'del') {
     my $bugs = FetchOneColumn();
 
     print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0>\n";
-    print "<TR BGCOLOR=\"#6666FF\">\n";
+    print "<TR BGCOLOR=\"#BFBFBF\">\n";
     print "  <TH VALIGN=\"top\" ALIGN=\"left\">Part</TH>\n";
     print "  <TH VALIGN=\"top\" ALIGN=\"left\">Value</TH>\n";
 
@@ -375,15 +342,9 @@ if ($action eq 'del') {
     print "</TR></TABLE>\n";
 
     print "<H2>Confirmation</H2>\n";
+    print "<P>Do you really want to delete this version?<P>\n";
 
     if ($bugs) {
-        if (!Param("allowbugdeletion")) {
-            print "Sorry, there are $bugs bugs outstanding for this version.
-You must reassign those bugs to another version before you can delete this
-one.";
-            PutTrailer($localtrailer);
-            exit;
-        }
         print "<TABLE BORDER=0 CELLPADDING=20 WIDTH=\"70%\" BGCOLOR=\"red\"><TR><TD>\n",
               "There are bugs entered for this version!  When you delete this ",
               "version, <B><BLINK>all</BLINK></B> stored bugs will be deleted, too. ",
@@ -391,14 +352,11 @@ one.";
               "</TD></TR></TABLE>\n";
     }
 
-    print "<P>Do you really want to delete this version?<P>\n";
     print "<FORM METHOD=POST ACTION=editversions.cgi>\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Yes, delete\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"delete\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"product\" VALUE=\"" .
-        value_quote($product) . "\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"version\" VALUE=\"" .
-        value_quote($version) . "\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"product\" VALUE=\"$product\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"version\" VALUE=\"$version\">\n";
     print "</FORM>";
 
     PutTrailer($localtrailer);
@@ -427,35 +385,29 @@ if ($action eq 'delete') {
     # so I have to iterate over bugs and delete all the indivial entries
     # in bugs_activies and attachments.
 
-    if (Param("allowbugdeletion")) {
-
-        SendSQL("SELECT bug_id
+    SendSQL("SELECT bug_id
              FROM bugs
              WHERE product=" . SqlQuote($product) . "
                AND version=" . SqlQuote($version));
-        while (MoreSQLData()) {
-            my $bugid = FetchOneColumn();
+    while (MoreSQLData()) {
+        my $bugid = FetchOneColumn();
 
-            my $query =
-                $::db->query("DELETE FROM attachments WHERE bug_id=$bugid")
+        my $query = $::db->query("DELETE FROM attachments WHERE bug_id=$bugid")
                 or die "$::db_errstr";
-            $query =
-                $::db->query("DELETE FROM bugs_activity WHERE bug_id=$bugid")
+        $query = $::db->query("DELETE FROM bugs_activity WHERE bug_id=$bugid")
                 or die "$::db_errstr";
-            $query =
-                $::db->query("DELETE FROM dependencies WHERE blocked=$bugid")
+        $query = $::db->query("DELETE FROM dependencies WHERE blocked=$bugid")
                 or die "$::db_errstr";
-        }
-        print "Attachments, bug activity and dependencies deleted.<BR>\n";
+    }
+    print "Attachments, bug activity and dependencies deleted.<BR>\n";
 
 
-        # Deleting the rest is easier:
+    # Deleting the rest is easier:
 
-        SendSQL("DELETE FROM bugs
+    SendSQL("DELETE FROM bugs
              WHERE product=" . SqlQuote($product) . "
                AND version=" . SqlQuote($version));
-        print "Bugs deleted.<BR>\n";
-    }
+    print "Bugs deleted.<BR>\n";
 
     SendSQL("DELETE FROM versions
              WHERE program=" . SqlQuote($product) . "
@@ -481,22 +433,22 @@ if ($action eq 'edit') {
     CheckVersion($product,$version);
 
     print "<FORM METHOD=POST ACTION=editversions.cgi>\n";
-    print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
+    print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0 ALIGN=center><TR>\n";
 
     EmitFormElements($product, $version);
 
     print "</TR></TABLE>\n";
 
-    print "<INPUT TYPE=HIDDEN NAME=\"versionold\" VALUE=\"" .
-        value_quote($version) . "\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"versionold\" VALUE=\"$version\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"update\">\n";
-    print "<INPUT TYPE=SUBMIT VALUE=\"Update\">\n";
+    print "<CENTER><INPUT TYPE=SUBMIT VALUE=\"Update\"></CENTER>\n";
 
     print "</FORM>";
 
     my $other = $localtrailer;
     $other =~ s/more/other/;
     PutTrailer($other);
+	PutFooter();
     exit;
 }
 

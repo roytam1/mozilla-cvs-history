@@ -27,7 +27,7 @@
         <TD ALIGN=left><PRE>
 <!-- start long description -->
 
-[+ $::bug_form{'description'} +]
+[+ $::bug_form{'long_desc'} +]
 
 <!-- end long description -->
         </PRE></TD>
@@ -69,7 +69,7 @@
 <!-- end platform selection -->
 </TD>
                 <TD ALIGN=right><B>Reporter:</B></TD><TD>[+ $::bug_form{'reporter'} +]</TD>
-                <TD ALIGN=right>
+                <TD ALIGN=right VALIGN=center>
 <!-- start component selection -->
 
 [+ $::bug_form{'component_popup'} +]
@@ -94,46 +94,42 @@
                 <TD>
 <!-- start severity selection -->
 
-[+ $::bug_form{'sev_popup'} +]
+[+ $::bug_form{'severity_popup'} +]
 
 <!-- end severity selection -->
-</TD>
+				</TD>
         </TR><TR>
                 <TD ALIGN=right><B><A HREF="bug_status.cgi#assigned_to">Assigned To:</A></B></TD>
                 <TD>[+ $::bug_form{'assigned_to'} +]</TD>
                 <TD ALIGN=center>&nbsp;</TD>
+<!--
                 <TD ALIGN=right COLSPAN=2><B><A HREF="bug_status.cgi#component">Component Text:</A></B></TD>
                 <TD>[+ $::bug_form{'component_text'} +]</TD>
+-->
         </TR>
         </TABLE>
         <P>
-        <TABLE BORDER=0 CELLSPACING=0 CELLPADDING=3> 
+        <TABLE BORDER=0 CELLSPACING=0 CELLPADDING=3 WIDTH=100%> 
         <TR>
-                <TH ALIGN=right><B>Cc:</B></TH>
-                <TD ALIGN=left>[+ $::bug_form{'cc_element'} +]</TD>
-        </TR>
-		[+ $::bug_form{'qacontact_element'} +]
-		[+ $::bug_form{'url_element'} +]
-		[+ $::bug_form{'summary_element'} +]
-		[+ $::bug_form{'status_whiteboard'} +]
-        <TR>
-                <TD ALIGN=right VALIGN=top><B>Attachments:</B></TD>
-                <TD ALIGN=left>
-                <TABLE BORDER=0 CELLSPACING=0 CELLPADDING=3>
-                <TR>
-                        <TD COLSPAN=3>[+ $::bug_form{'attachment_element'} +]</TD>
-                </TR>
-                </TABLE>
-                </TD>
+        	<TH WIDTH=20% ALIGN=right>[+ $::bug_form{'cc_element'} +]</TD>
+        </TR><TR>
+		    <TH ALIGN=right>[+ $::bug_form{'qacontact_element'} +]</TD>
+        </TR><TR>
+		    <TH ALIGN=right>[+ $::bug_form{'url_element'} +]</TD>
+        </TR><TR>
+			<TH ALIGN=right>[+ $::bug_form{'summary_element'} +]</TD>
+        </TR><TR>
+		    <TH ALIGN=right>[+ $::bug_form{'whiteboard_element'} +]</TD>
+        </TR><TR>
+            <TH ALIGN=right>Attachments:</TH><TD>[+ $::bug_form{'attachment_element'} +]</TD>
         </TR>
         </TABLE>
+        <P>
 
-        <P>
 <!-- start dependency selection -->
-
 [+ $::bug_form{'depends_element'} +]
-
 <!-- end dependency selection -->
+
         </TD>
 </TR><TR BGCOLOR="#CFCFCF">
         <TH ALIGN=left><B><A HREF=bug_status.cgi#description>Additional Comments</A></B></TH>

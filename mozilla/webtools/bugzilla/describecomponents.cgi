@@ -35,10 +35,10 @@ print "Content-type: text/html\n\n";
 my $product = $::FORM{'product'};
 if (!defined $product || lsearch(\@::legal_product, $product) < 0) {
 
-    PutHeader("Bugzilla component description");
+    PutHeader("Components");
     print "
 <FORM>
-Please specify the product whose components you want described.
+<CENTER><B>Please specify the product whose components you want described.</B>
 <P>
 Product: <SELECT NAME=product>
 ";
@@ -47,34 +47,33 @@ Product: <SELECT NAME=product>
 </SELECT>
 <P>
 <INPUT TYPE=\"submit\" VALUE=\"Submit\">
+</CENTER>
 </FORM>
 ";
-    PutFooter();
+	PutFooter();
     exit;
 }
 
 
-PutHeader("Bugzilla component description", "Bugzilla component description",
-          $product);
-
+PutHeader("Components", "Components", $product);
 print "
-<TABLE>
-<tr>
-<th align=left>Component</th>
-<th align=left>Default owner</th>
+<TABLE ALIGN=center WIDTH=800>
+<TR>
+<TH ALIGN=left>Component</TH>
+<TH ALIGN=left>Default owner</TH>
 ";
 
 my $useqacontact = Param("useqacontact");
 
 my $cols = 2;
 if ($useqacontact) {
-    print "<th align=left>Default qa contact</th>";
+    print "<TH ALIGN=left>Default qa contact</TH>";
     $cols++;
 }
 
 my $colbut1 = $cols - 1;
 
-print "</tr>";
+print "</TR>";
 
 SendSQL("select value, initialowner, initialqacontact, description from components where program = " . SqlQuote($product) . " order by value");
 
@@ -92,9 +91,10 @@ while (MoreSQLData()) {
 <td><a href="mailto:$initialqacontact">$initialqacontact</a></td>
 |;
     }
-    print "</tr><tr><td colspan=$colbut1>$description</td></tr>\n";
+    print "</TR><TR><TD COLSPAN=$colbut1>$description</TD></TR>\n";
 }
 
-print "<tr><td colspan=$cols><hr></td></tr></table>\n";
+print "<TR><TD COLSPAN=$cols><HR></TD></TR></TABLE>\n";
 
 PutFooter();
+

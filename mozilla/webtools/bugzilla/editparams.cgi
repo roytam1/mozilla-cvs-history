@@ -36,39 +36,38 @@ confirm_login();
 print "Content-type: text/html\n\n";
 
 if (!UserInGroup("tweakparams")) {
-    print "<H1>Sorry, you aren't a member of the 'tweakparams' group.</H1>\n";
-    print "And so, you aren't allowed to edit the parameters.\n";
-    PutFooter();
+	PutHeader("Not Allowed");
+    PutError("Sorry, you aren't a member of the 'tweakparams' group.<BR>\n" .
+    		 "And so, you aren't allowed to edit the parameters.\n");
     exit;
 }
 
 
-
 PutHeader("Edit parameters", undef, undef, undef, 1);
 
-print "This lets you edit the basic operating parameters of bugzilla.\n";
+print "<CENTER>This lets you edit the basic operating parameters of bugzilla.\n";
 print "Be careful!\n";
 print "<p>\n";
-print "Any item you check Reset on will get reset to its default value.\n";
+print "Any item you check Reset on will get reset to its default value.</CENTER>\n";
 
-print "<form method=post action=doeditparams.cgi><table>\n";
+print "<FORM METHOD=post ACTION=doeditparams.cgi>\n<TABLE ALIGN=center WIDTH=800>\n";
 
-my $rowbreak = "<tr><td colspan=2><hr></td></tr>";
+my $rowbreak = "<TR><TD COLSPAN=2><HR></TD></TR>";
 print $rowbreak;
 
 foreach my $i (@::param_list) {
-    print "<tr><th align=right valign=top>$i:</th><td>$::param_desc{$i}</td></tr>\n";
-    print "<tr><td valign=top><input type=checkbox name=reset-$i>Reset</td><td>\n";
+    print "<TR><TH ALIGN=right VALIGN=top>$i:</TH><TD>$::param_desc{$i}</TD></TR>\n";
+    print "<TR><TD VALIGN=top><INPUT TYPE=checkbox NAME=reset-$i>Reset</TD><TD>\n";
     my $value = Param($i);
     SWITCH: for ($::param_type{$i}) {
 	/^t$/ && do {
-            print "<input size=80 name=$i value=\"" .
+            print "<INPUT SIZE=60 MAXSIZE=80 NAME=$i VALUE=\"" .
                 value_quote($value) . "\">\n";
             last SWITCH;
 	};
 	/^l$/ && do {
-            print "<textarea wrap=hard name=$i rows=10 cols=80>" .
-                value_quote($value) . "</textarea>\n";
+            print "<TEXTAREA WRAP=hard NAME=$i ROWS=10 COLS=60>" .
+                value_quote($value) . "</TEXTAREA>\n";
             last SWITCH;
 	};
         /^b$/ && do {
@@ -81,29 +80,31 @@ foreach my $i (@::param_list) {
                 $on = "";
                 $off = "checked";
             }
-            print "<input type=radio name=$i value=1 $on>On\n";
-            print "<input type=radio name=$i value=0 $off>Off\n";
+            print "<INPUT TYPE=radio NAME=$i VALUE=1 $on>On\n";
+            print "<INPUT TYPE=radio NAME=$i VALUE=0 $off>Off\n";
             last SWITCH;
         };
         # DEFAULT
-        print "<font color=red><blink>Unknown param type $::param_type{$i}!!!</blink></font>\n";
+        print "<FONT COLOR=red><BLINK>Unknown param type $::param_type{$i}!!!</BLINK></FONT>\n";
     }
-    print "</td></tr>\n";
+    print "</TD></TR>\n";
     print $rowbreak;
 }
 
-print "<tr><th align=right valign=top>version:</th><td>
+print "<TR><TH ALIGN=right VALIGN=top>version:</TH><TD>
 What version of Bugzilla this is.  This can't be modified here, but
-<tt>%version%</tt> can be used as a parameter in places that understand
-such parameters</td></tr>
-<tr><td></td><td>" . Param('version') . "</td></tr>";
+<TT>%version%</TT> can be used as a parameter in places that understand
+such parameters</TD></TR>
+<TR><TD></TD><TD>" . Param('version') . "</TD></TR>";
 
-print "</table>\n";
+print "</TABLE>\n";
 
-print "<input type=reset value=\"Reset form\"><br>\n";
-print "<input type=submit value=\"Submit changes\">\n";
+print "<CENTER><INPUT TYPE=reset VALUE=\"Reset form\">\n";
+print "<INPUT TYPE=submit VALUE=\"Submit changes\"></CENTER>\n";
 
-print "</form>\n";
+print "</FORM>\n";
 
-print "<p><a href=query.cgi>Skip all this, and go back to the query page</a>\n";
+print "<P><CENTER><A HREF=query.cgi>Skip all this, and go back to the query page</A></CENTER>\n";
 PutFooter();
+
+exit;

@@ -19,6 +19,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#				  David Lawrence <dkl@redhat.com>
 
 use diagnostics;
 use strict;
@@ -36,11 +37,11 @@ print "\n";
 
 if (!defined $::FORM{'id'} || $::FORM{'id'} !~ /^\s*\d+\s*$/) {
     PutHeader("Search by bug number");
-    print "<FORM METHOD=GET ACTION=\"show_bug.cgi\">\n";
+    print "<CENTER><FORM METHOD=GET ACTION=\"show_bug.cgi\">\n";
     print "You may find a single bug by entering its bug id here: \n";
     print "<INPUT NAME=id>\n";
     print "<INPUT TYPE=\"submit\" VALUE=\"Show Me This Bug\">\n";
-    print "</FORM>\n";
+    print "</FORM></CENTER>\n";
     PutFooter();
     exit;
 }
@@ -50,8 +51,9 @@ GetVersionTable();
 PutHeader("Bugzilla bug $::FORM{'id'}", "Bugzilla Bug", $::FORM{'id'});
 navigation_header();
 
-print "<HR>\n";
+print "<P>\n";
 
 $! = 0;
 do "bug_form.pl" || die "Error doing bug_form.pl: $!";
 
+PutFooter();

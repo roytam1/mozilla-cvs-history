@@ -20,6 +20,7 @@
 #
 # Contributor(s): Holger Schurig <holgerschurig@nikocity.de>
 #                 Terry Weissman <terry@mozilla.org>
+#				  David Lawrence <dkl@redhat.com>
 #
 #
 # Direct any questions on this source code to
@@ -243,7 +244,7 @@ LocalVar('$db_name', '
 #
 # Name of the Oracle database ...
 #
-$db_name = "bugs-devel";        
+$db_name = "rheng";        
 ');
 
 
@@ -267,7 +268,7 @@ LocalVar('$db_home', '
 #
 # The path to Oracles home directory ...
 #
-$db_home = "/opt/oracle/product/805/";
+$db_home = "/opt/apps/oracle/product/8.0.5/";
 ');
 
 
@@ -372,6 +373,7 @@ LocalVar('@resolution', '
 # What resolution states would you like to have?
 #
 @resolution = (
+		" ",
         "NOTABUG",
         "WONTFIX",
         "DEFERRED",
@@ -477,10 +479,10 @@ use DBI;
 my $drh = DBI->install_driver($db_base)
     or die "Can't connect to the $db_base. Is the database installed and up and running?\n";
 
-my $db_name = "bugzilla";
+my $db_name = "rheng";
 my $db_user = "bugzilla/bugzilla";
 my $db_pass = "";
-my $db_home = "/opt/oracle/product/805/";
+my $db_home = "/opt/apps/oracle/product/8.0.5/";
 
 do 'localconfig';
 
@@ -507,6 +509,25 @@ print "\n\nOracle database connection successful.\n";
 END { $dbh->disconnect if $dbh }
 
 
+###########################################################################
+# Clean tables setup
+###########################################################################
+# If we were called with the argument clean then we need to create empty
+# tables to allow for data migration from another database. This way there
+# are no conflicts with primary keys, unique values, etc.
+
+my $clean = 0;
+
+if ($#ARGV >= 0) {
+	if ($ARGV[0] eq 'clean') {
+		$clean = 1; # clean tables
+		print "Creating empty tables.\n";
+	} else {
+		goto $ARGV[0];
+#		print "\nUsage: oracle_setup.pl <option>\noptions: clean - create empty tables\n";
+#		exit(0);
+	}
+}
 
 ###########################################################################
 # Table definitions
@@ -555,31 +576,28 @@ $table{attachments} =
     thedata 		BLOB        	CONSTRAINT ATTACH_NN_DATA       not null,
     submitter_id 	INTEGER         CONSTRAINT ATTACH_NN_SUBMIT    	not null";
 
-
+# fields to add later due to foreign keys: bug_status, bug_severity, op_sys, 
+# resolution, priority, rep_platform, target_milestone.
 $table{bugs} =
    "bug_id 				INTEGER     	CONSTRAINT BUGS_PK_BUGID PRIMARY KEY not null,
-    groupset 			INTEGER     	DEFAULT('0'),
+    groupset 			INTEGER     	DEFAULT(0) not null,
     assigned_to 		INTEGER     	CONSTRAINT BUGS_NN_ASSITO not null, 
    	bug_file_loc 		VARCHAR2(255)   DEFAULT(''),
-    bug_severity 		VARCHAR2(64)    CONSTRAINT BUGS_NN_SEVRTY not null,
-    bug_status 			VARCHAR2(64)    CONSTRAINT BUGS_NN_STATUS not null,
     creation_ts         DATE        	CONSTRAINT BUGS_NN_CRTETS not null,
-    delta_ts 			DATE,
+    delta_ts 			DATE			DEFAULT(sysdate),
     short_desc 			VARCHAR2(4000)  CONSTRAINT BUGS_NN_SHORT not null,
-    op_sys 				VARCHAR2(64)    DEFAULT('Linux'),
-    priority 			VARCHAR2(64)    CONSTRAINT BUGS_NN_PRIRTY not null,
     product 			VARCHAR2(256)   CONSTRAINT BUGS_NN_PRODCT not null,
-    rep_platform 		VARCHAR2(64)    CONSTRAINT BUGS_NN_PLATFM not null,
     reporter 			INTEGER     	CONSTRAINT BUGS_NN_REPRTR  not null,
     version 			VARCHAR2(64)    CONSTRAINT BUGS_NN_VERSN  not null,
     component 			VARCHAR2(64)    CONSTRAINT BUGS_NN_COMPNT not null,
-    resolution 			VARCHAR2(64)    DEFAULT(''),
-    target_milestone  	VARCHAR2(64)    DEFAULT(''),
-    qa_contact 			VARCHAR2(255)   DEFAULT(''),
+    qa_contact 			INTEGER		   	,
     status_whiteboard 	VARCHAR2(4000)  DEFAULT(''),
     votes 				INTEGER     	DEFAULT(''),
-    keywords 			VARCHAR(255)    DEFAULT(''), 
-    lastdiffed 			DATE";
+    keywords 			VARCHAR2(255)   DEFAULT(''), 
+	target_milestone    VARCHAR2(64)	DEFAULT(''),
+    lastdiffed 			DATE,
+	bug_view			INTEGER			DEFAULT(0),
+	long_desc			LONG";
 
 
 $table{cc} =
@@ -598,6 +616,7 @@ $table{components} =
    "value 				VARCHAR2(255)   CONSTRAINT COMP_NN_VALUE  not null,
     program 			VARCHAR2(255)   CONSTRAINT COMP_NN_PROGRM not null,
     initialowner 		VARCHAR2(64)    CONSTRAINT COMP_NN_INTOWN  not null, 
+	devowner			VARCHAR2(64)    DEFAULT(''),
     initialqacontact 	VARCHAR2(64) 	DEFAULT(''), 
     description 		VARCHAR2(2000) 	DEFAULT('')";
 
@@ -619,11 +638,11 @@ $table{dependencies} =
 # may be individually tweaked to add them in and out of groups.
 
 $table{groups} =
-   "bit 		INTEGER 		DEFAULT('0'),
+   "bit 		INTEGER 		DEFAULT(0) not null,
 	groupid     INTEGER     	CONSTRAINT GROUPS_PK_GROUPID    PRIMARY KEY not null,
     name  		VARCHAR2(255)   CONSTRAINT GROUPS_NN_NAME   not null,
     description VARCHAR2(2000)  CONSTRAINT GROUPS_NN_DESC  not null,
-    isbuggroup 	INTEGER     	DEFAULT('0'),
+    isbuggroup 	INTEGER     	DEFAULT(0) not null,
     userregexp 	VARCHAR2(255)	DEFAULT('')";
 
 
@@ -632,36 +651,38 @@ $table{logincookies} =
     userid 			INTEGER       CONSTRAINT LOGIN_NN_USERID not null,
     cryptpassword 	VARCHAR2(64),
     hostname 		VARCHAR2(128),
-    lastused 		DATE';
+    lastused 		DATE DEFAULT(sysdate)';
 
 
 $table{products} =
    "product 		VARCHAR2(255)   CONSTRAINT PRODUCT_NN_PRODUCT   not null,
     description 	VARCHAR2(2000)  CONSTRAINT PRODUCT_NN_DESC      not null,
-    milestoneurl 	VARCHAR2(255), 
-    disallownew  	INTEGER 		DEFAULT('0'),
-    votesperuser 	INTEGER 		DEFAULT('0'),
-	id				INTEGER			CONSTRAINT PRODUCT_PK_ID	PRIMARY KEY";
+    milestoneurl 	VARCHAR2(255)   DEFAULT(''), 
+    disallownew  	INTEGER 		DEFAULT(0) not null,
+    votesperuser 	INTEGER 		DEFAULT(0) not null,
+	id				INTEGER			CONSTRAINT PRODUCT_PK_ID	PRIMARY KEY,
+	votestoconfirm  INTEGER			DEFAULT(10000) not null,
+	defaultmilestone VARCHAR2(20)   DEFAULT('---') not null";
 
 
 $table{profiles} =
    "userid 				INTEGER     	CONSTRAINT PROFILE_PK_USRID  PRIMARY KEY,
-    login_name 			VARCHAR2(255)   CONSTRAINT PROFILE_UN_LOGIN  unique not null,
+    login_name 			VARCHAR2(255)   CONSTRAINT PROFILE_NN_LOGIN  not null,
     password 			VARCHAR2(16)    CONSTRAINT PROFILE_NN_PASSWD not null,
     cryptpassword 		VARCHAR2(64)    CONSTRAINT PROFILE_NN_CRYPT  not null,
     realname 			VARCHAR2(255)   DEFAULT(''),
-    groupset        	INTEGER     	DEFAULT(0),
-    emailnotification 	VARCHAR2(64)    DEFAULT('ExcludeSelfChanges'),
+    groupset        	INTEGER     	DEFAULT(0) not null,
+	groupid				INTEGER			DEFAULT(0) not null,
     disabledtext 		VARCHAR2(255)   DEFAULT(''),
-    newemailtech 		INTEGER     	DEFAULT('0'),
-    mybugslink  		INTEGER     	DEFAULT('1')";
+    newemailtech 		INTEGER     	DEFAULT(0) not null,
+    mybugslink  		INTEGER     	DEFAULT(1) not null";
 
 
 $table{namedqueries} =
     "userid 		INTEGER     	CONSTRAINT NAMED_NN_USRID not null,
      name 			VARCHAR2(255)   CONSTRAINT NAMED_NN_NAME  not null,
-     watchfordiffs 	INTEGER 		CONSTRAINT NAMED_NN_WATCH not null,
-     linkinfooter 	INTEGER 		CONSTRAINT NAMED_NN_LINK  not null,
+     watchfordiffs 	INTEGER 		DEFAULT(0) not null,
+     linkinfooter 	INTEGER 		DEFAULT(0) not null,
      query 			LONG     		CONSTRAINT NAMED_NN_QUERY not null";
 
 
@@ -679,7 +700,7 @@ $table{fielddefs} =
    "fieldid 	INTEGER     	CONSTRAINT FIELDDEF_PK_ID   PRIMARY KEY not null,
     name  		VARCHAR2(64)    CONSTRAINT FIELDDEF_NN_NAME not null,
     description VARCHAR2(255)   CONSTRAINT FIELDDEF_NN_DESC not null,
-    mailhead 	INTEGER     	DEFAULT ('0'),
+    mailhead 	INTEGER     	DEFAULT (0) not null,
     sortkey 	INTEGER     	CONSTRAINT FIELDDEF_NN_SORT not null";
 
 
@@ -714,14 +735,14 @@ $table{emailnotification} =
 
 
 $table{errata} = 
-	"revision	INTEGER     	DEFAULT('0'),
+	"revision	INTEGER     	DEFAULT(0) not null,
     type        VARCHAR2(10)    CONSTRAINT ERRATA_NN_TYPE   NOT NULL,
     issue_date  DATE        	CONSTRAINT ERRATA_NN_ISSUE  NOT NULL,
-    updated_on  DATE        	,
+    updated_on  DATE        	DEFAULT(sysdate),
     id          INTEGER     	CONSTRAINT ERRATA_PK_ID     PRIMARY KEY NOT NULL,
     synopsis    VARCHAR2(2000)  CONSTRAINT ERRATA_NN_SYNOP  NOT NULL,
-    mail        INTEGER     	DEFAULT('0'),
-    files       INTEGER     	DEFAULT('0')";
+    mail        INTEGER     	DEFAULT(0) not null,
+    files       INTEGER     	DEFAULT(0) not null";
 
 
 $table{news} =
@@ -759,7 +780,7 @@ $table{rep_platform} =
 
 
 $table{resolution} = 
-	"value   VARCHAR2(255) CONSTRAINT RESOL_PK_VALUE PRIMARY KEY NOT NULL";
+	"value   VARCHAR2(255) CONSTRAINT RESOL_PK_VALUE PRIMARY KEY";
 
 
 $table{bug_severity} = 
@@ -771,8 +792,8 @@ $table{milestones} =
      sortkey     INTEGER         CONSTRAINT MILE_NN_SORTKEY  NOT NULL";
 
 
+# necessary sequences for incrementing id numbers
 my %sequence;
-
 $sequence{groups} 		= 'create sequence groups_seq 		NOCACHE START WITH 1 INCREMENT BY 1';
 $sequence{attachments} 	= 'create sequence attachments_seq 	NOCACHE START WITH 1 INCREMENT BY 1';
 $sequence{bugs} 		= 'create sequence bugs_seq 		NOCACHE START WITH 1 INCREMENT BY 1';
@@ -783,8 +804,8 @@ $sequence{news} 		= 'create sequence news_seq 		NOCACHE START WITH 1 INCREMENT B
 $sequence{products} 	= 'create sequence products_seq 	NOCACHE START WITH 1 INCREMENT BY 1';
 $sequence{profiles} 	= 'create sequence profiles_seq 	NOCACHE START WITH 1 INCREMENT BY 1';
 
+# indexes for various tables
 my %index;
-
 $index{bugs} 			= "assigned_to, 
 						   creation_ts,
                 		   delta_ts,
@@ -846,13 +867,6 @@ while (my @row = $sth->fetchrow_array()) {
 }
 
 
-# add lines here if you add more --LOCAL-- config vars that end up in the enums:
-
-#my $severities = '"' . join('", "', @severities) . '"';
-#my $priorities = '"' . join('", "', @priorities) . '"';
-#my $op_sys      = '"' . join('", "', @op_sys)      . '"';
-#my $platforms  = '"' . join('", "', @platforms)  . '"';
-
 # go throught our %table hash and create missing tables
 # while (my ($tabname, $fielddef) = each %table) {
 foreach my $tabname (keys %table) {
@@ -863,67 +877,72 @@ foreach my $tabname (keys %table) {
 	$dbh->do($query)
         or die "Could not create table '$tabname'";
 	
-	# create sequences
-	if (defined ($sequence{$tabname})) {
-		print "Creating sequence " . $tabname . "_seq ...\n";
-		my $query = $sequence{$tabname};
-		print "$query\n" if $debug;
-		$dbh->do($query)
-        	or die "Could not create sequence '$tabname'";
-	}
-
-	# create indices
-	if (defined ($index{$tabname})) {
-        print "Creating index " . $tabname . "_idx ...\n";
-        my $query = "create index " . $tabname . "_idx on $tabname (" . 
-					$index{$tabname} . ")";
-        print "$query\n" if $debug;
-        $dbh->do($query)
-            or die "Could not create index '$tabname'";
-    }
-
     # add lines here if you add more --LOCAL-- config vars that end up in
     # the enums:
     if ($tabname eq 'resolution') {
         foreach my $value (@resolution) {
-            $dbh->do("insert into $tabname values ('$value')");
+            $dbh->do("insert into $tabname values ('$value')") unless ($clean);
         }
 	}
 	if ($tabname eq 'bug_status') {
         foreach my $value (@bug_status) {
-            $dbh->do("insert into $tabname values ('$value')");
+            $dbh->do("insert into $tabname values ('$value')") unless ($clean);
         }
     }
 	if ($tabname eq 'bug_severity') {
         foreach my $value (@bug_severity) {
-            $dbh->do("insert into $tabname values ('$value')");
+            $dbh->do("insert into $tabname values ('$value')") unless ($clean);
         }
     }
 	if ($tabname eq 'priority') {
         foreach my $value (@priority) {
-            $dbh->do("insert into $tabname values ('$value')");
+            $dbh->do("insert into $tabname values ('$value')") unless ($clean);
         }
     }
 	if ($tabname eq 'emailnotification') {
 		foreach my $value ("ExcludeSelfChanges", "CConly", "All") {
-			$dbh->do("insert into $tabname values ('$value')");
+			$dbh->do("insert into $tabname values ('$value')") unless ($clean);
         }
     }
 	if ($tabname eq 'op_sys') {
 		foreach my $value (@op_sys) {
-			$dbh->do("insert into $tabname values ('$value')");
+			$dbh->do("insert into $tabname values ('$value')") unless ($clean);
 		}
     }
 	if ($tabname eq 'rep_platform') {
 		foreach my $value (@rep_platform) {
-			$dbh->do("insert into $tabname values ('$value')");
+			$dbh->do("insert into $tabname values ('$value')") unless ($clean);
 		}
     }
 }
 
+# 2000-04-05 Add necessary foreign keys to specific tables for enum table types
+# These fields were left out of the table defs since they need to be created after the table that
+# the field refers to is created. There must be a way to force Oracle to allow the field to be created anyway
+# but so far have not been able to find one.
 
+&AddField('bugs', 'bug_status', 'VARCHAR2(64)');
+&AddField('bugs', 'bug_severity', 'VARCHAR2(64)');
+&AddField('bugs', 'priority', 'VARCHAR2(64)');
+&AddField('bugs', 'rep_platform', 'VARCHAR2(64)');
+&AddField('bugs', 'resolution', 'VARCHAR2(64) DEFAULT(\'\')');
+&AddField('bugs', 'op_sys', 'VARCHAR2(64)');
+&AddField('bugs', 'target_milestone', 'VARCHAR2(64)');
+&AddField('profiles', 'emailnotification', 'VARCHAR2(64)');
 
+# Create necessary indexes for tables that need them
+#foreach my $table (keys %table) {
+#	if (exists ($index{$table})) {
+#		&CheckIndex($table);
+#	}
+#}
 
+# Create necessary sequences for tables that need them
+#foreach my $table (keys %sequence) {
+#    if (exists ($sequence{$table})) {
+#        &CheckSequence($table);
+#    }
+#}
 
 ###########################################################################
 # Populate groups table
@@ -934,9 +953,8 @@ foreach my $tabname (keys %table) {
 # created with the next available bit set
 #
 
-sub AddGroup ($$)
-{
-    my ($name, $desc) = @_;
+sub AddGroup ($$;$) {
+    my ($name, $desc, $isbuggroup) = @_;
 	my @row;
 
     # does the group exist?
@@ -958,13 +976,16 @@ sub AddGroup ($$)
         $bit = 1;
     }
 
+	# If this is a bug group set to 1 else set to 0
+	$isbuggroup = defined($isbuggroup) && $isbuggroup == 1 ? $isbuggroup : 0;
+
     print "Adding group $name ...\n";
 	my $query = "INSERT INTO groups
-                          (groupid, bit, name, description, userregexp)
-                          VALUES (groups_seq.nextval, ?, ?, ?, ?)";
+                          (groupid, bit, name, description, userregexp, isbuggroup)
+                          VALUES (groups_seq.nextval, ?, ?, ?, ?, ?)";
 	print "$query\n" if $debug;
     $sth = $dbh->prepare($query);
-    $sth->execute($bit, $name, $desc, "");
+    $sth->execute($bit, $name, $desc, "", $isbuggroup);
 }
 
 
@@ -972,14 +993,17 @@ sub AddGroup ($$)
 # BugZilla uses --GROUPS-- to assign various rights to it's users. 
 #
 
-AddGroup 'tweakparams',      'Can tweak operating parameters';
-AddGroup 'editusers',      	 'Can edit or disable users';
-AddGroup 'editgroupmembers', 'Can put people in and out of groups that they are members of.';
-AddGroup 'creategroups',     'Can create and destroy groups.';
-AddGroup 'editcomponents',   'Can create, destroy, and edit components.';
-AddGroup 'editkeywords',   	 'Can create, destroy, and edit keywords.';
-AddGroup 'addnews',			 'Can add/modify/delete news items.';
-
+unless ($clean) {
+	AddGroup 'tweakparams',      'Can tweak operating parameters';
+	AddGroup 'editusers',      	 'Can edit or disable users';
+	AddGroup 'editgroupmembers', 'Can put people in and out of groups that they are members of.';
+	AddGroup 'creategroups',     'Can create and destroy groups.';
+	AddGroup 'editcomponents',   'Can create, destroy, and edit components.';
+	AddGroup 'editkeywords',   	 'Can create, destroy, and edit keywords.';
+	AddGroup 'addnews',			 'Can add/modify/delete news items.';
+	AddGroup 'devel',			 'Red Hat Development', '1';
+	AddGroup 'qa',				 'Red Hat Quality Assurance', '1';
+}
 
 
 ###########################################################################
@@ -991,7 +1015,7 @@ $sth->execute;
 
 my $productref = $sth->fetchrow_hashref();
 
-if (! defined($productref) ) {
+if (! defined($productref) && !$clean ) {
     print "Creating initial dummy product 'TestProduct' ...\n";
 	my $query = "";
 	$query = "INSERT INTO products(id, product, description) VALUES (products_seq.nextval, 'TestProduct', " .
@@ -1021,6 +1045,7 @@ if (! defined($productref) ) {
 ###########################################################################
 # Populate the list of fields.
 ###########################################################################
+FIELDDEFS:
 
 my $headernum = 1;
 
@@ -1043,6 +1068,8 @@ sub AddFDef ($$$) {
 }
 
 
+AddFDef("view", "View", 1);
+AddFDef("class", "Class", 1);
 AddFDef("bug_id", "Bug \#", 1);
 AddFDef("short_desc", "Summary", 1);
 AddFDef("product", "Product", 1);
@@ -1070,19 +1097,17 @@ AddFDef("attachments.mimetype", "Attachment mime type", 0);
 AddFDef("attachments.ispatch", "Attachment is patch", 0);
 AddFDef("target_milestone", "Target Milestone", 0);
 AddFDef("delta_ts", "Last changed date", 0);
-AddFDef("(to_days(now()) - to_days(bugs.delta_ts))", "Days since bug changed",
-        0);
+AddFDef("(sysdate - bugs.delta_ts)", "Days since bug changed",
+0);
 AddFDef("longdesc", "Comment", 0);
-    
-    
+
 
 
 ###########################################################################
 # Detect changed local settings
 ###########################################################################
 
-sub GetFieldDef ($$)
-{
+sub GetFieldDef ($$) {
     my ($table, $field) = @_;
 	my $sth = $dbh->prepare("select column_name, data_type from user_tab_columns " .
                 			"where table_name = '" . uc($table) . "'");
@@ -1094,33 +1119,80 @@ sub GetFieldDef ($$)
    }
 }
 
-#sub GetIndexDef ($$)
-#{
-#    my ($table, $field) = @_;
-#    my $sth = $dbh->prepare("SHOW INDEX FROM $table");
-#    $sth->execute;
-#
-#    while (my $ref = $sth->fetchrow_arrayref) {
-#        next if $$ref[2] ne $field;
-#        return $ref;
-#   }
-#}
+
+sub CheckIndex ($) {
+    my ($table) = (@_);
+	if (!exists ($index{$table})) {
+		return;
+	}	
+	# See if this table is already indexed in the Oracle Bugzilla database
+	my $query = "select index_name from all_indexes where index_name = '" .
+                         uc($table) . "_IDX'";
+	print "$query\n" if $debug;
+	$sth = $dbh->prepare($query);
+	$sth->execute();
+	my @row = $sth->fetchrow_array();
+	
+	# If it is not, then create one with the previous index definition
+	if (!defined ($row[0])) {
+		my $query = "create index " . $table . "_idx on $table (" . 
+                    $index{$table} . ")";
+		print "$query\n" if $debug;
+		print "Creating index for $table ...\n";
+		eval {
+			$sth = $dbh->prepare($query);
+			$sth->execute();
+		};
+		if ($@) {
+			print "Creation of index for $table unsuccessful!\n";
+		}
+	}
+}
+
+
+sub CheckSequence ($$) {
+    my ($table) = (@_);
+	if (!exists ($sequence{$table})) {
+		return;
+	}
+    # See if this sequence is already in the Oracle Bugzilla database
+    my $query = "select sequence_name from all_sequences where sequence_name = '" .
+                         uc($table) . "_SEQ'";
+    print "$query\n" if $debug;
+    $sth = $dbh->prepare($query);
+    $sth->execute();
+    my @row = $sth->fetchrow_array();
+
+    # If it is not, then create the sequence definition
+    if (!defined ($row[0])) {
+        my $query = $sequence{$table}; 
+        print "$query\n" if $debug;
+		print "Create sequence for $table ...\n";
+        eval {
+            $sth = $dbh->prepare($query);
+            $sth->execute();
+        };
+        if ($@) {
+            print "Creation of sequence for " . $table . "_seq unsuccessful!\n";
+        }
+    }
+}
+
 
 #
 # Check if the enums in the bugs table return the same values that are defined
 # in the various locally changeable variables. If this is true, then alter the
-# table definition.
+# table values.
 #
 
-sub CheckEnumTable ($@)
-{
-    my ($table, @against) = @_;
-	foreach my $value (@against) {
+sub CheckEnumTable ($$) {
+    my ($table, $against) = @_;
+	foreach my $value (@$against) {
 		my $sth = $dbh->prepare("select value from $table where value = '$value'");
 		$sth->execute();
 		my @row = $sth->fetchrow_array();
 		if (!$row[0]) {
-			$dbh->do("insert into $table values ($value)");
+			$dbh->do("insert into $table values ('$value')") unless ($clean);
 		}
     }
 }
@@ -1132,11 +1204,11 @@ sub CheckEnumTable ($@)
 # some --LOCAL-- variables
 #
 
-CheckEnumTable('bug_severity', @bug_severity);
-CheckEnumTable('priority',     @priority);
-CheckEnumTable('op_sys',       @op_sys);
-CheckEnumTable('rep_platform', @rep_platform);
-
+CheckEnumTable('bug_severity', \@bug_severity);
+CheckEnumTable('priority',     \@priority);
+CheckEnumTable('op_sys',       \@op_sys);
+CheckEnumTable('rep_platform', \@rep_platform);
+CheckEnumTable('resolution',   \@resolution);
 
 
 ###########################################################################
@@ -1157,7 +1229,7 @@ while (my @row = $sth->fetchrow_array()) {
 } 
 
 # when we have exactly one user ...
-if ($#result < 1) {
+if (defined ($result[0]) && $#result < 1 && !$clean) {
     print "Putting user $result[0] into every group ...\n";
 	my $sth = $dbh->prepare("select groupid from groups");
 	my @groupids;
@@ -1182,8 +1254,7 @@ if ($#result < 1) {
 # So we need some helper subroutines to make this possible:
 #
 
-sub ChangeFieldType ($$$)
-{
+sub ChangeFieldType ($$$) {
     my ($table, $field, $newtype) = @_;
 
     my $ref = GetFieldDef($table, $field);
@@ -1201,8 +1272,7 @@ sub ChangeFieldType ($$$)
 # Oracle cannot rename a field from what I could find,
 # funny though you can rename an entire table though.
 
-#sub RenameField ($$$)
-#{
+#sub RenameField ($$$) {
 #    my ($table, $field, $newname) = @_;
 #
 #    my $ref = GetFieldDef($table, $field);
@@ -1219,8 +1289,7 @@ sub ChangeFieldType ($$$)
 #    }
 #}
 
-sub AddField ($$$)
-{
+sub AddField ($$$) {
     my ($table, $field, $definition) = @_;
 
     my $ref = GetFieldDef($table, $field);
@@ -1235,8 +1304,7 @@ sub AddField ($$$)
 
 # Oracle can't drop a field from what I can tell. Maybe someone knows how.
 
-#sub DropField ($$)
-#{
+#sub DropField ($$) {
 #    my ($table, $field) = @_;
 #
 #    my $ref = GetFieldDef($table, $field);
@@ -1249,12 +1317,6 @@ sub AddField ($$$)
 
 
 my $regenerateshadow = 0;
-
-
-# 1999-05-12 Added a pref to control how much email you get.  This needs a new
-# column in the profiles table, so feed the following to mysql:
-
-AddField('profiles', 'emailnotification', 'VARCHAR2(64) DEFAULT(\'ExcludeSelfChanges\')');
 
 
 # 1999-06-22 Added an entry to the attachments table to record who the
@@ -1273,24 +1335,9 @@ AddField('attachments', 'submitter_id', 'INTEGER CONSTRAINT ATTACH_NN_SUBMIT not
 # For now I was too lazy, so you should read the README :-)
 
 
-
-# 1999-9-15 Apparently, newer alphas of MySQL won't allow you to have "when"
-# as a column name.  So, I have had to rename a column in the bugs_activity
-# table.
-
-#RenameField ('bugs_activity', 'when', 'bug_when');
-
-
-
 # 1999-10-11 Restructured voting database to add a cached value in each bug
-# recording how many total votes that bug has.  While I'm at it, I removed
-# the unused "area" field from the bugs database.  It is distressing to
-# realize that the bugs table has reached the maximum number of indices
-# allowed by MySQL (16), which may make future enhancements awkward.
-# (P.S. All is not lost; it appears that the latest betas of MySQL support
-# a new table format which will allow 32 indices.)
+# recording how many total votes that bug has.  
 
-# DropField('bugs', 'area');
 AddField('bugs',     'votes',        'INTEGER CONSTRAINT BUGS_NN_VOTES not null');
 AddField('products', 'votesperuser', 'INTEGER CONSTRAINT PRODUCTS_NN_VOTES not null');
 
@@ -1308,6 +1355,7 @@ AddField('products', 'votesperuser', 'INTEGER CONSTRAINT PRODUCTS_NN_VOTES not n
 
 # Oracle complains that the column must be empty for a column length to be changed.
 # I will look into this sometime.
+# This does work in MySQL though.
 
 # ChangeFieldType ('bugs',       'product', 'VARCHAR2(64)');
 # ChangeFieldType ('components', 'program', 'VARCHAR2(64)');
@@ -1324,7 +1372,7 @@ if (!GetFieldDef('bugs', 'keywords')) {
 
     my @kwords;
     print "Making sure 'keywords' field of table 'bugs' is empty ...\n";
-    $dbh->do("UPDATE bugs SET delta_ts = delta_ts, keywords = '' " .
+    $dbh->do("UPDATE bugs SET delta_ts = sysdate, keywords = '' " .
              "WHERE keywords != ''");
     print "Repopulating 'keywords' field of table 'bugs' ...\n";
     my $sth = $dbh->prepare("SELECT keywords.bug_id, keyworddefs.name " .
@@ -1339,7 +1387,7 @@ if (!GetFieldDef('bugs', 'keywords')) {
         my ($b, $k) = ($sth->fetchrow_array());
         if (!defined $b || $b ne $bugid) {
             if (@list) {
-                $dbh->do("UPDATE bugs SET delta_ts = delta_ts, keywords = " .
+                $dbh->do("UPDATE bugs SET delta_ts = sysdate, keywords = " .
                          $dbh->quote(join(', ', @list)) .
                          " WHERE bug_id = $bugid");
             }
@@ -1525,7 +1573,7 @@ if (GetFieldDef('bugs_activity', 'field')) {
 
 if (!GetFieldDef('bugs', 'lastdiffed')) {
     AddField('bugs', 'lastdiffed', 'DATE CONSTRAINT BUGS_NN_LAST not null');
-    $dbh->do('UPDATE bugs SET lastdiffed = sysdate, delta_ts = delta_ts');
+    $dbh->do('UPDATE bugs SET lastdiffed = sysdate, delta_ts = sysdate');
 }
 
 AddField('profiles', 'newemailtech', 'INTEGER CONSTRAINT PROFILES_NN_NEWMAIL not null');
@@ -1593,6 +1641,11 @@ AddField('namedqueries', 'linkinfooter', 'INTEGER CONSTRAINT QUERY_NN_LINK not n
 
 AddField('groups', 'contract', 'INTEGER DEFAULT(\'0\')');
 
+# 2000-04-07 Added a new field for tracking of CRM numbers per bug report. Requested by
+# Cygnus for EDK.
+
+AddField('bugs', 'crm_no', 'VARCHAR2(2000) DEFAULT(\'\')');
+
 #
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
@@ -1604,6 +1657,7 @@ AddField('groups', 'contract', 'INTEGER DEFAULT(\'0\')');
 # be honored by everyone who updates his Bugzilla installation.
 #
 #
+
 # Final checks...
 if ($regenerateshadow) {
     print "Now regenerating the shadow database for all bugs.\n";

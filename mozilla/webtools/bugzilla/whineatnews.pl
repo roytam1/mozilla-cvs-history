@@ -19,7 +19,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
-
+#				  David Lawrence <dkl@redhat.com>
 
 # This is a script suitable for running once a day from a cron job.  It 
 # looks at all the bugs, and sends whiny mail to anyone who has a bug 
@@ -33,9 +33,15 @@ require "globals.pl";
 
 ConnectToDatabase();
 
-SendSQL("select bug_id,login_name from bugs,profiles where " .
-        "bug_status = 'NEW' and to_days(now()) - to_days(delta_ts) > " .
-        Param('whinedays') . " and userid=assigned_to order by bug_id");
+if ($::driver eq 'mysql') {
+	SendSQL("select bug_id, login_name from bugs, profiles where " .
+	        "bug_status = 'NEW' and to_days(now()) - to_days(delta_ts) > " .
+	        Param('whinedays') . " and userid = assigned_to order by bug_id");
+} else {
+	SendSQL("select bug_id, login_name from bugs, profiles where " .
+            "bug_status = 'NEW' and sysdate - delta_ts > " .
+            Param('whinedays') . " and userid = assigned_to order by bug_id");
+}
 
 my %bugs;
 my @row;

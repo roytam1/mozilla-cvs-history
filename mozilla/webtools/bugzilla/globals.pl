@@ -18,11 +18,17 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#				  David Lawrence <dkl@redhat.com>
 
 # Contains some global variables and routines used throughout bugzilla.
 
 use diagnostics;
 use strict;
+use DBI;
+
+use Date::Format;               # For time2str().
+use Date::Parse;				# For str2time().
+# use Carp;                       # for confess
 
 # Shut up misguided -w warnings about "used only once".  For some reason,
 # "use vars" chokes on me when I try it here.
@@ -53,40 +59,68 @@ sub globals_pl_sillyness {
 # here
 # 
 
-my $db_host = "localhost";
-my $db_name = "bugs";
-my $db_user = "bugs";
-my $db_pass = "";
+#$::driver = 'mysql';
+$::driver = 'Oracle';
 
-do 'localconfig';
+# database setup
+my $dbhost = "";
+my $dbname = "";
+my $dbuser = "";
+my $dbpass = "";
 
-use Mysql;
+if ($::driver eq "mysql") {
+	$dbhost = "localhost";
+	$dbname = "bugs";
+	$dbuser = "bugs";
+	$dbpass = "";
+	do 'localconfig';
 
-use Date::Format;               # For time2str().
-use Date::Parse;               # For str2time().
-# use Carp;                       # for confess
+} else {
+	$ENV{'ORACLE_HOME'} = "/opt/apps/oracle/product/8.0.5/";
+	$ENV{'ORACLE_SID'} = "bugzilla";
+	$ENV{'TWO_TASK'} = "bugzilla";
+	$ENV{'ORACLE_USERID'} = "bugzilla/bugzilla";
+	$dbname = "rheng";
+	$dbuser = "bugzilla/bugzilla";
+	$dbhost = "";
+	$dbpass = "";
+	$::date_string = "SYSDATE";
+}
 
 # Contains the version string for the current running Bugzilla.
-$::param{'version'} = '2.9';
+$::param{'version'} = '2.8';
 
 $::dontchange = "--do_not_change--";
 $::chooseone = "--Choose_one:--";
+$::currentquery = "";
 $::defaultqueryname = "(Default query)";
 $::unconfirmedstate = "UNCONFIRMED";
 $::dbwritesallowed = 1;
 
+# subroutine:	ConnectToDatabase
+# description:	Make initial connection to bugs database
+# params:		None
+# returns:		None
+
 sub ConnectToDatabase {
-    my ($useshadow) = (@_);
-    if (!defined $::db) {
-        my $name = $db_name;
+	my ($useshadow) = (@_);
+	if (!defined $::db) {
+        my $name = $dbname;
         if ($useshadow && Param("shadowdb") && Param("queryagainstshadowdb")) {
             $name = Param("shadowdb");
             $::dbwritesallowed = 0;
         }
-	$::db = Mysql->Connect($db_host, $name, $db_user, $db_pass)
-            || die "Can't connect to database server.";
-    }
+    	$::db = DBI->connect("dbi:$::driver:$dbname", $dbuser, $dbpass, { RaiseError => 1 })
+        	or die "Can't connect to database server: " .  $DBI::errstr;
+    	$::db->{LongReadLen} = 1000000;
+	}
 }
+
+
+# subroutine: 	ReconnectToShadowDatabase
+# description:	connects to a shadow database if the normal one is unavailable
+# params:		none
+# returns:		none
 
 sub ReconnectToShadowDatabase {
     if (Param("shadowdb") && Param("queryagainstshadowdb")) {
@@ -95,16 +129,28 @@ sub ReconnectToShadowDatabase {
     }
 }
 
+
 my $shadowchanges = 0;
+
+# subroutine: 	SyncAnyPendingShadowChanges
+# description:	run script to sync up databases
+# params:		none
+# returns:		none
+
 sub SyncAnyPendingShadowChanges {
     if ($shadowchanges) {
         system("./syncshadowdb &");
         $shadowchanges = 0;
     }
 }
-    
 
+# set dosqllog to true if log file exists and is writable
 my $dosqllog = (-e "data/sqllog") && (-w "data/sqllog");
+
+# subroutine: 	SqlLog
+# description: 	Logs each database query to a log file if that log file exists
+# params:		$str = string to write to log file (scalar)
+# returns:		None
 
 sub SqlLog {
     if ($dosqllog) {
@@ -117,12 +163,20 @@ sub SqlLog {
         close SQLLOGFID;
     }
 }
-    
 
 
-
+# subroutine:	SendSQL
+# description: 	Sends current sql statement to database for execution, also logs statement
+#				to file if logfile exists
+# params:		$str = string containing current sql statement (scalar)
+#				$dontshadow = do not write into shadow database (scalar)
+# returns:		None
+ 
 sub SendSQL {
     my ($str, $dontshadow) = (@_);
+	if (!$::db) {
+		ConnectToDatabase();
+	}
     my $iswrite =  ($str =~ /^(INSERT|REPLACE|UPDATE|DELETE)/i);
     if ($iswrite && !$::dbwritesallowed) {
         die "Evil code attempted to write stuff to the shadow database.";
@@ -131,10 +185,11 @@ sub SendSQL {
         $str =~ s/^LOCK TABLES/LOCK TABLES shadowlog WRITE, /i;
     }
     SqlLog($str);
-    $::currentquery = $::db->query($str)
-	|| die "$str: " . $::db->errmsg;
-    SqlLog("Done");
-    if (!$dontshadow && $iswrite && Param("shadowdb")) {
+    $::currentquery = $::db->prepare($str);
+    	$::currentquery->execute || die "$str: " . $DBI::errstr;
+	SqlLog('Done');
+	# Very mysql specific
+	if (!$dontshadow && $iswrite && Param("shadowdb")) {
         my $q = SqlQuote($str);
         my $insertid;
         if ($str =~ /^(INSERT|REPLACE)/i) {
@@ -149,38 +204,195 @@ sub SendSQL {
     }
 }
 
+
+# subroutine:	MoreSQLData
+# description:	Returns true if there are more rows to return from database
+# params:		None
+# returns:		1 = more data available (scalar)
+#				0 = no more data available (scalar)
+
 sub MoreSQLData {
     if (defined @::fetchahead) {
-	return 1;
+		return 1;
     }
-    if (@::fetchahead = $::currentquery->fetchrow()) {
-	return 1;
+    if (@::fetchahead = $::currentquery->fetchrow_array()) {
+		return 1;
     }
     return 0;
 }
 
+
+# subroutine:	FetchSQLData
+# description:	Returns array containg the current row of data returned from database
+# params:		None
+# returns:		array containing the current row of data returned from database (array)
+
 sub FetchSQLData {
     if (defined @::fetchahead) {
-	my @result = @::fetchahead;
-	undef @::fetchahead;
-	return @result;
+		my @result = @::fetchahead;
+		undef @::fetchahead;
+		return @result;
     }
     return $::currentquery->fetchrow();
 }
 
+
+# subroutine:	FetchOneColumn
+# description:  Returns single column value if sql statement only receives one value
+# params:		None
+# returns:		$row[0] = single value returned from database (scalar)
 
 sub FetchOneColumn {
     my @row = FetchSQLData();
     return $row[0];
 }
 
-    
+
+# subroutine:   OracleQuote
+# description:  Oracle needs to have certain things quoted in a different way than Mysql
+# params:		$str = string to quote (scalar)
+# returns:		$str = quoted string (scalar)
+
+sub OracleQuote {
+	my ($str) = (@_);
+	return $::db->quote($str);
+}
+
+
+# subroutine:	CanISee
+# description: 	Added by Red Hat to support bug privacy feature using new group permissions 
+# params:		$id = id number of current bug report (scalar)
+# 				$userid = userid of current member (scalar)
+# returns:		1 = user can see the bug report (scalar)
+#				0 = user does not have permission to see (scalar)
+  
+sub CanISee {
+	my ($id, $userid) = (@_);
+	my $query = "select count(groupid) from bug_group where bugid = $id";
+	SendSQL($query);
+	my $result = FetchOneColumn();
+	if (!$result) {	# bug is public if no groups are set
+		return 1;
+	}
+	if ($userid == 0) {
+		return 0;
+	}
+	$query = "select bug_group.bugid from bug_group, user_group " .
+             "where user_group.userid = $userid " .
+             "and bug_group.bugid = $id " . 
+             "and user_group.groupid = bug_group.groupid ";
+	SendSQL($query);
+	$result = FetchOneColumn();
+	if ($result) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+
+# subroutine: 	CanIChange
+# description:	Added by Red Hat to allow some protection against people changing other's reports.
+# 				This really needs to be more flexible.
+#				One idea is if you are in the group for which it is private then you are allowed to
+#				to change the bug. Also need a caneditall type group designation.
+# params:		$id = current id number of bug report (scalar)
+#				$login = login name of current bugzilla user (scalar)
+#				$reporter = reporter of current bug report (scalar)
+#				$assigned = member bug report is currently assigned to (scalar)
+# returns:		1 = current member can make modifications to bug (scalar)
+# 				0 = current member can not make modifications to bug (scalar)
+
+sub CanIChange {
+	my ($id, $login, $reporter, $assigned) = (@_);
+	if (!defined($login)) {
+		return 0;
+	}
+	if ($login eq $reporter) {
+		return 1;
+	}
+	if ($login eq $assigned) {
+        return 1;
+    }
+	my $userid = DBname_to_id($login);
+	SendSQL("select count(groupid) from user_group where userid = $userid");
+	my $result = FetchOneColumn();
+	if ($result > 0) {
+		return 1;
+	}	
+	return 0;
+}
+
+
+# subroutine: 	GenProductList
+# description: 	Added by Red Hat. Generates product list based on new group permissions
+# params: 		$userid = userid of current bugzilla member (scalar)
+#				@old_product_list = array holding raw products list (array)
+# returns: 		@new_product_list = array holding permitted products (array)
+
+sub GenProductList {
+	my ($userid, @old_product_list) = (@_);
+	my @new_product_list;
+	foreach my $product (@old_product_list) {
+		my $query = "select product_group.productid " .
+					"from product_group, products " . 
+					"where products.id = product_group.productid and " .
+					"products.product = " . SqlQuote($product);
+		SendSQL($query);
+		my $result = FetchOneColumn();
+		if (!$result) {
+			push (@new_product_list, $product);				
+			next;
+		}
+		$query = "select product_group.productid from product_group, user_group " .
+             	 "where user_group.userid = $userid " .
+             	 "and product_group.productid = $result " .
+             	 "and user_group.groupid = product_group.groupid ";
+    	SendSQL($query);
+    	$result = FetchOneColumn();
+    	if ($result) {
+        	push (@new_product_list, $product);
+    	} 
+	}
+	return @new_product_list;	
+}
+
+
+# subroutine: 	GenVersionList
+# description: 	Added by Red Hat. Generates version list based on modified product list 
+# params: 		none 
+# returns: 		array holding sorted legal versions (array)
+
+sub GenVersionList {
+	my @new_version_list;
+	foreach my $product (@::legal_product) {
+		foreach my $version (@{$::versions{$product}}) {
+			if (lsearch(\@new_version_list, $version) >= 0) {
+				# if already same number in list then skip
+				next;
+			} else {
+				push (@new_version_list, $version);
+			}
+		}
+	}
+	# sort numerically
+	return (sort { $a <=> $b } @new_version_list);
+}
+
 
 @::default_column_list = ("severity", "priority", "platform", "owner",
                           "status", "resolution", "summary");
 
+
+# subroutine: 	AppendComment
+# description:	adds additional comment to current bug report
+# params:		$bugid = current bug report number (scalar)
+#				$who = login name of current bugzilla member (scalar)
+#				$comment = string containing new comment to append (scalar)
+# returns:		none
+
 sub AppendComment {
-    my ($bugid,$who,$comment) = (@_);
+    my ($bugid, $who, $comment) = (@_);
     $comment =~ s/\r\n/\n/g;     # Get rid of windows-style line endings.
     $comment =~ s/\r/\n/g;       # Get rid of mac-style line endings.
     if ($comment =~ /^\s*$/) {  # Nothin' but whitespace.
@@ -189,27 +401,49 @@ sub AppendComment {
 
     my $whoid = DBNameToIdAndCheck($who);
 
-    SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) " .
-            "VALUES($bugid, $whoid, now(), " . SqlQuote($comment) . ")");
-
-    SendSQL("UPDATE bugs SET delta_ts = now() WHERE bug_id = $bugid");
+	if ($::driver eq "mysql") {
+	    SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) " .
+    	        "VALUES($bugid, $whoid, now(), " . SqlQuote($comment) . ")");
+	    SendSQL("UPDATE bugs SET delta_ts = now() WHERE bug_id = $bugid");
+	} else {
+		SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) " .
+                "VALUES($bugid, $whoid, sysdate, " . SqlQuote($comment) . ")");
+        SendSQL("UPDATE bugs SET delta_ts = sysdate WHERE bug_id = $bugid");
+	}
 }
+
+
+# subroutine: 	GetFieldID
+# description:	returns field id for selected field or creates one if one does not exist
+# params:		$f = field name (scalar)
+# returns:		$fieldid = id of current field name (scalar)
 
 sub GetFieldID {
     my ($f) = (@_);
-    SendSQL("SELECT fieldid FROM fielddefs WHERE name = " . SqlQuote($f));
+    SendSQL("SELECT fieldid FROM fielddefs WHERE name = " . SqlQuote(lc($f)));
     my $fieldid = FetchOneColumn();
     if (!$fieldid) {
         my $q = SqlQuote($f);
-        SendSQL("REPLACE INTO fielddefs (name, description) VALUES ($q, $q)");
-        SendSQL("SELECT LAST_INSERT_ID()");
+		if ($::driver eq 'mysql') {
+        	SendSQL("REPLACE INTO fielddefs (name, description) VALUES ($q, $q)");
+        	SendSQL("SELECT LAST_INSERT_ID()");
+		} else {
+        	SendSQL("INSERT INTO fielddefs (fieldid, name, description, sortkey) " .
+					"VALUES (fielddefs_seq.nextval, $q, $q, fielddefs_seq.nextval)");
+        	SendSQL("SELECT fielddefs_seq.currval from dual");
+		}	
         $fieldid = FetchOneColumn();
     }
     return $fieldid;
 }
-        
 
 
+# subroutine:	lsearch
+# description:	searchs through list of items and returns index where item is found, -1 if not found
+# params:		$list = array reference to list of items to search (arrayref)
+#				$item = item to look for in list (scalar)
+# returns:		$count = index where item was found (scalar)
+#				-1 = item was not found in list (scalar)
 
 sub lsearch {
     my ($list,$item) = (@_);
@@ -223,10 +457,25 @@ sub lsearch {
     return -1;
 }
 
+
+# subroutine: 	Product_element
+# description:	make popup selection for products
+# params:		$prod = default product or current product (scalar)
+#				$onchange = javascript string for adding to popup widget (scalar)
+# returns: 		string containing html for popup widget creation (scalar)
+
 sub Product_element {
     my ($prod,$onchange) = (@_);
     return make_popup("product", keys %::versions, $prod, 1, $onchange);
 }
+
+
+# subroutine:   Component_element
+# description:  make popup selection for components 
+# params:       $comp = default component or current component (scalar)
+#				$prod = default product or current product (scalar)
+#               $onchange = javascript string for adding to popup widget (scalar)
+# returns:      string containing html for popup widget creation (scalar)
 
 sub Component_element {
     my ($comp,$prod,$onchange) = (@_);
@@ -245,6 +494,14 @@ sub Component_element {
     return make_popup("component", $componentlist, $defcomponent, 1, "");
 }
 
+
+# subroutine:   Version_element
+# description:  make popup selection for versions 
+# params: 		$vers = default version of current version (scalar)      
+#				$prod = default product or current product (scalar)
+#               $onchange = javascript string for adding to popup widget (scalar)
+# returns:      string containing html for popup widget creation (scalar)
+
 sub Version_element {
     my ($vers, $prod, $onchange) = (@_);
     my $versionlist;
@@ -259,7 +516,15 @@ sub Version_element {
     }
     return make_popup("version", $versionlist, $defversion, 1, $onchange);
 }
-        
+ 
+
+# subroutine: 	Milestone_element 
+# description:	make popup selection for milestones	
+# params:		$tm = default or current target milestone (scalar)
+#				$prod = default product or current product (scalar)
+#				$onchange = javascript string for adding to popup widget (scalar)
+# returns:		string containing html for popup widget creation (scalar)
+      
 sub Milestone_element {
     my ($tm, $prod, $onchange) = (@_);
     my $tmlist;
@@ -278,13 +543,17 @@ sub Milestone_element {
     return make_popup("target_milestone", $tmlist, $deftm, 1, $onchange);
 }
 
-# Generate a string which, when later interpreted by the Perl compiler, will
-# be the same as the given string.
+
+# subroutine:	PerlQuote
+# description:	Generate a string which, when later interpreted by the Perl compiler, will
+# 				be the same as the given string.
+# params:		$str = string for quoting (scalar)
+# returns:		quoted string (scalar)
 
 sub PerlQuote {
     my ($str) = (@_);
     return SqlQuote($str);
-    
+
 # The below was my first attempt, but I think just using SqlQuote makes more 
 # sense...
 #     $result = "'";
@@ -298,11 +567,15 @@ sub PerlQuote {
 #     }
 #     $result .= "'";
 #     return $result;
+
 }
 
 
-# Given the name of a global variable, generate Perl code that, if later
-# executed, would restore the variable to its current value.
+# subroutine:	GenerateCode
+# description:	Given the name of a global variable, generate Perl code that, if later
+# 				executed, would restore the variable to its current value.
+# params:		$name = name of global variable (scalar)
+# returns:		$result = final code that would restore variable later (scalar)
 
 sub GenerateCode {
     my ($name) = (@_);
@@ -331,6 +604,12 @@ sub GenerateCode {
     return $result;
 }
 
+
+# subroutine:   GenerateArrayCode
+# description:  Returns a string containing list of items suitable for generating an array  
+# params:       $ref = array reference to list of items (arrayref)
+# returns:      string containing formatted list of items (scalar)
+
 sub GenerateArrayCode {
     my ($ref) = (@_);
     my @list;
@@ -341,6 +620,11 @@ sub GenerateArrayCode {
 }
 
 
+# subroutine:	GenerateVersionTable
+# description: 	Generates file containing global variables such as products, 
+#				components, versions, etc. Saves time from accessing database for this information.
+# params:		None
+# returns:		None
 
 sub GenerateVersionTable {
     ConnectToDatabase();
@@ -367,7 +651,8 @@ sub GenerateVersionTable {
         $carray{$c} = 1;
     }
 
-    my $dotargetmilestone = 1;  # This used to check the param, but there's
+#    my $dotargetmilestone = Param("usetargetmilestone");
+	my $dotargetmilestone = 1;  # This used to check the param, but there's
                                 # enough code that wants to pretend we're using
                                 # target milestones, even if they don't get
                                 # shown to the user.  So we cache all the data
@@ -389,7 +674,7 @@ sub GenerateVersionTable {
             $::milestoneurl{$p} = $u;
         }
         $::prodmaxvotes{$p} = $votesperuser;
-        if ($votesperuser > 0) {
+		if ($votesperuser > 0) {
             $::anyvotesallowed = 1;
         }
     }
@@ -398,6 +683,7 @@ sub GenerateVersionTable {
     my $cols = LearnAboutColumns("bugs");
     
     @::log_columns = @{$cols->{"-list-"}};
+#	foreach my $i ("bug_id", "creation_ts", "delta_ts", "long_desc") {
     foreach my $i ("bug_id", "creation_ts", "delta_ts", "lastdiffed") {
         my $w = lsearch(\@::log_columns, $i);
         if ($w >= 0) {
@@ -406,14 +692,33 @@ sub GenerateVersionTable {
     }
     @::log_columns = (sort(@::log_columns));
 
-    @::legal_priority = SplitEnumType($cols->{"priority,type"});
-    @::legal_severity = SplitEnumType($cols->{"bug_severity,type"});
-    @::legal_platform = SplitEnumType($cols->{"rep_platform,type"});
-    @::legal_opsys = SplitEnumType($cols->{"op_sys,type"});
-    @::legal_bug_status = SplitEnumType($cols->{"bug_status,type"});
-    @::legal_resolution = SplitEnumType($cols->{"resolution,type"});
+	if ($::driver eq 'mysql') {
+    	@::legal_priority_contract = SplitEnumType($cols->{"priority,type"});
+#		@::legal_priority = SplitEnumType($cols->{"priority,type"});
+    	@::legal_severity = SplitEnumType($cols->{"bug_severity,type"});
+    	@::legal_platform = SplitEnumType($cols->{"rep_platform,type"});
+    	@::legal_opsys = SplitEnumType($cols->{"op_sys,type"});
+    	@::legal_bug_status = SplitEnumType($cols->{"bug_status,type"});
+    	@::legal_resolution = SplitEnumType($cols->{"resolution,type"});
+	} else {
+    	@::legal_severity = SplitTableValues("bug_severity");
+    	@::legal_platform = SplitTableValues("rep_platform");
+    	@::legal_opsys = SplitTableValues("op_sys");
+    	@::legal_bug_status = SplitTableValues("bug_status");
+    	@::legal_resolution = SplitTableValues("resolution");
+		@::legal_priority_contract = SplitTableValues("priority");
+	}
+
+	# Added by Red Hat for contract support bugs
+	@::legal_priority = @::legal_priority_contract;
+    my $w = lsearch(\@::legal_priority, "contract");
+    if ($w >= 0) {
+        splice(@::legal_priority, $w, 1);
+    }
+
+	# create a list of possible resolutions without a 'duplicate'
     @::legal_resolution_no_dup = @::legal_resolution;
-    my $w = lsearch(\@::legal_resolution_no_dup, "DUPLICATE");
+	my $w = lsearch(\@::legal_resolution_no_dup, "DUPLICATE");
     if ($w >= 0) {
         splice(@::legal_resolution_no_dup, $w, 1);
     }
@@ -439,11 +744,11 @@ sub GenerateVersionTable {
     @::legal_components = sort {uc($a) cmp uc($b)} keys(%carray);
     print FID GenerateCode('@::legal_components');
     foreach my $i('product', 'priority', 'severity', 'platform', 'opsys',
-                  'bug_status', 'resolution', 'resolution_no_dup') {
+				  'bug_status', 'resolution', 'resolution_no_dup', 'priority_contract') {
         print FID GenerateCode('@::legal_' . $i);
     }
     print FID GenerateCode('%::proddesc');
-    print FID GenerateCode('%::prodmaxvotes');
+#    print FID GenerateCode('%::prodmaxvotes');
     print FID GenerateCode('$::anyvotesallowed');
 
     if ($dotargetmilestone) {
@@ -451,6 +756,7 @@ sub GenerateVersionTable {
         SendSQL("SELECT value, product FROM milestones ORDER BY sortkey, value");
         my @line;
         my %tmarray;
+		%::milestoneurl = ();
         @::legal_target_milestone = ();
         while(@line = FetchSQLData()) {
             my ($tm, $pr) = (@line);
@@ -485,8 +791,10 @@ sub GenerateVersionTable {
 }
 
 
-
-# Returns the modification time of a file.
+# subroutine:	ModTime
+# description:	Returns the modification time of a file.
+# params:		$filename = name of file to return mod time for (scalar)
+# returns:		$mtime = modification time of file (scalar)
 
 sub ModTime {
     my ($filename) = (@_);
@@ -497,8 +805,11 @@ sub ModTime {
 }
 
 
-
-# This proc must be called before using legal_product or the versions array.
+# subroutine:	GetVersionTable
+# description:	This proc must be called before using legal_product or the versions array.
+#				Loads global variables into memory contains cached product, version values.
+# params:		none
+# returns:		none
 
 sub GetVersionTable {
     my $mtime = ModTime("data/versioncache");
@@ -517,37 +828,63 @@ sub GetVersionTable {
             die "Can't generate file data/versioncache";
         }
     }
+
+	# Added by Red Hat: support for new product group permissions	
+	# GenVersionList must come after GenProductList
+#	my $userid = 0;
+#	if (defined($::COOKIE{'Bugzilla_login'})) {
+#		$userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
+#	}
+#	@::legal_product = GenProductList($userid, @::legal_product);
+#	@::legal_versions = GenVersionList();
+
 }
 
 
+# subroutine: 	InsertNewUser
+# description:	Inserts a new bugzilla member into the database
+# params:		$username = email address of new member (scalar)
+# 				$realname = real name of new member (optional) (scalar)
+# returns:		$password = password created for new bugzilla member (scalar)
+		
 sub InsertNewUser {
     my ($username, $realname) = (@_);
     my $password = "";
-    for (my $i=0 ; $i<8 ; $i++) {
+	my $groupset = "0";
+	for (my $i=0 ; $i<8 ; $i++) {
         $password .= substr("abcdefghijklmnopqrstuvwxyz", int(rand(26)), 1);
     }
-    SendSQL("select bit, userregexp from groups where userregexp != ''");
-    my $groupset = "0";
+
+	SendSQL("select bit, userregexp from groups where userregexp != ''");
+	my @row;
     while (MoreSQLData()) {
         my @row = FetchSQLData();
-	# Modified -Joe Robins, 2/17/00
-	# Making this case insensitive, since usernames are email addresses,
-	# and could be any case.
-        if ($username =~ m/$row[1]/i) {
-            $groupset .= "+ $row[0]"; # Silly hack to let MySQL do the math,
-                                      # not Perl, since we're dealing with 64
-                                      # bit ints here, and I don't *think* Perl
-                                      # does that.
-        }
-    }
+        if ($username =~ m/$row[1]/) {
+            $groupset .= "+$row[0]"; 	# Silly hack to let MySQL do the math,
+            							# not Perl, since we're dealing with 64
+            							# bit ints here, and Perl won't do it.
+    	}
+	}
             
-    $username = SqlQuote($username);
-    $realname = SqlQuote($realname);
-    SendSQL("insert into profiles (login_name, realname, password, cryptpassword, groupset) values ($username, $realname, '$password', encrypt('$password'), $groupset)");
+	my $encrypted = crypt($password, substr($password, 0, 2));
+	if ($::driver eq "mysql") {
+    	SendSQL("insert into profiles (login_name, realname, password, cryptpassword, groupset, emailnotification) " .
+				"values (" . SqlQuote($username) . ", " . SqlQuote($realname) . ", " . 
+				SqlQuote($password) . ", " . SqlQuote($encrypted) . ", $groupset, 'ExludeSelfChangesOnly')");
+	} else {
+		SendSQL("insert into profiles (userid, login_name, realname, password, cryptpassword, groupset, emailnotification) " .
+				"values (profiles_seq.nextval, " . OracleQuote($username) . ", " . OracleQuote($realname) .
+				", " . OracleQuote($password) . ", " . OracleQuote($encrypted) . ", $groupset, 'ExludeSelfChangesOnly')");
+	}
     return $password;
 }
 
 
+# subroutine: 	DBID_to_name
+# description:	converts user id to actual login name 
+# params:		$id = user id of current bugzilla member (scalar)
+# returns:		string containing login name belonging to user id (scalar)
+	
 sub DBID_to_name {
     my ($id) = (@_);
     if (!defined $::cachedNameArray{$id}) {
@@ -561,6 +898,12 @@ sub DBID_to_name {
     return $::cachedNameArray{$id};
 }
 
+
+# subroutine:	DBname_to_id
+# description:	converts a member's login name to their user id
+# params:		$name = current member's login name (scalar)
+# returns:		$r = user id for belonging to current login name (scalar)
+
 sub DBname_to_id {
     my ($name) = (@_);
     SendSQL("select userid from profiles where login_name = @{[SqlQuote($name)]}");
@@ -572,6 +915,13 @@ sub DBname_to_id {
 }
 
 
+# subroutine:	DBNameToIdAndCheck
+# description:  returns the user id belong to current login name and if $forceok is true,
+#				add them to database if not currently a member. Sends out quiet email with password.
+# params:		$name = current login name to look up user id (scalar)
+# 				$forceok = true if add to database is ok, false if not ok (scalar)
+# returns:		$result = userid belonging to current login name (scalar)
+
 sub DBNameToIdAndCheck {
     my ($name, $forceok) = (@_);
     my $result = DBname_to_id($name);
@@ -579,8 +929,11 @@ sub DBNameToIdAndCheck {
         return $result;
     }
     if ($forceok) {
-        InsertNewUser($name, "");
-        $result = DBname_to_id($name);
+		my $password = InsertNewUser($name, "");
+		# This account was added as a result of a cc add or component assignment
+		# so we want to quitely email out a password.
+		MailPassword($name, $password, 1);
+		$result = DBname_to_id($name);
         if ($result > 0) {
             return $result;
         }
@@ -592,13 +945,18 @@ sub DBNameToIdAndCheck {
         print "Bugzilla account.\n";
         print "<P>Please hit the <B>Back</B> button and try again.\n";
     }
-    exit(0);
+	exit(0);
 }
 
-# This routine quoteUrls contains inspirations from the HTML::FromText CPAN
-# module by Gareth Rees <garethr@cre.canon.co.uk>.  It has been heavily hacked,
-# all that is really recognizable from the original is bits of the regular
-# expressions.
+
+# subroutine:	quoteUrls
+# description:	This routine quoteUrls contains inspirations from the HTML::FromText CPAN
+# 				module by Gareth Rees <garethr@cre.canon.co.uk>.  It has been heavily hacked,
+# 				all that is really recognizable from the original is bits of the regular
+#			 	expressions.
+# params:		$knownattachments = hash reference to list of attachments for bug (hash ref)
+#				$text = the actual text of the bug report (scalar)
+# returns:		$text = string containing original text with html markups (scalar)
 
 sub quoteUrls {
     my ($knownattachments, $text) = (@_);
@@ -676,24 +1034,50 @@ sub quoteUrls {
     return $text;
 }
 
+
+# subroutine:   GetLongDescriptionAsText
+# description:  Returns long description belonging to current bug report as text
+# params:       $id = id number for current bug report (scalar)
+#				$start = start days before now (scalar)
+# 				$end = end days before now (scalar)
+# returns:      string containing long description (scalar)
+
 sub GetLongDescriptionAsText {
     my ($id, $start, $end) = (@_);
     my $result = "";
     my $count = 0;
-    my ($query) = ("SELECT profiles.login_name, longdescs.bug_when, " .
-                   "       longdescs.thetext " .
-                   "FROM longdescs, profiles " .
-                   "WHERE profiles.userid = longdescs.who " .
-                   "      AND longdescs.bug_id = $id ");
+
+    my $query = "";
+    if ($::driver eq "mysql") {
+        $query = "SELECT profiles.login_name, longdescs.bug_when, " .
+                 "longdescs.thetext " .
+                 "FROM longdescs, profiles " .
+                 "WHERE profiles.userid = longdescs.who " .
+                 "AND longdescs.bug_id = $id ";
+    } else {
+	    $query = "SELECT profiles.login_name, TO_CHAR(longdescs.bug_when, 'YYYY-MM-DD HH24:MI:SS'), " .
+                 "longdescs.thetext " .
+                 "FROM longdescs, profiles " .
+                 "WHERE profiles.userid = longdescs.who " .
+                 "AND longdescs.bug_id = $id ";
+    }
 
     if ($start && $start =~ /[1-9]/) {
         # If the start is all zeros, then don't do this (because we want to
         # not emit a leading "Additional Comments" line in that case.)
-        $query .= "AND longdescs.bug_when > '$start'";
-        $count = 1;
+    	if ($::driver eq 'mysql') {
+		    $query .= "AND longdescs.bug_when > '$start'";
+    	} else {
+			$query .= "AND longdescs.bug_when > TO_DATE('$start', 'YYYY-MM-DD HH24:MI:SS') ";
+		}
+	    $count = 1;
     }
     if ($end) {
-        $query .= "AND longdescs.bug_when <= '$end'";
+		if ($::driver eq 'mysql') {
+ 	        $query .= "AND longdescs.bug_when <= '$end'";
+		} else {
+			$query .= "AND longdescs.bug_when <= TO_DATE('$end', 'YYYY-MM-DD HH24:MI:SS') ";
+		}
     }
 
     $query .= "ORDER BY longdescs.bug_when";
@@ -701,16 +1085,22 @@ sub GetLongDescriptionAsText {
     while (MoreSQLData()) {
         my ($who, $when, $text) = (FetchSQLData());
         if ($count) {
-            $result .= "\n\n------- Additional Comments From $who  " .
+            $result .= "\n\n------- Additional comments from $who  " .
                 time2str("%Y-%m-%d %H:%M", str2time($when)) . " -------\n";
         }
         $result .= $text;
         $count++;
     }
-
     return $result;
 }
 
+
+# subroutine:   GetLongDescriptionAsHTML
+# description:  Returns long description belonging to current bug report as html
+# params:       $id = id number for current bug report (scalar)
+#               $start = start days before now (scalar)
+#               $end = end days before now (scalar)
+# returns:      string containing long description (scalar)
 
 sub GetLongDescriptionAsHTML {
     my ($id, $start, $end) = (@_);
@@ -722,11 +1112,20 @@ sub GetLongDescriptionAsHTML {
         $knownattachments{FetchOneColumn()} = 1;
     }
 
-    my ($query) = ("SELECT profiles.login_name, longdescs.bug_when, " .
-                   "       longdescs.thetext " .
-                   "FROM longdescs, profiles " .
-                   "WHERE profiles.userid = longdescs.who " .
-                   "      AND longdescs.bug_id = $id ");
+    my $query = "";
+    if ($::driver eq "mysql") {
+        $query = "SELECT profiles.login_name, longdescs.bug_when, " .
+                 "longdescs.thetext " .
+                 "FROM longdescs, profiles " .
+                 "WHERE profiles.userid = longdescs.who " .
+                 "AND longdescs.bug_id = $id ";
+    } else {
+    	$query = "SELECT profiles.login_name, TO_CHAR(longdescs.bug_when, 'YYYY-mm-dd HH:MI'), " .
+                 "longdescs.thetext " .
+                 "FROM longdescs, profiles " .
+                 "WHERE profiles.userid = longdescs.who " .
+                 "AND longdescs.bug_id = $id ";
+    }
 
     if ($start && $start =~ /[1-9]/) {
         # If the start is all zeros, then don't do this (because we want to
@@ -743,10 +1142,10 @@ sub GetLongDescriptionAsHTML {
     while (MoreSQLData()) {
         my ($who, $when, $text) = (FetchSQLData());
         if ($count) {
-            $result .= "<BR><BR><I>------- Additional Comments From " .
+            $result .= "<BR>------- <I>Additional comments from</I> " .
                 qq{<A HREF="mailto:$who">$who</A> } .
                     time2str("%Y-%m-%d %H:%M", str2time($when)) .
-                        " -------</I><BR>\n";
+                        " -------<BR>\n";
         }
         $result .= "<PRE>" . quoteUrls(\%knownattachments, $text) . "</PRE>\n";
         $count++;
@@ -755,6 +1154,11 @@ sub GetLongDescriptionAsHTML {
     return $result;
 }
 
+
+# subroutine:	ShowCcList
+# description:	returns formatted list of cc addresses for current bug report
+# params:		$num = number of current bug report (scalar)
+# returns:		string containing comma separated list of cc addresses (scalar)
 
 sub ShowCcList {
     my ($num) = (@_);
@@ -768,36 +1172,47 @@ sub ShowCcList {
     foreach my $i (@ccids) {
         push @result, DBID_to_name($i);
     }
-
     return join(',', @result);
 }
 
 
-
-# Fills in a hashtable with info about the columns for the given table in the
-# database.  The hashtable has the following entries:
-#   -list-  the list of column names
-#   <name>,type  the type for the given name
+# subroutine:	LearnAboutColumns
+# description:	Fills in a hashtable with info about the columns for the given table in the
+# 				database.  The hashtable has the following entries:
+#   			-list-  the list of column names
+#   			<name>,type  the type for the given name
+# params:		$table = name of table to return gather information on (scalar)
+# returns:		%a = reference to hash containing table information (scalar)
 
 sub LearnAboutColumns {
     my ($table) = (@_);
     my %a;
-    SendSQL("show columns from $table");
-    my @list = ();
-    my @row;
+	my @list;
+	my @row;
+
+	if ($::driver eq "mysql") {
+    	SendSQL("show columns from $table");
+	} else {
+		SendSQL("select column_name, data_type from user_tab_columns " .
+                "where table_name = " . SqlQuote(uc($table)));
+	}
     while (@row = FetchSQLData()) {
         my ($name,$type) = (@row);
+		$name = uc($name);
         $a{"$name,type"} = $type;
         push @list, $name;
+		chop($a{"$name,type"});
     }
     $a{"-list-"} = \@list;
     return \%a;
 }
 
 
-
-# If the above returned a enum type, take that type and parse it into the
-# list of values.  Assumes that enums don't ever contain an apostrophe!
+# subroutine: 	SplitEnumType
+# description: 	If the above returned a enum type, take that type and parse it into the
+# 				list of values.  Assumes that enums don't ever contain an apostrophe! (MySQL Only)
+# params:		$str = enum values returned from mysql database for parsing (scalar)
+# returns:		@result = array holding parsed enum values from mysql database (scalar)
 
 sub SplitEnumType {
     my ($str) = (@_);
@@ -807,51 +1222,143 @@ sub SplitEnumType {
         while ($guts =~ /^\'([^\']*)\',(.*)$/) {
             push @result, $1;
             $guts = $2;
-	}
+		}
     }
     return @result;
 }
 
 
-# This routine is largely copied from Mysql.pm.
+# subroutine:	SplitTableValues
+# description:	This will take a table of values that were previously enum data types and return 
+# 				the legal values
+# params:		$str = table name (scalar)
+# returns: 		@result = array holding values from table
+
+sub SplitTableValues {
+	my ($str) = (@_);
+	my @result = ();
+	my @row = ();
+	my $query = "select value from $str";
+	SendSQL($query);
+	while (@row = FetchSQLData()) {
+		push (@result, $row[0]);
+	}
+	return @result;
+}
+
+
+# subroutine:	SqlQuote
+# description:	This routine is largely copied from Mysql.pm.
+# params:		$str = string to sql quote (scalar)
+# returns:		$str = quoted string (scalar)
 
 sub SqlQuote {
     my ($str) = (@_);
-#     if (!defined $str) {
-#         confess("Undefined passed to SqlQuote");
-#     }
+    if (!defined $str) {
+         confess("Undefined passed to SqlQuote");
+     }
     $str =~ s/([\\\'])/\\$1/g;
-    $str =~ s/\0/\\0/g;
+    $str =~ s/\0/\\0/g;	
+#	$str = $::db->quote($str);
     return "'$str'";
 }
 
 
+# subroutine:	UserInGroup
+# description: 	determines if the current bugzilla member is in a particular group
+# params:		$groupname = name of group to check for (scalar)
+# returns:		1 = current bugzilla member is a member of $groupname (scalar)
+#				0 = current bugzilla member is not a member of $groupname (scalar)
 
 sub UserInGroup {
     my ($groupname) = (@_);
-    if ($::usergroupset eq "0") {
-        return 0;
-    }
+	if (!defined($::COOKIE{'Bugzilla_login'})) {
+		return 0;
+	}
+	my $userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
     ConnectToDatabase();
-    SendSQL("select (bit & $::usergroupset) != 0 from groups where name = " . SqlQuote($groupname));
-    my $bit = FetchOneColumn();
-    if ($bit) {
+	if ($::driver eq 'mysql') {
+		if ($::usergroupset eq '0') {
+			return 0;
+		}
+		SendSQL("select (bit & $::usergroupset) != 0 from groups " .
+				"where name = " . SqlQuote($groupname));
+	} else {
+    	SendSQL("select user_group.groupid from groups, user_group" .
+				" where user_group.groupid = groups.groupid" . 
+				" and groups.name = " . SqlQuote($groupname) . 
+				" and user_group.userid = $userid"); 
+	}
+    my $result = FetchOneColumn();
+    if ($result) {
         return 1;
     }
     return 0;
 }
 
+
+# subroutine:	GroupExists
+# description: 	Verifies that specific group name exists in the database
+# params:		$groupname = name of group to verify (scalar)
+# returns:		$count = number of groups matching name, usually 1 (scalar)
+
 sub GroupExists {
     my ($groupname) = (@_);
     ConnectToDatabase();
-    SendSQL("select count(*) from groups where name=" . SqlQuote($groupname));
+    SendSQL("select count(*) from groups where name = " . SqlQuote($groupname));
     my $count = FetchOneColumn();
     return $count;
 }
 
-# Determines if the given bug_status string represents an "Opened" bug.  This
-# routine ought to be paramaterizable somehow, as people tend to introduce
-# new states into Bugzilla.
+
+# subroutine:	GroupsBelong
+# description:	returns list of groups that the current bugzilla member belongs to
+# 				Added by Red Hat
+# params:		none
+# returns:		@result = list of group numbers that member belongs to (array)
+
+sub GroupsBelong {
+		my $userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
+		SendSQL("select groupid from user_group where userid = $userid");
+		my @result;
+		my @row;
+		while (@row = FetchSQLData()) {
+			push (@result, $row[0]);
+		}
+		return @result;
+}
+
+# subroutine: 	UserInContract
+# description: 	returns true if user belongs to one or more contract groups
+# exceptions: 	only called if param('contract') true
+# params: 		$userid = user id of current bugzilla member (scalar)
+# returns: 		1 = member belongs to one or more contract groups (scalar)
+#				0 = member does not belong to one or more contract groups (scalar)
+
+sub UserInContract {
+	my $userid = shift;
+	
+	my $query = "select user_group.userid from groups, user_group " . 
+				"where groups.groupid = user_group.groupid " .
+				"and groups.contract = 1 " . 
+				"and user_group.userid = $userid";
+	SendSQL($query);
+	my $result = FetchOneColumn();
+	if ($result) {
+		return 1;
+	} else { 
+		return 0;
+	}
+}
+
+
+# subroutine: 	IsOpenedState
+# description:	Determines if the given bug_status string represents an "Opened" bug.  This
+# 				routine ought to be paramaterizable somehow, as people tend to introduce
+# 				new states into Bugzilla.
+# params:		$state = current state of the bug report in question (scalar)
+# returns:		1 = bug report is in a new, reopened, or assigned state (scalar)
+#				0 = bug report is not in a new, reopened, or assigned state (scalar)
 
 sub IsOpenedState {
     my ($state) = (@_);
@@ -861,6 +1368,13 @@ sub IsOpenedState {
     return 0;
 }
 
+
+# subroutine:	RemovedVotes
+# description:	informs people who voted that their votes have been removed from database
+# params:		$id = bug report number (scalar)
+#				$who = who is removing the votes (scalar)
+#				$reason = reason that votes were removed (scalar)
+# returns:		none
 
 sub RemoveVotes {
     my ($id, $who, $reason) = (@_);
@@ -877,39 +1391,48 @@ sub RemoveVotes {
     my @list;
     while (MoreSQLData()) {
         my ($name, $count) = (FetchSQLData());
-        push(@list, [$name, $count]);
-    }
+        push(@list, [$name, $count]);    
+	}
     if (0 < @list) {
         foreach my $ref (@list) {
             my ($name, $count) = (@$ref);
-            if (open(SENDMAIL, "|/usr/lib/sendmail -t")) {
-                my %substs;
-                $substs{"to"} = $name;
-                $substs{"bugid"} = $id;
-                $substs{"reason"} = $reason;
-                $substs{"count"} = $count;
+	        if (open(SENDMAIL, "|/usr/lib/sendmail -t")) {
+    	        my %substs;
+	            $substs{"to"} = $name;
+	            $substs{"bugid"} = $id;
+	            $substs{"reason"} = $reason;
+				$substs{"count"} = $count;
                 my $msg = PerformSubsts(Param("voteremovedmail"),
                                         \%substs);
                 print SENDMAIL $msg;
-                close SENDMAIL;
-            }
-        }
+	            close SENDMAIL;
+	        }
+		}
         SendSQL("DELETE FROM votes WHERE bug_id = $id" . $whopart);
         SendSQL("SELECT SUM(count) FROM votes WHERE bug_id = $id");
         my $v = FetchOneColumn();
         $v ||= 0;
-        SendSQL("UPDATE bugs SET votes = $v, delta_ts = delta_ts " .
-                "WHERE bug_id = $id");
+		if ($::driver eq 'mysql') {
+        	SendSQL("UPDATE bugs SET votes = $v, delta_ts = delta_ts " .
+            	    "WHERE bug_id = $id");
+		} else {
+			SendSQL("UPDATE bugs SET votes = $v, delta_ts = sysdate " .
+                    "WHERE bug_id = $id");
+		}
     }
 }
 
+
+# subroutine:	Param
+# description:	return value defined in the data/params file. 
+# params:		$value = param name to return value for (scalar)
+# returns:		string containing value associated with the param name (scalar)
 
 sub Param {
     my ($value) = (@_);
     if (defined $::param{$value}) {
         return $::param{$value};
     }
-
     # See if it is a dynamically-determined param (can't be changed by user).
     if ($value eq "commandmenu") {
         return GetCommandMenu();
@@ -942,6 +1465,13 @@ sub Param {
     die "Can't find param named $value";
 }
 
+
+# subroutine:	PerformSubsts
+# description:	replace placeholders with proper variable values
+# params:		$str = string containing place holders (scalar)
+#				$substs = hash reference containing values to replace with (hashref)
+# returns:		$str = string with variable values in place (scalar)
+    
 sub PerformSubsts {
     my ($str, $substs) = (@_);
     $str =~ s/%([a-z]*)%/(defined $substs->{$1} ? $substs->{$1} : Param($1))/eg;
@@ -949,7 +1479,10 @@ sub PerformSubsts {
 }
 
 
-# Trim whitespace from front and back.
+# subroutine:	trim
+# description:	Trim whitespace from front and back.
+# params:		$_ = string to trim whitespace (scalar)
+# returns:		$_ = string with whitespace removed (scalar)
 
 sub trim {
     ($_) = (@_);

@@ -20,11 +20,13 @@
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 David Gardiner <david.gardiner@unisa.edu.au>
+#				  David Lawrence <dkl@redhat.com>
 
 use diagnostics;
 use strict;
 
 require "CGI.pl";
+require "globals.pl";
 
 $::CheckOptionValues = 0;       # It's OK if we have some bogus things in the
                                 # pop-up lists here, from a remembered query
@@ -51,6 +53,11 @@ use vars
   %::components,
   %::FORM;
 
+# Hash to hold values to be passed to the html fill in template
+#my %::query_form = ();
+
+# Uncomment for debugging.
+# print "Content-type: text/html\n\n";
 
 if (defined $::FORM{"GoAheadAndLogIn"}) {
     # We got here from a login page, probably from relogin.cgi.  We better
@@ -59,8 +66,9 @@ if (defined $::FORM{"GoAheadAndLogIn"}) {
 } else {
     quietly_check_login();
 }
+
 my $userid = 0;
-if (defined $::COOKIE{"Bugzilla_login"}) {
+if (defined $::COOKIE{"Bugzilla_login"} && $::COOKIE{'Bugzilla_login'} ne "") {
     $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
 }
 
@@ -85,25 +93,30 @@ if ($userid) {
                 my $qname = SqlQuote($name);
                 SendSQL("SELECT query FROM namedqueries " .
                         "WHERE userid = $userid AND name = $qname");
+#				SendSQL("SELECT query FROM queries " .
+#                        "WHERE userid = $userid AND query_name = $qname");
                 my $query = FetchOneColumn();
                 if (!$query) {
-                    SendSQL("REPLACE INTO namedqueries " .
+                    SendSQL("INSERT INTO namedqueries " .
                             "(userid, name, query) VALUES " .
                             "($userid, $qname, " . SqlQuote($value) . ")");
+#                    SendSQL("INSERT INTO queries " .
+#                            "(userid, query_name, query) VALUES " .
+#                            "($userid, $qname, " . SqlQuote($value) . ")");
                 }
             }
-            print "Set-Cookie: $cookiename= ; path=/ ; expires=Sun, 30-Jun-1980 00:00:00 GMT\n";
+            print "Set-Cookie: $cookiename= ; path=/bugzilla2/ ; expires=Sun, 30-Jun-1980 00:00:00 GMT\n";
         }
     }
 }
                 
 
-
-
 if ($::FORM{'nukedefaultquery'}) {
     if ($userid) {
         SendSQL("DELETE FROM namedqueries " .
                 "WHERE userid = $userid AND name = '$::defaultqueryname'");
+#		SendSQL("DELETE FROM queries " .
+#                "WHERE userid = $userid AND query_name = '$::defaultqueryname'");
     }
     $::buffer = "";
 }
@@ -113,6 +126,8 @@ my $userdefaultquery;
 if ($userid) {
     SendSQL("SELECT query FROM namedqueries " .
             "WHERE userid = $userid AND name = '$::defaultqueryname'");
+#    SendSQL("SELECT query FROM queries " .
+#            "WHERE userid = $userid AND query_name = '$::defaultqueryname'");
     $userdefaultquery = FetchOneColumn();
 }
 
@@ -177,7 +192,6 @@ if (!ProcessFormStuff($::buffer)) {
 }
 
 
-                 
 
 if ($default{'chfieldto'} eq "") {
     $default{'chfieldto'} = "Now";
@@ -268,66 +282,51 @@ sub GenerateEmailInput {
 }
 
 
-            
-
-
-my $emailinput1 = GenerateEmailInput(1);
-my $emailinput2 = GenerateEmailInput(2);
+$::query_form{'emailinput1'} = GenerateEmailInput(1);
+$::query_form{'emailinput2'} = GenerateEmailInput(2);
 
 
 # javascript
     
-my $jscript = << 'ENDSCRIPT';
+$::query_form{'jscript'} = << 'ENDSCRIPT';
 <script language="Javascript1.1" type="text/javascript">
 <!--
 var cpts = new Array();
 var vers = new Array();
-var tms  = new Array();
 ENDSCRIPT
 
 
 my $p;
 my $v;
 my $c;
-my $m;
 my $i = 0;
 my $j = 0;
 
 foreach $c (@::legal_components) {
-    $jscript .= "cpts['$c'] = new Array();\n";
+    $::query_form{'jscript'} .= "cpts['$c'] = new Array();\n";
 }
 
 foreach $v (@::legal_versions) {
-    $jscript .= "vers['$v'] = new Array();\n";
+    $::query_form{'jscript'} .= "vers['$v'] = new Array();\n";
 }
 
-my $tm;
-foreach $tm (@::legal_target_milestone) {
-    $jscript .= "tms['$tm'] = new Array();\n";
-}
 
 for $p (@::legal_product) {
     if ($::components{$p}) {
         foreach $c (@{$::components{$p}}) {
-            $jscript .= "cpts['$c'][cpts['$c'].length] = '$p';\n";
+            $::query_form{'jscript'} .= "cpts['$c'][cpts['$c'].length] = '$p';\n";
         }
     }
 
     if ($::versions{$p}) {
         foreach $v (@{$::versions{$p}}) {
-            $jscript .= "vers['$v'][vers['$v'].length] = '$p';\n";
-        }
-    }
-
-    if ($::target_milestone{$p}) {
-        foreach $m (@{$::target_milestone{$p}}) {
-            $jscript .= "tms['$m'][tms['$m'].length] = '$p';\n";
+            $::query_form{'jscript'} .= "vers['$v'][vers['$v'].length] = '$p';\n";
         }
     }
 }
 
 $i = 0;
-$jscript .= q{
+$::query_form{'jscript'} .= q{
 
 // Only display versions/components valid for selected product(s)
 
@@ -416,39 +415,8 @@ function selectProduct(f) {
         }
     }
 
-    var tmsel = new Array();
-    for (i=0 ; i<f.target_milestone.length ; i++) {
-        if (f.target_milestone[i].selected) {
-            tmsel[f.target_milestone[i].value] = 1;
-        }
-    }
 
-    f.target_milestone.options.length = 0;
 
-    for (tm in tms) {
-        if (typeof(tms[v]) == 'function') continue;
-        var doit = doall;
-        for (i=0 ; !doit && i<f.product.length ; i++) {
-            if (f.product[i].selected) {
-                var p = f.product[i].value;
-                for (j in tms[tm]) {
-                    if (typeof(tms[tm][j]) == 'function') continue;
-                    var p2 = tms[tm][j];
-                    if (p2 == p) {
-                        doit = true;
-                        break;
-                    }
-                }
-            }
-        }
-        if (doit) {
-            var l = f.target_milestone.length;
-            f.target_milestone[l] = new Option(tm, tm);
-            if (tmsel[tm]) {
-                f.target_milestone[l].selected = true;
-            }
-        }
-    }
 
 }
 // -->
@@ -468,66 +436,52 @@ function selectProduct(f) {
 #    set legal_product [concat $default{"product"} [lreplace $legal_product $w $w]]
 # }
 
-PutHeader("Bugzilla Query Page", "Query", 
-          "This page lets you search the database for recorded bugs.",
-          q{onLoad="selectProduct(document.forms[0]);"},
-          0, $jscript);
+PutHeader("Bugzilla Query Page", "Query Page", "",
+          q{onLoad="selectProduct(document.forms[0]);"});
 
-push @::legal_resolution, "---"; # Oy, what a hack.
+if (Param('contract')) {
+    if (defined ($userid)) {
+        PutNotify($userid);
+    }
+}
+
+# push @::legal_resolution, "---"; # Oy, what a hack.
+# push @::legal_target_milestone, "---"; # Oy, what a hack.
 
 my @logfields = ("[Bug creation]", @::log_columns);
 
-print qq{
-<FORM METHOD=GET ACTION="buglist.cgi">
 
-<table>
-<tr>
-<th align=left><A HREF="bug_status.html">Status</a>:</th>
-<th align=left><A HREF="bug_status.html">Resolution</a>:</th>
-<th align=left><A HREF="bug_status.html#rep_platform">Platform</a>:</th>
-<th align=left><A HREF="bug_status.html#op_sys">OpSys</a>:</th>
-<th align=left><A HREF="bug_status.html#priority">Priority</a>:</th>
-<th align=left><A HREF="bug_status.html#severity">Severity</a>:</th>
-};
+$::query_form{'status_popup'} = make_selection_widget("bug_status", \@::legal_bug_status, 
+							  $default{'bug_status'}, $type{'bug_status'}, 1);
 
-print "
-</tr>
-<tr>
-<td align=left valign=top>
+$::query_form{'resolution_popup'} = make_selection_widget("resolution", \@::legal_resolution, 
+								  $default{'resolution'}, $type{'resolution'}, 1);
 
-@{[make_selection_widget(\"bug_status\",\@::legal_bug_status,$default{'bug_status'}, $type{'bug_status'}, 1)]}
+$::query_form{'platform_popup'} = make_selection_widget("rep_platform", \@::legal_platform, 
+							    $default{'platform'}, $type{'platform'}, 1);
 
-</td>
-<td align=left valign=top>
-@{[make_selection_widget(\"resolution\",\@::legal_resolution,$default{'resolution'}, $type{'resolution'}, 1)]}
+$::query_form{'opsys_popup'} = make_selection_widget("op_sys", \@::legal_opsys, 
+							 $default{'op_sys'}, $type{'op_sys'}, 1);
 
-</td>
-<td align=left valign=top>
-@{[make_selection_widget(\"rep_platform\",\@::legal_platform,$default{'platform'}, $type{'platform'}, 1)]}
+if (Param('contract')) {
+    if (UserInContract($userid)) {
+        $::query_form{'priority_popup'} .= make_selection_widget("priority", \@::legal_priority_contract, 
+										 $default{'priority'}, $type{'priority'}, 1);
+    } else {
+        $::query_form{'priority_popup'} .= make_selection_widget("priority", \@::legal_priority, 
+										 $default{'priority'}, $type{'priority'}, 1);
+    }
+} else {
+    $::query_form{'priority_popup'} .=  make_selection_widget("priority", \@::legal_priority, 
+							          $default{'priority'}, $type{'priority'}, 1);
+}
 
-</td>
-<td align=left valign=top>
-@{[make_selection_widget(\"op_sys\",\@::legal_opsys,$default{'op_sys'}, $type{'op_sys'}, 1)]}
+$::query_form{'priority_popup'} = make_selection_widget("priority", \@::legal_priority, 
+								$default{'priority'}, $type{'priority'}, 1);
 
-</td>
-<td align=left valign=top>
-@{[make_selection_widget(\"priority\",\@::legal_priority,$default{'priority'}, $type{'priority'}, 1)]}
+$::query_form{'severity_popup'} = make_selection_widget("bug_severity", \@::legal_severity, 
+								$default{'bug_severity'}, $type{'bug_severity'}, 1);
 
-</td>
-<td align=left valign=top>
-@{[make_selection_widget(\"bug_severity\",\@::legal_severity,$default{'bug_severity'}, $type{'bug_severity'}, 1)]}
-
-</tr>
-</table>
-
-<p>
-
-<table>
-<tr><td colspan=2>
-$emailinput1<p>
-</td></tr><tr><td colspan=2>
-$emailinput2<p>
-</td></tr>";
 
 my $inclselected = "SELECTED";
 my $exclselected = "";
@@ -539,143 +493,107 @@ if ($default{'bugidtype'} eq "exclude") {
 }
 my $bug_id = value_quote($default{'bug_id'}); 
 
-print qq{
+$::query_form{'bugid_element'} = qq{
 <TR>
-<TD COLSPAN="3">
-<SELECT NAME="bugidtype">
-<OPTION VALUE="include" $inclselected>Only
-<OPTION VALUE="exclude" $exclselected>Exclude
-</SELECT>
-bugs numbered: 
-<INPUT TYPE="text" NAME="bug_id" VALUE="$bug_id" SIZE=30>
-</TD>
+	<TD COLSPAN="3">
+	<SELECT NAME="bugidtype">
+	<OPTION VALUE="include" $inclselected>Only
+	<OPTION VALUE="exclude" $exclselected>Exclude
+	</SELECT>
+	bugs numbered: 
+	<INPUT TYPE="text" NAME="bug_id" VALUE="$bug_id" SIZE=30>
+	</TD>
 </TR>
 };
 
-print "
-<tr>
-<td>
-Changed in the <NOBR>last <INPUT NAME=changedin SIZE=2 VALUE=\"$default{'changedin'}\"> days.</NOBR>
-</td>
-<td align=right>
-At <NOBR>least <INPUT NAME=votes SIZE=3 VALUE=\"$default{'votes'}\"> votes.</NOBR>
-</tr>
-</table>
+$::query_form{'changedin_element'} = qq{
+Changed in the <NOBR>last <INPUT NAME=changedin SIZE=2 VALUE="$default{'changedin'}"> days.</NOBR>
+};
+
+$::query_form{'votes_element'} = qq {
+At <NOBR>least <INPUT NAME=votes SIZE=3 VALUE="$default{'votes'}"> votes.</NOBR>
+};
+
+$::query_form{'chfield_popup'} = make_selection_widget("chfield", \@logfields,
+                               $default{'chfield'}, $type{'chfield'}, 1);
+
+$::query_form{'chfieldfrom_element'} = "<INPUT NAME=chfieldfrom SIZE=10 VALUE=\"$default{'chfieldfrom'}\">\n";
+
+$::query_form{'chfieldto_element'} = "<INPUT NAME=chfieldto SIZE=10 VALUE=\"$default{'chfieldto'}\">\n";
+
+$::query_form{'chfieldvalue_element'} = "<INPUT NAME=chfieldvalue SIZE=10>\n";
 
 
-<table>
-<tr>
-<td rowspan=2 align=right>Where the field(s)
-</td><td rowspan=2>
-<SELECT NAME=\"chfield\" MULTIPLE SIZE=4>
-@{[make_options(\@logfields, $default{'chfield'}, $type{'chfield'})]}
-</SELECT>
-</td><td rowspan=2>
-changed.
-</td><td>
-<nobr>dates <INPUT NAME=chfieldfrom SIZE=10 VALUE=\"$default{'chfieldfrom'}\"></nobr>
-<nobr>to <INPUT NAME=chfieldto SIZE=10 VALUE=\"$default{'chfieldto'}\"></nobr>
-</td>
-</tr>
-<tr>
-<td>changed to value <nobr><INPUT NAME=chfieldvalue SIZE=10> (optional)</nobr>
-</td>
-</table>
+$::query_form{'product_popup'} = "<SELECT NAME=\"product\" MULTIPLE SIZE=5 onChange=\"selectProduct(this.form);\">\n" .
+							   make_options(\@::legal_product, $default{'product'}, $type{'product'}) .
+							   "</SELECT>\n";
 
+$::query_form{'version_popup'} = "<SELECT NAME=\"version\" MULTIPLE SIZE=5>\n" .
+							   make_options(\@::legal_versions, $default{'version'}, $type{'version'}) .
+							   "</SELECT>\n";
 
-<P>
+$::query_form{'component_popup'} = "<SELECT NAME=\"component\" MULTIPLE SIZE=5>\n" .
+								 make_options(\@::legal_components, $default{'component'}, $type{'component'}) .
+								 "</SELECT>\n";
 
-<table>
-<tr>
-<TH ALIGN=LEFT VALIGN=BOTTOM>Program:</th>
-<TH ALIGN=LEFT VALIGN=BOTTOM>Version:</th>
-<TH ALIGN=LEFT VALIGN=BOTTOM><A HREF=describecomponents.cgi>Component:</a></th>
-";
-
-if (Param("usetargetmilestone")) {
-    print "<TH ALIGN=LEFT VALIGN=BOTTOM>Target Milestone:</th>";
-}
-
-print "
-</tr>
-<tr>
-
-<td align=left valign=top>
-<SELECT NAME=\"product\" MULTIPLE SIZE=5 onChange=\"selectProduct(this.form);\">
-@{[make_options(\@::legal_product, $default{'product'}, $type{'product'})]}
-</SELECT>
-</td>
-
-<td align=left valign=top>
-<SELECT NAME=\"version\" MULTIPLE SIZE=5>
-@{[make_options(\@::legal_versions, $default{'version'}, $type{'version'})]}
-</SELECT>
-</td>
-
-<td align=left valign=top>
-<SELECT NAME=\"component\" MULTIPLE SIZE=5>
-@{[make_options(\@::legal_components, $default{'component'}, $type{'component'})]}
-</SELECT>
-</td>";
-
-if (Param("usetargetmilestone")) {
-    print "
-<td align=left valign=top>
-<SELECT NAME=\"target_milestone\" MULTIPLE SIZE=5>
-@{[make_options(\@::legal_target_milestone, $default{'target_milestone'}, $type{'target_milestone'})]}
-</SELECT>
-</td>";
-}
+$::query_form{'milestone_popup'} = "<SELECT NAME=\"target_milestone\" MULTIPLE SIZE=5>\n" .
+								 make_options(\@::legal_target_milestone, $default{'target_milestone'},
+								 $type{'target_milestone'}) .
+								 "</SELECT>\n";
 
 
 sub StringSearch {
     my ($desc, $name) = (@_);
     my $type = $name . "_type";
+	my $search = "";
     my $def = value_quote($default{$name});
-    print qq{<tr>
-<td align=right>$desc:</td>
-<td><input name=$name size=30 value="$def"></td>
-<td><SELECT NAME=$type>
+    $search = qq{<TR>
+<TD ALIGN=right>$desc:</TD>
+<TD><INPUT NAME=$name SIZE=45 VALUE="$def"></TD>
 };
-    if ($default{$type} eq "") {
-        $default{$type} = "substring";
-    }
-    foreach my $i (["substring", "case-insensitive substring"],
-                   ["casesubstring", "case-sensitive substring"],
-                   ["allwords", "all words"],
-                   ["anywords", "any words"],
-                   ["regexp", "regular expression"],
-                   ["notregexp", "not ( regular expression )"]) {
-        my ($n, $d) = (@$i);
-        my $sel = "";
-        if ($default{$type} eq $n) {
-            $sel = " SELECTED";
-        }
-        print qq{<OPTION VALUE="$n"$sel>$d\n};
-    }
-    print "</SELECT></TD>
-</tr>
-";
+
+	if ($::driver eq 'mysql') {
+		$search .= "<TD><SELECT NAME=$type>\n";
+    	if ($default{$type} eq "") {
+        	$default{$type} = "substring";
+    	}
+
+		my @search_types = [];
+		@search_types = (["substring", "case-insensitive substring"],
+                         ["casesubstring", "case-sensitive substring"],
+                   		 ["allwords", "all words"],
+	                     ["anywords", "any words"],
+                         ["regexp", "regular expression"],
+                         ["notregexp", "not ( regular expression )"]);
+
+	    foreach my $i (@search_types) {
+    	    my ($n, $d) = (@$i);
+        	my $sel = "";
+        	if ($default{$type} eq $n) {
+            	$sel = " SELECTED";
+        	}
+        	$search .= qq{<OPTION VALUE="$n"$sel>$d\n};
+    	}
+    	$search .= "</SELECT></TD>\n</TR>\n";
+	}
+		
+	return $search;
 }
 
-print "
-</tr>
-</table>
 
-<table border=0>
-";
-
-StringSearch("Summary", "short_desc");
-StringSearch("A description entry", "long_desc");
-StringSearch("URL", "bug_file_loc");
+$::query_form{'summary_popup'} = StringSearch("Summary", "short_desc");
+$::query_form{'description_popup'} = StringSearch("Description", "long_desc");
+$::query_form{'url_popup'} = StringSearch("URL", "bug_file_loc");
 
 if (Param("usestatuswhiteboard")) {
-    StringSearch("Status whiteboard", "status_whiteboard");
+    $::query_form{'whiteboard_popup'} = StringSearch("Status whiteboard", "status_whiteboard");
 }
+
+$::query_form{'keywords_popup'} = ();
 
 if (@::legal_keywords) {
     my $def = value_quote($default{'keywords'});
-    print qq{
+    $::query_form{'keywords_popup'} = qq{
 <TR>
 <TD ALIGN="right"><A HREF="describekeywords.cgi">Keywords</A>:</TD>
 <TD><INPUT NAME="keywords" SIZE=30 VALUE="$def"></TD>
@@ -685,18 +603,13 @@ if (@::legal_keywords) {
     if ($type eq "or") {        # Backward compatability hack.
         $type = "anywords";
     }
-    print BuildPulldown("keywords_type",
+    $::query_form{'keywords_popup'} .= BuildPulldown("keywords_type",
                         [["anywords", "Any of the listed keywords set"],
                          ["allwords", "All of the listed keywords set"],
                          ["nowords", "None of the listed keywords set"]],
                         $type);
-    print qq{</TD></TR>};
+    $::query_form{'keywords_popup'} .= qq{</TD></TR>};
 }
-
-print "
-</table>
-<p>
-";
 
 
 my @fields;
@@ -729,18 +642,17 @@ my @types = (
 	     );
 
 
-print qq{<A NAME="chart"> </A>\n};
+$::query_form{'chart_popup'} = qq{<A NAME="chart"> </A>\n};
 
 foreach my $cmd (grep(/^cmd-/, keys(%::FORM))) {
     if ($cmd =~ /^cmd-add(\d+)-(\d+)-(\d+)$/) {
-	$::FORM{"field$1-$2-$3"} = "xyzzy";
+		$::FORM{"field$1-$2-$3"} = "xyzzy";
     }
 }
 	
-#  foreach my $i (sort(keys(%::FORM))) {
-#      print "$i : " . value_quote($::FORM{$i}) . "<BR>\n";
-#  }
-
+#foreach my $i (sort(keys(%::FORM))) {
+#	print "$i : " . value_quote($::FORM{$i}) . "<BR>\n";
+#}
 
 if (!exists $::FORM{'field0-0-0'}) {
     $::FORM{'field0-0-0'} = "xyzzy";
@@ -770,39 +682,38 @@ for ($chart=0 ; exists $::FORM{"field$chart-0-0"} ; $chart++) {
 	}
 	push(@rows, "<TR>" . join(qq{<TD ALIGN="center"> or </TD>\n}, @cols) .
 	     qq{<TD><INPUT TYPE="submit" VALUE="Or" NAME="cmd-add$chart-$row-$col" $jsmagic></TD></TR>});
-    }
-    print qq{
+   }
+    $::query_form{'chart_popup'} .= qq{
 <HR>
 <TABLE>
 };
-    print join('<TR><TD>And</TD></TR>', @rows);
-    print qq{
+    $::query_form{'chart_popup'} .= join('<TR><TD>And</TD></TR>', @rows);
+    $::query_form{'chart_popup'} .= qq{
 <TR><TD><INPUT TYPE="submit" VALUE="And" NAME="cmd-add$chart-$row-0" $jsmagic>
 };
     my $n = $chart + 1;
     if (!exists $::FORM{"field$n-0-0"}) {
-        print qq{
+        $::query_form{'chart_popup'} .= qq{
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <INPUT TYPE="submit" VALUE="Add another boolean chart" NAME="cmd-add$n-0-0" $jsmagic>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <NOBR><A HREF="booleanchart.html">What is this stuff?</A></NOBR>
 };
     }
-    print qq{
+    $::query_form{'chart_popup'} .= qq{
 </TD>
 </TR>
 </TABLE>
     };
 }
-print qq{<HR>};
 
 
-
+$::query_form{'query_selection'} = ();
 
 if (!$userid) {
-    print qq{<INPUT TYPE="hidden" NAME="cmdtype" VALUE="doit">};
+    $::query_form{'query_selection'} .= qq{<INPUT TYPE="hidden" NAME="cmdtype" VALUE="doit">};
 } else {
-    print "
+    $::query_form{'query_selection'} .= "
 <BR>
 <INPUT TYPE=radio NAME=cmdtype VALUE=doit CHECKED> Run this query
 <BR>
@@ -813,6 +724,9 @@ if (!$userid) {
         SendSQL("SELECT name FROM namedqueries " .
                 "WHERE userid = $userid AND name != '$::defaultqueryname' " .
                 "ORDER BY name");
+#		SendSQL("SELECT query_name FROM queries " .
+#                "WHERE userid = $userid AND query_name != '$::defaultqueryname' " .
+#                "ORDER BY query_name");
         while (MoreSQLData()) {
             push(@namedqueries, FetchOneColumn());
         }
@@ -823,7 +737,7 @@ if (!$userid) {
     
     if (@namedqueries) {
         my $namelist = make_options(\@namedqueries);
-        print qq{
+        $::query_form{'query_selection'} .= qq{
 <table cellspacing=0 cellpadding=0><tr>
 <td><INPUT TYPE=radio NAME=cmdtype VALUE=editnamed> Load the remembered query:</td>
 <td rowspan=3><select name=namedcmd>$namelist</select>
@@ -834,7 +748,7 @@ if (!$userid) {
 </tr></table>};
     }
 
-    print "
+    $::query_form{'query_selection'} .= "
 <INPUT TYPE=radio NAME=cmdtype VALUE=asdefault> Remember this as the default query
 <BR>
 <INPUT TYPE=radio NAME=cmdtype VALUE=asnamed> Remember this query, and name it:
@@ -843,53 +757,43 @@ if (!$userid) {
 "
 }
 
-print "
-<NOBR><B>Sort By:</B>
-<SELECT NAME=\"order\">
-";
+$::query_form{'sort_popup'} = qq{<SELECT NAME=order>\n};
 
-my $deforder = "'Importance'";
-my @orders = ('Bug Number', $deforder, 'Assignee');
+# my $deforder = "Importance";
+# my @orders = ('Bug Number', $deforder, 'Assignee');
 
-if ($::COOKIE{'LASTORDER'}) {
-    $deforder = "Reuse same sort as last time";
-    unshift(@orders, $deforder);
+# if ($::COOKIE{'LASTORDER'}) {
+#     $deforder = "Reuse same sort as last time";
+#     unshift(@orders, $deforder);
+# }
+
+# my $defquerytype = $userdefaultquery ? "my" : "the";
+
+# $::query_form{'sort_popup'} .= make_options(\@orders, $deforder);
+
+foreach my $order ("Bug Number Ascending", "Bug Number Descending",
+                   "Importance", "Assignee") {
+    my $selected = "";
+    if (defined($::FORM{'order'}) && $::FORM{'order'} eq $order) {
+        $selected = "SELECTED";
+    }
+    $::query_form{'sort_popup'} .= "<OPTION $selected>$order\n";
 }
-
-my $defquerytype = $userdefaultquery ? "my" : "the";
-
-print make_options(\@orders, $deforder);
-print "</SELECT></NOBR>
-<INPUT TYPE=\"submit\" VALUE=\"Submit query\">
-<INPUT TYPE=\"reset\" VALUE=\"Reset back to $defquerytype default query\">
-";
+$::query_form{'sort_popup'} .= qq{</SELECT>\n};
 
 if ($userdefaultquery) {
-    print qq{<BR><A HREF="query.cgi?nukedefaultquery=1">Set my default query back to the system default</A>};
+	$::query_form{'nukedefaultquery_link'} = "<BR><A HREF=\"query.cgi?nukedefaultquery=1\">Set my default query back to the system default</A>";
 }
 
-print "
-</FORM>
-<P>Give me a <A HREF=\"help.html\">clue</A> about how to use this form.
-<P>
-";
+$::query_form{'admin_menu'} = GetAdminMenu();
 
-
-if (UserInGroup("tweakparams")) {
-    print "<a href=editparams.cgi>Edit Bugzilla operating parameters</a><br>\n";
-}
-if (UserInGroup("editcomponents")) {
-    print "<a href=editproducts.cgi>Edit Bugzilla products and components</a><br>\n";
-}
-if (UserInGroup("editkeywords")) {
-    print "<a href=editkeywords.cgi>Edit Bugzilla keywords</a><br>\n";
-}
 if ($userid) {
-    print "<a href=relogin.cgi>Log in as someone besides <b>$::COOKIE{'Bugzilla_login'}</b></a><br>\n";
+    $::query_form{'relogin_link'} = "<a href=relogin.cgi>Log in as someone besides <b>$::COOKIE{'Bugzilla_login'}</b></a><br>\n";
 }
-print "<a href=userprefs.cgi>Change your password or preferences.</a><br>\n";
-print "<a href=\"enter_bug.cgi\">Create a new bug.</a><br>\n";
-print "<a href=\"createaccount.cgi\">Open a new Bugzilla account</a><br>\n";
-print "<a href=\"reports.cgi\">Bug reports</a><br>\n";
+
+$::query_form{'foo'} = "Hey!<BR>";
+
+# We are ready to load the template and print
+print LoadTemplate('query_redhat.tmpl', \%::query_form);
 
 PutFooter();

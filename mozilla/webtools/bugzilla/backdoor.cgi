@@ -1,23 +1,22 @@
 #!/usr/bonsaitools/bin/perl -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
-# The contents of this file are subject to the Mozilla Public
-# License Version 1.1 (the "License"); you may not use this file
-# except in compliance with the License. You may obtain a copy of
-# the License at http://www.mozilla.org/MPL/
-#
-# Software distributed under the License is distributed on an "AS
-# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-# implied. See the License for the specific language governing
-# rights and limitations under the License.
-#
+# The contents of this file are subject to the Mozilla Public License
+# Version 1.0 (the "License"); you may not use this file except in
+# compliance with the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations
+# under the License.
+# 
 # The Original Code is the Bugzilla Bug Tracking System.
-#
+# 
 # The Initial Developer of the Original Code is Netscape Communications
-# Corporation. Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation. All
-# Rights Reserved.
-#
+# Corporation. Portions created by Netscape are Copyright (C) 1998
+# Netscape Communications Corporation. All Rights Reserved.
+# 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 
 # Provides a silly 'back-door' mechanism to let me automatically insert
@@ -43,13 +42,6 @@ print "Content-type: text/plain\n\n";
 # }
 
 my $host = $ENV{'REMOTE_ADDR'};
-
-#  if (open(CODE, ">data/backdoorcode")) {
-#      print CODE GenerateCode("%::FORM");
-#      close(CODE);
-#  }
-#
-# do "/tmp/backdoorcode";
 
 SendSQL("select passwd from backdoor where host = '$host'");
 my $passwd = FetchOneColumn();
@@ -93,10 +85,7 @@ if ($prod eq "Communicator") {
     $version = "other";
 }
 
-if ($prod eq "NSS") {
-  $version = "unspecified";
-}
-
+    
 # Validate fields, and whine about things that we apparently couldn't remap
 # into something legal.
 
@@ -120,7 +109,7 @@ $::FORM{'component'} = $comp;
 $::FORM{'version'} = $version;
 
 
-my $longdesc =
+$::FORM{'long_desc'} =
     "(This bug imported from BugSplat, Netscape's internal bugsystem.  It
 was known there as bug #$::FORM{'bug_id'}
 http://scopus.netscape.com/bugsplat/show_bug.cgi?id=$::FORM{'bug_id'}
@@ -143,7 +132,7 @@ if ($::FORM{'qa_contact'} ne "") {
 
 my @list = ('reporter', 'assigned_to', 'product', 'version', 'rep_platform',
             'op_sys', 'bug_status', 'bug_severity', 'priority', 'component',
-            'short_desc', 'creation_ts', 'delta_ts',
+            'short_desc', 'long_desc', 'creation_ts', 'delta_ts',
             'bug_file_loc', 'qa_contact', 'groupset');
 
 my @vallist;
@@ -162,10 +151,6 @@ SendSQL($query);
 
 SendSQL("select LAST_INSERT_ID()");
 my $zillaid = FetchOneColumn();
-
-SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) VALUES " .
-        "($zillaid, $::FORM{'reporter'}, now(), " . SqlQuote($longdesc) . ")");
-
 
 foreach my $cc (split(/,/, $::FORM{'cc'})) {
     if ($cc ne "") {

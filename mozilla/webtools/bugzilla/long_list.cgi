@@ -1,23 +1,22 @@
 #!/usr/bonsaitools/bin/perl -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
-# The contents of this file are subject to the Mozilla Public
-# License Version 1.1 (the "License"); you may not use this file
-# except in compliance with the License. You may obtain a copy of
-# the License at http://www.mozilla.org/MPL/
-#
-# Software distributed under the License is distributed on an "AS
-# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-# implied. See the License for the specific language governing
-# rights and limitations under the License.
-#
+# The contents of this file are subject to the Mozilla Public License
+# Version 1.0 (the "License"); you may not use this file except in
+# compliance with the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations
+# under the License.
+# 
 # The Original Code is the Bugzilla Bug Tracking System.
-#
+# 
 # The Initial Developer of the Original Code is Netscape Communications
-# Corporation. Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation. All
-# Rights Reserved.
-#
+# Corporation. Portions created by Netscape are Copyright (C) 1998
+# Netscape Communications Corporation. All Rights Reserved.
+# 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 
 
@@ -26,23 +25,13 @@ use strict;
 
 require "CGI.pl";
 
-# Shut up misguided -w warnings about "used only once".  "use vars" just
-# doesn't work for me.
-
-sub sillyness {
-    my $zz;
-    $zz = $::legal_keywords;
-    $zz = $::usergroupset;
-    $zz = %::FORM;
-}
+# Shut up misguided -w warnings about "used only once":
+use vars %::FORM;
 
 print "Content-type: text/html\n\n";
-PutHeader ("Full Text Bug Listing");
 
 ConnectToDatabase();
 quietly_check_login();
-
-GetVersionTable();
 
 my $generic_query  = "
 select
@@ -62,27 +51,28 @@ select
   bugs.short_desc,
   bugs.target_milestone,
   bugs.qa_contact,
-  bugs.status_whiteboard,
-  bugs.keywords
+  bugs.status_whiteboard
 from bugs,profiles assign,profiles report
-where assign.userid = bugs.assigned_to and report.userid = bugs.reporter and
-bugs.groupset & $::usergroupset = bugs.groupset and";
+where assign.userid = bugs.assigned_to and report.userid = bugs.reporter and ";
 
-$::FORM{'buglist'} = "" unless exists $::FORM{'buglist'};
 foreach my $bug (split(/:/, $::FORM{'buglist'})) {
-    SendSQL("$generic_query bugs.bug_id = $bug");
+ 	if (!CanISee($bug, DBname_to_id($::COOKIE{'Bugzilla_login'}))) {
+		next;
+	} 
+
+	SendSQL("$generic_query bugs.bug_id = $bug");
 
     my @row;
     if (@row = FetchSQLData()) {
         my ($id, $product, $version, $platform, $opsys, $status, $severity,
             $priority, $resolution, $assigned, $reporter, $component, $url,
             $shortdesc, $target_milestone, $qa_contact,
-            $status_whiteboard, $keywords) = (@row);
-        print "<IMG SRC=\"1x1.gif\" WIDTH=1 HEIGHT=80 ALIGN=LEFT>\n";
-        print "<TABLE WIDTH=100%>\n";
-        print "<TD COLSPAN=4><TR><DIV ALIGN=CENTER><B><FONT =\"+3\">" .
+            $status_whiteboard) = (@row);
+		print "<HTML><HEAD><TITLE>Bug # $id</TITLE></HEAD><BODY BGCOLOR=white>\n";
+        print "<TABLE CELLSPACING=4 CELLPADDING=4>\n";
+        print "<TR><TD COLSPAN=4 ALIGN=center><B><FONT =\"+3\">" .
             html_quote($shortdesc) .
-                "</B></FONT></DIV>\n";
+                "</B></FONT></TD></TR>\n";
         print "<TR><TD><B>Bug#:</B> <A HREF=\"show_bug.cgi?id=$id\">$id</A>\n";
         print "<TD><B>Product:</B> $product\n";
         print "<TD><B>Version:</B> $version\n";
@@ -108,15 +98,13 @@ foreach my $bug (split(/:/, $::FORM{'buglist'})) {
         print "<TR><TD COLSPAN=6><B>URL:</B>&nbsp;";
 	print "<A HREF=\"" . $url . "\">" .  html_quote($url) . "</A>\n"; 
         print "<TR><TD COLSPAN=6><B>Summary:</B> " . html_quote($shortdesc) . "\n";
-        if (@::legal_keywords) {
-            print "<TR><TD><B>Keywords: </B>$keywords</TD></TR>\n";
-        }
         if (Param("usestatuswhiteboard")) {
             print "<TR><TD COLSPAN=6><B>Status Whiteboard:" .
                 html_quote($status_whiteboard) . "\n";
         }
-        print "<TR><TD><B>Description:</B>\n</TABLE>\n";
-        print GetLongDescriptionAsHTML($bug);
-        print "<HR>\n";
+        print "<TR><TD><B>Description:</B></TD></TR>\n";
+        print "<TR><TD ALIGN=left COLSPAN=4><PRE>" . html_quote(GetLongDescriptionAsText($bug)) . "</PRE></TD>\n";
+		print "</TR></TABLE></BODY></HTML>\n";
     }
 }
+

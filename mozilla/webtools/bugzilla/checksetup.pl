@@ -162,11 +162,11 @@ $charts++ if eval "require GD";
 $charts++ if eval "require Chart::Base";
 if ($charts != 2) {
     print "If you you want to see graphical bug dependency charts, you may install\n",
-    "the optional libgd and the Perl modules GD-1.19 and Chart::Base-0.99b, e.g. by\n",
+    "the optional libgd and the Perl modules GD and Chart::Base, e.g. by\n",
     "running (as root)\n\n",
     "   perl -MCPAN -eshell\n",
-    "   install LDS/GD-1.19.tar.gz\n",
-    "   install N/NI/NINJAZ/Chart-0.99b.tar.gz";
+    "   install GD\n",
+    "   install Chart::Base\n";
 }
 
 
@@ -248,7 +248,7 @@ LocalVar('$db_host', '
 #
 $db_host = "localhost";         # where is the database?
 $db_port = 3306;                # which port to use
-$db_name = "bugs";              # name of the MySQL database
+$db_name = "bugs-devel";              # name of the MySQL database
 $db_user = "bugs";              # user to attach to the MySQL database
 ');
 LocalVar('$db_pass', '
@@ -426,8 +426,7 @@ if ($webservergroup) {
                 'processmail',
                 'whineatnews.pl',
                 'collectstats.pl',
-                'checksetup.pl',
-                'syncshadowdb';
+                'checksetup.pl';
 
     chmod 0770, 'data', 'shadow';
     chmod 0666, glob('data/*');
@@ -548,7 +547,7 @@ $table{bugs} =
     assigned_to mediumint not null, # This is a comment.
     bug_file_loc text,
     bug_severity enum($severities) not null,
-    bug_status enum("UNCONFIRMED", "NEW", "ASSIGNED", "REOPENED", "RESOLVED", "VERIFIED", "CLOSED") not null,
+    bug_status enum("NEW", "ASSIGNED", "REOPENED", "RESOLVED", "VERIFIED", "CLOSED") not null,
     creation_ts datetime not null,
     delta_ts timestamp,
     short_desc mediumtext,
@@ -560,7 +559,7 @@ $table{bugs} =
     version varchar(16) not null,
     component varchar(50) not null,
     resolution enum("", "FIXED", "INVALID", "WONTFIX", "LATER", "REMIND", "DUPLICATE", "WORKSFORME") not null,
-    target_milestone varchar(20) not null default "---",
+    target_milestone varchar(20) not null,
     qa_contact mediumint not null,
     status_whiteboard mediumtext not null,
     votes mediumint not null,
@@ -568,7 +567,6 @@ $table{bugs} =
                                 # the real data comes from the keywords table.
     . '
     lastdiffed datetime not null,
-    everconfirmed tinyint not null,
 
     index (assigned_to),
     index (creation_ts),
@@ -658,11 +656,7 @@ $table{products} =
     description mediumtext,
     milestoneurl tinytext not null,
     disallownew tinyint not null,
-    votesperuser smallint not null,
-    maxvotesperbug smallint not null default 10000,
-    votestoconfirm smallint not null,
-    defaultmilestone varchar(20) not null default "---"
-';
+    votesperuser smallint not null';
 
 
 $table{profiles} =
@@ -676,23 +670,8 @@ $table{profiles} =
     disabledtext mediumtext not null,
     newemailtech tinyint not null,
     mybugslink tinyint not null default 1,
-    blessgroupset bigint not null,
-
 
     unique(login_name)';
-
-
-$table{profiles_activity} = 
-   'userid mediumint not null,
-    who mediumint not null,
-    profiles_when datetime not null,
-    fieldid mediumint not null,
-    oldvalue tinytext,
-    newvalue tinytext,
-
-    index (userid),
-    index (profiles_when),
-    index (fieldid)';
 
 
 $table{namedqueries} =
@@ -753,23 +732,6 @@ $table{keyworddefs} =
      unique(name)';
 
 
-$table{milestones} =
-    'value varchar(20) not null,
-     product varchar(64) not null,
-     sortkey smallint not null,
-     unique (product, value)';
-
-$table{shadowlog} =
-    'id int not null auto_increment primary key,
-     ts timestamp,
-     reflected tinyint not null,
-     command mediumtext not null,
-
-     index(reflected)';
-
-$table{product_group} = 
-	'productid	int not null,
-	 userid		int not null
 
 ###########################################################################
 # Create tables
@@ -802,7 +764,7 @@ while (my ($tabname, $fielddef) = each %table) {
     $fielddef =~ s/\$platforms/$platforms/;
 
     $dbh->do("CREATE TABLE $tabname (\n$fielddef\n)")
-        or die "Could not create table '$tabname'. Please check your '$db_base' access.\n";
+        or die "Could not create table '$tabname'. Please check your '$db_base' access. $DBI::errstr\n";
 }
 
 
@@ -813,31 +775,22 @@ while (my ($tabname, $fielddef) = each %table) {
 # Populate groups table
 ###########################################################################
 
-sub GroupExists ($)
-{
-    my ($name) = @_;
-    my $sth = $dbh->prepare("SELECT name FROM groups WHERE name='$name'");
-    $sth->execute;
-    if ($sth->rows) {
-        return 1;
-    }
-    return 0;
-}
-
-
 #
 # This subroutine checks if a group exist. If not, it will be automatically
 # created with the next available bit set
 #
 
-sub AddGroup {
-    my ($name, $desc, $userregexp) = @_;
-    $userregexp ||= "";
+sub AddGroup ($$)
+{
+    my ($name, $desc) = @_;
 
-    return if GroupExists($name);
+    # does the group exist?
+    my $sth = $dbh->prepare("SELECT name FROM groups WHERE name='$name'");
+    $sth->execute;
+    return if $sth->rows;
     
     # get highest bit number
-    my $sth = $dbh->prepare("SELECT bit FROM groups ORDER BY bit DESC");
+    $sth = $dbh->prepare("SELECT bit FROM groups ORDER BY bit DESC");
     $sth->execute;
     my @row = $sth->fetchrow_array;
 
@@ -854,30 +807,20 @@ sub AddGroup {
     $sth = $dbh->prepare('INSERT INTO groups
                           (bit, name, description, userregexp)
                           VALUES (?, ?, ?, ?)');
-    $sth->execute($bit, $name, $desc, $userregexp);
-    return $bit;
+    $sth->execute($bit, $name, $desc, "");
 }
 
 
 #
-# BugZilla uses --GROUPS-- to assign various rights to its users. 
+# BugZilla uses --GROUPS-- to assign various rights to it's users. 
 #
 
 AddGroup 'tweakparams',      'Can tweak operating parameters';
 AddGroup 'editusers',      'Can edit or disable users';
+AddGroup 'editgroupmembers', 'Can put people in and out of groups that they are members of.';
 AddGroup 'creategroups',     'Can create and destroy groups.';
 AddGroup 'editcomponents',   'Can create, destroy, and edit components.';
 AddGroup 'editkeywords',   'Can create, destroy, and edit keywords.';
-
-if (!GroupExists("editbugs")) {
-    my $id = AddGroup('editbugs',  'Can edit all aspects of any bug.', ".*");
-    $dbh->do("UPDATE profiles SET groupset = groupset | $id");
-}
-
-if (!GroupExists("canconfirm")) {
-    my $id = AddGroup('canconfirm',  'Can confirm a bug.', ".*");
-    $dbh->do("UPDATE profiles SET groupset = groupset | $id");
-}
 
 
 
@@ -1076,15 +1019,8 @@ sub ChangeFieldType ($$$)
     my $ref = GetFieldDef($table, $field);
     #print "0: $$ref[0]   1: $$ref[1]   2: $$ref[2]   3: $$ref[3]  4: $$ref[4]\n";
 
-    my $oldtype = $ref->[1];
-    if ($ref->[4]) {
-        $oldtype .= qq{ default "$ref->[4]"};
-    }
-
-    if ($oldtype ne $newtype) {
+    if ($$ref[1] ne $newtype) {
         print "Updating field type $field in table $table ...\n";
-        print "old: $oldtype\n";
-        print "new: $newtype\n";
         $newtype .= " NOT NULL" if $$ref[3];
         $dbh->do("ALTER TABLE $table
                   CHANGE $field
@@ -1491,95 +1427,6 @@ AddField('profiles', 'mybugslink', 'tinyint not null default 1');
 AddField('namedqueries', 'linkinfooter', 'tinyint not null');
 
 
-# 2000-02-12 Added a new state to bugs, UNCONFIRMED.  Added ability to confirm
-# a vote via bugs.  Added user bits to control which users can confirm bugs
-# by themselves, and which users can edit bugs without their names on them.
-# Added a user field which controls which groups a user can put other users 
-# into.
-
-my @states = ("UNCONFIRMED", "NEW", "ASSIGNED", "REOPENED", "RESOLVED",
-              "VERIFIED", "CLOSED");
-CheckEnumField('bugs', 'bug_status', @states);
-if (!GetFieldDef('bugs', 'everconfirmed')) {
-    AddField('bugs', 'everconfirmed',  'tinyint not null');
-    $dbh->do("UPDATE bugs SET everconfirmed = 1, delta_ts = delta_ts");
-}
-AddField('products', 'maxvotesperbug', 'smallint not null default 10000');
-AddField('products', 'votestoconfirm', 'smallint not null');
-AddField('profiles', 'blessgroupset', 'bigint not null');
-
-
-# 2000-03-21 Adding a table for target milestones to 
-# database - matthew@zeroknowledge.com
-
-$sth = $dbh->prepare("SELECT count(*) from milestones");
-$sth->execute();
-if (!($sth->fetchrow_arrayref()->[0])) {
-    print "Replacing blank milestones...\n";
-    $dbh->do("UPDATE bugs SET target_milestone = '---', delta_ts=delta_ts WHERE target_milestone = ' '");
-    
-# Populate milestone table with all exisiting values in database
-    $sth = $dbh->prepare("SELECT DISTINCT target_milestone, product FROM bugs");
-    $sth->execute();
-    
-    print "Populating milestones table...\n";
-    
-    my $value;
-    my $product;
-    while(($value, $product) = $sth->fetchrow_array())
-    {
-        # check if the value already exists
-        my $sortkey = substr($value, 1);
-        if ($sortkey !~ /^\d+$/) {
-            $sortkey = 0;
-        } else {
-            $sortkey *= 10;
-        }
-        $value = $dbh->quote($value);
-        $product = $dbh->quote($product);
-        my $s2 = $dbh->prepare("SELECT value FROM milestones WHERE value = $value AND product = $product");
-        $s2->execute();
-        
-        if(!$s2->fetchrow_array())
-        {
-            $dbh->do("INSERT INTO milestones(value, product, sortkey) VALUES($value, $product, $sortkey)");
-        }
-    }
-}
-
-# 2000-03-22 Changed the default value for target_milestone to be "---"
-# (which is still not quite correct, but much better than what it was 
-# doing), and made the size of the value field in the milestones table match
-# the size of the target_milestone field in the bugs table.
-
-ChangeFieldType('bugs', 'target_milestone',
-                'varchar(20) default "---"');
-ChangeFieldType('milestones', 'value', 'varchar(20)');
-
-
-# 2000-03-23 Added a defaultmilestone field to the products table, so that
-# we know which milestone to initially assign bugs to.
-
-if (!GetFieldDef('products', 'defaultmilestone')) {
-    AddField('products', 'defaultmilestone',
-             'varchar(20) not null default "---"');
-    $sth = $dbh->prepare("SELECT product, defaultmilestone FROM products");
-    $sth->execute();
-    while (my ($product, $defaultmilestone) = $sth->fetchrow_array()) {
-        $product = $dbh->quote($product);
-        $defaultmilestone = $dbh->quote($defaultmilestone);
-        my $s2 = $dbh->prepare("SELECT value FROM milestones " .
-                               "WHERE value = $defaultmilestone " .
-                               "AND product = $product");
-        $s2->execute();
-        if (!$s2->fetchrow_array()) {
-            $dbh->do("INSERT INTO milestones(value, product) " .
-                     "VALUES ($defaultmilestone, $product)");
-        }
-    }
-}
-
-
 #
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
@@ -1596,4 +1443,3 @@ if ($regenerateshadow) {
     print "Now regenerating the shadow database for all bugs.\n";
     system("./processmail regenerate");
 }
-unlink "data/versioncache";

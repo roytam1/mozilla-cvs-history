@@ -40,6 +40,17 @@ ConnectToDatabase();
 
 quietly_check_login();
 
+if ($::driver ne 'mysql') {
+	my $userid = 0;
+	if (defined($::COOKIE{'Bugzilla_login'})) {
+		$userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
+	}
+	if (!CanISee($id, $userid)) {
+		PutHeader("Not Allowed");
+		PutError("You do not have permission to access this bug.");
+	}
+}
+
 $::usergroupset = $::usergroupset; # More warning suppression silliness.
 
 my %seen;
@@ -61,10 +72,24 @@ sub DumpKids {
             my ($bugid, $stat, $milestone) = ("", "", "");
             my ($userid, $short_desc) = ("", "");
             if (Param('usetargetmilestone')) {
-                SendSQL("select bug_id, bug_status, target_milestone, assigned_to, short_desc from bugs where bug_id = $kid and bugs.groupset & $::usergroupset = bugs.groupset");
+				if ($::driver eq 'mysql') {
+                	SendSQL("select bug_id, bug_status, target_milestone, assigned_to, " .
+							"short_desc from bugs where bug_id = $kid and " .
+							"bugs.groupset & $::usergroupset = bugs.groupset");
+				} else {
+                   SendSQL("select bug_id, bug_status, target_milestone, assigned_to, " .
+                            "short_desc from bugs where bug_id = $kid"); 
+				}
                 ($bugid, $stat, $milestone, $userid, $short_desc) = (FetchSQLData());
             } else {
-                SendSQL("select bug_id, bug_status, assigned_to, short_desc from bugs where bug_id = $kid and bugs.groupset & $::usergroupset = bugs.groupset");
+				if ($::driver eq 'mysql') {
+                	SendSQL("select bug_id, bug_status, assigned_to, short_desc " .
+							"from bugs where bug_id = $kid and " .
+							"bugs.groupset & $::usergroupset = bugs.groupset");
+				} else {
+                    SendSQL("select bug_id, bug_status, assigned_to, short_desc " .
+                            "from bugs where bug_id = $kid");
+				}
                 ($bugid, $stat, $userid, $short_desc) = (FetchSQLData());
 
             }
@@ -73,31 +98,33 @@ sub DumpKids {
             }
             my $opened = ($stat eq "NEW" || $stat eq "ASSIGNED" ||
                           $stat eq "REOPENED");
-            print "<li>";
+            print "<LI>";
             if (!$opened) {
-                print "<strike>";
+                print "<STRIKE>";
             }
             $short_desc = html_quote($short_desc);
             SendSQL("select login_name from profiles where userid = $userid");
             my ($owner) = (FetchSQLData());
             if ( (Param('usetargetmilestone')) && ($milestone) ) {
-                print qq{<a href="show_bug.cgi?id=$kid">$kid [$milestone, $owner] - $short_desc</a>};
+                print qq{<A HREF="show_bug.cgi?id=$kid">$kid [$milestone, $owner] - $short_desc</A>};
             } else {
-                print qq{<a href="show_bug.cgi?id=$kid">$kid [$owner] - $short_desc</a>};
+                print qq{<A HREF="show_bug.cgi?id=$kid">$kid [$owner] - $short_desc</A>};
             }
             if (!$opened) {
-                print "</strike>";
+                print "</STRIKE>";
             }
             DumpKids($kid, $me, $target);
         }
-        print "</ul>\n";
+        print "</UL>\n";
     }
 }
 
-print "<h1>Bugs that bug $linkedid depends on</h1>";
+print "<TABLE WIDTH=700 ALIGN=center>\n<TR>\n<TD ALIGN=left>\n";
+print "<H2>Bugs that bug $linkedid depends on</H2>";
 DumpKids($id, "blocked", "dependson");
-print "<h1>Bugs that depend on bug $linkedid</h1>";
+print "<H2>Bugs that depend on bug $linkedid</H2>";
 undef %seen;
 DumpKids($id, "dependson", "blocked");
+print "</TD>\n</TR>\n</TABLE>\n";
 
 PutFooter();

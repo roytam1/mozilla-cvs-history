@@ -39,9 +39,9 @@ sub EmitEntry {
 sub Error {
     my ($msg) = (@_);
     print qq{
-$msg
+<CENTER><B>$msg</B>
 <P>
-Please hit <B>back</B> and try again.
+Please hit <B>back</B> and try again.</CENTER>
 };
     PutFooter();
     exit();
@@ -67,11 +67,16 @@ sub ShowAccount {
 sub SaveAccount {
     if ($::FORM{'oldpwd'} ne ""
         || $::FORM{'pwd1'} ne "" || $::FORM{'pwd2'} ne "") {
-        my $old = SqlQuote($::FORM{'oldpwd'});
-        my $pwd1 = SqlQuote($::FORM{'pwd1'});
-        my $pwd2 = SqlQuote($::FORM{'pwd2'});
-        SendSQL("SELECT cryptpassword = ENCRYPT($old, LEFT(cryptpassword, 2)) " .
-                "FROM profiles WHERE userid = $userid");
+        my $old = $::FORM{'oldpwd'};
+        my $pwd1 = $::FORM{'pwd1'};
+        my $pwd2 = $::FORM{'pwd2'};
+
+		my $oldencrypted = crypt($old, substr($old, 0, 2));
+		if ($::driver eq 'mysql') {
+        	SendSQL("SELECT cryptpassword FROM profiles WHERE cryptpassword = " . SqlQuote($oldencrypted));
+		} else {
+			SendSQL("SELECT cryptpassword FROM profiles WHERE cryptpassword = " . OracleQuote($oldencrypted));
+		}
         if (!FetchOneColumn()) {
             Error("You did not enter your old password correctly.");
         }
@@ -81,10 +86,19 @@ sub SaveAccount {
         if ($::FORM{'pwd1'} eq '') {
             Error("You must enter a new password.");
         }
-        SendSQL("UPDATE profiles SET password = $pwd1, " .
-                "cryptpassword = ENCRYPT($pwd1) " .
-                "WHERE userid = $userid");
+
+		my $newencrypted = crypt($pwd1, substr($pwd1, 0, 2));
+		if ($::driver eq 'mysql') {
+        	SendSQL("UPDATE profiles SET password = " . SqlQuote($pwd1) .
+                	", cryptpassword = " . SqlQuote($newencrypted) . 
+                	" WHERE userid = $userid");
+		} else {
+			SendSQL("UPDATE profiles SET password = " . OracleQuote($pwd1) .
+                    ", cryptpassword = " . OracleQuote($newencrypted) .
+                    " WHERE userid = $userid");
+        }
     }
+
     SendSQL("UPDATE profiles SET " .
             "realname = " . SqlQuote($::FORM{'realname'}) .
             " WHERE userid = $userid");
@@ -111,7 +125,7 @@ On which of these bugs would you like email notification of changes?
     my $entry =
         BuildPulldown("emailnotification", 
                       [["ExcludeSelfChanges",
-                        "All qualifying bugs except those which I change"],
+                        "All qualifying bugs except those which I had changed"],
                        ["CConly",
                         "Only those bugs which I am listed on the CC line"],
                        ["All",
@@ -274,24 +288,24 @@ my @banklist = (
                 ["account", "Account settings",
                  \&ShowAccount, \&SaveAccount],
                 ["diffs", "Email settings",
-                 \&ShowDiffs, \&SaveDiffs],
-                ["footer", "Page footer",
-                 \&ShowFooter, \&SaveFooter],
-                ["permissions", "Permissions",
-                 \&ShowPermissions, undef]
-                );
+                 \&ShowDiffs, \&SaveDiffs]);
+#                ["footer", "Page footer",
+#                 \&ShowFooter, \&SaveFooter] , 
+#                ["permissions", "Permissions",
+#                 \&ShowPermissions, undef]
+#                );
 
 
 my $numbanks = @banklist;
 my $numcols = $numbanks + 2;
 
-my $headcol = '"lightblue"';
+my $headcol = '"#BFBFBF"';
 
 print qq{
 <CENTER>
-<TABLE CELLSPACING="0" CELLPADDING="10" BORDER=0 WIDTH="100%">
+<TABLE ALIGN=center CELLSPACING="0" CELLPADDING="10" BORDER=0 WIDTH="800">
 <TR>
-<TH COLSPAN="$numcols" BGCOLOR="lightblue">User preferences</TH>
+<TH COLSPAN="$numcols" BGCOLOR="#BFBFBF">User preferences</TH>
 </TR>
 <TR><TD BGCOLOR=$headcol>&nbsp;</TD>
 };
@@ -309,7 +323,7 @@ foreach my $i (@banklist) {
         my $zz;
         ($zz, $bankdescription, $showfunc, $savefunc) = (@$i);
     } else {
-        print qq{<TD ALIGN="center" BGCOLOR="lightblue"><A HREF="userprefs.cgi?bank=$name">$description</A></TD>};
+        print qq{<TD ALIGN="center" BGCOLOR="#ECECEC"><A HREF="userprefs.cgi?bank=$name">$description</A></TD>};
     }
 }
 print qq{
@@ -327,12 +341,12 @@ if (defined $bankdescription) {
 
     if ($::FORM{'dosave'}) {
         &$savefunc;
-        print "Your changes have been saved.";
+        print "<CENTER><B>Your changes have been saved.</B></CENTER>\n";
     }
     print qq{
-<H3>$bankdescription</H3>
+<CENTER><H3>$bankdescription</H3></CENTER>
 <FORM METHOD="POST">
-<TABLE>
+<TABLE ALIGN=center WIDTH=800>
 };
     &$showfunc;
     print qq{
@@ -341,11 +355,11 @@ if (defined $bankdescription) {
 <INPUT TYPE="hidden" NAME="bank" VALUE="$bank">
 };
     if ($savefunc) {
-        print qq{<INPUT TYPE="submit" VALUE="Submit">\n};
+        print qq{<CENTER><INPUT TYPE="submit" VALUE="Submit"></CENTER>\n};
     }
     print qq{</FORM>\n};
 } else {
-    print "<P>Please choose from the above links which settings you wish to change.</P>";
+    print "<CENTER><P>Please choose from the above links which settings you wish to change.</P></CENTER>";
 }
 
 

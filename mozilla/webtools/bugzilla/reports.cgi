@@ -439,7 +439,7 @@ FIN
         $prodname =~ s/\//-/gs;
 
         my $file = join '/', $dir, $prodname;
-	my $image = "$file.gif";
+	my $image = "$file.png";
 
 	if (! open FILE, $file)
 		{
@@ -495,7 +495,7 @@ FIN
 	$img->set (%settings);
 	
 	open IMAGE, ">$image" or die "$image: $!";
-	$img->gif (*IMAGE, \@data);
+	$img->png (*IMAGE, \@data);
 	close IMAGE;
 
 	print <<FIN;

@@ -20,11 +20,11 @@
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Dave Miller <dave@intrec.com>
 #                 Joe Robins <jmrobins@tgix.com>
-
+#				  David Lawrence <dkl@redhat.com>
 
 ########################################################################
 #
-# enter_bug.cgi
+# ::enter_bug.cgi
 # -------------
 # Displays bug entry form. Bug fields are specified through popup menus, 
 # drop-down lists, or text fields. Default for these values can be passed
@@ -37,7 +37,7 @@ use strict;
 
 require "CGI.pl";
 
-# Shut up misguided -w warnings about "used only once".  "use vars" just
+# Shut up misguided -w warnings about "used only once". "use vars" just
 # doesn't work for me.
 
 sub sillyness {
@@ -49,50 +49,41 @@ sub sillyness {
     $zz = @::legal_severity;
 }
 
-# I've moved the call to confirm_login up to here, since if we're using bug
-# groups to restrict bug entry, we need to know who the user is right from
-# the start.  If that parameter is turned off, there's still no harm done in
-# doing it now instead of a bit later.  -JMR, 2/18/00
-# Except that it will cause people without cookies enabled to have to log
-# in an extra time.  Only do it here if we really need to.  -terry, 3/10/00
-if (Param("usebuggroupsentry")) {
-    confirm_login();
+# hash to hold values to be passed to the html fill in template
+# my %::enter_bug;
+
+confirm_login();
+
+my $userid = 0;
+if (defined ($::COOKIE{'Bugzilla_login'})) {
+	$userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
 }
 
 if (!defined $::FORM{'product'}) {
     GetVersionTable();
-    my @prodlist;
-    foreach my $p (sort(keys %::versions)) {
-        if (defined $::proddesc{$p} && $::proddesc{$p} eq '0') {
-            # Special hack.  If we stuffed a "0" into proddesc, that means
-            # that disallownew was set for this bug, and so we don't want
-            # to allow people to specify that product here.
-            next;
-        }
-        if(Param("usebuggroupsentry")
-           && GroupExists($p)
-           && !UserInGroup($p)) {
-          # If we're using bug groups to restrict entry on products, and
-          # this product has a bug group, and the user is not in that
-          # group, we don't want to include that product in this list.
-          next;
-        }
-        push(@prodlist, $p);
-    }
+
+	my @prodlist = GenProductList($userid, keys %::versions);
+
     if (1 != @prodlist) {
         print "Content-type: text/html\n\n";
         PutHeader("Enter Bug");
-        
-        print "<H2>First, you must pick a product on which to enter\n";
-        print "a bug.</H2>\n";
-        print "<table>";
-        foreach my $p (@prodlist) {
+
+        print "<CENTER><H3>First, did you <A HREF=\"query.cgi\">query</A> the current database of bugs";
+		print "to see if your problem has already been reported?<P>";
+		print "Also, have you checked to see if your problem has been fixed in a latest ";
+		print "<A HREF=\"http://www.redhat.com/support/updates.html\">errata</A> updates?<P>"; 
+		print "If it has not then pick a product or category on which to enter a bug.</H3></CENTER>";
+		print "<TABLE ALIGN=center BORDER=1 CELLSPACING=0 CELLPADDING=3>\n";
+		print "<TR BGCOLOR=\"#BFBFBF\">\n<TH ALIGN=left>Product</TH>\n";
+		print "<TH ALIGN=left>Description</TH>\n</TR>\n";
+        foreach my $p (sort (@prodlist)) {
             if (defined $::proddesc{$p} && $::proddesc{$p} eq '0') {
                 # Special hack.  If we stuffed a "0" into proddesc, that means
                 # that disallownew was set for this bug, and so we don't want
                 # to allow people to specify that product here.
                 next;
             }
+
             if(Param("usebuggroupsentry")
                && GroupExists($p)
                && !UserInGroup($p)) {
@@ -101,22 +92,22 @@ if (!defined $::FORM{'product'}) {
                 # group, we don't want to include that product in this list.
                 next;
             }
-            print "<tr><th align=right valign=top><a href=\"enter_bug.cgi?product=" . url_quote($p) . "\">$p</a>:</th>\n";
+			print "<TR BGCOLOR=\"#ECECEC\">";
+			print "<TH ALIGN=left VALIGN=center><A HREF=\"enter_bug.cgi?product=" . url_quote($p);
+			print "\">$p</A></TH>\n";
             if (defined $::proddesc{$p}) {
-                print "<td valign=top>$::proddesc{$p}</td>\n";
+                print "<TD VALIGN=center ALIGN=left>$::proddesc{$p}</TD>\n";
             }
-            print "</tr>";
+            print "</TR>";
         }
-        print "</table>\n";
+        print "</TABLE>\n";
         PutFooter();
-        exit;
+		exit;
     }
     $::FORM{'product'} = $prodlist[0];
 }
 
 my $product = $::FORM{'product'};
-
-confirm_login();
 
 print "Content-type: text/html\n\n";
 
@@ -131,6 +122,7 @@ sub formvalue {
     return "";
 }
 
+
 sub pickplatform {
     my $value = formvalue("rep_platform");
     if ($value ne "") {
@@ -141,9 +133,9 @@ sub pickplatform {
             /Mozilla.*\(Windows/ && do {return "PC";};
             /Mozilla.*\(Macintosh/ && do {return "Macintosh";};
             /Mozilla.*\(Win/ && do {return "PC";};
-	    /Mozilla.*Windows NT/ && do {return "PC";};
-            /Mozilla.*Linux.*86/ && do {return "PC";};
-            /Mozilla.*Linux.*alpha/ && do {return "DEC";};
+	        /Mozilla.*Windows NT/ && do {return "PC";};
+            /Mozilla.*Linux.*86/ && do {return "i386";};
+            /Mozilla.*Linux.*alpha/ && do {return "alpha";};
             /Mozilla.*OSF/ && do {return "DEC";};
             /Mozilla.*HP-UX/ && do {return "HP";};
             /Mozilla.*IRIX/ && do {return "SGI";};
@@ -153,7 +145,6 @@ sub pickplatform {
     # default
     return "Other";
 }
-
 
 
 sub pickversion {
@@ -182,7 +173,7 @@ sub pickversion {
 
 
 sub pickcomponent {
-    my $result =formvalue('component');
+    my $result = formvalue('component');
     if ($result ne "" && lsearch($::components{$product}, $result) < 0) {
         $result = "";
     }
@@ -211,41 +202,50 @@ sub pickos {
             /Mozilla.*\(Win95.*\)/          && do {return "Windows 95";};
             /Mozilla.*\(Win98.*\)/          && do {return "Windows 98";};
             /Mozilla.*\(WinNT.*\)/          && do {return "Windows NT";};
-            /Mozilla.*\(Windows.*NT/        && do {return "Windows NT";};
-            /Mozilla.*Windows NT 5.*\)/     && do {return "Windows 2000";};
         }
     }
     # default
-    return "other";
+    return "Linux";
+#	return "other";
 }
-
 
 GetVersionTable();
 
-my $assign_element = GeneratePersonInput('assigned_to', 1,
-                                         formvalue('assigned_to'));
-my $cc_element = GeneratePeopleInput('cc', formvalue('cc'));
+$::enter_bug{'assign_element'} = "<A HREF=\"bug_status.cgi#assigned_to\"><B>Assigned To:</B></A></TD><TD>" . 
+							   GeneratePeopleInput('assigned_to', formvalue('assigned_to'));
 
+$::enter_bug{'cc_element'} = "<B>Cc:</B></TD><TD>" .
+						   GeneratePeopleInput('cc', formvalue('cc'));
 
 my $priority = Param('defaultpriority');
 
-my $priority_popup = make_popup('priority', \@::legal_priority,
-                                formvalue('priority', $priority), 0);
-my $sev_popup = make_popup('bug_severity', \@::legal_severity,
-                           formvalue('bug_severity', 'normal'), 0);
-my $platform_popup = make_popup('rep_platform', \@::legal_platform,
-                                pickplatform(), 0);
-my $opsys_popup = make_popup('op_sys', \@::legal_opsys, pickos(), 0);
+$::enter_bug{'severity_popup'} = "<A HREF=\"bug_status.cgi#bug_severity\"><B>Severity:</B></A></TD><TD>" . 
+							   make_popup('bug_severity', \@::legal_severity,
+                           	   formvalue('bug_severity', 'normal'), 0);
+
+$::enter_bug{'platform_popup'} = "<A HREF=\"bug_status.cgi#rep_platform\"><B>Platform:<B></A></TD><TD>" . 
+							   make_popup('rep_platform', \@::legal_platform,
+                               pickplatform(), 0) ;
+
+# $::enter_bug{'opsys_popup'} = "<A HREF=\"bug_status.cgi#op_sys\"><B>OpSys:</B></A></TD><TD>" . 
+							make_popup('op_sys', \@::legal_opsys, pickos(), 0);
+$::enter_bug{'opsys_popup'} = "<INPUT TYPE=hidden NAME=op_sys VALUE=\"" . value_quote(pickos()) ."\"></TD><TD>\n"; 
 
 if (1 == @{$::components{$product}}) {
     # Only one component; just pick it.
     $::FORM{'component'} = $::components{$product}->[0];
 }
 
-my $component_popup = make_popup('component', $::components{$product},
-                                 formvalue('component'), 1);
+$::enter_bug{'component_popup'} = "<A HREF=\"describecomponents.cgi?product=" . value_quote($product) . "\">" .
+								"<B>Component:</B></A></TD><TD>" . 
+								make_popup('component', $::components{$product},
+                                formvalue('component'), 1);
 
-PutHeader ("Enter Bug","Enter Bug","This page lets you enter a new bug into Bugzilla.");
+$::enter_bug{'component_text'} = "<A HREF=\"bug_status.cgi#component\"><B>Component Text:</B></A></TD><TD>" .
+							   GeneratePeopleInput('component_text', formvalue('component_text'));
+
+PutHeader ("Enter Bug", "Enter Bug");
+# PutHeader ("Enter Bug","Enter Bug","This page lets you enter a new bug into Bugzilla.");
 
 # Modified, -JMR, 2/24,00
 # If the usebuggroupsentry parameter is set, we need to check and make sure
@@ -281,126 +281,71 @@ if(Param("usebuggroups") && GroupExists($product)) {
     ($group_bit, $group_desc) = FetchSQLData();
 }
 
-print "
-<FORM METHOD=POST ACTION=\"post_bug.cgi\">
-<INPUT TYPE=HIDDEN NAME=reporter VALUE=\"$::COOKIE{'Bugzilla_login'}\">
-<INPUT TYPE=HIDDEN NAME=product VALUE=\""  . value_quote($product) . "\">
-  <TABLE CELLSPACING=2 CELLPADDING=0 BORDER=0>";
 
 if (Param("entryheaderhtml")){
-  print "
-  <TR>
-    <td></td>
-    <td colspan=3>" .
-  Param("entryheaderhtml") . "\n" .
-  " </td> 
-  </TR>
-  <TR><td><br></td></TR>";
+	$::enter_bug{'entryheaderhtml'} = Param("entryheaderhtml"); 
 }
 
-print "
-  <TR>
-    <td ALIGN=right valign=top><B>Reporter:</B></td>
-    <td valign=top>$::COOKIE{'Bugzilla_login'}</td>
-    <td ALIGN=right valign=top><B>Product:</B></td>
-    <td valign=top>$product</td>
-  </TR>
-  <TR>
-    <td ALIGN=right valign=top><B>Version:</B></td>
-    <td>" . Version_element(pickversion(), $product) . "</td>
-    <td align=right valign=top><b><a href=\"describecomponents.cgi?product=" .
-    url_quote($product) . "\">Component:</a></b></td>
-    <td>$component_popup</td>
-  </TR>
-  <tr><td>&nbsp<td> <td> <td> <td> <td> </tr>
-  <TR>
-    <td align=right><B><A HREF=\"bug_status.html#rep_platform\">Platform:</A></B></td>
-    <TD>$platform_popup</TD>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#op_sys\">OS:</A></B></TD>
-    <TD>$opsys_popup</TD>
-    <td align=right valign=top></td>
-    <td rowspan=3></td>
-    <td></td>
-  </TR>
-  <TR>";
+$::enter_bug{'version_element'} = "<B>Version:</B></TD><TD>" . 
+								Version_element(pickversion(), $product);
+    
+$::enter_bug{'component_describe'} = url_quote($product);
+
 if (Param('letsubmitterchoosepriority')) {
-    print "
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#priority\">Resolution<br>Priority</A>:</B></TD>
-    <TD>$priority_popup</TD>";
+    $::enter_bug{'priority_popup'} = "<B><A HREF=\"bug_status.cgi#priority\">Priority</A>:</B></TD><TD>" . 
+								   make_popup('priority', \@::legal_priority,
+    							   formvalue('priority', $priority), 0);
 } else {
-    print '<INPUT TYPE=HIDDEN NAME=priority VALUE="' .
-        value_quote($priority) . '">';
+    $::enter_bug{'priority_popup'} = "<INPUT TYPE=HIDDEN NAME=priority VALUE=\"" .
+        						   value_quote($priority) . "\"></TD><TD>\n";
 }
-print "
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#severity\">Severity</A>:</B></TD>
-    <TD>$sev_popup</TD>
-    <td></td>
-    <td></td>
-  </TR>
-  <tr><td>&nbsp<td> <td> <td> <td> <td> </tr>
-";
+
+$::enter_bug{'url_element'} = "<B>URL:</B></TD><TD>" . 
+							GeneratePeopleInput('bug_file_loc', formvalue('bug_file_loc'));
+
+$::enter_bug{'summary_element'} = "<B>Summary:</B></TD><TD>" .
+								GeneratePeopleInput('short_desc', formvalue('short_desc'));
+
+$::enter_bug{'comment'} = value_quote(formvalue('comment'));
 
 if (UserInGroup("editbugs") || UserInGroup("canconfirm")) {
     SendSQL("SELECT votestoconfirm FROM products WHERE product = " .
             SqlQuote($product));
     if (FetchOneColumn()) {
-        print qq{
-  <TR>
-    <TD ALIGN="right"><B><A HREF="bug_status.html#status">Initial state:</B></A></TD>
-    <TD COLSPAN="5">
+        $::enter_bug{'initialstate_popup'} = qq{
+    <B><A HREF="bug_status.html#status">Initial state:</B></A></TD>
+    <TD>
 };
-        print BuildPulldown("bug_status",
-                            [[$::unconfirmedstate], ["NEW"]],
-                            "NEW");
-        print "</TD></TR>";
+        $::enter_bug{'initialstate_popup'} = BuildPulldown("bug_status",
+                            			   [[$::unconfirmedstate], ["NEW"]],
+                            			   "NEW");
     }
+} else {
+	$::enter_bug{'initialstate_popup'} = "<INPUT TYPE=hidden NAME=bug_status VALUE=\"NEW\">\n";
 }
 
+# Red Hat contract bug support
+if (Param('contract') && UserInGroup('setcontract')) {
+	$::enter_bug{'contract_checkbox'} = qq{
+<INPUT TYPE="checkbox" NAME="iscontract" VALUE="1">&nbsp;<B>This is a contract bug</B></TD>
+};
 
-print "
-  <tr>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#assigned_to\">Assigned To:</A></B></TD>
-    <TD colspan=5>$assign_element
-    (Leave blank to assign to default component owner)</td>
-  </tr>
-  <tr>
-    <TD ALIGN=RIGHT><B>Cc:</B></TD>
-    <TD colspan=5>$cc_element</TD>
-  </tr>
-  <tr><td>&nbsp<td> <td> <td> <td> <td> </tr>
-  <TR>
-    <TD ALIGN=RIGHT><B>URL:</B>
-    <TD COLSPAN=5>
-      <INPUT NAME=bug_file_loc SIZE=60 value=\"" .
-    value_quote(formvalue('bug_file_loc')) .
-    "\"></TD>
-  </TR>
-  <TR>
-    <TD ALIGN=RIGHT><B>Summary:</B>
-    <TD COLSPAN=5>
-      <INPUT NAME=short_desc SIZE=60 value=\"" .
-    value_quote(formvalue('short_desc')) .
-    "\"></TD>
-  </TR>
-  <tr><td align=right valign=top><B>Description:</b></td>
-<!--  </tr> <tr> -->
-    <td colspan=5><TEXTAREA WRAP=HARD NAME=comment ROWS=10 COLS=80>" .
-    value_quote(formvalue('comment')) .
-    "</TEXTAREA><BR></td>
-  </tr>";
+}
+
 # In between the Description field and the Submit buttons, we'll put in the
 # select box for the bug group, if necessary.
 # Rather than waste time with another Param check and another database access,
 # $group_bit will only have a non-zero value if we're using bug groups and have
 # one for this product, so I'll check on that instead here.  -JMR, 2/18/00
-if($group_bit) {
+if($group_bit && $::driver eq 'mysql') {
   # In addition, we need to handle the possibility that we're coming from
   # a bookmark template.  We'll simply check if we've got a parameter called
   # groupset passed with a value other than the current bit.  If so, then we're
   # coming from a template, and we don't have group_bit set, so turn it off.
   my $check0 = (formvalue("groupset",$group_bit) == $group_bit) ? "" : " SELECTED";
   my $check1 = ($check0 eq "") ? " SELECTED" : "";
-  print "
+  $::enter_bug{'group_select'} = "
+  <table>
   <tr>
     <td align=right><B>Access:</td>
     <td colspan=5>
@@ -413,62 +358,68 @@ if($group_bit) {
         </option>
       </select>
     </td>
-  </tr>"
-}
-
-print "
-  <tr>
-   <td></td><td colspan=5>
-";
-
-if ($::usergroupset ne '0') {
-    SendSQL("SELECT bit, description FROM groups " .
-            "WHERE bit & $::usergroupset != 0 " .
-            "  AND isbuggroup != 0 ORDER BY bit");
-     while (MoreSQLData()) {
-        my ($bit, $description) = (FetchSQLData());
-        print BuildPulldown("bit-$bit",
-                            [["0",
-                             "People not in the \"$description\" group can see this bug"],
-                             ["1",
-                              "Only people in the \"$description\" group can see this bug"]],
-                            0);
-        print "<BR>\n";
-    }
-}
-
-print "
-   </td>
   </tr>
-  <tr>
-    <td></td>
-    <td colspan=5>
-       <INPUT TYPE=\"submit\" VALUE=\"    Commit    \" ONCLICK=\"if (this.form.short_desc.value =='') { alert('Please enter a summary sentence for this bug.'); return false; }\">
-       &nbsp;&nbsp;&nbsp;&nbsp;
-       <INPUT TYPE=\"reset\" VALUE=\"Reset\">
-       &nbsp;&nbsp;&nbsp;&nbsp;
-       <INPUT TYPE=\"submit\" NAME=maketemplate VALUE=\"Remember values as bookmarkable template\">
-    </td>
-  </tr>";
+</table>";
+
+} else {
+
+	# Find out which groups we are a member of and form radio buttons
+	SendSQL("select user_group.groupid, groups.description, groups.isbuggroup " .
+			"from user_group, groups " .
+			"where user_group.groupid = groups.groupid " .
+			"and user_group.userid = $userid order by groups.groupid");
+	my %grouplist;
+	my @buggrouplist;
+	my @row;
+	my $flag = 0;
+	while (@row = FetchSQLData()) {
+		if ($row[2] == 0) {
+			next;
+		}
+		$grouplist{$row[0]} = $row[1]; 
+		$flag = 1;
+	}
+	
+	if ($flag) {
+		$::enter_bug{'group_select'} = qq{
+<TABLE CELLSPACING=0 CELLPADDING=3 BORDER=1>
+<TR BGCOLOR="#CFCFCF">
+	<TD ALIGN=left><B>Groups that can see this bug.</B><BR> 
+	(If all unchecked then same as everyone)</TD>
+</TR><TR>
+	<TD ALIGN=left>
+};
+
+		foreach my $group (keys %grouplist) {
+			$::enter_bug{'group_select'} .= "<INPUT TYPE=checkbox NAME=group-$group VALUE=1>\n";
+			$::enter_bug{'group_select'} .= "<B>$grouplist{$group}</B> can only see this bug.<BR>\n";
+		}
+
+		$::enter_bug{'group_select'} .= qq{
+	</TD>
+</TR>
+</TABLE>
+};
+
+	}
+}
 
 if ( Param('usebrowserinfo') ) {
-    print "
-  <tr>
-    <td></td>
-    <td colspan=3>
-     <br>
+   $::enter_bug{'browserinfo'} = "
      Some fields initialized from your user-agent, 
-     <b>$ENV{'HTTP_USER_AGENT'}</b>.  If you think it got it wrong, 
+     <B>$ENV{'HTTP_USER_AGENT'}</B>.  If you think it got it wrong, 
      please tell " . Param('maintainer') . " what it should have been.
-    </td>
-  </tr>";
+";
+
 }
-print "
-  </TABLE>
-  <INPUT TYPE=hidden name=form_name VALUE=enter_bug>
-</FORM>\n";
+
+foreach my $key (keys %::FORM) {
+	$::enter_bug{$key} = $::FORM{$key};
+}
+
+# we should have enough now to fill in the template
+
+print LoadTemplate('enterbug_redhat.tmpl', \%::enter_bug);
 
 PutFooter();
-
-print "</BODY></HTML>\n";
 

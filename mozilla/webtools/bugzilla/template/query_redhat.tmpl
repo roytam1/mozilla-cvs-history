@@ -1,6 +1,6 @@
 <!-- start javascript -->
 
-[+ $query_form{'javascript'} +]
+[+ $::query_form{'jscript'} +]
 
 <!-- end javascript -->
 
@@ -20,28 +20,28 @@
     <TD ALIGN=left>
     <TABLE CELLSPACING=4 CELLPADDING=0> 
     <TR>
-        <TH ALIGN=left VALIGN=bottom>Program</TH>
-        <TH ALIGN=left VALIGN=bottom>Version</TH>
-        <TH ALIGN=left VALIGN=bottom><A HREF="describecomponents.cgi">Component</A></TH>
+        <TD ALIGN=left VALIGN=bottom>Program</TD>
+        <TD ALIGN=left VALIGN=bottom>Version</TD>
+        <TD ALIGN=left VALIGN=bottom><A HREF="describecomponents.cgi">Component</A></TD>
     </TR><TR>
         <TD ALIGN=left VALIGN=top>
 <!-- start product selection -->
 
-[+ $query_form{'product_popup'} +]
+[+ $::query_form{'product_popup'} +]
 
 <!-- end product selection -->
         </TD>
         <TD ALIGN=left VALIGN=top>
 <!-- start version selection -->
 
-[+ $query_form{'version_popup'} +]
+[+ $::query_form{'version_popup'} +]
 
 <!-- end version selection -->
         </TD>
         <TD ALIGN=left VALIGN=top>
 <!-- start component selection -->
 
-[+ $query_form{'component_popup'} +]
+[+ $::query_form{'component_popup'} +]
 
 <!-- end component selection -->
         </TD>
@@ -61,52 +61,52 @@
         <TD ALIGN=left>
         <TABLE CELLPADDING=0 CELLSPACING=4>
         <TR> 
-                <TH ALIGN=left><A HREF="bug_status.cgi">Status</A></TH>
-                <TH ALIGN=left><A HREF="bug_status.cgi">Resolution</A></TH>
-                <TH ALIGN=left><A HREF="bug_status.cgi#rep_platform">Platform</A></TH>
-                <TH ALIGN=left><A HREF="bug_status.cgi#priority">Priority</A></TH>
-                <TH ALIGN=left><A HREF="bug_status.cgi#severity">Severity</A></TH>
-				[+ $query_form{'targetmilestone_header'} +]
+                <TD ALIGN=left><A HREF="bug_status.cgi">Status</A></TD>
+                <TD ALIGN=left><A HREF="bug_status.cgi">Resolution</A></TD>
+                <TD ALIGN=left><A HREF="bug_status.cgi#rep_platform">Platform</A></TD>
+                <TD ALIGN=left><A HREF="bug_status.cgi#priority">Priority</A></TD>
+                <TD ALIGN=left><A HREF="bug_status.cgi#severity">Severity</A></TD>
+				[+ $::query_form{'targetmilestone_header'} +]
         </TR><TR>
                 <TD ALIGN=left VALIGN=top>
 <!-- begin bugs status selection -->
 
-[+ $query_form{'status_popup'} +]
+[+ $::query_form{'status_popup'} +]
 
 <!-- end bug status selection -->
                 </TD>
                 <TD ALIGN=left VALIGN=top>
 <!-- start resolution selection -->
 
-[+ $query_form{'resolution_popup'} +]
+[+ $::query_form{'resolution_popup'} +]
 
 <!-- end resolution selection -->
                 </TD>
                 <TD ALIGN=left VALIGN=top>
 <!-- start platform selection -->
 
-[+ $query_form{'platform_popup'} +]
+[+ $::query_form{'platform_popup'} +]
 
 <!-- end platform selection -->
                 </TD>
                 <TD ALIGN=left VALIGN=top>
 <!-- start priority selection -->
 
-[+ $query_form{'priority_popup'} +]
+[+ $::query_form{'priority_popup'} +]
 
 <!-- end priority selection -->
                 </TD>
                 <TD ALIGN=left VALIGN=top>
 <!-- start severity selection -->
 
-[+ $query_form{'severity_popup'} +]
+[+ $::query_form{'severity_popup'} +]
 
 <!-- end severity selection -->
         		</TD>
 				<TD ALIGN=left VALIGN=top>
 <!-- start targetmilestone selection -->
 
-[+ $query_form{'targetmilestone_popup'} +]
+[+ $::query_form{'targetmilestone_popup'} +]
 
 <!-- end targetmilestone selection -->
 				</TD>
@@ -124,68 +124,16 @@
         <TD ALIGN=left>
         <TABLE>
         <TR>
-                <TD COLSPAN=2>
-                
-<TABLE BORDER=1 CELLSPACING=0 CELLPADDING=0 ALIGN=center>
-<TR>
-        <TD>
-        <TABLE CELLSPACING=0 CELLPADDING=0>
-        <TR>
-                <TD ROWSPAN=2 VALIGN=top><A HREF="helpemailquery.cgi">Email:</A>
-                <INPUT NAME="email1" SIZE="35" VALUE="dkl@redhat.com">&nbsp;matching as
-                <SELECT NAME=emailtype1>
+                <TD ALIGN=center>
 
-                <OPTION SELECTED VALUE="substring">substring
-                <OPTION VALUE="exact">exact
-                </SELECT>
-                </TD>
-                <TD>
-                <INPUT TYPE="checkbox" NAME="emailassigned_to1" VALUE=1 checked>Assigned To
-                </TD>
-        </TR><TR>
-                <TD>
-                <INPUT TYPE="checkbox" NAME="emailreporter1" VALUE=1 >Reporter
-                </TD>
-        </TR><TR>
-                <TD ALIGN=right>(Will match any of the selected fields)</TD>
-                <TD>
-                <INPUT TYPE="checkbox" NAME="emailcc1" VALUE=1 >CC &nbsp;&nbsp;
-                </TD>
-        </TR>
-        </TABLE>
-</TABLE>
-<p>
-                </TD></TR><TR><TD COLSPAN=2>
-                
-<TABLE BORDER=1 CELLSPACING=0 CELLPADDING=0 ALIGN=center>
-<TR>
-        <TD>
-        <TABLE CELLSPACING=0 CELLPADDING=0>
-        <TR>
-                <TD ROWSPAN=2 VALIGN=top><A HREF="helpemailquery.cgi">Email:</A>
-                <INPUT NAME="email2" SIZE="35" VALUE="">&nbsp;matching as
-                <SELECT NAME=emailtype2>
+<!-- start email selection 1 -->
+[+ $::query_form{'emailinput1'} +]
+<!-- end email selection 1 -->
 
-                <OPTION SELECTED VALUE="substring">substring
-                <OPTION VALUE="exact">exact
-                </SELECT>
-                </TD>
-                <TD>
-                <INPUT TYPE="checkbox" NAME="emailassigned_to2" VALUE=1 >Assigned To
-                </TD>
-        </TR><TR>
-                <TD>
-                <INPUT TYPE="checkbox" NAME="emailreporter2" VALUE=1 checked>Reporter
-                </TD>
-        </TR><TR>
-                <TD ALIGN=right>(Will match any of the selected fields)</TD>
-                <TD>
-                <INPUT TYPE="checkbox" NAME="emailcc2" VALUE=1 >CC &nbsp;&nbsp;
-                </TD>
-        </TR>
-        </TABLE>
-</TABLE>
-<p>
+<!-- start email selection 2 -->
+[+ $::query_form{'emailinput2'} +]
+<!-- end email selection 2 -->                
+
                 </TD>
         </TR>
         </TABLE>
@@ -212,7 +160,7 @@
         <TD ROWSPAN=2>
 
 <!-- start chfield selection -->
-[+ $query_form{'chfield_popup'} +]
+[+ $::query_form{'chfield_popup'} +]
 <!--end chfield selection -->
 
 		</TD>
@@ -240,25 +188,25 @@
 	<TR>
 
 <!-- start short description selection -->
-[+ $query_form{'summary_element'} +]
+[+ $::query_form{'summary_popup'} +]
 <!-- end short description selection -->
 
 	</TR><TR>
 
 <!-- start description selection -->
-[+ $query_form{'longdesc_element'} +]
+[+ $::query_form{'description_popup'} +]
 <!-- end description selection -->
 
 	</TR><TR>
 
 <!-- start bug file selection -->
-[+ $query_form{'bugfile_element'} +]
+[+ $::query_form{'url_popup'} +]
 <!-- end bug file selection -->
 
 	</TR><TR>
 
 <!-- start whiteboard selection -->
-[+ $query_form{'whiteboard_element'} +]
+[+ $::query_form{'whiteboard_popup'} +]
 <!-- end whiteboard selection -->
 
     </TABLE>
@@ -274,13 +222,13 @@
 		<TD ALIGN=left>
 
 <!-- begin query selection -->
-[+ $query_form{'query_element'} +]
+[+ $::query_form{'query_selection'} +]
 <!-- end query selection -->
 
         <NOBR>Sort By:
 
 <!-- begin order selection -->
-[+ $query_form{'order_popup'} +]
+[+ $::query_form{'sort_popup'} +]
 <!-- end order selection -->
 		
 		</NOBR>
@@ -301,7 +249,7 @@
         Give me a <A HREF="help.cgi">clue</A> about how to use this form.<P>
 
 <!-- start admin menu selection -->
-[+ $query_form{'admin_menu'} +]
+[+ $::query_form{'admin_menu'} +]
 <!-- end admin menu selection -->
 
 <P>
@@ -309,7 +257,7 @@
 [+ 
 	if (defined($::COOKIE{'Bugzilla_login'})) {
 		$OUT = "<a href=relogin.cgi>Log in as someone besides <b>$::COOKIE{'Bugzilla_login'}</b> or log out.</a><br>";
-		$OUT = "<a href=changepassword.cgi>Change your password or preferences.</a><br>";
+		$OUT = "<a href=userprefs.cgi>Change your password or preferences.</a><br>";
 	}
 +]
 

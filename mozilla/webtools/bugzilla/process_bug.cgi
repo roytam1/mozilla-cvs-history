@@ -20,6 +20,7 @@
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
+#				  David Lawrence <dkl@redhat.com>
 
 use diagnostics;
 use strict;
@@ -32,21 +33,19 @@ require "CGI.pl";
 # Shut up misguided -w warnings about "used only once":
 
 use vars %::versions,
-    %::components,
-    %::COOKIE,
-    %::keywordsbyname,
-    %::legal_keywords,
-    %::legal_opsys,
-    %::legal_platform,
-    %::legal_priority,
-    %::target_milestone,
-    %::legal_severity;
+    	 %::components,
+    	 %::COOKIE,
+	     %::keywordsbyname,
+	     %::legal_keywords,
+	     %::legal_opsys,
+	     %::legal_platform,
+	     %::legal_priority,
+	     %::legal_severity;
 
 my $whoid = confirm_login();
 
 print "Content-type: text/html\n\n";
-
-PutHeader ("Bug processed");
+PutHeader ("Bug Processed", "Bug Processed", $::FORM{'id'});
 
 GetVersionTable();
 
@@ -54,18 +53,44 @@ if ( Param("strictvaluechecks") ) {
     CheckFormFieldDefined(\%::FORM, 'product');
     CheckFormFieldDefined(\%::FORM, 'version');
     CheckFormFieldDefined(\%::FORM, 'component');
-
     # check if target milestone is defined - matthew@zeroknowledge.com
     if ( Param("usetargetmilestone") ) {
         CheckFormFieldDefined(\%::FORM, 'target_milestone');
     }
 }
 
+# Hack added by Red Hat to disallow all users ability to make changes to other peoples reports
+# but still be able to add or remove themselves to the cc list.
+# if the user is the reporter or has higher than default privilege, then can make changes
+# this should probably be more flexible. This is for changes other than add themselves to Cc 
+# list or add a comment. This whole thing doesnt work if multiple bugs selected.
+if ($::FORM{'id'}) {
+	if ($::FORM{'add_comment'}) {
+		if (defined $::FORM{'comment'} && $::FORM{'comment'} ne "") {
+            AppendComment($::FORM{'id'}, $::COOKIE{'Bugzilla_login'}, $::FORM{'comment'});
+            print "<CENTER><B>Your comment has been added. Back to Bug # " .
+            	  "<A HREF=\"show_bug.cgi?id=$::FORM{'id'}\">$::FORM{'id'}</A></B></CENTER><P>\n";	
+			# fix by {} - karin@root66.nl.eu.org
+			# we wouldn't like some hacker including shellchars, whould we?
+			$::FORM{'id'} =~ s/[^a-zA-Z0-9\@_\.\/\+\-]//g;
+			$::COOKIE{'Bugzilla_login'} =~ s/[^a-zA-Z0-9\@_\.\/\+\-]//g;
+			system("./processmail $::FORM{'id'} $::COOKIE{'Bugzilla_login'}");
+			PutFooter();
+			exit;
+		} else {
+			PuntTryAgain("<B>You did not submit a comment. Back to Bug # " . 
+            			 "<A HREF=\"show_bug.cgi?id=$::FORM{'id'}\">$::FORM{'id'}</A>");	
+			PutFooter();
+			exit;
+		}
+	}
+}
+
 if ($::FORM{'product'} ne $::dontchange) {
     if ( Param("strictvaluechecks") ) {
         CheckFormField(\%::FORM, 'product', \@::legal_product);
     }
-    my $prod = $::FORM{'product'};
+	my $prod = $::FORM{'product'};
 
     # note that when this script is called from buglist.cgi (rather
     # than show_bug.cgi), it's possible that the product will be changed
@@ -89,15 +114,15 @@ if ($::FORM{'product'} ne $::dontchange) {
         print "component fields are not correct.  (Or, possibly, the bug did\n";
         print "not have a valid target milestone, component or version field in the first place.)\n";
         print "Anyway, please set the version, target milestone and component now.<p>\n";
-        print "<form>\n";
-        print "<table>\n";
-        print "<tr>\n";
-        print "<td align=right><b>Product:</b></td>\n";
-        print "<td>$prod</td>\n";
-        print "</tr><tr>\n";
-        print "<td align=right><b>Version:</b></td>\n";
-        print "<td>" . Version_element($::FORM{'version'}, $prod) . "</td>\n";
-        print "</tr><tr>\n";
+        print "<FORM>\n";
+        print "<TABLE>\n";
+        print "<TR>\n";
+        print "<TD ALIGN=right><B>Product:</B></TD>\n";
+        print "<TD>$prod</TD>\n";
+        print "</TR><TR>\n";
+        print "<TD ALIGN=right><B>Version:</B></TD>\n";
+        print "<TD>" . Version_element($::FORM{'version'}, $prod) . "</TD>\n";
+        print "</TR><TR>\n";
 
         if ( Param("usetargetmilestone") ) {
             print "<td align=right><b>Target Milestone:</b></td>\n";
@@ -105,21 +130,21 @@ if ($::FORM{'product'} ne $::dontchange) {
             print "</tr><tr>\n";
         }
 
-        print "<td align=right><b>Component:</b></td>\n";
-        print "<td>" . Component_element($::FORM{'component'}, $prod) . "</td>\n";
-        print "</tr>\n";
-        print "</table>\n";
+        print "<TD ALIGN=right><B>Component:</B></TD>\n";
+        print "<TD>" . Component_element($::FORM{'component'}, $prod) . "</TD>\n";
+        print "</TR>\n";
+        print "</TABLE>\n";
         foreach my $i (keys %::FORM) {
             if ($i ne 'version' && $i ne 'component' && $i ne 'target_milestone') {
-                print "<input type=hidden name=$i value=\"" .
+                print "<INPUT TYPE=hidden NAME=$i VALUE=\"" .
                 value_quote($::FORM{$i}) . "\">\n";
             }
         }
-        print "<input type=submit value=Commit>\n";
-        print "</form>\n";
-        print "</hr>\n";
-        print "<a href=query.cgi>Cancel all this and go to the query page.</a>\n";
-        PutFooter();
+        print "<INPUT TYPE=submit VALUE=Commit>\n";
+        print "</FORM>\n";
+        print "</HR>\n";
+        print "<A HREF=query.cgi>Cancel all this and go to the query page.</A>\n";
+		PutFooter();
         exit;
     }
 }
@@ -183,7 +208,7 @@ sub CheckCanChangeField {
         my $everconfirmed = FetchOneColumn();
         if ($everconfirmed) {
             return 1;
-        }
+       }
     } elsif ($reporterid eq $whoid || $ownerid eq $whoid ||
              $qacontactid eq $whoid) {
         return 1;
@@ -204,13 +229,8 @@ empowered user, may make that change to the $f field.
 }
 
 
-    
-    
-
-
 my @idlist;
 if (defined $::FORM{'id'}) {
-
     # since this means that we were called from show_bug.cgi, now is a good
     # time to do a whole bunch of error checking that can't easily happen when
     # we've been called from buglist.cgi, because buglist.cgi only tweaks
@@ -218,16 +238,16 @@ if (defined $::FORM{'id'}) {
     # (XXX those error checks need to happen too, but implementing them 
     # is more work in the current architecture of this script...)
     #
-    if ( Param('strictvaluechecks') ) { 
+    if ( Param('strictvaluechecks') ) {
         CheckFormField(\%::FORM, 'rep_platform', \@::legal_platform);
         CheckFormField(\%::FORM, 'priority', \@::legal_priority);
         CheckFormField(\%::FORM, 'bug_severity', \@::legal_severity);
-        CheckFormField(\%::FORM, 'component', 
+        CheckFormField(\%::FORM, 'component',
                        \@{$::components{$::FORM{'product'}}});
         CheckFormFieldDefined(\%::FORM, 'bug_file_loc');
         CheckFormFieldDefined(\%::FORM, 'short_desc');
         CheckFormField(\%::FORM, 'product', \@::legal_product);
-        CheckFormField(\%::FORM, 'version', 
+        CheckFormField(\%::FORM, 'version',
                        \@{$::versions{$::FORM{'product'}}});
         CheckFormField(\%::FORM, 'op_sys', \@::legal_opsys);
         CheckFormFieldDefined(\%::FORM, 'longdesclength');
@@ -237,7 +257,7 @@ if (defined $::FORM{'id'}) {
 } else {
     foreach my $i (keys %::FORM) {
         if ($i =~ /^id_/) {
-            if ( Param('strictvaluechecks') ) { 
+			if ( Param('strictvaluechecks') ) {
                 CheckPosInt(substr($i, 3));
             }
             push @idlist, substr($i, 3);
@@ -249,13 +269,18 @@ if (!defined $::FORM{'who'}) {
     $::FORM{'who'} = $::COOKIE{'Bugzilla_login'};
 }
 
+# fix by {} - karin@root66.nl.eu.org
+# we wouldn't like some hacker including shellchars, whould we?
+$::FORM{'who'} =~ s/[^a-zA-Z0-9\@_\.\/\+\-]//g;
+
 # the common updates to all bugs in @idlist start here
 #
 print "<TITLE>Update Bug " . join(" ", @idlist) . "</TITLE>\n";
-if (defined $::FORM{'id'}) {
-    navigation_header();
-}
-print "<HR>\n";
+#if (defined $::FORM{'id'}) {
+#    navigation_header();
+#}
+#print "<HR>\n";
+
 $::query = "update bugs\nset";
 $::comma = "";
 umask(0);
@@ -264,6 +289,7 @@ sub DoComma {
     $::query .= "$::comma\n    ";
     $::comma = ",";
 }
+
 
 sub DoConfirm {
     if ($UserInEditGroupSet < 0) {
@@ -283,16 +309,17 @@ sub ChangeStatus {
     my ($str) = (@_);
     if ($str ne $::dontchange) {
         DoComma();
-        if (IsOpenedState($str)) {
+        if (IsOpenedState($str) && $::driver eq 'mysql') {
             $::query .= "bug_status = IF(everconfirmed = 1, '$str', '$::unconfirmedstate')";
         } else {
-            $::query .= "bug_status = '$str'";
-        }
+	        $::query .= "bug_status = '$str'";
+		}
         $::FORM{'bug_status'} = $str; # Used later for call to
                                       # CheckCanChangeField to make sure this
                                       # is really kosher.
     }
 }
+
 
 sub ChangeResolution {
     my ($str) = (@_);
@@ -302,6 +329,7 @@ sub ChangeResolution {
     }
 }
 
+
 #
 # This function checks if there is a comment required for a specific
 # function and tests, if the comment was given.
@@ -309,7 +337,7 @@ sub ChangeResolution {
 #
 sub CheckonComment( $ ) {
     my ($function) = (@_);
-    
+
     # Param is 1 if comment should be added !
     my $ret = Param( "commenton" . $function );
 
@@ -320,8 +348,8 @@ sub CheckonComment( $ ) {
         if (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/) {
             # No comment - sorry, action not allowed !
             PuntTryAgain("You have to specify a <b>comment</b> on this " .
-                         "change.  Please give some words " .
-                         "on the reason for your change.");
+                       	 "change.  Please give some words " .
+                       	 "on the reason for your change.\n" );
         } else {
             $ret = 0;
         }
@@ -345,10 +373,39 @@ foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
     }
 }
 
-foreach my $field ("rep_platform", "priority", "bug_severity",          
+
+# If certains groups were set insert values in bug_group
+if ($::FORM{'id'}) {
+	my $id = $::FORM{'id'};
+	SendSQL("delete from bug_group where bugid = $id");
+	foreach my $b (grep(/^group-.*$/, keys %::FORM)) {
+		if ($::FORM{$b}) {
+    		$b =~ s/^group-//;
+			SendSQL("insert into bug_group values ($id, $b)");
+		}
+	}
+}
+
+# To fix in the near future
+#if ($::FORM{'component_text'} ne "") {
+#    SendSQL("Select value from components where program = " .
+#            SqlQuote($::FORM{'product'}) .
+#            " and value = " . SqlQuote($::FORM{'component_text'}));
+#    my $comp = FetchOneColumn();
+#    if ($comp) {
+#        $::FORM{'component'} = $::FORM{'component_text'};
+#    } else {
+#        print "The component you typed in is invalid, please back up\n";
+#        print "and correct the component text field or leave blank\n";
+#        print "and choose a component from the scrolling list.\n";
+#        exit;
+#	}
+#}
+
+foreach my $field ("rep_platform", "priority", "bug_severity", 
                    "summary", "component", "bug_file_loc", "short_desc",
-                   "product", "version", "op_sys",
-                   "target_milestone", "status_whiteboard") {
+                   "product", "version", "op_sys", 
+				   "target_milestone", "status_whiteboard") {
     if (defined $::FORM{$field}) {
         if ($::FORM{$field} ne $::dontchange) {
             DoComma();
@@ -394,6 +451,8 @@ if (defined $::FORM{'cc'} && defined $::FORM{'id'}) {
 if ( Param('strictvaluechecks') ) {
     CheckFormFieldDefined(\%::FORM, 'knob');
 }
+
+
 SWITCH: for ($::FORM{'knob'}) {
     /^none$/ && do {
         last SWITCH;
@@ -404,7 +463,7 @@ SWITCH: for ($::FORM{'knob'}) {
         last SWITCH;
     };
     /^accept$/ && CheckonComment( "accept" ) && do {
-        DoConfirm();
+		DoConfirm();
         ChangeStatus('ASSIGNED');
         last SWITCH;
     };
@@ -417,35 +476,41 @@ SWITCH: for ($::FORM{'knob'}) {
         ChangeResolution($::FORM{'resolution'});
         last SWITCH;
     };
-    /^reassign$/ && CheckonComment( "reassign" ) && do {
+	# Change status removed from original code because when we reassign something 
+	# we want it to retain assigned status if already assigned.
+    /^assign$/ && CheckonComment( "reassign" ) && do{
         if ($::FORM{'andconfirm'}) {
             DoConfirm();
         }
-        ChangeStatus('NEW');
-        DoComma();
+        # ChangeStatus('NEW');
+		ChangeStatus('ASSIGNED');
         if ( Param("strictvaluechecks") ) {
-          if ( !defined$::FORM{'assigned_to'} ||
-               trim($::FORM{'assigned_to'}) eq "") {
-            PuntTryAgain("You cannot reassign to a bug to nobody.  Unless " .
-                         "you intentionally cleared out the " .
-                         "\"Reassign bug to\" field, " .
-                         Param("browserbugmessage"));
-          }
+          	if ( !defined$::FORM{'assigned_to'} ||
+               	trim($::FORM{'assigned_to'}) eq "") {
+            	PuntTryAgain("You cannot reassign to a bug to nobody.  Unless " .
+                	         "you intentionally cleared out the " .
+                    	     "\"Reassign bug to\" field, " .
+                        	 Param("browserbugmessage"));
+          	}
         }
+		DoComma();
         my $newid = DBNameToIdAndCheck($::FORM{'assigned_to'});
         $::query .= "assigned_to = $newid";
         last SWITCH;
     };
-    /^reassignbycomponent$/  && CheckonComment( "reassignbycomponent" ) && do {
-        if ($::FORM{'product'} eq $::dontchange) {
-            PuntTryAgain("You must specify a product to help determine the " .
-                         "new owner of these bugs.");
+    # Change status removed from original code because when we reassign something 
+    # we want it to retain assigned status if already assigned.   
+	/^assignbycomponent$/ && CheckonComment( "reassignbycomponent" ) && do {
+		if ($::FORM{'product'} eq $::dontchange) {
+            PuntTryAgain("You must specify a product to help determine the new\n" . 
+            			 "owner of these bugs.\n");
         }
         if ($::FORM{'component'} eq $::dontchange) {
-            PuntTryAgain("You must specify a component whose owner should " .
-                         "get assigned these bugs.");
+            PuntTryAgain("You must specify a component whose owner should get " .
+            			 "assigned these bugs.\n");
         }
-        ChangeStatus('NEW');
+		# ChangeStatus('NEW');
+        ChangeStatus('ASSIGNED');
         SendSQL("select initialowner from components where program=" .
                 SqlQuote($::FORM{'product'}) . " and value=" .
                 SqlQuote($::FORM{'component'}));
@@ -466,9 +531,9 @@ SWITCH: for ($::FORM{'knob'}) {
         }
         last SWITCH;
     };   
-    /^reopen$/  && CheckonComment( "reopen" ) && do {
+    /^reopen$/ && CheckonComment( "reopen" ) && do {
         ChangeStatus('REOPENED');
-        ChangeResolution('');
+		ChangeResolution('');
         last SWITCH;
     };
     /^verify$/ && CheckonComment( "verify" ) && do {
@@ -479,26 +544,25 @@ SWITCH: for ($::FORM{'knob'}) {
         ChangeStatus('CLOSED');
         last SWITCH;
     };
-    /^duplicate$/ && CheckonComment( "duplicate" ) && do {
+    /^duplicate$/ &&  CheckonComment( "duplicate" ) && do {
         ChangeStatus('RESOLVED');
         ChangeResolution('DUPLICATE');
         if ( Param('strictvaluechecks') ) {
             CheckFormFieldDefined(\%::FORM,'dup_id');
         }
         my $num = trim($::FORM{'dup_id'});
-        SendSQL("SELECT bug_id FROM bugs WHERE bug_id = " . SqlQuote($num));
+		SendSQL("SELECT bug_id FROM bugs WHERE bug_id = " . SqlQuote($num));
         $num = FetchOneColumn();
-        if (!$num) {
-            PuntTryAgain("You must specify a bug number of which this bug " .
-                         "is a duplicate.  The bug has not been changed.")
+        if (!$num) { 
+            PuntTryAgain("You must specify a bug number of which this bug is a " .
+            			 "duplicate.  The bug has not been changed.\n");
         }
         if (!defined($::FORM{'id'}) || $num == $::FORM{'id'}) {
-            PuntTryAgain("Nice try, $::FORM{'who'}.  But it doesn't really ".
-                         "make sense to mark a bug as a duplicate of " .
-                         "itself, does it?");
+            PuntTryAgain("Nice try, $::FORM{'who'}.  But it doesn't really make sense to mark a " .
+            			 "bug as a duplicate of itself, does it?\n");
         }
         AppendComment($num, $::FORM{'who'}, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***");
-        if ( Param('strictvaluechecks') ) {
+		if ( Param('strictvaluechecks') ) {
           CheckFormFieldDefined(\%::FORM,'comment');
         }
         $::FORM{'comment'} .= "\n\n*** This bug has been marked as a duplicate of $num ***";
@@ -509,15 +573,52 @@ SWITCH: for ($::FORM{'knob'}) {
 
         last SWITCH;
     };
+	# non-privileged user wants to add theirself to the cc list
+	/^add_cc$/ && do {
+		if ($::COOKIE{'Bugzilla_login'} ne $::FORM{'reporter'}) {
+            my $whoid = DBNameToIdAndCheck($::COOKIE{'Bugzilla_login'});
+            my $cc_query = "SELECT bug_id FROM cc " .
+                           "WHERE bug_id = '" . $::FORM{'id'} . "' and who = '$whoid'";
+            SendSQL($cc_query);
+            $cc_query = FetchOneColumn();
+            if ($cc_query) {
+                PuntTryAgain("Nice Try. You are already on the CC list of bug $::FORM{'id'}.");
+            } else {
+                SendSQL("INSERT INTO cc VALUES ('$::FORM{'id'}', '$whoid')");
+                print "<CENTER><B>$::COOKIE{'Bugzilla_login'}</B> successfully added to Cc list. " .
+                	  "<A HREF=\"show_bug.cgi?id=$::FORM{'id'}\">Back</A> to bug $::FORM{'id'}</CENTER><P>\n";
+            }
+        } else {
+            print "<CENTER><B>You are the reporter of this bug. You will already receive mail for this report.</B>" .
+            	  "<P>Click back to return to the previous bug report.</CENTER><P>\n";
+        }
+	};
+	# non-privileged user wants to remove themselves from the cc list
+	/^rem_cc$/ && do {
+		my $whoid = DBNameToIdAndCheck($::COOKIE{'Bugzilla_login'});
+        my $cc_query = "SELECT bug_id FROM cc " .
+                       "WHERE bug_id = '$::FORM{'id'}' and who = '$whoid'";
+        SendSQL($cc_query);
+        $cc_query = FetchOneColumn();
+        if ($cc_query) {
+            $cc_query = "DELETE FROM cc " .
+                        "WHERE bug_id = '$::FORM{'id'}' and who = '$whoid'";
+            SendSQL($cc_query);
+            print "<CENTER><B>$::COOKIE{'Bugzilla_login'}</B> successfully removed from Cc list. " .
+            	  "<A HREF=\"show_bug.cgi?id=$::FORM{'id'}\">Back</A> to bug $::FORM{'id'}</CENTER><P>\n";
+        } else {
+            PuntTryAgain("Nice Try. You are not on the CC list of bug " . $::FORM{'id'});
+        }
+	};
     # default
-    print "Unknown action $::FORM{'knob'}!\n";
-    PutFooter();
+    PuntTryAgain("Unknown action $::FORM{'knob'}!\n");
     exit;
 }
 
 
 if ($#idlist < 0) {
-    PuntTryAgain("You apparently didn't choose any bugs to modify.");
+    PuntTryAgain("You apparently didn't choose any bugs to modify.\n" .
+    			 "<p>Click <b>Back</b> and try again.</CENTER>\n");
 }
 
 
@@ -531,10 +632,10 @@ if ($::FORM{'keywords'}) {
         }
         my $i = $::keywordsbyname{$keyword};
         if (!$i) {
-            PuntTryAgain("Unknown keyword named <code>$keyword</code>. " .
-                         "<P>The legal keyword names are " .
-                         "<A HREF=describekeywords.cgi>" .
-                         "listed here</A>.");
+            PuntTryAgain("Unknown keyword named <code>$keyword</code>.\n" .
+            			 "<P>The legal keyword names are <A HREF=describekeywords.cgi>" .
+            			 "listed here</A>.\n" .
+            			 "<P>Please click the <B>Back</B> button and try again.</CENTER>\n");
         }
         if (!$keywordseen{$i}) {
             push(@keywordlist, $i);
@@ -547,8 +648,8 @@ my $keywordaction = $::FORM{'keywordaction'} || "makeexact";
 
 if ($::comma eq "" && 0 == @keywordlist && $keywordaction ne "makeexact") {
     if (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/) {
-        PuntTryAgain("Um, you apparently did not change anything on the " .
-                     "selected bugs.");
+        PuntTryAgain("Um, you apparently did not change anything on the selected " .
+        			 "bugs. <p>Click <b>Back</b> and try again.</CENTER>\n");
     }
 }
 
@@ -558,11 +659,15 @@ my $delta_ts;
 
 sub SnapShotBug {
     my ($id) = (@_);
-    SendSQL("select delta_ts, " . join(',', @::log_columns) .
-            " from bugs where bug_id = $id");
+	if ($::driver eq "mysql") {
+		SendSQL("select delta_ts, " . join(',', @::log_columns) .
+                " from bugs where bug_id = $id");
+	} else {
+    	SendSQL("select TO_CHAR(delta_ts, 'YYYYMMDDHH24MISS'), " . join(',', @::log_columns) .
+        	    " from bugs where bug_id = $id");
+	}
     my @row = FetchSQLData();
     $delta_ts = shift @row;
-
     return @row;
 }
 
@@ -578,47 +683,66 @@ sub SnapShotDeps {
 }
 
 
+my $whoid = DBNameToIdAndCheck($::FORM{'who'});
 my $timestamp;
 
 sub LogDependencyActivity {
     my ($i, $oldstr, $target, $me) = (@_);
     my $newstr = SnapShotDeps($i, $target, $me);
     if ($oldstr ne $newstr) {
-        my $fieldid = GetFieldID($target);
-        SendSQL("INSERT INTO bugs_activity " .
-                "(bug_id,who,bug_when,fieldid,oldvalue,newvalue) VALUES " .
-                "($i,$whoid,$timestamp,$fieldid,'$oldstr','$newstr')");
+		my $fieldid = GetFieldID($target);
+		if ($::driver eq "mysq") {
+        	SendSQL("insert into bugs_activity " . 
+					"(bug_id, who, bug_when, fieldid, oldvalue, newvalue) " .
+					"values ($i, $whoid, $timestamp, '$fieldid', '$oldstr', '$newstr')");
+		} else { 
+			SendSQL("insert into bugs_activity " .
+                    "(bug_id, who, bug_when, fieldid, oldvalue, newvalue) " .
+                    "values ($i, $whoid, TO_DATE('$timestamp', 'YYYYMMDDHH24MISS'), '$fieldid', '$oldstr', '$newstr')");
+		}
         return 1;
     }
     return 0;
 }
+
 
 delete $::FORM{'resolution'};   # Make sure we don't test the resolution
                                 # against our permissions; we've already done
                                 # that kind of testing, and this form field
                                 # is actually usually not used.
 
+my $userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
 
 # this loop iterates once for each bug to be processed (eg when this script
 # is called with multiple bugs selected from buglist.cgi instead of
 # show_bug.cgi).
 #
 foreach my $id (@idlist) {
+	
+	if (defined($id) && !CanIChange($id, $::COOKIE{'Bugzilla_login'}, $::FORM{'reporter'}, $::FORM{'assigned_to'})) {
+		print "<H1>Permission denied.</H1><P>\n";
+		print "<B>You do not have permission to modify bug # $id.</B> \n";	
+		next;
+	}
+
     my %dependencychanged;
     my $write = "WRITE";        # Might want to make a param to control
                                 # whether we do LOW_PRIORITY ...
-    SendSQL("LOCK TABLES bugs $write, bugs_activity $write, cc $write, " .
-            "profiles $write, dependencies $write, votes $write, " .
-            "keywords $write, longdescs $write, fielddefs $write, " .
-            "keyworddefs READ, groups READ, attachments READ");
+	if ($::driver eq 'mysql') {
+    	SendSQL("LOCK TABLES bugs $write, bugs_activity $write, cc $write, " .
+        	    "profiles $write, dependencies $write, votes $write, " .
+            	"keywords $write, longdescs $write, fielddefs $write, " .
+            	"keyworddefs READ, groups READ, attachments READ");
+	}
+
     my @oldvalues = SnapShotBug($id);
-    my $i = 0;
-    foreach my $col (@::log_columns) {
-        if (exists $::FORM{$col}) {
-            CheckCanChangeField($col, $id, $oldvalues[$i], $::FORM{$col});
-        }
-        $i++;
-    }
+#    my $i = 0;
+#    foreach my $col (@::log_columns) {
+#        if (exists $::FORM{$col}) {
+#            CheckCanChangeField($col, $id, $oldvalues[$i], $::FORM{$col});
+#        }
+#        $i++;
+#    }
 
     if (defined $::FORM{'delta_ts'} && $::FORM{'delta_ts'} ne $delta_ts) {
         print "
@@ -630,27 +754,30 @@ The changes made were:
         DumpBugActivity($id, $delta_ts);
         my $longdesc = GetLongDescriptionAsHTML($id);
         my $longchanged = 0;
-
         if (length($longdesc) > $::FORM{'longdesclength'}) {
             $longchanged = 1;
             print "<P>Added text to the long description:<blockquote>";
             print substr($longdesc, $::FORM{'longdesclength'});
             print "</blockquote>\n";
         }
-        SendSQL("unlock tables");
-        print "You have the following choices: <ul>\n";
+
+		if ($::driver eq "mysql") {
+        	SendSQL("unlock tables");
+		}
+
+        print "You have the following choices: <UL>\n";
         $::FORM{'delta_ts'} = $delta_ts;
-        print "<li><form method=post>";
+        print "<LI><FORM METHOD=POST>";
         foreach my $i (keys %::FORM) {
             my $value = value_quote($::FORM{$i});
-            print qq{<input type=hidden name="$i" value="$value">\n};
+            print qq{<INPUT TYPE=hidden NAME="$i" VALUE="$value">\n};
         }
-        print qq{<input type=submit value="Submit my changes anyway">\n};
+        print qq{<INPUT TYPE=submit VALUE="Submit my changes anyway">\n};
         print " This will cause all of the above changes to be overwritten";
         if ($longchanged) {
             print ", except for the changes to the description";
         }
-        print qq{.</form>\n<li><a href="show_bug.cgi?id=$id">Throw away my changes, and go revisit bug $id</a></ul>\n};
+        print qq{.</FORM>\n<LI><A HREF="show_bug.cgi?id=$id">Throw away my changes, and go revisit bug $id</A></UL>\n};
         PutFooter();
         exit;
     }
@@ -671,7 +798,7 @@ The changes made were:
                         SqlQuote($i));
                 my $comp = FetchOneColumn();
                 if ($comp ne $i) {
-                    PuntTryAgain("$i is not a legal bug number");
+					PuntTryAgain("$i is not a legal bug number");
                 }
                 if (!exists $seen{$i}) {
                     push(@{$deps{$target}}, $i);
@@ -696,15 +823,13 @@ The changes made were:
                     }
                 }
             }
-                        
-
             my $tmp = $me;
             $me = $target;
             $target = $tmp;
         }
     }
 
-    if (@::legal_keywords) {
+	if (@::legal_keywords) {
         # There are three kinds of "keywordsaction": makeexact, add, delete.
         # For makeexact, we delete everything, and then add our things.
         # For add, we delete things we're adding (to make sure we don't
@@ -742,23 +867,53 @@ The changes made were:
                     " WHERE bug_id = $id");
         }
     }
-
     my $query = "$basequery\nwhere bug_id = $id";
     
-# print "<PRE>$query</PRE>\n";
+#	print "<PRE>$query</PRE>\n";
 
     if ($::comma ne "") {
         SendSQL($query);
-        SendSQL("select delta_ts from bugs where bug_id = $id");
-    } else {
-        SendSQL("select now()");
-    }
+    	if ($::driver eq "mysql") {
+        	SendSQL("select delta_ts from bugs where bug_id = $id");
+    	} else {
+        	SendSQL("select TO_CHAR(delta_ts, 'YYYYMMDDHH24MISS') from bugs where bug_id = $id");
+    	}
+	} else {
+		if ($::driver eq 'mysql') {
+			SendSQL("select now()");
+		} else {
+			SendSQL("select TO_CHAR(sysdate, 'YYYYMMDDHH24MISS') from dual");
+		}
+	}
     $timestamp = FetchOneColumn();
     
     if (defined $::FORM{'comment'}) {
         AppendComment($id, $::FORM{'who'}, $::FORM{'comment'});
+	}
+
+    if (defined $::FORM{'cc'} && ShowCcList($id) ne $::FORM{'cc'}) {
+        my %ccids;
+        foreach my $person (split(/[ ,]/, $::FORM{'cc'})) {
+            if ($person ne "") {
+				# Check to make sure it is in a valid email format
+				my $match = Param('emailregexp');
+				if ($person !~ /$match/) {
+					PuntTryAgain("The Cc e-mail address you entered " . 
+        						 "(<b>$person</b>) didn't match our minimal " .
+        						 "syntax checking for a legal email address. " .
+        						 Param('emailregexpdesc') . 
+        						 "<p>Please click <b>back</b> and try again.");
+				}
+				my $cid = DBNameToIdAndCheck($person, 1);
+                $ccids{$cid} = 1;
+            }
+        }
+        SendSQL("delete from cc where bug_id = $id");
+        foreach my $ccid (keys %ccids) {
+            SendSQL("insert into cc (bug_id, who) values ($id, $ccid)");
+        }
     }
-    
+
     if (defined $::FORM{'cc'} && $origcclist ne $::FORM{'cc'}) {
         SendSQL("delete from cc where bug_id = $id");
         foreach my $ccid (keys %ccids) {
@@ -769,12 +924,17 @@ The changes made were:
             my $col = GetFieldID('cc');
             my $origq = SqlQuote($origcclist);
             my $newq = SqlQuote($newcclist);
-            SendSQL("INSERT INTO bugs_activity " .
-                    "(bug_id,who,bug_when,fieldid,oldvalue,newvalue) VALUES " .
-                    "($id,$whoid,'$timestamp',$col,$origq,$newq)");
+			if ($::driver eq 'mysq') {
+            	SendSQL("INSERT INTO bugs_activity " .
+                	    "(bug_id, who, bug_when, fieldid, oldvalue, newvalue) VALUES " .
+                    	"($id, $whoid, '$timestamp', $col, $origq, $newq)");
+			} else {
+            	SendSQL("INSERT INTO bugs_activity " .
+                	    "(bug_id, who, bug_when, fieldid, oldvalue, newvalue) VALUES " .
+                    	"($id, $whoid, TO_DATE('$timestamp', 'YYYYMMDDHH24MISS'), $col, $origq, $newq)");
+			}	
         }
     }
-
 
     if (defined $::FORM{'dependson'}) {
         my $me = "blocked";
@@ -828,7 +988,6 @@ The changes made were:
         }
     }
 
-
     # get a snapshot of the newly set values out of the database, 
     # and then generate any necessary bug activity entries by seeing 
     # what has changed since before we wrote out the new values.
@@ -855,39 +1014,68 @@ The changes made were:
                                         # updates about this bug.
             }
             if ($col eq 'product') {
-                RemoveVotes($id, 0,
-                            "This bug has been moved to a different product");
+                RemoveVotes($id,
+                	"This bug has been moved to a different product");
             }
-            $col = GetFieldID($col);
+			$col = GetFieldID($col);
             $old = SqlQuote($old);
             $new = SqlQuote($new);
-            my $q = "insert into bugs_activity (bug_id,who,bug_when,fieldid,oldvalue,newvalue) values ($id,$whoid,'$timestamp',$col,$old,$new)";
-            # puts "<pre>$q</pre>"
+			
+			my $q = "";
+			if ($::driver eq "mysql") {	
+            	$q = "insert into bugs_activity (bug_id, who, bug_when, fieldid, oldvalue, newvalue) " .
+					 "values ($id, $whoid, '$timestamp', $col, $old, $new)";
+			} else {
+				$q = "insert into bugs_activity (bug_id, who, bug_when, fieldid, oldvalue, newvalue) " .
+                     "values ($id, $whoid, TO_DATE('$timestamp', 'YYYYMMDDHH24MISS'), $col, $old, $new)";
+			}
+#            print "<pre>$q</pre>";
             SendSQL($q);
         }
     }
-    
-    print "<TABLE BORDER=1><TD><H2>Changes to bug $id submitted</H2>\n";
-    SendSQL("unlock tables");
+
+    print "<TABLE BORDER=1 CELLSPACING=0 ALIGN=center>" ;
+	print "	  <TD><H2>Changes to bug $id submitted</H2>\n<P>\n";
+
+	if ($::driver eq "mysql") {
+	    SendSQL("unlock tables");
+	}
+
     system("./processmail", "-forcecc", $origcclist, $id, $::FORM{'who'});
-    print "<TD><A HREF=\"show_bug.cgi?id=$id\">Back To BUG# $id</A></TABLE>\n";
+	print "</TD>\n</TABLE>\n<P>\n";
+	
+	# Added because Oracle does not automatically update timestamps when using
+    # UPDATE
+    if ($::driver ne 'mysql') {
+        SendSQL("update bugs set delta_ts = sysdate where bug_id = $id");
+		SendSQL("select TO_CHAR(delta_ts, 'YYYYMMDDHH24MISS') from bugs " . 
+				"where bug_id = $id");
+		$::FORM{'delta_ts'} = FetchOneColumn();
+    }
 
     foreach my $k (keys(%dependencychanged)) {
-        print "<TABLE BORDER=1><TD><H2>Checking for dependency changes on bug $k</H2>\n";
+        print "<TABLE BORDER=1 CELLSPACING=0 ALIGN=center>";
+		print "   <TD><H2>Checking for dependency changes on bug $k</H2>\n<P>\n";
         system("./processmail $k $::FORM{'who'}");
-        print "<TD><A HREF=\"show_bug.cgi?id=$k\">Go To BUG# $k</A></TABLE>\n";
+        print "<TD><A HREF=\"show_bug.cgi?id=$k\">Go to BUG# $k</A></TABLE>\n<P>\n";
     }
 
 }
 
-if (defined $::next_bug) {
-    print("<P>The next bug in your list is:\n");
-    $::FORM{'id'} = $::next_bug;
-    print "<HR>\n";
-
-    navigation_header();
+#if (defined $::next_bug) {
+#    print("<P>The next bug in your list is:\n");
+#    $::FORM{'id'} = $::next_bug;
+#    print "<HR>\n";
+#
+#    navigation_header();
+#    do "bug_form.pl";
+#} else {
+#    navigation_header();
+#    PutFooter();
+#}
+ 
+if ($#idlist == 0) {
     do "bug_form.pl";
-} else {
-    navigation_header();
-    PutFooter();
 }
+
+PutFooter();

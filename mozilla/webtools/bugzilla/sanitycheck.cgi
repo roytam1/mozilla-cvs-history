@@ -36,12 +36,12 @@ my $offervotecacherebuild = 0;
 
 sub Status {
     my ($str) = (@_);
-    print "$str <P>\n";
+    print "<CENTER>$str</CENTER> <P>\n";
 }
 
 sub Alert {
     my ($str) = (@_);
-    Status("<font color=red>$str</font>");
+    Status("<CENTER><LI><font color=red>$str</font></CENTER>");
 }
 
 sub BugLink {
@@ -93,8 +93,12 @@ PutHeader("Bugzilla Sanity Check");
 
 if (exists $::FORM{'rebuildvotecache'}) {
     Status("OK, now rebuilding vote cache.");
-    SendSQL("lock tables bugs write, votes read");
-    SendSQL("update bugs set votes = 0, delta_ts=delta_ts");
+	if ($::driver eq 'mysql') {
+	    SendSQL("lock tables bugs write, votes read");
+	    SendSQL("update bugs set votes = 0, delta_ts = delta_ts");
+	} else {
+		SendSQL("update bugs set votes = 0, delta_ts = sysdate");
+	}	
     SendSQL("select bug_id, sum(count) from votes group by bug_id");
     my %votes;
     while (@row = FetchSQLData()) {
@@ -102,13 +106,19 @@ if (exists $::FORM{'rebuildvotecache'}) {
         $votes{$id} = $v;
     }
     foreach my $id (keys %votes) {
-        SendSQL("update bugs set votes = $votes{$id}, delta_ts=delta_ts where bug_id = $id");
+		if ($::driver eq 'mysql') {
+        	SendSQL("update bugs set votes = $votes{$id}, delta_ts = delta_ts where bug_id = $id");
+		} else {
+			SendSQL("update bugs set votes = $votes{$id}, delta_ts = sysdate where bug_id = $id");
+		}
     }
-    SendSQL("unlock tables");
+	if ($::driver eq 'mysql') {
+	    SendSQL("unlock tables");
+	}
     Status("Vote cache has been rebuilt.");
 }
 
-print "OK, now running sanity checks.<P>\n";
+print "<CENTER>OK, now running sanity checks.</CENTER><P>\n";
 
 CrossCheck("keyworddefs", "id",
            ["keywords", "keywordid"]);
@@ -139,43 +149,76 @@ CrossCheck("profiles", "userid",
            ["namedqueries", "userid"]);
 
 
-Status("Checking passwords");
-SendSQL("SELECT COUNT(*) FROM profiles WHERE cryptpassword != ENCRYPT(password, left(cryptpassword, 2))");
-my $count = FetchOneColumn();
-if ($count) {
-    Alert("$count entries have problems in their crypted password.");
-    if ($::FORM{'rebuildpasswords'}) {
-        Status("Rebuilding passwords");
-        SendSQL("UPDATE profiles
-                 SET cryptpassword = ENCRYPT(password,
-                                            left(cryptpassword, 2))
-                 WHERE cryptpassword != ENCRYPT(password,
+if ($::driver eq 'mysql') {
+	Status("Checking passwords");
+	SendSQL("SELECT COUNT(*) FROM profiles WHERE cryptpassword != ENCRYPT(password, left(cryptpassword, 2))");
+	my $count = FetchOneColumn();
+	if ($count) {
+    	Alert("$count entries have problems in their crypted password.");
+    	if ($::FORM{'rebuildpasswords'}) {
+        	Status("Rebuilding passwords");
+        	SendSQL("UPDATE profiles
+            	     SET cryptpassword = ENCRYPT(password,
+               	                             left(cryptpassword, 2))
+                	 WHERE cryptpassword != ENCRYPT(password,
                                                 left(cryptpassword, 2))");
-        Status("Passwords have been rebuilt.");
-    } else {
-        print qq{<a href="sanitycheck.cgi?rebuildpasswords=1">Click here to rebuild the crypted passwords</a><p>\n};
-    }
+        	Status("Passwords have been rebuilt.");
+    	} else {
+        	print qq{<a href="sanitycheck.cgi?rebuildpasswords=1">Click here to rebuild the crypted passwords</a><p>\n};
+    	}
+	}
+} else {
+	Status("Skipping password check...Oracle");
 }
 
 
 
 Status("Checking groups");
-SendSQL("select bit from groups where bit != pow(2, round(log(bit) / log(2)))");
-while (my $bit = FetchOneColumn()) {
-    Alert("Illegal bit number found in group table: $bit");
+if ($::driver eq 'mysql') {
+	SendSQL("select bit from groups where bit != pow(2, round(log(bit) / log(2)))");
+	while (my $bit = FetchOneColumn()) {
+    	Alert("Illegal bit number found in group table: $bit");
+	}
+	SendSQL("select sum(bit) from groups where isbuggroup != 0");
+	my $buggroupset = FetchOneColumn();
+	if (!defined $buggroupset || $buggroupset eq "") {
+	    $buggroupset = 0;
+	}
+	SendSQL("select bug_id, groupset from bugs where groupset & $buggroupset != groupset");
+	while (@row = FetchSQLData()) {
+	    Alert("Bad groupset $row[1] found in bug " . BugLink($row[0]));
+	}
+
+} else {
+	my @results = ();
+	SendSQL("select distinct user_group.groupid from user_group, groups " .
+			"where user_group.groupid != groups.groupid order by user_group.groupid");
+	while (my @row = FetchSQLData()) {
+		push (@results, $row[0]);
+	}
+	if ($#results >= 0) {
+		Alert("Illegal group number(s) found in user_group table: " . join (', ', @results));
+	}
+	@results = ();
+    SendSQL("select distinct bug_group.groupid from bug_group, groups " .
+            "where bug_group.groupid != groups.groupid order by bug_group.groupid");
+    while (my @row = FetchSQLData()) {
+        push (@results, $row[0]);
+    }
+    if ($#results >= 0) {
+        Alert("Illegal group number(s) found in bug_group table: " . join (', ', @results));
+    }
+	@results = ();
+    SendSQL("select distinct product_group.groupid from product_group, groups " .
+            "where product_group.groupid != groups.groupid order by product_group.groupid");
+    while (my @row = FetchSQLData()) {
+        push (@results, $row[0]);
+    }
+    if ($#results >= 0) {
+        Alert("Illegal group number(s) found in product_group table: " . join (', ', @results));
+    }
 }
     
-SendSQL("select sum(bit) from groups where isbuggroup != 0");
-my $buggroupset = FetchOneColumn();
-if (!defined $buggroupset || $buggroupset eq "") {
-    $buggroupset = 0;
-}
-SendSQL("select bug_id, groupset from bugs where groupset & $buggroupset != groupset");
-while (@row = FetchSQLData()) {
-    Alert("Bad groupset $row[1] found in bug " . BugLink($row[0]));
-}
-
-
 
 
 Status("Checking version/products");
@@ -232,16 +275,20 @@ foreach my $ref (@checklist) {
 }
 
 
-Status("Checking profile logins");
+if ($::driver eq 'mysql') {
+	Status("Checking profile logins");
 
-my $emailregexp = Param("emailregexp");
+	my $emailregexp = Param("emailregexp");
 
-SendSQL("SELECT userid, login_name FROM profiles " .
-        "WHERE login_name NOT REGEXP " . SqlQuote($emailregexp));
+	SendSQL("SELECT userid, login_name FROM profiles " .
+	        "WHERE login_name NOT REGEXP " . SqlQuote($emailregexp));
 
 
-while (my ($id,$email) = (FetchSQLData())) {
-    Alert "Bad profile email address, id=$id,  &lt;$email&gt;."
+	while (my ($id,$email) = (FetchSQLData())) {
+	    Alert "Bad profile email address, id=$id,  &lt;$email&gt;."
+	}
+} else {
+	Status("Skipping profile login check...Oracle");
 }
 
 
@@ -321,7 +368,9 @@ Status("Checking cached keywords");
 my %realk;
 
 if (exists $::FORM{'rebuildkeywordcache'}) {
-    SendSQL("LOCK TABLES bugs write, keywords read, keyworddefs read");
+	if ($::driver eq 'mysql') {
+	    SendSQL("LOCK TABLES bugs write, keywords read, keyworddefs read");
+	}
 }
 
 SendSQL("SELECT keywords.bug_id, keyworddefs.name " .
@@ -368,11 +417,19 @@ if (@fixlist) {
             if (exists($realk{$b})) {
                 $k = $realk{$b};
             }
-            SendSQL("UPDATE bugs SET delta_ts = delta_ts, keywords = " .
-                    SqlQuote($k) .
-                    " WHERE bug_id = $b");
+			if ($::driver eq 'mysql') {
+            	SendSQL("UPDATE bugs SET delta_ts = delta_ts, keywords = " .
+                	    SqlQuote($k) .
+                    	" WHERE bug_id = $b");
+			} else {
+				SendSQL("UPDATE bugs SET delta_ts = sysdate, keywords = " .
+                        SqlQuote($k) .
+                        " WHERE bug_id = $b");
+			}
         }
-        SendSQL("UNLOCK TABLES");
+		if ($::driver eq 'mysql') {
+	        SendSQL("UNLOCK TABLES");
+		}
         Status("Keyword cache fixed.");
     } else {
         print qq{<a href="sanitycheck.cgi?rebuildkeywordcache=1">Click here to rebuild the keyword cache</a><p>\n};

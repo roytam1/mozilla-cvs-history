@@ -77,10 +77,8 @@ print "Content-type: text/html\n\n";
 
 unless (UserInGroup("addnews")) {
     PutHeader("Not allowed");
-    print "Sorry, you aren't a member of the 'addnews' group.\n";
-    print "And so, you aren't allowed to add, modify or delete news items.\n";
-    PutTrailer();
-    exit;
+    PutError("Sorry, you aren't a member of the 'addnews' group.<BR>" .
+    		 "And so, you aren't allowed to add, modify or delete news items.");
 }
 
 
@@ -124,8 +122,7 @@ unless ($action) {
         print "</TR>";
     }
     print "<TR BGCOLOR=\"#ECECEC\">\n";
-    print "  <TH ALIGN=left COLSPAN=3>Add a new item</TH>\n";
-    print "  <TD ALIGN=left><A HREF=\"editnews.cgi?action=add\">Add</A></TD>\n";
+    print "  <TH COLSPAN=4><A HREF=\"editnews.cgi?action=add\">Add a new item</A></TH>\n";
     print "</TR></TABLE>\n";
 
     PutTrailer();
