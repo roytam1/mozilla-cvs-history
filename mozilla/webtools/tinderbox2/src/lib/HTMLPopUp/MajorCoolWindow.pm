@@ -92,6 +92,7 @@ sub page_header {
 $header .=<<EOF;
 <HTML>
         <!-- This file was automatically created by $main::0  -->
+        <!-- version: $main::$VERSION -->
         <!-- at $main::LOCALTIME -->
 <HEAD>
 	$refresh
