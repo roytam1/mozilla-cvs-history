@@ -533,6 +533,8 @@ SeaMonkeyCore -a \
 	mozilla/caps \
 	mozilla/config \
 	mozilla/dbm \
+	mozilla/db/mork \
+	mozilla/db/mdb \
 	mozilla/include \
 	mozilla/intl \
 	mozilla/jpeg \
