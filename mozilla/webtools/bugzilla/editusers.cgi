@@ -126,21 +126,19 @@ sub EmitFormElements ($$$$$)
     
     if($user ne "") {
         # Edit bug groups
-        print "</TR><TR><TH VALIGN=TOP ALIGN=RIGHT>Group Access:</TH><TD>\n";
-        print "<TABLE CELLPADDING=\"3\" CELLSPACING=\"0\"><TR>\n";
-
+        print "</TR><TR><TH VALIGN=TOP ALIGN=RIGHT>Group Access:</TH><TD>\n<TABLE><TR>\n";
         SendSQL("SELECT group_id, name, description FROM groups " .
                 "WHERE isbuggroup = 1 ORDER BY name");
 
         if (MoreSQLData()) {
             if ($editall) {
-                print "<TD COLSPAN=3 ALIGN=LEFT BGCOLOR=\"#ababab\"><B>Can turn this on for other users</B></TD>\n";
+                print "<TD COLSPAN=3 ALIGN=LEFT><B>Can turn this on for other users</B></TD>\n";
                 print "</TR><TR>\n";
-                print "<TD BGCOLOR=\"#ababab\">&nbsp;</TD>\n";
+                print "<TD ALIGN=CENTER><B>|</B></TD>\n";
             } else {
                 print "<TD COLSPAN=3></TD>\n</TR><TR>\n<TD></TD>\n";
             }
-            print "<TD COLSPAN=2 ALIGN=LEFT BGCOLOR=\"#dedede\"><B>User is a member of these groups</B></TD>\n";
+            print "<TD COLSPAN=2 ALIGN=LEFT><B>User is a member of these groups</B></TD>\n";
         }
 
         while (MoreSQLData()) {
@@ -168,21 +166,20 @@ sub EmitFormElements ($$$$$)
         print "</TR></TABLE></TD>\n";
     
         # Non non bug groups
-        print "</TR><TR><TH VALIGN=TOP ALIGN=RIGHT>Privileges:</TH><TD>\n";
-        print "<TABLE CELLPADDING=\"3\" CELLSPACING=\"0\"><TR>\n";
+        print "</TR><TR><TH VALIGN=TOP ALIGN=RIGHT>Privileges:</TH><TD>\n<TABLE><TR>\n";
         SendSQL("SELECT group_id, name, description " .
                 "FROM groups " .
                 "WHERE isbuggroup != 1 " .
                 "ORDER BY name");
         if (MoreSQLData()) {
             if ($editall) {
-                print "<TD COLSPAN=3 ALIGN=LEFT BGCOLOR=\"#ababab\"><B>Can turn this on for other users</B></TD>\n";
+                print "<TD COLSPAN=3 ALIGN=LEFT><B>Can turn this on for other users</B></TD>\n";
                 print "</TR><TR>\n";
-                print "<TD BGCOLOR=\"#ababab\">&nbsp;</TD>\n";
+                print "<TD ALIGN=CENTER><B>|</B></TD>\n";
             } else {
                 print "<TD COLSPAN=3></TD>\n</TR><TR>\n<TD></TD>\n";
             }
-            print "<TD COLSPAN=2 ALIGN=LEFT BGCOLOR=\"#dedede\"><B>User has these privileges.</B></TD>\n";
+            print "<TD COLSPAN=2 ALIGN=LEFT><B>User has these privileges.</B></TD>\n";
         }
         while (MoreSQLData()) {
             my ($groupid, $name, $description) = FetchSQLData();
