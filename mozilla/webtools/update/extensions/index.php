@@ -35,13 +35,12 @@
 // the terms of any one of the MPL, the GPL or the LGPL.
 //
 // ***** END LICENSE BLOCK *****
-?>
-<?php
+
 require_once('../core/init.php');
 $page_title = 'Mozilla Update :: Extensions - Add Features to Mozilla Software';
 $page_headers = '<link rel="alternate" type="application/rss+xml"
    title="New '.ucwords($application).' Extensions Additions"
-   href="/rss/?application='.$application.'&amp;type=E&amp;list=newest">';
+   href="../rss/?application='.$application.'&amp;type=E&amp;list=newest">';
 require_once(HEADER);
 ?>
 
@@ -76,128 +75,175 @@ print(ucwords($application)); ?> small to download <?php } ?>.</p>
         $currentver = $release;
         $currentver_display = $version;
         unset($version,$subver,$release);
-    ?>
 
-	<h2>Top Rated <?php print(ucwords($application)); ?> Extensions</h2>
-	<p class="first">Ratings are based on feedback from people who use these extensions.</p>
-	<ol>
+/**
+ * Turn off Top Rated until comment spam is better regulated.
+ * See: https://bugzilla.mozilla.org/show_bug.cgi?id=278016
+ * @TODO Fix comment spam.
+ */
 
-    <?php
-    $r=0;
-    $sql = "SELECT TM.ID, TM.Name, TM.Description, TM.Rating
-        FROM  `main` TM
-        INNER  JOIN version TV ON TM.ID = TV.ID
-        INNER  JOIN applications TA ON TV.AppID = TA.AppID
-    WHERE  `Type`  =  '$type' AND `AppName` = '$application' AND `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND `Rating` > '0' AND `approved` = 'YES' GROUP BY `Name` ORDER BY `Rating` DESC, `Name` ASC, TV.Version DESC";
-    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-        while ($row = mysql_fetch_array($sql_result)) {
-            $r++;
-            $s++;
-            $id = $row["ID"];
-            $name = $row["Name"];
-            $description = $row["Description"];
-            $rating = $row["Rating"];
+/* TURN OFF TOP RATED
 
+<h2>Top Rated <?php print(ucwords($application)); ?> Extensions</h2>
+<p class="first">Ratings are based on feedback from people who use these extensions.</p>
 
-            echo"		<li>";
-            echo"<a href=\"./moreinfo.php?".uriparams()."&amp;id=$id\"><strong>$name</strong></a>, $rating stars<br>";
-            echo"$description";
-            echo"</li>\n";
+<?php
+$sql = "
+    SELECT DISTINCT
+        TM.ID,
+        TM.Name,
+        TM.Description, 
+        TM.Rating
+    FROM
+        `main` TM
+    INNER JOIN 
+        version TV 
+    ON 
+        TM.ID = TV.ID
+    INNER JOIN 
+        applications TA 
+    ON 
+        TV.AppID = TA.AppID
+    WHERE
+        `Type` = '{$type}' AND
+        `AppName` = '{$application}' AND
+        `approved` = 'YES' 
+    ORDER BY
+        `Rating` DESC, 
+        `downloadcount` DESC,
+        `Name` ASC
+    LIMIT 5
+";
 
-            if ($r >= "5") {
-                break;
-            }
-        }
-        unset($usednames, $usedversions, $r, $s, $i);
-        ?>
+$sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 
-	</ol>
-	<h2>Most Popular <?php print(ucwords($application)); ?> Extensions</h2>
-	<p class="first">The most popular downloads over the last week.</p>
-	<ol>
-        <?php
-        $i=0;
-        $sql = "SELECT TM.ID, TM.Name, TM.Description, TM.TotalDownloads, TM.downloadcount FROM  `main` TM
-            INNER  JOIN version TV ON TM.ID = TV.ID
-            INNER  JOIN applications TA ON TV.AppID = TA.AppID
-            INNER  JOIN os TOS ON TV.OSID = TOS.OSID
-            WHERE  `Type`  =  'E' AND `AppName` = '$application' AND `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND (`OSName` = '$OS' OR `OSName` = 'ALL') AND `downloadcount` > '0' AND `approved` = 'YES' ORDER BY `downloadcount` DESC ";
-        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-            if (mysql_num_rows($sql_result)=="0") {
-                echo"        <li>No Popular Extensions</li>\n";
-            }
-            while ($row = mysql_fetch_array($sql_result)) {
-                $i++;
-                $id = $row["ID"];
-                $vid = $row["vID"];
-                $name = $row["Name"];
-                $description = $row["Description"];
-                $downloadcount = $row["downloadcount"];
-                $totaldownloads = $row["TotalDownloads"];
-                $typename="extensions";
-                if ($lastname == $name) {
-                    $i--;
-                    continue;
-                }
+if (!mysql_num_rows($sql_result)) {
+    echo '<p>No featured extensions were found.  Please check back later.</p>';
+} else {
+    echo '<ol>';
+    while ($row = mysql_fetch_array($sql_result)) {
+echo <<<TR
+        <li>
+        <a href="./moreinfo.php?id={$row['ID']}&amp;application={$application}"><strong>{$row['Name']}</strong></a>, {$row['Rating']} stars<br>
+        {$row['Description']}
+        </li>
+TR;
+    }
+    echo '</ol>';
+}
+*/
+?>
 
-                echo"		<li>";
-                echo"<a href=\"../$typename/moreinfo.php?".uriparams()."&amp;id=$id\"><strong>$name</strong></a>, $downloadcount downloads<br>";
-                echo"$description";
-                echo"</li>\n";
+<?php $catname = "Popular"; echo "<a href=\"showlist.php?".uriparams()."&amp;category=$catname&numpg=10&pageid=2\" title=\"$catdesc\">"; ?>
+<h2>Most Popular <?php print(ucwords($application)); ?> Extensions</h2></a>
+<p class="first">The most popular downloads over the last week.</p>
 
-                $lastname = $name;
-                if ($i >= "5") {
-                    break;
-                }
-            }
-        ?>
-	</ol>
-	<a href="/rss/?application=<?php echo"$application"; ?>&amp;type=E&amp;list=newest"><img src="../images/rss.png" width="16" height="16" class="rss" alt="News Additions in RSS"></a>
-	<h2>Newest <?php print(ucwords($application)); ?> Extensions</h2>
-	<p class="first">New and updated extensions. Subscribe to <a href="/rss/?application=<?php echo"$application"; ?>&amp;type=E&amp;list=newest">our RSS feed</a> to be notified when new extensions are added.</p>
-	<ol>
+<?php
+$sql = "
+    SELECT DISTINCT
+        TM.ID,
+        TM.Name,
+        TM.Description, 
+        TM.Rating,
+        TM.downloadcount
+    FROM
+        `main` TM
+    INNER JOIN 
+        version TV 
+    ON 
+        TM.ID = TV.ID
+    INNER JOIN 
+        applications TA 
+    ON 
+        TV.AppID = TA.AppID
+    WHERE
+        `Type` = '{$type}' AND
+        `AppName` = '{$application}' AND
+        `approved` = 'YES' 
+    ORDER BY
+        `downloadcount` DESC,
+        `Rating` DESC, 
+        `Name` ASC
+    LIMIT 10
+";
 
-        <?php
-        $i=0;
-        $sql = "SELECT TM.ID, TM.Type, TM.Description, TM.Name, TV.Version, TV.DateAdded
-            FROM  `main` TM
-            INNER  JOIN version TV ON TM.ID = TV.ID
-            INNER  JOIN applications TA ON TV.AppID = TA.AppID
-            INNER  JOIN os TOS ON TV.OSID = TOS.OSID
-            WHERE  `Type`='E' AND `AppName` = '$application' AND `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND (`OSName` = '$OS' OR `OSName` = 'ALL') AND `approved` = 'YES' ORDER BY `DateAdded` DESC ";
-        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-            if (mysql_num_rows($sql_result)=="0") {
-                echo"        <li>Nothing Recently Added</li>\n";
-            }
-            while ($row = mysql_fetch_array($sql_result)) {
-                $i++;
-                $id = $row["ID"];
-                $type = $row["Type"];
-                $name = $row["Name"];
-                $description = $row["Description"];
-                $version = $row["Version"];
-                $dateadded = $row["DateAdded"];
-                $dateadded = gmdate("F d, Y", strtotime("$dateadded")); 
-                //$dateupdated = gmdate("F d, Y g:i:sa T", $timestamp);
-                $typename = "extensions";
+$sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 
-                if ($lastname == $name) {
-                    $i--;
-                    continue;
-                }
+if (!mysql_num_rows($sql_result)) {
+    echo '<p>No featured extensions were found.  Please check back later.</p>';
+} else {
+    echo '<ol>';
+    while ($row = mysql_fetch_array($sql_result)) {
+echo <<<MP
+        <li>
+        <a href="./moreinfo.php?id={$row['ID']}&amp;application={$application}"><strong>{$row['Name']}</strong></a>,
+        ({$row['Rating']} stars, {$row['downloadcount']} downloads)<br>
+        {$row['Description']}
+        </li>
+MP;
+    }
+    echo '</ol>';
+}
+?>
 
-                echo"		<li>";
-                echo"<a href=\"../$typename/moreinfo.php?".uriparams()."&amp;id=$id\"><strong>$name $version</strong></a>, $dateadded<br>";
-                echo"$description";
-                echo"</li>\n";
+<a href="/rss/?application=<?php echo"$application"; ?>&amp;type=E&amp;list=newest"><img src="../images/rss.png" width="16" height="16" class="rss" alt="News Additions in RSS"></a>
+<?php $catname = "Newest"; echo "<a href=\"showlist.php?".uriparams()."&amp;category=$catname&numpg=10&pageid=2\" title=\"$catdesc\">"; ?>
+<h2>Newest <?php print(ucwords($application)); ?> Extensions</h2></a>
+<p class="first">New and updated extensions. Subscribe to <a href="/rss/?application=<?php echo"$application"; ?>&amp;type=E&amp;list=newest">our RSS feed</a> to be notified when new extensions are added.</p>
 
-                $lastname = $name;
-                if ($i >= "8") {
-                    break;
-                }
-            }
-        ?>
-	</ol>
+<?php
+$sql = "
+    SELECT DISTINCT
+        TM.ID, 
+        TM.Type, 
+        TM.Description, 
+        TM.Name, 
+        TV.Version, 
+        TV.DateAdded
+    FROM  
+        `main` TM
+    INNER JOIN 
+        version TV 
+    ON 
+        TM.ID = TV.ID
+    INNER JOIN 
+        applications TA 
+    ON 
+        TV.AppID = TA.AppID
+    INNER
+        JOIN os TOS
+    ON
+        TV.OSID = TOS.OSID
+    WHERE  
+        `Type`='E' AND 
+        `AppName` = '$application' AND 
+        (`OSName` = '$OS' OR `OSName` = 'ALL') AND 
+        `approved` = 'YES'
+    ORDER BY
+        DateAdded DESC
+    LIMIT 10
+";
+
+$sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+
+if (!mysql_num_rows($sql_result)) {
+    echo '<p>Nothing recently added.  Please try again later.</p>';
+} else {
+    echo '<ol>';
+    while ($row = mysql_fetch_array($sql_result)) {
+        $row['DateAdded'] = gmdate('F d, Y', strtotime($row['DateAdded']));
+echo <<<MP
+        <li>
+        <a href="./moreinfo.php?id={$row['ID']}&amp;application={$application}"><strong>{$row['Name']} {$row['Version']}</strong></a>,
+        {$row['DateAdded']}<br>
+        {$row['Description']}
+        </li>
+MP;
+    }
+    echo '</ol>';
+}
+?>
+
 	</div>
 </div>
 
