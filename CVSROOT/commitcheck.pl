@@ -55,9 +55,6 @@ $fullname{'46'} = 'ef';
 $mode{'101'} = 'Open';
 $branch{'101'} = 'HEAD';
 $fullname{'101'} = 'Embeddable Web Browser';
-$mode{'60'} = 'Open';
-$branch{'60'} = 'HEAD';
-$fullname{'60'} = 'FontLib';
 $mode{'49'} = 'Open';
 $branch{'49'} = 'HEAD';
 $fullname{'49'} = 'GTK';
@@ -226,7 +223,6 @@ if (m:^mozilla/lib/layout/.*$:) {return '56';}
 if (m:^mozilla/modules/edtplug/.*$:) {return '56';}
 if (m:^mozilla/cmd/dialup/.*$:) {return '58';}
 if (m:^mozilla/directory/.*$:) {return '59';}
-if (m:^mozilla/modules/libfont/.*$:) {return '60';}
 if (m:^mozilla/lib/htmldlgs/.*$:) {return '61';}
 if (m:^mozilla/include/xlate\.h/.*$:) {return '62';}
 if (m:^mozilla/lib/xlate/.*$:) {return '62';}
