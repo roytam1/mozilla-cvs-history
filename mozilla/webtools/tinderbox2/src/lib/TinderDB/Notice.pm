@@ -300,7 +300,7 @@ sub render_notice {
     # If the user requests for us to lie about the time, we should
     # also tell when the note was really posted.
 
-    my $localpostedtime;
+    my $localpostedtime = '';
     if ( 
          ($notice->{'posttime'} - $notice->{'time'}) > 
          $main::SECONDS_PER_HOUR
@@ -312,7 +312,7 @@ sub render_notice {
                             "");
     }
     
-    my $rendered_association;
+    my $rendered_association = '';
     my $assocations_ref = $notice->{'associations'};
     if ($assocations_ref) {
         foreach $association (sort keys %{ $assocations_ref }) {
@@ -497,7 +497,7 @@ sub status_table_row {
                      " -->\n");
         return @html;
     }
-    
+
     my ($db_index, $first_notice_time, $authors) =
         cell_data($tree, 
                   $NEXT_DB{$tree}{$association},
@@ -538,7 +538,7 @@ sub status_table_row {
         
         $db_index = $next_db_index;
         $rowspan++ ;
-        
+
         ($next_db_index, $first_notice_time, $authors) =
             cell_data($tree, 
                       $db_index, 
