@@ -180,6 +180,7 @@ MozillaSourceUnixOnly -a \
 	mozilla/Makefile.in \
 	mozilla/configure \
 	mozilla/configure.in \
+	mozilla/allmakefiles.sh \
 	mozilla/cmd/Makefile \
 	mozilla/cmd/Makefile.in \
 	mozilla/cmd/stubfe \
@@ -331,6 +332,7 @@ RaptorDoc -a \
 
 RaptorDist -a \
 	mozilla/configure.in \
+	mozilla/allmakefiles.sh \
 	mozilla/Makefile.in \
 	mozilla/base \
 	mozilla/build \
@@ -504,6 +506,7 @@ SeaMonkeyCore -a \
 	mozilla/client.mak \
 	mozilla/configure \
 	mozilla/configure.in \
+	mozilla/allmakefiles.sh \
 	mozilla/Makefile.in \
 	mozilla/aclocal.m4 \
 	mozilla/base \
