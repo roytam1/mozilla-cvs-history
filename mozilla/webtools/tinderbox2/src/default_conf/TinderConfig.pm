@@ -235,7 +235,8 @@ $ADD_TEXT_BROWSER_STRINGS = 0;
 	       # control system.
 	       
 #	       'TinderHeader::TreeState',
-	       'TinderHeader::TreeState_Bonsai',
+#	       'TinderHeader::TreeState_Bonsai',
+	       'TinderHeader::TreeState_Bonsai_Plus',
 
 	      );
 
