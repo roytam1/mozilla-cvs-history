@@ -130,7 +130,10 @@ unless ($action) {
         print "<input type=hidden name=\"oldisactive-$groupid\" value=\"$isactive\"></td>\n";
         print "<td><input type=\"checkbox\" name=\"isbuggroup-$groupid\" value=\"1\"" . ($isbuggroup ? " checked" : "") . ">\n";
         print "<input type=hidden name=\"oldisbuggroup-$groupid\" value=\"$isbuggroup\"></td>\n";
-        print "<td align=center valign=middle><a href=\"editgroups.cgi?action=del&group=$groupid\">Delete</a></td>\n";
+        print "<td align=center valign=middle>
+               <a href=\"editgroups.cgi?action=changeform&group=$groupid\">Edit</a>
+               <a href=\"editgroups.cgi?action=del&group=$groupid\">Delete</a>
+               </td>\n";
         print "</tr>\n";
     }
 
@@ -163,6 +166,70 @@ care not to duplicate the Names of any of them in your user groups.<p>";
     print "</form>\n";
 
     PutFooter();
+    exit;
+}
+
+#
+#
+# action='changeform' -> present form for altering an existing group
+#
+# (next action will be 'postchanges')
+#
+
+if ($action eq 'changeform') {
+    PutHeader("Change Group");
+
+    my $gid = trim($::FORM{group} || '');
+    unless ($gid) {
+        ShowError("No group specified.<BR>" .
+                  "Click the <b>Back</b> button and try again.");
+        PutFooter();
+        exit;
+    }
+
+    SendSQL("SELECT group_id, name, description, userregexp
+             FROM groups WHERE group_id=" . SqlQuote($gid));
+    my ($group_id, $name, $description, $rexp) = FetchSQLData();
+
+    print "<P> 
+           <B>Group:</B> $name <P>
+           <B>Description:</B> $description <P>
+           <B>User Regexp:</B> \"$rexp\" <P>
+           <BR>
+           In addition to the users matching the regular exprression listed 
+           above, users who are members members of other groups can be 
+           included by including the other groups in this group. <P>\n";
+
+    print "<FORM METHOD=POST ACTION=editgroups.cgi>\n";
+    print "<TABLE>";
+    SendSQL("SELECT groups.group_id, groups.name, groups.description,
+             ISNULL(member_group_map.member_id) = 0 FROM groups
+             LEFT JOIN member_group_map 
+             ON member_group_map.member_id = groups.group_id
+             AND member_group_map.group_id = $group_id
+             AND member_group_map.maptype = 2
+             WHERE groups.group_id != $group_id ORDER by name");
+
+    while (MoreSQLData()) {
+        my ($grpid, $grpnam, $grpdesc, $grpmember) = FetchSQLData();
+        my $grpchecked = $grpmember ? "CHECKED" : "";
+        print "<TR>";
+        print "<TD><INPUT TYPE=checkbox NAME=\"grp-$grpid\" $grpchecked VALUE=1>";
+        print "<INPUT TYPE=HIDDEN NAME=\"oldgrp-$grpid\" VALUE=$grpmember></TD>";
+        print "<TD><B>$grpnam</B></TD>";
+        print "<TD>$grpdesc</TD>";
+        print "</TR>\n";
+    }
+
+    print "</TABLE><BR>";
+    print "<INPUT TYPE=SUBMIT VALUE=\"Submit\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"postchanges\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"group\" VALUE=$gid>\n";
+    print "</FORM>";
+
+
+
+    PutTrailer("<a href=editgroups.cgi>Back to group list</a>");
     exit;
 }
 
@@ -468,6 +535,56 @@ if ($action eq 'delete') {
     }
 
     PutTrailer("<a href=editgroups.cgi>Back to group list</a>");
+    exit;
+}
+
+#
+# action='postchanges' -> update the groups
+#
+
+if ($action eq 'postchanges') {
+    PutHeader("Updating group hierarchy");
+    my $gid = trim($::FORM{group} || '');
+    unless ($gid) {
+        ShowError("No group specified.<BR>" .
+                  "Click the <b>Back</b> button and try again.");
+        PutFooter();
+        exit;
+    }
+
+    my $chgs = 0;
+    print "Checking....";
+    foreach my $b (grep(/^oldgrp-\d*$/, keys %::FORM)) {
+        if (defined($::FORM{$b})) {
+            my $v = substr($b, 7);
+            print "checking $v<P>\n";
+            my $grp = $::FORM{"grp-$v"} || 0;
+            if ($::FORM{"oldgrp-$v"} != $grp) {
+                $chgs = 1;
+                print "changed";
+                if ($grp != 0) {
+                    print " set ";
+                    SendSQL("INSERT INTO member_group_map 
+                             (member_id, group_id, maptype, isderived)
+                             VALUES ($v, $gid, 2, 0)");
+                } else {
+                    print " cleared ";
+                    SendSQL("DELETE FROM member_group_map
+                             WHERE member_id = $v AND group_id = $gid
+                             AND maptype = 2");
+                }
+            }
+
+        }
+    }
+    if (!$chgs) {
+        print "You didn't change anything!<BR>\n";
+        print "If you really meant it, hit the <B>Back</B> button and try again.<p>\n";
+    } else {
+        SendSQL("UPDATE groups SET group_when = NOW() WHERE group_id = $gid");
+        print "Done.<p>\n";
+    }
+    PutTrailer("<a href=editgroups.cgi>Back to the group list</a>");
     exit;
 }
 
