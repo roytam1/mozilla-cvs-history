@@ -162,9 +162,6 @@ $fullname{'90'} = 'XP File Handling';
 $mode{'91'} = 'Open';
 $branch{'91'} = 'HEAD';
 $fullname{'91'} = 'XP Miscellany';
-$mode{'92'} = 'Open';
-$branch{'92'} = 'HEAD';
-$fullname{'92'} = 'XP Utilities';
 $mode{'97'} = 'Open';
 $branch{'97'} = 'HEAD';
 $fullname{'97'} = 'XP Widgets';
@@ -237,8 +234,6 @@ if (m:^mozilla/modules/xml/.*$:) {return '88';}
 if (m:^mozilla/xpcom/.*$:) {return '89';}
 if (m:^mozilla/include/shist\.h/.*$:) {return '91';}
 if (m:^mozilla/lib/libmisc/.*$:) {return '91';}
-if (m:^mozilla/include/xp\.h/.*$:) {return '92';}
-if (m:^mozilla/lib/mariner/.*$:) {return '92';}
 if (m:^mozilla/modules/zlib/.*$:) {return '93';}
 if (m:^mozilla/base/.*$:) {return '94';}
 if (m:^mozilla/view/.*$:) {return '96';}
