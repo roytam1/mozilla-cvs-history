@@ -46,8 +46,11 @@ function do_shift(l) {
 }
 
 function go_to (url) {
-  document.location.href = url;
-  //window.open(url, "other" );
+    if ( typeof sidebar != "undefined" && sidebar == 1 ) {
+        load_relative_url(url);
+    } else {
+        document.location.href = url;
+    }
 }
 
 function map(l, f) {
