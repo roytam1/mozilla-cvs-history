@@ -182,7 +182,7 @@ if ($category=="%") {$category = $catname; unset($catname); }
 echo"<DIV id=\"listnav\">";
 if (!$OS) {$OS="all";}
 if (!$category) {$categoryname="All"; } else {$categoryname = $category;}
-echo"<DIV class=\"pagenum\" "; if ($application!="mozilla") {echo" style=\"margin-right: 95px;\""; } echo">";
+echo"<DIV class=\"pagenum\" "; if ($application!="mozilla") {echo" style=\"margin-right: 58%;\""; } echo">";
 $previd=$pageid-1;
 if ($previd >"0") {
 echo"<a href=\"?pageid=$previd\">&#171; Previous</A> &bull; ";

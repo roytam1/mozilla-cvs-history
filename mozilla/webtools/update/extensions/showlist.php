@@ -173,7 +173,7 @@ if ($category=="%") {$category = $catname; unset($catname); }
 echo"<DIV id=\"listnav\">";
 if (!$OS) {$OS="all";}
 if (!$category) {$categoryname="All"; } else {$categoryname = $category;}
-echo"<DIV class=\"pagenum\" "; if ($application!="mozilla") {echo" style=\"margin-right: 95px;\""; } echo">";
+echo"<DIV class=\"pagenum\" "; if ($application!="mozilla") {echo" style=\"margin-right: 58%;\""; } echo">";
 $previd=$pageid-1;
 if ($previd >"0") {
 echo"<a href=\"?pageid=$previd\">&#171; Previous</A> &bull; ";
@@ -395,8 +395,8 @@ echo"<DIV class=\"iconbar\" style=\"width: 104px;\">";
 if ($appname=="Thunderbird") {
 echo"<A HREF=\"moreinfo.php?id=$id&vid=$vid\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" TITLE=\"More Info about $name\" ALT=\"\">More Info</A>";
 } else {
-//echo"<A HREF=\"install.php/$filename?id=$id&vid=$vid\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" TITLE=\"Install $name\" ALT=\"\">Install</A>";
-echo"<A HREF=\"javascript:void(InstallTrigger.install({'$name $version':'$uri'}))\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" TITLE=\"Install $name\" ALT=\"\">Install</A>";
+echo"<A HREF=\"install.php/$filename?id=$id&vid=$vid\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" TITLE=\"Install $name\" ALT=\"\">Install</A>";
+//echo"<A HREF=\"javascript:void(InstallTrigger.install({'$name $version':'$uri'}))\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" TITLE=\"Install $name\" ALT=\"\">Install</A>";
 }
 echo"<BR><SPAN class=\"filesize\">Size: $filesize kb</SPAN></DIV>";
 if ($homepage) {echo"<DIV class=\"iconbar\" style=\"width: 98px;\"><A HREF=\"$homepage\"><IMG SRC=\"/images/home.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" TITLE=\"$name Homepage\" ALT=\"\">Homepage</A></DIV>";}
