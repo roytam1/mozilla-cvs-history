@@ -1323,7 +1323,6 @@ $table{attachstatusdefs} =
 #
 $table{bugs} =
    'bug_id mediumint not null auto_increment primary key,
-    groupset bigint not null,
     assigned_to mediumint not null, # This is a comment.
     bug_file_loc text,
     bug_severity enum($my_severities) not null,
@@ -1413,16 +1412,7 @@ $table{dependencies} =
     index(dependson)';
 
 
-# Group bits must be a power of two. Groups are identified by a bit; sets of
-# groups are indicated by or-ing these values together.
-#
-# isbuggroup is nonzero if this is a group that controls access to a set
-# of bugs.  In otherword, the groupset field in the bugs table should only
-# have this group's bit set if isbuggroup is nonzero.
-#
-# User regexp is which email addresses are initially put into this group.
-# This is only used when an email account is created; otherwise, profiles
-# may be individually tweaked to add them in and out of groups.
+# User regexp is which email addresses are put into this group.
 #
 # 2001-04-10 myk@mozilla.org:
 # isactive determines whether or not a group is active.  An inactive group
@@ -1432,14 +1422,15 @@ $table{dependencies} =
 # http://bugzilla.mozilla.org/show_bug.cgi?id=75482
 
 $table{groups} =
-   'bit bigint not null,
+   'group_id mediumint not null auto_increment primary key,
     name varchar(255) not null,
     description text not null,
+    group_when datetime not null,
     isbuggroup tinyint not null,
     userregexp tinytext not null,
     isactive tinyint not null default 1,
 
-    unique(bit),
+    unique(group_id),
     unique(name)';
 
 $table{logincookies} =
@@ -1452,7 +1443,8 @@ $table{logincookies} =
 
 
 $table{products} =
-   'product varchar(64),
+   'product_id mediumint primary key auto_increment not null,
+    product varchar(64),
     description mediumtext,
     milestoneurl tinytext not null,
     disallownew tinyint not null,
@@ -1468,13 +1460,11 @@ $table{profiles} =
     login_name varchar(255) not null,
     cryptpassword varchar(34),
     realname varchar(255),
-    groupset bigint not null,
     disabledtext mediumtext not null,
     mybugslink tinyint not null default 1,
-    blessgroupset bigint not null default 0,
     emailflags mediumtext,
-
-
+    profile_when datetime not null,
+    refreshed_when datetime not null,
     unique(login_name)';
 
 
@@ -1579,7 +1569,37 @@ $table{tokens} =
 
      index(userid)';
 
+# group membership tables for tracking group and privilege 
+# 
+# This table determines the groups that a user beloings to
+# directly or due to regexp and which groups can be blessed
+# by a user or group
+# maptype:
+# val  nick     meaning
+# 0 - "u2gm"    member_id is the user_id of a group member
+# 1 - "uBg"     member_id is the user_id of a user who can bless the group
+# 2 - "g2gm"    member_id is the group_id of a group included in the group
+# 3 - "gBg"     member_id is the group_id of a group who can bless the group
+# isderived: (applies to u2gm records only)
+# if 0 - u2gm record was explicitly granted
+# if 1 - u2gm record was created by evaluating a regexp or group hierarchy
+$table{member_group_map} =
+    'member_id mediumint not null,
+     group_id mediumint not null,
+     maptype smallint default 0,
+     isderived tinyint not null default 0,
 
+     unique(member_id, group_id, maptype),
+     index(group_id)';
+
+# This table determines in which groups a user must be a member to have
+# permission to see a bug
+$table{bug_group_map} =
+    'bug_id mediumint not null,
+     group_id mediumint not null,
+
+     unique(bug_id, group_id),
+     index(group_id)';
 
 ###########################################################################
 # Create tables
@@ -1655,7 +1675,7 @@ sub GroupDoesExist ($)
 
 #
 # This subroutine checks if a group exist. If not, it will be automatically
-# created with the next available bit set
+# created with the next available groupid
 #
 
 sub AddGroup {
@@ -1664,26 +1684,16 @@ sub AddGroup {
 
     return if GroupDoesExist($name);
     
-    # get highest bit number
-    my $sth = $dbh->prepare("SELECT bit FROM groups ORDER BY bit DESC");
-    $sth->execute;
-    my @row = $sth->fetchrow_array;
-
-    # normalize bits
-    my $bit;
-    if (defined $row[0]) {
-        $bit = $row[0] << 1;
-    } else {
-        $bit = 1;
-    }
-
-   
     print "Adding group $name ...\n";
-    $sth = $dbh->prepare('INSERT INTO groups
-                          (bit, name, description, userregexp, isbuggroup)
-                          VALUES (?, ?, ?, ?, ?)');
-    $sth->execute($bit, $name, $desc, $userregexp, 0);
-    return $bit;
+    my $sth = $dbh->prepare('INSERT INTO groups
+                          (name, description, userregexp, isbuggroup)
+                          VALUES (?, ?, ?, ?)');
+    $sth->execute($name, $desc, $userregexp, 0);
+
+    $sth = $dbh->prepare("select last_insert_id()");
+    $sth->execute();
+    my ($last) = $sth->fetchrow_array();
+    return $last;
 }
 
 
@@ -1696,20 +1706,59 @@ AddGroup 'editusers',      'Can edit or disable users';
 AddGroup 'creategroups',     'Can create and destroy groups.';
 AddGroup 'editcomponents',   'Can create, destroy, and edit components.';
 AddGroup 'editkeywords',   'Can create, destroy, and edit keywords.';
+AddGroup 'admin',  'Adminstrators';
 
-# Add the groupset field here because this code is run before the
-# code that updates the database structure.
-&AddField('profiles', 'groupset', 'bigint not null');
+#  Add the group_id here because this code is run before the code 
+#  that updates the database structure
+&AddField('groups', 'group_id', 'mediumint not null auto_increment primary key');
+if (GetFieldDef('profiles', 'groupset')) {
+    my $sth = $dbh->prepare("SELECT group_id FROM groups 
+                WHERE name = 'admin'");
+    $sth->execute();
+    my ($id) = $sth->fetchrow_array();
+    $sth = $dbh->prepare("SELECT userid FROM profiles 
+                WHERE groupset = 9223372036854775807");
+    $sth->execute();
+    while ( my ($userid) = $sth->fetchrow_array() ) {
+        # existing administrators are made members of group "admin"
+        $dbh->do("INSERT INTO member_group_map 
+            (member_id, group_id, maptype, isderived) 
+            VALUES ($userid, $id, 0, 0)");
+        # existing administrators are made blessers of group "admin"
+        # only explitly defined blessers can bless group admin
+        # other groups can be blessed by any admin or additional
+        # defined blessers
+        $dbh->do("INSERT INTO member_group_map 
+            (member_id, group_id, maptype, isderived) 
+            VALUES ($userid, $id, 1, 0)");
+    }
+}
+
 
 if (!GroupDoesExist("editbugs")) {
     my $id = AddGroup('editbugs',  'Can edit all aspects of any bug.', ".*");
-    $dbh->do("UPDATE profiles SET groupset = groupset | $id");
+    my $sth = $dbh->prepare("SELECT userid FROM profiles ORDER BY userid");
+    $sth->execute();
+    while ( my ($userid) = $sth->fetchrow_array() ) {
+        $dbh->do("INSERT INTO member_group_map 
+            (member_id, group_id, maptype, isderived) 
+            VALUES ($userid, $id, 0, 0)");
+    }
+
 }
 
 if (!GroupDoesExist("canconfirm")) {
     my $id = AddGroup('canconfirm',  'Can confirm a bug.', ".*");
-    $dbh->do("UPDATE profiles SET groupset = groupset | $id");
+    my $sth = $dbh->prepare("SELECT userid FROM profiles ORDER BY userid");
+    $sth->execute();
+    while ( my ($userid) = $sth->fetchrow_array() ) {
+        $dbh->do("INSERT INTO member_group_map 
+            (member_id, group_id, maptype, isderived) 
+            VALUES ($userid, $id, 0, 0)");
+    }
+
 }
+
 
 
 
@@ -1898,17 +1947,29 @@ CheckEnumField('bugs', 'rep_platform', @my_platforms);
 #  Prompt the user for the email address and name of an administrator.  Create
 #  that login, if it doesn't exist already, and make it a member of all groups.
 
+
+my @groups = ();
+$sth = $dbh->prepare("select group_id from groups");
+$sth->execute();
+while ( my @row = $sth->fetchrow_array() ) {
+    push (@groups, $row[0]);
+}
+    
+
 sub bailout {   # this is just in case we get interrupted while getting passwd
     system("stty","echo"); # re-enable input echoing
     exit 1;
 }
 
 $sth = $dbh->prepare(<<_End_Of_SQL_);
-  SELECT login_name
-  FROM profiles
-  WHERE groupset=9223372036854775807
+  SELECT member_id
+  FROM groups, member_group_map
+  WHERE groups.name = 'admin'
+  AND groups.group_id = member_group_map.group_id
+  AND member_group_map.maptype = 0
 _End_Of_SQL_
 $sth->execute;
+
 # when we have no admin users, prompt for admin email address and password ...
 if ($sth->rows == 0) {
   my $login = "";
@@ -2041,16 +2102,37 @@ _End_Of_SQL_
 
     $dbh->do(<<_End_Of_SQL_);
       INSERT INTO profiles
-      (login_name, realname, cryptpassword, groupset)
-      VALUES ($login, $realname, $cryptedpassword, 0x7fffffffffffffff)
-_End_Of_SQL_
-  } else {
-    $dbh->do(<<_End_Of_SQL_);
-      UPDATE profiles
-      SET groupset=0x7fffffffffffffff
-      WHERE login_name=$login
+      (login_name, realname, cryptpassword)
+      VALUES ($login, $realname, $cryptedpassword)
 _End_Of_SQL_
   }
+    # Put the admin in each group if not already    
+    my $query = "select userid from profiles where login_name = $login";    
+    $sth = $dbh->prepare($query); 
+    $sth->execute();
+    my ($userid) = $sth->fetchrow_array();
+   
+    foreach my $group ( @groups ) {
+        my $query = "SELECT member_id FROM member_group_map 
+            WHERE group_id = $group AND member_id = $userid 
+            AND maptype = 0"; 
+        $sth = $dbh->prepare($query);
+        $sth->execute();
+        if ( !$sth->fetchrow_array() ) {
+            $dbh->do("INSERT INTO member_group_map 
+                (member_id, group_id, maptype, isderived) 
+                VALUES ($userid, $group, 0, 0)");
+        }
+    }
+    # the admin also gets an explicit bless capability for the admin group
+    my $sth = $dbh->prepare("SELECT group_id FROM groups 
+                WHERE name = 'admin'");
+    $sth->execute();
+    my ($id) = $sth->fetchrow_array();
+    $dbh->do("INSERT INTO member_group_map 
+        (member_id, group_id, maptype, isderived) 
+        VALUES ($userid, $id, 1, 0)");
+
   print "\n$login is now set up as the administrator account.\n";
 }
 
@@ -2062,9 +2144,11 @@ _End_Of_SQL_
 ###########################################################################
 
 $sth = $dbh->prepare(<<_End_Of_SQL_);
-  SELECT userid
-  FROM profiles
-  WHERE groupset=9223372036854775807
+  SELECT member_id
+  FROM groups, member_group_map
+  WHERE groups.name = 'admin'
+  AND groups.group_id = member_group_map.group_id
+  AND member_group_map.maptype = 0
 _End_Of_SQL_
 $sth->execute;
 my ($adminuid) = $sth->fetchrow_array;
@@ -2191,7 +2275,6 @@ sub TableExists ($)
 # but aren't in very old bugzilla's (like 2.1)
 # Steve Stock (sstock@iconnect-inc.com)
 AddField('bugs', 'target_milestone', 'varchar(20) not null default "---"');
-AddField('bugs', 'groupset', 'bigint not null');
 AddField('bugs', 'qa_contact', 'mediumint not null');
 AddField('bugs', 'status_whiteboard', 'mediumtext not null');
 AddField('products', 'disallownew', 'tinyint not null');
@@ -2489,7 +2572,7 @@ if (!GetFieldDef('bugs', 'lastdiffed')) {
 # in my database.  This code detects that, cleans up the duplicates, and
 # then tweaks the table to declare the field to be unique.  What a pain.
 
-if (GetIndexDef('profiles', 'login_name')->[1]) {
+if (GetIndexDef('profiles', 'login_name')) {
     print "Searching for duplicate entries in the profiles table ...\n";
     while (1) {
         # This code is weird in that it loops around and keeps doing this
@@ -2622,7 +2705,6 @@ if (!GetFieldDef('bugs', 'everconfirmed')) {
 }
 AddField('products', 'maxvotesperbug', 'smallint not null default 10000');
 AddField('products', 'votestoconfirm', 'smallint not null');
-AddField('profiles', 'blessgroupset', 'bigint not null');
 
 # 2000-03-21 Adding a table for target milestones to 
 # database - matthew@zeroknowledge.com
@@ -3003,6 +3085,54 @@ if (GetFieldDef("logincookies", "hostname")) {
 if (!GetFieldDef("bugs", "alias")) {
     AddField("bugs", "alias", "VARCHAR(20)");
     $dbh->do("ALTER TABLE bugs ADD UNIQUE (alias)");
+}
+
+#
+# If the whole groups system is new, but the installation isn't, 
+# convert all the old groupset groups, etc...
+if (GetFieldDef("profiles", "groupset")) {
+    AddField('groups', 'group_when', 'datetime not null');
+    AddField('products', 'product_id', 
+        'mediumint primary key auto_increment not null');
+    AddField('profiles', 'profile_when', 'datetime not null');
+    AddField('profiles', 'refreshed_when', 'datetime not null');
+
+    $sth = $dbh->prepare("SELECT bit, group_id FROM groups
+                WHERE bit > 0");
+    $sth->execute();
+    while (my ($bit, $gid) = $sth->fetchrow_array) {
+        # create u2g memberships for old groupsets
+        my $sth2 = $dbh->prepare("SELECT userid FROM profiles
+                   WHERE (groupset & $bit) != 0");
+        $sth2->execute();
+        while (my ($uid) = $sth2->fetchrow_array) {
+            $dbh->do("INSERT IGNORE INTO member_group_map
+                   (member_id, group_id, maptype, isderived)
+                   VALUES($uid, $gid, 0, 0)");
+        }
+        # create uBg memberships for old groupsets
+        $sth2 = $dbh->prepare("SELECT userid FROM profiles
+                   WHERE (blessgroupset & $bit) != 0");
+        $sth2->execute();
+        while (my ($uid) = $sth2->fetchrow_array) {
+            $dbh->do("INSERT IGNORE INTO member_group_map
+                   (member_id, group_id, maptype, isderived)
+                   VALUES($uid, $gid, 1, 0)");
+        }
+        # create bug_group_map records for old groupsets
+        $sth2 = $dbh->prepare("SELECT bug_id FROM bugs
+                   WHERE (groupset & $bit) != 0");
+        $sth2->execute();
+        while (my ($bid) = $sth2->fetchrow_array) {
+            $dbh->do("INSERT IGNORE INTO bug_group_map
+                   (bug_id, group_id)
+                   VALUES($bid, $gid)");
+        }
+    }
+    DropField('profiles','groupset');
+    DropField('profiles','blessgroupset');
+    DropField('bugs','groupset');
+    DropField('groups','bit');
 }
 
 # If you had to change the --TABLE-- definition in any way, then add your
