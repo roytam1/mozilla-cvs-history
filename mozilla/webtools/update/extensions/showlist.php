@@ -176,13 +176,13 @@ if (!$category) {$categoryname="All"; } else {$categoryname = $category;}
 echo"<DIV class=\"pagenum\" "; if ($application!="mozilla") {echo" style=\"margin-right: 58%;\""; } echo">";
 $previd=$pageid-1;
 if ($previd >"0") {
-echo"<a href=\"?application=$application&category=$category&numpg=$numpg&pageid=$previd\">&#171; Previous</A> &bull; ";
+echo"<a href=\"?application=$application&version=$app_version&category=$category&numpg=$items_per_page&pageid=$previd\">&#171; Previous</A> &bull; ";
 }
 echo"Page $pageid of $num_pages";
 
 $nextid=$pageid+1;
 if ($pageid <$num_pages) {
-echo" &bull; <a href=\"?application=$application&category=$category&numpg=$numpg&pageid=$nextid\">Next &#187;</a>";
+echo" &bull; <a href=\"?application=$application&version=$app_version&category=$category&numpg=$items_per_page&pageid=$nextid\">Next &#187;</a>";
 }
 
 echo"</DIV>\n";
@@ -428,14 +428,14 @@ echo"<DIV id=\"listnav\">";
 echo"<DIV class=\"pagenum\">";
 $previd=$pageid-1;
 if ($previd >"0") {
-echo"<a href=\"?application=$application&category=$category&numpg=$numpg&pageid=$previd\">&#171; Previous</A> &bull; ";
+echo"<a href=\"?application=$application&version=$app_version&category=$category&numpg=$items_per_page&pageid=$previd\">&#171; Previous</A> &bull; ";
 }
 echo"Page $pageid of $num_pages";
 
 
 $nextid=$pageid+1;
 if ($pageid <$num_pages) {
-echo" &bull; <a href=\"?application=$application&category=$category&numpg=$numpg&pageid=$nextid\">Next &#187;</a>";
+echo" &bull; <a href=\"?application=$application&version=$app_version&category=$category&numpg=$items_per_page&pageid=$nextid\">Next &#187;</a>";
 }
 echo"<BR>\n";
 
@@ -459,7 +459,7 @@ while ($i <= $maxpagesonpage && $i <= $num_pages) {
 if ($i==$pageid) { 
     echo"<SPAN style=\"color: #FF0000\">$i</SPAN>&nbsp;";
   } else {
-    echo"<A HREF=\"?application=$application&category=$category&numpg=$numpg&pageid=$i\">$i</A>&nbsp;";
+    echo"<A HREF=\"?application=$application&version=$app_version&category=$category&numpg=$items_per_page&pageid=$i\">$i</A>&nbsp;";
 
 }
 
