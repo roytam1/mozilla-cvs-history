@@ -102,7 +102,7 @@ sub gettree_header {
 
   if (
       ($text_treestate) &&
-      ($text_treestate != 'Current_Bonsai_State') 
+      ($text_treestate ne 'Current_Bonsai_State') 
       ) {
       $treestate = $text_treestate;
   } else {
