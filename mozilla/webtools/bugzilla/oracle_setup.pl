@@ -99,7 +99,7 @@ use strict;
 
 use vars qw(
     $webservergroup
-    $db_host $db_port $db_name $db_user $db_pass $db_check
+    $db_host $db_port $db_home $db_name $db_user $db_pass $db_check
     @bug_severity @priority @op_sys @rep_platform @resolution @bug_status
 );
 
@@ -239,31 +239,36 @@ $webservergroup = "nobody";
 
 
 
-#LocalVar('$db_host', '
+LocalVar('$db_name', '
 #
-# How to access the SQL database:
+# Name of the Oracle database ...
 #
-#$db_host = "localhost";         # where is the database?
-#$db_port = 3306;                # which port to use
-#$db_name = "bugs-devel";              # name of the MySQL database
-#db_user = "bugs";              # user to attach to the MySQL database
-#');
-#LocalVar('$db_pass', '
-#
-# Some people actually use passwords with their MySQL database ...
-#
-#$db_pass = "";
-#');
+$db_name = "bugs-devel";        
+');
 
 
+LocalVar('$db_user', '
+#
+# Username for the Oracle database ...
+#
+$db_user = "bugzilla/bugzilla";
+');
 
-#LocalVar('$db_check', '
+
+LocalVar('$db_pass', '
 #
-# Should checksetup.pl try to check if your MySQL setup is correct?
-# (with some combinations of MySQL/Msql-mysql/Perl/moonphase this doesn\'t work)
+# Password for the database ...
 #
-#$db_check = 1;
-#');
+$db_pass = "";
+');
+
+
+LocalVar('$db_home', '
+#
+# The path to Oracles home directory ...
+#
+$db_home = "/opt/oracle/product/805/";
+');
 
 
 LocalVar('@bug_severity', '
@@ -445,7 +450,7 @@ if ($webservergroup) {
                 'checksetup.pl',
 				'oracle_setup.pl';
 
-    chmod 0770, 'data', 'shadow';
+    chmod 0777, 'data', 'shadow';
     chmod 0666, glob('data/*');
 }
 
@@ -462,7 +467,7 @@ if ($webservergroup) {
 #
 
 # This settings are not yet changeable, because other code depends on
-# the fact that we use MySQL and not, say, PostgreSQL.
+# the fact that we use Oracle and not, say, PostgreSQL.
 
 my $db_base = 'Oracle';
 
@@ -472,36 +477,21 @@ use DBI;
 my $drh = DBI->install_driver($db_base)
     or die "Can't connect to the $db_base. Is the database installed and up and running?\n";
 
-#if ($db_check) {
-#    # Do we have the database itself?
-#    my @databases = $drh->func($db_host, $db_port, '_ListDBs');
-#    unless (grep /^$db_name$/, @databases) {
-#    	print "Creating database $db_name ...\n";
-#    	$drh->func('createdb', $db_name, 'admin')
-#            	or die <<"EOF"
-#
-#The '$db_name' database is not accessible. This might have several reasons:
-#
-#* Oracle is not running.
-#* Oracle is running, but the rights are not set correct. 
-#* There is an subtle problem with Perl, DBI, DBD::Oracle and Oracle. Make
-#  sure all settings in 'localconfig' are correct. If all else fails, set
-#  '\$db_check' to zero.\n
-#EOF
-#    }
-#}
-
-# database setup 
-# Connect to Oracle Database
-$ENV{'ORACLE_HOME'} = "/opt/oracle/product/805/";
-$ENV{'ORACLE_SID'} = "bugzilla";
-$ENV{'TWO_TASK'} = "bugzilla";
-$ENV{'ORACLE_USERID'} = "bugzilla/bugzilla";
-
 my $db_name = "bugzilla";
 my $db_user = "bugzilla/bugzilla";
 my $db_pass = "";
+my $db_home = "/opt/oracle/product/805/";
+
+do 'localconfig';
+
 my $connectstring = "dbi:$db_base:$db_name";
+
+# database setup 
+# Connect to Oracle Database with Oracle environment variables;
+$ENV{'ORACLE_HOME'} = $db_home;
+$ENV{'ORACLE_SID'} = $db_name;
+$ENV{'TWO_TASK'} = $db_name;
+$ENV{'ORACLE_USERID'} = $db_user;
 
 # now get a handle to the database:
 my $dbh = DBI->connect($connectstring, $db_user, $db_pass, { RaiseError => 1 })
