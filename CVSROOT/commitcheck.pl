@@ -270,7 +270,7 @@ if (m:^mozilla/lib/libmime/.*$:) {return '76';}
 if (m:^mozilla/network/.*$:) {return '77';}
 if (m:^mozilla/lib/libpwcac/.*$:) {return '79';}
 if (m:^mozilla/lib/libpics/.*$:) {return '80';}
-if (m:^mozilla/lib/plugin/.*$:) {return '81';}
+if (m:^mozilla/modules/plugin/.*$:) {return '81';}
 if (m:^mozilla/modules/libpref/.*$:) {return '82';}
 if (m:^mozilla/modules/progress/.*$:) {return '83';}
 if (m:^mozilla/modules/libreg/.*$:) {return '84';}
