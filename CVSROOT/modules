@@ -330,6 +330,7 @@ RaptorDist -a \
 	mozilla/nav-java \
 	mozilla/network \
 	mozilla/nsprpub \
+	mozilla/rdf \
 	mozilla/sun-java \
 	mozilla/xpcom \
 	mozilla/xpfe
