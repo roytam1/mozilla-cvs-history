@@ -412,6 +412,7 @@ if (m:^mozilla/gfx/src/gtk/.*$:) {return '49';}
 if (m:^mozilla/widget/src/gtk/.*$:) {return '49';}
 if (m:^mozilla/widget/src/gtk2/.*$:) {return '49';}
 if (m:^mozilla/widget/src/gtksuperwin/.*$:) {return '49';}
+if (m:^mozilla/widget/src/gtkxtbin/.*$:) {return '49';}
 if (m:^mozilla/rdf/.*$:) {return '52';}
 if (m:^mozilla/extensions/vixen/.*$:) {return '156';}
 if (m:^mozilla/dbm/.*$:) {return '53';}
