@@ -565,9 +565,9 @@ if ($action eq 'del') {
     CheckUser($user);
 
     # display some data about the user
-    SendSQL("SELECT realname FROM profiles
+    SendSQL("SELECT userid, realname FROM profiles
          WHERE login_name=" . SqlQuote($user));
-    my $realname = FetchOneColumn();
+    my ($theuserid, $realname) = FetchSQLData();
     $realname ||= "<FONT COLOR=\"red\">missing</FONT>";
     
     print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0>\n";
@@ -587,7 +587,9 @@ if ($action eq 'del') {
     print "  <TD VALIGN=\"top\">Group set:</TD>\n";
     print "  <TD VALIGN=\"top\">";
     SendSQL("SELECT name
-              FROM groups
+              FROM groups, user_group_map
+              WHERE groups.group_id = user_group_map.group_id
+              AND user_group_map.user_id = $theuserid
               ORDER BY isbuggroup, name");
     my $found = 0;
     while ( MoreSQLData() ) {

@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -wT
+#!/usr/bonsaitools/bin/perl -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -655,8 +655,6 @@ sub NewProcessOnePerson ($$$$$$$$$$$$) {
       return;
     }
        
-    detaint_natural($person);
- 
     SendSQL("SELECT userid FROM profiles WHERE login_name = " . SqlQuote($person));
     my ($userid) = FetchOneColumn();
 
@@ -680,7 +678,7 @@ sub NewProcessOnePerson ($$$$$$$$$$$$) {
         my $save_id = $dep_id;
         detaint_natural($dep_id) || warn("Unexpected Error: \@depbugs contains a non-numeric value: '$save_id'")
                                  && return;
-        return unless CanSeeBug($dep_id, $userid, $groupset);
+        return unless CanSeeBug($dep_id, $userid);
     }
 
     my %mailhead = %defmailhead;
