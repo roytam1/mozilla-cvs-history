@@ -1,7 +1,8 @@
-#!#perl# #perlflags# --
+#!#perl# --
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
+# This script does not need to run under taint perl.
 
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
