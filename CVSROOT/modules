@@ -96,6 +96,7 @@ MozillaSourceCommon -a \
 	mozilla/LICENSE \
 	mozilla/base \
 	mozilla/build \
+	!mozilla/build/mac/client.mac \
 	mozilla/include \
 	mozilla/caps \
 	mozilla/jpeg \
@@ -340,6 +341,7 @@ RaptorDist -a \
 	mozilla/Makefile.in \
 	mozilla/makefile.win \
 	mozilla/build \
+	!mozilla/build/mac/client.mac \
 	mozilla/caps \
 	mozilla/config \
 	mozilla/dbm \
@@ -528,6 +530,7 @@ SeaMonkeyCore -a \
 	mozilla/aclocal.m4 \
 	mozilla/base \
 	mozilla/build \
+	!mozilla/build/mac/client.mac \
 	mozilla/caps \
 	mozilla/config \
 	mozilla/cmd/xfe/icons/icondata.h \
