@@ -179,6 +179,7 @@ MozillaSourceUnixOnly -a \
     mozilla/config/Rhapsody.mk  \
     mozilla/config/rules.mk  \
     mozilla/config/SCOOS.mk  \
+    mozilla/config/set-timebomb.pl \
     mozilla/config/SINIX.mk  \
     mozilla/config/sj.pl  \
     mozilla/config/SunOS.mk  \
