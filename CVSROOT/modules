@@ -578,6 +578,7 @@ SeaMonkeyBrowser -a \
 	mozilla/silentdl \
 	mozilla/editor/Makefile.in \
 	mozilla/editor/public \
+	mozilla/extensions \
 	SeaMonkeyXPToolKit
 
 # This needs work!
