@@ -38,6 +38,7 @@ sub globals_pl_sillyness {
     $zz = @main::default_column_list;
     $zz = $main::defaultqueryname;
     $zz = @main::dontchange;
+    $zz = @main::enterable_products;
     $zz = %main::keywordsbyname;
     $zz = @main::legal_bug_status;
     $zz = @main::legal_components;
@@ -50,6 +51,7 @@ sub globals_pl_sillyness {
     $zz = @main::legal_target_milestone;
     $zz = @main::legal_versions;
     $zz = @main::milestoneurl;
+    $zz = %main::proddesc;
     $zz = @main::prodmaxvotes;
     $zz = $main::superusergroupset;
     $zz = $main::userid;
@@ -575,16 +577,13 @@ sub GenerateVersionTable {
                                 # about them anyway.
 
     my $mpart = $dotargetmilestone ? ", milestoneurl" : "";
-    SendSQL("select product, description, votesperuser, disallownew$mpart from products");
+    SendSQL("select product, description, votesperuser, disallownew$mpart from products ORDER BY product");
     $::anyvotesallowed = 0;
     while (@line = FetchSQLData()) {
         my ($p, $d, $votesperuser, $dis, $u) = (@line);
         $::proddesc{$p} = $d;
-        if ($dis) {
-            # Special hack.  Stomp on the description and make it "0" if we're
-            # not supposed to allow new bugs against this product.  This is
-            # checked for in enter_bug.cgi.
-            $::proddesc{$p} = "0";
+        if (!$dis) {
+            push @::enterable_products, $p;
         }
         if ($dotargetmilestone) {
             $::milestoneurl{$p} = $u;
@@ -671,6 +670,7 @@ sub GenerateVersionTable {
     }
     print FID GenerateCode('@::settable_resolution');
     print FID GenerateCode('%::proddesc');
+    print FID GenerateCode('@::enterable_products');
     print FID GenerateCode('%::prodmaxvotes');
     print FID GenerateCode('$::anyvotesallowed');
 
@@ -868,9 +868,8 @@ sub SelectVisible {
     # and is authorized to access the bug.
 
     # A user is also authorized to access a bug if she is the reporter, 
-    # assignee, QA contact, or member of the cc: list of the bug and the bug 
-    # allows users in those roles to see the bug.  The boolean fields 
-    # reporter_accessible, assignee_accessible, qacontact_accessible, and 
+    # or member of the cc: list of the bug and the bug allows users in those
+    # roles to see the bug.  The boolean fields reporter_accessible and 
     # cclist_accessible identify whether or not those roles can see the bug.
 
     # Bit arithmetic is performed by MySQL instead of Perl because bitset
@@ -898,9 +897,7 @@ sub SelectVisible {
         # cause all rows to be returned! We work arround this by adding an not isnull
         # test to the JOINed cc table. See http://lists.mysql.com/cgi-ez/ezmlm-cgi?9:mss:11417
         # Its needed, even though it shouldn't be
-        $replace .= "OR (bugs.reporter_accessible = 1 AND bugs.reporter = $userid) 
-                   OR (bugs.assignee_accessible = 1 AND bugs.assigned_to = $userid) 
-                   OR (bugs.qacontact_accessible = 1 AND bugs.qa_contact = $userid)";
+        $replace .= "OR (bugs.reporter_accessible = 1 AND bugs.reporter = $userid) ";
         if ($::driver eq 'mysql') {
             $replace .= " 
                    OR (bugs.cclist_accessible = 1 AND selectVisible_cc.who = $userid AND not isnull(selectVisible_cc.who))";
@@ -1170,15 +1167,13 @@ sub detaint_natural {
 # expressions.
 
 sub quoteUrls {
-    my ($knownattachments, $text) = (@_);
+    my ($text) = (@_);
     return $text unless $text;
     
     my $base = Param('urlbase');
 
     my $protocol = join '|',
     qw(afs cid ftp gopher http https mid news nntp prospero telnet wais);
-
-    my %options = ( metachars => 1, @_ );
 
     my $count = 0;
 
@@ -1230,9 +1225,9 @@ sub quoteUrls {
         $item = GetBugLink($num, $item);
         $things[$count++] = $item;
     }
-    while ($text =~ s/\battachment(\s|%\#)*(\d+)/"##$count##"/ei) {
+    while ($text =~ s/\b(Created an )?attachment(\s|%\#)*(\(id=)?(\d+)\)?/"##$count##"/ei) {
         my $item = $&;
-        my $num = $2;
+        my $num = $4;
         $item = value_quote($item); # Not really necessary, since we know
                                     # there's no special chars in it.
         $item = qq{<A HREF="attachment.cgi?id=$num&action=view">$item</A>};
@@ -1244,14 +1239,6 @@ sub quoteUrls {
         my $bug_link;
         $bug_link = GetBugLink($num, $num);
         $item =~ s@\d+@$bug_link@;
-        $things[$count++] = $item;
-    }
-    while ($text =~ s/Created an attachment \(id=(\d+)\)/"##$count##"/e) {
-        my $item = $&;
-        my $num = $1;
-        if ($knownattachments->{$num}) {
-            $item = qq{<A HREF="attachment.cgi?id=$num&action=view">$item</A>};
-        }
         $things[$count++] = $item;
     }
 
@@ -1396,11 +1383,6 @@ sub GetLongDescriptionAsHTML {
     my ($id, $start, $end) = (@_);
     my $result = "";
     my $count = 0;
-    my %knownattachments;
-    SendSQL("SELECT attach_id FROM attachments WHERE bug_id = $id");
-    while (MoreSQLData()) {
-        $knownattachments{FetchOneColumn()} = 1;
-    }
 
     my $query = "
     SELECT 
@@ -1456,12 +1438,39 @@ sub GetLongDescriptionAsHTML {
               
             $result .= time2str("%Y-%m-%d %H:%M", str2time($when)) . " -------</I><BR>\n";
         }
-        $result .= "<PRE>" . quoteUrls(\%knownattachments, $text) . "</PRE>\n";
+        $result .= "<PRE>" . quoteUrls($text) . "</PRE>\n";
         $count++;
     }
 
     return $result;
 }
+
+
+sub GetComments {
+    my ($id) = (@_);
+    my @comments;
+    
+    SendSQL("SELECT  profiles.realname, profiles.login_name, 
+                     date_format(longdescs.bug_when,'%Y-%m-%d %H:%i'), 
+                     longdescs.thetext
+            FROM     longdescs, profiles
+            WHERE    profiles.userid = longdescs.who 
+              AND    longdescs.bug_id = $id 
+            ORDER BY longdescs.bug_when");
+             
+    while (MoreSQLData()) {
+        my %comment;
+        ($comment{'name'}, $comment{'email'}, $comment{'time'}, $comment{'body'}) = FetchSQLData();
+        
+        $comment{'email'} .= Param('emailsuffix');
+        $comment{'name'} = $comment{'name'} || $comment{'email'};
+         
+        push (@comments, \%comment);
+    }
+    
+    return \@comments;
+}
+
 
 # Fills in a hashtable with info about the columns for the given table in the
 # database.  The hashtable has the following entries:
@@ -1557,6 +1566,7 @@ sub UserInGroup {
                 "from groups where name = " . SqlQuote($groupname));
     }
     my $bit = FetchOneColumn();
+    PopGlobalSQLState();
     if ($bit) {
         return 1;
     }
@@ -1695,7 +1705,7 @@ sub RemoveVotes {
             if (Param('sendmailnow')) {
                $sendmailparm = '';
             }
-            if (open(SENDMAIL, "|/usr/lib/sendmail $sendmailparm -t")) {
+            if (open(SENDMAIL, "|/usr/lib/sendmail $sendmailparm -t -i")) {
                 my %substs;
 
                 $substs{"to"} = $name;
@@ -1864,9 +1874,6 @@ $::template = Template->new(
     # Colon-separated list of directories containing templates.
     INCLUDE_PATH => "template/custom:template/default" ,
 
-    # Allow templates to be specified with relative paths.
-    RELATIVE => 1 ,
-
     # Remove white-space before template directives (PRE_CHOMP) and at the
     # beginning and end of templates and template blocks (TRIM) for better 
     # looking, more compact content.  Use the plus sign at the beginning 
@@ -1879,6 +1886,17 @@ $::template = Template->new(
       {
         # Render text in strike-through style.
         strike => sub { return "<strike>" . $_[0] . "</strike>" } ,
+
+        # Returns the text with backslashes, single/double quotes,
+        # and newlines/carriage returns escaped for use in JS strings.
+        js => sub
+        {
+            my ($var) = @_;
+            $var =~ s/([\\\'\"])/\\$1/g; 
+            $var =~ s/\n/\\n/g; 
+            $var =~ s/\r/\\r/g; 
+            return $var;
+        }
       } ,
   }
 );
@@ -1938,6 +1956,9 @@ $::vars =
     # Function for processing global parameters that contain references
     # to other global parameters.
     'PerformSubsts' => \&PerformSubsts ,
+
+    # Generic linear search function
+    'lsearch' => \&lsearch ,
   };
 
 1;

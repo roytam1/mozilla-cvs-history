@@ -205,11 +205,13 @@ function merge_arrays(a, b, b_is_select) {
     return ret;
 }
 
-[%# Returns an array of indexes.
+[%# Returns an array of indexes or values from a select form control.
   #    - control: select control from which to find selections
-  #    - findall: boolean, dumping all options if all or just the selected 
-  #      indexes. %]
-function getSelection(control, findall) {
+  #    - findall: boolean, store all options when true or just the selected 
+  #      indexes
+  #    - want_values: boolean; we store values when true and indexes when
+  #      false %]
+function getSelection(control, findall, want_values) {
     var ret = new Array();
 
     if ((!findall) && (control.selectedIndex == -1)) {
@@ -218,7 +220,7 @@ function getSelection(control, findall) {
 
     for (var i=0; i<control.length; i++) {
         if (findall || control.options[i].selected) {
-            ret[ret.length] = i;
+            ret[ret.length] = want_values ? control.options[i].value : i;
         }
     }
     return ret;
@@ -226,10 +228,16 @@ function getSelection(control, findall) {
 
 [%# Selects items in control that have index defined in sel
   #    - control: SELECT control to be restored
-  #    - sel: array of indexes in select form control %]
-function restoreSelection(control, sel) {
-    for (var s in sel) {
-        control.options[sel[s]].selected = true;
+  #    - selnames: array of indexes in select form control %]
+function restoreSelection(control, selnames) {
+    [%# right. this sucks. but I see no way to avoid going through the
+      # list and comparing to the contents of the control. %]
+    for (var j=0; j < selnames.length; j++) {
+        for (var i=0; i < control.options.length; i++) {
+            if (control.options[i].value == selnames[j]) {
+                control.options[i].selected = true;
+            }
+        }
     }
 }
 
@@ -276,11 +284,9 @@ function selectProduct(f) {
     var sel = Array();
 
     [%# if nothing selected, pick all %]
-    if (f.product.selectedIndex == -1) {
-        sel = getSelection(f.product, true);
-    } else {
-        sel = getSelection(f.product, false);
-
+    var findall = f.product.selectedIndex == -1;
+    sel = getSelection(f.product, findall, false);
+    if (!findall) {
         [%# save sel for the next invocation of selectProduct() %]
         var tmp = sel;
     
@@ -292,15 +298,23 @@ function selectProduct(f) {
             sel = fake_diff_array(sel, last_sel);
             merging = true;
         }
-
         last_sel = tmp;
     }
-
-    [%# do the actual fill/update %]
-    updateSelect(cpts, sel, f.component, merging);
-    updateSelect(vers, sel, f.version, merging);
+    [%# save original options selected %]
+    var saved_cpts = getSelection(f.component, false, true);
+    var saved_vers = getSelection(f.version, false, true);
     [% IF Param('usetargetmilestone') %]
-        updateSelect(tms, sel, f.target_milestone, merging);
+    var saved_tms = getSelection(f.target_milestone, false, true);
+    [% END %]
+
+    [%# do the actual fill/update, reselect originally selected options %]
+    updateSelect(cpts, sel, f.component, merging);
+    restoreSelection(f.component, saved_cpts);
+    updateSelect(vers, sel, f.version, merging);
+    restoreSelection(f.version, saved_vers);
+    [% IF Param('usetargetmilestone') %]
+    updateSelect(tms, sel, f.target_milestone, merging);
+    restoreSelection(f.target_milestone, saved_tms);
     [% END %]
 }
 
@@ -333,117 +347,110 @@ function selectProduct(f) {
       </select>
     </td>
     <td>
-      <input name="short_desc" size="30" value="[% default.short_desc.0 FILTER html %]" />
+      <input name="short_desc" size="40" value="[% default.short_desc.0 FILTER html %]" />
     </td>
     <td>
       <input type="submit" value="Search" />
     </td>
   </tr>  
-</table>
 
 [%# *** Product Component Version Target *** %]
 
-<table>
   <tr>
-  <td>
-    <table>
-      <tr valign="bottom">
-        <th align="left">Product:</th>
-        <th align="left"><a href="describecomponents.cgi">Component</a>:</th>
-        <th align="left">Version:</th>
+    <td colspan="4">
+      <table>
+        <tr valign="bottom">
+          <th align="left">Product:</th>
+          <th align="left"><a href="describecomponents.cgi">Component</a>:</th>
+          <th align="left">Version:</th>
 
-      [% IF (Param("usetargetmilestone")) %]
-        <th align="left">Target:</th>
-      [% END %]
-      </tr>
+        [% IF (Param("usetargetmilestone")) %]
+          <th align="left">Target:</th>
+        [% END %]
+        </tr>
 
-      <tr valign="top">
-        
-        [%# Can't use the select block here because of onChange and the fact that
-            'component' is a toolkit reserved word - we use 'component_' instead. %]
-        <td align="left">
-          <select name="product" multiple size="5" onChange="selectProduct(this.form);">
-          [% FOREACH p = product %]
-            <option value="[% p FILTER html %]"
-              [% " selected" IF lsearch(default.product, p) != -1 %]>
-              [% p FILTER html %]</option>
-          [% END %]
-          </select>
-        </td>
+        <tr valign="top">
 
-        <td align="left">
-          <select name="component" multiple size="5">
-          [% FOREACH c = component_ %]
-            <option value="[% c FILTER html %]"
-              [% " selected" IF lsearch(default.component, c) != -1 %]>
-              [% c FILTER html %]</option>
-          [% END %]
-          </select>
-        </td>
+          [%# Can't use the select block here because of onChange and the fact that
+              'component' is a toolkit reserved word - we use 'component_' instead. %]
+          <td align="left">
+            <select name="product" multiple size="5" onChange="selectProduct(this.form);">
+            [% FOREACH p = product %]
+              <option value="[% p FILTER html %]"
+                [% " selected" IF lsearch(default.product, p) != -1 %]>
+                [% p FILTER html %]</option>
+            [% END %]
+            </select>
+          </td>
 
-        [% PROCESS select sel = { name => 'version', size => 5 } %]
+          <td align="left">
+            <select name="component" multiple size="5">
+            [% FOREACH c = component_ %]
+              <option value="[% c FILTER html %]"
+                [% " selected" IF lsearch(default.component, c) != -1 %]>
+                [% c FILTER html %]</option>
+            [% END %]
+            </select>
+          </td>
 
-      [% IF target_milestone.size > 0 %]
-        [% PROCESS select sel = { name => 'target_milestone', size => 5 } %]
-      [% END %]
-      </tr>
-    </table>
-  </td>
+          [% PROCESS select sel = { name => 'version', size => 5 } %]
+
+        [% IF target_milestone.size > 0 %]
+          [% PROCESS select sel = { name => 'target_milestone', size => 5 } %]
+        [% END %]
+        </tr>
+      </table>
+    </td>
   </tr>
   
 [%# *** Comment URL Whiteboard Keywords *** %]
 
-  <tr>
-  <td>
-    <table border="0">
-    [% FOREACH field = [ 
-      { name => "long_desc", description => "A comment" },
-      { name => "bug_file_loc", description => "The URL" },
-      { name => "status_whiteboard", description => "Whiteboard" } ] %]
+  [% FOREACH field = [ 
+    { name => "long_desc", description => "A&nbsp;comment" },
+    { name => "bug_file_loc", description => "The&nbsp;URL" },
+    { name => "status_whiteboard", description => "Whiteboard" } ] %]
 
-      [% UNLESS field.name == 'status_whiteboard' AND NOT Param('usestatuswhiteboard') %]
-      <tr>
-        <th align="right">[% field.description %]:</th>
-        <td>
-          <select name="[% field.name %]_type">
-          [% FOREACH qv = query_variants %]
-            [% type = "${field.name}_type" %]                   
-            <option value="[% qv.value %]"
-              [% " selected" IF default.$type.0 == qv.value %]>[% qv.description %]</option>
-          [% END %]              
-          </select>
-        </td>
-        <td><input name="[% field.name %]" size="40" value="
-          [% default.${field.name}.0 FILTER html %]" /></td>
-      </tr>  
-      [% END %]
+    [% UNLESS field.name == 'status_whiteboard' AND NOT Param('usestatuswhiteboard') %]
+    <tr>
+      <th align="right">[% field.description %]:</th>
+      <td>
+        <select name="[% field.name %]_type">
+        [% FOREACH qv = query_variants %]
+          [% type = "${field.name}_type" %]                   
+          <option value="[% qv.value %]"
+            [% " selected" IF default.$type.0 == qv.value %]>[% qv.description %]</option>
+        [% END %]              
+        </select>
+      </td>
+      <td><input name="[% field.name %]" size="40" value="
+        [% default.${field.name}.0 FILTER html %]" />
+      </td>
+      <td></td>
+    </tr>  
     [% END %]
+  [% END %]
 
-    [% IF have_keywords %]
-      <tr>
-        <th align="right"><a href="describekeywords.cgi">Keywords</a>:</th>
-        <td>
-          <select name="keywords_type">
-          [% FOREACH qv = [ 
-            { name => "anywords", description => "contains any of the keywords" },
-            { name => "allwords", description => "contains all of the keywords" },
-            { name => "nowords",  description => "contains none of the keywords" } ] %]
-                           
-            <option value="[% qv.name %]"
-              [% " selected" IF default.keywords_type.0 == qv.name %]>
-              [% qv.description %]</option>
-          [% END %]
-          </select>
-        </td>
-        <td>
-          <input name="keywords" size="40" value="[% default.keywords.0 FILTER html %]" />
-        </td>
-      </tr>
-    [% END %]
+  [% IF have_keywords %]
+    <tr>
+      <th align="right"><a href="describekeywords.cgi">Keywords</a>:</th>
+      <td>
+        <select name="keywords_type">
+        [% FOREACH qv = [ 
+          { name => "anywords", description => "contains any of the keywords" },
+          { name => "allwords", description => "contains all of the keywords" },
+          { name => "nowords",  description => "contains none of the keywords" } ] %]
 
-    </table>
-  </td>  
-  </tr>
+          <option value="[% qv.name %]"
+            [% " selected" IF default.keywords_type.0 == qv.name %]>
+            [% qv.description %]</option>
+        [% END %]
+        </select>
+      </td>
+      <td>
+        <input name="keywords" size="40" value="[% default.keywords.0 FILTER html %]" />
+      </td>
+    </tr>
+  [% END %]
 </table>  
 
 <hr>
@@ -484,6 +491,7 @@ function selectProduct(f) {
           </strong>  
         </legend>
 
+
 <table>
   <tr>
   [% FOREACH n = [1, 2] %]
@@ -497,33 +505,63 @@ function selectProduct(f) {
     </td>
   </tr>
   <tr>
-    <td><input type="checkbox" name="emailassigned_to[% n %]" value="1"
-        [% " checked" IF default.emailassigned_to.$n %] />bug owner</td>
+    <td>
+      <input type="checkbox" name="emailassigned_to[% n %]" 
+             id="emailassigned_to[% n %]" value="1"
+             [% " checked" IF default.emailassigned_to.$n %] />
+      <label for="emailassigned_to[% n %]">
+        bug owner
+      </label>
+    </td>
   </tr>
   <tr>
-    <td><input type="checkbox" name="emailreporter[% n %]" value="1"
-        [% " checked" IF default.emailreporter.$n %] />reporter</td>
+    <td>
+      <input type="checkbox" name="emailreporter[% n %]" 
+             id="emailreporter[% n %]" value="1"
+             [% " checked" IF default.emailreporter.$n %] />
+      <label for="emailreporter[% n %]">
+        reporter
+      </label>
+    </td>
   </tr>
   [% IF Param('useqacontact') %]
   <tr>
-    <td><input type="checkbox" name="emailqa_contact[% n %]" value="1"
-        [% " checked" IF default.emailqa_contact.$n %] />QA Contact</td>
+    <td>
+      <input type="checkbox" name="emailqa_contact[% n %]" 
+             id="emailqa_contact[% n %]" value="1"
+             [% " checked" IF default.emailqa_contact.$n %] />
+      <label for="emailqa_contact[% n %]">
+        QA contact
+      </label>
+    </td>
   </tr>
   [% END %]
   <tr>
-    <td><input type="checkbox" name="emailcc[% n %]" value="1"
-        [% " checked" IF default.emailcc.$n %] />CC list member</td>
+    <td>
+      <input type="checkbox" name="emailcc[% n %]" 
+             id="emailcc[% n %]" value="1"
+             [% " checked" IF default.emailcc.$n %] />
+      <label for="emailcc[% n %]">
+        CC list member
+      </label>
+    </td>
   </tr>
   <tr>
-    <td><input type="checkbox" name="emaillongdesc[% n %]" value="1"
-        [% " checked" IF default.emaillongdesc.$n %] />commenter</td>
+    <td>
+        <input type="checkbox" name="emaillongdesc[% n %]" 
+               id="emaillongdesc[% n %]" value="1"
+               [% " checked" IF default.emaillongdesc.$n %] />
+      <label for="emaillongdesc[% n %]">
+        commenter
+      </label>
+    </td>
   </tr>
   <tr>
     <td>
       <select name="emailtype[% n %]">
       [% FOREACH qv = [ 
-        { name => "exact", description => "is" },
         { name => "substring", description => "contains" },
+        { name => "exact", description => "is" },
         { name => "regexp", description => "matches regexp" },
         { name => "notregexp", description => "doesn&#8217;t match regexp" } ] %]
         
@@ -573,6 +611,7 @@ function selectProduct(f) {
   </tr>
 </table>
 
+
       </fieldset>
     </td>
    
@@ -581,6 +620,7 @@ function selectProduct(f) {
     <td valign="top">
       <fieldset>
         <legend><strong>Bug Changes</strong></legend>
+
 
 <dl>
   <dt>Only bugs changed in the last </dt>
@@ -603,13 +643,14 @@ function selectProduct(f) {
   <dd>
     <input name="chfieldfrom" size="10" value="[% default.chfieldfrom.0 FILTER html %]" />
     and <input name="chfieldto" size="10" value="[% default.chfieldto.0 FILTER html %]" />
-    <br>(YYYY-MM-DD)
+    <br />(YYYY-MM-DD)
   </dd>
   <dt>to this value: (optional)</dt>
   <dd>
     <input name="chfieldvalue" size="20" value="[% default.chfieldvalue.0 FILTER html %]" />
   </dd>
 </dl>
+
 
        </fieldset>
      </td>
@@ -623,9 +664,9 @@ function selectProduct(f) {
     [% IF NOT userid %]
       <input type="hidden" name="cmdtype" value="doit" />
     [% ELSE %]
-      <br>
+      <br />
       <input type="radio" name="cmdtype" value="doit" checked /> Run this query
-      <br>
+      <br />
 
       [% IF namedqueries.size > 0 %]
         <p>
@@ -661,15 +702,16 @@ function selectProduct(f) {
 
       <input type="radio" name="cmdtype" value="asdefault" />
       Remember this as my default query
-      <br>
+      <br />
       <input type="radio" name="cmdtype" value="asnamed" />
       Remember this query, and name it:
       <input type="text" name="newqueryname">
-      <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="tofooter" value="1" />
+      <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="tofooter" value="1" />
           and put it in my page footer
-      <br>
+      <br />
     [% END %]
-      <p>
+      <br />
+      <div>
       Sort results by:
       <select name="order">
       [% FOREACH order = orders %]
@@ -678,14 +720,14 @@ function selectProduct(f) {
       [% END %]
       </select>
 
-      <input type="submit" value="Submit query" />
+      <input type="submit" value="Search" />
       [% IF userdefaultquery %]
          <p>
            <a href="query.cgi?nukedefaultquery=1">
              Set my default query back to the system default</a>
          </p>
       [% END %]
-      </p>
+      </div>
     </td>
   </tr>
 </table>

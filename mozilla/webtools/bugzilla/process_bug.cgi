@@ -102,15 +102,13 @@ PutHeader ("Bug processed");
 
 GetVersionTable();
 
-if ( Param("strictvaluechecks") ) {
-    CheckFormFieldDefined(\%::FORM, 'product');
-    CheckFormFieldDefined(\%::FORM, 'version');
-    CheckFormFieldDefined(\%::FORM, 'component');
+CheckFormFieldDefined(\%::FORM, 'product');
+CheckFormFieldDefined(\%::FORM, 'version');
+CheckFormFieldDefined(\%::FORM, 'component');
 
-    # check if target milestone is defined - matthew@zeroknowledge.com
-    if ( Param("usetargetmilestone") ) {
-        CheckFormFieldDefined(\%::FORM, 'target_milestone');
-    }
+# check if target milestone is defined - matthew@zeroknowledge.com
+if ( Param("usetargetmilestone") ) {
+  CheckFormFieldDefined(\%::FORM, 'target_milestone');
 }
 
 ConnectToDatabase();
@@ -154,10 +152,9 @@ if ( $::FORM{'id'} ) {
 }
 if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct) 
      || (!$::FORM{'id'} && $::FORM{'product'} ne $::dontchange))
-    && CheckonComment( "reassignbycomponent" )) {
-    if ( Param("strictvaluechecks") ) {
-        CheckFormField(\%::FORM, 'product', \@::legal_product);
-    }
+    && CheckonComment( "reassignbycomponent" ))
+{
+    CheckFormField(\%::FORM, 'product', \@::legal_product);
     my $prod = $::FORM{'product'};
 
     # note that when this script is called from buglist.cgi (rather
@@ -433,7 +430,7 @@ Do you wish to do this?</P>
     exit;
 } # end DuplicateUserConfirm()
 
-if (defined $::FORM{'id'} && Param('strictvaluechecks')) {
+if (defined $::FORM{'id'}) {
     # since this means that we were called from show_bug.cgi, now is a good
     # time to do a whole bunch of error checking that can't easily happen when
     # we've been called from buglist.cgi, because buglist.cgi only tweaks
@@ -623,7 +620,7 @@ if (defined $::FORM{'qa_contact'}) {
 
 # If the user is submitting changes from show_bug.cgi for a single bug,
 # and that bug is restricted to a group, process the checkboxes that
-# allowed the user to set whether or not the reporter, assignee, QA contact, 
+# allowed the user to set whether or not the reporter
 # and cc list can see the bug even if they are not members of all groups 
 # to which the bug is restricted.
 if ( $::FORM{'id'} ) {
@@ -639,14 +636,6 @@ if ( $::FORM{'id'} ) {
         DoComma();
         $::FORM{'reporter_accessible'} = $::FORM{'reporter_accessible'} ? '1' : '0';
         $::query .= "reporter_accessible = $::FORM{'reporter_accessible'}";
-
-        DoComma();
-        $::FORM{'assignee_accessible'} = $::FORM{'assignee_accessible'} ? '1' : '0';
-        $::query .= "assignee_accessible = $::FORM{'assignee_accessible'}";
-
-        DoComma();
-        $::FORM{'qacontact_accessible'} = $::FORM{'qacontact_accessible'} ? '1' : '0';
-        $::query .= "qacontact_accessible = $::FORM{'qacontact_accessible'}";
 
         DoComma();
         $::FORM{'cclist_accessible'} = $::FORM{'cclist_accessible'} ? '1' : '0';
@@ -697,9 +686,7 @@ if (defined $::FORM{newcc} || defined $::FORM{removecc} || defined $::FORM{massc
 }
 
 
-if ( Param('strictvaluechecks') ) {
-    CheckFormFieldDefined(\%::FORM, 'knob');
-}
+CheckFormFieldDefined(\%::FORM, 'knob');
 SWITCH: for ($::FORM{'knob'}) {
     /^none$/ && do {
         last SWITCH;
@@ -736,14 +723,12 @@ SWITCH: for ($::FORM{'knob'}) {
         }
         ChangeStatus('NEW');
         DoComma();
-        if ( Param("strictvaluechecks") ) {
-          if ( !defined$::FORM{'assigned_to'} ||
-               trim($::FORM{'assigned_to'}) eq "") {
-            PuntTryAgain("You cannot reassign to a bug to nobody.  Unless " .
-                         "you intentionally cleared out the " .
-                         "\"Reassign bug to\" field, " .
-                         Param("browserbugmessage"));
-          }
+        if ( !defined$::FORM{'assigned_to'} ||
+             trim($::FORM{'assigned_to'}) eq "") {
+          PuntTryAgain("You cannot reassign to a bug to nobody.  Unless " .
+                       "you intentionally cleared out the " .
+                       "\"Reassign bug to\" field, " .
+                       Param("browserbugmessage"));
         }
         my $newid = DBNameToIdAndCheck($::FORM{'assigned_to'});
         $::query .= "assigned_to = $newid";
@@ -801,9 +786,7 @@ SWITCH: for ($::FORM{'knob'}) {
     /^duplicate$/ && CheckonComment( "duplicate" ) && do {
         ChangeStatus('RESOLVED');
         ChangeResolution('DUPLICATE');
-        if ( Param('strictvaluechecks') ) {
-            CheckFormFieldDefined(\%::FORM,'dup_id');
-        }
+        CheckFormFieldDefined(\%::FORM,'dup_id');
         my $num = trim($::FORM{'dup_id'});
         SendSQL("SELECT bug_id FROM bugs WHERE bug_id = " . SqlQuote($num));
         $num = FetchOneColumn();
@@ -1451,9 +1434,7 @@ The changes made were:
             SendSQL("INSERT INTO cc (who, bug_id) VALUES ($reporter, " . SqlQuote($duplicate) . ")");
         }
         AppendComment($duplicate, $::COOKIE{'Bugzilla_login'}, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***");
-        if ( Param('strictvaluechecks') ) {
-          CheckFormFieldDefined(\%::FORM,'comment');
-        }
+        CheckFormFieldDefined(\%::FORM,'comment');
         SendSQL("INSERT INTO duplicates VALUES ($duplicate, $::FORM{'id'})");
         print "<TABLE BORDER=1><TD><H2>Duplicate notation added to bug $duplicate</H2>\n";
         system("./processmail", $duplicate, $::COOKIE{'Bugzilla_login'});

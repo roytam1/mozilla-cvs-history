@@ -597,7 +597,7 @@ sub make_options {
         }
     }
     if (!$found && $default ne "") {
-      if ( Param("strictvaluechecks") && $::CheckOptionValues &&
+      if ( $::CheckOptionValues &&
            ($default ne $::dontchange) && ($default ne "-All-") &&
            ($default ne "DUPLICATE") ) {
         print "Possible bug database corruption has been detected.  " .
@@ -762,7 +762,7 @@ sub MailPassword {
                              "login" => $login,
                              "password" => $password});
 
-    open SENDMAIL, "|/usr/lib/sendmail -t";
+    open SENDMAIL, "|/usr/lib/sendmail -t -i";
     print SENDMAIL $msg;
     close SENDMAIL;
 }
