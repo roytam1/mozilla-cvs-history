@@ -473,9 +473,18 @@ JSClient -a \
 # (5.0 Browser and 5.0 Mail/News based on nglayout)
 #
 # Initial wild ass guess: cyeh@netscape.com
+# Second guess: mcafee@netscape.com
+#
+# We might want to do the platform-specific stuff like:
+#   SeaMonkeyCoreFoo = SeaMonkeyCore + <stuff for platform Foo>
+# and so on, for each module.
 #
 
+NSPR -a \
+	mozilla/nsprpub
+
 SeaMonkeyCore -a \
+	mozilla/client.mk \
 	mozilla/configure.in \
 	mozilla/Makefile.in \
 	mozilla/aclocal.m4 \
@@ -483,7 +492,9 @@ SeaMonkeyCore -a \
 	mozilla/build \
 	mozilla/caps \
 	mozilla/config \
+	mozilla/cmd/xfe/icons/icondata.h \
 	mozilla/dbm \
+	mozilla/include \
 	mozilla/jpeg \
 	mozilla/js \
 	mozilla/lib/liblayer \
@@ -505,9 +516,14 @@ SeaMonkeyCore -a \
 
 SeaMonkeyLayout -a \
 	SeaMonkeyCore \
-	mozilla/nglayout \
+	nglayout.mk \
+	mozilla/dom \
+	mozilla/gfx \
 	mozilla/htmlparser \
-	mozilla/widget
+	mozilla/layout \
+	mozilla/webshell \
+	mozilla/widget \
+	mozilla/view
 
 SeaMonkeyXPToolKit -a \
 	SeaMonkeyLayout \
@@ -516,10 +532,11 @@ SeaMonkeyXPToolKit -a \
 SeaMonkeyBrowser -a \
 	SeaMonkeyXPToolKit
 
-######################
-# These are poorly defined right now.
-#SeaMonkeyMailNews -a \
-#
-#SeaMonkeyEditor -a \
-	
+# This needs work!
+SeaMonkeyMailNews -a \
+	SeaMonkeyLayout
+
+SeaMonkeyEditor -a \
+	SeaMonkeyBrowser \
+	editor
 
