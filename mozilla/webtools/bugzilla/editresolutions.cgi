@@ -130,7 +130,7 @@ $::extraerrorsref = sub ($) {
             my $newisdupe = ($fieldsref->{restype} == $::duperestype);
             
             if ($oldisdupe && !$newisdupe) {
-                DisplayError("You can't change the resolution type of an in-use resolutoion from 'Duplicate'. $::tryagain");
+                DisplayError("You can't change the resolution type of an in-use resolution from 'Duplicate'. $::tryagain");
                 exit;
             }
             elsif (!$oldisdupe && $newisdupe) { 
