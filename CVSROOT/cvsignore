@@ -22,3 +22,4 @@ _stubs
 *_OPT.OBJ
 *_OPT_EDT.OBJ
 so_locations
+*.flc
