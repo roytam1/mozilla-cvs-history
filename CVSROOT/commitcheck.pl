@@ -336,6 +336,7 @@ if (m:^mozilla/java/dom/.*$:) {return '130';}
 if (m:^mozilla/java/fe/.*$:) {return '131';}
 if (m:^mozilla/java/util/.*$:) {return '133';}
 if (m:^mozilla/extensions/xmlterm/.*$:) {return '141';}
+if (m:^xpcom/remote$:) {return '143';}
 }
 return '';
 }
