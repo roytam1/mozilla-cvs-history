@@ -118,9 +118,11 @@ $fullname{'100'} = 'New HTML Style System';
 $mode{'98'} = 'Open';
 $branch{'98'} = 'HEAD';
 $fullname{'98'} = 'New Layout Engine';
-$mode{'78'} = 'Open';
+$mode{'78'} = 'Restricted';
 $branch{'78'} = 'HEAD';
 $fullname{'78'} = 'NSPR';
+$blessed{'78'} = ['gordon%netscape.com',];
+$super{'78'} = ['wtc%netscape.com','larryh%netscape.com','srinivas%netscape.com',];
 $mode{'80'} = 'Open';
 $branch{'80'} = 'HEAD';
 $fullname{'80'} = 'PICS';
@@ -223,6 +225,7 @@ if (m:^mozilla/js/jsj/.*$:) {return '72';}
 if (m:^mozilla/lib/mailto/.*$:) {return '75';}
 if (m:^mozilla/lib/libmime/.*$:) {return '76';}
 if (m:^mozilla/network/.*$:) {return '77';}
+if (m:^mozilla/nsprpub/.*$:) {return '78';}
 if (m:^mozilla/lib/libpics/.*$:) {return '80';}
 if (m:^mozilla/modules/plugin/.*$:) {return '81';}
 if (m:^mozilla/modules/libpref/.*$:) {return '82';}
