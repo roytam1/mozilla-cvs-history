@@ -1833,7 +1833,7 @@ AddFDef("alias", "Alias", 0);
 AddFDef("everconfirmed", "Ever Confirmed", 0);
 AddFDef("reporter_accessible", "Reporter Accessible", 0);
 AddFDef("cclist_accessible", "CC Accessible", 0);
-AddFDef("bug_group", "Bug Group", 0);
+AddFDef("bug_group", "Group", 0);
 
 # Oops. Bug 163299
 $dbh->do("DELETE FROM fielddefs WHERE name='cc_accessible'");
@@ -3229,7 +3229,7 @@ if (GetFieldDef("profiles", "groupset")) {
         }
     }
     # replace old activity log groupset records with groups
-    AddFDef("bug_group", "Bug Group", 0);
+    AddFDef("bug_group", "Group", 0);
     $sth = $dbh->prepare("SELECT fieldid FROM fielddefs WHERE name = " . $dbh->quote('bug_group'));
     $sth->execute();
     my ($bgfid) = $sth->fetchrow_array;
