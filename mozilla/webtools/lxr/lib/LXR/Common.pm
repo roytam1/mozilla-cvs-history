@@ -154,8 +154,9 @@ sub htmlquote {
 
 
 sub freetextmarkup {
-    $_[0] =~ s#((ftp|http)://\S*[^\s.])#<a href=\"$1\">$1</a>#g;
-    $_[0] =~ s/(&lt;(.*@.*)&gt;)/<a href=\"mailto:$2\">$1<\/a>/g;
+    $_[0] =~ s#((ftp|http)://\S*[^\s."')>])#<a href=\"$1\">$1</a>#g;
+    $_[0] =~ s/(\0<(?:mailto:|)(.*@.*)\0>)/<a href=\"mailto:$2\">$1<\/a>/g;
+    $_[0] =~ s/(&lt;(?:mailto:|)(.*@.*)&gt;)/<a href=\"mailto:$2\">$1<\/a>/g;
 }
 
 
