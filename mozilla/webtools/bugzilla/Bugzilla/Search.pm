@@ -318,6 +318,9 @@ sub init {
              push(@wherepart, "$table.bug_id = bugs.bug_id");
              $f = "$table.thetext";
          },
+         "^groupset," => sub {
+             &::ThrowUserError("groupset is no longer a legal field");
+         },
          "^bug_group," => sub {
             push(@supptables, "LEFT JOIN bug_group_map bug_group_map_$chartid ON bugs.bug_id = bug_group_map_$chartid.bug_id");
 

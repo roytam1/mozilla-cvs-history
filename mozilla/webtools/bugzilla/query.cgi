@@ -294,7 +294,9 @@ push(@fields, { name => "noop", description => "---" });
 SendSQL("SELECT name, description FROM fielddefs ORDER BY sortkey");
 while (MoreSQLData()) {
     my ($name, $description) = FetchSQLData();
-    push(@fields, { name => $name, description => $description });
+    if ( $description ne 'groupset' ) {
+        push(@fields, { name => $name, description => $description });
+    }
 }
 
 $vars->{'fields'} = \@fields;
