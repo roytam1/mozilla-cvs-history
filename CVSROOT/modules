@@ -437,6 +437,7 @@ JSClient -a \
         mozilla/js/Makefile.in \
         mozilla/js/makefile.win \
         mozilla/js/src \
+        mozilla/js/macbuild \
         mozilla/js/jsd \
         mozilla/js/jsd/java \
         mozilla/js/jsd/classes \
