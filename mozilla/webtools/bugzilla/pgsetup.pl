@@ -806,7 +806,7 @@ EOF
 #my $connectstring = "dbi:$db_base:dbname=$my_db_name;host=$my_db_host";
 
 my $connectstring = "dbi:$db_base:dbname=$my_db_name";
-my $dbh = DBI->connect($connectstring, $my_db_user, $my_db_pass)
+my $dbh = DBI->connect($connectstring, $my_db_user, $my_db_pass, {PrintError=>0, RaiseError=>1})
     or die "Can't connect to the table '$connectstring'.\n",
            "Have you read the Bugzilla Guide in the doc directory?  Have you read the doc of '$db_base'?\n";
 

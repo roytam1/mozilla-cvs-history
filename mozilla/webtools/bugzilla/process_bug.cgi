@@ -43,7 +43,8 @@ use vars %::versions,
     %::legal_platform,
     %::legal_priority,
     %::target_milestone,
-    %::legal_severity;
+    %::legal_severity,
+    %::superusergroupset;
 
 my $whoid = confirm_login();
 
@@ -581,10 +582,12 @@ if($::usergroupset ne '0') {
     }
     if ($groupAdd ne "0" || $groupDel ne "0") {
         DoComma();
+        # mysql < 3.23.5 doesn't support the ~ operator, even though
+        # the docs say that it does
         if ($::driver eq 'mysql') {
-            $::query .= "groupset = ((groupset & ~($groupDel)) | ($groupAdd))";
+            $::query .= "groupset = ((groupset & ($::superusergroupset - ($groupDel))) | ($groupAdd))";
         } elsif ($::driver eq 'Pg') {
-            $::query .= "groupset = ((groupset & ~(int8($groupDel))) | (int8($groupAdd)))";
+            $::query .= "groupset = ((groupset & (int8($::superusergroupset) - (int8($groupDel)))) | (int8($groupAdd)))";
         }
     }
 }

@@ -79,6 +79,7 @@ if ($::driver eq 'mysql') {
 
 $::FORM{'buglist'} = "" unless exists $::FORM{'buglist'};
 foreach my $bug (split(/:/, $::FORM{'buglist'})) {
+    detaint_natural($bug) || next;
     SendSQL(SelectVisible("$generic_query bugs.bug_id = $bug",
                           $::userid, $::usergroupset));
 

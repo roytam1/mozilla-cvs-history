@@ -32,8 +32,6 @@ use strict;
 use lib ".";
 
 # use Carp;                       # for confess
-# Shut up misguided -w warnings about "used only once".  For some reason,
-# "use vars" chokes on me when I try it here.
 
 # commented out the following snippet of code. this tosses errors into the
 # CGI if you are perl 5.6, and doesn't if you have perl 5.003. 
@@ -41,6 +39,8 @@ use lib ".";
 # eval "use Mozilla::LDAP::Conn";
 # my $have_ldap = $@ ? 0 : 1;
 
+# Shut up misguided -w warnings about "used only once".  For some reason,
+# "use vars" chokes on me when I try it here.
 
 sub CGI_pl_sillyness {
     my $zz;
@@ -1100,11 +1100,6 @@ sub PutHeader {
     }
     $jscript ||= "";
 
-    my $header_info = {};
-    $header_info->{login} = $::COOKIE{Bugzilla_login};
-    $header_info->{date} = `date`;
-    $header_info->{header} = "$h1 $h2";
-    
     # If we are shutdown, we want a very basic page to give that
     # information.  Also, the page title should indicate that
     # we are down.  
@@ -1358,7 +1353,7 @@ Edit <a href="userprefs.cgi">prefs</a>
             $html .= ", <a href=\"editusers.cgi\">users</a>\n";
         }
         if (UserInGroup("editcomponents")) {
-            $html .= ", <a href=\"editproducts.cgi\">components</a>\n";
+            $html .= ", <a href=\"editproducts.cgi\">products</a>\n";
             $html .= ", <a href=\"editattachstatuses.cgi\">
               attachment&nbsp;statuses</a>\n" if Param('useattachmenttracker');
         }

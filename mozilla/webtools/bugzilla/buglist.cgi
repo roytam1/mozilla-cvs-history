@@ -159,13 +159,14 @@ sub GenerateSQL {
 
     # First, deal with all the old hard-coded non-chart-based poop.
 
+#    unshift(@supptables,
+#            ("profiles map_assigned_to",
+#             "profiles map_reporter",
+#             "LEFT JOIN profiles map_qa_contact  ON bugs.qa_contact = map_qa_contact.userid"));
+
     unshift(@supptables,
             ("profiles map_assigned_to",
              "profiles map_reporter"));
-
-#    unshift(@supptables,
-#                "profiles map_qa_contact LEFT JOIN map_qa_contact ON " . 
-#                "map_qa_contact.userid = bugs.qa_contact ");
 
     unshift(@wherepart,
             ("bugs.assigned_to = map_assigned_to.userid",
@@ -1033,7 +1034,9 @@ DefCol("votes", "bugs.votes", "Votes", "bugs.votes");
 DefCol("keywords", "bugs.keywords", "Keywords", "bugs.keywords", 5);
 
 my @collist;
-if (defined $::COOKIE{'COLUMNLIST'}) {
+if (defined $::FORM{'columnlist'}) {
+    @collist = split(/[ ,]+/, $::FORM{'columnlist'});
+} elsif (defined $::COOKIE{'COLUMNLIST'}) {
     @collist = split(/ /, $::COOKIE{'COLUMNLIST'});
 } else {
     @collist = @::default_column_list;

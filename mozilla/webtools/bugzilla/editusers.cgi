@@ -786,19 +786,19 @@ if ($action eq 'update') {
         if($groupsetold eq $::superusergroupset) {
           print "Cannot change permissions of superuser.\n";
         } else {
-            if ($::driver eq 'mysql') {
-                SendSQL("UPDATE profiles
+           if ($::driver eq 'mysql') {
+               SendSQL("UPDATE profiles
                         SET groupset =
                             groupset - (groupset & $opblessgroupset) + 
                             (($groupset) & $opblessgroupset)
                         WHERE login_name=" . SqlQuote($userold));
-            } elsif ($::driver eq 'Pg') {
-                SendSQL("UPDATE profiles
+           } elsif ($::driver eq 'Pg') {
+               SendSQL("UPDATE profiles
                         SET groupset =
                             groupset - (groupset & int8($opblessgroupset)) + 
                             ((int8($groupset)) & int8($opblessgroupset))
                         WHERE login_name=" . SqlQuote($userold));
-            }
+           }
            # I'm paranoid that someone who I give the ability to bless people
            # will start misusing it.  Let's log who blesses who (even though
            # nothing actually uses this log right now).
