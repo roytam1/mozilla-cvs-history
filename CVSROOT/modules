@@ -168,7 +168,6 @@ MozillaSourceWinOnly -a \
 	mozilla/modules/libfont/producers/win \
 	mozilla/modules/libfont/producers/win/classes \
 	mozilla/modules/libfont/producers/win/classes/netscape \
-	mozilla/modules/libfont/producers/win/classes/netscape/fonts \
 	mozilla/modules/libfont/producers/win/src \
 	mozilla/modules/makefile.win \
 	mozilla/modules/progress/makefile.win \
@@ -605,6 +604,7 @@ SeaMonkeyLayout -a \
 	mozilla/dom \
 	mozilla/gfx \
 	mozilla/htmlparser \
+	mozilla/parser \
 	mozilla/layout \
 	mozilla/view \
 	mozilla/webshell \
