@@ -45,6 +45,13 @@
 
 package HTMLPopUp;
 
+# Load standard perl libraries
+
+
+# Load Tinderbox libraries
+
+use lib '#tinder_libdir#';
+
 use Utils;
 
 # Pick how you wish to the Tinderbox popup windows to be implemented:

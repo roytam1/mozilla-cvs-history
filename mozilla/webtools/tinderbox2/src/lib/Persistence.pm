@@ -50,6 +50,8 @@ package Persistence;
 
 # Load Tinderbox libraries
 
+use lib '#tinder_libdir#';
+
 use Utils;
 
 $VERSION = '#tinder_version#';
