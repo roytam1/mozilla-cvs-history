@@ -38,6 +38,20 @@
 package TinderConfig;
 
 
+
+# How do we run the unzip command?
+
+@GZIP = ("/usr/local/bin/gzip",);
+
+@GUNZIP = ("/usr/local/bin/gzip", "--uncompress", "--to-stdout",);
+
+
+# The GNU UUDECODE will use these arugments, Solaris uudecode is
+# different. 
+
+@UUDECODE = ("/usr/local/bin/uudecode", "-o",);
+
+
 # The url to the tinderbox server binary directory
 
 $URL_BIN =  "http://tinderbox.mozilla.org/cgibin";

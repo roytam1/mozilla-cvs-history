@@ -106,22 +106,17 @@ sub set_static_vars {
   # taint perl requires we clean up these bad environmental variables.
   
   delete @ENV{'IFS', 'CDPATH', 'ENV', 'BASH_ENV', 'LD_PRELOAD'};
-  
-  
-  
-  # How do we run the unzip command? The full path to gzip is found by
-  # configure and substituted into this file.
-  
-  @GZIP = ("#gzip#",);
-  
-  @GUNZIP = ("#gzip#", "--uncompress", "--to-stdout",);
-  
-  
-  # The GNU UUDECODE will use these arugments, Solaris uudecode is
-  # different. The full path to uudecode is found by configure and
-  # substituted into this file.
-  
-  @UUDECODE = ("#uudecode#", "-o",);
+
+
+
+  # How do we run various commands?  The TinderConfig file contains
+  # full path names AND arguments.  We use the list form of the
+  # variable to ensure that when these executables are run we are
+  # always taint safe.
+
+  @GZIP = @TinderConfig::GZIP;
+  @GUNZIP = @TinderConfig::GUNZIP;
+  @UUDECODE= @TinderConfig::UUDECODE;
   
   # the version number of this tinderbox release.
 
