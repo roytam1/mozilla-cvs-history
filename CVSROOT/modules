@@ -572,6 +572,7 @@ SeaMonkeyCore -a \
 	mozilla/rdf \
 	mozilla/sun-java \
 	mozilla/tools/leaky \
+	mozilla/tools/elf-dynstr-gc \
 	mozilla/uriloader \
 	mozilla/xpcom/.cvsignore \
 	mozilla/xpcom/Makefile.in \
