@@ -284,15 +284,7 @@ if (m:^gfx/src/ps/.*$:) {return '62';}
 if (m:^mozilla/modules/libimg/.*$:) {return '63';}
 if (m:^mozilla/modules/libutil/.*$:) {return '63';}
 if (m:^mozilla/include/libcnv\.h/.*$:) {return '66';}
-if (m:^mozilla/include/csid\.h/.*$:) {return '67';}
-if (m:^mozilla/include/intl_csi\.h/.*$:) {return '67';}
-if (m:^mozilla/include/libi18n\.h/.*$:) {return '67';}
-if (m:^mozilla/include/resdef\.h/.*$:) {return '67';}
-if (m:^mozilla/include/xpgetstr\.h/.*$:) {return '67';}
-if (m:^mozilla/include/xplocale\.h/.*$:) {return '67';}
-if (m:^mozilla/include/xpresdef\.h/.*$:) {return '67';}
-if (m:^mozilla/include/xupfonts\.h/.*$:) {return '67';}
-if (m:^mozilla/lib/libi18n/.*$:) {return '67';}
+if (m:^mozilla/intl/.*$:) {return '67';}
 if (m:^mozilla/modules/oji/.*$:) {return '68';}
 if (m:^mozilla/nav-java/.*$:) {return '68';}
 if (m:^mozilla/sun-java/.*$:) {return '68';}
