@@ -602,13 +602,6 @@ SeaMonkeyLayout -a \
 
 SeaMonkeyXPToolKit -a \
 	SeaMonkeyLayout \
-	mozilla/cmd/macfe/applevnt \
-	mozilla/cmd/macfe/central \
-	mozilla/cmd/macfe/gui \
-	mozilla/cmd/macfe/include \
-	mozilla/cmd/macfe/pch \
-	mozilla/cmd/macfe/projects \
-	mozilla/cmd/macfe/utility \
 	mozilla/xpfe
 
 SeaMonkeyBrowser -a \
