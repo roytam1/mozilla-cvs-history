@@ -197,7 +197,7 @@ sub save_note {
                        "/Notice\.Update\.$time\.$MAILADDR"); 
 
   $update_file =~ s/\@/\./g;
-  $update_file = main::extract_filename_chars($update_file);
+  $update_file = main::extract_safe_filename($update_file);
   
   Persistence::save_structure( 
                              $record,
