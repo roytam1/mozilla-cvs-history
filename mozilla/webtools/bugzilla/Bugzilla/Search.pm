@@ -813,20 +813,25 @@ sub init {
         }
     }
     my $query =  ("SELECT DISTINCT " . 
-                  " COUNT(ugmap.group_id) AS cntuseringroups, " .
+                  " COUNT(ugmap.user_id) AS cntuseringroups, " .
                   " COUNT(bgmap.group_id) AS cntbugingroups, " .
+                  " ((COUNT(ccmap.who) AND cclist_accessible) " .
+                  "  OR ((bugs.reporter = $::userid) AND bugs.reporter_accessible) " .
+                  "  OR bugs.assigned_to = $::userid ) AS canseeanyway, " .
                     join(', ', @fields) .
                   " FROM $suppstring" .
                   " LEFT JOIN bug_group_map AS bgmap " .
                   " ON bgmap.bug_id = bugs.bug_id " .
                   " LEFT JOIN user_group_map AS ugmap " .
                   " ON bgmap.group_id = ugmap.group_id " .
-                  " AND ugmap.user_id = $::userid" .
+                  " AND ugmap.user_id = $::userid " .
                   " AND ugmap.isbless = 0" .
+                  " LEFT JOIN cc AS ccmap " .
+                  " ON ccmap.who = $::userid AND ccmap.bug_id = bugs.bug_id " .
                   " WHERE " . join(' AND ', (@wherepart, @andlist)) .
                   " GROUP BY bugs.bug_id " .
                   " HAVING cntuseringroups = cntbugingroups" .
-                  " "
+                  " OR canseeanyway" 
               );
 
     if ($debug) {

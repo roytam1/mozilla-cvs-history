@@ -606,10 +606,10 @@ my @bugs; # the list of records
 
 while (my @row = FetchSQLData()) {
     my $bug = {}; # a record
-    # discard the first 2 fields - they are counters for filtering
+    # discard the first 3 fields - they are counters for filtering
     shift @row;
     shift @row;
-
+    shift @row;
     # Slurp the row of data into the record.
     foreach my $column (@selectcolumns) {
         $bug->{$column} = shift @row;
