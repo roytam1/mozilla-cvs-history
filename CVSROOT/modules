@@ -363,3 +363,14 @@ PerLDAP -a \
 MessagingSDK -a \
 	mozilla/msgsdk
 
+
+#######################################################################
+# Modules for Calendar client.
+# (spider@netscape.com)
+#
+
+CalendarClient -a \
+	RaptorAll \
+	mozilla/gconfig \
+	mozilla/modules/calendar  \
+	mozilla/calendar
