@@ -352,7 +352,7 @@ RaptorDist -a \
 	mozilla/lib/libpwcac \
 	mozilla/lib/xp \
 	mozilla/modules/libimg \
-	mozilla/libjar \
+	mozilla/modules/libjar \
 	mozilla/modules/libpref \
 	mozilla/modules/libreg \
 	mozilla/modules/libutil \
