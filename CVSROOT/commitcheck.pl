@@ -94,6 +94,9 @@ $fullname{'72'} = 'LiveConnect';
 $mode{'47'} = 'Open';
 $branch{'47'} = 'HEAD';
 $fullname{'47'} = 'Macintosh FE';
+$mode{'123'} = 'Open';
+$branch{'123'} = 'HEAD';
+$fullname{'123'} = 'Mail/News';
 $mode{'76'} = 'Open';
 $branch{'76'} = 'HEAD';
 $fullname{'76'} = 'MIMELib';
@@ -284,6 +287,7 @@ if (m:^js/src/xpconnect$:) {return '118';}
 if (m:^xpcom/reflect/xptcall$:) {return '118';}
 if (m:^xpcom/reflect/xptinfo$:) {return '118';}
 if (m:^mozilla/mailnews/news/.*$:) {return '122';}
+if (m:^mozilla/mailnews/[^/]*$:) {return '123';}
 }
 return '';
 }
