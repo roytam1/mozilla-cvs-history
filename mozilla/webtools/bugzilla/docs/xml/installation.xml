@@ -639,7 +639,7 @@
         <screen>  <prompt>mysql&gt;</prompt> GRANT SELECT,INSERT,UPDATE,DELETE,INDEX,ALTER,CREATE,
          DROP,REFERENCES ON bugs.* TO bugs@localhost
          IDENTIFIED BY '<replaceable>$db_pass</replaceable>';
-  <prompt>mysql&gt;</prompt> FLUSH PRIVILEGES</screen>
+  <prompt>mysql&gt;</prompt> FLUSH PRIVILEGES;</screen>
 
         <note>
           <para>If you are using MySQL 4, you need to add
