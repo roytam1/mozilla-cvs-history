@@ -226,9 +226,9 @@ sub SplitEnumType {
 sub PerlQuote {
     my ($str) = (@_);
 
-    $str = SqlQuote($str);
-
-    return $str;
+    $str =~ s/([\\\'])/\\$1/g;
+    $str =~ s/\0/\\0/g;
+    return "'$str'"
 }
 
 sub GenerateArrayCode {
