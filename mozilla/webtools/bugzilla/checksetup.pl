@@ -1833,8 +1833,8 @@ AddFDef("longdesc", "Comment", 0);
 AddFDef("alias", "Alias", 0);
 AddFDef("everconfirmed", "Ever Confirmed", 0);
 AddFDef("reporter_accessible", "Reporter Accessible", 0);
-AddFDef("bug_group", "Bug Group", 0);
 AddFDef("cclist_accessible", "CC Accessible", 0);
+AddFDef("bug_group", "Bug Group", 0);
 
 # Oops. Bug 163299
 $dbh->do("DELETE FROM fielddefs WHERE name='cc_accessible'");
@@ -2333,6 +2333,9 @@ sub TableExists ($)
 # really old fields that were added before checksetup.pl existed
 # but aren't in very old bugzilla's (like 2.1)
 # Steve Stock (sstock@iconnect-inc.com)
+
+# bug 157756 - groupsets replaced by maps
+# AddField('bugs', 'groupset', 'bigint not null'); 
 AddField('bugs', 'target_milestone', 'varchar(20) not null default "---"');
 AddField('bugs', 'qa_contact', 'mediumint not null');
 AddField('bugs', 'status_whiteboard', 'mediumtext not null');
@@ -2772,6 +2775,8 @@ if (!GetFieldDef('bugs', 'everconfirmed')) {
 }
 AddField('products', 'maxvotesperbug', 'smallint not null default 10000');
 AddField('products', 'votestoconfirm', 'smallint not null');
+# bug 157756 - groupsets replaced by maps
+# AddField('profiles', 'blessgroupset', 'bigint not null');
 
 # 2000-03-21 Adding a table for target milestones to 
 # database - matthew@zeroknowledge.com
