@@ -612,6 +612,7 @@ SeaMonkeyXPToolKit -a \
 	mozilla/xpfe
 
 SeaMonkeyBrowser -a \
+	mozilla/directory/xpcom \
 	mozilla/editor/Makefile.in \
 	mozilla/editor/public \
 	mozilla/extensions \
