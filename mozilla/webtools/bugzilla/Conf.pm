@@ -50,6 +50,7 @@ sub ask {
     print "$question [$default]";
     $answer = <STDIN>;
     chomp($answer);
+    if ($answer eq "") { $answer = $default; } # handle the default
     $main::c{$name} = $answer;
 } 
 
