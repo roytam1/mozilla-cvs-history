@@ -208,10 +208,14 @@ if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct)
        $mok = lsearch($::target_milestone{$prod}, $::FORM{'target_milestone'}) >= 0;
     }
 
+    # FIXME - The groups only matter if the old and new products have different defaults
+    # When we figure out what to do about that, $pok will become an issue
+    my $pok = 1 ;
+
     # If the product-specific fields need to be verified, or we need to verify
     # whether or not to add the bugs to their new product's group, display
     # a verification form.
-    if (!$vok || !$cok || !$mok || (0 && Param('makeproductgroups') && !defined($::FORM{'addtonewgroup'}))) {
+    if (!$vok || !$cok || !$mok || (!$pok && !defined($::FORM{'addtonewgroup'}))) {
         $vars->{'form'} = \%::FORM;
         
         if (!$vok || !$cok || !$mok) {
@@ -782,7 +786,6 @@ if ($#idlist < 0) {
     ThrowUserError("You apparently didn't choose any bugs to modify.");
 }
 
-
 my @keywordlist;
 my %keywordseen;
 
@@ -1096,7 +1099,7 @@ foreach my $id (@idlist) {
     }
     my $groupAddNames = '';
     my $groupDelNames = '';
-    
+    my $newprod = ($::FORM{'product'} != $::dontchange) ? $::FORM{'product'} : $oldhash{'product'};
     SendSQL("SELECT groups.group_id, name, 
              ctl_permitted,
              ctl_required,
@@ -1110,7 +1113,7 @@ foreach my $id (@idlist) {
              AND member_id = $::userid 
              AND maptype = $::Tmaptype->{'u2gm'} 
              WHERE group_type = $::Tgroup_type->{'buggroup'} 
-             AND product = " . SqlQuote($oldhash{'product'}) );
+             AND product = " . SqlQuote($newprod));
 
     while (MoreSQLData()) {
         my ($gid, $grpname, $pflag, $rflag, $uflag) = FetchSQLData();
