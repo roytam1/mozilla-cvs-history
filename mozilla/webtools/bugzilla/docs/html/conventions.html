@@ -4,7 +4,7 @@
 >Document Conventions</TITLE
 ><META
 NAME="GENERATOR"
-CONTENT="Modular DocBook HTML Stylesheet Version 1.61
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
 "><LINK
 REL="HOME"
 TITLE="The Bugzilla Guide"
@@ -13,13 +13,13 @@ REL="UP"
 TITLE="About This Guide"
 HREF="about.html"><LINK
 REL="PREVIOUS"
-TITLE="Translations"
-HREF="translations.html"><LINK
+TITLE="Credits"
+HREF="credits.html"><LINK
 REL="NEXT"
-TITLE="Using Bugzilla"
-HREF="using.html"></HEAD
+TITLE="Introduction"
+HREF="introduction.html"></HEAD
 ><BODY
-CLASS="SECTION"
+CLASS="section"
 BGCOLOR="#FFFFFF"
 TEXT="#000000"
 LINK="#0000FF"
@@ -28,6 +28,7 @@ ALINK="#0000FF"
 ><DIV
 CLASS="NAVHEADER"
 ><TABLE
+SUMMARY="Header navigation table"
 WIDTH="100%"
 BORDER="0"
 CELLPADDING="0"
@@ -44,7 +45,8 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="translations.html"
+HREF="credits.html"
+ACCESSKEY="P"
 >Prev</A
 ></TD
 ><TD
@@ -57,7 +59,8 @@ WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
 ><A
-HREF="using.html"
+HREF="introduction.html"
+ACCESSKEY="N"
 >Next</A
 ></TD
 ></TR
@@ -66,22 +69,17 @@ HREF="using.html"
 ALIGN="LEFT"
 WIDTH="100%"></DIV
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H1
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="CONVENTIONS"
->1.9. Document Conventions</A
-></H1
+NAME="conventions">1.5. Document Conventions</H1
 ><P
->    This document uses the following conventions
-  </P
+>This document uses the following conventions:</P
 ><DIV
-CLASS="INFORMALTABLE"
+CLASS="informaltable"
 ><A
-NAME="AEN129"
-></A
-><P
+NAME="AEN178"><P
 ></P
 ><TABLE
 BORDER="0"
@@ -90,11 +88,11 @@ CLASS="CALSTABLE"
 ><TR
 ><TH
 ALIGN="LEFT"
-VALIGN="TOP"
+VALIGN="MIDDLE"
 >Descriptions</TH
 ><TH
 ALIGN="LEFT"
-VALIGN="TOP"
+VALIGN="MIDDLE"
 >Appearance</TH
 ></TR
 ></THEAD
@@ -102,17 +100,17 @@ VALIGN="TOP"
 ><TR
 ><TD
 ALIGN="LEFT"
-VALIGN="TOP"
+VALIGN="MIDDLE"
 >Warnings</TD
 ><TD
 ALIGN="LEFT"
-VALIGN="TOP"
-><DIV
-CLASS="CAUTION"
+VALIGN="MIDDLE"
+>&#13;            <DIV
+CLASS="caution"
 ><P
 ></P
 ><TABLE
-CLASS="CAUTION"
+CLASS="caution"
 WIDTH="100%"
 BORDER="0"
 ><TR
@@ -128,27 +126,28 @@ ALT="Caution"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->Warnings.</P
+>Don't run with scissors!</P
 ></TD
 ></TR
 ></TABLE
 ></DIV
-></TD
+>
+          </TD
 ></TR
 ><TR
 ><TD
 ALIGN="LEFT"
-VALIGN="TOP"
+VALIGN="MIDDLE"
 >Hint</TD
 ><TD
 ALIGN="LEFT"
-VALIGN="TOP"
-><DIV
-CLASS="TIP"
+VALIGN="MIDDLE"
+>&#13;            <DIV
+CLASS="tip"
 ><P
 ></P
 ><TABLE
-CLASS="TIP"
+CLASS="tip"
 WIDTH="100%"
 BORDER="0"
 ><TR
@@ -164,27 +163,28 @@ ALT="Tip"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->Hint.</P
+>Would you like a breath mint?</P
 ></TD
 ></TR
 ></TABLE
 ></DIV
-></TD
+>
+          </TD
 ></TR
 ><TR
 ><TD
 ALIGN="LEFT"
-VALIGN="TOP"
+VALIGN="MIDDLE"
 >Notes</TD
 ><TD
 ALIGN="LEFT"
-VALIGN="TOP"
-><DIV
-CLASS="NOTE"
+VALIGN="MIDDLE"
+>&#13;            <DIV
+CLASS="note"
 ><P
 ></P
 ><TABLE
-CLASS="NOTE"
+CLASS="note"
 WIDTH="100%"
 BORDER="0"
 ><TR
@@ -200,27 +200,28 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->Note.</P
+>Dear John...</P
 ></TD
 ></TR
 ></TABLE
 ></DIV
-></TD
+>
+          </TD
 ></TR
 ><TR
 ><TD
 ALIGN="LEFT"
-VALIGN="TOP"
+VALIGN="MIDDLE"
 >Information requiring special attention</TD
 ><TD
 ALIGN="LEFT"
-VALIGN="TOP"
-><DIV
-CLASS="WARNING"
+VALIGN="MIDDLE"
+>&#13;            <DIV
+CLASS="warning"
 ><P
 ></P
 ><TABLE
-CLASS="WARNING"
+CLASS="warning"
 WIDTH="100%"
 BORDER="0"
 ><TR
@@ -236,138 +237,151 @@ ALT="Warning"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->Warning.</P
+>Read this or the cat gets it.</P
 ></TD
 ></TR
 ></TABLE
 ></DIV
-></TD
+>
+          </TD
 ></TR
 ><TR
 ><TD
 ALIGN="LEFT"
-VALIGN="TOP"
+VALIGN="MIDDLE"
 >File Names</TD
 ><TD
 ALIGN="LEFT"
-VALIGN="TOP"
-><TT
-CLASS="FILENAME"
->file.extension</TT
-></TD
+VALIGN="MIDDLE"
+>&#13;            <TT
+CLASS="filename"
+>filename</TT
+>
+          </TD
 ></TR
 ><TR
 ><TD
 ALIGN="LEFT"
-VALIGN="TOP"
+VALIGN="MIDDLE"
 >Directory Names</TD
 ><TD
 ALIGN="LEFT"
-VALIGN="TOP"
-><TT
-CLASS="FILENAME"
+VALIGN="MIDDLE"
+>&#13;            <TT
+CLASS="filename"
 >directory</TT
-></TD
+>
+          </TD
 ></TR
 ><TR
 ><TD
 ALIGN="LEFT"
-VALIGN="TOP"
+VALIGN="MIDDLE"
 >Commands to be typed</TD
 ><TD
 ALIGN="LEFT"
-VALIGN="TOP"
-><B
-CLASS="COMMAND"
+VALIGN="MIDDLE"
+>&#13;            <B
+CLASS="command"
 >command</B
-></TD
+>
+          </TD
 ></TR
 ><TR
 ><TD
 ALIGN="LEFT"
-VALIGN="TOP"
+VALIGN="MIDDLE"
 >Applications Names</TD
 ><TD
 ALIGN="LEFT"
-VALIGN="TOP"
-><SPAN
-CLASS="APPLICATION"
+VALIGN="MIDDLE"
+>&#13;            <SPAN
+CLASS="application"
 >application</SPAN
-></TD
+>
+          </TD
 ></TR
 ><TR
 ><TD
 ALIGN="LEFT"
-VALIGN="TOP"
-><I
-CLASS="FOREIGNPHRASE"
+VALIGN="MIDDLE"
+>&#13;          <I
+CLASS="foreignphrase"
 >Prompt</I
-> of users command under bash shell</TD
+>
+
+          of users command under bash shell</TD
 ><TD
 ALIGN="LEFT"
-VALIGN="TOP"
+VALIGN="MIDDLE"
 >bash$</TD
 ></TR
 ><TR
 ><TD
 ALIGN="LEFT"
-VALIGN="TOP"
-><I
-CLASS="FOREIGNPHRASE"
+VALIGN="MIDDLE"
+>&#13;          <I
+CLASS="foreignphrase"
 >Prompt</I
-> of root users command under bash shell</TD
+>
+
+          of root users command under bash shell</TD
 ><TD
 ALIGN="LEFT"
-VALIGN="TOP"
+VALIGN="MIDDLE"
 >bash#</TD
 ></TR
 ><TR
 ><TD
 ALIGN="LEFT"
-VALIGN="TOP"
-><I
-CLASS="FOREIGNPHRASE"
+VALIGN="MIDDLE"
+>&#13;          <I
+CLASS="foreignphrase"
 >Prompt</I
-> of user command under tcsh shell</TD
+>
+
+          of user command under tcsh shell</TD
 ><TD
 ALIGN="LEFT"
-VALIGN="TOP"
+VALIGN="MIDDLE"
 >tcsh$</TD
 ></TR
 ><TR
 ><TD
 ALIGN="LEFT"
-VALIGN="TOP"
+VALIGN="MIDDLE"
 >Environment Variables</TD
 ><TD
 ALIGN="LEFT"
-VALIGN="TOP"
-><TT
-CLASS="ENVAR"
+VALIGN="MIDDLE"
+>&#13;            <TT
+CLASS="envar"
 >VARIABLE</TT
-></TD
+>
+          </TD
 ></TR
 ><TR
 ><TD
 ALIGN="LEFT"
-VALIGN="TOP"
+VALIGN="MIDDLE"
 >Emphasized word</TD
 ><TD
 ALIGN="LEFT"
-VALIGN="TOP"
-><EM
+VALIGN="MIDDLE"
+>&#13;            <EM
 >word</EM
-></TD
+>
+          </TD
 ></TR
 ><TR
 ><TD
 ALIGN="LEFT"
-VALIGN="TOP"
+VALIGN="MIDDLE"
 >Code Example</TD
 ><TD
 ALIGN="LEFT"
-VALIGN="TOP"
-><TABLE
+VALIGN="MIDDLE"
+>&#13;            <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
 WIDTH="100%"
@@ -376,19 +390,22 @@ WIDTH="100%"
 ><FONT
 COLOR="#000000"
 ><PRE
-CLASS="PROGRAMLISTING"
+CLASS="programlisting"
 ><TT
-CLASS="SGMLTAG"
+CLASS="sgmltag"
 >&#60;para&#62;</TT
->Beginning and end of paragraph<TT
-CLASS="SGMLTAG"
+>
+Beginning and end of paragraph
+<TT
+CLASS="sgmltag"
 >&#60;/para&#62;</TT
 ></PRE
 ></FONT
 ></TD
 ></TR
 ></TABLE
-></TD
+>
+          </TD
 ></TR
 ></TBODY
 ></TABLE
@@ -401,6 +418,7 @@ CLASS="NAVFOOTER"
 ><HR
 ALIGN="LEFT"
 WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
 WIDTH="100%"
 BORDER="0"
 CELLPADDING="0"
@@ -411,7 +429,8 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="translations.html"
+HREF="credits.html"
+ACCESSKEY="P"
 >Prev</A
 ></TD
 ><TD
@@ -420,6 +439,7 @@ ALIGN="center"
 VALIGN="top"
 ><A
 HREF="index.html"
+ACCESSKEY="H"
 >Home</A
 ></TD
 ><TD
@@ -427,7 +447,8 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="using.html"
+HREF="introduction.html"
+ACCESSKEY="N"
 >Next</A
 ></TD
 ></TR
@@ -436,20 +457,21 @@ HREF="using.html"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->Translations</TD
+>Credits</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
 HREF="about.html"
+ACCESSKEY="U"
 >Up</A
 ></TD
 ><TD
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->Using Bugzilla</TD
+>Introduction</TD
 ></TR
 ></TABLE
 ></DIV

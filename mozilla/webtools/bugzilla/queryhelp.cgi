@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -27,9 +27,13 @@ use vars %::FORM;
 use diagnostics;
 use strict;
 
+use lib qw(.);
+
 require "CGI.pl";
 
 ConnectToDatabase();
+quietly_check_login();
+
 GetVersionTable();
 
 print "Content-type: text/html\n\n";
@@ -77,7 +81,7 @@ Until you get better, you can use the "brute force" method where you enter a ver
 the long list of bugs manually. Just try not to overuse this method if you don't have to as you might be slowing down
 the search for other people if there are many people searching at the same time. Finally, I would recommend learning the Boolean Chart immediately because it is extremely 
 powerful. Also, there is a navigation bar at the <a href="#bottom">bottom</a> of 
-most Bugzilla pages, and important links at the <a href="index.html">front page</a>.
+most Bugzilla pages, and important links at the <a href="index.cgi">front page</a>.
 
 
 
@@ -114,32 +118,99 @@ print qq{
 <td align="left" valign="top">
 
 <SELECT NAME="bug_status" MULTIPLE SIZE="7">
-<OPTION VALUE="UNCONFIRMED">UNCONFIRMED<OPTION VALUE="NEW">NEW<OPTION VALUE="ASSIGNED">ASSIGNED<OPTION VALUE="REOPENED">REOPENED<OPTION VALUE="RESOLVED">RESOLVED<OPTION VALUE="VERIFIED">VERIFIED<OPTION VALUE="CLOSED">CLOSED</SELECT>
+<OPTION VALUE="UNCONFIRMED">UNCONFIRMED
+<OPTION VALUE="NEW">NEW
+<OPTION VALUE="ASSIGNED">ASSIGNED
+<OPTION VALUE="REOPENED">REOPENED
+<OPTION VALUE="RESOLVED">RESOLVED
+<OPTION VALUE="VERIFIED">VERIFIED
+<OPTION VALUE="CLOSED">CLOSED
+</SELECT>
 
 </td>
 <td align="left" valign="top">
 <SELECT NAME="resolution" MULTIPLE SIZE="7">
-<OPTION VALUE="FIXED">FIXED<OPTION VALUE="INVALID">INVALID<OPTION VALUE="WONTFIX">WONTFIX<OPTION VALUE="LATER">LATER<OPTION VALUE="REMIND">REMIND<OPTION VALUE="DUPLICATE">DUPLICATE<OPTION VALUE="WORKSFORME">WORKSFORME<OPTION VALUE="MOVED">MOVED<OPTION VALUE="---">---</SELECT>
+<OPTION VALUE="FIXED">FIXED
+<OPTION VALUE="INVALID">INVALID
+<OPTION VALUE="WONTFIX">WONTFIX
+<OPTION VALUE="LATER">LATER
+<OPTION VALUE="REMIND">REMIND
+<OPTION VALUE="DUPLICATE">DUPLICATE
+<OPTION VALUE="WORKSFORME">WORKSFORME
+<OPTION VALUE="MOVED">MOVED
+<OPTION VALUE="---">---
+</SELECT>
 
 </td>
 <td align="left" valign="top">
 <SELECT NAME="rep_platform" MULTIPLE SIZE="7">
-<OPTION VALUE="All">All<OPTION VALUE="DEC">DEC<OPTION VALUE="HP">HP<OPTION VALUE="Macintosh">Macintosh<OPTION VALUE="PC">PC<OPTION VALUE="SGI">SGI<OPTION VALUE="Sun">Sun<OPTION VALUE="Other">Other</SELECT>
+<OPTION VALUE="All">All
+<OPTION VALUE="DEC">DEC
+<OPTION VALUE="HP">HP
+<OPTION VALUE="Macintosh">Macintosh
+<OPTION VALUE="PC">PC
+<OPTION VALUE="SGI">SGI
+<OPTION VALUE="Sun">Sun
+<OPTION VALUE="Other">Other
+</SELECT>
 
 </td>
 <td align="left" valign="top">
 <SELECT NAME="op_sys" MULTIPLE SIZE="7">
-<OPTION VALUE="All">All<OPTION VALUE="Windows 3.1">Windows 3.1<OPTION VALUE="Windows 95">Windows 95<OPTION VALUE="Windows 98">Windows 98<OPTION VALUE="Windows ME">Windows ME<OPTION VALUE="Windows 2000">Windows 2000<OPTION VALUE="Windows NT">Windows NT<OPTION VALUE="Mac System 7">Mac System 7<OPTION VALUE="Mac System 7.5">Mac System 7.5<OPTION VALUE="Mac System 7.6.1">Mac System 7.6.1<OPTION VALUE="Mac System 8.0">Mac System 8.0<OPTION VALUE="Mac System 8.5">Mac System 8.5<OPTION VALUE="Mac System 8.6">Mac System 8.6<OPTION VALUE="Mac System 9.0">Mac System 9.0<OPTION VALUE="Linux">Linux<OPTION VALUE="BSDI">BSDI<OPTION VALUE="FreeBSD">FreeBSD<OPTION VALUE="NetBSD">NetBSD<OPTION VALUE="OpenBSD">OpenBSD<OPTION VALUE="AIX">AIX<OPTION VALUE="BeOS">BeOS<OPTION VALUE="HP-UX">HP-UX<OPTION VALUE="IRIX">IRIX<OPTION VALUE="Neutrino">Neutrino<OPTION VALUE="OpenVMS">OpenVMS<OPTION VALUE="OS/2">OS/2<OPTION VALUE="OSF/1">OSF/1<OPTION VALUE="Solaris">Solaris<OPTION VALUE="SunOS">SunOS<OPTION VALUE="other">other</SELECT>
+<OPTION VALUE="All">All
+<OPTION VALUE="Windows 3.1">Windows 3.1
+<OPTION VALUE="Windows 95">Windows 95
+<OPTION VALUE="Windows 98">Windows 98
+<OPTION VALUE="Windows ME">Windows ME
+<OPTION VALUE="Windows 2000">Windows 2000
+<OPTION VALUE="Windows NT">Windows NT
+<OPTION VALUE="Windows XP">Windows XP
+<OPTION VALUE="Mac System 7">Mac System 7
+<OPTION VALUE="Mac System 7.5">Mac System 7.5
+<OPTION VALUE="Mac System 7.6.1">Mac System 7.6.1
+<OPTION VALUE="Mac System 8.0">Mac System 8.0
+<OPTION VALUE="Mac System 8.5">Mac System 8.5
+<OPTION VALUE="Mac System 8.6">Mac System 8.6
+<OPTION VALUE="Mac System 9.0">Mac System 9.0
+<OPTION VALUE="Linux">Linux
+<OPTION VALUE="BSDI">BSDI
+<OPTION VALUE="FreeBSD">FreeBSD
+<OPTION VALUE="NetBSD">NetBSD
+<OPTION VALUE="OpenBSD">OpenBSD
+<OPTION VALUE="AIX">AIX
+<OPTION VALUE="BeOS">BeOS
+<OPTION VALUE="HP-UX">HP-UX
+<OPTION VALUE="IRIX">IRIX
+<OPTION VALUE="Neutrino">Neutrino
+<OPTION VALUE="OpenVMS">OpenVMS
+<OPTION VALUE="OS/2">OS/2
+<OPTION VALUE="OSF/1">OSF/1
+<OPTION VALUE="Solaris">Solaris
+<OPTION VALUE="SunOS">SunOS
+<OPTION VALUE="other">other
+</SELECT>
 
 </td>
 <td align="left" valign="top">
 <SELECT NAME="priority" MULTIPLE SIZE="7">
-<OPTION VALUE="P1">P1<OPTION VALUE="P2">P2<OPTION VALUE="P3">P3<OPTION VALUE="P4">P4<OPTION VALUE="P5">P5</SELECT>
+<OPTION VALUE="P1">P1
+<OPTION VALUE="P2">P2
+<OPTION VALUE="P3">P3
+<OPTION VALUE="P4">P4
+<OPTION VALUE="P5">P5
+</SELECT>
 
 </td>
 <td align="left" valign="top">
 <SELECT NAME="bug_severity" MULTIPLE SIZE="7">
-<OPTION VALUE="blocker">blocker<OPTION VALUE="critical">critical<OPTION VALUE="major">major<OPTION VALUE="normal">normal<OPTION VALUE="minor">minor<OPTION VALUE="trivial">trivial<OPTION VALUE="enhancement">enhancement</SELECT>
+<OPTION VALUE="blocker">blocker
+<OPTION VALUE="critical">critical
+<OPTION VALUE="major">major
+<OPTION VALUE="normal">normal
+<OPTION VALUE="minor">minor
+<OPTION VALUE="trivial">trivial
+<OPTION VALUE="enhancement">enhancement
+</SELECT>
 </td>
 </tr>
 </table>
@@ -206,7 +277,7 @@ will be marked with one of the following resolutions.
 
 <ul>
 <li><b>FIXED</b> - A fix for this bug is checked into the tree and tested.
-<li><b>INVALID</b> - The problem described is not a bug 
+<li><b>INVALID</b> - The problem described is not a bug. 
 <li><b>WONTFIX</b> - The problem described is a bug which will never be fixed.
 <li><b>LATER</b> - The problem described is a bug which will not be fixed in this
 version of the product.
@@ -489,8 +560,6 @@ user with the proper permissions can edit these keywords. The following is a lis
 stored on this version of Bugzilla:
 };
 
-ConnectToDatabase();
-
 my $tableheader = qq{
 <p><table border="1" cellpadding="4" cellspacing="0">
 <tr bgcolor="#6666FF">
@@ -506,19 +575,14 @@ my $line_count = 0;
 my $max_table_size = 50;
 
 SendSQL("SELECT keyworddefs.name, keyworddefs.description, 
-                COUNT(keywords.bug_id), keywords.bug_id
+                COUNT(keywords.bug_id)
          FROM keyworddefs LEFT JOIN keywords ON keyworddefs.id=keywords.keywordid
          GROUP BY keyworddefs.id
          ORDER BY keyworddefs.name");
 
 while (MoreSQLData()) {
-    my ($name, $description, $bugs, $onebug) = FetchSQLData();
-    if ($bugs && $onebug) {
-        # This 'onebug' stuff is silly hackery for old versions of
-        # MySQL that seem to return a count() of 1 even if there are
-        # no matching.  So, we ask for an actual bug number.  If it
-        # can't find any bugs that match the keyword, then we set the
-        # count to be zero, ignoring what it had responded.
+    my ($name, $description, $bugs) = FetchSQLData();
+    if ($bugs) {
         my $q = url_quote($name);
         $bugs = qq{<A HREF="buglist.cgi?keywords=$q">$bugs</A>};
     } else {
@@ -540,7 +604,6 @@ while (MoreSQLData()) {
 
 print "</table><p>\n";
 
-quietly_check_login();
 
 if (UserInGroup("editkeywords")) {
     print qq{<p><a href="editkeywords.cgi">Edit keywords</a>\n};
@@ -566,14 +629,14 @@ print qq{
 
 <br>
 
-<p>Module options are where you select what program, module and version the bugs you want to 
-find describe. Selecting one or more of the programs, versions, components, or milestones will limit your search.
+<p>Module options are where you select what product, module and version the bugs you want to 
+find describe. Selecting one or more of the products, versions, components, or milestones will limit your search.
 
 <p><a name="product"></a>
 <h4>Products</h4> 
 
 
-<p>Although all subprojects within the Mozilla project are similiar, there are several seperate
+<p>Although all subprojects within the Mozilla project are similar, there are several seperate
 products being developed. Each product has its own components.
 
 };
@@ -601,6 +664,7 @@ SendSQL("SELECT product,description FROM products ORDER BY product");
         while (MoreSQLData()) {
 
         my ($product, $productdesc) = FetchSQLData();
+        next if (Param("usebuggroups") && GroupExists($product) && !UserInGroup($product));
         push (@products, $product);
 
         $line_count++;

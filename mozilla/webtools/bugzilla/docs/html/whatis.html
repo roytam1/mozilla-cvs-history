@@ -4,22 +4,22 @@
 >What is Bugzilla?</TITLE
 ><META
 NAME="GENERATOR"
-CONTENT="Modular DocBook HTML Stylesheet Version 1.61
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
 "><LINK
 REL="HOME"
 TITLE="The Bugzilla Guide"
 HREF="index.html"><LINK
 REL="UP"
-TITLE="Using Bugzilla"
-HREF="using.html"><LINK
+TITLE="Introduction"
+HREF="introduction.html"><LINK
 REL="PREVIOUS"
-TITLE="Using Bugzilla"
-HREF="using.html"><LINK
+TITLE="Introduction"
+HREF="introduction.html"><LINK
 REL="NEXT"
 TITLE="Why Should We Use Bugzilla?"
 HREF="why.html"></HEAD
 ><BODY
-CLASS="SECTION"
+CLASS="section"
 BGCOLOR="#FFFFFF"
 TEXT="#000000"
 LINK="#0000FF"
@@ -28,6 +28,7 @@ ALINK="#0000FF"
 ><DIV
 CLASS="NAVHEADER"
 ><TABLE
+SUMMARY="Header navigation table"
 WIDTH="100%"
 BORDER="0"
 CELLPADDING="0"
@@ -44,20 +45,22 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="using.html"
+HREF="introduction.html"
+ACCESSKEY="P"
 >Prev</A
 ></TD
 ><TD
 WIDTH="80%"
 ALIGN="center"
 VALIGN="bottom"
->Chapter 2. Using Bugzilla</TD
+>Chapter 2. Introduction</TD
 ><TD
 WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
 ><A
 HREF="why.html"
+ACCESSKEY="N"
 >Next</A
 ></TD
 ></TR
@@ -66,112 +69,81 @@ HREF="why.html"
 ALIGN="LEFT"
 WIDTH="100%"></DIV
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H1
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="WHATIS"
->2.1. What is Bugzilla?</A
-></H1
+NAME="whatis">2.1. What is Bugzilla?</H1
 ><P
->      Bugzilla is one example of a class of programs called "Defect
-Tracking Systems", or, more commonly, "Bug-Tracking Systems".  Defect
-Tracking Systems allow individual or groups of developers to keep
-track of outstanding bugs in their product effectively. Bugzilla was
-originally written by Terry Weissman in a programming language called
-"TCL", to replace a crappy bug-tracking database used internally for
-Netscape Communications.  Terry later ported Bugzilla to Perl from
-TCL, and in Perl it remains to this day. Most commercial
-defect-tracking software vendors at the time charged enormous
-licensing fees, and Bugzilla quickly became a favorite of the
-open-source crowd (with its genesis in the open-source browser
-project, Mozilla).  It is now the de-facto standard defect-tracking
-system against which all others are measured.
+>&#13;    Bugzilla is a bug- or issue-tracking system. Bug-tracking
+    systems allow individual or groups of developers effectively to keep track
+    of outstanding problems with their product. 
+    Bugzilla was originally
+    written by Terry Weissman in a programming language called TCL, to
+    replace a rudimentary bug-tracking database used internally by Netscape
+    Communications. Terry later ported Bugzilla to Perl from TCL, and in Perl
+    it remains to this day. Most commercial defect-tracking software vendors
+    at the time charged enormous licensing fees, and Bugzilla quickly became
+    a favorite of the open-source crowd (with its genesis in the open-source
+    browser project, Mozilla). It is now the de-facto standard
+    defect-tracking system against which all others are measured.
     </P
 ><P
->      Bugzilla has matured immensely, and now boasts many advanced features.  These include:
-      <P
+>Bugzilla boasts many advanced features. These include: 
+    <P
 ></P
 ><UL
 ><LI
 ><P
->	    integrated, product-based granular security schema
-	  </P
+>Powerful searching</P
 ></LI
 ><LI
 ><P
->	    inter-bug dependencies and dependency graphing
-	  </P
+>User-configurable email notifications of bug changes</P
 ></LI
 ><LI
 ><P
->	    advanced reporting capabilities
-	  </P
+>Full change history</P
 ></LI
 ><LI
 ><P
->	    a robust, stable RDBMS back-end
-	  </P
+>Inter-bug dependency tracking and graphing</P
 ></LI
 ><LI
 ><P
->	    extensive configurability
-	  </P
+>Excellent attachment management</P
 ></LI
 ><LI
 ><P
->	    a very well-understood and well-thought-out natural bug resolution protocol
-	  </P
+>Integrated, product-based, granular security schema</P
 ></LI
 ><LI
 ><P
->	    email, XML, console, and HTTP APIs
-	  </P
+>Fully security-audited, and runs under Perl's taint mode</P
 ></LI
 ><LI
 ><P
->	    available integration with automated software
-	    configuration management systems, including Perforce and
-	    CVS (through the Bugzilla email interface and
-	    checkin/checkout scripts)
-	  </P
+>A robust, stable RDBMS back-end</P
 ></LI
 ><LI
 ><P
->	    too many more features to list
-	  </P
+>Web, XML, email and console interfaces</P
+></LI
+><LI
+><P
+>Completely customisable and/or localisable web user
+        interface</P
+></LI
+><LI
+><P
+>Extensive configurability</P
+></LI
+><LI
+><P
+>Smooth upgrade pathway between versions</P
 ></LI
 ></UL
 >
-    </P
-><P
->      Despite its current robustness and popularity, Bugzilla faces
-      some near-term challenges, such as reliance on a single
-      database, a lack of abstraction of the user interface and
-      program logic, verbose email bug notifications, a powerful but
-      daunting query interface, little reporting configurability,
-      problems with extremely large queries, some unsupportable bug
-      resolution options, little internationalization (although non-US
-      character sets are accepted for comments), and dependence on
-      some nonstandard libraries.
-    </P
-><P
->      Some recent headway has been made on the query front, however.
-      If you are using the latest version of Bugzilla, you should see
-      a <SPAN
-CLASS="QUOTE"
->"simple search"</SPAN
-> form on the default front page of
-      your Bugzilla install.  Type in two or three search terms and
-      you should pull up some relevant information.  This is also
-      available as "queryhelp.cgi".
-    </P
-><P
->      Despite these small problems, Bugzilla is very hard to beat.  It
-      is under <EM
->very</EM
-> active development to address
-      the current issues, and continually gains new features.
     </P
 ></DIV
 ><DIV
@@ -179,6 +151,7 @@ CLASS="NAVFOOTER"
 ><HR
 ALIGN="LEFT"
 WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
 WIDTH="100%"
 BORDER="0"
 CELLPADDING="0"
@@ -189,7 +162,8 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="using.html"
+HREF="introduction.html"
+ACCESSKEY="P"
 >Prev</A
 ></TD
 ><TD
@@ -198,6 +172,7 @@ ALIGN="center"
 VALIGN="top"
 ><A
 HREF="index.html"
+ACCESSKEY="H"
 >Home</A
 ></TD
 ><TD
@@ -206,6 +181,7 @@ ALIGN="right"
 VALIGN="top"
 ><A
 HREF="why.html"
+ACCESSKEY="N"
 >Next</A
 ></TD
 ></TR
@@ -214,13 +190,14 @@ HREF="why.html"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->Using Bugzilla</TD
+>Introduction</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="using.html"
+HREF="introduction.html"
+ACCESSKEY="U"
 >Up</A
 ></TD
 ><TD
