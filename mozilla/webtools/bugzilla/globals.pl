@@ -725,8 +725,14 @@ sub CanSeeBug {
 
     # if no groups are found --> user is permitted to access
     # if no user is found for a group --> user is not permitted to access
-    my $query = "SELECT bugs.bug_id, ISNULL(bug_group_map.group_id), 
-        ISNULL(member_group_map.member_id) FROM bugs 
+    my $query = "SELECT bugs.bug_id, reporter, assigned_to, qa_contact,
+        reporter_accessible, cclist_accessible,
+        ISNULL(cc.who) = 0, 
+        ISNULL(bug_group_map.group_id) = 0, 
+        ISNULL(member_group_map.member_id) = 0 
+        FROM bugs 
+        LEFT JOIN cc ON bugs.bug_id = cc.bug_id 
+        AND cc.who = $userid
         LEFT JOIN bug_group_map ON bugs.bug_id = bug_group_map.bug_id 
         LEFT JOIN member_group_map ON 
         member_group_map.group_id = bug_group_map.group_id  
@@ -735,11 +741,16 @@ sub CanSeeBug {
         WHERE bugs.bug_id = $id ORDER BY member_group_map.member_id";
     PushGlobalSQLState();
     SendSQL($query);
-    my ($found_id, $found_group, $found_member) = FetchSQLData();
+    my ($found_id, $reporter, $assigned_to, $qa_contact,
+        $rep_access, $cc_access,
+        $found_cc, $found_group, $found_member) 
+        = FetchSQLData();
     PopGlobalSQLState();
-    # FIXME - reporter and cc sometimes can also see bug as well as assignee
-    my $ret = (($found_group == 1) || ($found_member == 0)) ? 1 : 0;
-    return $ret;
+    return (($assigned_to == $userid) 
+               || ($qa_contact == $userid)
+               || (($reporter == $userid) && $rep_access) 
+               || ($found_cc && $cc_access) 
+               || !$found_group || $found_member);
 }
 
 sub CanEditBug {
@@ -751,7 +762,6 @@ sub CanEditBug {
     my ($product) = FetchSQLData();
     my $ret = UserCanActOnProduct($product, 'canedit');
     PopGlobalSQLState();
-    # FIXME - reporter and cc sometimes can also edit bug as well as assignee
     return $ret;
 }
 

@@ -72,20 +72,12 @@ use vars qw($template $vars);
 my @idlist;
 if (defined $::FORM{'id'}) {
     ValidateBugID($::FORM{'id'});
-    if (!CanEditBug($::FORM{'id'},$::userid)) {
-        DisplayError("You are not authorized to edit bug $::FORM{'id'}");
-        exit;
-    }
     push @idlist, $::FORM{'id'};
 } else {
     foreach my $i (keys %::FORM) {
         if ($i =~ /^id_([1-9][0-9]*)/) {
             my $id = $1;
             ValidateBugID($id);
-            if (!CanEditBug($id,$::userid)) {
-                DisplayError("You are not authorized to edit bug $id");
-                exit;
-            }
             push @idlist, $id;
         }
     }
@@ -297,7 +289,8 @@ sub CheckCanChangeField {
         return 1;             # it'll flag it when "status" is checked.
     }
     if ($UserInEditGroupSet < 0) {
-        $UserInEditGroupSet = UserInGroup("editbugs");
+        $UserInEditGroupSet = 
+            (UserInGroup("editbugs") && CanEditBug($::FORM{'id'},$::userid));
     }
     if ($UserInEditGroupSet) {
         return 1;
