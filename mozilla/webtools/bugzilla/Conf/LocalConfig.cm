@@ -32,8 +32,10 @@ configuration.
 EOF
 }
 
+$editor = getConf('editor');
+
 if ($newstuff ne "") {
-	system(getConf('editor')."Conf/Supplies/localconfig");
+	system("$editor Conf/Supplies/localconfig");
 }
 
 # 2000-Dec-18 - justdave@syndicomm.com - see Bug 52921
