@@ -186,7 +186,7 @@ $header .=<<EOF;
         tipColor = "#FFFF80";                   // yellow background
         // Timing
         tipOpen = 150;                          // open msecs after mouseover
-        tipClose = 50;                          // close msecs after mouseout
+        tipClose = 800;                         // close msecs after mouseout
         tipFactor = 2;                          // est: chars read in 1 msec
         // Null defaults
         tipWin = null;
