@@ -1310,6 +1310,17 @@ sub BugInGroup {
     return $bugingroup;
 }
 
+sub BugInGroupId {
+    my ($bugid, $groupid) = (@_);
+    PushGlobalSQLState();
+    SendSQL("SELECT bug_id != 0 FROM bug_group_map
+            WHERE bug_id = $bugid
+            AND group_id = $groupid");
+    my $bugingroup = FetchOneColumn();
+    PopGlobalSQLState();
+    return $bugingroup;
+}
+
 sub BugInAnyGroup {
     my ($bugid) = (@_);
     PushGlobalSQLState();
@@ -1336,6 +1347,15 @@ sub GroupNameToId {
     my $id = FetchOneColumn();
     PopGlobalSQLState();
     return $id;
+}
+
+sub GroupIdToName {
+    my ($groupid) = (@_);
+    PushGlobalSQLState();
+    SendSQL("select name from groups where group_id = $groupid");
+    my $name = FetchOneColumn();
+    PopGlobalSQLState();
+    return $name;
 }
 
 
