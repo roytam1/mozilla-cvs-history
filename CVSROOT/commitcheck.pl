@@ -17,7 +17,7 @@ $fullname{'53'} = 'Berkeley DB';
 $mode{'166'} = 'Restricted';
 $branch{'166'} = 'HEAD';
 $fullname{'166'} = 'Browser';
-$blessed{'166'} = ['scott%scott-macgregor.org','pinkerton%netscape.com','kerz%mozillazine.org','ian%hixie.ch','dbaron%dbaron.org','bzbarsky%mit.edu','bryner%brianryner.com','brendan%mozilla.org','asa%mozilla.org','noririty%jcom.home.ne.jp',];
+$blessed{'166'} = ['scott%scott-macgregor.org','pinkerton%netscape.com','noririty%jcom.home.ne.jp','kerz%mozillazine.org','ian%hixie.ch','dbaron%dbaron.org','bzbarsky%mit.edu','bryner%brianryner.com','brendan%mozilla.org','asa%mozilla.org',];
 $super{'166'} = ['varga%utcru.sk','mkaply%us.ibm.com','jag%tty.nl','hewitt%netscape.com','dean_tessman%hotmail.com','chanial%noos.fr','blakeross%telocity.com','ben%bengoodger.com','hyatt%mozilla.org',];
 $mode{'55'} = 'Open';
 $branch{'55'} = 'HEAD';
@@ -415,6 +415,7 @@ if (m:^mozilla/extensions/p3p/.*$:) {return '162';}
 if (m:^mozilla/chimera/.*$:) {return '164';}
 if (m:^mozilla/layout/mathml/.*$:) {return '165';}
 if (m:^mozilla/browser/.*$:) {return '166';}
+if (m:^mozilla/chrome/.*$:) {return '166';}
 if (m:^mozilla/toolkit/.*$:) {return '166';}
 if (m:^mozilla/mail/.*$:) {return '170';}
 if (m:^mozilla/extensions/cookie$:) {return '171';}
