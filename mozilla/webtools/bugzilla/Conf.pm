@@ -49,7 +49,7 @@ sub ask {
     }
     print "$question [$default]";
     $answer = <STDIN>;
-    $answer = chomp($answer);
+    chomp($answer);
     $main::c{$name} = $answer;
 } 
 
