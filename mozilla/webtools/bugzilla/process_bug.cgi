@@ -211,7 +211,7 @@ if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct)
     # If the product-specific fields need to be verified, or we need to verify
     # whether or not to add the bugs to their new product's group, display
     # a verification form.
-    if (!$vok || !$cok || !$mok || 0 && (Param('usebuggroups') && !defined($::FORM{'addtonewgroup'}))) {
+    if (!$vok || !$cok || !$mok || (0 && Param('usebuggroups') && !defined($::FORM{'addtonewgroup'}))) {
         $vars->{'form'} = \%::FORM;
         
         if (!$vok || !$cok || !$mok) {
@@ -470,38 +470,38 @@ sub ChangeResolution {
     }
 }
 
-# Changing this so that it will process groups from checkboxes instead of
-# select lists.  This means that instead of looking for the bit-X values in
-# the form, we need to loop through all the bug groups this user has access
-# to, and for each one, see if it's selected.
-# In order to make mass changes work correctly, keep a sum of bits for groups
-# added, and another one for groups removed, and then let mysql do the bit
-# operations
-# If the form element isn't present, or the user isn't in the group, leave
-# it as-is
-my @groupAdd = ();
-my @groupDel = ();
-
-SendSQL("SELECT groups.group_id, isactive FROM groups, member_group_map WHERE " .
-        "groups.group_id = member_group_map.group_id AND " .
-        "member_group_map.member_id = $::userid AND " .
-        "member_group_map.maptype = $::Tmaptype->{'u2gm'} AND " .
-        "group_type = $::Tgroup_type->{'buggroup'}");
-while (my ($b, $isactive) = FetchSQLData()) {
-    # The multiple change page may not show all groups a bug is in
-    # (eg product groups when listing more than one product)
-    # Only consider groups which were present on the form. We can't do this
-    # for single bug changes because non-checked checkboxes aren't present.
-    # All the checkboxes should be shown in that case, though, so its not
-    # an issue there
-    if ($::FORM{'id'} || exists $::FORM{"bit-$b"}) {
-        if (!$::FORM{"bit-$b"}) {
-            push(@groupDel, $b);
-        } elsif ($::FORM{"bit-$b"} == 1 && $isactive) {
-            push(@groupAdd, $b);
-        }
-    }
-}
+# # Changing this so that it will process groups from checkboxes instead of
+# # select lists.  This means that instead of looking for the bit-X values in
+# # the form, we need to loop through all the bug groups this user has access
+# # to, and for each one, see if it's selected.
+# # In order to make mass changes work correctly, keep a sum of bits for groups
+# # added, and another one for groups removed, and then let mysql do the bit
+# # operations
+# # If the form element isn't present, or the user isn't in the group, leave
+# # it as-is
+# my @groupAdd = ();
+# my @groupDel = ();
+# 
+# SendSQL("SELECT groups.group_id, isactive FROM groups, member_group_map WHERE " .
+#         "groups.group_id = member_group_map.group_id AND " .
+#         "member_group_map.member_id = $::userid AND " .
+#         "member_group_map.maptype = $::Tmaptype->{'u2gm'} AND " .
+#         "group_type = $::Tgroup_type->{'buggroup'}");
+# while (my ($b, $isactive) = FetchSQLData()) {
+#     # The multiple change page may not show all groups a bug is in
+#     # (eg product groups when listing more than one product)
+#     # Only consider groups which were present on the form. We can't do this
+#     # for single bug changes because non-checked checkboxes aren't present.
+#     # All the checkboxes should be shown in that case, though, so its not
+#     # an issue there
+#     if ($::FORM{'id'} || exists $::FORM{"bit-$b"}) {
+#         if (!$::FORM{"bit-$b"}) {
+#             push(@groupDel, $b);
+#         } elsif ($::FORM{"bit-$b"} == 1 && $isactive) {
+#             push(@groupAdd, $b);
+#         }
+#     }
+# }
 
 foreach my $field ("rep_platform", "priority", "bug_severity",          
                    "summary", "component", "bug_file_loc", "short_desc",
@@ -927,6 +927,8 @@ foreach my $id (@idlist) {
             "keywords $write, longdescs $write, fielddefs $write, " .
             "bug_group_map $write, " .
             "member_group_map READ, " .
+            "group_control_map as P READ, " .
+            "group_control_map as R READ, " .
             "keyworddefs READ, groups READ, attachments READ, products READ");
     my @oldvalues = SnapShotBug($id);
     my %oldhash;
@@ -1094,21 +1096,48 @@ foreach my $id (@idlist) {
         SendSQL($query);
     }
     my $groupAddNames = '';
-    foreach my $grouptoadd (@groupAdd) {
-        if (!BugInGroupId($id, $grouptoadd)) {
-            $groupAddNames .= GroupIdToName($grouptoadd) . ' ';
-        }
-        SendSQL("INSERT IGNORE INTO bug_group_map (bug_id, group_id) 
-                 VALUES ($id, $grouptoadd)");
-    }
     my $groupDelNames = '';
-    foreach my $grouptodel (@groupDel) {
-        if (BugInGroupId($id, $grouptodel)) {
-            $groupDelNames .= GroupIdToName($grouptodel) . ' ';
+    SendSQL("SELECT groups.group_id, name, 
+             ISNULL(P.control_id) = 0,
+             ISNULL(R.control_id) = 0,
+             ISNULL(member_id) = 0
+             FROM groups, products
+             LEFT JOIN group_control_map as P
+             ON groups.group_id = P.group_id
+             AND P.control_id = product_id
+             AND P.control_id_type = $::Tcontrol_id_type->{'product'}
+             AND P.control_type = $::Tcontrol_type->{'permitted'}
+             LEFT JOIN group_control_map as R
+             ON groups.group_id = R.group_id
+             AND R.control_id = product_id
+             AND R.control_id_type = $::Tcontrol_id_type->{'product'}
+             AND R.control_type = $::Tcontrol_type->{'required'}
+             LEFT JOIN member_group_map
+             ON member_group_map.group_id = groups.group_id 
+             AND member_id = $::userid 
+             AND maptype = $::Tmaptype->{'u2gm'} 
+             WHERE group_type = $::Tgroup_type->{'buggroup'} 
+             AND product = " . SqlQuote($oldhash{'product'}) );
+    while (MoreSQLData()) {
+        my ($gid, $grpname, $pflag, $rflag, $uflag) = FetchSQLData();
+        my $bflag = BugInGroupId($id, $gid);
+        if (!$bflag && ($rflag || 
+            ($pflag && $uflag && ($::FORM{"bit-$gid"} == 1)))) {
+            $groupAddNames .= $grpname . ' ';
+            PushGlobalSQLState();
+            SendSQL("INSERT IGNORE INTO bug_group_map (bug_id, group_id) 
+                     VALUES ($id, $gid)");
+            PopGlobalSQLState();
+        } elsif ($bflag && !$rflag &&
+                (!$pflag || ($uflag & (abs($::FORM{"bit-$gid"}) != 1)))) {
+            $groupDelNames .= $grpname . ' ';
+            PushGlobalSQLState();
+            SendSQL("DELETE FROM bug_group_map 
+                     WHERE bug_id = $id AND  group_id = $gid");
+            PopGlobalSQLState();
         }
-        SendSQL("DELETE FROM bug_group_map 
-                 WHERE bug_id = $id AND  group_id = $grouptodel");
     }
+
     SendSQL("select now()");
     $timestamp = FetchOneColumn();
 
