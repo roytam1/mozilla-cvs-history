@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/local/bin/perl -w
 ###########################################################################
 # $Id$
 #
@@ -36,7 +36,7 @@ $MAX_RECOVER_DAYS = 500;
 use vars qw{$BILLING_HOME $RRD_DIR $REPORT_HOME $LOG_DIR $LOG_ARCHIVE_DIR
             $BIN_DIR $INC_DIR};
 
-$BILLING_HOME = "/usr/local/root/apache/cgi-bin/Burstable";
+$BILLING_HOME = "/usr/local/root/apache/cgi-bin/Burstable/TEST_ENV";
 
 $RRD_DIR = "/usr/local/nme/polling/www";
 
