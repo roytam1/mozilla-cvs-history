@@ -372,4 +372,5 @@ CalendarClient -a \
 	mozilla/gconfig \
 	mozilla/gfx \
 	mozilla/widget \
+	mozilla/xpfc \
 	mozilla/view
