@@ -76,6 +76,9 @@ $fullname{'130'} = 'Java APIs for DOM';
 $mode{'127'} = 'Open';
 $branch{'127'} = 'HEAD';
 $fullname{'127'} = 'Java APIs to WebShell';
+$mode{'131'} = 'Open';
+$branch{'131'} = 'HEAD';
+$fullname{'131'} = 'Java Front End';
 $mode{'68'} = 'Open';
 $branch{'68'} = 'HEAD';
 $fullname{'68'} = 'Java Stubs';
@@ -302,6 +305,7 @@ if (m:^xpcom/reflect/xptcall$:) {return '118';}
 if (m:^xpcom/reflect/xptinfo$:) {return '118';}
 if (m:^mozilla/mailnews/news/.*$:) {return '122';}
 if (m:^mozilla/mailnews/[^/]*$:) {return '123';}
+if (m:^java/fe$:) {return '131';}
 }
 return '';
 }
