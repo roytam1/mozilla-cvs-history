@@ -39,7 +39,7 @@
 $pos = strpos($_SERVER["REQUEST_URI"], "/admin");
 if ($pos !== false) {
 echo'<LINK REL="STYLESHEET" TYPE="text/css" HREF="/core/mozupdates.bak.css">';
-$application="login"; $_SESSION["application"]="login"; unset($_SESSION["app_version"], $_SESSION["app_os"]);
+$application="login";
  }
 ?>
 <DIV class="header">

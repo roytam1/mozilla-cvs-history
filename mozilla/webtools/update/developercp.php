@@ -50,7 +50,7 @@ require"core/config.php";
 </HEAD>
 <BODY>
 <?php
-$application="login"; $_SESSION["application"]="login"; unset($_SESSION["app_version"], $_SESSION["app_os"]);
+$application="login";
 include"$page_header";
 ?>
 <DIV class="faqtitle">Developer Control Panel - Coming Soon</DIV>
