@@ -80,9 +80,9 @@ sub CheckProduct ($)
 # Displays the form to edit a products parameters
 #
 
-sub EmitFormElements ($$$$$$$$)
+sub EmitFormElements ($$$$$$$$$)
 {
-    my ($product, $description, $milestoneurl, $disallownew,
+    my ($product, $description, $milestoneurl, $disallownew, $allcancomment,
         $votesperuser, $maxvotesperbug, $votestoconfirm, $defaultmilestone)
         = @_;
 
@@ -116,6 +116,10 @@ sub EmitFormElements ($$$$$$$$)
     print "  <TH ALIGN=\"right\">Closed for bug entry:</TH>\n";
     my $closed = $disallownew ? "CHECKED" : "";
     print "  <TD><INPUT TYPE=CHECKBOX NAME=\"disallownew\" $closed VALUE=\"1\"></TD>\n";
+    print "</TR><TR>\n";
+    print "  <TH ALIGN=\"right\">All can comment:</TH>\n";
+    my $box = $allcancomment ? "CHECKED" : "";
+    print "  <TD><INPUT TYPE=CHECKBOX NAME=\"allcancomment\" $box VALUE=\"1\"></TD>\n";
 
     print "</TR><TR>\n";
     print "  <TH ALIGN=\"right\">Maximum votes per person:</TH>\n";
@@ -199,7 +203,7 @@ my $localtrailer = "<A HREF=\"editproducts.cgi\">edit</A> more products";
 unless ($action) {
     PutHeader("Select product");
 
-    SendSQL("SELECT products.product,description,disallownew,
+    SendSQL("SELECT products.product,description,disallownew,allcancomment,
                     votesperuser,maxvotesperbug,votestoconfirm,COUNT(bug_id)
              FROM products LEFT JOIN bugs
                ON products.product=bugs.product
@@ -216,7 +220,7 @@ unless ($action) {
     print "  <TH ALIGN=\"left\">Action</TH>\n";
     print "</TR>";
     while ( MoreSQLData() ) {
-        my ($product, $description, $disallownew, $votesperuser,
+        my ($product, $description, $disallownew, $allcancomment, $votesperuser,
             $maxvotesperbug, $votestoconfirm, $bugs) = FetchSQLData();
         $description ||= "<FONT COLOR=\"red\">missing</FONT>";
         $disallownew = $disallownew ? 'closed' : 'open';
@@ -258,7 +262,7 @@ if ($action eq 'add') {
     print "<FORM METHOD=POST ACTION=editproducts.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
-    EmitFormElements('', '', '', 0, 0, 10000, 0, "---");
+    EmitFormElements('', '', '', 0, 0, 0, 10000, 0, "---");
 
     print "</TR><TR>\n";
     print "  <TH ALIGN=\"right\">Version:</TH>\n";
@@ -310,6 +314,8 @@ if ($action eq 'new') {
 
     my $description  = trim($::FORM{description}  || '');
     my $milestoneurl = trim($::FORM{milestoneurl} || '');
+    my $allcancomment = 0;
+    $allcancomment = 1 if $::FORM{allcancomment};
     my $disallownew = 0;
     $disallownew = 1 if $::FORM{disallownew};
     my $votesperuser = $::FORM{votesperuser};
@@ -636,11 +642,11 @@ if ($action eq 'edit') {
     CheckProduct($product);
 
     # get data of product
-    SendSQL("SELECT description,milestoneurl,disallownew,
+    SendSQL("SELECT description,milestoneurl,disallownew,allcancomment,
                     votesperuser,maxvotesperbug,votestoconfirm,defaultmilestone
              FROM products
              WHERE product=" . SqlQuote($product));
-    my ($description, $milestoneurl, $disallownew,
+    my ($description, $milestoneurl, $disallownew, $allcancomment,
         $votesperuser, $maxvotesperbug, $votestoconfirm, $defaultmilestone) =
         FetchSQLData();
 
@@ -648,7 +654,7 @@ if ($action eq 'edit') {
     print "<TABLE  BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
     EmitFormElements($product, $description, $milestoneurl, 
-                     $disallownew, $votesperuser, $maxvotesperbug,
+                     $disallownew, $allcancomment, $votesperuser, $maxvotesperbug,
                      $votestoconfirm, $defaultmilestone);
     
     print "</TR><TR VALIGN=top>\n";
@@ -734,6 +740,7 @@ if ($action eq 'edit') {
     print "<INPUT TYPE=HIDDEN NAME=\"milestoneurlold\" VALUE=\"" .
         value_quote($milestoneurl) . "\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"disallownewold\" VALUE=\"$disallownew\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"allcancommentold\" VALUE=\"$allcancomment\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"votesperuserold\" VALUE=\"$votesperuser\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"maxvotesperbugold\" VALUE=\"$maxvotesperbug\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"votestoconfirmold\" VALUE=\"$votestoconfirm\">\n";
@@ -853,6 +860,8 @@ if ($action eq 'update') {
     my $descriptionold      = trim($::FORM{descriptionold}      || '');
     my $disallownew         = trim($::FORM{disallownew}         || '');
     my $disallownewold      = trim($::FORM{disallownewold}      || '');
+    my $allcancomment       = trim($::FORM{allcancomment}       || '');
+    my $allcancommentold    = trim($::FORM{allcancommentold}    || '');
     my $milestoneurl        = trim($::FORM{milestoneurl}        || '');
     my $milestoneurlold     = trim($::FORM{milestoneurlold}     || '');
     my $votesperuser        = trim($::FORM{votesperuser}        || 0);
@@ -891,6 +900,14 @@ if ($action eq 'update') {
                  SET disallownew=$disallownew
                  WHERE product=" . SqlQuote($productold));
         print "Updated bug submit status.<BR>\n";
+    }
+
+    if ($allcancomment ne $allcancommentold) {
+        $allcancomment ||= 0;
+        SendSQL("UPDATE products
+                 SET allcancomment=$allcancomment
+                 WHERE product=" . SqlQuote($productold));
+        print "Updated all can comment status.<BR>\n";
     }
 
     if ($description ne $descriptionold) {

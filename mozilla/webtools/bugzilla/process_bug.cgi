@@ -283,7 +283,18 @@ sub CheckCanChangeField {
         return 1;
     }
     if ($f =~ /^longdesc/) {
-        return 1;
+        PushGlobalSQLState();
+        SendSQL("SELECT allcancomment FROM bugs, products " .
+                "WHERE bug_id = $bugid AND products.product = bugs.product");
+        my ($allcancomment) = (FetchSQLData());
+        PopGlobalSQLState();
+        if ($allcancomment) {
+            return 1;
+        }
+        SendSQL("UNLOCK TABLES");
+        ThrowUserError("You tried to comment on this bug,
+                        but only the owner or submitter of the bug, or a 
+                        sufficiently empowered user, may add a comment.");
     }
     if ($f eq "resolution") { # always OK this.  if they really can't,
         return 1;             # it'll flag it when "status" is checked.
@@ -936,6 +947,9 @@ foreach my $id (@idlist) {
             CheckCanChangeField($col, $id, $oldvalues[$i], $::FORM{$col});
         }
         $i++;
+    }
+    if (defined $::FORM{'comment'} && !($::FORM{'comment'} =~ /^\s*$/)) {
+            CheckCanChangeField('longdesc', $id, '', 'dummy');
     }
     if ($requiremilestone) {
         my $value = $::FORM{'target_milestone'};

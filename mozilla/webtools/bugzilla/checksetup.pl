@@ -1462,6 +1462,7 @@ $table{products} =
     description mediumtext,
     milestoneurl tinytext not null,
     disallownew tinyint not null,
+    allcancomment tinyint not null default 1,
     votesperuser smallint not null,
     maxvotesperbug smallint not null default 10000,
     votestoconfirm smallint not null,
@@ -3175,6 +3176,8 @@ if (GetFieldDef("profiles", "groupset")) {
     DropField('bugs','groupset');
     DropField('groups','bit');
 }
+AddField('products', 'allcancomment', 
+        'tinyint not null default 1');
 
 if(-e "data/params") {
     require "data/params";
