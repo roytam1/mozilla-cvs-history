@@ -39,6 +39,7 @@ ClientSourceProductUnix -a MozillaCommon MozillaUnixOnly
 MozillaCommon -a \
     ns/LEGAL  \
     ns/LICENSE  \
+    ns/CHANGELOG  \
     ns/build  \
     ns/include  \
     ns/jpeg  \
