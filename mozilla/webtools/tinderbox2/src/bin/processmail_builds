@@ -860,6 +860,9 @@ sub parse_mail_body {
   # calling the symbolic reference to the function continually.  This
   # is also how we check that the function exists.
 
+    my $func_line_type = '';
+    my $func_parse_errorline = "";
+
     my ($out, $func);
 
     $func = "Error_Parse::$TINDERBOX{'errorparser'}::line_type";
@@ -871,9 +874,6 @@ sub parse_mail_body {
     $out = eval "\$func_parse_errorline = \\&${func};";
     ($@) &&
         die("Errorparser is not set. $@");
-
-    my $func_line_type = '';
-    my $func_parse_errorline = "";
 
   open(BINARY, ">$TMP_FILE{'binaryfile'}") ||
     die("Could not write to file: '$TMP_FILE{'binaryfile'}'. $!\n");
