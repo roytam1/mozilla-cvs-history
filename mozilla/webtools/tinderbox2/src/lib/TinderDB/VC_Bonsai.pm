@@ -414,9 +414,16 @@ sub status_table_row {
 
   }
 
+  if (defined($DATABASE{$tree}{$next_time}{'treestate'})) {
+      $LAST_TREESTATE = $DATABASE{$tree}{$next_time}{'treestate'};
+  }
+
   # Do we need a multiline empty cell or do we have data?
 
-  if  ( $next_time < $row_times->[$row_index] ) {
+  if  (
+       ( $next_time < $row_times->[$row_index] ) ||
+       (!(defined($DATABASE{$tree}{$next_time}{'author'})))
+       ) {
       
       # now convert the break time to a rowspan.
 
@@ -465,7 +472,7 @@ sub status_table_row {
 
     $NEXT_DB++;
 
-    if ($DATABASE{$tree}{$time}{'treestate'}) {
+    if (defined($DATABASE{$tree}{$time}{'treestate'})) {
       $LAST_TREESTATE = $DATABASE{$tree}{$time}{'treestate'};
     }
 
