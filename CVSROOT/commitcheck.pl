@@ -151,6 +151,9 @@ $super{'78'} = ['srinivas%netscape.com','larryh%netscape.com','wtc%netscape.com'
 $mode{'159'} = 'Open';
 $branch{'159'} = 'HEAD';
 $fullname{'159'} = 'NSS Trunk';
+$mode{'162'} = 'Open';
+$branch{'162'} = 'HEAD';
+$fullname{'162'} = 'P3P';
 $mode{'111'} = 'Open';
 $branch{'111'} = 'HEAD';
 $fullname{'111'} = 'PerlConnect';
@@ -355,6 +358,7 @@ if (m:^mozilla/uriloader/.*$:) {return '158';}
 if (m:^mozilla/string/.*$:) {return '160';}
 if (m:^mozilla/gfx/src/qt/.*$:) {return '161';}
 if (m:^mozilla/widget/src/qt/.*$:) {return '161';}
+if (m:^mozilla/extensions/p3p/.*$:) {return '162';}
 }
 if ($b eq 'NSPRPUB_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
