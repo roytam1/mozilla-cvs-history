@@ -1223,22 +1223,25 @@ $table{user_group_map} =
     'user_id mediumint not null,
      group_id mediumint not null,
      canbless smallint default 0,
-    
-     index(user_id)';
+
+     unique(user_id, group_id),    
+     index(group_id)';
 
 # This table determines which groups have permission to see a bug
 $table{bug_group_map} =
     'bug_id mediumint not null,
      group_id mediumint not null,
 
-     index(bug_id)';
+     unique(bug_id, group_id),
+     index(group_id)';
 
 # This table determines which groups may report bugs against a product
 $table{product_group_map} =
     'product_id mediumint not null,
      group_id mediumint not null,
 
-     index(product_id)';
+     unique(product_id, group_id),
+     index(group_id)';
 
 ###########################################################################
 # Create tables
