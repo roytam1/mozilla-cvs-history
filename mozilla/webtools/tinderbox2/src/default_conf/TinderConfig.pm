@@ -103,6 +103,12 @@ $ERROR_LOG = "/var/log/tinderbox2/tinderbox2.log";
 # Where the daemon mode lock (for all trees) is placed
 $LOCK_FILE = $TINDERBOX_HTML_DIR."/tinderd.lock";
 
+# Where to place file containing pid, this file makes writing
+# /etc/rc.d/inid.d scripts easier and its naming and location are OS
+# specific. 
+
+$PID_DIR = "/var/run/";
+
 # The time between auto refreshes for all pages in seconds.
 
 $REFRESH_TIME = (60 * 15);

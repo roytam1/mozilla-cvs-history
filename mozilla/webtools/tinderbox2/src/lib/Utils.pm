@@ -121,6 +121,15 @@ sub set_static_vars {
   $LOCK_FILE = ( $TinderConfig::LOCK_FILE ||
                  "/usr/apache/cgibin/webtools/tinderbox/tinderd.lock");
 
+  # Where to place file containing pid, this file makes writing
+  # /etc/rc.d/inid.d scripts easier and its naming and location are OS
+  # specific.
+
+  $PID_DIR = ( $TinderConfig::PID_DIR ||
+                "/var/run/");
+
+  $PID_FILE= "$PID_DIR/$PROGRAM.pid";
+
   # the time between auto refreshes for all pages in seconds.
   
   $REFRESH_TIME = ( $TinderConfig::REFRESH_TIME || 
@@ -398,6 +407,7 @@ sub fatal_error {
   # we have trouble removing the file we we will be exiting anyway.
 
   unlink ($LOCK_FILE);
+  unlink ($PID_FILE);
 
 
   print "Content-type: text/html\n\n";
