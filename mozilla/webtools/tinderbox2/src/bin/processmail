@@ -308,6 +308,11 @@ sub set_filenames{
     ("$FileStructure::URLS{'gunzip'}?".
      "tree=$tree&full-log=$main::UID");
 
+  # record the basename of the log file
+
+  $TINDERBOX{'full-log'} = File::Basename::basename($FILE{'full-log'});
+  $TINDERBOX{'brief-log'} = File::Basename::basename($FILE{'brief-log'});
+  
   return 1;
 }
 
@@ -1043,9 +1048,6 @@ sub assemble_files {
       die("Could not close file: '$TMP_FILE{'errorpick'}'.\n");
     
   }
-  
-  $TINDERBOX{'full-log'} = File::Basename::basename($FILE{'full-log'});
-  $TINDERBOX{'brief-log'} = File::Basename::basename($FILE{'brief-log'});
   
   if( 
      ($TINDERBOX{'binaryname'}) && 
