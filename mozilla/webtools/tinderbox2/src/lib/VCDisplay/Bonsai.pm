@@ -73,7 +73,7 @@ $VERSION = '#tinder_version#';
 
 # this is how we create a URL to the various CGI programs.
 
-# If you your using VCDisplay:Bonsai we need to know how to make HMTL
+# If you your using VCDisplay:Bonsai we need to know how to make HTML
 # to point o the bonsai CGI programs.
 
 $BONSAI_URL = ( $TinderConfig::BONSAI_URL || 

@@ -230,7 +230,7 @@ $PersistenceImpl = (
                    );
 
 
-# If you your using VCDisplay:Bonsai we need to know how to make HMTL
+# If you your using VCDisplay:Bonsai we need to know how to make HTML
 # to point to the bonsai CGI programs.
 
 $BONSAI_URL = "http://tinderbox.mozilla.org/bonsai";
@@ -241,7 +241,7 @@ $BONSAI_URL = "http://tinderbox.mozilla.org/bonsai";
 $BONSAI_DIR = "/home/httpd/cgi-bin/bonsai";
 
 
-# If you your using BT_Generic we need to know how to make HMTL
+# If you your using BT_Generic we need to know how to make HTML
 # to point to the bug tracking CGI programs.
 
 $BT_URL	= 'http://bugzilla.mozilla.org/';
