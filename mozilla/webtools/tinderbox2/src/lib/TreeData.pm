@@ -243,6 +243,6 @@ sub get_all_trees {
   @out = sort (keys %VC_TREE);
 
   return @out;
-
 }
 
+1;
