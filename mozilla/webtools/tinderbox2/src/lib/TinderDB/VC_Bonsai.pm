@@ -417,6 +417,7 @@ sub status_table_row {
    return @outrow;
   }
     
+  my $time = $row_times->[$row_index];
   if (defined($DATABASE{$tree}{$time}{'treestate'})) {
       $LAST_TREESTATE = $DATABASE{$tree}{$time}{'treestate'};
   }
@@ -454,7 +455,12 @@ sub status_table_row {
 
 
   while (!(
-         is_break_cell($tree,$DB_TIMES[$next_index],$DB_TIMES[$next_index+1],$LAST_TREESTATE)
+         is_break_cell(
+                       $tree,
+                       $DB_TIMES[$next_index],
+                       $DB_TIMES[$next_index+1],
+                       $LAST_TREESTATE,
+                       )
          )) {
       $next_index++;
 
@@ -465,9 +471,9 @@ sub status_table_row {
   # Do we need a multiline empty cell or do we have data?
 
   if ( 
-       (defined($DATABASE{$tree}{$next_time}{'author'})) &&
-       ($next_time < $row_times->[$row_index] ) &&
-       1) {
+       (!(defined($DATABASE{$tree}{$next_time}{'author'}))) ||
+       ($next_time < $row_times->[$row_index] )
+       ) {
       
       # now convert the break time to a rowspan.
 
@@ -709,6 +715,18 @@ sub status_table_row {
                "\t</td>\n".
                "");
     
+  } else {
+
+      # I should not need to put some arbitrary single empty cell here
+      # at the bottom, but I think this is prudent to have one.
+
+      push @outrow, ("\t<!-- VC_Bonsai: catchall-skipping, ".
+                     "should not get here. ".
+                     "tree: $tree, ".
+                     "additional_skips: ".
+                     ($NEXT_ROW{$tree} -  $row_index).", ".
+                     "previous_end: ".localtime($current_rec->{'timenow'}).", ".
+                     " -->\n");
   }
 
   return @outrow; 
