@@ -100,43 +100,32 @@ sub PutTrailer (@)
 unless ($action) {
     PutHeader("Edit Groups","Edit Groups","This lets you edit the groups available to put users in.");
 
-    print "<form method=post action=editgroups.cgi>\n";
     print "<table border=1>\n";
     print "<tr>";
     print "<th>Name</th>";
     print "<th>Description</th>";
     print "<th>User RegExp</th>";
-    print "<th>Active</th>";
+    print "<th>Use For Bugs</th>";
     print "<th>Type</th>";
     print "<th>Action</th>";
     print "</tr>\n";
 
-    SendSQL("SELECT group_id,name,description,userregexp,isactive,isbuggroup " .
+    SendSQL("SELECT id,name,description,userregexp,isactive,isbuggroup " .
             "FROM groups " .
             "ORDER BY isbuggroup, name");
 
     while (MoreSQLData()) {
         my ($groupid, $name, $desc, $regexp, $isactive, $isbuggroup) = FetchSQLData();
         print "<tr>\n";
-        if ($isbuggroup == 0 ) {
-            print "<td>$name</td>\n";
-            print "<td>$desc</td>\n";
-            print "<td><input size=30 name=\"regexp-$groupid\" value=\"$regexp\">\n";
-            print "<input type=hidden name=\"oldregexp-$groupid\" value=\"$regexp\"></td>\n";
-            print "<td>&nbsp</td>";
-            print "<td>";
-            print "system";
-        } else {
-            print "<td><input size=20 name=\"name-$groupid\" value=\"$name\">\n";
-            print "<input type=hidden name=\"oldname-$groupid\" value=\"$name\"></td>\n";
-            print "<td><input size=40 name=\"desc-$groupid\" value=\"$desc\">\n";
-            print "<input type=hidden name=\"olddesc-$groupid\" value=\"$desc\"></td>\n";
-            print "<td><input size=30 name=\"regexp-$groupid\" value=\"$regexp\">\n";
-            print "<input type=hidden name=\"oldregexp-$groupid\" value=\"$regexp\"></td>\n";
-            print "<td><input type=\"checkbox\" name=\"isactive-$groupid\" value=\"1\"" . ($isactive ? " checked" : "") . ">\n";
-            print "<input type=hidden name=\"oldisactive-$groupid\" value=\"$isactive\"></td>\n";
-            print "<td>user</td>\n";
-        }
+        print "<td>$name</td>\n";
+        print "<td>$desc</td>\n";
+        print "<td>$regexp&nbsp</td>\n";
+        print "<td align=center>";
+        print "X" if $isactive;
+        print "&nbsp</td>\n";
+        print "<td> &nbsp ";
+        print (($isbuggroup == 0 ) ? "system" : "user"); 
+        print "&nbsp</td>\n";
         print "<td align=center valign=middle>
                <a href=\"editgroups.cgi?action=changeform&group=$groupid\">Edit</a>";
         print " | <a href=\"editgroups.cgi?action=del&group=$groupid\">Delete</a>" if ($isbuggroup != 0);
@@ -148,9 +137,6 @@ unless ($action) {
     print "<td><a href=\"editgroups.cgi?action=add\">Add Group</a></td>\n";
     print "</tr>\n";
     print "</table>\n";
-    print "<input type=hidden name=\"action\" value=\"update\">";
-    print "<input type=submit value=\"Submit changes\">\n";
-
     print "<p>";
     print "<b>Name</b> is what is used with the UserInGroup() function in any
 customized cgi files you write that use a given group.  It can also be used by
@@ -161,13 +147,12 @@ to others in the same group.<p>";
     print "<b>User RegExp</b> is optional, and if filled in, will automatically
 grant membership to this group to anyone creating a new account with an
 email address that matches this regular expression.<p>";
-    print "The <b>Active</b> flag determines whether or not the group is active.
+    print "The <b>Use For Bugs</b> flag determines whether or not the group is eligable to be used for bugs.
 If you deactivate a group it will no longer be possible for users to add bugs
 to that group, although bugs already in the group will remain in the group.
 Deactivating a group is a much less drastic way to stop a group from growing
 than deleting the group would be as well as way to maintain lists of users without cluttering the lists of groups used for bug restrictions.<p>";
     print "The <b>Type</b> field identifies system groups.<p>";  
-    print "</form>\n";
 
     PutFooter();
     exit;
@@ -191,38 +176,70 @@ if ($action eq 'changeform') {
         exit;
     }
 
-    SendSQL("SELECT group_id, name, description, userregexp
-             FROM groups WHERE group_id=" . SqlQuote($gid));
-    my ($group_id, $name, $description, $rexp) = FetchSQLData();
-
-    print "<P> 
-           <B>Group:</B> $name <P>
-           <B>Description:</B> $description <P>
-           <B>User Regexp:</B> \"$rexp\" <P>
-           <BR>
-           In addition to the users explicitly included in this group 
-           and users matching the regular expression listed 
-           above, users who are members members of other groups can be 
-           included by including the other groups in this group. <P>\n";
+    SendSQL("SELECT id, name, description, userregexp, isactive, isbuggroup
+             FROM groups WHERE id=" . SqlQuote($gid));
+    my ($group_id, $name, $description, $rexp, $isactive, $isbuggroup) 
+        = FetchSQLData();
 
     print "<FORM METHOD=POST ACTION=editgroups.cgi>\n";
+    print "<TABLE BORDER=1 CELLPADDING=4>";
+    print "<TR><TH>Group:</TH><TD>";
+    if ($isbuggroup == 0) {
+        print "$name";
+    } else {
+        print "<INPUT TYPE=HIDDEN NAME=\"oldname\" VALUE=$name>
+        <INPUT NAME=\"name\" VALUE=\"$name\">";
+    }
+    print "</TD></TR><TR><TH>Description:</TH><TD>";
+    if ($isbuggroup == 0) {
+        print "$description";
+    } else {
+        print "<INPUT TYPE=HIDDEN NAME=\"olddesc\" VALUE=\"$description\">
+        <INPUT NAME=\"desc\" VALUE=\"$description\">";
+    }
+    print "</TD></TR><TR>
+           <TH>User Regexp:</TH><TD>";
+    print "<INPUT TYPE=HIDDEN NAME=\"oldrexp\" VALUE=\"$rexp\">
+           <INPUT SIZE=40 NAME=\"rexp\" VALUE=\"$rexp\"></TD></TR>";
+    if ($isbuggroup == 1) {
+        print "<TR><TH>Use For Bugs:</TH><TD>
+        <SELECT NAME=\"isactive\">
+          <OPTION VALUE=0 " . (($isactive == 0) ? "selected" : "") . ">no</OPTION>
+          <OPTION VALUE=1 " . (($isactive == 1) ? "selected" : "") . ">yes</OPTION>
+        </SELECT>
+        <INPUT TYPE=HIDDEN NAME=\"oldisactive\" VALUE=$isactive>
+        </TD>
+        </TR>";
+    }
+    print "</TABLE>
+           <BR>
+           Users become members of this group in one of three ways:
+           <BR>
+           - by being explicity included when the user is edited
+           <BR>
+           - by matching the user regexp above
+           <BR>
+           - by being a member of one of the groups included in this group
+           by checking the boxes  
+           below. <P>\n";
+
     print "<TABLE>";
     print "<TR><TD COLSPAN=4>Members of these groups can grant membership to this group</TD></TR>";
     print "<TR><TD ALIGN=CENTER>|</TD><TD COLSPAN=3>Members of these groups are included in this group</TD></TR>";
     print "<TR><TD ALIGN=CENTER>|</TD><TD ALIGN=CENTER>|</TD><TD COLSPAN=2></TD><TR>";
-    SendSQL("SELECT groups.group_id, groups.name, groups.description,
+    SendSQL("SELECT groups.id, groups.name, groups.description,
              ISNULL(group_group_map.child_id) = 0, 
              ISNULL(B.child_id) = 0
              FROM groups
              LEFT JOIN group_group_map 
-             ON group_group_map.child_id = groups.group_id
+             ON group_group_map.child_id = groups.id
              AND group_group_map.parent_id = $group_id
              AND group_group_map.isbless = 0
              LEFT JOIN group_group_map as B
-             ON B.child_id = groups.group_id
+             ON B.child_id = groups.id
              AND B.parent_id = $group_id
              AND B.isbless = 1
-             WHERE groups.group_id != $group_id ORDER by name");
+             WHERE groups.id != $group_id ORDER by name");
 
     while (MoreSQLData()) {
         my ($grpid, $grpnam, $grpdesc, $grpmember, $blessmember) = FetchSQLData();
@@ -264,7 +281,7 @@ if ($action eq 'add') {
     print "<th>New Name</th>";
     print "<th>New Description</th>";
     print "<th>New User RegExp</th>";
-    print "<th>Active</th>";
+    print "<th>Use For Bugs</th>";
     print "</tr><tr>";
     print "<td><input size=20 name=\"name\"></td>\n";
     print "<td><input size=40 name=\"desc\"></td>\n";
@@ -283,7 +300,7 @@ may not contain any spaces.<p>";
     print "<b>Description</b> is what will be shown in the bug reports to
 members of the group where they can choose whether the bug will be restricted
 to others in the same group.<p>";
-    print "The <b>Active</b> flag determines whether or not the group is active.
+    print "The <b>Use For Bugs</b> flag determines whether or not the group is eligable to be used for bugs.
 If you deactivate a group it will no longer be possible for users to add bugs
 to that group, although bugs already in the group will remain in the group.
 Deactivating a group is a much less drastic way to stop a group from growing
@@ -384,7 +401,7 @@ if ($action eq 'del') {
         PutFooter();
         exit;
     }
-    SendSQL("SELECT group_id FROM groups WHERE group_id=" . SqlQuote($gid));
+    SendSQL("SELECT id FROM groups WHERE id=" . SqlQuote($gid));
     if (!FetchOneColumn()) {
         ShowError("That group doesn't exist.<BR>" .
                   "Click the <b>Back</b> button and try again.");
@@ -393,7 +410,7 @@ if ($action eq 'del') {
     }
     SendSQL("SELECT name,description " .
             "FROM groups " .
-            "WHERE group_id = " . SqlQuote($gid));
+            "WHERE id = " . SqlQuote($gid));
 
     my ($name, $desc) = FetchSQLData();
     print "<table border=1>\n";
@@ -522,7 +539,7 @@ if ($action eq 'delete') {
     SendSQL("DELETE FROM user_group_map WHERE group_id = $gid");
     SendSQL("DELETE FROM group_group_map WHERE parent_id = $gid");
     SendSQL("DELETE FROM bug_group_map WHERE group_id = $gid");
-    SendSQL("DELETE FROM groups WHERE group_id = $gid");
+    SendSQL("DELETE FROM groups WHERE id = $gid");
     print "<B>Group $gid has been deleted.</B><BR>";
 
 
@@ -543,8 +560,30 @@ if ($action eq 'postchanges') {
         PutFooter();
         exit;
     }
-
+    SendSQL("SELECT isbuggroup FROM groups WHERE id = $gid");
+    my ($isbuggroup) = FetchSQLData();
     my $chgs = 0;
+    if (($isbuggroup == 1) && ($::FORM{"oldname"} ne $::FORM{"name"})) {
+        $chgs = 1;
+        SendSQL("UPDATE groups SET name = " . 
+            SqlQuote($::FORM{"name"}) . " WHERE id = $gid");
+    }
+    if (($isbuggroup == 1) && ($::FORM{"olddesc"} ne $::FORM{"desc"})) {
+        $chgs = 1;
+        SendSQL("UPDATE groups SET description = " . 
+            SqlQuote($::FORM{"desc"}) . " WHERE id = $gid");
+    }
+    if ($isbuggroup && ($::FORM{"oldrexp"} ne $::FORM{"rexp"})) {
+        $chgs = 1;
+        SendSQL("UPDATE groups SET userregexp = " . 
+            SqlQuote($::FORM{"rexp"}) . " WHERE id = $gid");
+    }
+    if (($isbuggroup == 1) && ($::FORM{"oldisactive"} ne $::FORM{"isactive"})) {
+        $chgs = 1;
+        SendSQL("UPDATE groups SET isactive = " . 
+            SqlQuote($::FORM{"isactive"}) . " WHERE id = $gid");
+    }
+    
     print "Checking....";
     foreach my $b (grep(/^oldgrp-\d*$/, keys %::FORM)) {
         if (defined($::FORM{$b})) {
@@ -590,108 +629,14 @@ if ($action eq 'postchanges') {
         print "You didn't change anything!<BR>\n";
         print "If you really meant it, hit the <B>Back</B> button and try again.<p>\n";
     } else {
-        SendSQL("UPDATE groups SET group_when = NOW() WHERE group_id = $gid");
+        SendSQL("UPDATE groups SET group_when = NOW() WHERE id = $gid");
         print "Done.<p>\n";
     }
     PutTrailer("<a href=editgroups.cgi>Back to the group list</a>");
     exit;
 }
 
-#
-# action='update' -> update the groups
-#
 
-if ($action eq 'update') {
-    PutHeader("Updating groups");
-
-    my $chgs = 0;
-
-    foreach my $b (grep(/^name-\d*$/, keys %::FORM)) {
-        if ($::FORM{$b}) {
-            my $v = substr($b, 5);
-            if ($::FORM{"oldname-$v"} ne $::FORM{"name-$v"}) {
-                $chgs = 1;
-                SendSQL("SELECT name FROM groups WHERE name=" .
-                         SqlQuote($::FORM{"name-$v"}));
-                if (!FetchOneColumn()) {
-                    SendSQL("SELECT name FROM groups WHERE name=" .
-                             SqlQuote($::FORM{"oldname-$v"}) .
-                             " && isbuggroup = 0");
-                    if (FetchOneColumn()) {
-                        ShowError("You cannot update the name of a " .
-                                  "system group. Skipping $v");
-                    } else {
-                        SendSQL("UPDATE groups SET name=" .
-                                SqlQuote($::FORM{"name-$v"}) .
-                                " WHERE group_id=" . SqlQuote($v));
-                        print "Group $v name updated.<br>\n";
-                    }
-                } else {
-                    ShowError("Duplicate name '" . $::FORM{"name-$v"} .
-                              "' specified for group $v.<BR>" .
-                              "Update of group $v name skipped.");
-                }
-            }
-            if ($::FORM{"olddesc-$v"} ne $::FORM{"desc-$v"}) {
-                $chgs = 1;
-                SendSQL("SELECT description FROM groups WHERE description=" .
-                         SqlQuote($::FORM{"desc-$v"}));
-                if (!FetchOneColumn()) {
-                    SendSQL("UPDATE groups SET description=" .
-                            SqlQuote($::FORM{"desc-$v"}) .
-                            " WHERE group_id=" . SqlQuote($v));
-                    print "Group $v description updated.<br>\n";
-                } else {
-                    ShowError("Duplicate description '" . $::FORM{"desc-$v"} .
-                              "' specified for group $v.<BR>" .
-                              "Update of group $v description skipped.");
-                }
-            }
-            if ($::FORM{"oldregexp-$v"} ne $::FORM{"regexp-$v"}) {
-                if (!eval {qr/$::FORM{"regexp-$v"}/}) {
-                    ShowError("The regular expression you entered is invalid. " .
-                              "Please click the <b>Back</b> button and try again.");
-                    PutFooter();
-                    exit;
-                }
-                $chgs = 1;
-                SendSQL("UPDATE groups SET userregexp=" .
-                        SqlQuote($::FORM{"regexp-$v"}) .
-                        " , group_when = NOW() " .
-                        " WHERE group_id=" . SqlQuote($v));
-                print "Group $v user regexp updated.<br>\n";
-            }
-            # convert an undefined value in the inactive field to zero
-            # (this occurs when the inactive checkbox is not checked 
-            # and the browser does not send the field to the server)
-            my $isactive = $::FORM{"isactive-$v"} || 0;
-            if ($::FORM{"oldisactive-$v"} != $isactive) {
-                $chgs = 1;
-                if ($isactive == 0 || $isactive == 1) {
-                    SendSQL("UPDATE groups SET isactive=$isactive, " .
-                            " group_when = NOW() " .
-                            " WHERE group_id=" . SqlQuote($v));
-                    print "Group $v active flag updated.<br>\n";
-                } else {
-                    ShowError("The value '" . $isactive .
-                              "' is not a valid value for the active flag.<BR>" .
-                              "There may be a problem with Bugzilla or a bug in your browser.<br>" . 
-                              "Update of active flag for group $v skipped.");
-                }
-            }
-        SendSQL("UPDATE groups SET group_when = NOW()
-                 WHERE group_id=" . SqlQuote($v));
-        }
-    }
-    if (!$chgs) {
-        print "You didn't change anything!<BR>\n";
-        print "If you really meant it, hit the <B>Back</B> button and try again.<p>\n";
-    } else {
-        print "Done.<p>\n";
-    }
-    PutTrailer("<a href=editgroups.cgi>Back to the group list</a>");
-    exit;
-}
 
 #
 # No valid action found

@@ -212,16 +212,16 @@ sub show_bug {
     # Groups
     my @groups;
 
-    SendSQL("SELECT DISTINCT groups.group_id, name, description, 
+    SendSQL("SELECT DISTINCT groups.id, name, description, 
              ISNULL(bug_group_map.group_id) = 0,
              ISNULL(user_group_map.group_id) = 0,
              isactive
              FROM groups 
              LEFT JOIN bug_group_map 
-             ON bug_group_map.group_id = groups.group_id
+             ON bug_group_map.group_id = groups.id
              AND bug_id = $bug{'bug_id'}
              LEFT JOIN user_group_map 
-             ON user_group_map.group_id = groups.group_id
+             ON user_group_map.group_id = groups.id
              AND user_id = $::userid
              AND isbless = 0
              WHERE isbuggroup = 1");

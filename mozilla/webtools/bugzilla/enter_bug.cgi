@@ -332,15 +332,15 @@ $default{'bug_status'} = $status[0];
 my $group_id = '0';
 
 if(Param("usebuggroups") && GroupExists($product)) {
-    SendSQL("SELECT group_id FROM groups ".
+    SendSQL("SELECT id FROM groups ".
             "WHERE name = " . SqlQuote($product) . 
             " AND isbuggroup = 1");
     ($group_id) = FetchSQLData();
 }
 
-SendSQL("SELECT DISTINCT groups.group_id, groups.name, groups.description " .
+SendSQL("SELECT DISTINCT groups.id, groups.name, groups.description " .
         "FROM groups, user_group_map " .
-        "WHERE user_group_map.group_id = groups.group_id " .
+        "WHERE user_group_map.group_id = groups.id " .
         "AND user_group_map.user_id = $::userid " .
         "AND isbless = 0 " .
         "AND isbuggroup = 1 AND isactive = 1 ORDER BY description");

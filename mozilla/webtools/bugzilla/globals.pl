@@ -833,7 +833,7 @@ sub DeriveGroup {
             "AND isbless = 0 AND isderived = 1");
 
     my %groupsadded = ();
-    SendSQL("SELECT group_id, userregexp FROM groups WHERE userregexp != ''");
+    SendSQL("SELECT id, userregexp FROM groups WHERE userregexp != ''");
     while (MoreSQLData()) {
         my ($groupid, $rexp) = FetchSQLData();
         if ($login =~ m/$rexp/i) {        
@@ -1311,8 +1311,8 @@ sub SqlQuote {
 sub UserInGroup {
     my ($groupname) = (@_);
     PushGlobalSQLState();
-    SendSQL("SELECT groups.group_id FROM groups, user_group_map 
-        WHERE groups.group_id = user_group_map.group_id 
+    SendSQL("SELECT groups.id FROM groups, user_group_map 
+        WHERE groups.id = user_group_map.group_id 
         AND user_group_map.user_id = $::userid
         AND isbless = 0
         AND groups.name = " . SqlQuote($groupname));
@@ -1328,8 +1328,8 @@ sub UserCanBlessGroup {
     my ($groupname) = (@_);
     PushGlobalSQLState();
     # check if user explicitly can bless group
-    SendSQL("SELECT groups.group_id FROM groups, user_group_map 
-        WHERE groups.group_id = user_group_map.group_id 
+    SendSQL("SELECT groups.id FROM groups, user_group_map 
+        WHERE groups.id = user_group_map.group_id 
         AND user_group_map.user_id = $::userid
         AND isbless = 1
         AND groups.name = " . SqlQuote($groupname));
@@ -1341,9 +1341,9 @@ sub UserCanBlessGroup {
     PushGlobalSQLState();
     # check if user is a member of a group that can bless this group
     # this group does not count
-    SendSQL("SELECT groups.group_id FROM groups, user_group_map, 
+    SendSQL("SELECT groups.id FROM groups, user_group_map, 
         group_group_map 
-        WHERE groups.group_id = parent_id 
+        WHERE groups.id = parent_id 
         AND user_group_map.user_id = $::userid
         AND user_group_map.isbless = 0
         AND group_group_map.isbless = 1
@@ -1369,9 +1369,9 @@ sub UserCanBlessAnything {
     }
     PushGlobalSQLState();
     # check if user is a member of a group that can bless this group
-    SendSQL("SELECT groups.group_id FROM groups, user_group_map, 
+    SendSQL("SELECT groups.id FROM groups, user_group_map, 
         group_group_map 
-        WHERE groups.group_id = parent_id 
+        WHERE groups.id = parent_id 
         AND user_group_map.user_id = $::userid
         AND group_group_map.isbless = 1
         AND user_group_map.group_id = child_id");
@@ -1388,7 +1388,7 @@ sub BugInGroup {
     PushGlobalSQLState();
     SendSQL("SELECT bug_group_map.bug_id != 0 FROM bug_group_map, groups 
             WHERE bug_group_map.bug_id = $bugid
-            AND bug_group_map.group_id = groups.group_id
+            AND bug_group_map.group_id = groups.id
             AND groups.name = " . SqlQuote($groupname));
     my $bugingroup = FetchOneColumn();
     PopGlobalSQLState();
@@ -1428,7 +1428,7 @@ sub GroupExists {
 sub GroupNameToId {
     my ($groupname) = (@_);
     PushGlobalSQLState();
-    SendSQL("select group_id from groups where name=" . SqlQuote($groupname));
+    SendSQL("select id from groups where name=" . SqlQuote($groupname));
     my $id = FetchOneColumn();
     PopGlobalSQLState();
     return $id;
@@ -1437,7 +1437,7 @@ sub GroupNameToId {
 sub GroupIdToName {
     my ($groupid) = (@_);
     PushGlobalSQLState();
-    SendSQL("select name from groups where group_id = $groupid");
+    SendSQL("select name from groups where id = $groupid");
     my $name = FetchOneColumn();
     PopGlobalSQLState();
     return $name;
@@ -1451,7 +1451,7 @@ sub GroupIsActive {
     my ($groupid) = (@_);
     $groupid ||= 0;
     PushGlobalSQLState();
-    SendSQL("select isactive from groups where group_id=$groupid");
+    SendSQL("select isactive from groups where id=$groupid");
     my $isactive = FetchOneColumn();
     PopGlobalSQLState();
     return $isactive;

@@ -1438,7 +1438,7 @@ $table{dependencies} =
 # http://bugzilla.mozilla.org/show_bug.cgi?id=75482
 
 $table{groups} =
-   'group_id mediumint not null auto_increment primary key,
+   'id mediumint not null auto_increment primary key,
     name varchar(255) not null,
     description text not null,
     isbuggroup tinyint not null,
@@ -1446,7 +1446,7 @@ $table{groups} =
     userregexp tinytext not null,
     isactive tinyint not null default 1,
 
-    unique(group_id),
+    unique(id),
     unique(name)';
 
 $table{logincookies} =
@@ -1589,14 +1589,14 @@ $table{user_group_map} =
      isbless smallint not null default 0,
      isderived tinyint not null default 0,
 
-     index(user_id, group_id)';
+     unique(user_id, group_id, isderived, isbless)';
 
 $table{group_group_map} =
     'child_id mediumint not null,
      parent_id mediumint not null,
      isbless smallint not null default 0,
 
-     index(child_id)';
+     unique(child_id,parent_id,isbless)';
 
 # This table determines in which groups a user must be a member to have
 # permission to see a bug
@@ -1726,9 +1726,9 @@ AddGroup 'admin',  'Administrators';
 
 #  Add the group_id here because this code is run before the code 
 #  that updates the database structure
-AddField('groups', 'group_id', 'mediumint not null auto_increment primary key');
+AddField('groups', 'id', 'mediumint not null auto_increment primary key');
 if (GetFieldDef('profiles', 'groupset')) {
-    my $sth = $dbh->prepare("SELECT group_id FROM groups 
+    my $sth = $dbh->prepare("SELECT id FROM groups 
                 WHERE name = 'admin'");
     $sth->execute();
     my ($adminid) = $sth->fetchrow_array();
@@ -1749,7 +1749,7 @@ if (GetFieldDef('profiles', 'groupset')) {
             (user_id, group_id, isbless, isderived) 
             VALUES ($userid, $adminid, 1, 0)");
     }
-    $sth = $dbh->prepare("SELECT group_id FROM groups");
+    $sth = $dbh->prepare("SELECT id FROM groups");
     $sth->execute();
     while ( my ($id) = $sth->fetchrow_array() ) {
         # admins can bless every group
@@ -1980,7 +1980,7 @@ CheckEnumField('bugs', 'rep_platform', @my_platforms);
 
 
 my @groups = ();
-$sth = $dbh->prepare("select group_id from groups");
+$sth = $dbh->prepare("select id from groups");
 $sth->execute();
 while ( my @row = $sth->fetchrow_array() ) {
     push (@groups, $row[0]);
@@ -1996,7 +1996,7 @@ $sth = $dbh->prepare(<<_End_Of_SQL_);
   SELECT user_id
   FROM groups, user_group_map
   WHERE groups.name = 'admin'
-  AND groups.group_id = user_group_map.group_id
+  AND groups.id = user_group_map.group_id
 _End_Of_SQL_
 $sth->execute;
 
@@ -2155,7 +2155,7 @@ _End_Of_SQL_
         }
     }
     # the admin also gets an explicit bless capability for the admin group
-    my $sth = $dbh->prepare("SELECT group_id FROM groups 
+    my $sth = $dbh->prepare("SELECT id FROM groups 
                 WHERE name = 'admin'");
     $sth->execute();
     my ($id) = $sth->fetchrow_array();
@@ -2177,7 +2177,7 @@ $sth = $dbh->prepare(<<_End_Of_SQL_);
   SELECT user_id
   FROM groups, user_group_map
   WHERE groups.name = 'admin'
-  AND groups.group_id = user_group_map.group_id
+  AND groups.id = user_group_map.group_id
 _End_Of_SQL_
 $sth->execute;
 my ($adminuid) = $sth->fetchrow_array;
@@ -3133,7 +3133,7 @@ if (GetFieldDef("profiles", "groupset")) {
     AddField('profiles', 'profile_when', 'datetime not null');
     AddField('profiles', 'refreshed_when', 'datetime not null');
 
-    $sth = $dbh->prepare("SELECT bit, group_id FROM groups
+    $sth = $dbh->prepare("SELECT bit, id FROM groups
                 WHERE bit > 0");
     $sth->execute();
     while (my ($bit, $gid) = $sth->fetchrow_array) {

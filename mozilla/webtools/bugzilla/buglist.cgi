@@ -216,10 +216,10 @@ sub GetGroupsByUserId {
     return if !$userid;
 
     SendSQL("
-        SELECT  groups.group_id, name, description, isactive
+        SELECT  groups.id, name, description, isactive
           FROM  groups, user_group_map
          WHERE  user_id = $userid AND isbless = 0 
-           AND  user_group_map.group_id = groups.group_id
+           AND  user_group_map.group_id = groups.id
            AND  isbuggroup = 1
       ORDER BY  description ");
 

@@ -536,7 +536,7 @@ sub GetUserInfo {
     $user{'canblessany'} = UserCanBlessAnything();
 
     SendSQL("SELECT name FROM groups, user_group_map " .
-            "WHERE groups.group_id = user_group_map.group_id " .
+            "WHERE groups.id = user_group_map.group_id " .
             "AND user_id = $userid " .
             "AND isbless = 0");
     while (MoreSQLData()) {
