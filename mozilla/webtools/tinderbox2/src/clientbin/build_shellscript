@@ -576,7 +576,7 @@ sub slow_build_speed {
   my ($sleep_time) = 0;
 
   if ($actual_build_seconds < $minimum_build_seconds) {
-    $sleep_time = $actual_build_seconds - $minimum_build_seconds;
+    $sleep_time = $minimum_build_seconds - $actual_build_seconds;
   }
 
   sleep($sleep_time);
