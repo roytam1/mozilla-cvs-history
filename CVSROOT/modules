@@ -276,21 +276,30 @@ RaptorAll -a \
 	RaptorDist  \
 	Raptor
 
+#####################################################################
+# Module for the Normandy landing.
+
+NormandyBeach -a \
+	MozillaSource \
+	mozilla/lib/libaddr \
+	mozilla/lib/libmsg
+
 #######################################################################
 # Modules for the Directory SDK.  There are two users of the libldap
 # Mozilla and the DirectorySDK
- 
+
 DirectorySDKSource -a \
-       DirectorySDKSourceCommon \
-       DirectorySDKSourceBuild
- 
+	DirectorySDKSourceCommon \
+	DirectorySDKSourceBuild
+
 DirectorySDKSourceCommon -a \
-       mozilla/directory/ldapsdk.mak \
-       mozilla/directory/ldapsdk.mk \
-       mozilla/directory/buildsdk.txt \
-       mozilla/directory/Makefile \
-       mozilla/directory/c-sdk
- 
+	mozilla/directory/ldapsdk.mak \
+	mozilla/directory/ldapsdk.mk \
+	mozilla/directory/buildsdk.txt \
+	mozilla/directory/Makefile \
+	mozilla/directory/c-sdk
+
 DirectorySDKSourceBuild -a \
-       mozilla/cmd/winfe/mkfiles32 \
-       mozilla/config
+	mozilla/cmd/winfe/mkfiles32 \
+	mozilla/config
+
