@@ -100,10 +100,6 @@ sub initBug  {
 
 
   $self->{'whoid'} = $user_id;
-  &::SendSQL("SELECT groupset FROM profiles WHERE userid=$self->{'whoid'}");
-  my $usergroupset = &::FetchOneColumn();
-  if (!$usergroupset) { $usergroupset = '0' }
-  $self->{'usergroupset'} = $usergroupset;
 
   my $query = "
     select
@@ -116,7 +112,7 @@ sub initBug  {
     where bugs.bug_id = $bug_id
     group by bugs.bug_id";
 
-  &::SendSQL(&::SelectVisible($query, $user_id, $usergroupset));
+  &::SendSQL(&::SelectVisible($query, $user_id));
   my @row;
 
   if (@row = &::FetchSQLData()) {
@@ -135,7 +131,7 @@ sub initBug  {
         $count++;
     }
   } else {
-    &::SendSQL("select groupset from bugs where bug_id = $bug_id");
+    &::SendSQL("select bug_id from bug_group_map where bug_id = $bug_id");
     if (@row = &::FetchSQLData()) {
       $self->{'bug_id'} = $bug_id;
       $self->{'error'} = "NotPermitted";
