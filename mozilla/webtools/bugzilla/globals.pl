@@ -668,6 +668,7 @@ sub InsertNewUser {
     $username = SqlQuote($username);
     $realname = SqlQuote($realname);
     $cryptpassword = SqlQuote($cryptpassword);
+    PushGlobalSQLState();
     SendSQL("INSERT INTO profiles (login_name, realname, cryptpassword) 
              VALUES ($username, $realname, $cryptpassword)");
     PopGlobalSQLState();
