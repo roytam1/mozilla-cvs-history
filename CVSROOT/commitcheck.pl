@@ -100,9 +100,6 @@ $fullname{'123'} = 'Mail/News';
 $mode{'124'} = 'Open';
 $branch{'124'} = 'HEAD';
 $fullname{'124'} = 'MIME';
-$mode{'76'} = 'Open';
-$branch{'76'} = 'HEAD';
-$fullname{'76'} = 'MIMELib';
 $mode{'112'} = 'Restricted';
 $branch{'112'} = 'HEAD';
 $fullname{'112'} = 'Mozilla Tools';
@@ -256,7 +253,6 @@ if (m:^mozilla/js/src/.*$:) {return '70';}
 if (m:^mozilla/js/jsd/.*$:) {return '71';}
 if (m:^mozilla/js/jsj/.*$:) {return '72';}
 if (m:^mozilla/cck/.*$:) {return '108';}
-if (m:^mozilla/lib/libmime/.*$:) {return '76';}
 if (m:^mozilla/network/.*$:) {return '77';}
 if (m:^mozilla/nsprpub/.*$:) {return '78';}
 if (m:^mozilla/lib/libpics/.*$:) {return '80';}
