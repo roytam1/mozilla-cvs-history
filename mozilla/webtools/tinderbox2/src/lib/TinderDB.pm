@@ -835,6 +835,19 @@ return a list of all the times where an even occured.
 
 =back
 
+=over 4
+
+=item B<notice_association>
+
+return a list of all the columns which users can attach notices to.
+This is important for companies like Netscape where they do not have a
+notice column but they attach comments to individual builds which are
+not green.
+
+
+
+=back
+
 =head1 AUTHOR
 
 Ken Estes (kestes@staff.mail.com)
