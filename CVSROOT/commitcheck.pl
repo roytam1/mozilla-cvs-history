@@ -208,6 +208,9 @@ $fullname{'121'} = 'Xlib-based gfx + widget';
 $mode{'88'} = 'Open';
 $branch{'88'} = 'HEAD';
 $fullname{'88'} = 'XML';
+$mode{'141'} = 'Open';
+$branch{'141'} = 'HEAD';
+$fullname{'141'} = 'xmlterm';
 $mode{'90'} = 'Open';
 $branch{'90'} = 'HEAD';
 $fullname{'90'} = 'XP File Handling';
@@ -329,6 +332,7 @@ if (m:^mozilla/java/webclient/.*$:) {return '127';}
 if (m:^mozilla/java/dom/.*$:) {return '130';}
 if (m:^mozilla/java/fe/.*$:) {return '131';}
 if (m:^mozilla/java/util/.*$:) {return '133';}
+if (m:^mozilla/extensions/xmlterm/.*$:) {return '141';}
 }
 return '';
 }
