@@ -44,6 +44,7 @@
 # Load the tinderbox specific libraries
 use lib '#tinder_libdir#';
 
+use TinderConfig;
 use Utils;
 use HTMLPopUp;
 
@@ -145,7 +146,7 @@ foreach $tree (@TREES) {
 
 $out = <<EOF;
 
-\$record = {
+\$r = {
 		'tree' => '$tree',
 		'mailaddr' => '$mailaddr',
 		'rendered_notice' => '$rendered_notice', 
