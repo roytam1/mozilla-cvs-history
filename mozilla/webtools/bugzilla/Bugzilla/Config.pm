@@ -30,11 +30,11 @@ package Bugzilla::Config;
 
 =head1 NAME
 
-Bugzilla::Config - Configuration paramaters for Bugzilla
+Bugzilla::Config - Configuration parameters for Bugzilla
 
 =head1 SYNOPSIS
 
-  # Getting paramaters
+  # Getting parameters
   use Bugzilla::Config;
 
   my $fooSetting = Param('foo');
@@ -130,7 +130,11 @@ sub _load_datafiles {
 _load_datafiles();
 
 # Load in the param defintions
-do 'defparams.pl';
+unless (my $ret = do 'defparams.pl') {
+    die "Couldn't parse defparams.pl: $@" if $@;
+    die "Couldn't do defparams.pl: $!" unless defined $ret;
+    die "Couldn't run defparams.pl" unless $ret;
+}
 
 # Stick the params into a hash
 my %params;
@@ -168,7 +172,7 @@ sub Param {
 
 =item C<GetParamList()>
 
-Returns the list of known paramater types, from defparams.pl. Users should not
+Returns the list of known parameter types, from defparams.pl. Users should not
 rely on this method; it is intended for editparams/doeditparams only
 
 The format for the list is specified in defparams.pl

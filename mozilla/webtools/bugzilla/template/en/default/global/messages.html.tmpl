@@ -45,14 +45,8 @@
     also bookmark the result of any individual query.
 
   [% ELSIF message_tag == "buglist_new_named_query" %]
-    OK, you have a new query named <code>[% queryname FILTER html %]</code>."
+    OK, you have a new query named <code>[% queryname FILTER html %]</code>.
 
-  [% ELSIF message_tag == "buglist_parameters_required" %]
-    [% title = "Parameters Required" %]
-    [% url   = "query.cgi" %]
-    [% link  = "Please use the search form to specify some search criteria." %]
-    This script is not meant to be invoked without any search terms.
-   
   [% ELSIF message_tag == "buglist_query_gone" %]
     [% title = "Query is gone" %]
     [% link  = "Go back to the query page." %]
@@ -194,53 +188,6 @@
     [% title = "Bugzilla Login Changed" %]
     Your Bugzilla login has been changed.
 
-  [% ELSIF message_tag == "page_not_found" %]
-    [% title = "Page not found" %]
-    The page you requested cannot be found.
-
-  [% ELSIF message_tag == "milestone_required" %]
-    [% title = "Milestone Required" %]
-    You must determine a target milestone for bug [% bug_id %]
-    if you are going to accept it.  Part of accepting 
-    a bug is giving an estimate of when it will be fixed.
-
-  [% ELSIF message_tag == "missing_email_type" %]
-    [% title = "Your Query Makes No Sense" %]
-    You must specify one or more fields in which to search for
-    <tt>[% email %]</tt>.
-    
-  [% ELSIF message_tag == "need_component" %]
-    [% title = "Component Required" %]
-    You must specify a component to help determine the new owner of these bugs.                            
-  [% ELSIF message_tag == "need_product" %]
-    [% title = "Product Required" %]
-    You must specify a product to help determine the new owner of these bugs.                 
-  [% ELSIF message_tag == "no_bugs_chosen" %]
-    [% title = "No Bugs Chosen" %]
-    You apparently didn't choose any bugs to modify.
-
-  [% ELSIF message_tag == "no_dupe_stats" %]
-    [% title = "Cannot Find Duplicate Statistics" %]
-    There are no duplicate statistics for today ([% today %]) or yesterday.
-    
-  [% ELSIF message_tag == "no_dupe_stats_error_today" %]
-    [% title = "Error Reading Today's Dupes File" %]
-    An error occurred opening today's dupes file: [% error_msg FILTER html %].
-
-  [% ELSIF message_tag == "no_dupe_stats_error_whenever" %]
-    [% title = "Error Reading Previous Dupes File" %]
-    An error occurred opening $changedsince days ago ($whenever)'s dupes file:
-    [% error_msg FILTER html %].
-     
-  [% ELSIF message_tag == "no_dupe_stats_error_yesterday" %]
-    [% title = "Error Reading Yesterday's Dupes File" %]
-    There are no duplicate statistics for today ([% today %]), and an error
-    occurred opening yesterday's dupes file: [% error_msg FILTER html %].
-    
-  [% ELSIF message_tag == "password_changed" %]
-    [% title = "Password Changed" %]
-    Your password has been changed.
-
   [% ELSIF message_tag == "password_change_canceled" %]
     [% title = "Cancel Request to Change Password" %]
     Your request has been cancelled.
@@ -250,25 +197,18 @@
     A token for changing your password has been emailed to you.
     Follow the instructions in that email to change your password.
 
-  [% ELSIF message_tag == "reassign_to_empty" %]
-    [% title = "Illegal Reassignment" %]
-    You cannot reassign to a bug to nobody. Unless you
-    intentionally cleared out the "Reassign bug to" 
-    field, [% Param("browserbugmessage") %]
+  [% ELSIF message_tag == "password_changed" %]
+    [% title = "Password Changed" %]
+    Your password has been changed.
 
   [% ELSIF message_tag == "shutdown" %]
     [% title = "Bugzilla is Down" %]
     [% Param("shutdownhtml") %]
     
-  [% ELSIF message_tag == "unknown_keyword" %]
-    [% title = "Unknown Keyword" %]
-    <code>[% keyword FILTER html %]</code> is not a known keyword. 
-    The legal keyword names are <a href="describekeywords.cgi">listed here</a>.
-    
   [% ELSE %]
     [%# Give sensible error if error functions are used incorrectly.
       #%]        
-    You are using Bugzilla's error-reporting functions incorrectly. You
+    You are using Bugzilla's messaging functions incorrectly. You
     passed in the string '[% message_tag %]'. The correct use is to pass
     in a tag, and define that tag in the file messages.html.tmpl.<br>
     <br>

@@ -1009,7 +1009,7 @@ sub quoteUrls {
 }
 
 # GetBugLink creates a link to a bug, including its title.
-# It takes either two or three paramaters:
+# It takes either two or three parameters:
 #  - The bug number
 #  - The link text, to place between the <a>..</a>
 #  - An optional comment number, for linking to a particular
@@ -1339,7 +1339,7 @@ sub GroupIsActive {
 }
 
 # Determines if the given bug_status string represents an "Opened" bug.  This
-# routine ought to be paramaterizable somehow, as people tend to introduce
+# routine ought to be parameterizable somehow, as people tend to introduce
 # new states into Bugzilla.
 
 sub IsOpenedState {
