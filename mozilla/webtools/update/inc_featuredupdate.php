@@ -38,6 +38,29 @@
 ?>
 
 
+
+<DIV class="contentbox" style="margin-left: 2px; border-color: #E00;">
+<DIV class="boxheader">Firefox 1.0 Released!</DIV>
+<SPAN class="itemdescription">
+<P><IMG SRC="images/product-front-firefox.png" width="112" height="112" alt="" align=left border=0>
+The wait is over. Get Firefox 1.0, the most standards compliant, flexible, and user-centric web-browsing platform on Earth.
+Firefox 1.0 is the culmination of almost 7 years of work by thousands of independent hackers and companies through Mozilla.org,
+and over two years of intense focus on a streamlined browser made for the masses hungry for a better web experience.
+Firefox 1.0 Features include Tabbed Browsing, Smarter Search and FastFind, Hassle-Free Downloading, Live Bookmarks,
+Extension and Theme Support, and more.
+
+</P>
+
+<SPAN style="font-size: 16pt; text-align: center;">
+<a href="http://www.mozilla.org/products/firefox/">Get Firefox 1.0!</a></SPAN><BR>
+
+<a href="http://www.mozilla.org/products/firefox/releases/1.0.html">Firefox Release Notes</a> | <a href="http://www.mozilla.org/press/mozilla-2004-11-09.html">Press Release</a><BR>
+
+
+</SPAN>
+</DIV>
+
+
 <DIV class="contentbox" style="margin-left: 2px; border-color: #00E;">
 <DIV class="boxheader">Thunderbird 0.9 Released!</DIV>
 <SPAN class="itemdescription">
