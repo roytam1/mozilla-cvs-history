@@ -52,7 +52,7 @@ package TinderDB::BT_Generic;
 
 #   $DATABASE{$tree}{$timenow}{$status}{$bug_id} = $record;
 
-# Where $rec is an anonymous hash of name vaule pairs from the bug
+# Where $rec is an anonymous hash of name value pairs from the bug
 # tracking system.
 
 # we also store information in the metadata structure

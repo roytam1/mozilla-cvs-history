@@ -302,12 +302,12 @@ sub build_scripts {
 
 # Each phase must have the following entries:
 
-#	 phase_name: discribes what the phase is.
+#	 phase_name: describes what the phase is.
 
 #	 error_status: the tinderbox status which should be returned
 #	 if the phase fails.
 
-#	 script: a list of shell commands to be exected in order
+#	 script: a list of shell commands to be executed in order
 #	 until one fails (each command in a separate shell, similar to make).
 
 #	 dir: the directory which will be local while the script is

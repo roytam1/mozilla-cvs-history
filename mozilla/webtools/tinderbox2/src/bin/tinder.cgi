@@ -133,10 +133,11 @@ databases.  This requires the user to specify a single tree which the
 page will represent and pass in any additional arguments which the
 user wishes to be different from the defaults.
 
-New data is pushed into the system via administrative web forms and 
-specified format.  Additional data is gathed by having the program
-query the Version Control Software to find any updates which have
-happend recently.
+New data is pushed into the system via administrative web forms and
+via mail which is delivered to the helper program processmail and has
+the specified format.  Additional data is gathered by having the
+program query the Version Control Software to find any updates which
+have happended recently.
 
 Errors are logged to the logfile: $ERROR_LOG
 

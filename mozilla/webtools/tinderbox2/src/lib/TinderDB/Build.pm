@@ -685,7 +685,7 @@ sub debug_database {
 sub status_table_legend {
   my ($out)='';
 
-  # print user defined legend, this is typically all the possible
+  # Print user defined legend, this is typically all the possible
   # links which can be included in a build log.
 
   my $print_legend = BuildStatus::TinderboxPrintLegend();
@@ -1315,7 +1315,7 @@ sub buildcell_links {
     
     # Binary file Link
     my $binary_ref = (
-                      FileStructure::get_filename($tree, build_din_dir) . 
+                      FileStructure::get_filename($tree, build_bin_dir) . 
                       $current_rec->{'binaryname'}
                       );
 

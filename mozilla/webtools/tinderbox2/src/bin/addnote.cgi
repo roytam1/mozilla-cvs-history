@@ -3,7 +3,7 @@
 #
 
 # addnote.cgi - the webform via which users enter notices to be 
-#		 on the tinderbox status page.
+#		 displayed on the tinderbox status page.
 
 
 # $Revision$ 

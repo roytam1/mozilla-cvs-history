@@ -211,7 +211,7 @@ sub chk_security {
   # could cause us problems.
 
   # Check effective uid of the process to see if we have
-  # been configured to run with too much privileges.
+  # been configured to run with too many privileges.
 
   # Ideally we do not want the tinderbox application running with the
   # privileges of a restricted user id (like: root, daemon, bin,
@@ -230,7 +230,7 @@ sub chk_security {
   ( $) == $tinderbox_gid) ||
     die("Security Error. ".
         "Must not run this program using effective group id ".
-        "different than tinderbox group id.".
+        "different than the tinderbox group id.".
         "id: $) must be $tinderbox_gid\n");
 
 
