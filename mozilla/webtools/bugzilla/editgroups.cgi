@@ -310,6 +310,7 @@ if ($action eq 'new') {
     }
     foreach my $userid (@adminlist) {
         SendSQL("INSERT INTO user_group_map VALUES ($userid, $id)");
+        SendSQL("INSERT INTO bless_group_map VALUES ($userid, $id)");
     }
     PutTrailer("<a href=\"editgroups.cgi?action=add\">Add another group</a>",
                "<a href=\"editgroups.cgi\">Back to the group list</a>");
@@ -367,12 +368,12 @@ if ($action eq 'del') {
        print "
 <B>One or more users belong to this group. You cannot delete this group while
 there are users in it.</B><BR>
-<A HREF=\"editusers.cgi?action=list&query=" .
-url_quote("(groupset & $id) OR (blessgroupset & $id)") . "\">Show me which users.</A> - <INPUT TYPE=CHECKBOX NAME=\"removeusers\">Remove all users from
+<A HREF=\"editusers.cgi?action=list&group=$id\">
+Show me which users.</A> - <INPUT TYPE=CHECKBOX NAME=\"removeusers\">Remove all users from
 this group for me<P>
 ";
     }
-    SendSQL("SELECT bug_id FROM bug_group_map WHERE group_id = $id");
+    SendSQL("SELECT bug_id FROM bug_group_map WHERE group_id = $id ORDER BY bug_id");
     if (MoreSQLData()) {
        $cantdelete = 1;
        my $buglist = "0";
@@ -423,8 +424,8 @@ You cannot delete this group while it is tied to a product.</B><BR>
 
 if ($action eq 'delete') {
     PutHeader("Deleting group");
-    my $bit = trim($::FORM{group} || '');
-    unless ($bit) {
+    my $groupid = trim($::FORM{group} || '');
+    unless ($groupid) {
         ShowError("No group specified.<BR>" .
                   "Click the <b>Back</b> button and try again.");
         PutFooter();
@@ -432,33 +433,30 @@ if ($action eq 'delete') {
     }
     SendSQL("SELECT name " .
             "FROM groups " .
-            "WHERE bit = " . SqlQuote($bit));
+            "WHERE group_id = " . SqlQuote($groupid));
     my ($name) = FetchSQLData();
 
     my $cantdelete = 0;
-    my $opblessgroupset = '9223372036854775807'; # This is all 64 bits.
 
-    SendSQL("SELECT userid FROM profiles " .
-            "WHERE (groupset & $opblessgroupset)=$opblessgroupset");
-    my @opusers = ();
-    while (MoreSQLData()) {
-      my ($userid) = FetchSQLData();
-      push @opusers, $userid; # cache a list of the users with admin powers
-    }
-    SendSQL("SELECT login_name FROM profiles WHERE " .
-            "(groupset & $bit)=$bit OR (blessgroupset & $bit)=$bit");
+    SendSQL("SELECT COUNT(user_id) FROM user_group_map WHERE group_id = $groupid");
     if (FetchOneColumn()) {
       if (!defined $::FORM{'removeusers'}) {
         $cantdelete = 1;
       }
     }
-    SendSQL("SELECT bug_id FROM bugs WHERE (groupset & $bit)=$bit");
+    SendSQL("SELECT COUNT(user_id) FROM bless_group_map WHERE group_id = $groupid");
+    if (FetchOneColumn()) {
+      if (!defined $::FORM{'removeusers'}) {
+        $cantdelete = 1;
+      }
+    }
+    SendSQL("SELECT COUNT(bug_id) FROM bug_group_map WHERE group_id = $groupid");
     if (FetchOneColumn()) {
       if (!defined $::FORM{'removebugs'}) {
         $cantdelete = 1;
       }
     }
-    SendSQL("SELECT product FROM products WHERE product=" . SqlQuote($name));
+    SendSQL("SELECT product FROM products WHERE product = " . SqlQuote($name));
     if (FetchOneColumn()) {
       if (!defined $::FORM{'unbind'}) {
         $cantdelete = 1;
@@ -470,40 +468,34 @@ if ($action eq 'delete') {
           "records in the database which refer to it.  All child records " .
           "must be removed or altered to remove the reference to this " .
           "group before the group can be deleted.");
-      print "<A HREF=\"editgroups.cgi?action=del&group=$bit\">" .
+      print "<A HREF=\"editgroups.cgi?action=del&group=$groupid\">" .
             "View the list of which records are affected</A><BR>";
       PutTrailer("<a href=editgroups.cgi>Back to group list</a>");
       exit;
     }
 
-    SendSQL("SELECT login_name,groupset,blessgroupset FROM profiles WHERE " .
-            "(groupset & $bit) OR (blessgroupset & $bit)");
+    SendSQL("SELECT COUNT(user_id) FROM user_group_map " . 
+            "WHERE group_id = $groupid");
     if (FetchOneColumn()) {
-      SendSQL("UPDATE profiles SET groupset=(groupset-$bit) " .
-              "WHERE (groupset & $bit)");
-      print "All users have been removed from group $bit.<BR>";
-      SendSQL("UPDATE profiles SET blessgroupset=(blessgroupset-$bit) " .
-              "WHERE (blessgroupset & $bit)");
-      print "All users with authority to add users to group $bit have " .
-            "had that authority removed.<BR>";
+        SendSQL("DELETE FROM user_group_map WHERE group_id = $groupid");
+        print "All users have been removed from group $groupid.<BR>";
     }
-    SendSQL("SELECT bug_id FROM bugs WHERE (groupset & $bit)");
+    SendSQL("SELECT COUNT(user_id) FROM bless_group_map " .
+            "WHERE group_id = $groupid");
     if (FetchOneColumn()) {
-      SendSQL("UPDATE bugs SET groupset=(groupset-$bit) " .
-              "WHERE (groupset & $bit)");
-      print "All bugs have had group bit $bit cleared.  Any of these " .
+        SendSQL("DELETE FROM bless_group_map WHERE group_id = $groupid");
+        print "All users with authority to add users to group $groupid have " .
+              "had that authority removed.<BR>";
+    }
+    SendSQL("SELECT COUNT(bug_id) FROM bug_group_map WHERE group_id = $groupid");
+    if (FetchOneColumn()) {
+      SendSQL("DELETE FROM bug_group_map WHERE group_id = $groupid");
+      print "All bugs have had group bit $groupid cleared.  Any of these " .
             "bugs that were not also in another group are now " .
             "publicly visible.<BR>";
     }
-    SendSQL("DELETE FROM groups WHERE bit=$bit");
-    print "<B>Group $bit has been deleted.</B><BR>";
-
-    foreach my $userid (@opusers) {
-      SendSQL("UPDATE profiles SET groupset=$opblessgroupset " .
-              "WHERE userid=$userid");
-      print "Group bits restored for " . DBID_to_name($userid) .
-            " (maintainer)<BR>\n";
-    }
+    SendSQL("DELETE FROM groups WHERE group_id = $groupid");
+    print "<B>Group $groupid has been deleted.</B><BR>";
 
     PutTrailer("<a href=editgroups.cgi>Back to group list</a>");
     exit;
@@ -529,19 +521,16 @@ if ($action eq 'update') {
 
             if ($::FORM{"oldname-$v"} ne $::FORM{"name-$v"}) {
                 $chgs = 1;
-                SendSQL("SELECT name FROM groups WHERE name=" .
-                         SqlQuote($::FORM{"name-$v"}));
+                SendSQL("SELECT name FROM groups WHERE name = " . SqlQuote($::FORM{"name-$v"}));
                 if (!FetchOneColumn()) {
-                    SendSQL("SELECT name FROM groups WHERE name=" .
-                             SqlQuote($::FORM{"oldname-$v"}) .
-                             " && isbuggroup = 0");
+                    SendSQL("SELECT name FROM groups WHERE name = " . SqlQuote($::FORM{"oldname-$v"}) . 
+                            " AND isbuggroup = 0");
                     if (FetchOneColumn()) {
                         ShowError("You cannot update the name of a " .
                                   "system group. Skipping $v");
                     } else {
-                        SendSQL("UPDATE groups SET name=" .
-                                SqlQuote($::FORM{"name-$v"}) .
-                                " WHERE bit=" . SqlQuote($v));
+                        SendSQL("UPDATE groups SET name = " . SqlQuote($::FORM{"name-$v"}) .
+                                " WHERE group_id = " . SqlQuote($v));
                         print "Group $v name updated.<br>\n";
                     }
                 } else {
@@ -552,12 +541,10 @@ if ($action eq 'update') {
             }
             if ($::FORM{"olddesc-$v"} ne $::FORM{"desc-$v"}) {
                 $chgs = 1;
-                SendSQL("SELECT description FROM groups WHERE description=" .
-                         SqlQuote($::FORM{"desc-$v"}));
+                SendSQL("SELECT description FROM groups WHERE description = " . SqlQuote($::FORM{"desc-$v"}));
                 if (!FetchOneColumn()) {
-                    SendSQL("UPDATE groups SET description=" .
-                            SqlQuote($::FORM{"desc-$v"}) .
-                            " WHERE bit=" . SqlQuote($v));
+                    SendSQL("UPDATE groups SET description = " . SqlQuote($::FORM{"desc-$v"}) .
+                            " WHERE group_id = " . SqlQuote($v));
                     print "Group $v description updated.<br>\n";
                 } else {
                     ShowError("Duplicate description '" . $::FORM{"desc-$v"} .
@@ -567,9 +554,9 @@ if ($action eq 'update') {
             }
             if ($::FORM{"oldregexp-$v"} ne $::FORM{"regexp-$v"}) {
                 $chgs = 1;
-                SendSQL("UPDATE groups SET userregexp=" .
+                SendSQL("UPDATE groups SET userregexp = " .
                         SqlQuote($::FORM{"regexp-$v"}) .
-                        " WHERE bit=" . SqlQuote($v));
+                        " WHERE group_id = " . SqlQuote($v));
                 print "Group $v user regexp updated.<br>\n";
             }
             # convert an undefined value in the inactive field to zero
@@ -579,8 +566,8 @@ if ($action eq 'update') {
             if ($::FORM{"oldisactive-$v"} != $isactive) {
                 $chgs = 1;
                 if ($isactive == 0 || $isactive == 1) {
-                    SendSQL("UPDATE groups SET isactive=$isactive" .
-                            " WHERE bit=" . SqlQuote($v));
+                    SendSQL("UPDATE groups SET isactive = $isactive " .
+                            "WHERE group_id = " . SqlQuote($v));
                     print "Group $v active flag updated.<br>\n";
                 } else {
                     ShowError("The value '" . $isactive .

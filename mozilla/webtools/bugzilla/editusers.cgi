@@ -304,28 +304,34 @@ if ($action eq 'list') {
     my $query = "";
     my $matchstr = $::FORM{'matchstr'};
     if (exists $::FORM{'matchtype'}) {
-      $query = "SELECT login_name,realname,disabledtext " .
-          "FROM profiles WHERE login_name ";
-      if ($::FORM{'matchtype'} eq 'substr') {
-          $query .= "like";
-          $matchstr = '%' . $matchstr . '%';
-      } elsif ($::FORM{'matchtype'} eq 'regexp') {
-          $query .= "regexp";
-          $matchstr = '.'
+        $query = "SELECT login_name,realname,disabledtext " .
+                 "FROM profiles " .
+                 "WHERE login_name ";
+        if ($::FORM{'matchtype'} eq 'substr') {
+            $query .= "like";
+            $matchstr = '%' . $matchstr . '%';
+        } elsif ($::FORM{'matchtype'} eq 'regexp') {
+            $query .= "regexp";
+            $matchstr = '.'
                 unless $matchstr;
-      } elsif ($::FORM{'matchtype'} eq 'notregexp') {
-          $query .= "not regexp";
-          $matchstr = '.'
+        } elsif ($::FORM{'matchtype'} eq 'notregexp') {
+            $query .= "not regexp";
+            $matchstr = '.'
                 unless $matchstr;
-      } else {
-          die "Unknown match type";
-      }
-      $query .= SqlQuote($matchstr) . " ORDER BY login_name";
+        } else {
+            die "Unknown match type";
+        }
+        $query .= SqlQuote($matchstr) . " ORDER BY login_name";
     } elsif (exists $::FORM{'query'}) {
-      $query = "SELECT login_name,realname,disabledtext " .
-          "FROM profiles WHERE " . $::FORM{'query'} . " ORDER BY login_name";
+        $query = "SELECT login_name,realname,disabledtext " .
+                 "FROM profiles WHERE " . $::FORM{'query'} . " ORDER BY login_name";
+    } elsif (exists $::FORM{'group'}) {
+        $query = "SELECT login_name,realname,disabledtext " .
+                 "FROM profiles, user_group_map " . 
+                 "WHERE profiles.userid = user_group_map.user_id " . 
+                 "AND user_group_map.group_id = " . $::FORM{'group'} . " ORDER BY login_name";
     } else {
-      die "Missing parameters";
+        die "Missing parameters";
     }
 
     SendSQL($query);
@@ -703,7 +709,7 @@ if ($action eq 'edit') {
     # get data of user
     SendSQL("SELECT userid, realname, disabledtext
          FROM profiles
-         WHERE login_name=" . SqlQuote($user));
+         WHERE login_name = " . SqlQuote($user));
     my ($userid, $realname, $disabledtext) = FetchSQLData();
     
       # find out which groups belong to
