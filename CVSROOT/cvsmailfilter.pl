@@ -3,6 +3,8 @@
 
 # Arguments:
 #
+# -a Only send checkin messages which contain added files.  All other checkin
+#    messages will be ignored. 
 # -u <url>   Base URL for the Bonsai directory; "/cvsview2.cgi" will get 
 #     appended to this with appropriate args.
 # -h <hostname>    Host whose SMTP server we will contact to send mail.
@@ -44,6 +46,7 @@ sub get_response_code {
 
 
 my $debug = 0;
+my $addsonly = 0;
 
 my $mailhost = "127.0.0.1";
 my $urlbase = "";
@@ -69,6 +72,8 @@ while (@ARGV) {
         $cvsargs = shift @ARGV;
     } elsif ($arg eq '-f') {
         $fileregexp = shift @ARGV;
+    } elsif ($arg eq '-a') {
+        $addsonly = 1;
     } else {
         push(@mailto, $arg);
     }
@@ -89,6 +94,7 @@ if ($urlbase ne "" && $cvsargs ne "") {
 }
 
 my $message = "";
+my $filesadded = 0;
 while (<>) {
     my $line = $_;
     if ($line =~ m@^Revision/Branch: (.*)$@) {
@@ -96,7 +102,19 @@ while (<>) {
             $url .= "&branch=$1";
         }
     }
+    # if we see that files have been added on this checkin, remember that fact
+    #
+    if ($line =~ m@^Added Files:@) {
+        $filesadded = 1;
+    }
+
     $message .= $line;
+}
+
+# bail out if this is an adds-only run and no files have been added
+#
+if ($addsonly == 1 && $filesadded == 0 ) {
+    exit 0;
 }
 
 if ($url ne "") {
