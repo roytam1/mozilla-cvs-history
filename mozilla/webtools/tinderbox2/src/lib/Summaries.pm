@@ -110,6 +110,7 @@ sub summary_pages {
                       'panel',
                       'express',   
 		      'hdml',
+                      'jspanel',
                       
 # these summary function have not been debugged yet, I just took the
 # source from the previous Tinderbox
@@ -430,6 +431,41 @@ sub panel {
 
   $footer = "</body>\n</html>\n";
   $extension = 'html';
+
+  return ($header, $body, $footer, $extension);
+}
+
+sub jspanel {
+  my ($header, $body, $footer, $extension) = ();
+  my $temp;
+
+  $header = "";
+  $body = 'var status = "';
+
+  $temp .= HTMLPopUp::Link(
+                           "linktxt"=> ("$TREE is $TREE_STATE".
+                                        " as of $HTML_TIME"),
+                           "href"=>(FileStructure::get_filename($TREE, 
+                                                                 'tree_URL').
+                                     "/$FileStructure::DEFAULT_HTML_PAGE"),
+                     );
+  $temp =~ s/\"/\'/g;
+  $body .= $temp;
+
+  $body .= "<table border=0 cellpadding=1 cellspacing=1>";
+  for ($i=0; $i <= $#BUILD_NAMES; $i++) {
+    my ($buildname) = $BUILD_NAMES[$i];
+    my ($color) = $HTML_COLORS[$i];
+    $body .= "<tr><td class='tinderbuild' bgcolor='$color'>$buildname</td></tr>";
+  }
+
+  $body .= "</table>";
+
+  ## end the js
+  $body .= '";';
+
+  $footer = "\n";
+  $extension = 'js';
 
   return ($header, $body, $footer, $extension);
 }
