@@ -106,7 +106,7 @@ if ($::FORM{'assigned_to'} eq "") {
 my @bug_fields = ("product", "version", "rep_platform",
                   "bug_severity", "priority", "op_sys", "assigned_to",
                   "bug_status", "bug_file_loc", "short_desc", "component",
-                  "target_milestone");
+                  "target_milestone", "resolution");
 
 if (Param("useqacontact")) {
     SendSQL("select initialqacontact from components where program=" .
@@ -117,6 +117,8 @@ if (Param("useqacontact")) {
         $::FORM{'qa_contact'} = $qacontact;
         push(@bug_fields, "qa_contact");
     }
+} else {
+    $::FORM{'qa_contact'} = "0";
 }
 
 if (exists $::FORM{'bug_status'}) {
@@ -200,7 +202,11 @@ $comment = trim($comment);
 # OK except for the fact that it causes e-mail to be suppressed.
 $comment = $comment ? $comment : " ";
 
-$query .= "$::userid, now(), (0";
+if ($::driver eq 'mysql') {
+    $query .= "$::userid, now(), (0";
+} elsif ($::driver eq 'Pg') {
+    $query .= "$::userid, now(), (int8(0)";
+}
 
 foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
     if ($::FORM{$b}) {
@@ -223,8 +229,11 @@ foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
 }
 
 
-
-$query .= ") & $::usergroupset)\n";
+if ($::driver eq 'mysql') {
+    $query .= ") & $::usergroupset)\n";
+} elsif ($::driver eq 'Pg') {
+    $query .= " & int8($::usergroupset)))\n";
+}
 
 
 my %ccids;
@@ -243,8 +252,7 @@ if (defined $::FORM{'cc'}) {
 
 SendSQL($query);
 
-SendSQL("select LAST_INSERT_ID()");
-my $id = FetchOneColumn();
+my $id = CurrId("bugs_bug_id_seq");
 
 SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) VALUES " .
         "($id, $::userid, now(), " . SqlQuote($comment) . ")");

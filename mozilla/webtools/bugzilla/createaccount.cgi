@@ -27,6 +27,7 @@ use diagnostics;
 use strict;
 
 require "CGI.pl";
+require "globals.pl";
 
 # Shut up misguided -w warnings about "used only once":
 
