@@ -43,8 +43,30 @@
 
 package Persistence;
 
-use Persistence::Dumper;
-#use Persistence::Storable;
+
+
+# Load standard perl libraries
+
+
+# Load Tinderbox libraries
+
+use Utils;
+
+$VERSION = '#tinder_version#';
+
+
+# Pick how you wish to the Tinderbox Persistence to be implemented:
+# Uncomment only one Persistence implementation.
+
+$IMPLS = ( ($TinderConfig::PersistenceImpl) ||
+           (
+            'Persistence::Dumper',
+# storable has not been tested yet
+            # 'Persistence::Storable',
+           )
+         );
+
+main::require_modules($IMPLS);
 
 
 1;

@@ -158,8 +158,15 @@ $VCDisplayImpl = (
 		  #'VCDisplay::Bonsai',
 		 );
 
+$PersistenceImpl = (
+                    'Persistence::Dumper',
+# storable has not been tested yet
+                    # 'Persistence::Storable',
+                   );
+
+
 # If you your using VCDisplay:Bonsai we need to know how to make HMTL
-# to point o the bonsai CGI programs.
+# to point to the bonsai CGI programs.
 
 $BONSAI_URL = "http://tinderbox.mozilla.org/bonsai";
 
