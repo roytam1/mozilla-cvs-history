@@ -26,7 +26,7 @@ $fullname{'183'} = 'calendar';
 $mode{'146'} = 'Restricted';
 $branch{'146'} = 'NSPRPUB_PRE_4_2_CLIENT_BRANCH';
 $fullname{'146'} = 'Client NSPR';
-$blessed{'146'} = ['sdagley%mac.com','mkaply%us.ibm.com','lpham%netscape.com','jje%mac.com','granrose%netscape.com','sfraser%netscape.com',];
+$blessed{'146'} = ['sdagley%mac.com','mkaply%us.ibm.com','lpham%netscape.com','jje%mac.com','granrose%netscape.com','smfr%smfr.org',];
 $super{'146'} = ['wchang0222%aol.com','seawood%netscape.com','darin%meer.net','cls%seawood.org','bryner%brianryner.com','leaf%mozilla.org',];
 $mode{'96'} = 'Open';
 $branch{'96'} = 'HEAD';
@@ -178,7 +178,7 @@ $fullname{'122'} = 'News';
 $mode{'78'} = 'Restricted';
 $branch{'78'} = 'HEAD';
 $fullname{'78'} = 'NSPR';
-$blessed{'78'} = ['sdagley%mac.com','gerv%gerv.net','sfraser%netscape.com',];
+$blessed{'78'} = ['sdagley%mac.com','gerv%gerv.net','smfr%smfr.org',];
 $super{'78'} = ['srinivas%netscape.com','seawood%netscape.com','darin%meer.net','cls%seawood.org','bryner%brianryner.com','wchang0222%aol.com',];
 $mode{'163'} = 'Restricted';
 $branch{'163'} = 'NSS_3_3_BRANCH';
@@ -310,28 +310,6 @@ $fullname{'93'} = 'Zlib';
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'HEAD') {
-if (m:^mozilla/modules/zlib/.*$:) {return '93';}
-if (m:^gfx/src/xprint$:) {return '179';}
-if (m:^mozilla/view/.*$:) {return '96';}
-if (m:^mozilla/layout/base/.*$:) {return '98';}
-if (m:^mozilla/layout/build/.*$:) {return '98';}
-if (m:^mozilla/layout/doc/.*$:) {return '98';}
-if (m:^mozilla/layout/html/.*$:) {return '98';}
-if (m:^mozilla/layout/macbuild/.*$:) {return '98';}
-if (m:^mozilla/layout/tools/.*$:) {return '98';}
-if (m:^modules/libpr0n/decoders/mng/.*$:) {return '155';}
-if (m:^mozilla/modules/libimg/mng/.*$:) {return '155';}
-if (m:^mozilla/content/html/style/.*$:) {return '100';}
-if (m:^mozilla/content/shared/.*$:) {return '100';}
-if (m:^mozilla/embedding/.*$:) {return '101';}
-if (m:^mozilla/webshell/.*$:) {return '101';}
-if (m:^mozilla/parser/htmlparser$:) {return '102';}
-if (m:^mozilla/content/base/.*$:) {return '103';}
-if (m:^mozilla/content/events/.*$:) {return '103';}
-if (m:^mozilla/content/html/content/.*$:) {return '103';}
-if (m:^mozilla/content/html/document/.*$:) {return '103';}
-if (m:^mozilla/dom/.*$:) {return '103';}
-if (m:^mozilla/js/rhino/.*$:) {return '138';}
 if (m:^mozilla/xpfe/.*$:) {return '137';}
 if (m:^mozilla/js/tests$:) {return '114';}
 if (m:^js/src/perlconnect$:) {return '111';}
@@ -452,6 +430,28 @@ if (m:^mozilla/extensions/xmlextras/.*$:) {return '88';}
 if (m:^mozilla/parser/expat/.*$:) {return '88';}
 if (m:^mozilla/xpcom/.*$:) {return '89';}
 if (m:^xpcom/io$:) {return '90';}
+if (m:^mozilla/modules/zlib/.*$:) {return '93';}
+if (m:^gfx/src/xprint$:) {return '179';}
+if (m:^mozilla/view/.*$:) {return '96';}
+if (m:^mozilla/layout/base/.*$:) {return '98';}
+if (m:^mozilla/layout/build/.*$:) {return '98';}
+if (m:^mozilla/layout/doc/.*$:) {return '98';}
+if (m:^mozilla/layout/html/.*$:) {return '98';}
+if (m:^mozilla/layout/macbuild/.*$:) {return '98';}
+if (m:^mozilla/layout/tools/.*$:) {return '98';}
+if (m:^modules/libpr0n/decoders/mng/.*$:) {return '155';}
+if (m:^mozilla/modules/libimg/mng/.*$:) {return '155';}
+if (m:^mozilla/content/html/style/.*$:) {return '100';}
+if (m:^mozilla/content/shared/.*$:) {return '100';}
+if (m:^mozilla/embedding/.*$:) {return '101';}
+if (m:^mozilla/webshell/.*$:) {return '101';}
+if (m:^mozilla/parser/htmlparser$:) {return '102';}
+if (m:^mozilla/content/base/.*$:) {return '103';}
+if (m:^mozilla/content/events/.*$:) {return '103';}
+if (m:^mozilla/content/html/content/.*$:) {return '103';}
+if (m:^mozilla/content/html/document/.*$:) {return '103';}
+if (m:^mozilla/dom/.*$:) {return '103';}
+if (m:^mozilla/js/rhino/.*$:) {return '138';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
