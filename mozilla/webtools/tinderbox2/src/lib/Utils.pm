@@ -170,6 +170,7 @@ sub get_env {
 # set_static_vars) so that the error environment is setup incase of
 # problems.
 
+  umask 0022; 
   $| = 1;
   $PROGRAM = File::Basename::basename($0);
   $TIME = time();
