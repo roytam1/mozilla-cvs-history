@@ -178,7 +178,9 @@ sub EmitFormElements ($$$$)
                 }
                 $checked = ($checked) ? "CHECKED" : "";
                 print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"group_$groupid\" $checked VALUE=\"$groupid\"></TD>";
-                print "<TD><B>" . ucfirst($name) . "</B>: $description</TD>\n";
+                print "<TD><B>";
+                print '*' if ($isderived);
+                print ucfirst($name) . "</B>: $description</TD>\n";
                 }
             }
         }
@@ -686,8 +688,9 @@ if ($action eq 'edit') {
         value_quote($disabledtext) . "\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"update\">\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Update\">\n";
-    print "<BR>User is a member of any groups shown with grey bars as a result
-    of a regular expression match or membership in another group.<BR>";
+    print "<BR>* User is a member of any groups shown with grey bars and
+           marked with an asterisk as a result of a regular expression match 
+           or membership in another group.<BR>";
 
     print "</FORM>";
 
