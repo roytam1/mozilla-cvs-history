@@ -463,6 +463,7 @@ print "
 
 SendSQL("SELECT groups.group_id, groups.name, groups.description " .
         "FROM groups, user_group_map " .
+        "WHERE groups.group_id = user_group_map.group_id " . 
         "AND user_group_map.user_id = $userid " . 
         "AND isbuggroup != 0 AND isactive = 1 ORDER BY description");
 # We only print out a header bit for this section if there are any
