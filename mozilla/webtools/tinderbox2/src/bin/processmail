@@ -45,6 +45,7 @@ use File::Basename;
 use Sys::Hostname;
 use File::stat;
 use Getopt::Long;
+use Time::Local;
 
 # Tinderbox libraries
 use lib '#tinder_libdir#';
