@@ -1,9 +1,18 @@
+# -*- Mode: perl; indent-tabs-mode: nil -*-
+
 
 # $Revision$ 
 # $Date$ 
 # $Author$ 
 # $Source$ 
 # $Name$ 
+
+
+
+# BuildStatus.pm - the definitions of the various types of build
+# results and what action should be taken with each result.  Users can
+# customize their tinderbox to call pagers when certain events happen
+# or change the names/colors of the build events.
 
 
 # The contents of this file are subject to the Mozilla Public
