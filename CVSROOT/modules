@@ -564,6 +564,7 @@ SeaMonkeyCore -a \
 	mozilla/modules/oji \
 	mozilla/modules/plugin \
 	mozilla/modules/security/freenav \
+	mozilla/modules/staticmod \
 	mozilla/modules/zlib \
 	mozilla/nav-java \
 	mozilla/network \
