@@ -156,7 +156,7 @@ sub have_vers {
   my ($pkg, $wanted, $optional) = @_;
   my ($msg, $vnum, $vstr);
   no strict 'refs';
-  printf("checking for %s %s ", $pkg, !$wanted?'(any)':"(v$wanted)");
+  printf("checking for %s %s", $pkg, !$wanted?'(any)':"(v$wanted)");
 
   eval { my $p; ($p = $pkg . ".pm") =~ s!::!/!g; require $p; };
 
@@ -191,7 +191,9 @@ sub have_vers {
   }
 
   my $vok = (vers_cmp($vnum,$wanted) > -1);
-  output ((($vok) ? "ok: " : " "), "$vstr\n") unless $silent;
+  $svok = " ok: " if ($vok == 1);
+  $svok = ": " if ($vok == 0);
+  output ($svok."$vstr\n") unless $silent;
   return $vok;
 }
 
