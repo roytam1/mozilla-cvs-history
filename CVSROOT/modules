@@ -88,7 +88,6 @@ MozillaSourceCommon -a \
     mozilla/nsprpub  \
     mozilla/xpcom \
     mozilla/l10n \
-    mozilla/nsprpub \
     mozilla/dbm  \
     README 
 
