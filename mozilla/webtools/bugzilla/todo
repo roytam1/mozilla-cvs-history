@@ -1,0 +1,20 @@
+buglist.cgi
+  barely started
+
+globals.pl
+  lots left to review
+
+query.cgi:
+  Add --- to legal_resolution and target_milestone, why?
+
+look for uses of make_popup
+  -- it hasn't been modified yet
+
+deal with processmail
+  -- merge in use of Net::SMTP from redhat
+
+deal with *.sh
+  -- either take my table changes and integrate with existing scripts or kill and leave one big table creation script
+
+see about new_comment
+  -- it deals with its own data file, why?
