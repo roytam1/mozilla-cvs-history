@@ -1,7 +1,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
-# TinderConfig - 
 
+# TinderConfig - Global configuration file containing the major
+# customizable settings.
 
 
 # $Revision$ 
@@ -198,6 +199,10 @@ $VCDisplayImpl = (
 # files allows great debugging capabilities and Storable, availible
 # from CPAN, which is a much faster binary format.
 
+# If you are worried about security you should use Storable because
+# Dumper uses and Eval to load the new code it is concievable that the
+# code could be forced to perform unwanted actions.
+
 $PersistenceImpl = (
                     'Persistence::Dumper',
                     # 'Persistence::Storable',
@@ -228,6 +233,16 @@ $FULL_LOG_TRIM_DAYS = 7;
 # zero means no, one means yes.
 
 $LOG_PERFORMANCE = 0;
+
+# Define IP addresses/domain names which are allowed to run the
+# administrative functions.
+
+$ADMINISTRATIVE_NETWORK_PAT = ( 
+                                '(^207\.200\.81\..*)|'.
+                                '(mozilla.org$)|'.
+                                '(netscape.com$)|'.
+                                '(^localhost$)'
+                              );
 
 
 1;
