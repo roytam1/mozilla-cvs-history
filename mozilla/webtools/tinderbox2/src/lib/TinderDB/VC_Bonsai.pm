@@ -342,7 +342,9 @@ sub status_table_header {
 
 # Return the data which would appear in a cell if we were to render
 # it.  The checkin data comes back in a datastructure and we return
-# the oldest treestate found in this cell.
+# the oldest treestate found in this cell.  The reason for another
+# data structure is that this one is keyed on authors while the main
+# data structure is keyed on time.
 
 sub cell_data {
     my ($tree, $db_index, $last_time) = @_;
@@ -383,7 +385,7 @@ sub cell_data {
 
 
 
-# produce the HTML which goes with this data.
+# Produce the HTML which goes with the already computed author data.
 
 sub render_authors {
     my ($tree, $last_treestate, $authors, $mindate, $maxdate,) = @_;
@@ -469,12 +471,13 @@ sub render_authors {
                 }
             }
             $table .= "</table>";
-            
-            # This is a Netscape specific CVS/Bonsai issue. Most users do
-            # not have '%' in their CVS names. Do not display the full mail
-            # address in the status column, it takes up too much space.
+
+            # This is a Netscape.com/Mozilla.org specific CVS/Bonsai
+            # issue. Most users do not have '%' in their CVS names. Do
+            # not display the full mail address in the status column,
+            # it takes up too much space.
             # Keep only the user name.
-            
+
             my $display_author=$author;
             $display_author =~ s/\%.*//;
             
@@ -573,7 +576,11 @@ sub render_authors {
     
     return @outrow;
 }
-    
+
+
+# Create one cell (possibly taking up many rows) which will show
+# that no authors have checked in during this time.
+
 sub render_empty_cell {
     my ($last_treestate, $rowspan) = @_;
 
