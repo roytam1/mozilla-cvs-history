@@ -323,7 +323,7 @@ EOF
 
 
 
-sub set_filenames{
+sub set_filenames {
 
   # These are temporary files, used by the mail processsor and will be
   # erased before the program exits.  We use filenames which end in
@@ -417,6 +417,10 @@ sub backward_compatibility {
 
   if ($TINDERBOX{'status'} eq 'busted') {
     $TINDERBOX{'status'} = 'build_failed';
+  }
+
+  if ($TINDERBOX{'status'} eq ' testfailed') {
+    $TINDERBOX{'status'} = ' test_failed';
   }
 
   if ($TINDERBOX{'builddate'}) {
