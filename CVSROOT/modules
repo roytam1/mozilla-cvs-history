@@ -645,6 +645,13 @@ SeaMonkeyEditor -a \
 SeaMonkeyAll -a \
 	SeaMonkeyEditor
 
+Blackwood -a \
+	mozilla/java
+
+SeaMonkeyBlackwood -a \
+	SeaMonkeyAll \
+	Blackwood
+
 #############################################################
 #
 # Alexander Larsson's GTK+ widget for embedding mozilla into
