@@ -307,7 +307,10 @@ RaptorDoc -a \
 	mozilla/README/nglayout
 
 RaptorDist -a \
+	mozilla/configure.in \
+	mozilla/Makefile.in \
 	mozilla/base \
+	mozilla/build \
 	mozilla/config \
 	mozilla/dbm \
 	mozilla/include \
