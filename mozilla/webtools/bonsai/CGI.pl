@@ -77,16 +77,6 @@ sub url_encode2 {
     return $s;
 }
 
-sub url_encode3 {
-    my ($s) = @_;
-
-    $s =~ s/\n/\%0a/g;
-    $s =~ s/\r//g;
-    $s =~ s/\"/\%22/g;
-    $s =~ s/\+/\%2b/g;
-    return $s;
-}
-
 ##
 ##  Routines to generate html as part of Bonsai
 ##
