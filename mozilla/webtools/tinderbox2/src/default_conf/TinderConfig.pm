@@ -98,7 +98,7 @@ $GLOBAL_INDEX_FILE = "index.html";
 
 # Error log filename:
 
-$ERROR_LOG = "/var/log/tinderbox2/log";
+$ERROR_LOG = "/var/log/tinderbox2/tinderbox2.log";
   
 # Where the daemon mode lock (for all trees) is placed
 $LOCK_FILE = $TINDERBOX_HTML_DIR."/tinderd.lock";
