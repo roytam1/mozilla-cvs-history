@@ -185,7 +185,7 @@ sub get_build_names  {
     
     $build_obj->loadtree_db($tree);
     
-    @build_names = sort $build_obj->all_build_names($tree);
+    @build_names = TinderDB::Build::all_build_names($tree);
   };
 
   return @build_names;

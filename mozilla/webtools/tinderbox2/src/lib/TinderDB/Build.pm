@@ -194,6 +194,8 @@ sub build_names {
 # The admin tree program needs to know all the build names so it can
 # set ignore_builds.
 
+# note that the admintree.cgi program calls this function directly.
+
 sub all_build_names {
   my ($tree) = (@_);
   
