@@ -131,6 +131,9 @@ $branch{'136'} = 'HEAD';
 $fullname{'136'} = 'Locked-Content';
 $blessed{'136'} = [];
 $super{'136'} = ['hyatt%mozilla.org',];
+$mode{'176'} = 'Open';
+$branch{'176'} = 'HEAD';
+$fullname{'176'} = 'Mac-Based GFX and Widget';
 $mode{'123'} = 'Open';
 $branch{'123'} = 'HEAD';
 $fullname{'123'} = 'Mail/News';
@@ -428,6 +431,8 @@ if (m:^mozilla/modules/plugin/.*$:) {return '81';}
 if (m:^mozilla/gfx/src/windows/.*$:) {return '175';}
 if (m:^mozilla/widget/src/windows/.*$:) {return '175';}
 if (m:^mozilla/modules/libpref/.*$:) {return '82';}
+if (m:^mozilla/gfx/src/mac/.*$:) {return '176';}
+if (m:^mozilla/widget/src/mac/.*$:) {return '176';}
 if (m:^mozilla/modules/progress/.*$:) {return '83';}
 if (m:^mozilla/modules/libreg/.*$:) {return '84';}
 if (m:^mozilla/modules/security/.*$:) {return '86';}
