@@ -30,7 +30,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 /* Default shell to use.  */
 #if defined(NETSCAPE)
-char default_shell[] = "shmsdos";
+char default_shell[] = "sh.exe";
 #else
 char default_shell[] = "/bin/sh";
 #endif
@@ -1471,8 +1471,7 @@ exec_command (argv, envp)
 			     "logout", "set", "umask", "wait", "while", "for",
 			     "case", "if", ":", ".", "break", "continue",
 			     "export", "read", "readonly", "shift", "times",
-			     "trap", "switch", "mkdir", "echo", "cp", "rm",
-			     "touch", "nsinstall", "test", "mv", 0 };
+			     "trap", "switch", "test", 0 };
 #else
   static char sh_chars[] = "#;\"*?[]&|<>(){}$`^";
   static char *sh_cmds[] = { "cd", "eval", "exec", "exit", "login",

@@ -1921,8 +1921,8 @@ print_version ()
  * #define BUILD_NUMBER 19970918
  */
 
-#define DEFAULT_SHELL "shmsdos"
-#define BUILD_NUMBER 19980324
+#define DEFAULT_SHELL "sh.exe"
+#define BUILD_NUMBER 19980501
 
 #if defined(DEFAULT_SHELL) && defined(BUILD_NUMBER)
 
