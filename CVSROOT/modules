@@ -497,6 +497,8 @@ NSPR -a \
 	mozilla/nsprpub
 
 SeaMonkeyCore -a \
+	mozilla/README/nglayout \
+	mozilla/build/mac \
 	mozilla/client.mk \
 	mozilla/client.mak \
 	mozilla/configure.in \
@@ -514,6 +516,12 @@ SeaMonkeyCore -a \
 	mozilla/js \
 	mozilla/lib/liblayer \
 	mozilla/lib/libpwcac \
+	mozilla/lib/mac/MacMemoryAllocator \
+	mozilla/lib/mac/Misc \
+	mozilla/lib/mac/MoreFiles \
+	mozilla/lib/mac/NSRuntime \
+	mozilla/lib/mac/NSStdLib \
+	mozilla/lib/mac/PowerPlant \
 	mozilla/lib/xp \
 	mozilla/modules/libimg \
 	mozilla/modules/libpref \
@@ -544,6 +552,13 @@ SeaMonkeyLayout -a \
 
 SeaMonkeyXPToolKit -a \
 	SeaMonkeyLayout \
+	mozilla/cmd/macfe/applevnt
+	mozilla/cmd/macfe/central \
+	mozilla/cmd/macfe/gui \
+	mozilla/cmd/macfe/include \
+	mozilla/cmd/macfe/pch \
+	mozilla/cmd/macfe/projects \
+	mozilla/cmd/macfe/utility \
 	mozilla/xpfe
 
 SeaMonkeyBrowser -a \
