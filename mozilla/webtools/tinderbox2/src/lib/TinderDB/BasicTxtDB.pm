@@ -147,14 +147,12 @@ sub readdir_file_prefix {
   
   my (@sorted_files) = sort grep ( /^$prefix/, @dir_list );
 
-  # remove the real database, which has no suffix so appears first in
-  # the list.
+  # make it taint safe.
 
+  my (@untainted_files) = map { main::extract_filename_chars($_) } 
+  @sorted_files;
 
- #this looks very wrong.  The grep should take care of this
-#  my (@sorted_files) = @sorted_files[1 .. $#sorted_files];
-  
-  return @sorted_files;
+  return @untainted_files;
 }
 
 

@@ -65,6 +65,9 @@ use Data::Dumper;
 sub save_structure {
   my ($data_refs, $data_file,) = @_;
 
+  # This may be the output of a glob, make it taint safe.
+  $data_file = main::extract_filename_chars($data_file);
+
   # Create a text representation of the data we wish to save.  We need
   # only eval this string to get back the data.  We pick the name of
   # the data to be '$r' so that load_structure will know what to
