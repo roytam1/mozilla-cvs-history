@@ -679,3 +679,13 @@ Webtools -a \
 	Bonsai \
 	LXR \
 	Tinderbox
+
+#############################################################
+#
+# Module for iPlanet Network Security Services
+#
+#############################################################
+NSS -a \
+	mozilla/security/nss \
+	mozilla/security/coreconf
+
