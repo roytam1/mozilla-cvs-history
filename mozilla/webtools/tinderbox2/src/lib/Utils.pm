@@ -324,6 +324,21 @@ sub clean_times {
 }
 
 
+# given a time we round down to nearest 5 minutes 
+
+sub round_time {
+    my ($time) = @_;
+
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
+        localtime($time);
+
+    my $remainder = $min % 5;
+    $time = $time - ($remainder*$main::SECONDS_PER_MINUTE) - $sec;
+
+    return $time;
+}
+
+
 # make a directory (and all of its parents if need be).
 
 # You can optionally specify the permssions for all the directories
