@@ -196,6 +196,7 @@ unless (have_vers("MIME::Base64",0))      { push @missing, "MIME::Base64" }
 unless (have_vers("AppConfig","1.52"))    { push @missing,"AppConfig" }
 unless (have_vers("Template","2.01"))     { push @missing,"Template" }
 unless (have_vers("Text::Wrap","2001.0131")) { push @missing,"Text::Wrap" }
+unless (have_vers("File::Spec", "0.82"))  { push @missing,"File::Spec" }
 
 # If CGI::Carp was loaded successfully for version checking, it changes the
 # die and warn handlers, we don't want them changed, so we need to stash the
@@ -268,7 +269,26 @@ if (@missing > 0) {
 #
 
 print "Checking user setup ...\n";
+$@ = undef;
 do 'localconfig';
+if ($@) { # capture errors in localconfig, bug 97290
+   print STDERR <<EOT;
+An error has occurred while reading your 
+'localconfig' file.  The text of the error message is:
+
+$@
+
+Please fix the error in your 'localconfig' file.  
+Alternately rename your 'localconfig' file, rerun 
+checksetup.pl, and re-enter your answers.
+
+  \$ mv -f localconfig localconfig.old
+  \$ ./pgsetup.pl
+
+
+EOT
+    die "Syntax error in localconfig";
+}
 my $newstuff = "";
 sub LocalVar ($$)
 {
@@ -286,6 +306,39 @@ sub LocalVar ($$)
 # Set up the defaults for the --LOCAL-- variables below:
 #
 
+LocalVar('index_html', <<'END');
+#
+# With the introduction of a configurable index page using the
+# template toolkit, Bugzilla's main index page is now index.cgi.
+# Most web servers will allow you to use index.cgi as a directory
+# index and many come preconfigured that way, however if yours
+# doesn't you'll need an index.html file that provides redirection
+# to index.cgi. Setting $index_html to 1 below will allow
+# checksetup.pl to create one for you if it doesn't exist.
+# NOTE: checksetup.pl will not replace an existing file, so if you
+#       wish to have checksetup.pl create one for you, you must
+#       make sure that there isn't already an index.html
+$index_html = 0;
+END
+
+my $mysql_binaries = `which mysql`;
+if ($mysql_binaries =~ /no mysql/) {
+    # If which didn't find it, just provide a reasonable default
+    $mysql_binaries = "/usr/bin";
+} else {
+    $mysql_binaries =~ s:/mysql\n$::;
+}
+
+LocalVar('mysqlpath', <<"END");
+#
+# In order to do certain functions in Bugzilla (such as sync the shadow
+# database), we require the MySQL Binaries (mysql, mysqldump, and mysqladmin).
+# Because it's possible that these files aren't in your path, you can specify
+# their location here.
+# Please specify only the directory name, with no trailing slash.
+\$mysqlpath = "$mysql_binaries";
+END
+
 LocalVar('create_htaccess', <<'END');
 #
 # If you are using Apache for your web server, Bugzilla can create .htaccess
@@ -301,7 +354,6 @@ LocalVar('create_htaccess', <<'END');
 # If this is set to 0, Bugzilla will not create these files.
 $create_htaccess = 1;
 END
-
 
 LocalVar('webservergroup', '
 #
@@ -423,6 +475,17 @@ LocalVar('platforms', '
 );
 ');
 
+LocalVar('contenttypes', '
+#
+# The types of content that template files can generate, indexed by file extension.
+#
+$contenttypes = {
+  "html" => "text/html" , 
+   "rdf" => "application/xml" , 
+   "xml" => "text/xml" , 
+    "js" => "application/x-javascript" , 
+};
+');
 
 if ($newstuff ne "") {
     print "\nThis version of Bugzilla contains some variables that you may want\n",
@@ -445,6 +508,7 @@ my $my_db_port = ${*{$main::{'db_port'}}{SCALAR}};
 my $my_db_name = ${*{$main::{'db_name'}}{SCALAR}};
 my $my_db_user = ${*{$main::{'db_user'}}{SCALAR}};
 my $my_db_pass = ${*{$main::{'db_pass'}}{SCALAR}};
+my $my_index_html = ${*{$main::{'index_html'}}{SCALAR}};
 my $my_webservergroup = ${*{$main::{'webservergroup'}}{SCALAR}};
 my $my_create_htaccess = ${*{$main::{'create_htaccess'}}{SCALAR}};
 my @my_severities = @{*{$main::{'severities'}}{ARRAY}};
@@ -608,6 +672,37 @@ END
 
 }
 
+if ($my_index_html) {
+    if (!-e "index.html") {
+        print "Creating index.html...\n";
+        open HTML, ">index.html";
+        print HTML <<'END';
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="REFRESH" CONTENT="0; URL=index.cgi">
+</HEAD>
+<BODY>
+<H1>I think you are looking for <a href="index.cgi">index.cgi</a></H1>
+</BODY>
+</HTML>
+END
+        close HTML;
+    }
+    else {
+        open HTML, "index.html";
+        if (! grep /index\.cgi/, <HTML>) {
+            print "\n\n";
+            print "*** It appears that you still have an old index.html hanging\n";
+            print "    around.  The contents of this file should be moved into a\n";
+            print "    template and placed in the 'template/custom' directory.\n\n";
+            print "    template and placed in the 'template/custom' directory.\n\n";
+        }
+        close HTML;
+    }
+}
+
+
 # Just to be sure ...
 unlink "data/versioncache";
 
@@ -677,36 +772,63 @@ sub isExecutableFile {
 
 # fix file (or files - wildcards ok) permissions 
 sub fixPerms {
-    my $file;
-    my @files = glob($_[0]);
-    my $exeperm = 0777 & ~ $_[1];
-    my $normperm = 0666 & ~ $_[1];
-    foreach $file (@files) {
-      # do not change permissions on directories here
-      if (!(-d $file)) {
-        # check if the file is executable.
-        if (isExecutableFile($file)) {
-      #printf ("Changing $file to %o",$exeperm);
-          chmod $exeperm, $file;
-        } else {
-      #print ("Changing $file to %o", $normperm);
-          chmod $normperm, $file;
+    my ($file_pattern, $owner, $group, $umask, $do_dirs) = @_;
+    my @files = glob($file_pattern);
+    my $execperm = 0777 & ~ $umask;
+    my $normperm = 0666 & ~ $umask;
+    foreach my $file (@files) {
+        next if (!-e $file);
+        # do not change permissions on directories here unless $do_dirs is set
+        if (!(-d $file)) {
+            chown $owner, $group, $file;
+            # check if the file is executable.
+            if (isExecutableFile($file)) {
+                #printf ("Changing $file to %o\n", $execperm);
+                chmod $execperm, $file;
+            } else {
+                #printf ("Changing $file to %o\n", $normperm);
+                chmod $normperm, $file;
+            }
         }
-      }
+        elsif ($do_dirs) {
+            chown $owner, $group, $file;
+            if ($file =~ /CVS$/) {
+                chmod 0700, $file;
+            }
+            else {
+                #printf ("Changing $file to %o\n", $execperm);
+                chmod $execperm, $file;
+                fixPerms("$file/.htaccess", $owner, $group, $umask, $do_dirs);
+                fixPerms("$file/*", $owner, $group, $umask, $do_dirs); # do the contents of the directory
+            }
+        }
     }
 }
 
 if ($my_webservergroup) {
+    unless ($< == 0) { # zach: if not root, yell at them, bug 87398 
+    print <<EOF;
+
+Warning: you have entered a value for the "webservergroup" parameter
+in localconfig, but you are not running this script as root.
+This can cause permissions problems and decreased security.  If you
+experience problems running Bugzilla scripts, log in as root and re-run
+this script, or remove the value of the "webservergroup" parameter.
+Note that any warnings about "uninitialized values" that you may
+see below are caused by this.
+
+EOF
+    }
+
     # Funny! getgrname returns the GID if fed with NAME ...
     my $webservergid = getgrnam($my_webservergroup);
     # chown needs to be called with a valid uid, not 0.  $< returns the
-    # caller's uid.  Maybe there should be a $bugzillauid, and call with that
-    # userid.
-    chown $<, $webservergid, glob('*');
-    if (-e ".htaccess") { chown $<, $webservergid, ".htaccess" } # glob('*') doesn't catch dotfiles
-    if (-e "data/.htaccess") { chown $<, $webservergid, "data/.htaccess" }
-    if (-e "data/webdot/.htaccess") { chown $<, $webservergid, "data/webdot/.htaccess" }
-    fixPerms('*',027);
+    # caller's uid.  Maybe there should be a $bugzillauid, and call with that userid.
+    fixPerms('.htaccess', $<, $webservergid, 027); # glob('*') doesn't catch dotfiles
+    fixPerms('data/.htaccess', $<, $webservergid, 027);
+    fixPerms('data/webdot/.htaccess', $<, $webservergid, 027);
+    fixPerms('*', $<, $webservergid, 027);
+    fixPerms('template', $<, $webservergid, 027, 1);
     chmod 0644, 'globals.pl';
     chmod 0644, 'RelationSet.pm';
     chmod 0771, 'data';
@@ -714,11 +836,14 @@ if ($my_webservergroup) {
 } else {
     # get current gid from $( list
     my $gid = (split " ", $()[0];
-    chown $<, $gid, glob('*');
-    fixPerms('*',022);
+    fixPerms('.htaccess', $<, $gid, 022); # glob('*') doesn't catch dotfiles
+    fixPerms('data/.htaccess', $<, $gid, 022);
+    fixPerms('data/webdot/.htaccess', $<, $gid, 022);
+    fixPerms('*', $<, $gid, 022);
+    fixPerms('template', $<, $gid, 022, 1);
     chmod 01777, 'data', 'graphs';
 }
-
+ 
 
 ###########################################################################
 # Check Postgresql setup
@@ -897,8 +1022,8 @@ $table{bugs} =
     bug_file_loc varchar(4000),
     bug_severity varchar(255) not null,
     bug_status varchar(255) not null,
-    creation_ts timestamp not null default now(),
-    delta_ts timestamp not null default now(),
+    creation_ts timestamp not null,
+    delta_ts timestamp,
     short_desc varchar(4000),
     op_sys varchar(255) not null,
     priority varchar(255) not null,
@@ -913,11 +1038,9 @@ $table{bugs} =
     status_whiteboard text not null default \'\',
     votes integer not null default 0,
     keywords text not null default \'\', 
-    lastdiffed timestamp not null default now(),
+    lastdiffed timestamp,
     everconfirmed integer not null,
     reporter_accessible integer not null default 1,
-    assignee_accessible integer not null default 1,
-    qacontact_accessible integer not null default 1,
     cclist_accessible integer not null default 1';
 
 # Note: keywords field is only a cache;
@@ -1010,8 +1133,8 @@ $index{dependencies} = [
 
 $table{groups} =
     'group_id serial,
-       group_bit bigint not null,
-    name varchar(255) not null,
+    group_bit bigint constraint groupbit_unique unique not null,
+    name varchar(255) constraint groupname_unique unique not null,
     description text not null,
     isbuggroup integer not null,
     userregexp varchar(2000) not null,
@@ -1024,7 +1147,7 @@ $table{logincookies} =
    'cookie serial,
     userid integer not null,
     cryptpassword varchar(64),
-    hostname varchar(128),
+    ipaddr varchar(128),
     lastused timestamp';
 
 $index{lastused} = [
@@ -1034,7 +1157,7 @@ $index{lastused} = [
 
 $table{products} =
     'product_id serial,
-       product varchar(64),
+    product varchar(64) constraint product_unique unique not null,
     description varchar(4000),
     milestoneurl varchar(2000) not null,
     disallownew integer not null,
@@ -1047,7 +1170,7 @@ $table{products} =
 
 $table{profiles} =
    'userid serial,
-    login_name varchar(255) not null,
+    login_name varchar(255) constraint loginname_unique unique not null,
     cryptpassword varchar(34),
     realname varchar(255),
     groupset bigint not null,
@@ -1095,7 +1218,7 @@ $index{namedqueries} = [
 
 $table{fielddefs} =
    'fieldid serial,
-    name varchar(64) not null,
+    name varchar(64) constraint fieldname_unique unique not null,
     description text not null,
     mailhead integer not null default 0,
     sortkey integer not null';
@@ -2591,14 +2714,58 @@ ChangeFieldType("profiles", "disabledtext", "varchar(4000) not null");
 # assignee, QA contact, and users on the cc: list can see bugs even when
 # they are not members of groups to which the bugs are restricted.
 AddField("bugs", "reporter_accessible", "integer not null default 1");
-AddField("bugs", "assignee_accessible", "integer not null default 1");
-AddField("bugs", "qacontact_accessible", "integer not null default 1");
+#AddField("bugs", "assignee_accessible", "integer not null default 1");
+#AddField("bugs", "qacontact_accessible", "integer not null default 1");
 AddField("bugs", "cclist_accessible", "integer not null default 1");
 
 # 2001-08-21 myk@mozilla.org bug84338:
 # Add a field for the attachment ID to the bugs_activity table, so installations
 # using the attachment manager can record changes to attachments.
 AddField("bugs_activity", "attach_id", "integer");
+
+# 2002-02-04 bbaetz@student.usyd.edu.au bug 95732
+# Remove logincookies.cryptpassword, and delete entries which become
+# invalid
+if (GetFieldDef("logincookies", "cryptpassword")) {
+    # We need to delete any cookies which are invalid, before dropping the
+    # column
+
+    print "Removing invalid login cookies...\n";
+
+    # mysql doesn't support DELETE with multi-table queries, so we have
+    # to iterate
+    my $sth = $dbh->prepare("SELECT cookie FROM logincookies, profiles " .
+                            "WHERE logincookies.cryptpassword != " .
+                            "profiles.cryptpassword AND " .
+                            "logincookies.userid = profiles.userid");
+    $sth->execute();
+    while (my ($cookie) = $sth->fetchrow_array()) {
+        $dbh->do("DELETE FROM logincookies WHERE cookie = $cookie");
+    }
+
+    DropField("logincookies", "cryptpassword");
+}
+
+# 2002-02-13 bbaetz@student.usyd.edu.au - bug 97471
+# qacontact/assignee should always be able to see bugs,
+# so remove their restriction column
+if (GetFieldDef("bugs","qacontact_accessible")) {
+    print "Removing restrictions on bugs for assignee and qacontact...\n";
+
+    DropField("bugs", "qacontact_accessible");
+    DropField("bugs", "assignee_accessible");
+}
+
+# 2002-03-15 bbaetz@student.usyd.edu.au - bug 129466
+# Use the ip, not the hostname, in the logincookies table
+if (GetFieldDef("logincookies", "hostname")) {
+    # We've changed what we match against, so all entries are now invalid
+    $dbh->do("DELETE FROM logincookies");
+
+    # Now update the logincookies schema
+    DropField("logincookies", "hostname");
+    AddField("logincookies", "ipaddr", "varchar(40) NOT NULL");
+}
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.

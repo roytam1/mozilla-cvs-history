@@ -303,14 +303,20 @@ if ($::usergroupset ne '0') {
     my $group_bit = '0';
 
     if(Param("usebuggroups") && GroupExists($product)) {
-        SendSQL("SELECT bit FROM groups ".
-                "WHERE name = " . SqlQuote($product) . " " .
-                "AND isbuggroup != 0");
+        if ($::driver eq 'mysql') {
+            SendSQL("SELECT bit FROM groups ".
+                    "WHERE name = " . SqlQuote($product) . " " .
+                    "AND isbuggroup != 0");
+        } elsif ($::driver eq 'Pg') {
+            SendSQL("SELECT group_bit FROM groups ".
+                    "WHERE name = " . SqlQuote($product) . " " .
+                    "AND isbuggroup != 0");
+        }   
         ($group_bit) = FetchSQLData();
     }
 
     if ($::driver eq 'mysql') {
-        SendSQL("SELECT group_bit, name, description FROM groups " .
+        SendSQL("SELECT bit, name, description FROM groups " .
                 "WHERE (group_bit & $::usergroupset) != 0 " .
                 "  AND isbuggroup != 0 AND isactive = 1 ORDER BY description");
     } elsif ($::driver eq 'Pg') {

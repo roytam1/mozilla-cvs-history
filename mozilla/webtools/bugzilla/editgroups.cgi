@@ -572,13 +572,13 @@ if ($action eq 'delete') {
     }
     if (FetchOneColumn()) {
         if ($::driver eq 'mysql') {
-              SendSQL("UPDATE bugs SET groupset = (groupset - $bit) " .
+              SendSQL("UPDATE bugs SET groupset = (groupset - $bit), delta_ts=delta_ts" .
                     "WHERE (groupset & $bit)");
         } elsif ($::driver eq 'Pg') {
-            SendSQL("UPDATE bugs SET groupset = (groupset - int8($bit)) " .
+            SendSQL("UPDATE bugs SET groupset = (groupset - int8($bit)), delta_ts=now() " .
                     "WHERE (groupset & int8($bit)) != 0");
         }
-          print "All bugs have had group bit $bit cleared.  Any of these " .
+        print "All bugs have had group bit $bit cleared.  Any of these " .
               "bugs that were not also in another group are now " .
               "publicly visible.<BR>";
     }

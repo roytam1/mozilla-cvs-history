@@ -92,6 +92,8 @@ if (defined $::FORM{'dup_id'} && $::FORM{'knob'} eq "duplicate") {
     DuplicateUserConfirm();
 }
 
+ValidateComment($::FORM{'comment'});
+
 ######################################################################
 # End Data/Security Validation
 ######################################################################
@@ -473,7 +475,7 @@ if (defined $::FORM{'id'}) {
         # If there is another bug, then we're going to display it,
         # so check that its a legal bug
         # We need to check that its a number first
-        if (!(detaint_natural($::next_bug) && CanSeeBug($::next_bug))) {
+        if (!(detaint_natural($::next_bug) && ValidateBugID($::next_bug))) {
             # This isn't OK
             # Rather than error out (which could validly happen if there
             # was a bug in the list whose group was changed in the meantime)

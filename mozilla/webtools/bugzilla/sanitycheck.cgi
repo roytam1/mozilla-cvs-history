@@ -474,7 +474,9 @@ if (@badbugs) {
 }
 
 if (exists $::FORM{'rebuildkeywordcache'}) {
-    SendSQL("UNLOCK TABLES");
+    if ($::driver eq 'mysql') {
+        SendSQL("UNLOCK TABLES");
+    }
 }
 
 ###########################################################################
@@ -650,6 +652,37 @@ foreach my $enum ( "bug_status", "resolution", "bug_severity", "op_sys", "priori
    }
 }
 
+
+###########################################################################
+# Unsent mail
+###########################################################################
+
+Status("Checking for unsent mail");
+
+@badbugs = ();
+
+if ($::driver eq 'mysql') {
+    SendSQL("SELECT bug_id " .
+            "FROM bugs WHERE lastdiffed < delta_ts AND ".
+            "delta_ts < date_sub(now(), INTERVAL 30 minute) ".
+            "ORDER BY bug_id");
+} elsif ($::driver eq 'Pg') {
+    SendSQL("SELECT bug_id " .
+            "FROM bugs WHERE lastdiffed < delta_ts AND ".
+            "now() - INTERVAL '30 minutes' > delta_ts ".
+            "ORDER BY bug_id");
+}
+
+while (@row = FetchSQLData()) {
+    my ($id) = (@row);
+    push(@badbugs, $id);
+}
+
+if (@badbugs > 0) {
+    Alert("Bugs that have changes but no mail sent for at least half an hour: " .
+          join (", ", @badbugs));
+    print("Run <code>processmail rescanall</code> to fix this<p>\n");
+}
 
 ###########################################################################
 # End
