@@ -586,7 +586,7 @@ SeaMonkeyCore -a \
 	mozilla/network \
 	mozilla/netwerk \
 	mozilla/nglayout.mk \
-	mozilla/plugin/oji/MRJ \
+	mozilla/plugin/oji \
 	mozilla/profile \
 	mozilla/rdf \
 	mozilla/string \
