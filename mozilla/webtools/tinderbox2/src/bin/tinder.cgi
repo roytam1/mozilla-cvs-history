@@ -202,8 +202,9 @@ sub construct_times_vec {
 
 sub parse_args {
 
-  my (%form) = HTMLPopUp::split_cgi_args();
-
+  my (%form) = HTMLPopUp::split_cgi_args(
+                                         'cgi_remove_args' => ['daemon-mode'],
+                                         );
 
   my ($tree) = $form{'tree'};
   my ($daemon_mode) = (grep /daemon-mode/, keys %form);
