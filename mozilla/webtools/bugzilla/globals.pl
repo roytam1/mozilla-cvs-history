@@ -737,16 +737,16 @@ sub CanSeeBug {
         reporter_accessible, cclist_accessible,
         ISNULL(cc.who) = 0, 
         ISNULL(bug_group_map.group_id) = 0, 
-        ISNULL(member_group_map.member_id) = 0 
+        ISNULL(user_group_map.user_id) = 0 
         FROM bugs 
         LEFT JOIN cc ON bugs.bug_id = cc.bug_id 
         AND cc.who = $userid
         LEFT JOIN bug_group_map ON bugs.bug_id = bug_group_map.bug_id 
-        LEFT JOIN member_group_map ON 
-        member_group_map.group_id = bug_group_map.group_id  
-        AND member_group_map.maptype = $::Tmaptype->{'u2gm'} 
-        AND member_group_map.member_id = $userid  
-        WHERE bugs.bug_id = $id ORDER BY member_group_map.member_id";
+        LEFT JOIN user_group_map ON 
+        user_group_map.group_id = bug_group_map.group_id  
+        AND user_group_map.isbless = 0
+        AND user_group_map.user_id = $userid  
+        WHERE bugs.bug_id = $id ORDER BY user_group_map.user_id";
     PushGlobalSQLState();
     SendSQL($query);
     my ($found_id, $reporter, $assigned_to, $qa_contact,
@@ -830,12 +830,12 @@ sub DeriveGroup {
     my ($user) = (@_);
     PushGlobalSQLState();
 
-    SendSQL("LOCK TABLES profiles WRITE, member_group_map WRITE, groups READ");
+    SendSQL("LOCK TABLES profiles WRITE, user_group_map WRITE, group_group_map READ, groups READ");
     SendSQL("SELECT login_name, NOW() FROM profiles WHERE userid = $user");
     my ($login, $starttime) = FetchSQLData();
     
-    SendSQL("DELETE FROM member_group_map WHERE member_id = $user " .
-            "AND maptype = $::Tmaptype->{'u2gm'} AND isderived = 1");
+    SendSQL("DELETE FROM user_group_map WHERE user_id = $user " .
+            "AND isbless = 0 AND isderived = 1");
 
     my %groupsadded = ();
     SendSQL("SELECT group_id, userregexp FROM groups WHERE userregexp != ''");
@@ -844,9 +844,9 @@ sub DeriveGroup {
         if ($login =~ m/$rexp/i) {        
             PushGlobalSQLState();
             $groupsadded{$groupid} = 1;
-            SendSQL("INSERT INTO member_group_map " .
-                    "(member_id, group_id, maptype, isderived) " .
-                    "VALUES ($user, $groupid, $::Tmaptype->{'u2gm'}, 1)");
+            SendSQL("INSERT INTO user_group_map " .
+                    "(user_id, group_id, isbless, isderived) " .
+                    "VALUES ($user, $groupid, 0, 1)");
             PopGlobalSQLState();
 
         }
@@ -854,8 +854,8 @@ sub DeriveGroup {
 
     my %groupschecked = ();
     my @groupstocheck = ();
-    SendSQL("SELECT group_id FROM member_group_map WHERE member_id = $user
-             AND maptype = $::Tmaptype->{'u2gm'}");
+    SendSQL("SELECT group_id FROM user_group_map WHERE user_id = $user
+             AND isbless = 0");
     while (MoreSQLData()) {
         my ($groupid) = FetchSQLData();
         push(@groupstocheck,$groupid);
@@ -864,8 +864,8 @@ sub DeriveGroup {
         my $group = shift @groupstocheck;
         if (!defined($groupschecked{"$group"})) {
             $groupschecked{"$group"} = 1;
-            SendSQL("SELECT group_id FROM member_group_map WHERE
-                     member_id = $group AND maptype = $::Tmaptype->{'g2gm'}");
+            SendSQL("SELECT parent_id FROM group_group_map WHERE
+                     child_id = $group AND isbless = 0");
             while (MoreSQLData()) {
                 my ($groupid) = FetchSQLData();
                 if (!defined($groupschecked{"$groupid"})) {
@@ -873,9 +873,9 @@ sub DeriveGroup {
                     if (!$groupsadded{$groupid}) {
                         $groupsadded{$groupid} = 1;
                         PushGlobalSQLState();
-                        SendSQL("INSERT INTO member_group_map 
-                                 (member_id, group_id, maptype, isderived)
-                                 VALUES ($user, $groupid, $::Tmaptype->{'u2gm'}, 1)");
+                        SendSQL("INSERT INTO user_group_map 
+                                 (user_id, group_id, isbless, isderived)
+                                 VALUES ($user, $groupid, 0, 1)");
                         PopGlobalSQLState();
                     }
                 }
@@ -1314,10 +1314,10 @@ sub SqlQuote {
 sub UserInGroup {
     my ($groupname) = (@_);
     PushGlobalSQLState();
-    SendSQL("SELECT groups.group_id FROM groups, member_group_map 
-        WHERE groups.group_id = member_group_map.group_id 
-        AND member_group_map.member_id = $::userid
-        AND maptype = $::Tmaptype->{'u2gm'}
+    SendSQL("SELECT groups.group_id FROM groups, user_group_map 
+        WHERE groups.group_id = user_group_map.group_id 
+        AND user_group_map.user_id = $::userid
+        AND isbless = 0
         AND groups.name = " . SqlQuote($groupname));
     my $rslt = FetchOneColumn();
     PopGlobalSQLState();
@@ -1331,10 +1331,10 @@ sub UserCanBlessGroup {
     my ($groupname) = (@_);
     PushGlobalSQLState();
     # check if user explicitly can bless group
-    SendSQL("SELECT groups.group_id FROM groups, member_group_map 
-        WHERE groups.group_id = member_group_map.group_id 
-        AND member_group_map.member_id = $::userid
-        AND maptype = $::Tmaptype->{'uBg'}
+    SendSQL("SELECT groups.group_id FROM groups, user_group_map 
+        WHERE groups.group_id = user_group_map.group_id 
+        AND user_group_map.user_id = $::userid
+        AND isbless = 1
         AND groups.name = " . SqlQuote($groupname));
     my $rslt = FetchOneColumn();
     PopGlobalSQLState();
@@ -1344,14 +1344,13 @@ sub UserCanBlessGroup {
     PushGlobalSQLState();
     # check if user is a member of a group that can bless this group
     # this group does not count
-    SendSQL("SELECT groups.group_id FROM groups, member_group_map, 
-        member_group_map AS G
-        WHERE groups.group_id = G.group_id 
-        AND member_group_map.member_id = $::userid
-        AND member_group_map.maptype = $::Tmaptype->{'u2gm'}
-        AND G.maptype = $::Tmaptype->{'gBg'}
-        AND G.group_id != G.member_id
-        AND member_group_map.group_id = G.member_id
+    SendSQL("SELECT groups.group_id FROM groups, user_group_map, 
+        group_group_map 
+        WHERE groups.group_id = parent_id 
+        AND user_group_map.user_id = $::userid
+        AND user_group_map.isbless = 0
+        AND group_group_map.isbless = 1
+        AND user_group_map.group_id = child_id
         AND groups.name = " . SqlQuote($groupname));
     $rslt = FetchOneColumn();
     PopGlobalSQLState();
@@ -1364,10 +1363,8 @@ sub UserCanBlessGroup {
 sub UserCanBlessAnything {
     PushGlobalSQLState();
     # check if user explicitly can bless a group
-    SendSQL("SELECT groups.group_id FROM groups, member_group_map 
-        WHERE groups.group_id = member_group_map.group_id 
-        AND member_group_map.member_id = $::userid
-        AND maptype = $::Tmaptype->{'uBg'}");
+    SendSQL("SELECT group_id FROM user_group_map 
+        WHERE user_id = $::userid AND isbless = 1");
     my $rslt = FetchOneColumn();
     PopGlobalSQLState();
     if ($rslt) {
@@ -1375,13 +1372,12 @@ sub UserCanBlessAnything {
     }
     PushGlobalSQLState();
     # check if user is a member of a group that can bless this group
-    SendSQL("SELECT groups.group_id FROM groups, member_group_map, 
-        member_group_map AS G
-        WHERE groups.group_id = G.group_id 
-        AND member_group_map.member_id = $::userid
-        AND member_group_map.maptype = $::Tmaptype->{'u2gm'}
-        AND G.maptype = $::Tmaptype->{'gBg'}
-        AND member_group_map.group_id = G.member_id");
+    SendSQL("SELECT groups.group_id FROM groups, user_group_map, 
+        group_group_map 
+        WHERE groups.group_id = parent_id 
+        AND user_group_map.user_id = $::userid
+        AND group_group_map.isbless = 1
+        AND user_group_map.group_id = child_id");
     $rslt = FetchOneColumn();
     PopGlobalSQLState();
     if ($rslt) {
@@ -1939,12 +1935,10 @@ $::vars =
 
     'T' => {
         'group_type' => {'system' => 0, 'buggroup' => 1, 'user' => 2},
-        'maptype' => {'u2gm' => 0, 'uBg' => 1, 'g2gm' => 2, 'gBg' => 3},
     }
 
   };
 
   $::Tgroup_type = $::vars->{'T'}{'group_type'};
-  $::Tmaptype = $::vars->{'T'}{'maptype'};
 
 1;

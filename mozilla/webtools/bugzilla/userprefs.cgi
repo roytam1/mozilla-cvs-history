@@ -34,7 +34,6 @@ use RelationSet;
 sub sillyness {
     my $zz;
     $zz = $::defaultqueryname;
-    $zz = %::Tmaptype;
 }
 
 # Use global template variables.
@@ -332,10 +331,10 @@ sub SaveFooter {
 sub DoPermissions {
     my (@has_bits, @set_bits);
     
-    SendSQL("SELECT description FROM groups, member_group_map " .
-            "WHERE member_group_map.group_id = groups.group_id " .
-            "AND member_group_map.member_id = $::userid " .
-            "AND member_group_map.maptype = $::Tmaptype->{'u2gm'} " .
+    SendSQL("SELECT description FROM groups, user_group_map " .
+            "WHERE user_group_map.group_id = groups.group_id " .
+            "AND user_id = $::userid " .
+            "AND isbless = 0 " .
             "ORDER BY groups.group_id");
     while (MoreSQLData()) {
         push(@has_bits, FetchSQLData());

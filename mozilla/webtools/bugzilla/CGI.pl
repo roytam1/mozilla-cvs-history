@@ -46,7 +46,6 @@ sub CGI_pl_sillyness {
     my $zz;
     $zz = %::MFORM;
     $zz = %::dontchange;
-    $zz = %::Tmaptype;
 }
 
 use CGI::Carp qw(fatalsToBrowser);
@@ -536,10 +535,10 @@ sub GetUserInfo {
 
     $user{'canblessany'} = UserCanBlessAnything();
 
-    SendSQL("SELECT name FROM groups, member_group_map " .
-            "WHERE groups.group_id = member_group_map.group_id " .
-            "AND member_group_map.member_id = $userid " .
-            "AND member_group_map.maptype = $::Tmaptype->{'u2gm'}");
+    SendSQL("SELECT name FROM groups, user_group_map " .
+            "WHERE groups.group_id = user_group_map.group_id " .
+            "AND user_id = $userid " .
+            "AND isbless = 0");
     while (MoreSQLData()) {
         my ($name) = FetchSQLData();    
         $groups{$name} = 1;

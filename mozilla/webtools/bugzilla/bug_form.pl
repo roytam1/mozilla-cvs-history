@@ -36,7 +36,6 @@ sub show_bug {
         $zz = %::FORM;
         $zz = %::proddesc;
         $zz = %::prodmaxvotes;
-        $zz = %::Tmaptype;
         $zz = %::Tgroup_type;
         $zz = @::enterable_products;                                            
         $zz = @::settable_resolution;
@@ -216,16 +215,16 @@ sub show_bug {
 
     SendSQL("SELECT DISTINCT groups.group_id, name, description, 
              ISNULL(bug_group_map.group_id) = 0,
-             ISNULL(member_group_map.group_id) = 0,
+             ISNULL(user_group_map.group_id) = 0,
              isactive
              FROM groups 
              LEFT JOIN bug_group_map 
              ON bug_group_map.group_id = groups.group_id
-             AND bug_group_map.bug_id = $bug{'bug_id'}
-             LEFT JOIN member_group_map 
-             ON member_group_map.group_id = groups.group_id
-             AND member_group_map.member_id = $::userid
-             AND member_group_map.maptype = $::Tmaptype->{'u2gm'}
+             AND bug_id = $bug{'bug_id'}
+             LEFT JOIN user_group_map 
+             ON user_group_map.group_id = groups.group_id
+             AND user_id = $::userid
+             AND isbless = 0
              WHERE group_type = $::Tgroup_type->{'buggroup'}");
 
     $user{'inallgroups'} = 1;

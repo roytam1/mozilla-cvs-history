@@ -134,14 +134,13 @@ sub EmitFormElements ($$$$)
     if($user ne "") {
         print "</TR><TR><TH VALIGN=TOP ALIGN=RIGHT>Group Access:</TH><TD><TABLE><TR>";
         SendSQL("SELECT groups.group_id, groups.name, groups.description, " .
-                "ISNULL(member_group_map.member_id) = 0 " .
-                "FROM groups INNER JOIN groups as G " .
-                "ON groups.group_id = G.group_id " .
-                "LEFT JOIN member_group_map " .
-                "ON member_group_map.group_id = G.group_id " .
-                "AND member_group_map.maptype = $::Tmaptype->{'u2gm'} " .
-                "AND member_group_map.isderived = 0 " .
-                "AND member_group_map.member_id = $user_id " .
+                "ISNULL(user_id) = 0, " .
+                "isderived " .
+                "FROM groups " .
+                "LEFT JOIN user_group_map " .
+                "ON user_group_map.group_id = groups.group_id " .
+                "AND isbless = 0 " .
+                "AND user_id = $user_id " .
                 "ORDER BY groups.name");
         if (MoreSQLData()) {
             if ($editall) {
@@ -150,22 +149,17 @@ sub EmitFormElements ($$$$)
             }
             print "<TD COLSPAN=2 ALIGN=LEFT><B>User is a member of these groups</B></TD>\n";
             while (MoreSQLData()) {
-                my ($groupid, $name, $description, $checked) = FetchSQLData();
+                my ($groupid, $name, $description, $member, $isderived) = FetchSQLData();
                 next if (!$editall && !UserCanBlessGroup($name));
+                $isderived = $isderived || 0;
+                my $checked = ($member && ($isderived == 1)) ? 1 : 0;
                 PushGlobalSQLState();
-                SendSQL("SELECT member_id " .
-                        "FROM member_group_map " .
-                        "WHERE maptype = $::Tmaptype->{'uBg'} " .
-                        "AND member_id = $user_id " .
+                SendSQL("SELECT user_id " .
+                        "FROM user_group_map " .
+                        "WHERE isbless = 1 " .
+                        "AND user_id = $user_id " .
                         "AND group_id = $groupid");
                 my ($blchecked) = FetchSQLData() ? 1 : 0;
-                SendSQL("SELECT member_id " .
-                        "FROM member_group_map " .
-                        "WHERE maptype = $::Tmaptype->{'u2gm'} " .
-                        "AND member_id = $user_id " .
-                        "AND isderived = 1 " .
-                        "AND group_id = $groupid");
-                my ($isderived) = FetchSQLData() ? 1 : 0; 
                 PopGlobalSQLState();
                 print "<INPUT TYPE=HIDDEN NAME=\"oldgroup_$groupid\" VALUE=\"$checked\">\n";
                 print "<INPUT TYPE=HIDDEN NAME=\"oldbless_$groupid\" VALUE=\"$blchecked\">\n";
@@ -311,8 +305,8 @@ if ($action eq 'list') {
           "FROM profiles WHERE " . $::FORM{'query'} . " ORDER BY login_name";
     } elsif (exists $::FORM{'group'}) {
       $query = "SELECT DISTINCTROW login_name,realname,disabledtext " .
-          "FROM profiles, member_group_map WHERE profiles.userid = member_id
-           AND maptype IN ($::Tmaptype->{'u2gm'},$::Tmaptype->{'uBg'}) AND group_id=" . $::FORM{'group'} . " ORDER BY login_name";
+          "FROM profiles, user_group_map WHERE profiles.userid = user_group_map.user_id
+           AND group_id=" . $::FORM{'group'} . " ORDER BY login_name";
     } else {
       die "Missing parameters";
     }
@@ -532,10 +526,10 @@ if ($action eq 'del') {
     print "  <TD VALIGN=\"top\">Group set:</TD>\n";
     print "  <TD VALIGN=\"top\">";
     SendSQL("SELECT name
-             FROM groups, member_group_map
-             WHERE groups.group_id = member_group_map.group_id
-             AND member_group_map.member_id = $thisuserid
-             AND member_group_map.maptype = $::Tmaptype->{'u2gm'}
+             FROM groups, user_group_map
+             WHERE groups.group_id = user_group_map.group_id
+             AND user_group_map.user_id = $thisuserid
+             AND isbless = 0
              ORDER BY name");
     my $found = 0;
     while ( MoreSQLData() ) {
@@ -727,15 +721,15 @@ if ($action eq 'update') {
         if ($::FORM{"oldgroup_$groupid"} != ($::FORM{"group_$groupid"} ? 1 : 0)) {
             # group membership changed
             PushGlobalSQLState();
-            SendSQL("DELETE FROM member_group_map 
-                     WHERE member_id = $thisuserid
+            SendSQL("DELETE FROM user_group_map 
+                     WHERE user_id = $thisuserid
                      AND group_id = $groupid
-                     AND maptype = $::Tmaptype->{'u2gm'} 
+                     AND isbless = 0
                      AND isderived = 0");
             if ($::FORM{"group_$groupid"}) {
-                SendSQL("INSERT INTO member_group_map 
-                         (member_id, group_id, maptype, isderived)
-                         VALUES ($thisuserid, $groupid, $::Tmaptype->{'u2gm'}, 0)");
+                SendSQL("INSERT INTO user_group_map 
+                         (user_id, group_id, isbless, isderived)
+                         VALUES ($thisuserid, $groupid, 0, 0)");
                 print "Added user to group $name<BR>\n";
             } else {
                 print "Dropped user from group $name<BR>\n";
@@ -746,15 +740,15 @@ if ($action eq 'update') {
         if ($editall && ($::FORM{"oldbless_$groupid"} != ($::FORM{"bless_$groupid"} ? 1 : 0))) {
             # group membership changed
             PushGlobalSQLState();
-            SendSQL("DELETE FROM member_group_map 
-                     WHERE member_id = $thisuserid
+            SendSQL("DELETE FROM user_group_map 
+                     WHERE user_id = $thisuserid
                      AND group_id = $groupid
-                     AND maptype = $::Tmaptype->{'uBg'}
+                     AND isbless = 1
                      AND isderived = 0");
             if ($::FORM{"bless_$groupid"}) {
-                SendSQL("INSERT INTO member_group_map 
-                         (member_id, group_id, maptype, isderived)
-                         VALUES ($thisuserid, $groupid, $::Tmaptype->{'uBg'}, 0)");
+                SendSQL("INSERT INTO user_group_map 
+                         (user_id, group_id, isbless, isderived)
+                         VALUES ($thisuserid, $groupid, 1, 0)");
                 print "Granted user permission to bless group $name<BR>\n";
             } else {
                 print "Revoked user's permission to bless group $name<BR>\n";

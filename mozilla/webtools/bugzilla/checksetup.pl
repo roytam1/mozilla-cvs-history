@@ -1592,13 +1592,20 @@ $table{tokens} =
 # isderived: (applies to u2gm records only)
 # if 0 - u2gm record was explicitly granted
 # if 1 - u2gm record was created by evaluating a regexp or group hierarchy
-$table{member_group_map} =
-    'member_id mediumint not null,
+$table{user_group_map} =
+    'user_id mediumint not null,
      group_id mediumint not null,
-     maptype smallint not null default 0,
+     isbless smallint not null default 0,
      isderived tinyint not null default 0,
 
-     index(member_id, group_id)';
+     index(user_id, group_id)';
+
+$table{group_group_map} =
+    'child_id mediumint not null,
+     parent_id mediumint not null,
+     isbless smallint not null default 0,
+
+     index(child_id)';
 
 # This table determines in which groups a user must be a member to have
 # permission to see a bug
@@ -1741,24 +1748,24 @@ if (GetFieldDef('profiles', 'groupset')) {
     $sth->execute();
     while ( my ($userid) = $sth->fetchrow_array() ) {
         # existing administrators are made members of group "admin"
-        $dbh->do("INSERT INTO member_group_map 
-            (member_id, group_id, maptype, isderived) 
-            VALUES ($userid, $adminid, $::Tmaptype->{'u2gm'}, 0)");
+        $dbh->do("INSERT INTO user_group_map 
+            (user_id, group_id, isbless, isderived) 
+            VALUES ($userid, $adminid, 0, 0)");
         # existing administrators are made blessers of group "admin"
         # only explitly defined blessers can bless group admin
         # other groups can be blessed by any admin or additional
         # defined blessers
-        $dbh->do("INSERT INTO member_group_map 
-            (member_id, group_id, maptype, isderived) 
-            VALUES ($userid, $adminid, $::Tmaptype->{'uBg'}, 0)");
+        $dbh->do("INSERT INTO user_group_map 
+            (user_id, group_id, isbless, isderived) 
+            VALUES ($userid, $adminid, 1, 0)");
     }
     $sth = $dbh->prepare("SELECT group_id FROM groups");
     $sth->execute();
     while ( my ($id) = $sth->fetchrow_array() ) {
         # admins can bless every group
-        $dbh->do("INSERT INTO member_group_map 
-            (member_id, group_id, maptype, isderived) 
-            VALUES ($adminid, $id, $::Tmaptype->{'gBg'}, 0)");
+        $dbh->do("INSERT INTO group_group_map 
+            (child_id, parent_id, isbless) 
+            VALUES ($adminid, $id, 1)");
     }
                           
 }
@@ -1769,9 +1776,9 @@ if (!GroupDoesExist("editbugs")) {
     my $sth = $dbh->prepare("SELECT userid FROM profiles ORDER BY userid");
     $sth->execute();
     while ( my ($userid) = $sth->fetchrow_array() ) {
-        $dbh->do("INSERT INTO member_group_map 
-            (member_id, group_id, maptype, isderived) 
-            VALUES ($userid, $id, $::Tmaptype->{'u2gm'}, 0)");
+        $dbh->do("INSERT INTO user_group_map 
+            (user_id, group_id, isbless, isderived) 
+            VALUES ($userid, $id, 0, 0)");
     }
 
 }
@@ -1781,9 +1788,9 @@ if (!GroupDoesExist("canconfirm")) {
     my $sth = $dbh->prepare("SELECT userid FROM profiles ORDER BY userid");
     $sth->execute();
     while ( my ($userid) = $sth->fetchrow_array() ) {
-        $dbh->do("INSERT INTO member_group_map 
-            (member_id, group_id, maptype, isderived) 
-            VALUES ($userid, $id, $::Tmaptype->{'u2gm'}, 0)");
+        $dbh->do("INSERT INTO user_group_map 
+            (user_id, group_id, isbless, isderived) 
+            VALUES ($userid, $id, 0, 0)");
     }
 
 }
@@ -1992,11 +1999,10 @@ sub bailout {   # this is just in case we get interrupted while getting passwd
 }
 
 $sth = $dbh->prepare(<<_End_Of_SQL_);
-  SELECT member_id
-  FROM groups, member_group_map
+  SELECT user_id
+  FROM groups, user_group_map
   WHERE groups.name = 'admin'
-  AND groups.group_id = member_group_map.group_id
-  AND member_group_map.maptype = $::Tmaptype->{'u2gm'}
+  AND groups.group_id = user_group_map.group_id
 _End_Of_SQL_
 $sth->execute;
 
@@ -2143,15 +2149,15 @@ _End_Of_SQL_
     my ($userid) = $sth->fetchrow_array();
    
     foreach my $group ( @groups ) {
-        my $query = "SELECT member_id FROM member_group_map 
-            WHERE group_id = $group AND member_id = $userid 
-            AND maptype = $::Tmaptype->{'u2gm'}"; 
+        my $query = "SELECT user_id FROM user_group_map 
+            WHERE group_id = $group AND user_id = $userid 
+            AND isbless = 0";
         $sth = $dbh->prepare($query);
         $sth->execute();
         if ( !$sth->fetchrow_array() ) {
-            $dbh->do("INSERT INTO member_group_map 
-                (member_id, group_id, maptype, isderived) 
-                VALUES ($userid, $group, $::Tmaptype->{'u2gm'}, 0)");
+            $dbh->do("INSERT INTO user_group_map 
+                (user_id, group_id, isbless, isderived) 
+                VALUES ($userid, $group, 0, 0)");
         }
     }
     # the admin also gets an explicit bless capability for the admin group
@@ -2159,9 +2165,9 @@ _End_Of_SQL_
                 WHERE name = 'admin'");
     $sth->execute();
     my ($id) = $sth->fetchrow_array();
-    $dbh->do("INSERT INTO member_group_map 
-        (member_id, group_id, maptype, isderived) 
-        VALUES ($userid, $id, $::Tmaptype->{'uBg'}, 0)");
+    $dbh->do("INSERT INTO user_group_map 
+        (user_id, group_id, isbless, isderived) 
+        VALUES ($userid, $id, 1, 0)");
 
   print "\n$login is now set up as the administrator account.\n";
 }
@@ -2174,11 +2180,10 @@ _End_Of_SQL_
 ###########################################################################
 
 $sth = $dbh->prepare(<<_End_Of_SQL_);
-  SELECT member_id
-  FROM groups, member_group_map
+  SELECT user_id
+  FROM groups, user_group_map
   WHERE groups.name = 'admin'
-  AND groups.group_id = member_group_map.group_id
-  AND member_group_map.maptype = $::Tmaptype->{'u2gm'}
+  AND groups.group_id = user_group_map.group_id
 _End_Of_SQL_
 $sth->execute;
 my ($adminuid) = $sth->fetchrow_array;
@@ -3264,15 +3269,15 @@ if (GetFieldDef("profiles", "groupset")) {
                    WHERE (groupset & $bit) != 0");
         $sth2->execute();
         while (my ($uid) = $sth2->fetchrow_array) {
-            my $query = "SELECT member_id FROM member_group_map 
-                WHERE group_id = $gid AND member_id = $uid 
-                AND maptype = $::Tmaptype->{'u2gm'}"; 
+            my $query = "SELECT user_id FROM user_group_map 
+                WHERE group_id = $gid AND user_id = $uid 
+                AND isbless = 0"; 
             my $sth3 = $dbh->prepare($query);
             $sth3->execute();
             if ( !$sth3->fetchrow_array() ) {
-                $dbh->do("INSERT INTO member_group_map
-                       (member_id, group_id, maptype, isderived)
-                       VALUES($uid, $gid, $::Tmaptype->{'u2gm'}, 0)");
+                $dbh->do("INSERT INTO user_group_map
+                       (user_id, group_id, isbless, isderived)
+                       VALUES($uid, $gid, 0, 0)");
             }
         }
         # create uBg memberships for old groupsets
@@ -3280,9 +3285,9 @@ if (GetFieldDef("profiles", "groupset")) {
                    WHERE (blessgroupset & $bit) != 0");
         $sth2->execute();
         while (my ($uid) = $sth2->fetchrow_array) {
-            $dbh->do("INSERT INTO member_group_map
-                   (member_id, group_id, maptype, isderived)
-                   VALUES($uid, $gid, $::Tmaptype->{'uBg'}, 0)");
+            $dbh->do("INSERT INTO user_group_map
+                   (user_id, group_id, isbless, isderived)
+                   VALUES($uid, $gid, 1, 0)");
         }
         # create bug_group_map records for old groupsets
         $sth2 = $dbh->prepare("SELECT bug_id FROM bugs

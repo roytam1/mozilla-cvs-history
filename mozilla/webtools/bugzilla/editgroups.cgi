@@ -229,17 +229,17 @@ if ($action eq 'changeform') {
     print "<TR><TD ALIGN=CENTER>|</TD><TD COLSPAN=3>Members of these groups are included in this group</TD></TR>";
     print "<TR><TD ALIGN=CENTER>|</TD><TD ALIGN=CENTER>|</TD><TD COLSPAN=2></TD><TR>";
     SendSQL("SELECT groups.group_id, groups.name, groups.description,
-             ISNULL(member_group_map.member_id) = 0, 
-             ISNULL(B.member_id) = 0
+             ISNULL(group_group_map.child_id) = 0, 
+             ISNULL(B.child_id) = 0
              FROM groups
-             LEFT JOIN member_group_map 
-             ON member_group_map.member_id = groups.group_id
-             AND member_group_map.group_id = $group_id
-             AND member_group_map.maptype = $::Tmaptype->{'g2gm'}
-             LEFT JOIN member_group_map as B
-             ON B.member_id = groups.group_id
-             AND B.group_id = $group_id
-             AND B.maptype = $::Tmaptype->{'gBg'}
+             LEFT JOIN group_group_map 
+             ON group_group_map.child_id = groups.group_id
+             AND group_group_map.parent_id = $group_id
+             AND group_group_map.isbless = 0
+             LEFT JOIN group_group_map as B
+             ON B.child_id = groups.group_id
+             AND B.parent_id = $group_id
+             AND B.isbless = 1
              WHERE groups.group_id != $group_id ORDER by name");
 
     while (MoreSQLData()) {
@@ -385,8 +385,8 @@ if ($action eq 'new') {
     SendSQL("SELECT last_insert_id()");
     my $gid = FetchOneColumn();
     my $admin = GroupNameToId('admin');
-    SendSQL("INSERT INTO member_group_map (member_id, group_id, maptype)
-             VALUES ($admin, $gid, $::Tmaptype->{'gBg'})");
+    SendSQL("INSERT INTO group_group_map (child_id, parent_id, isbless)
+             VALUES ($admin, $gid, 1)");
     print "OK, done.<p>\n";
     PutTrailer("<a href=\"editgroups.cgi?action=add\">Add another group</a>",
                "<a href=\"editgroups.cgi\">Back to the group list</a>");
@@ -435,8 +435,8 @@ if ($action eq 'del') {
 
     print "<FORM METHOD=POST ACTION=editgroups.cgi>\n";
     my $cantdelete = 0;
-    SendSQL("SELECT member_id FROM member_group_map 
-             WHERE group_id = $gid");
+    SendSQL("SELECT user_id FROM user_group_map 
+             WHERE group_id = $gid AND isbless = 0");
     if (!FetchOneColumn()) {} else {
        $cantdelete = 1;
        print "
@@ -512,8 +512,8 @@ if ($action eq 'delete') {
 
     my $cantdelete = 0;
 
-    SendSQL("SELECT member_id FROM member_group_map 
-             WHERE group_id = $gid");
+    SendSQL("SELECT user_id FROM user_group_map 
+             WHERE group_id = $gid AND isbless = 0");
     if (FetchOneColumn()) {
       if (!defined $::FORM{'removeusers'}) {
         $cantdelete = 1;
@@ -543,7 +543,8 @@ if ($action eq 'delete') {
       exit;
     }
 
-    SendSQL("DELETE FROM member_group_map WHERE group_id = $gid");
+    SendSQL("DELETE FROM user_group_map WHERE group_id = $gid");
+    SendSQL("DELETE FROM group_group_map WHERE parent_id = $gid");
     SendSQL("DELETE FROM bug_group_map WHERE group_id = $gid");
     SendSQL("DELETE FROM groups WHERE group_id = $gid");
     print "<B>Group $gid has been deleted.</B><BR>";
@@ -579,14 +580,14 @@ if ($action eq 'postchanges') {
                 print "changed";
                 if ($grp != 0) {
                     print " set ";
-                    SendSQL("INSERT INTO member_group_map 
-                             (member_id, group_id, maptype, isderived)
-                             VALUES ($v, $gid, $::Tmaptype->{'g2gm'}, 0)");
+                    SendSQL("INSERT INTO group_group_map 
+                             (child_id, parent_id, isbless)
+                             VALUES ($v, $gid, 0)");
                 } else {
                     print " cleared ";
-                    SendSQL("DELETE FROM member_group_map
-                             WHERE member_id = $v AND group_id = $gid
-                             AND maptype = $::Tmaptype->{'g2gm'}");
+                    SendSQL("DELETE FROM group_group_map
+                             WHERE child_id = $v AND parent_id = $gid
+                             AND isbless = 0");
                 }
             }
 
@@ -596,14 +597,14 @@ if ($action eq 'postchanges') {
                 print "changed";
                 if ($bless != 0) {
                     print " set ";
-                    SendSQL("INSERT INTO member_group_map 
-                             (member_id, group_id, maptype, isderived)
-                             VALUES ($v, $gid, $::Tmaptype->{'gBg'}, 0)");
+                    SendSQL("INSERT INTO group_group_map 
+                             (child_id, parent_id, isbless)
+                             VALUES ($v, $gid, 1)");
                 } else {
                     print " cleared ";
-                    SendSQL("DELETE FROM member_group_map
-                             WHERE member_id = $v AND group_id = $gid
-                             AND maptype = $::Tmaptype->{'gBg'}");
+                    SendSQL("DELETE FROM group_group_map
+                             WHERE child_id = $v AND parent_id = $gid
+                             AND isbless = 1");
                 }
             }
 

@@ -52,7 +52,6 @@ use vars qw(
   $userid
   %MFORM
   %versions
-  %Tmaptype
 );
 
 # We have to connect to the database, even though we don't use it in this code,
@@ -340,10 +339,10 @@ if(Param("usebuggroups") && GroupExists($product)) {
 }
 
 SendSQL("SELECT DISTINCT groups.group_id, groups.name, groups.description " .
-        "FROM groups, member_group_map " .
-        "WHERE member_group_map.group_id = groups.group_id " .
-        "AND member_group_map.member_id = $::userid " .
-        "AND member_group_map.maptype = $::Tmaptype->{'u2gm'} " .
+        "FROM groups, user_group_map " .
+        "WHERE user_group_map.group_id = groups.group_id " .
+        "AND user_group_map.user_id = $::userid " .
+        "AND isbless = 0 " .
         "AND group_type = $::Tgroup_type->{'buggroup'} AND isactive = 1 ORDER BY description");
 
 my @groups;

@@ -44,7 +44,6 @@ sub sillyness {
     $zz = @::legal_product;
     $zz = @::legal_severity;
     $zz = %::target_milestone;
-    $zz = %::Tmaptype;
 }
 
 # Use global template variables.
@@ -262,10 +261,10 @@ foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
             ThrowCodeError("Attempted to add bug to an inactive group, " . 
                            "identified by the bit '$v'.", undef, "abort");
         }
-        SendSQL("SELECT member_id FROM member_group_map 
-                 WHERE member_id = $::userid
+        SendSQL("SELECT user_id FROM user_group_map 
+                 WHERE user_id = $::userid
                  AND group_id = $v
-                 AND maptype = $::Tmaptype->{'u2gm'}");
+                 AND isbless = 0");
         my ($member) = FetchSQLData();
         if ($member) {
             push(@groupstoadd,$v)

@@ -50,7 +50,6 @@ use vars qw(%versions
           %target_milestone
           %legal_severity
           %Tgroup_type
-          %Tmaptype
           $next_bug);
 
 ConnectToDatabase();
@@ -476,10 +475,10 @@ sub ChangeResolution {
 my @groupAdd = ();
 my @groupDel = ();
 
-SendSQL("SELECT groups.group_id, isactive FROM groups, member_group_map WHERE " .
-        "groups.group_id = member_group_map.group_id AND " .
-        "member_group_map.member_id = $::userid AND " .
-        "member_group_map.maptype = $::Tmaptype->{'u2gm'} AND " .
+SendSQL("SELECT groups.group_id, isactive FROM groups, user_group_map WHERE " .
+        "groups.group_id = user_group_map.group_id AND " .
+        "user_group_map.user_id = $::userid AND " .
+        "isbless = 0 AND " .
         "group_type = $::Tgroup_type->{'buggroup'}");
 while (my ($b, $isactive) = FetchSQLData()) {
     # The multiple change page may not show all groups a bug is in
@@ -954,7 +953,7 @@ foreach my $id (@idlist) {
             "products READ, components READ, " .
             "keywords $write, longdescs $write, fielddefs $write, " .
             "bug_group_map $write, " .
-            "member_group_map READ, " .
+            "user_group_map READ, " .
             "keyworddefs READ, groups READ, attachments READ");
     my @oldvalues = SnapShotBug($id);
     my %oldhash;
