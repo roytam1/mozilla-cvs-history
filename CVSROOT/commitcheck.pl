@@ -204,10 +204,7 @@ if (m:^mozilla/modules/libhook/.*$:) {return '54';}
 if (m:^mozilla/build/.*$:) {return '55';}
 if (m:^mozilla/config/.*$:) {return '55';}
 if (m:^mozilla/l10n/.*$:) {return '55';}
-if (m:^mozilla/include/edt\.h/.*$:) {return '56';}
-if (m:^mozilla/include/edttypes\.h/.*$:) {return '56';}
-if (m:^mozilla/lib/layout/.*$:) {return '56';}
-if (m:^mozilla/modules/edtplug/.*$:) {return '56';}
+if (m:^mozilla/editor$:) {return '56';}
 if (m:^mozilla/cmd/dialup/.*$:) {return '58';}
 if (m:^mozilla/directory/.*$:) {return '59';}
 if (m:^mozilla/modules/libimg/.*$:) {return '63';}
