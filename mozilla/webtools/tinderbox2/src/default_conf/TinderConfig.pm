@@ -202,6 +202,16 @@ $PopUpImpl = (
 @DBImpl = (
 	   'TinderDB::Time',
 
+           # If you development spans multiple time zones you may wish
+           # to display a time other then the time on the server. More
+           # then one time column can be included if you
+           # desire. Time_UTC displays the UTC time while Time_Local
+           # will use JavaScript to compute the correct time for each
+           # browser.
+
+	   # 'TinderDB::Time_Local',
+	   # 'TinderDB::Time_UTC',
+
            # The notice board is a special column, you may not wish to
            # include it. If you do not have a notice column you can
            # still have notices appear, they will just appear in the
