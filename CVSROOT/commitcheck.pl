@@ -172,7 +172,7 @@ $mode{'163'} = 'Restricted';
 $branch{'163'} = 'NSS_3_3_BRANCH';
 $fullname{'163'} = 'NSS Stable Release Branch';
 $blessed{'163'} = [];
-$super{'163'} = ['mhein%sun.com','tfox%netscape.com','sonja.mirtitsch%sun.com','nicolson%netscape.com','nelsonb%netscape.com','kirk.erickson%sun.com','jpierre%netscape.com','javi%netscape.com','ian.mcgreer%sun.com','glen.beasley%sun.com','ddrinan%netscape.com','bishakhabanerjee%netscape.com','wchang0222%aol.com','relyea%netscape.com',];
+$super{'163'} = ['tfox%netscape.com','nicolson%netscape.com','nelsonb%netscape.com','jpierre%netscape.com','ian.mcgreer%sun.com','glen.beasley%sun.com','bishakhabanerjee%netscape.com','wchang0222%aol.com','relyea%netscape.com',];
 $mode{'159'} = 'Open';
 $branch{'159'} = 'HEAD';
 $fullname{'159'} = 'NSS Trunk';
@@ -295,35 +295,6 @@ $fullname{'93'} = 'Zlib';
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'HEAD') {
-if (m:^mozilla/xpcom/.*$:) {return '89';}
-if (m:^xpcom/io$:) {return '90';}
-if (m:^mozilla/modules/zlib/.*$:) {return '93';}
-if (m:^mozilla/view/.*$:) {return '96';}
-if (m:^mozilla/layout/base/.*$:) {return '98';}
-if (m:^mozilla/layout/build/.*$:) {return '98';}
-if (m:^mozilla/layout/doc/.*$:) {return '98';}
-if (m:^mozilla/layout/html/.*$:) {return '98';}
-if (m:^mozilla/layout/macbuild/.*$:) {return '98';}
-if (m:^mozilla/layout/tools/.*$:) {return '98';}
-if (m:^modules/libpr0n/decoders/mng/.*$:) {return '155';}
-if (m:^mozilla/modules/libimg/mng/.*$:) {return '155';}
-if (m:^mozilla/content/html/style/.*$:) {return '100';}
-if (m:^mozilla/content/shared/.*$:) {return '100';}
-if (m:^mozilla/embedding/.*$:) {return '101';}
-if (m:^mozilla/webshell/.*$:) {return '101';}
-if (m:^mozilla/htmlparser/.*$:) {return '102';}
-if (m:^mozilla/content/base/.*$:) {return '103';}
-if (m:^mozilla/content/events/.*$:) {return '103';}
-if (m:^mozilla/content/html/content/.*$:) {return '103';}
-if (m:^mozilla/content/html/document/.*$:) {return '103';}
-if (m:^mozilla/dom/.*$:) {return '103';}
-if (m:^mozilla/js/rhino/.*$:) {return '138';}
-if (m:^mozilla/xpfe/.*$:) {return '137';}
-if (m:^mozilla/js/tests$:) {return '114';}
-if (m:^js/src/perlconnect$:) {return '111';}
-if (m:^mozilla/silentdl/.*$:) {return '110';}
-if (m:^mozilla/content/xsl/.*$:) {return '140';}
-if (m:^mozilla/extensions/transformiix/.*$:) {return '140';}
 if (m:^gfx/src/photon/.*$:) {return '113';}
 if (m:^widget/src/photon/.*$:) {return '113';}
 if (m:^mozilla/content/xul/.*$:) {return '106';}
@@ -345,20 +316,20 @@ if (m:^mozilla/java/util/.*$:) {return '133';}
 if (m:^CVSROOT/commitcheck\.pl$:) {return '3';}
 if (m:^CVSROOT/passwd$:) {return '3';}
 if (m:^mozilla/extensions/xmlterm/.*$:) {return '141';}
-if (m:^xpcom/remote$:) {return '143';}
 if (m:^mozilla/security/coreconf/.*$:) {return '145';}
 if (m:^mozilla/security/jss/.*$:) {return '145';}
 if (m:^mozilla/security/nss/.*$:) {return '145';}
-if (m:^embedding/browser/gtk$:) {return '144';}
+if (m:^xpcom/remote$:) {return '143';}
 if (m:^composer$:) {return '173';}
-if (m:^mozilla/mstone/.*$:) {return '147';}
+if (m:^embedding/browser/gtk$:) {return '144';}
 if (m:^mozilla/[^/]*$:) {return '19';}
-if (m:^mozilla/xpinstall/.*$:) {return '150';}
+if (m:^mozilla/mstone/.*$:) {return '147';}
 if (m:^mozilla/gfx/src/xlib/.*$:) {return '121';}
 if (m:^mozilla/widget/src/xlib/.*$:) {return '121';}
 if (m:^mozilla/widget/src/xlibxtbin/.*$:) {return '121';}
-if (m:^mozilla/security/manager/.*$:) {return '151';}
+if (m:^mozilla/xpinstall/.*$:) {return '150';}
 if (m:^mozilla/ef/.*$:) {return '46';}
+if (m:^mozilla/security/manager/.*$:) {return '151';}
 if (m:^mozilla/gfx/src/gtk/.*$:) {return '49';}
 if (m:^mozilla/widget/src/gtk/.*$:) {return '49';}
 if (m:^mozilla/widget/src/gtk2/.*$:) {return '49';}
@@ -430,6 +401,35 @@ if (m:^mozilla/modules/softupdt/.*$:) {return '87';}
 if (m:^mozilla/content/xml/.*$:) {return '88';}
 if (m:^mozilla/expat/.*$:) {return '88';}
 if (m:^mozilla/extensions/xmlextras/.*$:) {return '88';}
+if (m:^mozilla/xpcom/.*$:) {return '89';}
+if (m:^xpcom/io$:) {return '90';}
+if (m:^mozilla/modules/zlib/.*$:) {return '93';}
+if (m:^mozilla/view/.*$:) {return '96';}
+if (m:^mozilla/layout/base/.*$:) {return '98';}
+if (m:^mozilla/layout/build/.*$:) {return '98';}
+if (m:^mozilla/layout/doc/.*$:) {return '98';}
+if (m:^mozilla/layout/html/.*$:) {return '98';}
+if (m:^mozilla/layout/macbuild/.*$:) {return '98';}
+if (m:^mozilla/layout/tools/.*$:) {return '98';}
+if (m:^modules/libpr0n/decoders/mng/.*$:) {return '155';}
+if (m:^mozilla/modules/libimg/mng/.*$:) {return '155';}
+if (m:^mozilla/content/html/style/.*$:) {return '100';}
+if (m:^mozilla/content/shared/.*$:) {return '100';}
+if (m:^mozilla/embedding/.*$:) {return '101';}
+if (m:^mozilla/webshell/.*$:) {return '101';}
+if (m:^mozilla/htmlparser/.*$:) {return '102';}
+if (m:^mozilla/content/base/.*$:) {return '103';}
+if (m:^mozilla/content/events/.*$:) {return '103';}
+if (m:^mozilla/content/html/content/.*$:) {return '103';}
+if (m:^mozilla/content/html/document/.*$:) {return '103';}
+if (m:^mozilla/dom/.*$:) {return '103';}
+if (m:^mozilla/js/rhino/.*$:) {return '138';}
+if (m:^mozilla/xpfe/.*$:) {return '137';}
+if (m:^mozilla/js/tests$:) {return '114';}
+if (m:^js/src/perlconnect$:) {return '111';}
+if (m:^mozilla/silentdl/.*$:) {return '110';}
+if (m:^mozilla/content/xsl/.*$:) {return '140';}
+if (m:^mozilla/extensions/transformiix/.*$:) {return '140';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
