@@ -20,14 +20,7 @@
 #   V = old version number (pre-checkin)
 #   v = new version number (post-checkin)
 #
-# For example:
-#DEFAULT (echo ""; id; echo %s; date; cat) >> $CVSROOT/CVSROOT/commitlog
-# or
-#DEFAULT (echo ""; id; echo %{sVv}; date; cat) >> $CVSROOT/CVSROOT/commitlog
-# ALL			$CVSROOT/CVSROOT/dolog.pl -h 127.0.0.1 -r /m/mozilla-mirror bonsai-new-checkin-daemon@warp.mcom.com
 ALL			$CVSROOT/CVSROOT/dolog.pl -h 127.0.0.1 -r /cvsroot bonsai-new-checkin-daemon@lounge.mozilla.org
-# ALL			$CVSROOT/CVSROOT/dolog.pl -h 127.0.0.1 -r /cvsroot bonsai@tinderbox.seawood.org
-# mozilla/webtools	$CVSROOT/CVSROOT/dolog.pl -h 127.0.0.1 -r /cvsroot webtools-changed@warp.mcom.com
-mozilla/webtools	$CVSROOT/CVSROOT/cvsmailfilter.pl -u http://cvs-mirror.mozilla.org/webtools/bonsai -r /cvsroot -s %s webtools-changed@warp.mcom.com terry@mozilla.org
-mozilla/tripledb	$CVSROOT/CVSROOT/cvsmailfilter.pl -u http://cvs-mirror.mozilla.org/webtools/bonsai -r /cvsroot -s %s terry@mozilla.org
-CVSROOT		$CVSROOT/CVSROOT/cvsmailfilter.pl -u http://cvs-mirror.mozilla.org/webtools/bonsai -r /cvsroot -s %s -f modules cyeh@netscape.com leaf@netscape.com
+mozilla/webtools	$CVSROOT/CVSROOT/cvsmailfilter.pl -u http://bonsai.mozilla.org -r /cvsroot -s %s webtools-changed@warp.mcom.com terry@mozilla.org
+mozilla/tripledb	$CVSROOT/CVSROOT/cvsmailfilter.pl -u http://bonsai.mozilla.org -r /cvsroot -s %s terry@mozilla.org
+CVSROOT		$CVSROOT/CVSROOT/cvsmailfilter.pl -u http://bonsai.mozilla.org -r /cvsroot -s %s -f modules cyeh@netscape.com leaf@netscape.com
