@@ -155,6 +155,8 @@ use VCDisplay;
 use Utils;
 use TinderConfig;
 use TinderDB::Notice;
+use TinderHeader;
+
 
 $VERSION = '#tinder_version#';
 
