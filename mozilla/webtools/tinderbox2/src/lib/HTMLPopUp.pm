@@ -113,8 +113,8 @@ $DEFAULT_POPUP_TITLE = '';
 # these varaibles are a hack, I need them to make the popup window
 # auto size correctly.  I wish there was a javascript way to autosize.
 
-$DEFAULT_POPUP_HEIGHT = 225;
-$DEFAULT_POPUP_WIDTH = 425;
+$DEFAULT_POPUP_HEIGHT = 160;
+$DEFAULT_POPUP_WIDTH = 225;
 
 if (defined($TinderConfig::ADD_TEXT_BROWSER_STRINGS)) {
     $ADD_TEXT_BROWSER_STRINGS = $TinderConfig::ADD_TEXT_BROWSER_STRINGS;
