@@ -342,6 +342,7 @@ if (m:^mozilla/java/dom/.*$:) {return '130';}
 if (m:^mozilla/java/util/.*$:) {return '133';}
 if (m:^mozilla/extensions/xmlterm/.*$:) {return '141';}
 if (m:^xpcom/remote$:) {return '143';}
+if (m:^embedding/browser/gtk$:) {return '144';}
 if (m:^mozilla/mstone/.*$:) {return '147';}
 if (m:^mozilla/xpinstall/.*$:) {return '150';}
 if (m:^mozilla/extensions/psm-glue/.*$:) {return '151';}
