@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/perl
+#!/usr/bonsaitools/bin/perl
 # $Id$
 
 # genxref.pl --	Finds identifiers in a set of C files using an
