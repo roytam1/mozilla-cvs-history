@@ -482,6 +482,13 @@ sub daemon_main {
 
     $summary_data = Summaries::summary_pages($tree, $summary_data);
 
+    # There are automated bots who need the header data, they extract
+    # it from this file.
+    
+    my ($all_headers) = TinderHeader::get_alltree_headers($tree);
+    
+    TinderHeader::export_alltree_headers($tree, $all_headers);
+    
     # if previous runs have died in the middle of an update, they will
     # leave these files which are useless and need to be cleaned up.
     
