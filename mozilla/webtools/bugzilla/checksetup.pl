@@ -3075,7 +3075,9 @@ my @admins = ();
 if (GetFieldDef("profiles", "groupset")) {
     AddField('groups', 'group_when', 'datetime not null');
     $dbh->do("ALTER TABLE groups DROP INDEX bit") if GetIndexDef("groups","bit");
+    $dbh->do("ALTER TABLE groups DROP INDEX name") if GetIndexDef("groups","name");
     AddField('groups', 'id', 'mediumint not null auto_increment primary key');
+    $dbh->do("ALTER TABLE groups ADD UNIQUE (name)");
     AddField('products', 'id', 
         'mediumint primary key auto_increment not null');
     AddField('profiles', 'refreshed_when', 'datetime not null');
