@@ -37,10 +37,10 @@ require "globals.pl";
 # Shut up misguided -w warnings about "used only once".  "use vars" just
 # doesn't work for me.
 
-#sub sillyness {
-#    my $zz;
-#    $zz = $::userid;
-#}
+sub sillyness {
+    my $zz;
+    $zz = $::userid;
+}
 
 my $editall;
 
@@ -715,12 +715,15 @@ if ($action eq 'update') {
              WHERE login_name=" . SqlQuote($userold));
     my ($thisuserid) = FetchSQLData();
 
+    my @grpadd = ();
+    my @grpdel = ();
+    my $chggrp = 0;
     SendSQL("SELECT id, name FROM groups");
-    while (MoreSQLData()) {
-        my ($groupid, $name) = FetchSQLData();
+    while (my ($groupid, $name) = FetchSQLData()) {
         if ($::FORM{"oldgroup_$groupid"} != ($::FORM{"group_$groupid"} ? 1 : 0)) {
             # group membership changed
             PushGlobalSQLState();
+            $chggrp = 1;
             SendSQL("DELETE FROM user_group_map 
                      WHERE user_id = $thisuserid
                      AND group_id = $groupid
@@ -731,11 +734,12 @@ if ($action eq 'update') {
                          (user_id, group_id, isbless, isderived)
                          VALUES ($thisuserid, $groupid, 0, 0)");
                 print "Added user to group $name<BR>\n";
+                push(@grpadd, $name);
             } else {
                 print "Dropped user from group $name<BR>\n";
+                push(@grpdel, $name);
             }
             PopGlobalSQLState();
-            
         }
         if ($editall && ($::FORM{"oldbless_$groupid"} != ($::FORM{"bless_$groupid"} ? 1 : 0))) {
             # group membership changed
@@ -756,6 +760,14 @@ if ($action eq 'update') {
             PopGlobalSQLState();
             
         }
+    }
+    my $fieldid = GetFieldID("bug_group");
+    if ($chggrp) {
+        SendSQL("INSERT INTO profiles_activity " .  
+                "(userid, who, profiles_when, fieldid, oldvalue, newvalue) " .  
+                "VALUES " .  "($thisuserid, $::userid, now(), $fieldid, " .  
+                SqlQuote(join(", ",@grpdel)) . ", " .
+                SqlQuote(join(", ",@grpadd)) . ")");
     }
 
 
