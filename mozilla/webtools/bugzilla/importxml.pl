@@ -88,12 +88,15 @@ sub sillyness {
     $zz = %::target_milestone;
 }
 
+# XML::Parser automatically unquotes characters when it
+# parses the XML, so this routine shouldn't be needed
+# for anything (see bug 109530).
 sub UnQuoteXMLChars {
     $_[0] =~ s/&amp;/&/g;
     $_[0] =~ s/&lt;/</g;
     $_[0] =~ s/&gt;/>/g;
-    $_[0] =~ s/&apos;/'/g;
-    $_[0] =~ s/&quot;/"/g;
+    $_[0] =~ s/&apos;/'/g;  # ' # Darned emacs colors
+    $_[0] =~ s/&quot;/"/g;  # " # Darned emacs colors
 #    $_[0] =~ s/([\x80-\xFF])/&XmlUtf8Encode(ord($1))/ge;
     return($_[0]);
 }
@@ -111,7 +114,7 @@ sub MailMessage {
   $header.= "Subject: $subject\n\n";
 
   open(SENDMAIL,
-    "|/usr/lib/sendmail -ODeliveryMode=background -t") ||
+    "|/usr/lib/sendmail -ODeliveryMode=background -t -i") ||
       die "Can't open sendmail";
   print SENDMAIL $header . $message . "\n";
   close SENDMAIL;
@@ -132,11 +135,7 @@ sub Log {
 sub Lock {
     if ($::lockcount <= 0) {
         $::lockcount = 0;
-        if (!open(LOCKFID, ">>data/maillock")) {
-            mkdir "data", 0777;
-            chmod 0777, "data";
-            open(LOCKFID, ">>data/maillock") || die "Can't open lockfile.";
-        }
+        open(LOCKFID, ">>data/maillock") || die "Can't open data/maillock: $!";
         my $val = flock(LOCKFID,2);
         if (!$val) { # '2' is magic 'exclusive lock' const.
             print "Content-type: text/html\n\n";
@@ -318,7 +317,7 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
       $long_description .= "$sorted_descs[$z]->{'bug_when'}"; 
       $long_description .= " ----\n\n";
     }
-    $long_description .=  UnQuoteXMLChars($sorted_descs[$z]->{'thetext'});
+    $long_description .=  $sorted_descs[$z]->{'thetext'};
     $long_description .=  "\n";
   }
 
@@ -351,12 +350,12 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
 
   if ( (defined $bug_fields{'bug_file_loc'}) && ($bug_fields{'bug_file_loc'}) ){
       push (@query, "bug_file_loc");
-      push (@values, SqlQuote(UnQuoteXMLChars($bug_fields{'bug_file_loc'})));
+      push (@values, SqlQuote($bug_fields{'bug_file_loc'}));
       }
 
   if ( (defined $bug_fields{'short_desc'}) && ($bug_fields{'short_desc'}) ){
       push (@query, "short_desc");
-      push (@values, SqlQuote(UnQuoteXMLChars($bug_fields{'short_desc'})) );
+      push (@values, SqlQuote($bug_fields{'short_desc'}) );
       }
 
 
