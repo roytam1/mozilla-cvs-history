@@ -237,12 +237,16 @@ sub split_cgi_args {
 # Environmental variables are checked for security.
 
 sub regenerate_HTML_pages {
-    local $ENV{"QUERY_STRING"} = '';
+    my $old_query_string =  $ENV{"QUERY_STRING"};
+
+    $ENV{"QUERY_STRING"} = '';
 
     system(
            $FileStructure::CGIBIN_DIR.'tinder.cgi', 
            '--daemon-mode',
            );
+
+    $ENV{"QUERY_STRING"} = $old_query_string;
 
     return 0;
 }
