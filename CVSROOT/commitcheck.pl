@@ -407,11 +407,7 @@ if (m:^mozilla/chimera/.*$:) {return '164';}
 if (m:^mozilla/layout/mathml/.*$:) {return '165';}
 if (m:^mozilla/browser/.*$:) {return '166';}
 if (m:^mozilla/toolkit/.*$:) {return '166';}
-if (m:^mozilla/mail/[^/]*$:) {return '170';}
-if (m:^mozilla/mail/app/.*$:) {return '170';}
-if (m:^mozilla/mail/base/.*$:) {return '170';}
-if (m:^mozilla/mail/components/.*$:) {return '170';}
-if (m:^mozilla/mail/extensions/.*$:) {return '170';}
+if (m:^mozilla/mail/.*$:) {return '170';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
