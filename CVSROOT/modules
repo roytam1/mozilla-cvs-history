@@ -484,7 +484,6 @@ NSPR -a \
 	mozilla/nsprpub
 
 SeaMonkeyCore -a \
-	mozilla/client.mk \
 	mozilla/configure.in \
 	mozilla/Makefile.in \
 	mozilla/aclocal.m4 \
@@ -516,7 +515,7 @@ SeaMonkeyCore -a \
 
 SeaMonkeyLayout -a \
 	SeaMonkeyCore \
-	nglayout.mk \
+	mozilla/nglayout.mk \
 	mozilla/dom \
 	mozilla/gfx \
 	mozilla/htmlparser \
@@ -530,6 +529,7 @@ SeaMonkeyXPToolKit -a \
 	mozilla/xpfe
 
 SeaMonkeyBrowser -a \
+	mozilla/client.mk \
 	SeaMonkeyXPToolKit
 
 # This needs work!
