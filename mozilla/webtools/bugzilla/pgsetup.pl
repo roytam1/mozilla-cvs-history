@@ -745,7 +745,7 @@ if ($my_db_check) {
 
     my $sql_want = "7.1.2";  # minimum version of PostgreSQL 
 
-    my $dsn = "dbi:$db_base:dbname=template1";
+    my $dsn = "dbi:$db_base:dbname=template1;host=$my_db_host";
     my $dbh = DBI->connect($dsn, "postgres", "")
       or die "Can't connect to the $db_base database. Is the database " .
         "installed and\nup and running?\n\n";
@@ -803,9 +803,7 @@ EOF
 }
 
 # now get a handle to the database:
-#my $connectstring = "dbi:$db_base:dbname=$my_db_name;host=$my_db_host";
-
-my $connectstring = "dbi:$db_base:dbname=$my_db_name";
+my $connectstring = "dbi:$db_base:dbname=$my_db_name;host=$my_db_host";
 my $dbh = DBI->connect($connectstring, $my_db_user, $my_db_pass, {PrintError=>0, RaiseError=>1})
     or die "Can't connect to the table '$connectstring'.\n",
            "Have you read the Bugzilla Guide in the doc directory?  Have you read the doc of '$db_base'?\n";
@@ -1375,25 +1373,29 @@ sub AddFDef ($$$) {
     $name = $dbh->quote($name);
     $description = $dbh->quote($description);
 
-    my $sth = $dbh->prepare("SELECT fieldid FROM fielddefs " .
-                            "WHERE name = $name");
-    # print "Name = $name\n";
+    my $query = "SELECT fieldid FROM fielddefs WHERE name = $name";
+    print "$query\n";
+    my $sth = $dbh->prepare($query);
     $sth->execute();
-    my ($fieldid) = ($sth->fetchrow_array());
-
-    if ( !$fieldid ) {
-        $dbh->do("INSERT INTO fielddefs " .
-                 "(name, description, mailhead, sortkey) VALUES " .
-                 "($name, $description, $mailhead, $headernum)");
+    my ($fieldid) = $sth->fetchrow_array();
+    print "FieldID = $fieldid\n"; 
+    if (!$fieldid) {
+        $query = "INSERT INTO fielddefs (name, description, mailhead, sortkey) VALUES " .
+                 "($name, $description, $mailhead, $headernum)"; 
+        print "$query\n";
+        $dbh->do($query);
     } else {
-        $dbh->do("UPDATE fielddefs set name = $name, description = $description, " .
-                 "mailhead = $mailhead, sortkey = $headernum");
+        $query = "UPDATE fielddefs set name = $name, description = $description, " . 
+                 "mailhead = $mailhead, sortkey = $headernum" . 
+                 "WHERE fieldid = $fieldid";
+        print "$query\n";
+        $dbh->do($query);
     }
     $headernum++;
 }
 
 
-AddFDef("bug_id", "Bug \#", 1);
+AddFDef("bug_id", "Bug #", 1);
 AddFDef("short_desc", "Summary", 1);
 AddFDef("product", "Product", 1);
 AddFDef("version", "Version", 1);
