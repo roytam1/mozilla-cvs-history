@@ -302,7 +302,7 @@ sub printfile {
     }
 }
 
-($Conf, $HTTP, $Path) = &init;
+($Conf, $HTTP, $Path) = &init($0);
 
 #if the file is html then don't print a header because the file
 #has its own -dme
