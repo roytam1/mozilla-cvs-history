@@ -59,7 +59,10 @@ use Storable;
 sub save_structure {
   my ($data_refs, $data_file,) = @_;
 
-  store($data_refs, $data_file,);
+  my ($tmpfile) = "$data_file.$main::UID";
+
+  store($data_refs, $tmpfile);
+  main::atomic_rename_file($tmpfile, $data_file);
 
   return ;
 }
@@ -74,7 +77,7 @@ sub load_structure {
   (-r $data_file) || (-R $data_file) ||
     die("data file: $data_file is not readable\n");
 
-  my ($r) = retrieve($data_file,);
+  my ($r) = retrieve($data_file);
 
   return $r;
 }
