@@ -304,6 +304,12 @@ $fullname{'93'} = 'Zlib';
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'HEAD') {
+if (m:^mozilla/gfx/public/.*$:) {return '177';}
+if (m:^mozilla/widget/public/.*$:) {return '177';}
+if (m:^mozilla/nsprpub/.*$:) {return '78';}
+if (m:^mozilla/gfx/src/mac/.*$:) {return '178';}
+if (m:^mozilla/widget/src/mac/.*$:) {return '178';}
+if (m:^mozilla/modules/plugin/.*$:) {return '81';}
 if (m:^mozilla/modules/libpref/.*$:) {return '82';}
 if (m:^mozilla/modules/progress/.*$:) {return '83';}
 if (m:^mozilla/modules/libreg/.*$:) {return '84';}
@@ -361,19 +367,19 @@ if (m:^mozilla/java/util/.*$:) {return '133';}
 if (m:^CVSROOT/commitcheck\.pl$:) {return '3';}
 if (m:^CVSROOT/passwd$:) {return '3';}
 if (m:^mozilla/extensions/xmlterm/.*$:) {return '141';}
+if (m:^xpcom/remote$:) {return '143';}
 if (m:^mozilla/security/coreconf/.*$:) {return '145';}
 if (m:^mozilla/security/jss/.*$:) {return '145';}
 if (m:^mozilla/security/nss/.*$:) {return '145';}
-if (m:^xpcom/remote$:) {return '143';}
-if (m:^composer$:) {return '173';}
 if (m:^embedding/browser/gtk$:) {return '144';}
-if (m:^mozilla/[^/]*$:) {return '19';}
+if (m:^composer$:) {return '173';}
 if (m:^mozilla/mstone/.*$:) {return '147';}
+if (m:^mozilla/[^/]*$:) {return '19';}
+if (m:^mozilla/xpinstall/.*$:) {return '150';}
 if (m:^mozilla/gfx/src/xlib/.*$:) {return '121';}
 if (m:^mozilla/widget/src/xlib/.*$:) {return '121';}
-if (m:^mozilla/xpinstall/.*$:) {return '150';}
-if (m:^mozilla/ef/.*$:) {return '46';}
 if (m:^mozilla/security/manager/.*$:) {return '151';}
+if (m:^mozilla/ef/.*$:) {return '46';}
 if (m:^mozilla/gfx/src/gtk/.*$:) {return '49';}
 if (m:^mozilla/widget/src/gtk/.*$:) {return '49';}
 if (m:^mozilla/widget/src/gtk2/.*$:) {return '49';}
@@ -427,12 +433,6 @@ if (m:^js/src/liveconnect/.*$:) {return '72';}
 if (m:^mozilla/gfx/src/windows/.*$:) {return '175';}
 if (m:^mozilla/widget/src/windows/.*$:) {return '175';}
 if (m:^mozilla/netwerk/.*$:) {return '77';}
-if (m:^mozilla/gfx/public/.*$:) {return '177';}
-if (m:^mozilla/widget/public/.*$:) {return '177';}
-if (m:^mozilla/nsprpub/.*$:) {return '78';}
-if (m:^mozilla/gfx/src/mac/.*$:) {return '178';}
-if (m:^mozilla/widget/src/mac/.*$:) {return '178';}
-if (m:^mozilla/modules/plugin/.*$:) {return '81';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
