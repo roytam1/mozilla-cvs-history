@@ -141,6 +141,15 @@ sub get_env {
 
   $HOSTNAME = Sys::Hostname::hostname();
 
+  # check both real and effective uid of the process to see if we have
+  # been configured to run with too much privileges.
+
+  ( $< == 0 ) &&
+    die("Security Error. Must not run this program as root\n");
+
+  ( $> == 0 ) &&
+    die("Security Error. Must not run this program as root\n");
+
   my ($logdir) = File::Basename::dirname($ERROR_LOG);
   mkdir_R($logdir);
 
