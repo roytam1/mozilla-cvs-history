@@ -181,6 +181,9 @@ $fullname{'83'} = 'Progress Window';
 $mode{'84'} = 'Open';
 $branch{'84'} = 'HEAD';
 $fullname{'84'} = 'Registry';
+$mode{'138'} = 'Open';
+$branch{'138'} = 'HEAD';
+$fullname{'138'} = 'Rhino';
 $mode{'86'} = 'Open';
 $branch{'86'} = 'HEAD';
 $fullname{'86'} = 'Security Stubs';
@@ -298,6 +301,7 @@ if (m:^mozilla/layout/.*$:) {return '98';}
 if (m:^mozilla/webshell/.*$:) {return '101';}
 if (m:^mozilla/htmlparser/.*$:) {return '102';}
 if (m:^mozilla/dom/.*$:) {return '103';}
+if (m:^mozilla/js/rhino/.*$:) {return '138';}
 if (m:^mozilla/xpfe$:) {return '137';}
 if (m:^mozilla/js/tests$:) {return '114';}
 if (m:^js/src/perlconnect$:) {return '111';}
