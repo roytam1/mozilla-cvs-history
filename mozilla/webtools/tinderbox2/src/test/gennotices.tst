@@ -1,4 +1,6 @@
 #!#perl# --
+# -*- Mode: perl; indent-tabs-mode: nil -*-
+#
 
 # generate random notices for testing purposes.  This program will
 # generate several hours worth of 'random notes' staring at the
@@ -101,9 +103,9 @@ $TINDERBOX_DATA_DIR = ( $TinderConfig::TINDERBOX_DATA_DIR ||
 		      'Slippage',
 
 		      # build
-#		      'Build_Packages_(Solaris)', 'Build_Packages_(Linux)',
-#		      'Coverage_Tests', 'Performance_Tests', 'Failover_Tests', 
-#		      'Lint_Tests', 
+		      'Build_Packages_(Solaris)', 'Build_Packages_(Linux)',
+		      'Coverage_Tests', 'Performance_Tests', 'Failover_Tests', 
+		      'Lint_Tests', 
 		      'Next_Milestone',
 
 	       );

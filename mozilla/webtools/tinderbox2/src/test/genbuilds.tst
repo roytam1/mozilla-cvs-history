@@ -1,4 +1,6 @@
 #!#perl# --
+# -*- Mode: perl; indent-tabs-mode: nil -*-
+#
 
 # generate random build data for testing purposes.  This program will
 # generate several hours worth of 'randomized builds' starting at the
