@@ -247,6 +247,11 @@ sub savetree_db {
 # looks like:
 # 		$DATABASE{$tree}{$time};
 
+# so really everything above the dotted line is an implementation
+# about how the database is stored on the disk, this part is an
+# implementation of the DATABASE datastructure.
+
+
 
 # remove all records from the database which are older then last_time.
 
@@ -287,6 +292,15 @@ sub event_times_vec {
   return @out;
 }
 
+# where can people attach notices to?
+# Really this is the names the columns produced by this DB
+
+# the default for columns is not to allow notices, unless they have
+# installed all the hooks they need and override this function.
+
+sub notice_association {
+    return ;
+}
 
 
 1;
