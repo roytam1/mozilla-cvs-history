@@ -86,6 +86,6 @@ $sql = "UPDATE `t_main` SET `Rating`='$rating' WHERE `ID`='$id' LIMIT 1";
 
 
 $return_path="extensions/moreinfo.php?id=$_POST[id]&vid=$_POST[vid]&page=comments&action=postsuccessfull";
-header("Location: http://$_SERVER[HTTP_HOST]/$return_path");
+header("Location: http://$sitehostname/$return_path");
 exit;
 ?>
