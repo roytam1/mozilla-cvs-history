@@ -313,10 +313,10 @@ sub save_tree_state {
 
   LoadCheckins();
 
-  if ($value == 'Open') {
+  if ($value eq 'Open') {
       $clear_list_of_checkins=1;
       AdminOpenTree($time_now, $clear_list_of_checkins);
-  } elsif ($value == 'Closed') {
+  } elsif ($value eq 'Closed') {
       AdminCloseTree($time_now);
   } else {
       die("Bonsai does not implement TreeState: $value\n");
