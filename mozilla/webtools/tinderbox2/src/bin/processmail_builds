@@ -927,7 +927,7 @@ sub parse_mail_body {
 
         my $good_line = (
                          ($print !~ m!<\s*a\s+!i) ||
-                         ($print =~ m!>[^<>]*<\s*/a\s+!i)
+                         ($print =~ m!>[^<>]*<\s*/a\s*>!i)
                          );
 
         if ($good_line) {
