@@ -1736,6 +1736,10 @@ sub AddGroup {
 # BugZilla uses --GROUPS-- to assign various rights to its users. 
 #
 
+sub RenameField ($$$);
+sub GetFieldDef ($$);
+sub AddField ($$$);
+
 RenameField ('groups', 'isbuggroup', 'group_type');
 AddGroup 'tweakparams',      'Can tweak operating parameters';
 AddGroup 'editusers',      'Can edit or disable users';
@@ -1746,7 +1750,7 @@ AddGroup 'admin',  'Administrators';
 
 #  Add the group_id here because this code is run before the code 
 #  that updates the database structure
-&AddField('groups', 'group_id', 'mediumint not null auto_increment primary key');
+AddField('groups', 'group_id', 'mediumint not null auto_increment primary key');
 if (GetFieldDef('profiles', 'groupset')) {
     my $sth = $dbh->prepare("SELECT group_id FROM groups 
                 WHERE name = 'admin'");
