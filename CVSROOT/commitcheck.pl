@@ -220,8 +220,6 @@ if (m:^mozilla/lib/layout/.*$:) {return '56';}
 if (m:^mozilla/modules/edtplug/.*$:) {return '56';}
 if (m:^mozilla/cmd/dialup/.*$:) {return '58';}
 if (m:^mozilla/directory/.*$:) {return '59';}
-if (m:^mozilla/include/xlate\.h/.*$:) {return '62';}
-if (m:^mozilla/lib/xlate/.*$:) {return '62';}
 if (m:^mozilla/modules/libimg/.*$:) {return '63';}
 if (m:^mozilla/modules/libutil/.*$:) {return '63';}
 if (m:^mozilla/lib/libcnv/.*$:) {return '65';}
