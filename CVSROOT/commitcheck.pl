@@ -187,6 +187,9 @@ $fullname{'143'} = 'Remote XPCOM';
 $mode{'138'} = 'Open';
 $branch{'138'} = 'HEAD';
 $fullname{'138'} = 'Rhino';
+$mode{'145'} = 'Open';
+$branch{'145'} = 'HEAD';
+$fullname{'145'} = 'security';
 $mode{'86'} = 'Open';
 $branch{'86'} = 'HEAD';
 $fullname{'86'} = 'Security Stubs';
@@ -248,6 +251,7 @@ if ($b eq 'ColorSync_19980824_BRANCH') {
 if ($b eq 'HEAD') {
 if (m:^CVSROOT/commitcheck\.pl$:) {return '3';}
 if (m:^CVSROOT/passwd$:) {return '3';}
+if (m:^mozilla/security/.*$:) {return '145';}
 if (m:^mozilla/[^/]*$:) {return '19';}
 if (m:^mozilla/cmd/macfe/.*$:) {return '47';}
 if (m:^mozilla/gfx/src/xlib/.*$:) {return '121';}
