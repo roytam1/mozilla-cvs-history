@@ -52,17 +52,17 @@ sub IssuePasswordToken {
     # Generate a unique token and insert it into the tokens table.
     # We have to lock the tokens table before generating the token, 
     # since the database must be queried for token uniqueness.
-	if ($::driver eq 'mysql') {
-    	&::SendSQL("LOCK TABLE tokens WRITE");
-	}
+    if ($::driver eq 'mysql') {
+        &::SendSQL("LOCK TABLE tokens WRITE");
+    }
     my $token = GenerateUniqueToken();
     my $quotedtoken = &::SqlQuote($token);
     my $quotedipaddr = &::SqlQuote($::ENV{'REMOTE_ADDR'});
     &::SendSQL("INSERT INTO tokens ( userid , issuedate , token , tokentype , eventdata )
                 VALUES      ( $userid , NOW() , $quotedtoken , 'password' , $quotedipaddr )");
-	if ($::driver eq 'mysql') {
-    	&::SendSQL("UNLOCK TABLES");
-	}
+    if ($::driver eq 'mysql') {
+        &::SendSQL("UNLOCK TABLES");
+    }
     # Mail the user the token along with instructions for using it.
     MailPasswordToken($loginname, $token);
 
@@ -169,13 +169,13 @@ Cancelled Because: $cancelaction
     close SENDMAIL;
 
     # Delete the token from the database.
-	if ($::driver eq 'mysql') {
-	    &::SendSQL("LOCK TABLE tokens WRITE");
+    if ($::driver eq 'mysql') {
+        &::SendSQL("LOCK TABLE tokens WRITE");
     }
-	&::SendSQL("DELETE FROM tokens WHERE token = $quotedtoken");
-	if ($::driver eq 'mysql') {
-    	&::SendSQL("UNLOCK TABLES");
-	}
+    &::SendSQL("DELETE FROM tokens WHERE token = $quotedtoken");
+    if ($::driver eq 'mysql') {
+        &::SendSQL("UNLOCK TABLES");
+    }
 }
 
 sub HasPasswordToken {
