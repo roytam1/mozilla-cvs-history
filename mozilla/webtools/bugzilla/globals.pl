@@ -763,14 +763,12 @@ sub InsertNewUser {
         }
     }
         
-    my $encrypted = crypt($password, substr($password, 0, 2));
-    $encrypted = SqlQuote($encrypted);    
-
     # Insert the new user record into the database.            
     $username = SqlQuote($username);
     $realname = SqlQuote($realname);
-    SendSQL("insert into profiles (login_name, realname, cryptpassword, groupset) " . 
-            "values ($username, $realname, $encrypted, $groupset)");
+    $cryptpassword = SqlQuote($cryptpassword);
+    SendSQL("INSERT INTO profiles (login_name, realname, cryptpassword, groupset) 
+             VALUES ($username, $realname, $cryptpassword, $groupset)");
     PopGlobalSQLState();
 
     # Return the password to the calling code so it can be included 
@@ -1787,10 +1785,10 @@ sub max {
 # Trim whitespace from front and back.
 
 sub trim {
-    ($_) = (@_);
-    s/^\s+//g;
-    s/\s+$//g;
-    return $_;
+    my ($str) = @_;
+    $str =~ s/^\s+//g;
+    $str =~ s/\s+$//g;
+    return $str;
 }
 
 

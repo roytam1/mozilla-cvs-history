@@ -56,7 +56,7 @@ my $serverpush = 0;
 ConnectToDatabase();
 
 #print "Content-type: text/plain\n\n";    # Handy for debugging.
-#$::FORM{'debug'} = 0;
+#$::FORM{'debug'} = 1;
 
 
 if (grep(/^cmd-/, keys(%::FORM))) {
@@ -1054,7 +1054,7 @@ DefCol("version", "substring(bugs.version, 1, 5)", "Vers", "bugs.version");
 DefCol("os", "substring(bugs.op_sys, 1, 4)", "OS", "bugs.op_sys");
 DefCol("target_milestone", "bugs.target_milestone", "TargetM",
        "bugs.target_milestone");
-DefCol("votes", "bugs.votes", "Votes", "bugs.votes");
+DefCol("votes", "bugs.votes", "Votes", "bugs.votes desc");
 DefCol("keywords", "bugs.keywords", "Keywords", "bugs.keywords", 5);
 
 my @collist;
@@ -1587,7 +1587,7 @@ document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCh
     if (Param("useqacontact")) {
         print "
 <TR>
-<TD ALIGN=\"right\"><B>QA Contact:</B></TD>
+<TD><B>QA Contact:</B></TD>
 <TD COLSPAN=3><INPUT NAME=qa_contact SIZE=32 VALUE=\"" .
             value_quote($::dontchange) . "\"></TD>
 </TR>";
@@ -1606,7 +1606,7 @@ document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCh
 
     if (@::legal_keywords) {
         print qq{
-<TR><TD ALIGN=\"RIGHT\"><B><A HREF="describekeywords.cgi">Keywords</A>:</TD>
+<TR><TD><B><A HREF="describekeywords.cgi">Keywords</A>:</TD>
 <TD COLSPAN=3><INPUT NAME=keywords SIZE=32 VALUE="">
 <SELECT NAME="keywordaction">
 <OPTION VALUE="add">Add these keywords

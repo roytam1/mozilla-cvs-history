@@ -106,7 +106,7 @@ if ($::FORM{'assigned_to'} eq "") {
 my @bug_fields = ("product", "version", "rep_platform",
                   "bug_severity", "priority", "op_sys", "assigned_to",
                   "bug_status", "bug_file_loc", "short_desc", "component",
-                  "target_milestone", "resolution");
+                  "target_milestone");
 
 if (Param("useqacontact")) {
     SendSQL("select initialqacontact from components where program=" .
@@ -117,9 +117,9 @@ if (Param("useqacontact")) {
         $::FORM{'qa_contact'} = $qacontact;
         push(@bug_fields, "qa_contact");
     }
-} else {
-    $::FORM{'qa_contact'} = "0";
-}
+} # else {
+#    $::FORM{'qa_contact'} = "0";
+#}
 
 if (exists $::FORM{'bug_status'}) {
     if (!UserInGroup("canedit") && !UserInGroup("canconfirm")) {

@@ -173,7 +173,7 @@ sake of convience.<p>";
             "FROM groups " .
             "WHERE isbuggroup = 0 " .
             "ORDER BY group_bit");
-
+    
     while (MoreSQLData()) {
         my ($bit, $name, $desc, $regexp) = FetchSQLData();
         print "<tr>\n";
@@ -318,11 +318,7 @@ if ($action eq 'new') {
     my $bit = "";
     foreach (@bitvals) {
         if ($bit eq "") {
-            if ($::driver eq 'mysql') {
-                SendSQL("SELECT bit FROM groups WHERE bit=" . SqlQuote($_));
-            } elsif ($::driver eq 'Pg') {
-                SendSQL("SELECT group_bit FROM groups WHERE group_bit=" . SqlQuote($_));
-            }
+            SendSQL("SELECT group_bit FROM groups WHERE group_bit=" . SqlQuote($_));
             if (!FetchOneColumn()) { $bit = $_; }
         }
     }
@@ -335,27 +331,15 @@ if ($action eq 'new') {
     }
 
     # Add the new group
-    if ($::driver eq 'mysql') {
-        SendSQL("INSERT INTO groups ( " .
-                "bit, name, description, isbuggroup, userregexp, isactive" .
-                " ) VALUES (" .
-                $bit . "," .
-                SqlQuote($name) . "," .
-                SqlQuote($desc) . "," .
-                "1," .
-                SqlQuote($regexp) . "," .
-                $isactive . ")" );
-    } elsif ($::driver eq 'Pg') {
-        SendSQL("INSERT INTO groups ( " .
-                "group_bit, name, description, isbuggroup, userregexp, isactive" .
-                " ) VALUES (" .
-                $bit . "," .
-                SqlQuote($name) . "," .
-                SqlQuote($desc) . "," .
-                "1," .
-                SqlQuote($regexp) . "," . 
-                $isactive . ")" );
-    }
+    SendSQL("INSERT INTO groups ( " .
+            "group_bit, name, description, isbuggroup, userregexp, isactive" .
+            " ) VALUES (" .
+            $bit . "," .
+            SqlQuote($name) . "," .
+            SqlQuote($desc) . "," .
+            "1," .
+            SqlQuote($regexp) . "," . 
+            $isactive . ")" );
 
     print "OK, done.<p>\n";
     print "Your new group was assigned bit #$bit.<p>";
@@ -379,26 +363,16 @@ if ($action eq 'del') {
         PutFooter();
         exit;
     }
-    if ($::driver eq 'mysql') {
-        SendSQL("SELECT bit FROM groups WHERE bit=" . SqlQuote($bit));
-    } elsif ($::driver eq 'Pg') {
-        SendSQL("SELECT group_bit FROM groups WHERE group_bit=" . SqlQuote($bit));
-    }
+    SendSQL("SELECT group_bit FROM groups WHERE group_bit=" . SqlQuote($bit));
     if (!FetchOneColumn()) {
         ShowError("That group doesn't exist.<BR>" .
                   "Click the <b>Back</b> button and try again.");
         PutFooter();
         exit;
     }
-    if ($::driver eq 'mysql') {
-        SendSQL("SELECT name,description " .
-                "FROM groups " .
-                "WHERE bit = " . SqlQuote($bit));
-    } elsif ($::driver eq 'Pg') {
-        SendSQL("SELECT name,description " .
-                "FROM groups " .
-                "WHERE group_bit = " . SqlQuote($bit));
-    }
+    SendSQL("SELECT name,description " .
+            "FROM groups " .
+            "WHERE group_bit = " . SqlQuote($bit));
 
     my ($name, $desc) = FetchSQLData();
     print "<table border=1>\n";
@@ -609,11 +583,7 @@ if ($action eq 'delete') {
               "bugs that were not also in another group are now " .
               "publicly visible.<BR>";
     }
-    if ($::driver eq 'mysql') {
-        SendSQL("DELETE FROM groups WHERE bit = $bit");
-    } elsif ($::driver eq 'Pg') {
-        SendSQL("DELETE FROM groups WHERE group_bit = $bit");
-    }
+    SendSQL("DELETE FROM groups WHERE group_bit = $bit");
     print "<B>Group $bit has been deleted.</B><BR>";
 
     foreach my $userid (@opusers) {
@@ -662,15 +632,9 @@ if ($action eq 'update') {
                         ShowError("You cannot update the name of a " .
                                   "system group. Skipping $v");
                     } else {
-                        if ($::driver eq 'mysql') {
-                            SendSQL("UPDATE groups SET name = " .
-                                    SqlQuote($::FORM{"name-$v"}) .
-                                    " WHERE bit = " . SqlQuote($v));
-                        } elsif ($::driver eq 'Pg') {
-                            SendSQL("UPDATE groups SET name = " .
-                                    SqlQuote($::FORM{"name-$v"}) .
-                                    " WHERE group_bit = " . SqlQuote($v));
-                        }
+                        SendSQL("UPDATE groups SET name = " .
+                                SqlQuote($::FORM{"name-$v"}) .
+                                " WHERE group_bit = " . SqlQuote($v));
                         print "Group $v name updated.<br>\n";
                     }
                 } else {
@@ -684,13 +648,8 @@ if ($action eq 'update') {
                 SendSQL("SELECT description FROM groups WHERE description=" .
                          SqlQuote($::FORM{"desc-$v"}));
                 if (!FetchOneColumn()) {
-                    if ($::driver eq 'mysql') {
-                        SendSQL("UPDATE groups SET description=" .
-                                " WHERE bit=" . SqlQuote($v));
-                    } elsif ($::driver eq 'Pg') {
-                        SendSQL("UPDATE groups SET description=" .
-                                " WHERE group_bit=" . SqlQuote($v));
-                    }
+                    SendSQL("UPDATE groups SET description=" .
+                            " WHERE group_bit=" . SqlQuote($v));
                     print "Group $v description updated.<br>\n";
                 } else {
                     ShowError("Duplicate description '" . $::FORM{"desc-$v"} .
@@ -700,15 +659,9 @@ if ($action eq 'update') {
             }
             if ($::FORM{"oldregexp-$v"} ne $::FORM{"regexp-$v"}) {
                 $chgs = 1;
-                if ($::driver eq 'mysql') {
-                    SendSQL("UPDATE groups SET userregexp=" .
-                            SqlQuote($::FORM{"regexp-$v"}) .
-                            " WHERE bit=" . SqlQuote($v));
-                } elsif ($::driver eq 'Pg') {
-                    SendSQL("UPDATE groups SET userregexp=" .
-                            SqlQuote($::FORM{"regexp-$v"}) .
-                            " WHERE group_bit=" . SqlQuote($v));
-                }
+                SendSQL("UPDATE groups SET userregexp=" .
+                        SqlQuote($::FORM{"regexp-$v"}) .
+                        " WHERE group_bit=" . SqlQuote($v));
                 print "Group $v user regexp updated.<br>\n";
             }
             # convert an undefined value in the inactive field to zero
@@ -718,13 +671,8 @@ if ($action eq 'update') {
             if ($::FORM{"oldisactive-$v"} != $isactive) {
                 $chgs = 1;
                 if ($isactive == 0 || $isactive == 1) {
-                    if ($::driver eq 'mysql') {
-                        SendSQL("UPDATE groups SET isactive=$isactive" .
-                                " WHERE bit=" . SqlQuote($v));
-                    } elsif ($::driver eq 'Pg') {
-                        SendSQL("UPDATE groups SET isactive=$isactive" .
-                                " WHERE group_bit=" . SqlQuote($v));
-                    }
+                    SendSQL("UPDATE groups SET isactive=$isactive" .
+                            " WHERE group_bit=" . SqlQuote($v));
                     print "Group $v active flag updated.<br>\n";
                 } else {
                     ShowError("The value '" . $isactive .

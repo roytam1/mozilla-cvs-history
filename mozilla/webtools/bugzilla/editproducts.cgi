@@ -331,7 +331,7 @@ if ($action eq 'new') {
     SendSQL("INSERT INTO products ( " .
             "product, description, milestoneurl, disallownew, votesperuser, " .
             "maxvotesperbug, votestoconfirm, defaultmilestone" .
-            " ) VALUES (" .
+            " ) VALUES ( " .
             SqlQuote($product) . "," .
             SqlQuote($description) . "," .
             SqlQuote($milestoneurl) . "," .

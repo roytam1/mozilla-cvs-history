@@ -463,8 +463,8 @@ print "
 
 if ($::usergroupset ne '0') {
     if ($::driver eq 'mysql') {
-        SendSQL("SELECT bit, description FROM groups " .
-                "WHERE (bit & $::usergroupset) != 0 " .
+        SendSQL("SELECT group_bit, description FROM groups " .
+                "WHERE (group_bit & $::usergroupset) != 0 " .
                 "  AND isbuggroup != 0 AND isactive = 1 ORDER BY description");
     } elsif ($::driver eq 'Pg') {
         SendSQL("SELECT group_bit, name, description FROM groups " .

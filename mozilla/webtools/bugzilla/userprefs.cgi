@@ -509,8 +509,8 @@ sub ShowPermissions {
     my $found = 0;
     if ($::driver eq 'mysql') {
         SendSQL("SELECT description FROM groups " .
-                "WHERE (group_bit & $::usergroupset) != 0 " .
-                "ORDER BY group_bit");
+                "WHERE (bit & $::usergroupset) != 0 " .
+                "ORDER BY bit");
     } elsif ($::driver eq 'Pg') {
         SendSQL("SELECT description FROM groups " .
                 "WHERE (group_bit & int8($::usergroupset)) != 0 " .
@@ -533,8 +533,8 @@ sub ShowPermissions {
         print "<P><UL>\n";
         if ($::driver eq 'mysql') {
             SendSQL("SELECT description FROM groups " .
-                    "WHERE (group_bit & $blessgroupset) != 0 " .
-                    "ORDER BY group_bit");
+                    "WHERE (bit & $blessgroupset) != 0 " .
+                    "ORDER BY bit");
         } elsif ($::driver eq 'Pg') {
             SendSQL("SELECT description FROM groups " .
                     "WHERE (group_bit & int8($blessgroupset)) != 0 " .
@@ -609,7 +609,7 @@ foreach my $i (@banklist) {
         my $zz;
         ($zz, $bankdescription, $showfunc, $savefunc) = (@$i);
     } else {
-        print qq{<TD ALIGN="center" BGCOLOR="#ababab"><A HREF="userprefs.cgi?bank=$name">$description</A></TD>};
+        print qq{<TD ALIGN="center" BGCOLOR="lightblue"><A HREF="userprefs.cgi?bank=$name">$description</A></TD>};
     }
 }
 print qq{

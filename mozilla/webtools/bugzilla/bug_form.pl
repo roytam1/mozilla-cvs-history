@@ -221,11 +221,12 @@ if (1 < @prodlist) {
         "</SELECT>";
 }
 else {
-    $product_popup = $bug{'product'};
+    $product_popup = $bug{'product'} . 
+        "<INPUT TYPE=\"HIDDEN\" NAME=\"product\" VALUE=\"$bug{'product'}\">";
 }
 
 print "
-<INPUT TYPE=HIDDEN NAME=\"delta_ts\" VALUE=\"" . value_quote($bug{'delta_ts'}) . "\">
+<INPUT TYPE=HIDDEN NAME=\"delta_ts\" VALUE=\"$bug{'delta_ts'}\">
 <INPUT TYPE=HIDDEN NAME=\"longdesclength\" VALUE=\"$longdesclength\">
 <INPUT TYPE=HIDDEN NAME=\"id\" VALUE=$id>
   <TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0><TR>
@@ -416,7 +417,7 @@ if ($::prodmaxvotes{$bug{'product'}}) {
 <table><tr>
 <th><a href="votehelp.html">Votes:</a></th>
 <td>
-    $bug{'votes'}&nbsp;&nbsp;&nbsp;
+$bug{'votes'}&nbsp;&nbsp;&nbsp;
 <a href="showvotes.cgi?bug_id=$id">Show votes for this bug</a>&nbsp;&nbsp;&nbsp;
 <a href="showvotes.cgi?voteon=$id">Vote for this bug</a>
 </td>

@@ -494,13 +494,12 @@ if ($action eq 'new') {
     }
 
     # Add the new user
-    my $encrypted = crypt($password, substr($password, 0, 2));
     SendSQL("INSERT INTO profiles ( " .
             "login_name, cryptpassword, realname, groupset, " .
             "disabledtext" .
-            " ) VALUES (" .
+            " ) VALUES ( " .
             SqlQuote($user) . "," .
-            SqlQuote($encrypted) . "," .
+            SqlQuote(Crypt($password)) . "," .
             SqlQuote($realname) . "," .
             $bits . "," .
             SqlQuote($disabledtext) . ")" );
@@ -578,7 +577,7 @@ if ($action eq 'del') {
     } elsif ($::driver eq 'Pg') {
         SendSQL("SELECT name
                  FROM groups
-                 WHERE group_bit & $groupset = group_bit
+                 WHERE (group_bit & int8($groupset)) = group_bit
                  ORDER BY isbuggroup, name");
     }
     my $found = 0;
@@ -812,7 +811,7 @@ if ($action eq 'update') {
                        "(userid,who,profiles_when,fieldid,oldvalue,newvalue) " .
                        "VALUES " .
                        "($u, $::userid, now(), $fieldid, " .
-                       SqlQuote($groupsetold) . ", " . SqlQuote($groupset) . ")");
+                       " $groupsetold, $groupset)");
            }
            print "Updated permissions.\n";
        }

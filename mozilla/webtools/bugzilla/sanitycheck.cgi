@@ -214,14 +214,22 @@ CrossCheck("products", "product",
 
 
 Status("Checking groups");
-SendSQL("select group_bit from groups");
+if ($::driver eq 'mysql') {
+    SendSQL("select bit from groups");
+} elsif ($::driver eq 'Pg') {
+    SendSQL("select group_bit from groups");
+}
 while (my $bit = FetchOneColumn()) {
     if ( $bit != pow(2, int(log($bit) / log(2))) ) {
         Alert("Illegal bit number found in group table: $bit");
     }
 }
     
-SendSQL("select sum(group_bit) from groups where isbuggroup != 0");
+if ($::driver eq 'mysql') {
+    SendSQL("select sum(bit) from groups where isbuggroup != 0");
+} elsif ($::driver eq 'Pg') {
+    SendSQL("select sum(group_bit) from groups where isbuggroup != 0");
+}
 my $buggroupset = FetchOneColumn();
 if (!defined $buggroupset || $buggroupset eq "") {
     $buggroupset = 0;

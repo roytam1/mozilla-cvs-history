@@ -29,6 +29,8 @@
 use diagnostics;
 use strict;
 
+use lib qw(.);
+
 # Include the Bugzilla CGI and general utility library.
 require "CGI.pl";
 
@@ -139,7 +141,7 @@ exit;
 
 sub validateID
 {
-  # Validate the value of the "id" form field, which must contain a positive
+  # Validate the value of the "id" form field, which must contain an
   # integer that is the ID of an existing attachment.
 
   $::FORM{'id'} =~ /^[1-9][0-9]*$/
@@ -555,7 +557,7 @@ sub edit
   # Retrieve a list of status flags that have been set on the attachment.
   my %statuses;
   SendSQL("SELECT  id, name 
-           FROM    attachstatuses, attachstatusdefs 
+           FROM    attachstatuses JOIN attachstatusdefs 
            WHERE   attachstatuses.statusid = attachstatusdefs.id 
            AND     attach_id = $::FORM{'id'}");
   while ( my ($id, $name) = FetchSQLData() )

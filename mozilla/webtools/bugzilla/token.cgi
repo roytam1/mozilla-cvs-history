@@ -27,7 +27,6 @@
 # Make it harder for us to do dangerous things in Perl.
 use diagnostics;
 use strict;
-use lib '.';
 
 # Include the Bugzilla CGI and general utility library.
 require "CGI.pl";

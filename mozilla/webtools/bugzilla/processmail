@@ -50,7 +50,7 @@ my %nomail;
 my @excludedAddresses = ();
 
 # disable email flag for offline debugging work
-my $enableSendMail = 0;
+my $enableSendMail = 1;
 
 my %force;
 @{$force{'QAcontact'}} = ();
@@ -181,7 +181,7 @@ sub ProcessOneBug {
 
     my $deptext = "";
 
-    my $resid = "";
+    my $resid =
 
     SendSQL("SELECT bugs_activity.bug_id, bugs.short_desc, fielddefs.name, " .
             "       removed, added " .
@@ -246,9 +246,9 @@ sub ProcessOneBug {
     my @currentEmailAttributes = getEmailAttributes($newcomments, @diffs);
     my (@assigned_toList,@reporterList,@qa_contactList,@ccList) = ();
 
-    open(LOG, ">>/tmp/maillog");
-    print LOG "\nBug ID: $id   CurrentEmailAttributes:";
-    print LOG join(',', @currentEmailAttributes) . "\n";
+    #open(LOG, ">>/tmp/maillog");
+    #print LOG "\nBug ID: $id   CurrentEmailAttributes:";
+    #print LOG join(',', @currentEmailAttributes) . "\n";
 
     @excludedAddresses = (); # zero out global list 
 
@@ -285,12 +285,12 @@ sub ProcessOneBug {
         }
     }
 
-    print LOG "\nbug $id email sent: " . join(',', @allEmail) . "\n";
+    #print LOG "\nbug $id email sent: " . join(',', @allEmail) . "\n";
         
     @excludedAddresses = filterExcludeList(\@excludedAddresses,
                                            \@allEmail);
 
-    print LOG "excluded: " . join(',',@excludedAddresses) . "\n\n";
+    #print LOG "excluded: " . join(',',@excludedAddresses) . "\n\n";
 
     foreach my $person ( @allEmail ) {
         my @reasons;
@@ -320,11 +320,13 @@ sub ProcessOneBug {
         }
     }
 
-
-#    SendSQL("UPDATE bugs SET lastdiffed = '$end', delta_ts = now()" .
-#            "WHERE bug_id = $id");
-    SendSQL("UPDATE bugs SET lastdiffed = now(), delta_ts = now()" .
-            "WHERE bug_id = $id");
+    if ($::driver eq 'mysql') {
+        SendSQL("UPDATE bugs SET lastdiffed = '$end', delta_ts = now()" .
+                "WHERE bug_id = $id");
+    } else {
+        SendSQL("UPDATE bugs SET lastdiffed = TO_DATE('$end', 'YYYYMMDDHH24MISS'), delta_ts = now()" .
+                "WHERE bug_id = $id");
+    }
 
     # Filter the exclude list for dupes one last time
     @excludedAddresses = filterExcludeList(\@excludedAddresses,
