@@ -253,7 +253,7 @@ sub create_global_index {
                            "\t\t<LI>".
                            HTMLPopUp::Link(
                                            "linktxt"=>$_,
-                                           "href"=>"./$_/index.html",
+                                           "href"=>"./$_/status.html",
                                           ).
                            "</LI>\n"
                           );
