@@ -101,7 +101,7 @@ and both the GD and Chart perl modules.
 EOF
 }
 
-if (!$xmlparser {
+if (!$xmlparser) {
 	output <<EOF;
 
 To use Bugzilla's import/export bug feature (to move bugs from one 
