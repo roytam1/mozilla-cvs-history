@@ -1,7 +1,7 @@
 <HTML>
 <HEAD>
    <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=x-mac-roman">
-   <META NAME="GENERATOR" CONTENT="Mozilla/4.04 [en] (WinNT; U) [Netscape]">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.04 [en] (WinNT; I) [Netscape]">
    <META NAME="KeyWords" CONTENT="client, source, documentation">
    <META NAME="Author" CONTENT="Kipp E.B. Hickman">
    <TITLE>NGLayout Windows Build Instructions</TITLE>
@@ -10,7 +10,7 @@
 
 <H2>
 <FONT FACE="Arial,Helvetica">NGLayout Windows Build Instructions</FONT></H2>
-This document explains how to build NGLayout for the Windows platform.
+This document explains how to build NGLayout for the Windows platform.&nbsp;
 <HR><B><FONT SIZE=+1>Required Tools:</FONT></B>
 <UL>
 <LI>
@@ -53,11 +53,13 @@ unzip -o -q win-19980415.zip</LI>
 <LI>
 There are several environment variables you will need to set, either manually
 or via a script within a command session, or by setting them in your system
-environment located through the Control Panel | System icon.<P>
-<B>Note: There is an additional variable for building NGLayout!
-Use this list carefully!</B><P>
-The variables are:</LI>
+environment located through the Control Panel | System icon.</LI>
 
+
+<P>&nbsp;<B>Note: There is an additional variable for building NGLayout!
+Use this list carefully!</B>
+
+<P>&nbsp;The variables are:
 <UL>
 <LI>
 set MOZ_BITS=32</LI>
@@ -99,8 +101,10 @@ if you are running VC++ 5.0 or higher: set _MSC_VER=1100; if you are running
 VC++ 4.2 then set MOZ_VCVER=42</LI>
 
 <LI>
-<B>set STANDALONE_IMAGE_LIB=1</B></LI> 
+<B>set STANDALONE_IMAGE_LIB=1</B></LI>
 
+<LI>
+<B>set MODULAR_NETLIB=1</B></LI>
 </UL>
 </UL>
 <B><FONT SIZE=+1>Building:</FONT></B>
@@ -122,10 +126,10 @@ nmake /f makefile.win</LI>
 </UL>
 
 <LI>
-<B>Build the NGLayout:</B> This will do a complete build of the source tree.
-You will end up with a viewer.exe at the end. The viewer.exe will be in
-your dist\win32_[OD].obj\bin directory (O will be used when you don't set
-MOZ_DEBUG; D will be used when you set MOZ_DEBUG).</LI>
+<B>Build the NGLayout:</B> This will do a complete build of the source
+tree. You will end up with a viewer.exe at the end. The viewer.exe will
+be in your dist\win32_[OD].obj\bin directory (O will be used when you don't
+set MOZ_DEBUG; D will be used when you set MOZ_DEBUG).</LI>
 
 <UL>
 <LI>
