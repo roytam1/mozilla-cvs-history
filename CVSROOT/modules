@@ -139,6 +139,8 @@ MozillaSourceUnixOnly -a \
     mozilla/config/BSD_OS.mk  \
     mozilla/config/autoconf.mk.in \
     mozilla/config/bdate.c \
+    mozilla/config/bdate.pl \
+    mozilla/config/aboutime.pl \
     mozilla/config/bsdecho.c  \
     mozilla/config/clobber_miss.pl  \
     mozilla/config/common.mk  \
