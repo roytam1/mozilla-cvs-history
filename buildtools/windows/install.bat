@@ -3,7 +3,20 @@ if "%MOZ_TOOLS%" == "" goto no_moz_tools
 
 echo.
 echo MOZ_TOOLS is set to %MOZ_TOOLS%
+echo It should NOT be set to anything in your cygwin 
+echo directory, such as c:\cygwin or c:\cygwin\bin
+echo where C:\cygwin represents where you installed cygwin.
+echo In that case files will be overwritten.
 echo.
+echo It should be set to some empty directory.
+echo. e.g.
+echo.   mkdir c:\moz_tools
+echo.   set MOZ_TOOLS=c:\moz_tools
+echo.
+echo Please verify this.
+echo.
+
+pause
 
 echo copying exes and dlls to %MOZ_TOOLS%\bin
 if not exist %MOZ_TOOLS%\bin\NUL mkdir %MOZ_TOOLS%\bin >NUL
@@ -48,3 +61,4 @@ echo Please set MOZ_TOOLS and run install.bat again
 echo.
 
 :done
+pause
