@@ -28,7 +28,8 @@ require "CGI.pl";
 
 ConnectToDatabase();
 
-confirm_login();
+my $userid = 0;
+$userid = confirm_login();
 
 ######################################################################
 # Begin Data/Security Validation
@@ -66,7 +67,7 @@ if (0 == @buglist) {
 # a non-negative integer (a series of digits not preceded by a
 # minus sign).
 foreach my $id (@buglist) {
-  ValidateBugID($id);
+  ValidateBugID($id, $userid);
   ($::FORM{$id} =~ /^\d+$/)
     || DisplayError("Only use non-negative numbers for your bug votes.")
     && exit;

@@ -28,7 +28,7 @@ use strict;
 use lib qw(.);
 require "CGI.pl";
 
-use vars %::FORM;
+use vars %::FORM, %::COOKIE;
 
 ConnectToDatabase();
 

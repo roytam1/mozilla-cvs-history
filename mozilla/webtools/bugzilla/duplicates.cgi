@@ -30,14 +30,17 @@ use AnyDBM_File;
 require "globals.pl";
 require "CGI.pl";
 
+sub globals_pl_sillyness {
+    my $zz;
+    $zz = %::COOKIE;
+}
+
 ConnectToDatabase(1);
 GetVersionTable();
 
+my $userid = 0;
 quietly_check_login();
-
-# Silly used-once warnings
-$::userid = $::userid;
-$::usergroupset = $::usergroupset;
+$userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
 
 my %dbmcount;
 my %count;
@@ -202,7 +205,7 @@ foreach (@sortedcount)
 {
   my $id = $_;
   SendSQL(SelectVisible("SELECT component, bug_severity, op_sys, target_milestone, short_desc, bug_status, resolution" .
-                 " FROM bugs WHERE bugs.bug_id = $id", $::userid, $::usergroupset));
+                 " FROM bugs WHERE bugs.bug_id = $id", $userid));
   next unless MoreSQLData();
   my ($component, $severity, $op_sys, $milestone, $summary, $bug_status, $resolution) = FetchSQLData();
   $summary = html_quote($summary);

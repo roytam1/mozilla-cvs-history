@@ -284,7 +284,7 @@ sub ValidateBugID {
       || DisplayError("Bug #$id does not exist.")
       && exit;
 
-    return if CanSeeBug($id, $::userid, $::usergroupset);
+    return if CanSeeBug($id, $userid);
 
     # The user did not pass any of the authorization tests, which means they
     # are not authorized to see the bug.  Display an error and stop execution.

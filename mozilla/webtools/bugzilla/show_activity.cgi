@@ -26,21 +26,25 @@ use strict;
 
 require "CGI.pl";
 
+sub globals_pl_sillyness {
+    my $zz;
+    $zz = %::COOKIE;
+}
+
 ConnectToDatabase();
 
 ######################################################################
 # Begin Data/Security Validation
 ######################################################################
 
-# Check whether or not the user is currently logged in. This function 
-# sets the value of $::usergroupset, the binary number that records
-# the set of groups to which the user belongs and which we can use
-# to determine whether or not the user is authorized to access this bug.
+# Check whether or not the user is currently logged in. 
+my $userid = 0;
 quietly_check_login();
+$userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
 
 # Make sure the bug ID is a positive integer representing an existing
 # bug that the user is authorized to access.
-ValidateBugID($::FORM{'id'});
+ValidateBugID($::FORM{'id'}, $userid);
 
 ######################################################################
 # End Data/Security Validation

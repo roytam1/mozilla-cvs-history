@@ -25,6 +25,11 @@ use strict;
 
 require "CGI.pl";
 
+sub globals_pl_sillyness {
+    my $zz;
+    $zz = %::COOKIE;
+}
+
 ConnectToDatabase();
 
 my $userid = 0;

@@ -50,8 +50,6 @@ sub globals_pl_sillyness {
     $zz = @main::legal_versions;
     $zz = @main::milestoneurl;
     $zz = @main::prodmaxvotes;
-    $zz = $main::superusergroupset;
-    $zz = $main::userid;
 }
 
 #
@@ -85,10 +83,6 @@ $::chooseone = "--Choose_one:--";
 $::defaultqueryname = "(Default query)";
 $::unconfirmedstate = "UNCONFIRMED";
 $::dbwritesallowed = 1;
-
-# Adding a global variable for the value of the superuser groupset.
-# Joe Robins, 7/5/00
-$::superusergroupset = "9223372036854775807";
 
 #sub die_with_dignity {
 #    my ($err_msg) = @_;
@@ -708,13 +702,10 @@ sub GenerateRandomPassword {
 }
 
 sub SelectVisible {
-#     my ($query, $userid, $usergroupset) = @_;
     my ($query, $userid) = @_;
     
     # Run the SQL $query with the additional restriction that
-    # the bugs can be seen by $userid. $usergroupset is provided
-    # as an optimisation when this is already known, eg from CGI.pl
-    # If not present, it will be obtained from the db.
+    # the bugs can be seen by $userid.     
     # Assumes that 'bugs' is mentioned as a table name. You should
     # also make sure that bug_id is qualified bugs.bug_id!
     # Your query must have a WHERE clause. This is unlikely to be a problem.
@@ -723,15 +714,6 @@ sub SelectVisible {
     # This means that if you change the name from selectVisible_cc (or add
     # additional tables), you will need to update anywhere which does a
     # LOCK TABLE, and then calls routines which call this
-
-#    $usergroupset = 0 unless $userid;
-#
-#    unless (defined($usergroupset)) {
-#        PushGlobalSQLState();
-#        SendSQL("SELECT groupset FROM profiles WHERE userid = $userid");
-#        $usergroupset = FetchOneColumn();
-#        PopGlobalSQLState();
-#    }
 
     my @usergroupset = ();
     PushGlobalSQLState();
@@ -775,7 +757,6 @@ sub SelectVisible {
                 selectVisible_bug_groups.group_id = selectVisible_user_groups.group_id AND
                 selectVisible_user_groups.user_id ";
 
-    # $replace .= "WHERE ((bugs.groupset & $usergroupset) = bugs.groupset ";
     # $replace .= "WHERE ((selectVisible_groups.group_id IN (" . join(',', @usergroupset) . ")) ";
     $replace .= "WHERE ((isnull(selectVisible_user_groups.group_id)) ";
 
@@ -798,19 +779,12 @@ sub SelectVisible {
 }
 
 sub CanSeeBug {
-    # Note that we pass in the usergroupset, since this is known
-    # in most cases (ie viewing bugs). Maybe make this an optional
-    # parameter?
-
-#    my ($id, $userid, $usergroupset) = @_;
     my ($id, $userid) = @_;
 
     # Query the database for the bug, retrieving a boolean value that
     # represents whether or not the user is authorized to access the bug.
 
     PushGlobalSQLState();
-#    SendSQL(SelectVisible("SELECT bugs.bug_id FROM bugs WHERE bugs.bug_id = $id",
-#                          $userid, $usergroupset));
     SendSQL(SelectVisible("SELECT bugs.bug_id FROM bugs WHERE bugs.bug_id = $id", $userid));
 
     my $ret = defined(FetchSQLData());
@@ -973,7 +947,7 @@ sub detaint_natural {
 # expressions.
 
 sub quoteUrls {
-    my ($knownattachments, $text) = (@_);
+    my ($knownattachments, $text, $userid) = (@_);
     return $text unless $text;
     
     my $base = Param('urlbase');
@@ -1016,7 +990,7 @@ sub quoteUrls {
         my $item = $&;
         my $bugnum = $2;
         my $comnum = $4;
-        $item = GetBugLink($bugnum, $item);
+        $item = GetBugLink($bugnum, $item, $userid);
         $item =~ s/(id=\d+)/$1#c$comnum/;
         $things[$count++] = $item;
     }
@@ -1030,7 +1004,7 @@ sub quoteUrls {
     while ($text =~ s/\bbug(\s|%\#)*(\d+)/"##$count##"/ei) {
         my $item = $&;
         my $num = $2;
-        $item = GetBugLink($num, $item);
+        $item = GetBugLink($num, $item, $userid);
         $things[$count++] = $item;
     }
     while ($text =~ s/\battachment(\s|%\#)*(\d+)/"##$count##"/ei) {
@@ -1045,7 +1019,7 @@ sub quoteUrls {
         my $item = $&;
         my $num = $1;
         my $bug_link;
-        $bug_link = GetBugLink($num, $num);
+        $bug_link = GetBugLink($num, $num, $userid);
         $item =~ s@\d+@$bug_link@;
         $things[$count++] = $item;
     }
@@ -1073,12 +1047,12 @@ sub quoteUrls {
 }
 
 # This is a new subroutine written 12/20/00 for the purpose of processing a
-# link to a bug.  It can be called using "GetBugLink (<BugNumber>, <LinkText>);"
+# link to a bug.  It can be called using "GetBugLink (<BugNumber>, <LinkText>, <userid>);"
 # Where <BugNumber> is the number of the bug and <LinkText> is what apprears
 # between '<a>' and '</a>'.
 
 sub GetBugLink {
-    my ($bug_num, $link_text) = (@_);
+    my ($bug_num, $link_text, $userid) = (@_);
     my ($link_return) = "";
 
     # TODO - Add caching capabilites... possibly use a global variable in the form
@@ -1103,8 +1077,7 @@ sub GetBugLink {
     $link_text = value_quote($link_text);
     $link_return .= qq{<a href="show_bug.cgi?id=$bug_num" title="$bug_stat};
     if ($bug_res ne "") {$link_return .= " $bug_res"}
-#    if ($bug_grp == 0 || CanSeeBug($bug_num, $::userid, $::usergroupset)) {
-    if ($bug_grp == 0 || CanSeeBug($bug_num, $::userid)) {
+    if ($bug_grp == 0 || CanSeeBug($bug_num, $userid)) {
         $link_return .= " - $bug_desc";
     }
     $link_return .= qq{">$link_text</a>};
@@ -1155,7 +1128,7 @@ sub GetLongDescriptionAsText {
 
 
 sub GetLongDescriptionAsHTML {
-    my ($id, $start, $end) = (@_);
+    my ($id, $start, $end, $userid) = (@_);
     my $result = "";
     my $count = 0;
     my %knownattachments;
@@ -1195,7 +1168,7 @@ sub GetLongDescriptionAsHTML {
               
             $result .= time2str("%Y-%m-%d %H:%M", str2time($when)) . " -------</I><BR>\n";
         }
-        $result .= "<PRE>" . quoteUrls(\%knownattachments, $text) . "</PRE>\n";
+        $result .= "<PRE>" . quoteUrls(\%knownattachments, $text, $userid) . "</PRE>\n";
         $count++;
     }
 

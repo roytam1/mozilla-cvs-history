@@ -315,7 +315,7 @@ sub EmitDependList {
     while (MoreSQLData()) {
         my ($i) = (FetchSQLData());
         push(@list, $i);
-        print GetBugLink($i, $i);
+        print GetBugLink($i, $i, $userid);
         print " ";
     }
     print "</td><td><input name=$targetfield value=\"" .

@@ -92,12 +92,12 @@ elsif ($action eq "viewall")
 }
 elsif ($action eq "enter") 
 { 
-  ValidateBugID($::FORM{'bugid'});
+  ValidateBugID($::FORM{'bugid'}, $userid);
   enter(); 
 }
 elsif ($action eq "insert")
 {
-  ValidateBugID($::FORM{'bugid'});
+  ValidateBugID($::FORM{'bugid'}, $userid);
   validateFilename();
   validateData();
   validateDescription();
@@ -325,7 +325,7 @@ sub validateObsolete
     my ($bugid, $isobsolete, $description) = FetchSQLData();
 
     # Make sure the user is authorized to access this attachment's bug.
-    ValidateBugID($bugid);
+    ValidateBugID($bugid, $userid);
 
     if ($bugid != $::FORM{'bugid'})
     {

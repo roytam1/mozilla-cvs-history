@@ -37,7 +37,6 @@ sub sillyness {
     $zz = $::db_name;
     $zz = $::defaultqueryname;
     $zz = $::unconfirmedstate;
-    $zz = $::userid;
     $zz = @::components;
     $zz = @::default_column_list;
     $zz = @::legal_keywords;
@@ -48,7 +47,7 @@ sub sillyness {
     $zz = @::legal_severity;
     $zz = @::versions;
     $zz = @::target_milestone;
-    $zz = %::proddesc;
+#    $zz = %::proddesc;
 };
 
 my $serverpush = 0;
@@ -154,6 +153,10 @@ sub GenerateSQL {
     ParseUrlString($urlstr, \%F, \%M);
     my @specialchart;
     my @andlist;
+
+    my $userid = 0;
+    quietly_check_login();
+    $userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
 
     # First, deal with all the old hard-coded non-chart-based poop.
 
@@ -810,7 +813,7 @@ sub GenerateSQL {
                   " WHERE " . join(' AND ', (@wherepart, @andlist)) .
                   " GROUP BY bugs.bug_id");
 
-    $query = SelectVisible($query, $::userid, $::usergroupset);
+    $query = SelectVisible($query, $userid);
 
     if ($debug) {
         print "<P><CODE>" . value_quote($query) . "</CODE><P>\n";

@@ -33,7 +33,6 @@ require "CGI.pl";
 sub sillyness {
     my $zz;
     $zz = $::buffer;
-    $zz = $::usergroupset;
     $zz = %::COOKIE;
     $zz = %::components;
     $zz = %::versions;
@@ -200,7 +199,7 @@ $comment = trim($comment);
 # OK except for the fact that it causes e-mail to be suppressed.
 $comment = $comment ? $comment : " ";
 
-$query .= "$::userid, now())";
+$query .= "$userid, now())";
 
 my %ccids;
 

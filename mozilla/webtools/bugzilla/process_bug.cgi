@@ -993,7 +993,7 @@ The changes made were:
 <p>
 ";
         DumpBugActivity($id, $delta_ts);
-        my $longdesc = GetLongDescriptionAsHTML($id);
+        my $longdesc = GetLongDescriptionAsHTML($id, $whoid);
         my $longchanged = 0;
 
         if (length($longdesc) > $::FORM{'longdesclength'}) {

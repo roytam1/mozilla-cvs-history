@@ -26,9 +26,16 @@ use strict;
 
 require "CGI.pl";
 
+sub globals_pl_sillyness {
+    my $zz;
+    $zz = %::COOKIE;
+}
+
 ConnectToDatabase();
 
+my $userid = 0;
 quietly_check_login();
+$userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
 
 if ($::FORM{attach_id} !~ /^[1-9][0-9]*$/) {
     DisplayError("Attachment ID should be numeric.");
@@ -44,7 +51,7 @@ if (!$bug_id) {
 }
 
 # Make sure the user can see the bug to which this file is attached
-ValidateBugID($bug_id);
+ValidateBugID($bug_id, $userid);
 
 print qq{Content-type: $mimetype\n\n$thedata};
 

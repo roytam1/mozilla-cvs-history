@@ -36,15 +36,8 @@ require "globals.pl";
 # Shut up misguided -w warnings about "used only once".  "use vars" just
 # doesn't work for me.
 
-sub sillyness {
-    my $zz;
-    $zz = $::userid;
-    $zz = $::superusergroupset;
-}
-
 my $editall;
 my @opblessgroupset = ();    # Groups that this viewer can bless someone into
-
 
 # TestUser:  just returns if the specified user does exists
 # CheckUser: same check, optionally  emit an error text
@@ -250,7 +243,7 @@ print "Content-type: text/html\n\n";
 $editall = UserInGroup($userid, "editusers");
 
 if (!$editall) {
-    SendSQL("SELECT group_id FROM bless_group_map WHERE user_id = $::userid");
+    SendSQL("SELECT group_id FROM bless_group_map WHERE user_id = $userid");
     while ( my @row = FetchSQLData() ) {
         push(@opblessgroupset, $row[0]);
     }
@@ -814,7 +807,7 @@ if ($action eq 'update') {
 #               SendSQL("INSERT INTO profiles_activity " .
 #                       "(userid,who,profiles_when,fieldid,oldvalue,newvalue) " .
 #                       "VALUES " .
-#                       "($u, $::userid, now(), $fieldid, " .
+#                       "($u, $userid, now(), $fieldid, " .
 #                       " $groupsetold, $groupset)");
 #           }
 #           print "Updated permissions.\n";
