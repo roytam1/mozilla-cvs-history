@@ -546,6 +546,7 @@ SeaMonkeyCore -a \
 	mozilla/lib/mac/MoreFiles \
 	mozilla/lib/mac/NSRuntime \
 	mozilla/lib/mac/NSStdLib \
+	mozilla/lib/mac/NSStartup \
 	mozilla/lib/mac/PowerPlant \
 	mozilla/lib/mac/InterfaceLib \
 	mozilla/modules/libimg \
