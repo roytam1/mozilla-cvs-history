@@ -432,7 +432,7 @@ sub status_table_row {
 
   # first find out what time the break will occur at.
 
-  my $next_index = $DB_TIMES[$NEXT_DB];
+  my $next_index = $NEXT_DB;
 
   while (!(
          is_break_cell(
