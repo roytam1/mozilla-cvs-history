@@ -86,8 +86,6 @@ $DEBUG = 1;
 #	     'maxdate' => The most recent time which should be considered
 #	     'who' => The VC name of the individual who checked in the change
 #	     'linktxt' => The text to display on the link to the query
-#	     'alt_linktxt' => Alternative text to display if there is no web 
-#				 access to the VC system
 #	     );
     
 
