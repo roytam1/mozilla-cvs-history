@@ -74,7 +74,7 @@ sub load_bonsai_libs {
   # bonsai must be both loaded and run from the bonsai dir.
 
   chdir ($BONSAI_DIR)	||
-    die("Could not cd to /. $!\n");
+    die("Could not cd to $BONSAI_DIR. $!\n");
 
   # Hide the use libs from the perl compiler.  This is neccessary or
   # it will be evaluated before BONSAI_DIR is defined.
