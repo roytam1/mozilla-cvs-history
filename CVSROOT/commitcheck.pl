@@ -200,7 +200,7 @@ if (m:^mozilla/cmd/wincom/.*$:) {return '48';}
 if (m:^mozilla/cmd/winfe/.*$:) {return '48';}
 if (m:^mozilla/gfx/src/gtk/.*$:) {return '49';}
 if (m:^mozilla/widget/src/gtk/.*$:) {return '49';}
-if (m:^mozilla/modules/rdf/.*$:) {return '52';}
+if (m:^mozilla/rdf/.*$:) {return '52';}
 if (m:^mozilla/dbm/.*$:) {return '53';}
 if (m:^mozilla/modules/libhook/.*$:) {return '54';}
 if (m:^mozilla/build/.*$:) {return '55';}
