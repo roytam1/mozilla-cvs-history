@@ -132,13 +132,14 @@ unless ($action) {
         print "<input type=hidden name=\"oldisbuggroup-$groupid\" value=\"$isbuggroup\"></td>\n";
         print "<td align=center valign=middle>
                <a href=\"editgroups.cgi?action=changeform&group=$groupid\">Edit</a>
+               |
                <a href=\"editgroups.cgi?action=del&group=$groupid\">Delete</a>
                </td>\n";
         print "</tr>\n";
     }
 
     print "<tr>\n";
-    print "<td colspan=5></td>\n";
+    print "<td colspan=6></td>\n";
     print "<td><a href=\"editgroups.cgi?action=add\">Add Group</a></td>\n";
     print "</tr>\n";
     print "</table>\n";
@@ -160,6 +161,9 @@ If you deactivate a group it will no longer be possible for users to add bugs
 to that group, although bugs already in the group will remain in the group.
 Deactivating a group is a much less drastic way to stop a group from growing
 than deleting the group would be.<p>";
+    print "The <b>Buggroup</b> flag determines whether or not the group should
+           generate a checkbox on bug entry/edit pages for group restrictions.
+           If buggroup is set, the checkbox will be offerred.<p>";  
     print "In addition, the following groups that determine user privileges
 exist.  You can only edit the User rexexp on these groups.  You should also take
 care not to duplicate the Names of any of them in your user groups.<p>";
@@ -196,7 +200,8 @@ if ($action eq 'changeform') {
            <B>Description:</B> $description <P>
            <B>User Regexp:</B> \"$rexp\" <P>
            <BR>
-           In addition to the users matching the regular exprression listed 
+           In addition to the users explicitly included in this group 
+           and users matching the regular expression listed 
            above, users who are members members of other groups can be 
            included by including the other groups in this group. <P>\n";
 
