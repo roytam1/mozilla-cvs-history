@@ -491,7 +491,6 @@ sub ShowQuery {
 # is non-NULL
 #
 sub CheckField {
-    my $self = shift;
     my ($newvalue,                # the value to check
         $fieldname,              # the fieldname to check
         $legalsRef               # (optional) ref to a list of legal values
@@ -508,21 +507,17 @@ sub CheckField {
 
 sub SnapShotBugInDB {
     my $self = shift;
-    &::SendSQL("select delta_ts, " . join(',', @::log_columns) .
-            " from bugs where bug_id = $self->{'bug_id'}");
-    my (@row) = &::FetchSQLData();
-    my $delta_ts = shift @row;
+    my $bugid;
+    my $who;
+    my $snap;
+    my @snaplist;
+    my %snapshot;
 
-    return @row;
-}
-
-sub SnapShotSelf {
-    my $self = shift;
-    my @row;
-    foreach my $col (@::log_columns) {
-        push (@row, $self->{$col});
-    }
-    return @row;
+    $bugid = $self->{'bug_id'};
+    $who = $self->{'whoid'};
+    $snap = initBug($self, $bugid, $who);
+    %snapshot = %$snap; 
+    return %snapshot;
 }
 
 sub DoConfirm {
@@ -632,12 +627,12 @@ sub SetVersion {
 sub SetPlatform {
    my $self = shift;
    my ($platform) = (@_);
-   
+  
    unless (CheckField($self, $platform, 'rep_platform', \@::legal_platform)) {
      $self->{'error'} = "Invalid platform \'$platform\'";
      return 0;
    }
-   $self->{'rep_platform'} = $platform;
+   $self->{'rep_platform'} = "$platform";
    return 1;
 }
 
@@ -645,7 +640,7 @@ sub SetOperatingSystem {
    my $self = shift;
    my ($os) = (@_);
    
-   unless (CheckField($self, 'op_sys', @::legal_opsys)) {
+   unless (CheckField($self, $os, 'op_sys', \@::legal_opsys)) {
      $self->{'error'} = "Invalid operating system \'$os\'";
      return 0;
    }
@@ -655,9 +650,9 @@ sub SetOperatingSystem {
 
 sub SetPriority {
    my $self = shift;
-   my ($priority) = (@_);
+   my ($priority) = @_;
 
-   unless (CheckField($self, 'priority', @::legal_priority)) {
+  unless (CheckField($priority, 'priority', \@::legal_priority)) {
      $self->{'error'} = "Invalid priority \'$priority\'";
      return 0;
    }
@@ -734,7 +729,7 @@ sub SetStatus {
    my $self = shift;
    my ($status) = (@_);
 
-   unless(CheckField($self, 'bug_status', @::legal_bug_status)) {
+   unless(CheckField($self, $status, 'bug_status', \@::legal_bug_status)) {
       $self->{'error'} = "Invalid status \'$status\'";
       return 0;
    }
@@ -844,39 +839,91 @@ sub WriteChanges {
     &::SendSQL("UNLOCK TABLES");
 } 
 
+# stupid subroutine for checking if lists are equal.
+sub ListDiff {
+    my $self = shift;
+    my (@source, @dest, $type) = @_;
+
+    if (@source != @dest) {
+      return 1;
+    }
+    @source = sort(@source);
+    @dest   = sort(@dest);
+
+    my $i;
+    for ($i = 0; $i < @source; $i++) {
+      if ($type eq 'str') {
+          if ($source[$i] ne $dest[$i]) {
+              return 1;
+          }
+      }
+      else {
+          if ($source[$i] != $dest[$i]) {
+              return 1;
+          }
+      }
+    }
+    return 0;
+}
+
+sub ChangedFields {
+    my $self = shift;
+    my (%snapshot) = @_;
+    my @changed;
+
+    foreach my $field (keys(%snapshot)) {
+        if (&::Param("usedependencies")) {
+            if (($field eq 'dependson') || ($field eq 'blocking')) {
+                if (ListDiff($self->{$field}, $snapshot{$field})) {
+                    push(@changed, $field);
+                }
+            }
+        }
+        if ($field eq 'longdesc') {
+            if (ListDiff($self->{$field}, $snapshot{$field})) {
+               push(@changed, $field);
+            }
+        } 
+        if ($field eq 'attachments') {
+            if (ListDiff($self->{$field}, $snapshot{$field})) {
+               push(@changed, $field);
+            }
+        }
+        if ($field eq 'keywords') {
+            if (ListDiff($self->{$field}, $snapshot{$field}, 'str')) {
+               push(@changed, $field);
+            }
+        }
+        if ($self->{$field} ne $snapshot{$field}) {
+            push (@changed, $field);
+        }
+    }
+    return @changed;
+}
+
+sub TestChanged {
+   my $self = shift();
+   my %snappy;
+   my @changed;
+
+   %snappy = SnapShotBugInDB($self);
+   @changed = ChangedFields($self, %snappy);
+
+   foreach my $field (@changed) {
+       print $field . "has changed";
+   }
+}
+
 sub CommitChanges {
    my $self = shift();
+   my @changed;
 
    if ($self->{'dirty'}) {
-
-      undef ($self->{'error'});
-      undef ($self->{'query'});
-      my @oldvalues = SnapShotBugInDB($self);
-      my @newvalues = SnapShotSelf($self);
-
-      foreach my $i (@oldvalues) {
-        if ($oldvalues[$i] ne $newvalues[$i]) {
-          $self->{'error'} = CheckCanChangeField($self, $::log_columns[$i], $oldvalues[$i], 
-                           $newvalues[$i]);
-        }
-        if (defined($self->{'error'})) {
-           return;
-        }
-        else {
-           AddQuery($self, $::log_columns[$i], $newvalues[$i]); 
-        }
-      }
-      if (CheckCollision($self)) {
-          $self->{'error'} = "midair collision";
-          return;
-      }
-      WriteChanges($self);
-  } # if dirty
-
-  foreach my $ick (@::log_columns) {
-    print $::log_columns[$ick] . "\n";
-  }
-   
+       @changed = ChangedFields;
+   }
+   if (@changed > 0) {
+       die;
+   }
 #snapshot dependencies
 #check can change fields
 #check collision
