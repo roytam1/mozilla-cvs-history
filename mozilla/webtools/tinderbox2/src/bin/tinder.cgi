@@ -350,6 +350,11 @@ sub HTML_status_page {
                            "\?".
                            "tree=$tree"),
                   ).
+  "<br>\n".
+    HTMLPopUp::Link(
+                    "linktxt"=>"Tinderbox Index", 
+                    "href"=>("$FileStructure::URLS{'indexpage'}"),
+                    ).
   "<br>\n";
   my ($links) = 
     HTMLPopUp::Link(
