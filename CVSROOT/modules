@@ -37,6 +37,7 @@ ClientSourceProductMac -a MozillaCommon MozillaMacOnly
 ClientSourceProductUnix -a MozillaCommon MozillaUnixOnly
 
 MozillaCommon -a \
+    ns/LEGAL \
     ns/build  \
     ns/include  \
     ns/jpeg  \
