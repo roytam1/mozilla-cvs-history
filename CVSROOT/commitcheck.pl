@@ -14,6 +14,11 @@ $fullname{'53'} = 'Berkeley DB';
 $mode{'55'} = 'Open';
 $branch{'55'} = 'HEAD';
 $fullname{'55'} = 'Build Config';
+$mode{'164'} = 'Restricted';
+$branch{'164'} = 'HEAD';
+$fullname{'164'} = 'chimera';
+$blessed{'164'} = [];
+$super{'164'} = ['hyatt%netscape.com','sfraser%netscape.com','pinkerton%netscape.com','ben%netscape.com',];
 $mode{'146'} = 'Restricted';
 $branch{'146'} = 'NSPRPUB_PRE_4_2_CLIENT_BRANCH';
 $fullname{'146'} = 'Client NSPR';
@@ -363,6 +368,7 @@ if (m:^mozilla/string/.*$:) {return '160';}
 if (m:^mozilla/gfx/src/qt/.*$:) {return '161';}
 if (m:^mozilla/widget/src/qt/.*$:) {return '161';}
 if (m:^mozilla/extensions/p3p/.*$:) {return '162';}
+if (m:^chimera/.*$:) {return '164';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
