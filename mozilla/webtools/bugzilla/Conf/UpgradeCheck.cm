@@ -12,13 +12,13 @@ $cgidir = getConf('loc_cgi'); # this will also be set if an install has been don
 
 output <<EOF;
 In order to proceed with configuration, I need to offer you several choices in 
-regards to upgrading or installation. Note that if you select an upgrade option, 
-any changes made to the source code in the installed location will be lost. Custom 
-templates will be saved. Options marked with XXX are not yet ready and do not work.
+regards to upgrading or installation. Note that if you select an upgrade 
+option, any changes made to the source code in the installed location will 
+be lost. Custom templates will be saved.
 
 1) Install a completely new installation
 2) Upgrade an existing installation
-3) XXX: Convert and upgrade an existing installation that was installed with checksetup.pl
+3) Convert and upgrade an existing installation that was installed with checksetup.pl
 EOF
 
 if ($upgrade) {
@@ -35,9 +35,23 @@ if (getConf('inschoice') eq 1) { # new installation
 	setConf('installtype','upgrade');
 	ask('upgrade_path','Please enter the path to where the cgi executables are stored for the 
 	installation you wish to upgrade','');
+	
+	# now we have to import the settings from that installation
+	
+	if (-e correctpath(getConf('upgrade_path').'/config.pl')) {
+		require correctpath(getConf('upgrade_path').'/config.pl');
+	} else {
+		die "A valid Bugzilla installation was not found at that location\n";
+	}
+	
+} elsif (getConf('inschoice') eq 3) {
+	setConf('installtype','convert');
+	ask('upgrade_path','Please enter the path to your Bugzilla installation','');
 } elsif (getConf('inschoice') eq 4) { # upgrade same source tree
 	setConf('installtype','upgrade');
-	setConf('upgrade_path',$cgidir);
+	setConf('upgrade_path',getConf('dir_cgi');
+} else {
+	die "invalid choice\n";
 }
 
 sub correctpath($) { # fix the dir seperator, do we really need this?

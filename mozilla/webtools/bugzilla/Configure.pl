@@ -58,6 +58,16 @@ if ($args =~ /--perl\=([\/A-Za-z0-9]+|[\/A-Za-z0-9]+ )/) { # they passed us a pe
 runconf('Conf/ModuleCheck.cm');
 runconf('Conf/UpgradeCheck.cm');
 
+# alas, a junction in our plans:
+if (getConf('installtype' eq 'convert')) {
+	runconf('Conf/UpgradeConvert.cm');
+	runconf('Conf/Upgrade.cm');
+} elsif (getConf('installtype' eq 'upgrade')) {
+	runconf('Conf/Upgrade.cm');
+} elsif (getConf('installtype' eq 'new')) {
+	runconf('Conf/Location.cm');
+}
+
 
 sub runconf {
     my ($path) = @_;
