@@ -252,11 +252,11 @@ sub render_notice {
     # also tell when the note was really posted.
 
     my $localpostedtime;
-    if ($notice->{'time'} != $notice->{'posttime'}) {
+    if ( $notice->{'posttime'} - $notice->{'time'} > $main::SECONDS_PER_HOUR) {
        $localpostedtime = (
-                           "(Actually posted at: ". 
-                           $notice->{'localpostedtime'}.
-                           ")".
+                           "<br>(Actually posted at: ". 
+                           $notice->{'localposttime'}.
+                           ")\n".
                            "");
     }
 

@@ -238,8 +238,10 @@ sub split_cgi_args {
 
 sub regenerate_HTML_pages {
     my $old_query_string =  $ENV{"QUERY_STRING"};
+    my $old_request_method = $ENV{"REQUEST_METHOD"};
 
     $ENV{"QUERY_STRING"} = '';
+    $ENV{"REQUEST_METHOD"} = '';
 
     system(
            $FileStructure::CGIBIN_DIR.'tinder.cgi', 
@@ -247,6 +249,7 @@ sub regenerate_HTML_pages {
            );
 
     $ENV{"QUERY_STRING"} = $old_query_string;
+    $ENV{"REQUEST_METHOD"} = $old_request_method;
 
     return 0;
 }

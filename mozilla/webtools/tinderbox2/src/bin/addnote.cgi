@@ -135,6 +135,11 @@ sub get_params {
 
   if (param("effectivetime")) {
       $EFFECTIVE_TIME = timestring2time( param("effectivetime") );
+
+      # allow people to backdate notices but not forward date them.
+      if ($EFFECTIVE_TIME > $TIME) {
+          $EFFECTIVE_TIME = $TIME;
+      }
   } else {
       $EFFECTIVE_TIME = time();
   }
