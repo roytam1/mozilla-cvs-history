@@ -33,6 +33,9 @@ package Bug;
 use CGI::Carp qw(fatalsToBrowser);
 my %ok_field;
 
+@::legal_keywords = @::legal_keywords; # kill "used only once" warning
+$::unconfirmedstate = $::unconfirmedstate;
+
 for my $key (qw (bug_id product version rep_platform op_sys bug_status 
                 resolution priority bug_severity component assigned_to
                 reporter bug_file_loc short_desc target_milestone 
