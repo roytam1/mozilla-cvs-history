@@ -720,8 +720,9 @@ MozillaTinderboxAll -a \
         mozilla/security/manager \
         mozilla/modules/libpr0n
 
-        # mozilla uses mozilla/security/manager from 
-        # the tip, not the nss branch
+# mozilla uses mozilla/security/manager from 
+# the tip, not the nss branch
+#
 # commenting out NSS because the client uses a static tag so watching
 # checkins as they happen is of no use to us
 #	NSS \
