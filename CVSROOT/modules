@@ -369,7 +369,7 @@ RaptorMac -a \
 
 #######################################################################
 # Modules for the Directory SDK.  There are two users of the libldap
-# Mozilla and the DirectorySDK
+# Mozilla and the DirectorySDK. Maintained by Chuck Boatwright (cboatwri)
 
 DirectorySDKSource -a \
 	DirectorySDKSourceCommon \
