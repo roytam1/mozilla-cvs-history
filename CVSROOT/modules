@@ -216,7 +216,7 @@ MozillaSourceMacOnly -a \
     mozilla/config/mac  \
     mozilla/config/bdate.pl  \
     mozilla/config/aboutime.pl  \
-    mozilla/config/set-timebomb.pl  \
+    mozilla/config/mac-set-timebomb.pl  \
     mozilla/cmd/dialup  \
     mozilla/cmd/macfe \
     mozilla/lib/mac/AutoAdmin  \
