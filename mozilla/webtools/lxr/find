@@ -31,7 +31,7 @@ sub find {
     print("<P ALIGN=CENTER>\n",
 	  "Search for files (by name) using regular expressions.\n",
 	  "<BR>(Need some <A HREF=\"search-help.html\">Hints</A> ",
-	  "on performing searches?)</P>\n");
+	  "on performing searches?)\n");
 
     print ("<form method=get action=\"find\">\n");
 
@@ -53,7 +53,7 @@ sub find {
 	    &warning("Could not open .glimpse_filenames.");
 	    return;
 	}
-	print("<P><hr>\n");
+	print("<hr>\n");
 	$sourceroot = $Conf->sourceroot;
 	while($file = <FILELLISTING>) {
 	    $file =~ s/^$sourceroot//;

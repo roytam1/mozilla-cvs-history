@@ -1,23 +1,22 @@
 #!/usr/bonsaitools/bin/perl -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
-# The contents of this file are subject to the Mozilla Public
-# License Version 1.1 (the "License"); you may not use this file
-# except in compliance with the License. You may obtain a copy of
-# the License at http://www.mozilla.org/MPL/
-#
-# Software distributed under the License is distributed on an "AS
-# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-# implied. See the License for the specific language governing
-# rights and limitations under the License.
-#
+# The contents of this file are subject to the Mozilla Public License
+# Version 1.0 (the "License"); you may not use this file except in
+# compliance with the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations
+# under the License.
+# 
 # The Original Code is the Bugzilla Bug Tracking System.
-#
+# 
 # The Initial Developer of the Original Code is Netscape Communications
-# Corporation. Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation. All
-# Rights Reserved.
-#
+# Corporation. Portions created by Netscape are Copyright (C) 1998
+# Netscape Communications Corporation. All Rights Reserved.
+# 
 # Contributor(s): Terry Weissman <terry@mozilla.org>,
 # Bryce Nesbitt <bryce-mozilla@nextbus.com>
 
@@ -123,25 +122,15 @@ sub DescDependencies {
         }
         if (@list) {
             my @verbose;
-            my $count = 0;
             foreach my $i (@list) {
                 SendSQL("select bug_status, resolution from bugs where bug_id = $i");
                 my ($bug_status, $resolution) = (FetchSQLData());
-                my $desc;
-                if ($bug_status eq "NEW" || $bug_status eq "ASSIGNED" ||
-                    $bug_status eq "REOPENED") {
-                    $desc = "";
-                } else {
-                    $desc = "[$resolution]";
+                if ($resolution ne "") {
+                    $resolution = "/$resolution";
                 }
-                push(@verbose, $i . "$desc");
-                $count++;
+                push(@verbose, $i . "[$bug_status$resolution]");
             }
-            if ($count > 5) {
-                $result .= "$title: Big list (more than 5) has been omitted\n";
-            } else {
-                $result .= "$title: " . join(', ', @verbose) . "\n";
-            }
+            $result .= "$title: " . join(', ', @verbose) . "\n";
         }
         my $tmp = $me;
         $me = $target;
@@ -324,14 +313,13 @@ sub ProcessOneBug {
             my $msg = PerformSubsts(Param("changedmail"), \%substs);
 
             if (!$regenerate) {
-                # Note: fixaddresses may result in a Cc: only.  This seems
-                # harmless.
+		# Note: fixaddresses may result in a Cc: only.  This seems harmless.
                 open(SENDMAIL, "|/usr/lib/sendmail -t") ||
                     die "Can't open sendmail";
                 print SENDMAIL $msg;
                 close SENDMAIL;
                 $logstr = "$logstr; mail sent to $tolist, $cclist";
-                print "<B>Email sent to:</B> $tolist $cclist\n";
+		print "<B>Email sent to:</B> $tolist $cclist\n";
                 if ($didexclude) {
                     print "<B>Excluding:</B> $nametoexclude (<a href=changepassword.cgi>change your preferences</a> if you wish not to be excluded)\n";
                 }
