@@ -80,6 +80,15 @@ sub gettree_header {
   my ($text_treestate) = $self->SUPER::gettree_header($tree);
   my $treestate;
 
+  if (!($text_treestate)) {
+
+      # If there is no state, then force the default. This is needed
+      # for the first time a new tree is run.
+
+      $self->SUPER::savetree_header($tree, 'Current_Bonsai_State');
+      $text_treestate = 'Current_Bonsai_State';
+  }
+
   if (
       ($text_treestate) &&
       ($text_treestate != 'Current_Bonsai_State') 
