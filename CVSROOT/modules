@@ -150,6 +150,7 @@ MozillaSourceUnixOnly -a \
     mozilla/config/mangle.c  \
     mozilla/config/mantomak.c  \
     mozilla/config/mkdepend  \
+    mozilla/config/mkdetect  \
     mozilla/config/NCR.mk  \
     mozilla/config/NEC.mk  \
     mozilla/config/NEWS-OS.mk  \
