@@ -36,8 +36,8 @@ my %ok_field;
 for my $key (qw (bug_id product version rep_platform op_sys bug_status 
                 resolution priority bug_severity component assigned_to
                 reporter bug_file_loc short_desc target_milestone 
-                qa_contact status_whiteboard creation_ts groupset 
-                delta_ts votes whoid usergroupset comment query error) ){
+                qa_contact status_whiteboard creation_ts 
+                delta_ts votes whoid comment query error) ){
     $ok_field{$key}++;
     }
 
@@ -101,51 +101,65 @@ sub initBug  {
 
 
   $self->{'whoid'} = $user_id;
-  &::SendSQL("SELECT groupset FROM profiles WHERE userid=$self->{'whoid'}");
-  my $usergroupset = &::FetchOneColumn();
-  if (!$usergroupset) { $usergroupset = '0' }
-  $self->{'usergroupset'} = $usergroupset;
 
-  my $query = "
+  # First check that we can see it
+  if (!&::CanSeeBug($bug_id, $user_id)) {
+      # is it not there, or are we just forbidden to see it?
+      &::SendSQL("SELECT bug_id FROM bugs WHERE bug_id = $bug_id");
+      if (&::FetchSQLData()) {
+          $self->{'error'} = "NotPermitted";
+      } else {
+          $self->{'error'} = "NotFound";
+      }
+      $self->{'bug_id'} = $bug_id;
+      return $self;
+  }
+
+    my $query = "";
+    if ($::driver eq 'mysql') {
+        $query = "
     select
       bugs.bug_id, product, version, rep_platform, op_sys, bug_status,
       resolution, priority, bug_severity, component, assigned_to, reporter,
       bug_file_loc, short_desc, target_milestone, qa_contact,
       status_whiteboard, date_format(creation_ts,'%Y-%m-%d %H:%i'),
-      groupset, delta_ts, sum(votes.count)
+      delta_ts, sum(votes.count)
     from bugs left join votes using(bug_id)
     where bugs.bug_id = $bug_id
     group by bugs.bug_id";
+    } elsif ($::driver eq 'Pg') {
+        $query = "
+    select
+      bugs.bug_id, product, version, rep_platform, op_sys, bug_status,
+      resolution, priority, bug_severity, component, assigned_to, reporter,
+      bug_file_loc, short_desc, target_milestone, qa_contact,
+      status_whiteboard, creation_ts,
+      delta_ts, sum(votes.count)
+    from bugs left join votes using(bug_id)
+    where bugs.bug_id = $bug_id
+    group by bugs.bug_id, product, version, rep_platform, op_sys, bug_status,
+         resolution, priority, bug_severity, component, assigned_to, reporter,
+         bug_file_loc, short_desc, target_milestone, qa_contact, status_whiteboard,
+         creation_ts, delta_ts";
+    }
 
-  &::SendSQL(&::SelectVisible($query, $user_id, $usergroupset));
+  &::SendSQL($query);
   my @row;
 
-  if (@row = &::FetchSQLData()) {
-    my $count = 0;
-    my %fields;
-    foreach my $field ("bug_id", "product", "version", "rep_platform",
-                       "op_sys", "bug_status", "resolution", "priority",
-                       "bug_severity", "component", "assigned_to", "reporter",
-                       "bug_file_loc", "short_desc", "target_milestone",
-                       "qa_contact", "status_whiteboard", "creation_ts",
-                       "groupset", "delta_ts", "votes") {
-        $fields{$field} = shift @row;
-        if ($fields{$field}) {
-            $self->{$field} = $fields{$field};
-        }
-        $count++;
-    }
-  } else {
-    &::SendSQL("select groupset from bugs where bug_id = $bug_id");
-    if (@row = &::FetchSQLData()) {
-      $self->{'bug_id'} = $bug_id;
-      $self->{'error'} = "NotPermitted";
-      return $self;
-    } else {
-      $self->{'bug_id'} = $bug_id;
-      $self->{'error'} = "NotFound";
-      return $self;
-    }
+  @row = &::FetchSQLData();
+  my $count = 0;
+  my %fields;
+  foreach my $field ("bug_id", "product", "version", "rep_platform",
+                     "op_sys", "bug_status", "resolution", "priority",
+                     "bug_severity", "component", "assigned_to", "reporter",
+                     "bug_file_loc", "short_desc", "target_milestone",
+                     "qa_contact", "status_whiteboard", "creation_ts",
+                     "delta_ts", "votes") {
+      $fields{$field} = shift @row;
+      if ($fields{$field}) {
+          $self->{$field} = $fields{$field};
+      }
+      $count++;
   }
 
   $self->{'assigned_to'} = &::DBID_to_name($self->{'assigned_to'});
@@ -349,24 +363,14 @@ sub XML_Footer {
 sub UserInGroup {
     my $self = shift();
     my ($groupname) = (@_);
-    if ($self->{'usergroupset'} eq "0") {
-        return 0;
-    }
-    &::ConnectToDatabase();
-    &::SendSQL("select (bit & $self->{'usergroupset'}) != 0 from groups where name = " 
-           . &::SqlQuote($groupname));
-    my $bit = &::FetchOneColumn();
-    if ($bit) {
-        return 1;
-    }
-    return 0;
+    return &::UserInGroup($self->{'whoid'}, $groupname);
 }
 
 sub CanChangeField {
    my $self = shift();
    my ($f, $oldvalue, $newvalue) = (@_);
-   my $UserInEditGroupSet = -1;
-   my $UserInCanConfirmGroupSet = -1;
+   my $UserInEditGroup = -1;
+   my $UserInCanConfirmGroup = -1;
    my $ownerid;
    my $reporterid;
    my $qacontactid;
@@ -389,10 +393,10 @@ sub CanChangeField {
     if ($f =~ /^longdesc/) {
         return 1;
     }
-    if ($UserInEditGroupSet < 0) {
-        $UserInEditGroupSet = UserInGroup($self, "editbugs");
+    if ($UserInEditGroup < 0) {
+        $UserInEditGroup = UserInGroup($self, "editbugs");
     }
-    if ($UserInEditGroupSet) {
+    if ($UserInEditGroup) {
         return 1;
     }
     &::SendSQL("SELECT reporter, assigned_to, qa_contact FROM bugs " .
@@ -413,10 +417,10 @@ sub CanChangeField {
         # group?  Or, has it ever been confirmed?  If not, then this
         # isn't legal.
 
-        if ($UserInCanConfirmGroupSet < 0) {
-            $UserInCanConfirmGroupSet = &::UserInGroup("canconfirm");
+        if ($UserInCanConfirmGroup < 0) {
+            $UserInCanConfirmGroup = &::UserInGroup($self->{'whoid'},"canconfirm");
         }
-        if ($UserInCanConfirmGroupSet) {
+        if ($UserInCanConfirmGroup) {
             return 1;
         }
         &::SendSQL("SELECT everconfirmed FROM bugs WHERE bug_id = $self->{'bug_id'}");
@@ -437,14 +441,18 @@ sub Collision {
     my $self = shift();
     my $write = "WRITE";        # Might want to make a param to control
                                 # whether we do LOW_PRIORITY ...
-    &::SendSQL("LOCK TABLES bugs $write, bugs_activity $write, cc $write, " .
-               "cc AS selectVisible_cc $write, " .
-            "profiles $write, dependencies $write, votes $write, " .
-            "keywords $write, longdescs $write, fielddefs $write, " .
-            "keyworddefs READ, groups READ, attachments READ, products READ");
+    if ($::driver eq 'mysql') {
+        &::SendSQL("LOCK TABLES bugs $write, bugs_activity $write, cc $write, " .
+                "cc AS selectVisible_cc $write, " .
+                "profiles $write, dependencies $write, votes $write, " .
+                "keywords $write, longdescs $write, fielddefs $write, " .
+                "keyworddefs READ, groups READ, attachments READ, products READ");
+    } 
     &::SendSQL("SELECT delta_ts FROM bugs where bug_id=$self->{'bug_id'}");
     my $delta_ts = &::FetchOneColumn();
-    &::SendSQL("unlock tables");
+    if ($::driver eq 'mysql') {
+        &::SendSQL("unlock tables");
+    }
     if ($self->{'delta_ts'} ne $delta_ts) {
        return 1;
     }
