@@ -74,6 +74,7 @@ MozillaCommon -a \
     ns/modules/rdf  \
     ns/modules/schedulr  \
     ns/modules/security/freenav  \
+    ns/modules/xml  \
     ns/modules/zlib/src  \
     ns/nav-java/stubs  \
     ns/nsprpub  \
