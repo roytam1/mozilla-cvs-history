@@ -97,7 +97,7 @@ my $message = "";
 my $filesadded = 0;
 while (<>) {
     my $line = $_;
-    if ($line =~ m@^Revision/Branch: (.*)$@) {
+    if ($line =~ m@^      Tag: (.*)$@) {
         if ($url ne "") {
             $url .= "&branch=$1";
         }
