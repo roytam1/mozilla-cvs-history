@@ -381,6 +381,7 @@ RaptorWin -a \
 
 RaptorUnix -a \
 	Raptor \
+	mozilla/aclocal.m4
 	mozilla/nglayout.mk
 
 RaptorMac -a \
