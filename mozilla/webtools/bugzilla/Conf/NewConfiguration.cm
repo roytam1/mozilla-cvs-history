@@ -63,10 +63,30 @@ output "Any existing data in this database may be deleted.\n";
 output "Remember that you can answer 'stop' at any time to save your settings\n";
 ask('db_name','Database name?','bugs');
 
-output "Now configuring other database configuration settings\n";
+output "Now configuring other database access configuration settings\n";
 ask('db_port',"Database port?",3306);
 ask('db_user',"Database username?",'bugs');
 ask('db_pass',"Database password (leave blank if none)?",'');
 storeData();
+
+output "Now configuring database options\n";
+output "Remember you can answer 'stop' for any question to save your settings and exit\n\n";
+ask('db_sock',"Please select the database socket you wish to use. Leaving this option blank is almost always the right choice:",'');
+
+if (getConf('databasetype') eq 'mysql') {
+	# If we are using mysql, we need the path to the binaries
+	# Code snipped from checksetup to find a default
+	my $mysql_binaries = `which mysql`;
+	my $defauttext;
+	if ($mysql_binaries =~ /no mysql/) {
+    	# If which didn't find it, just provide a reasonable default
+    	$mysql_binaries = "/usr/bin";
+	} else {
+    	$mysql_binaries =~ s:/mysql\n$::;
+    	$defaulttext = " A suitable default was autodetected on your system."
+	}
+
+	ask ('mysqlpath',"Please specify only the directory name, with no trailing slash to the MySQL binaries on your system.$defaulttext",$mysql_binaries);
+}
 
 1;
