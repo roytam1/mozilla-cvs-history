@@ -365,7 +365,6 @@ if (m:^js/src/perlconnect$:) {return '111';}
 if (m:^mozilla/silentdl/.*$:) {return '110';}
 if (m:^mozilla/extensions/transformiix/.*$:) {return '140';}
 if (m:^base/src/photon/.*$:) {return '113';}
-if (m:^embedding/browser/photon/.*$:) {return '113';}
 if (m:^gfx/src/photon/.*$:) {return '113';}
 if (m:^widget/src/photon/.*$:) {return '113';}
 if (m:^mozilla/content/xul/.*$:) {return '106';}
