@@ -328,7 +328,8 @@ RaptorDist -a \
 	mozilla/network \
 	mozilla/nsprpub \
 	mozilla/sun-java \
-	mozilla/xpcom
+	mozilla/xpcom \
+	mozilla/xpfe
 
 RaptorLayout -a \
 	mozilla/dom \
