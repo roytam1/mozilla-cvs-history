@@ -489,6 +489,8 @@ sub render_authors {
 
             my $link_choices; 
             
+            $link_choices .= "<tt>$author</tt>";
+            $link_choices .= "<br>";
             $link_choices .= 
               VCDisplay::query(
                                'tree' => $tree,
@@ -499,6 +501,7 @@ sub render_authors {
                                "linktxt" => "This check-in",
                                );
 
+            $link_choices .= "<br>";
             $link_choices .= 
               VCDisplay::query(
                                'tree' => $tree,
@@ -509,6 +512,7 @@ sub render_authors {
                                "linktxt" => "Check-ins within 24 hours",
                                );
 
+            $link_choices .= "<br>";
             $link_choices .= 
               VCDisplay::query(
                                'tree' => $tree,
@@ -519,12 +523,14 @@ sub render_authors {
                                "linktxt" => "Check-ins within 7 days",
                                );
 
+            $link_choices .= "<br>";
             $link_choices .= 
               HTMLPopUp::Link(
                               "href" => "mailto: $mailto_author",
                               "linktxt" => $display_author,
                               );
 
+            $link_choices .= "<br>";
 
 
             # This is a Netscape.com/Mozilla.org specific CVS/Bonsai
