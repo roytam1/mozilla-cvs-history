@@ -360,9 +360,9 @@ sub UserInGroup {
         " AND user_group_map.user_id = " . $self->{'whoid'} .
         " AND isbless = 0" .
         " AND groups.name = " . SqlQuote($groupname));
-    my $rslt = FetchOneColumn();
+    my $result = FetchOneColumn();
     PopGlobalSQLState();
-    if ($rslt) {
+    if ($result) {
         return 1;
     }
     return 0;

@@ -29,7 +29,7 @@ use strict;
 
 # The caller MUST require CGI.pl and globals.pl before using this
 
-use vars qw($userid );
+use vars qw($userid);
 
 package Bugzilla::Search;
 

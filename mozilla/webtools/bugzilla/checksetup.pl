@@ -1630,7 +1630,7 @@ $table{group_group_map} =
      parent_id mediumint not null,
      isbless smallint not null default 0,
 
-     unique(child_id,parent_id,isbless)';
+     unique(child_id, parent_id, isbless)';
 
 # This table determines in which groups a user must be a member to have
 # permission to see a bug
@@ -3043,7 +3043,15 @@ if (($fielddef = GetFieldDef("attachments", "creation_ts")) &&
 # If the whole groups system is new, but the installation isn't, 
 # convert all the old groupset groups, etc...
 #
-# ListBits(arg) returns a list of UNKNOWN<n> for all bits set in arg
+# This requires:
+# 1) define groups ids in group table
+# 2) populate user_group_map with grants from old groupsets and blessgroupsets
+# 3) populate bug_group_map with data converted from old bug groupsets
+# 4) convert activity logs to use group names instead of numbers
+# 5) identify the admin from the old all-ones groupset
+#
+# ListBits(arg) returns a list of group names or UNKNOWN<n> if the group
+# has been deleted for all bits set in arg
 sub ListBits {
     my ($num) = @_;
     my @res = ();
@@ -3076,7 +3084,7 @@ if (GetFieldDef("profiles", "groupset")) {
                 WHERE bit > 0");
     $sth->execute();
     while (my ($bit, $gid) = $sth->fetchrow_array) {
-        # create u2g memberships for old groupsets
+        # create user_group_map membership grants for old groupsets
         my $sth2 = $dbh->prepare("SELECT userid FROM profiles
                    WHERE (groupset & $bit) != 0");
         $sth2->execute();
@@ -3092,7 +3100,7 @@ if (GetFieldDef("profiles", "groupset")) {
                        VALUES($uid, $gid, 0, 0)");
             }
         }
-        # create uBg memberships for old groupsets
+        # create user can bless group grants for old groupsets
         $sth2 = $dbh->prepare("SELECT userid FROM profiles
                    WHERE (blessgroupset & $bit) != 0");
         $sth2->execute();
@@ -3105,10 +3113,10 @@ if (GetFieldDef("profiles", "groupset")) {
         $sth2 = $dbh->prepare("SELECT bug_id FROM bugs
                    WHERE (groupset & $bit) != 0");
         $sth2->execute();
-        while (my ($bid) = $sth2->fetchrow_array) {
+        while (my ($bug_id) = $sth2->fetchrow_array) {
             $dbh->do("INSERT INTO bug_group_map
                    (bug_id, group_id)
-                   VALUES($bid, $gid)");
+                   VALUES($bug_id, $gid)");
         }
     }
     # replace old activity log groupset records with groups
@@ -3122,7 +3130,7 @@ if (GetFieldDef("profiles", "groupset")) {
     $sth = $dbh->prepare("SELECT bug_id, bug_when, who, added, removed
                           FROM bugs_activity WHERE fieldid = $gsid");
     $sth->execute();
-    while (my ($bid, $bwhen, $bwho, $added, $removed) = $sth->fetchrow_array) {
+    while (my ($bug_id, $bug_when, $who, $added, $removed) = $sth->fetchrow_array) {
         $added ||= 0;
         $removed ||= 0;
         my $sth2 = $dbh->prepare("SELECT name FROM groups WHERE (bit & $added) != 0 AND (bit & $removed) = 0");
@@ -3142,14 +3150,14 @@ if (GetFieldDef("profiles", "groupset")) {
         my ($miss) = $sth2->fetchrow_array;
         if ($miss) {
             push @logadd, ListBits($miss);
-            print "\nWARNING - GROUPSET ACTIVITY ON BUG $bid CONTAINS DELETED GROUPS\n";
+            print "\nWARNING - GROUPSET ACTIVITY ON BUG $bug_id CONTAINS DELETED GROUPS\n";
         }
         $sth2 = $dbh->prepare("SELECT ($removed & ~BIT_OR(bit)) FROM groups");
         $sth2->execute();
         ($miss) = $sth2->fetchrow_array;
         if ($miss) {
             push @logrem, ListBits($miss);
-            print "\nWARNING - GROUPSET ACTIVITY ON BUG $bid CONTAINS DELETED GROUPS\n";
+            print "\nWARNING - GROUPSET ACTIVITY ON BUG $bug_id CONTAINS DELETED GROUPS\n";
         }
         my $logr = "";
         my $loga = "";
@@ -3158,8 +3166,8 @@ if (GetFieldDef("profiles", "groupset")) {
         $dbh->do("UPDATE bugs_activity SET fieldid = $bgfid, added = " .
                   $dbh->quote($loga) . ", removed = " . 
                   $dbh->quote($logr) .
-                  " WHERE bug_id = $bid AND bug_when = " . $dbh->quote($bwhen) .
-                  " AND who = $bwho AND fieldid = $gsid");
+                  " WHERE bug_id = $bug_id AND bug_when = " . $dbh->quote($bug_when) .
+                  " AND who = $who AND fieldid = $gsid");
 
     }
     $sth = $dbh->prepare("SELECT userid, profiles_when, who, newvalue, oldvalue
@@ -3235,12 +3243,12 @@ if (GetFieldDef("profiles", "groupset")) {
 #sub GetIndexDef ($$);
 #sub AddField ($$$);
 
-AddGroup 'tweakparams',      'Can tweak operating parameters';
+AddGroup 'tweakparams',    'Can tweak operating parameters';
 AddGroup 'editusers',      'Can edit or disable users';
-AddGroup 'creategroups',     'Can create and destroy groups.';
-AddGroup 'editcomponents',   'Can create, destroy, and edit components.';
+AddGroup 'creategroups',   'Can create and destroy groups.';
+AddGroup 'editcomponents', 'Can create, destroy, and edit components.';
 AddGroup 'editkeywords',   'Can create, destroy, and edit keywords.';
-AddGroup 'admin',  'Administrators';
+AddGroup 'admin',          'Administrators';
 
 
 if (!GroupDoesExist("editbugs")) {
@@ -3308,6 +3316,7 @@ if (@admins) {
             (child_id, parent_id, isbless) 
             VALUES ($adminid, $id, 1)");
         # admins are initially members of every group
+        next if ($id == $adminid);
         $dbh->do("INSERT INTO group_group_map 
             (child_id, parent_id, isbless) 
             VALUES ($adminid, $id, 0)");
@@ -3326,12 +3335,8 @@ while ( my @row = $sth->fetchrow_array() ) {
 #  Prompt the user for the email address and name of an administrator.  Create
 #  that login, if it doesn't exist already, and make it a member of all groups.
 
-$sth = $dbh->prepare(<<_End_Of_SQL_);
-  SELECT user_id
-  FROM groups, user_group_map
-  WHERE name = 'admin'
-  AND id = group_id
-_End_Of_SQL_
+$sth = $dbh->prepare("SELECT user_id FROM groups, user_group_map" .
+                    " WHERE name = 'admin' AND id = group_id");
 $sth->execute;
 # when we have no admin users, prompt for admin email address and password ...
 if ($sth->rows == 0) {
@@ -3361,7 +3366,7 @@ if ($sth->rows == 0) {
 
   print "\nLooks like we don't have an administrator set up yet.  Either this is your\n";
   print "first time using Bugzilla, or your administrator's privs might have accidently\n";
-  print "gotten deleted at some point.\n";
+  print "gotten deleted.\n";
   while(! $admin_ok ) {
     while( $login eq "" ) {
       print "Enter the e-mail address of the administrator: ";
@@ -3382,11 +3387,8 @@ if ($sth->rows == 0) {
       }
     }
     $login = $dbh->quote($login);
-    $sth = $dbh->prepare(<<_End_Of_SQL_);
-      SELECT login_name
-      FROM profiles
-      WHERE login_name=$login
-_End_Of_SQL_
+    $sth = $dbh->prepare("SELECT login_name FROM profiles" .
+                        " WHERE login_name=$login");
     $sth->execute;
     if ($sth->rows > 0) {
       print "$login already has an account.\n";
@@ -3475,11 +3477,8 @@ _End_Of_SQL_
     $realname = $dbh->quote($realname);
     $cryptedpassword = $dbh->quote($cryptedpassword);
 
-    $dbh->do(<<_End_Of_SQL_);
-      INSERT INTO profiles
-      (login_name, realname, cryptpassword)
-      VALUES ($login, $realname, $cryptedpassword)
-_End_Of_SQL_
+    $dbh->do("INSERT INTO profiles (login_name, realname, cryptpassword)" .
+            " VALUES ($login, $realname, $cryptedpassword)");
   }
     # Put the admin in each group if not already    
     my $query = "select userid from profiles where login_name = $login";    
@@ -3487,7 +3486,7 @@ _End_Of_SQL_
     $sth->execute();
     my ($userid) = $sth->fetchrow_array();
    
-    foreach my $group ( @groups ) {
+    foreach my $group (@groups) {
         my $query = "SELECT user_id FROM user_group_map 
             WHERE group_id = $group AND user_id = $userid 
             AND isbless = 0";
@@ -3513,7 +3512,7 @@ _End_Of_SQL_
             VALUES ($id, $group, 1)");
     }
 
-  print "\n$login is now set up as the administrator account.\n";
+  print "\n$login is now set up as an administrator account.\n";
 }
 
 
@@ -3521,15 +3520,12 @@ _End_Of_SQL_
 #
 # Final checks...
 
-$sth = $dbh->prepare(<<_End_Of_SQL_);
-  SELECT user_id
-  FROM groups, user_group_map
-  WHERE groups.name = 'admin'
-  AND groups.id = user_group_map.group_id
-_End_Of_SQL_
+$sth = $dbh->prepare("SELECT user_id FROM groups, user_group_map" .
+                    " WHERE groups.name = 'admin'" .
+                    " AND groups.id = user_group_map.group_id");
 $sth->execute;
 my ($adminuid) = $sth->fetchrow_array;
-if (!$adminuid) { die "No administator!" } # should never get here
+if (!$adminuid) { die "No administrator!" } # should never get here
 # when test product was created, admin was unknown
 $dbh->do("UPDATE components SET initialowner = $adminuid WHERE initialowner = 0");
 

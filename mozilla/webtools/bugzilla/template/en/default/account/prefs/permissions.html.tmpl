@@ -21,23 +21,23 @@
 
 [%# INTERFACE:
   # has_bits: array of hashes. May be empty.
-  #           name => Descriptions of the permissions the user has. 
+  #           name => Names of the permissions the user has. 
   #           desc => Descriptions of the permissions the user has. 
   # set_bits: array of hashes. May be empty. 
-  #           name => Descriptions of the permissions the user can set for 
+  #           name => Names of the permissions the user can set for 
   #           other people.
   #           desc => Descriptions of the permissions the user can set for 
   #           other people.
   #%]
  
-<table align=center>
+<table align="center">
   <tr>
     <td>
       [% IF has_bits.size %]
         You have the following permission bits set on your account:
         <p>
         <br>
-        <table align=center>
+        <table align="center">
           [% FOREACH bit_description = has_bits %]
             <tr>
               <td>[% bit_description.name %]</td>
@@ -54,7 +54,7 @@
         And you can turn on or off the following bits for
         <a href="editusers.cgi">other users</a>:
         <p>
-          <table align=center>
+          <table align="center">
           [% FOREACH bit_description = set_bits %]
             <tr>
               <td>[% bit_description.name %]</td>

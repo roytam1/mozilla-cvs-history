@@ -660,11 +660,17 @@ sub CanSeeBug {
         $found_cc, $found_groups, $found_members) 
         = FetchSQLData();
     PopGlobalSQLState();
-    return (($found_groups == 0) || ($userid && (($assigned_to == $userid) 
-               || ($qa_contact == $userid)
-               || (($reporter == $userid) && $rep_access) 
-               || ($found_cc && $cc_access) 
-               || ($found_groups == $found_members))));
+    return (
+               ($found_groups == 0) 
+               || (($userid > 0) && 
+                  (
+                       ($assigned_to == $userid) 
+                    || ($qa_contact == $userid)
+                    || (($reporter == $userid) && $rep_access) 
+                    || ($found_cc && $cc_access) 
+                    || ($found_groups == $found_members)
+                  ))
+           );
 }
 
 sub ValidatePassword {
@@ -722,14 +728,16 @@ sub Crypt {
     return $cryptedpassword;
 }
 
-sub CheckGroup {
+sub ConfirmGroup {
     my ($user) = (@_);
     PushGlobalSQLState();
     SendSQL("SELECT userid FROM profiles, groups WHERE userid = $user " .
-            "AND  profiles.refreshed_when <= groups.group_when ");
+            "AND profiles.refreshed_when <= groups.group_when ");
     my $ret = FetchSQLData();
     PopGlobalSQLState();
-    return $ret;
+    if ($ret) {
+        DeriveGroup($user);
+    }
 }
 
 sub DeriveGroup {
@@ -1204,9 +1212,9 @@ sub UserInGroup {
         AND user_group_map.user_id = $userid
         AND isbless = 0
         AND groups.name = " . SqlQuote($groupname));
-    my $rslt = FetchOneColumn();
+    my $result = FetchOneColumn();
     PopGlobalSQLState();
-    return defined($rslt);
+    return defined($result);
 }
 
 sub UserCanBlessGroup {
@@ -1218,9 +1226,9 @@ sub UserCanBlessGroup {
         AND user_group_map.user_id = $::userid
         AND isbless = 1
         AND groups.name = " . SqlQuote($groupname));
-    my $rslt = FetchOneColumn();
+    my $result = FetchOneColumn();
     PopGlobalSQLState();
-    if ($rslt) {
+    if ($result) {
         return 1;
     }
     PushGlobalSQLState();
@@ -1234,9 +1242,9 @@ sub UserCanBlessGroup {
         AND group_group_map.isbless = 1
         AND user_group_map.group_id = child_id
         AND groups.name = " . SqlQuote($groupname));
-    $rslt = FetchOneColumn();
+    $result = FetchOneColumn();
     PopGlobalSQLState();
-    if ($rslt) {
+    if ($result) {
         return 1;
     }
     return 0;
@@ -1247,9 +1255,9 @@ sub UserCanBlessAnything {
     # check if user explicitly can bless a group
     SendSQL("SELECT group_id FROM user_group_map 
         WHERE user_id = $::userid AND isbless = 1");
-    my $rslt = FetchOneColumn();
+    my $result = FetchOneColumn();
     PopGlobalSQLState();
-    if ($rslt) {
+    if ($result) {
         return 1;
     }
     PushGlobalSQLState();
@@ -1260,9 +1268,9 @@ sub UserCanBlessAnything {
         AND user_group_map.user_id = $::userid
         AND group_group_map.isbless = 1
         AND user_group_map.group_id = child_id");
-    $rslt = FetchOneColumn();
+    $result = FetchOneColumn();
     PopGlobalSQLState();
-    if ($rslt) {
+    if ($result) {
         return 1;
     }
     return 0;
@@ -1294,7 +1302,7 @@ sub BugInGroupId {
 sub GroupExists {
     my ($groupname) = (@_);
     PushGlobalSQLState();
-    SendSQL("select count(*) from groups where name=" . SqlQuote($groupname));
+    SendSQL("SELECT COUNT(*) FROM groups WHERE name=" . SqlQuote($groupname));
     my $count = FetchOneColumn();
     PopGlobalSQLState();
     return $count;
@@ -1303,7 +1311,7 @@ sub GroupExists {
 sub GroupNameToId {
     my ($groupname) = (@_);
     PushGlobalSQLState();
-    SendSQL("select id from groups where name=" . SqlQuote($groupname));
+    SendSQL("SELECT id FROM groups WHERE name=" . SqlQuote($groupname));
     my $id = FetchOneColumn();
     PopGlobalSQLState();
     return $id;
@@ -1312,7 +1320,7 @@ sub GroupNameToId {
 sub GroupIdToName {
     my ($groupid) = (@_);
     PushGlobalSQLState();
-    SendSQL("select name from groups where id = $groupid");
+    SendSQL("SELECT name FROM groups WHERE id = $groupid");
     my $name = FetchOneColumn();
     PopGlobalSQLState();
     return $name;
@@ -1326,7 +1334,7 @@ sub GroupIsActive {
     my ($groupid) = (@_);
     $groupid ||= 0;
     PushGlobalSQLState();
-    SendSQL("select isactive from groups where id=$groupid");
+    SendSQL("SELECT isactive FROM groups WHERE id=$groupid");
     my $isactive = FetchOneColumn();
     PopGlobalSQLState();
     return $isactive;
