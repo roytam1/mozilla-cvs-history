@@ -105,7 +105,7 @@ $VERSION = '#tinder_version#';
 # find this hard to ready so I set a variable.
 
 if (defined($TinderConfig::$EMPTY_TABLE_CELL)) {
-    $EMPTY_TABLE_CELL = $TinderConfig::$EMPTY_TABLE_CELL;
+    $EMPTY_TABLE_CELL = $TinderConfig::EMPTY_TABLE_CELL;
 } else {
     $EMPTY_TABLE_CELL ="&nbsp;";
 }
