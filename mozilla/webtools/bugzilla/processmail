@@ -19,7 +19,10 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>,
-# Bryce Nesbitt <bryce-mozilla@nextbus.com>
+# 				  Bryce Nesbitt <bryce-mozilla@nextbus.com>
+#                 Bryce Nesbitt <bryce-mozilla@nextbus.com>
+#                 Dan Mosedale <dmose@mozilla.org>
+#				  David Lawrence <dkl@redhat.com>
 
 # To recreate the shadow database,  run "processmail regenerate" .
 
@@ -154,7 +157,6 @@ sub DescDependencies {
 }
 
 
-
 sub GetBugText {
     my ($id) = (@_);
     undef %::bug;
@@ -237,12 +239,11 @@ sub GetBugText {
 |                              DESCRIPTION                                   |
 END
 
-    my $prettymail = $^A . $::bug{'long_desc'};
-        return $prettymail;
-
+    	my $prettymail = $^A . $::bug{'long_desc'} . "\n";
+    	return $prettymail;
 
     } else {
-        return "Bug\#: $id
+    	return "Bug\#: $id
 Product: $::bug{'product'}
 Version: $::bug{'version'}
 Platform: $::bug{'rep_platform'}
@@ -267,6 +268,7 @@ $::bug{'long_desc'}
 my $didexclude = 0;
 my %seen;
 my @sentlist;
+
 sub fixaddresses {
     my ($field, $list) = (@_);
     my @result;
@@ -274,12 +276,22 @@ sub fixaddresses {
         if (!defined $i || $i eq "") {
             next;
         }
-        SendSQL("select emailnotification, groupset & $::bug{'groupset'} from profiles where login_name = " .
-                SqlQuote($i));
-        my ($emailnotification, $groupset) = (FetchSQLData());
-        if ($groupset ne $::bug{'groupset'}) {
-            next;
-        }
+
+		my ($emailnotification, $groupset, $userid);
+		if ($::driver eq 'mysql') {
+	        SendSQL("select emailnotification, groupset & $::bug{'groupset'} from profiles where login_name = " .
+    	            SqlQuote($i));
+			($emailnotification, $groupset) = (FetchSQLData());
+        	if ($groupset ne $::bug{'groupset'}) {
+            	next;
+        	}
+		} else {
+			SendSQL("select userid, emailnotification from profiles where login_name = " . SqlQuote($i));
+			($userid, $emailnotification) = (FetchSQLData());	
+			if (!CanISee($::bug{'bug_id'}, $userid)) {
+				next;
+			}
+		}
         if ($emailnotification eq "CConly") {
             if ($field ne "cc") {
                 next;
@@ -350,15 +362,40 @@ sub NewProcessOneBug {
         $defmailhead{$field} = $mailhead;
         $fielddescription{$field} = $description;
     }
-    SendSQL("SELECT " . join(',', @::log_columns) . ", lastdiffed, now() " .
-            "FROM bugs WHERE bug_id = $id");
+	if ($::driver eq 'mysql') {
+	    SendSQL("SELECT " . join(',', @::log_columns) . ", lastdiffed, now() " .
+	            "FROM bugs WHERE bug_id = $id");
+	} else {
+       SendSQL("SELECT " . join(',', @::log_columns) . ", TO_CHAR(lastdiffed, 'YYYY-MM-DD HH24:MI:SS'), " .
+			   "TO_CHAR(sysdate, 'YYYY-MM-DD HH24:MI:SS') FROM bugs WHERE bug_id = $id"); 
+	}
+
     my @row = FetchSQLData();
     foreach my $i (@::log_columns) {
-        $values{$i} = shift(@row);
+		$i = lc($i);
+		my $temp = shift (@row);
+		if (defined ($temp)) {
+		    $values{$i} = $temp;
+		} else {
+			$values{$i} = "";
+		} 
     }
-    my ($start, $end) = (@row);
+
+	my ($start, $end) = (@row);
+#	if (!$start) {
+#		$start = $end;
+#	}
+
     $values{'cc'} = ShowCcList($id);
     
+	# added for oracle
+	if ($::driver ne 'mysql') {
+		SendSQL("select TO_CHAR(creation_ts, 'YYYY-MM-DD HH24:MI:SS'), " .
+				"TO_CHAR(delta_ts, 'YYYY-MM-DD HH24:MI:SS') from bugs " .
+				" where bug_id = $id");
+		($values{'creation_ts'}, $values{'delta_ts'}) = (FetchSQLData());
+	}
+
     my @voterlist;
     SendSQL("SELECT profiles.login_name FROM votes, profiles " .
             "WHERE votes.bug_id = $id AND profiles.userid = votes.who");
@@ -366,25 +403,37 @@ sub NewProcessOneBug {
         push(@voterlist, FetchOneColumn());
     }
 
-    $values{'assigned_to'} = DBID_to_name($values{'assigned_to'});
+	$values{'assigned_to'} = DBID_to_name($values{'assigned_to'});
     $values{'reporter'} = DBID_to_name($values{'reporter'});
-    if ($values{'qa_contact'}) {
+    if ($values{'qa_contact'} > 0) {
         $values{'qa_contact'} = DBID_to_name($values{'qa_contact'});
     }
 
     my @diffs;
 
-
-    SendSQL("SELECT profiles.login_name, fielddefs.description, " .
-            "       bug_when, oldvalue, newvalue " .
-            "FROM bugs_activity, fielddefs, profiles " .
-            "WHERE bug_id = $id " .
-            "  AND fielddefs.fieldid = bugs_activity.fieldid " .
-            "  AND profiles.userid = who " .
-            "  AND bug_when > '$start' " .
-            "  AND bug_when <= '$end' " .
-            "ORDER BY bug_when"
-            );
+	if ($::driver eq 'mysql') {
+	    SendSQL("SELECT profiles.login_name, fielddefs.description, " .
+	            "bug_when, oldvalue, newvalue " .
+	            "FROM bugs_activity, fielddefs, profiles " .
+	            "WHERE bug_id = $id " .
+	            "AND fielddefs.fieldid = bugs_activity.fieldid " .
+	            "AND profiles.userid = who " .
+	            "AND bug_when > '$start' " .
+	            "AND bug_when <= '$end' " .
+	            "ORDER BY bug_when"
+	           );
+	} else {
+       SendSQL("SELECT profiles.login_name, fielddefs.description, " .
+               "TO_CHAR(bug_when, 'YYYY-MM-DD HH24:MI:SS'), oldvalue, newvalue " .
+               "FROM bugs_activity, fielddefs, profiles " .
+               "WHERE bug_id = $id " .
+               "AND fielddefs.fieldid = bugs_activity.fieldid " .
+               "AND profiles.userid = who " .
+               "AND bug_when > TO_DATE('$start', 'YYYY-MM-DD HH24:MI:SS') " .
+               "AND bug_when <= TO_DATE('$end', 'YYYY-MM-DD HH24:MI:SS') " .
+               "ORDER BY bug_when"
+			);
+	}
 
     while (MoreSQLData()) {
         my @row = FetchSQLData();
@@ -409,19 +458,33 @@ sub NewProcessOneBug {
 
     my $deptext = "";
 
-    my $resid = 
+    my $resid = "";
 
-    SendSQL("SELECT bugs_activity.bug_id, fielddefs.name, " .
-            "       oldvalue, newvalue " .
-            "FROM bugs_activity, dependencies, fielddefs ".
-            "WHERE bugs_activity.bug_id = dependencies.dependson " .
-            "  AND dependencies.blocked = $id " .
-            "  AND fielddefs.fieldid = bugs_activity.fieldid" .
-            "  AND (fielddefs.name = 'bug_status' " .
-            "    OR fielddefs.name = 'resolution') " .
-            "  AND bug_when > '$start' " .
-            "  AND bug_when <= '$end' " .
-            "ORDER BY bug_when, bug_id");
+	if ($::driver eq 'mysql') {
+	    SendSQL("SELECT bugs_activity.bug_id, fielddefs.name, " .
+    	        "       oldvalue, newvalue " .
+        	    "FROM bugs_activity, dependencies, fielddefs ".
+            	"WHERE bugs_activity.bug_id = dependencies.dependson " .
+	            "  AND dependencies.blocked = $id " .
+	            "  AND fielddefs.fieldid = bugs_activity.fieldid" .
+	            "  AND (fielddefs.name = 'bug_status' " .
+    	        "    OR fielddefs.name = 'resolution') " .
+        	    "  AND bug_when > '$start' " .
+            	"  AND bug_when <= '$end' " .
+            	"ORDER BY bug_when, bug_id");
+	} else {
+	    SendSQL("SELECT bugs_activity.bug_id, fielddefs.name, " .
+    	        "       oldvalue, newvalue " .
+        	    "FROM bugs_activity, dependencies, fielddefs ".
+            	"WHERE bugs_activity.bug_id = dependencies.dependson " .
+	            "  AND dependencies.blocked = $id " .
+    	        "  AND fielddefs.fieldid = bugs_activity.fieldid" .
+        	    "  AND (fielddefs.name = 'bug_status' " .
+            	"    OR fielddefs.name = 'resolution') " .
+	            "  AND bug_when > TO_DATE('$start', 'YYYY-MM-DD HH24:MI:SS') " .
+    	        "  AND bug_when <= TO_DATE('$end', 'YYYY-MM-DD HH24:MI:SS') " .
+        	    "ORDER BY bug_when, bug_id");
+	}
     
     my $thisdiff = "";
     my $lastbug = "";
@@ -466,19 +529,29 @@ sub NewProcessOneBug {
         if ($seen{$person}) {
             next;
         }
-        
-        SendSQL("SELECT userid, emailnotification, newemailtech," .
-                "       groupset & $values{'groupset'} " .
-                "FROM profiles WHERE login_name = " . SqlQuote($person));
-        my ($userid, $emailnotification, $newemailtech,
-            $groupset) = (FetchSQLData());
+
+		my ($userid, $emailnotification, $newemailtech, $groupset);
+    	if ($::driver eq 'mysql') {    
+	        SendSQL("SELECT userid, emailnotification, newemailtech," .
+    	            "       groupset & $values{'groupset'} " .
+        	        "FROM profiles WHERE login_name = " . SqlQuote($person));
+	        ($userid, $emailnotification, $newemailtech, $groupset) = (FetchSQLData());
+
+			if ($groupset ne $values{'groupset'}) {
+            	next;
+			}
+        } else  {
+			SendSQL("SELECT userid, emailnotification, newemailtech " .
+                    "FROM profiles WHERE login_name = " . SqlQuote($person));
+			($userid, $emailnotification, $newemailtech) = (FetchSQLData());
+			if (!CanISee($id, $userid)) {
+				next;
+			}
+		}
         if (!$newemailtech || !Param('newemailtech')) {
             next;
         }
         $seen{$person} = 1;
-        if ($groupset ne $values{'groupset'}) {
-            next;
-        }
         if ($emailnotification eq "ExcludeSelfChanges" &&
             lc($person) eq $nametoexclude) {
             $didexclude = 1;
@@ -573,13 +646,13 @@ sub NewProcessOneBug {
         close SENDMAIL;
         push(@sentlist, $person);
     }
-
-        
-
-
-
-    SendSQL("UPDATE bugs SET lastdiffed = '$end', delta_ts = delta_ts " .
-            "WHERE bug_id = $id");
+	if ($::driver eq 'mysql') {
+	    SendSQL("UPDATE bugs SET lastdiffed = '$end', delta_ts = delta_ts " .
+	            "WHERE bug_id = $id");
+	} else {
+		SendSQL("UPDATE bugs SET lastdiffed = TO_DATE('$end', 'YYYY-MM-DD HH24:MI:SS'), delta_ts = sysdate " .
+                "WHERE bug_id = $id");
+	}
 }
 
 
@@ -606,7 +679,8 @@ sub ProcessOneBug {
     print FID $text;
     close FID;
     if (Different($old, $new)) {
-        system("diff -c -b $old $new > $diffs");
+#        system("diff -c -b $old $new > $diffs");
+		system("diff -u $old $new > $diffs");
         my $tolist = fixaddresses("to",
                                   [$::bug{'assigned_to'}, $::bug{'reporter'},
                                    $::bug{'qa_contact'}]);
@@ -637,7 +711,7 @@ sub ProcessOneBug {
             if (!$regenerate) {
                 # Note: fixaddresses may result in a Cc: only.  This seems
                 # harmless.
-                open(SENDMAIL, "|/usr/lib/sendmail -t") ||
+                open(SENDMAIL, "|/usr/lib/sendmail -ODeliveryMode=deferred -t") ||
                     die "Can't open sendmail";
 
                 print SENDMAIL $msg;
@@ -655,10 +729,11 @@ sub ProcessOneBug {
         Log($logstr);
     }
     if (@sentlist) {
-        print "<B>Email sent to:</B> " . join(", ", @sentlist) . "\n";
+        print "<CENTER><B>Email sent to:</B> " . join(", ", @sentlist) . "\n";
         if ($didexclude) {
             print qq{<B>Excluding:</B> $nametoexclude (<a href="userprefs.cgi?bank=diffs">change your preferences</a> if you wish not to be excluded)\n};
         }
+		print "</CENTER>\n";
     }
     rename($new, $old) || die "Can't rename $new to $old";
     chmod 0666, $old;
@@ -683,7 +758,7 @@ if (open(FID, "<data/nomail")) {
 }
 
 # To recreate the shadow database,  run "processmail regenerate" .
-if ($ARGV[0] eq "regenerate") {
+if ($ARGV[0] >= 0 && $ARGV[0] eq "regenerate") {
     $regenerate = 1;
     shift @ARGV;
     SendSQL("select bug_id from bugs order by bug_id");
@@ -700,7 +775,7 @@ if ($ARGV[0] eq "regenerate") {
     exit;
 }
 
-if ($ARGV[0] eq "-forcecc") {
+if ($ARGV[0] >= 0 && $ARGV[0] eq "-forcecc") {
     shift(@ARGV);
     foreach my $i (split(/,/, shift(@ARGV))) {
         push(@forcecc, trim($i));
@@ -716,9 +791,13 @@ if ($#ARGV == 1) {
     $nametoexclude = lc($ARGV[1]);
 }
 
-if ($ARGV[0] eq "rescanall") {
+if ($ARGV[0] >= 0 && $ARGV[0] eq "rescanall") {
     print "<br> Collecting bug ids...\n";
-    SendSQL("select bug_id from bugs where to_days(now()) - to_days(delta_ts) <= 2 order by bug_id");
+	if ($::driver eq 'mysql') {
+	    SendSQL("select bug_id from bugs where to_days(now()) - to_days(delta_ts) <= 2 order by bug_id");
+	} else {
+		SendSQL("select bug_id from bugs where sysdate - delta_ts <= 2 order by bug_id");
+	}
     my @list;
     while (my @row = FetchSQLData()) {
         push @list, $row[0];
