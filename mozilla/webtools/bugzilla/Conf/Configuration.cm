@@ -1,0 +1,25 @@
+package Conf::Configuration;
+use Conf;
+no warnings;
+
+# Here is where we ask localconfig-like questions
+
+output <<EOF;
+
+Now, I have a series of questions to ask about how you would like 
+your Bugzilla installation configured. In some cases, 
+you may need to ask your system administrator about certain 
+questions or consult some documentation. If this is the case, 
+you can just answer 'stop' to any of the questions and I will 
+save your settings so you can come back where you were next time.
+
+First of all, what is your prefered text editor of choice?
+I will use this editor to allow you to easially give answers 
+to some of the longer configuration questions. 
+
+EOF
+
+ask('editor','Favorite text editor?',$ENV{'EDITOR'});
+
+
+1;
