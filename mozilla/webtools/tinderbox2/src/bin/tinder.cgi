@@ -396,7 +396,7 @@ sub HTML_status_page {
   $out .= "\n\n";
   $out .= "<!-- /Build Page Headers -->\n\n\n";
   $out .= "$links\n";
-  $out .= "<br>\n"
+  $out .= "<br>\n";
   $out .= "<!-- Message of the Day -->\n";
   $out .=  $motd;
   $out .= "<p>\n<!-- /Message of the Day -->\n";
@@ -418,9 +418,9 @@ sub HTML_status_page {
   $out .= "</table>\n\n";
   $out .= "<!-- Page Footer --><p>\n";
   $out .= $links;
-  $out .= "<br>\n"
+  $out .= "<br>\n";
   $out .= $previous_links;
-  $out .= "<br>\n"
+  $out .= "<br>\n";
   $out .= "<!-- Table Legend -->\n";
   $out .= "<FONT SIZE=\"+3\"><B><NOBR>Table Legend</NOBR></B></FONT>";
   $out .= "<table width=\"100%\" cellpadding=0 cellspacing=0>\n";
