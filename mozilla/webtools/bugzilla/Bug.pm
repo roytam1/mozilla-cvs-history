@@ -34,7 +34,7 @@ use CGI::Carp qw(fatalsToBrowser);
 my %ok_field;
 
 for my $key (qw (bug_id product version rep_platform op_sys bug_status 
-                resolution priority bug_severity component assigned_to
+                resolution_id priority bug_severity component assigned_to
                 reporter bug_file_loc short_desc target_milestone 
                 qa_contact status_whiteboard creation_ts groupset 
                 delta_ts votes whoid usergroupset comment query error) ){
@@ -107,7 +107,7 @@ sub initBug  {
   my $query = "
     select
       bugs.bug_id, product, version, rep_platform, op_sys, bug_status,
-      resolution, priority, bug_severity, component, assigned_to, reporter,
+      resolution_id, priority, bug_severity, component, assigned_to, reporter,
       bug_file_loc, short_desc, target_milestone, qa_contact,
       status_whiteboard, date_format(creation_ts,'%Y-%m-%d %H:%i'),
       groupset, delta_ts, sum(votes.count)
@@ -122,7 +122,7 @@ sub initBug  {
     my $count = 0;
     my %fields;
     foreach my $field ("bug_id", "product", "version", "rep_platform",
-                       "op_sys", "bug_status", "resolution", "priority",
+                       "op_sys", "bug_status", "resolution_id", "priority",
                        "bug_severity", "component", "assigned_to", "reporter",
                        "bug_file_loc", "short_desc", "target_milestone",
                        "qa_contact", "status_whiteboard", "creation_ts",
@@ -257,7 +257,7 @@ sub emitXML {
   foreach my $field ("bug_id", "urlbase", "bug_status", "product",
       "priority", "version", "rep_platform", "assigned_to", "delta_ts", 
       "component", "reporter", "target_milestone", "bug_severity", 
-      "creation_ts", "qa_contact", "op_sys", "resolution", "bug_file_loc",
+      "creation_ts", "qa_contact", "op_sys", "resolution_id", "bug_file_loc",
       "short_desc", "keywords", "status_whiteboard") {
     if ($self->{$field}) {
       $xml .= "  <$field>" . QuoteXMLChars($self->{$field}) . "</$field>\n";

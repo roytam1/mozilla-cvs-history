@@ -43,7 +43,7 @@ sub edit_resolutions_sillyness {
     $zz = $::maxnamesize;
     $zz = $::maxrestype;
     $zz = @::defaultrest;
-    $zz = $::validaterestref;
+    $zz = $::extraerrorsref;
     $zz = $::extravarsref;
     $zz = $::successfulrestype;
     $zz = $::unsuccessfulrestype;
@@ -69,7 +69,7 @@ $::bugsreffieldref = "$::bugsreftablename.resolution_id";
 $::maxnamesize = 64;
 $::usesortkeys = 1;
 
-$::validaterestref = sub ($) {
+$::extraerrorsref = sub ($) {
 
     my ($fieldsref) = @_;
 
@@ -77,22 +77,28 @@ $::validaterestref = sub ($) {
     if (!defined $::FORM{restype}) {
         ThatDoesntValidate("restype");
         exit;
-    } elsif ( ($::FORM{restype} =~ /^\s*(\d)+\s*$/) && (0 <= $1) && ($1 <= $::maxrestype) ) {
-        $$fieldsref{restype} = $1;
-    } else {
-        ThatDoesntValidate("restype");
-        exit;
+    }
+    else {
+        detaint_natural($::FORM{restype});
+
+        if ((defined $::FORM{restype}) && (0 <= $::FORM{restype}) && ($::FORM{restype} <= $::maxrestype)) {
+            $fieldsref->{restype} = $::FORM{restype};
+        }
+        else {
+            ThatDoesntValidate("restype");
+            exit;
+        }
     }
 
     # Extra name check
     my $uniqlength = 4;
 
-    my $namestart = SqlQuote(substr($$fieldsref{name}, 0, $uniqlength));
+    my $namestart = SqlQuote(substr($fieldsref->{name}, 0, $uniqlength));
 
-    if (defined $$fieldsref{id}) {
+    if (defined $fieldsref->{id}) {
         SendSQL("SELECT name " .
                 "FROM   $::tablename " .
-                "WHERE  id != $$fieldsref{id} " .
+                "WHERE  id != $fieldsref->{id} " .
                 "  AND  SUBSTRING(name, 1, $uniqlength) = $namestart");
     } else {
         SendSQL("SELECT name " .
@@ -100,7 +106,7 @@ $::validaterestref = sub ($) {
                 "WHERE  SUBSTRING(name, 1, $uniqlength) = $namestart");
     }
 
-    my $htmlname = html_quote($$fieldsref{name});
+    my $htmlname = html_quote($fieldsref->{name});
 
     my ($dupename) = FetchSQLData();
 
@@ -110,6 +116,26 @@ $::validaterestref = sub ($) {
                      "$uniqlength characters as least one other resolution, " .
                      "eg $htmldupename. $::tryagain\n");
         exit;
+    }
+
+    # Restype change check
+    SendSQL("SELECT resolutions.restype, bugs.bug_id IS NOT NULL " .
+            "FROM resolutions LEFT JOIN bugs ON resolutions.id = bugs.resolution_id " .
+            "WHERE resolutions.id = $fieldsref->{id}");
+    my ($oldrestype, $isused) = FetchSQLData();
+    
+    if ($isused) {
+        my $oldisdupe = ($oldrestype == $::duperestype);
+        my $newisdupe = ($fieldsref->{restype} == $::duperestype);
+        
+        if ($oldisdupe && !$newisdupe) {
+            DisplayError("You can't change the resolution type of an in-use resolutoion from 'Duplicate'. $::tryagain");
+            exit;
+        }
+        elsif (!$oldisdupe && $newisdupe) { 
+            DisplayError("You can't change the resolution type of an in-use resolution to 'Duplicate'. $::tryagain");
+            exit;
+        }
     }
 
 };

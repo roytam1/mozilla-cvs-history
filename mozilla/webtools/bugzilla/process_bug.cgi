@@ -771,10 +771,12 @@ SWITCH: for ($::FORM{'knob'}) {
         last SWITCH;
     };   
     /^reopen$/  && CheckonComment( "reopen" ) && do {
-        SendSQL("SELECT resolution FROM bugs WHERE bug_id = $::FORM{'id'}");
+        SendSQL("SELECT restype FROM bugs, resolutions " .
+                "WHERE bug_id = $::FORM{'id'} " .
+                "AND bugs.resolution_id = resolutions.id");
         ChangeStatus('REOPENED');
         ChangeResolution(0);
-        if (FetchOneColumn() eq 'DUPLICATE') {
+        if (FetchOneColumn() == $::duperestype) {
             SendSQL("DELETE FROM duplicates WHERE dupe = $::FORM{'id'}");
         }
         last SWITCH;
@@ -788,33 +790,39 @@ SWITCH: for ($::FORM{'knob'}) {
         last SWITCH;
     };
     /^duplicate$/ && CheckonComment( "duplicate" ) && do {
-        ChangeStatus('RESOLVED');
-        ChangeResolution($::duperesolutionid);
-        if ( Param('strictvaluechecks') ) {
-            CheckFormFieldDefined(\%::FORM,'dup_id');
-        }
-        my $num = trim($::FORM{'dup_id'});
-        SendSQL("SELECT bug_id FROM bugs WHERE bug_id = " . SqlQuote($num));
-        $num = FetchOneColumn();
-        if (!$num) {
-            PuntTryAgain("You must specify a valid bug number of which this bug " .
-                         "is a duplicate.  The bug has not been changed.")
-        }
-        if (!defined($::FORM{'id'}) || $num == $::FORM{'id'}) {
-            PuntTryAgain("Nice try, $::FORM{'who'}.  But it doesn't really ".
-                         "make sense to mark a bug as a duplicate of " .
-                         "itself, does it?");
-        }
-        my $checkid = trim($::FORM{'id'});
-        SendSQL("SELECT bug_id FROM bugs where bug_id = " .  SqlQuote($checkid));
-        $checkid = FetchOneColumn();
-        if (!$checkid) {
-            PuntTryAgain("The bug id $::FORM{'id'} is invalid. Please reload this bug ".
-                         "and try again.");
-        }
-        $::FORM{'comment'} .= "\n\n*** This bug has been marked as a duplicate of $num ***";
-        $duplicate = $num;
+        my $resolution_id = ResolutionNameToID($::FORM{'dupe_resolution'});
+        if ($resolution_id == 0) {
+            PuntTryAgain("Whoops!  Something went wrong - I can't find
+                          the resolution \"$::FORM{'resolution'}\".");
+        } else {
+            ChangeStatus('RESOLVED');
+            ChangeResolution($resolution_id);
+            if ( Param('strictvaluechecks') ) {
+                CheckFormFieldDefined(\%::FORM,'dup_id');
+            }
+            my $num = trim($::FORM{'dup_id'});
+            SendSQL("SELECT bug_id FROM bugs WHERE bug_id = " . SqlQuote($num));
+            $num = FetchOneColumn();
+            if (!$num) {
+                PuntTryAgain("You must specify a valid bug number of which this bug " .
+                             "is a duplicate.  The bug has not been changed.")
+                }
+            if (!defined($::FORM{'id'}) || $num == $::FORM{'id'}) {
+                PuntTryAgain("Nice try, $::FORM{'who'}.  But it doesn't really ".
+                             "make sense to mark a bug as a duplicate of " .
+                             "itself, does it?");
+            }
+            my $checkid = trim($::FORM{'id'});
+            SendSQL("SELECT bug_id FROM bugs where bug_id = " .  SqlQuote($checkid));
+            $checkid = FetchOneColumn();
+            if (!$checkid) {
+                PuntTryAgain("The bug id $::FORM{'id'} is invalid. Please reload this bug ".
+                             "and try again.");
+            }
+            $::FORM{'comment'} .= "\n\n*** This bug has been marked as a duplicate of $num ***";
+            $duplicate = $num;
 
+        }
         last SWITCH;
     };
     # default

@@ -440,7 +440,7 @@ Status("Checking duplicates table");
 
 SendSQL("SELECT bugs.bug_id " .
         "FROM bugs, duplicates, resolutions " .
-        "WHERE bugs.restype != $::duperestype " .
+        "WHERE resolutions.restype != $::duperestype " .
         "  AND bugs.bug_id = duplicates.dupe " .
         "  AND bugs.resolution_id = resolutions.id " .
         "ORDER BY bugs.bug_id");
@@ -489,7 +489,7 @@ my $open_states = join(', ', @open_states);
 
 SendSQL("SELECT   bug_id FROM bugs " .
         "WHERE    bug_status IN ($open_states) " .
-        "AND      resolution != '' " .
+        "AND      resolution_id != 0 " .
         "ORDER BY bug_id");
 
 while (@row = FetchSQLData()) {
@@ -506,7 +506,7 @@ if (@badbugs > 0) {
 
 SendSQL("SELECT   bug_id FROM bugs " .
         "WHERE    bug_status NOT IN ($open_states) " .
-        "AND      resolution = '' " .
+        "AND      resolution_id = 0 " .
         "ORDER BY bug_id");
 
 while (@row = FetchSQLData()) {

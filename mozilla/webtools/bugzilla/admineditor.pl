@@ -100,8 +100,9 @@ $::extravarsref = sub ($) {};
 # "Rest" allows us to extend the code in this file to handle extra things, called
 # "the rest".
 
-# This validates the rest.
-$::validaterestref = sub ($) {};
+# These check extra errors and warnings.
+$::extraerrorsref = sub ($) {};
+$::extrawarningsref = sub ($) { return (); };
 
 # This takes the rest, and does anything necessary for use in SQL, eg
 # SqlQuoting strings.
@@ -231,8 +232,21 @@ sub ValidateSortKey ($) {
 
 }
 
-
 my $vars;
+
+sub CheckWarnings (%) {
+
+    my (%fields) = @_;
+
+    my @warnings = &$::extrawarningsref(%fields);
+
+    if (@warnings && !$::FORM{reallychange}) {
+        $vars->{warnings} = @warnings;
+        EmitTemplate("admin/$::valuetypeplural/warnings.atml");
+        exit;
+    }
+
+}
 
 sub EmitTemplate($) {
 
@@ -325,7 +339,10 @@ sub AdminEditor() {
         ValidateName(\%fields);
         ValidateDesc(\%fields);
         ValidateSortKey(\%fields) if ($::usesortkeys);
-        &$::validaterestref(\%fields);
+        &$::extraerrorsref(\%fields);
+
+        CheckWarnings(%fields);
+
         InsertNew(%fields);
         
     }
@@ -342,13 +359,18 @@ sub AdminEditor() {
         ValidateDesc(\%fields);
         ValidateIsActive(\%fields);
         ValidateSortKey(\%fields) if ($::usesortkeys);
-        &$::validaterestref(\%fields);
+
+        &$::extraerrorsref(\%fields);
+
+        CheckWarnings(%fields);
+
         UpdateExisting(%fields);
         
     }
     elsif ($action eq "delete") {
         
         ValidateID(\%fields);
+
         DeleteExisting(%fields);
         
     }
@@ -424,8 +446,6 @@ sub InsertNew(%) {
     
     my (%fields) = @_;
 
-    # Cleanups and validity checks
-
     my $htmlname = html_quote($fields{name});
     my $sqlname = SqlQuote($fields{name});
     my $sqldescription = SqlQuote($fields{description});
@@ -441,8 +461,7 @@ sub InsertNew(%) {
     while (MoreSQLData()) {
         my $oldid = FetchOneColumn();
 
-        detaint_natural($oldid);
-        die "Failed to detaint ID from DB when determining next sequential number." if (!defined $oldid);
+        detaint_natural($oldid) || die "Failed to detaint next seqnum.";
 
         if ($oldid > $newid) {
             last;

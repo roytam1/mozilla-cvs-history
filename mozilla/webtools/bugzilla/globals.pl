@@ -526,12 +526,13 @@ sub GenerateVersionTable {
     @::legal_opsys = SplitEnumType($cols->{"op_sys,type"});
     @::legal_bug_status = SplitEnumType($cols->{"bug_status,type"});
 
-    SendSQL("SELECT name, isactive, bug_id IS NOT NULL, restype " .
+    SendSQL("SELECT resolutions.name, resolutions.isactive, resolutions.restype, bugs.bug_id IS NOT NULL " .
             "FROM resolutions LEFT JOIN bugs ON resolutions.id = bugs.resolution_id ".
-            "ORDER BY sortkey, name");
+            "GROUP BY resolutions.name " .
+            "ORDER BY resolutions.sortkey, resolutions.name");
 
     while (MoreSQLData()) {
-        my ($name, $isactive, $isused, $restype) = FetchSQLData();
+        my ($name, $isactive, $restype, $isused ) = FetchSQLData();
         push(@::queryable_resolution, $name) if ($isactive | $isused);
         if ($isactive) {
             if ($restype == $::duperestype) {

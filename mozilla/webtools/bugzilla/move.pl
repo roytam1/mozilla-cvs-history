@@ -27,9 +27,6 @@ use Bug;
 require "CGI.pl";
 $::lockcount = 0;
 
-# Silliness
-$::movedresolutionid = $::movedresolutionid;
-
 unless ( Param("move-enabled") ) {
   print "\n<P>Sorry. Bug moving is not enabled here. ";
   print "If you need to move a bug, contact " . Param("maintainer");
@@ -84,6 +81,14 @@ if ( !defined $::FORM{'buglist'} ) {
   exit;
 }
 
+if ( !defined $::FORM{'resolution'} ) {
+  print "Content-type: text/html\n\n";
+  PutHeader("Move Bugs");
+  print "Resolution not specified.";
+  PutFooter();
+  exit;
+}
+
 confirm_login();
 my $exporter = $::COOKIE{"Bugzilla_login"};
 my $movers = Param("movers");
@@ -112,14 +117,21 @@ foreach my $id (split(/:/, $::FORM{'buglist'})) {
     SendSQL("INSERT INTO bugs_activity " .
             "(bug_id,who,bug_when,fieldid,removed,added) VALUES " .
             "($id,$exporterid,now(),$fieldid,'$cur_status','RESOLVED')");
+
     $fieldid = GetFieldID("resolution");
-    my $cur_res= $bug->resolution;
+    my $new_res_name = $::FORM{'move_resolution'};
+    my $new_res_id = ResolutionNameToID($new_res_name);
+    my $cur_res_id = $bug->resolution_id;
+    my $cur_res_name = ResolutionIDToName($cur_res_id);
+
     SendSQL("INSERT INTO bugs_activity " .
             "(bug_id,who,bug_when,fieldid,removed,added) VALUES " .
-            "($id,$exporterid,now(),$fieldid,'$cur_res','MOVED')");
+            "($id,$exporterid,now(),$fieldid," .
+            SqlQuote($cur_res_name) . ',' .
+            SqlQuote($new_res_name) . ')');
 
-    SendSQL("UPDATE bugs SET bug_status =\"RESOLVED\" where bug_id=\"$id\"");
-    SendSQL("UPDATE bugs SET resolution_id = $::movedresolutionid where bug_id=\"$id\"");
+    SendSQL("UPDATE bugs SET bug_status = 'RESOLVED' WHERE bug_id = $id");
+    SendSQL("UPDATE bugs SET resolution_id = $new_res_id WHERE bug_id = $id");
 
     my $comment = "Bug moved to " . Param("move-to-url") . ".\n\n";
     $comment .= "If the move succeeded, $exporter will receive a mail\n";

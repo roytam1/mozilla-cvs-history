@@ -506,10 +506,9 @@ if ($canedit || $::userid == $assignedtoid ||
         if (@::settable_dupe_resolution == 1) {
             print $::settable_dupe_resolution[0] . " ";
         } else {
-            my $resolution_popup = make_options(\@::settable_dupe_resolution,
-                                                $bug{'resolution'});
-            print "<SELECT NAME=resolution ONCHANGE=\"if (this.value != '') {document.changeform.knob\[$knum\].checked=true}\"><br>\n\">
-                   $resolution_popup</SELECT>";
+            my $resolution_popup = make_options(\@::settable_dupe_resolution);
+            print "<select name=\"dupe_resolution\" onchange=\"if (this.value != '') {document.changeform.knob\[$knum\].checked=true}\">" .
+                  "$resolution_popup</select>";
         }
 
         print "of bug #
@@ -578,9 +577,17 @@ print "
 ";
 
 if ( Param("move-enabled") && (defined $::COOKIE{"Bugzilla_login"}) && ($::COOKIE{"Bugzilla_login"} =~ /($movers)/) ){
-  print "&nbsp; <FONT size=\"+1\"><B> | </B></FONT> &nbsp;"
-       ."<INPUT TYPE=\"SUBMIT\" NAME=\"action\" VALUE=\"" 
-       . Param("move-button-text") . "\">\n";
+    print qq{&nbsp; <font size="+1"><B> | </B></font> &nbsp;
+             <input type="submit" name="action" value="} .
+          Param("move-button-text") . qq{">\n};
+
+    if (@::settable_moved_resolution == 1) {
+        print qq{<input type="hidden" name="move_resolution" value="$::settable_moved_resolution[0]">};
+    }
+    else {
+        my $resolution_popup = make_options(\@::settable_moved_resolution);
+        print qq{Resolution: <select name="move_resolution">$resolution_popup</select>};
+    }
 }
 
 print "<BR></FORM>";
