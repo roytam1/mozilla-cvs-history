@@ -145,13 +145,20 @@ sub tree2queue {
 
 # turn a tree name into the name of a its file.
 
-sub tree2logfile {
+sub tree2logfiles {
     my ($tree_name) = @_;
     
     my $queue_name = tree2queue($tree_name);
-    my $req_log = "$REQ_HOME/releng-${queue_name}/etc/req-log";
-    
-    return $req_log; 
+
+    my @req_logs;
+    if ($tree_name eq 'ALL') {
+        @req_logs = glob "$REQ_HOME/releng-*/etc/req-log";
+        @req_logs =   map { main::extract_filename_chars($_) } @req_logs;
+    }else{
+        @req_logs = ("$REQ_HOME/releng-${queue_name}/etc/req-log");
+    }
+
+    return @req_logs; 
 }
 
 
