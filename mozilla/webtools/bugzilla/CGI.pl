@@ -437,20 +437,20 @@ sub quietly_check_login() {
     my $userid = 0;
     if (defined $::COOKIE{"Bugzilla_login"} &&
         defined $::COOKIE{"Bugzilla_logincookie"}) {
-        SendSQL("SELECT profiles.userid, " .
-                "profiles.login_name, " .
-                "(profiles.login_name = " .
-                SqlQuote($::COOKIE{"Bugzilla_login"}) .
-                " AND logincookies.ipaddr = " .
-                SqlQuote($ENV{"REMOTE_ADDR"}) .
-                ") AS isok, profiles.disabledtext " .
+        SendSQL("SELECT profiles.userid," .
+                " profiles.login_name, " .
+                " profiles.disabledtext " .
                 " FROM profiles, logincookies WHERE logincookies.cookie = " .
                 SqlQuote($::COOKIE{"Bugzilla_logincookie"}) .
-                " AND profiles.userid = logincookies.userid HAVING isok");
+                " AND profiles.userid = logincookies.userid AND" .
+                " profiles.login_name = " .
+                SqlQuote($::COOKIE{"Bugzilla_login"}) .
+                " AND logincookies.ipaddr = " .
+                SqlQuote($ENV{"REMOTE_ADDR"}));
         my @row;
         if (@row = FetchSQLData()) {
-            ($userid, my $loginname, my $ok, my $disabledtext) = (@row);
-            if ($ok) {
+            ($userid, my $loginname, my $disabledtext) = (@row);
+            if ($userid > 0) {
                 if ($disabledtext eq '') {
                     $::COOKIE{"Bugzilla_login"} = $loginname; # Makes sure case
                                                               # is in
@@ -461,8 +461,6 @@ sub quietly_check_login() {
                     $::disabledreason = $disabledtext;
                     $userid = 0;
                 }
-            } else {
-                $userid = 0;
             }
         }
     }
@@ -516,7 +514,7 @@ sub GetUserInfo {
     SendSQL("SELECT name FROM groups, user_group_map " .
             "WHERE groups.id = user_group_map.group_id " .
             "AND user_id = $userid " .
-            "AND isbless = 0");
+            "AND NOT isbless");
     while (MoreSQLData()) {
         my ($name) = FetchSQLData();    
         $groups{$name} = 1;

@@ -645,20 +645,20 @@ sub CanSeeBug {
     #   (specified in the MySQL documentation) and postgreSQL places NULLs
     #   ahead of number in descending sorts, this needs to change for Postgres 
     #   the first row contain the NULL value if there is going to be one.  
-    my $query = "SELECT bugs.bug_id, reporter, assigned_to, qa_contact,
-        reporter_accessible, cclist_accessible,
-        ISNULL(cc.who) = 0, 
-        ISNULL(bug_group_map.group_id) = 0, 
-        ISNULL(user_group_map.user_id) = 0
-        FROM bugs 
-        LEFT JOIN cc ON bugs.bug_id = cc.bug_id 
-        AND cc.who = $userid
-        LEFT JOIN bug_group_map ON bugs.bug_id = bug_group_map.bug_id 
-        LEFT JOIN user_group_map ON 
-        user_group_map.group_id = bug_group_map.group_id  
-        AND user_group_map.isbless = 0
-        AND user_group_map.user_id = $userid  
-        WHERE bugs.bug_id = $id ORDER BY user_group_map.user_id ";
+    my $query = "SELECT bugs.bug_id, reporter, assigned_to, qa_contact," .
+        " reporter_accessible, cclist_accessible," .
+        " cc.who IS NOT NULL," .
+        " bug_group_map.group_id IS NOT NULL," .
+        " user_group_map.user_id IS NOT NULL" .
+        " FROM bugs" .
+        " LEFT JOIN cc ON bugs.bug_id = cc.bug_id" .
+        " AND cc.who = $userid" .
+        " LEFT JOIN bug_group_map ON bugs.bug_id = bug_group_map.bug_id" .
+        " LEFT JOIN user_group_map ON" .
+        " user_group_map.group_id = bug_group_map.group_id" .
+        " AND user_group_map.isbless = 0" .
+        " AND user_group_map.user_id = $userid" .
+        " WHERE bugs.bug_id = $id ORDER BY user_group_map.user_id";
     PushGlobalSQLState();
     SendSQL($query);
     my ($found_id, $reporter, $assigned_to, $qa_contact,
@@ -772,7 +772,7 @@ sub DeriveGroup {
     my %groupidschecked = ();
     my @groupidstocheck = ();
     SendSQL("SELECT group_id FROM user_group_map WHERE user_id = $user
-             AND isbless = 0");
+             AND NOT isbless");
     while (MoreSQLData()) {
         my ($groupid) = FetchSQLData();
         push(@groupidstocheck,$groupid);
@@ -783,8 +783,8 @@ sub DeriveGroup {
         my $group = shift @groupidstocheck;
         if (!defined($groupidschecked{"$group"})) {
             $groupidschecked{"$group"} = 1;
-            SendSQL("SELECT parent_id FROM group_group_map WHERE
-                     child_id = $group AND isbless = 0");
+            SendSQL("SELECT parent_id FROM group_group_map WHERE"
+                 . " child_id = $group AND NOT isbless");
             while (MoreSQLData()) {
                 my ($groupid) = FetchSQLData();
                 if (!defined($groupidschecked{"$groupid"})) {
@@ -793,9 +793,9 @@ sub DeriveGroup {
                 if (!$groupidsadded{$groupid}) {
                     $groupidsadded{$groupid} = 1;
                     PushGlobalSQLState();
-                    SendSQL("INSERT INTO user_group_map 
-                             (user_id, group_id, isbless, isderived)
-                             VALUES ($user, $groupid, 0, 1)");
+                    SendSQL("INSERT INTO user_group_map"
+                         . " (user_id, group_id, isbless, isderived)"
+                         . " VALUES ($user, $groupid, 0, 1)");
                     PopGlobalSQLState();
                 }
             }
@@ -1212,10 +1212,7 @@ sub UserInGroup {
         AND groups.name = " . SqlQuote($groupname));
     my $rslt = FetchOneColumn();
     PopGlobalSQLState();
-    if ($rslt) {
-        return 1;
-    }
-    return 0;
+    return defined($rslt);
 }
 
 sub UserCanBlessGroup {

@@ -229,19 +229,19 @@ if ($action eq 'changeform') {
     # a record making that group a child of this group
     # and the existance of a record permitting that group to bless
     # this one
-    SendSQL("SELECT groups.id, groups.name, groups.description,
-             ISNULL(group_group_map.child_id) = 0, 
-             ISNULL(B.child_id) = 0
-             FROM groups
-             LEFT JOIN group_group_map 
-             ON group_group_map.child_id = groups.id
-             AND group_group_map.parent_id = $group_id
-             AND group_group_map.isbless = 0
-             LEFT JOIN group_group_map as B
-             ON B.child_id = groups.id
-             AND B.parent_id = $group_id
-             AND B.isbless = 1
-             WHERE groups.id != $group_id ORDER by name");
+    SendSQL("SELECT groups.id, groups.name, groups.description," .
+             " group_group_map.child_id IS NOT NULL," .
+             " B.child_id IS NOT NULL" .
+             " FROM groups" .
+             " LEFT JOIN group_group_map" .
+             " ON group_group_map.child_id = groups.id" .
+             " AND group_group_map.parent_id = $group_id" .
+             " AND group_group_map.isbless = 0" .
+             " LEFT JOIN group_group_map as B" .
+             " ON B.child_id = groups.id" .
+             " AND B.parent_id = $group_id" .
+             " AND B.isbless" .
+             " WHERE groups.id != $group_id ORDER by name");
 
     while (MoreSQLData()) {
         my ($grpid, $grpnam, $grpdesc, $grpmember, $blessmember) = FetchSQLData();

@@ -356,12 +356,11 @@ sub UserInGroup {
     my $self = shift();
     my ($groupname) = (@_);
     PushGlobalSQLState();
-    &::ConnectToDatabase();
-    &::SendSQL("SELECT groups.id FROM groups, user_group_map 
-        WHERE groups.id = user_group_map.group_id 
-        AND user_group_map.user_id = " . $self->{'whoid'} .
-        " AND isbless = 0
-        AND groups.name = " . SqlQuote($groupname));
+    &::SendSQL("SELECT groups.id FROM groups, user_group_map" .
+        " WHERE groups.id = user_group_map.group_id " .
+        " AND user_group_map.user_id = " . $self->{'whoid'} .
+        " AND isbless = 0" .
+        " AND groups.name = " . SqlQuote($groupname));
     my $rslt = FetchOneColumn();
     PopGlobalSQLState();
     if ($rslt) {

@@ -228,19 +228,19 @@ sub show_bug {
     # user_group_map record putting the user in that group.
     # The LEFT JOINs are checking for record existence.
     #
-    SendSQL("SELECT DISTINCT groups.id, name, description, 
-             ISNULL(bug_group_map.group_id) = 0,
-             ISNULL(user_group_map.group_id) = 0,
-             isactive
-             FROM groups 
-             LEFT JOIN bug_group_map 
-             ON bug_group_map.group_id = groups.id
-             AND bug_id = $bug{'bug_id'}
-             LEFT JOIN user_group_map 
-             ON user_group_map.group_id = groups.id
-             AND user_id = $::userid
-             AND isbless = 0
-             WHERE isbuggroup = 1");
+    SendSQL("SELECT DISTINCT groups.id, name, description," .
+             " bug_group_map.group_id IS NOT NULL," .
+             " user_group_map.group_id IS NOT NULL," .
+             " isactive" .
+             " FROM groups" . 
+             " LEFT JOIN bug_group_map" .
+             " ON bug_group_map.group_id = groups.id" .
+             " AND bug_id = $bug{'bug_id'}" .
+             " LEFT JOIN user_group_map" .
+             " ON user_group_map.group_id = groups.id" .
+             " AND user_id = $::userid" .
+             " AND NOT isbless" .
+             " WHERE isbuggroup");
 
     $user{'inallgroups'} = 1;
 

@@ -104,7 +104,7 @@ use Bugzilla::Config qw(:DEFAULT :admin);
 # this way we can look in the symbol table to see if they've been declared
 # yet or not.
 
-use vars qw( $db_name);
+use vars qw( $db_name );
 
 ###########################################################################
 # Check required module
