@@ -51,38 +51,33 @@ sub new {
   my $type = shift();
   my $class = ref($type) || $type;
   my %bug;
+  my $self = {};
 
   # create a ref to an empty hash and bless it
   #
-  my $self = {%bug};
-  bless $self, $type;
-
-  # construct from a hash containing a bug's info
-  #
-  if ($#_ == 1) {
-    $self->initBug(@_);
-  } else {
-    confess("invalid number of arguments \($#_\)($_)");
-  }
+     %bug = GetBug(@_);
+     if (defined($bug{'error'})) {
+         confess($bug{'error'});
+     }
+     $self = {%bug};
+     bless $self, $type;
 
   # bless as a Bug
   #
   return $self;
 }
 
-
-
 # dump info about bug into hash unless user doesn't have permission
 # user_id 0 is used when person is not logged in.
 #
-sub initBug  {
-  my $self = shift();
+sub GetBug  {
   my ($bug_id, $user_id) = (@_);
-
+  my %bug;
 
   if ( (! defined $bug_id) || (!$bug_id) ) {
     # no bug number given
-    return {};
+    $bug{'error'} = 'No bug number given!';
+    return %bug;
   }
 
 # default userid 0, or get DBID if you used an email address
@@ -98,10 +93,10 @@ sub initBug  {
   &::ConnectToDatabase();
   &::GetVersionTable();
 
-  $self->{'whoid'} = $user_id;
-  &::SendSQL("SELECT groupset FROM profiles WHERE userid=$self->{'whoid'}");
+  $bug{'whoid'} = $user_id;
+  &::SendSQL("SELECT groupset FROM profiles WHERE userid=$bug{'whoid'}");
   my $usergroupset = &::FetchOneColumn();
-  $self->{'usergroupset'} = $usergroupset;
+  $bug{'usergroupset'} = $usergroupset;
 
   my $query = "
     select
@@ -129,37 +124,37 @@ sub initBug  {
                        "groupset", "delta_ts", "votes") {
 	$fields{$field} = shift @row;
 	if ($fields{$field}) {
-	    $self->{$field} = $fields{$field};
+	    $bug{$field} = $fields{$field};
 	}
 	$count++;
     }
   } else {
     &::SendSQL("select groupset from bugs where bug_id = $bug_id");
     if (@row = &::FetchSQLData()) {
-      $self->{'bug_id'} = $bug_id;
-      $self->{'error'} = "NotPermitted";
-      return $self;
+      $bug{'bug_id'} = $bug_id;
+      $bug{'error'} = "NotPermitted";
+      return %bug;
     } else {
-      $self->{'bug_id'} = $bug_id;
-      $self->{'error'} = "NotFound";
-      return $self;
+      $bug{'bug_id'} = $bug_id;
+      $bug{'error'} = "Bug #$bug_id not found in database.";
+      return %bug;
     }
   }
 
-  $self->{'assigned_to'} = &::DBID_to_name($self->{'assigned_to'});
-  $self->{'reporter'} = &::DBID_to_name($self->{'reporter'});
+  $bug{'assigned_to'} = &::DBID_to_name($bug{'assigned_to'});
+  $bug{'reporter'} = &::DBID_to_name($bug{'reporter'});
 
   my $ccSet = new RelationSet;
   $ccSet->mergeFromDB("select who from cc where bug_id=$bug_id");
   my @cc = $ccSet->toArrayOfStrings();
   if (@cc) {
-    $self->{'cc'} = \@cc;
+    $bug{'cc'} = \@cc;
   }
 
-  if (&::Param("useqacontact") && (defined $self->{'qa_contact'}) ) {
-    my $name = $self->{'qa_contact'} > 0 ? &::DBID_to_name($self->{'qa_contact'}) :"";
+  if (&::Param("useqacontact") && (defined $bug{'qa_contact'}) ) {
+    my $name = $bug{'qa_contact'} > 0 ? &::DBID_to_name($bug{'qa_contact'}) :"";
     if ($name) {
-      $self->{'qa_contact'} = $name;
+      $bug{'qa_contact'} = $name;
     }
   }
 
@@ -174,7 +169,7 @@ sub initBug  {
         push(@keywordlist, &::FetchOneColumn());
     }
     if (@keywordlist) {
-      $self->{'keywords'} = \@keywordlist;
+      $bug{'keywords'} = \@keywordlist;
     }
   }
 
@@ -194,7 +189,7 @@ sub initBug  {
     }
   }
   if (@attachments) {
-    $self->{'attachments'} = \@attachments;
+    $bug{'attachments'} = \@attachments;
   }
 
   &::SendSQL("select bug_id, who, bug_when
@@ -209,20 +204,20 @@ sub initBug  {
     push @longdescs, \%longdesc;
   }
   if (@longdescs) {
-    $self->{'longdescs'} = \@longdescs;
+    $bug{'longdescs'} = \@longdescs;
   }
 
   if (&::Param("usedependencies")) {
     my @depends = EmitDependList("blocked", "dependson", $bug_id);
     if ( @depends ) {
-      $self->{'dependson'} = \@depends;
+      $bug{'dependson'} = \@depends;
     }
     my @blocks = EmitDependList("dependson", "blocked", $bug_id);
     if ( @blocks ) {
-      $self->{'blocks'} = \@blocks;
+      $bug{'blocks'} = \@blocks;
     }
   }
-  return $self;
+  return %bug;
 }
 
 # given a bug hash, emit xml for it. with file header provided by caller
@@ -509,14 +504,11 @@ sub SnapShotBugInDB {
     my $self = shift;
     my $bugid;
     my $who;
-    my $snap;
-    my @snaplist;
     my %snapshot;
 
     $bugid = $self->{'bug_id'};
     $who = $self->{'whoid'};
-    $snap = initBug($self, $bugid, $who);
-    %snapshot = %$snap; 
+    %snapshot = GetBug($bugid, $who);
     return %snapshot;
 }
 
@@ -841,12 +833,13 @@ sub WriteChanges {
 
 # stupid subroutine for checking if lists are equal.
 sub ListDiff {
-    my $self = shift;
     my (@source, @dest, $type) = @_;
 
     if (@source != @dest) {
       return 1;
     }
+
+# must be a list of strings or numbers. have at you!
     @source = sort(@source);
     @dest   = sort(@dest);
 
@@ -872,30 +865,25 @@ sub ChangedFields {
     my @changed;
 
     foreach my $field (keys(%snapshot)) {
-        if (&::Param("usedependencies")) {
-            if (($field eq 'dependson') || ($field eq 'blocking')) {
-                if (ListDiff($self->{$field}, $snapshot{$field})) {
-                    push(@changed, $field);
+        # we just punt for longdescs and attachments, since if a user
+        # we currently don't allow for new attachments, and we use
+        # the comment field for new comments.
+        unless (($field eq 'longdescs') || ($field eq 'attachments')) { 
+            if (&::Param("usedependencies")) {
+                if (($field eq 'dependson') || ($field eq 'blocking')) {
+                    if (ListDiff($self->{$field}, $snapshot{$field})) {
+                        push(@changed, $field);
+                    }
                 }
             }
-        }
-        if ($field eq 'longdesc') {
-            if (ListDiff($self->{$field}, $snapshot{$field})) {
-               push(@changed, $field);
+            if ($field eq 'keywords') {
+                if (ListDiff($self->{$field}, $snapshot{$field}, 'str')) {
+                   push(@changed, $field);
+                }
             }
-        } 
-        if ($field eq 'attachments') {
-            if (ListDiff($self->{$field}, $snapshot{$field})) {
-               push(@changed, $field);
+            if ($self->{$field} ne $snapshot{$field}) {
+                push (@changed, $field);
             }
-        }
-        if ($field eq 'keywords') {
-            if (ListDiff($self->{$field}, $snapshot{$field}, 'str')) {
-               push(@changed, $field);
-            }
-        }
-        if ($self->{$field} ne $snapshot{$field}) {
-            push (@changed, $field);
         }
     }
     return @changed;
@@ -910,7 +898,7 @@ sub TestChanged {
    @changed = ChangedFields($self, %snappy);
 
    foreach my $field (@changed) {
-       print $field . "has changed";
+       print $field . " has changed\n";
    }
 }
 
