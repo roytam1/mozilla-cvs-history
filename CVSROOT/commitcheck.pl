@@ -131,6 +131,9 @@ $fullname{'123'} = 'Mail/News';
 $mode{'124'} = 'Open';
 $branch{'124'} = 'HEAD';
 $fullname{'124'} = 'MIME';
+$mode{'157'} = 'Open';
+$branch{'157'} = 'HEAD';
+$fullname{'157'} = 'Movemail';
 $mode{'112'} = 'Restricted';
 $branch{'112'} = 'HEAD';
 $fullname{'112'} = 'Mozilla Tools';
@@ -356,6 +359,7 @@ if (m:^mozilla/mstone/.*$:) {return '147';}
 if (m:^mozilla/xpinstall/.*$:) {return '150';}
 if (m:^mozilla/extensions/psm-glue/.*$:) {return '151';}
 if (m:^mozilla/extensions/vixen/.*$:) {return '156';}
+if (m:^mozilla/mailnews/movemail$:) {return '157';}
 }
 if ($b eq 'NSPRPUB_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
