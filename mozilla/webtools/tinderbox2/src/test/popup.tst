@@ -1,4 +1,6 @@
 #!#perl# -w --
+# -*- Mode: perl; indent-tabs-mode: nil -*-
+#
 
 # generate static html pages for use in testing the popup libraries.
 # Output is written to the directory $TinderConfig::TINDERBOX_HTML_DIR/popup
