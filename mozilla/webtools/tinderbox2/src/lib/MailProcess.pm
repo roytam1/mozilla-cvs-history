@@ -73,7 +73,7 @@ sub parse_mailprocess_args {
   }
   
   if ($help) {
-    usage();
+    main::usage();
   }
 
   # For security purposes we may wish to disable web access to the mail
