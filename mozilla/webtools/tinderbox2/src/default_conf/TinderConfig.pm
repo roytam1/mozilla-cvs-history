@@ -135,6 +135,14 @@ $PopUpImpl = (
 	      # 'HTMLPopUp::PortableLayers',
 	     );
 
+# Which string should be used in empty table cells?  If this string is
+set to "&nbsp;" then all cell squares will have borders on them, If
+this string is set to "" then many cells may be missing borders.
+
+
+#$EMPTY_TABLE_CELL = "&nbsp;";
+$EMPTY_TABLE_CELL = "";
+
 
 # Use the DB implementations you wish to use.
 
