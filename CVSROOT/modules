@@ -687,9 +687,17 @@ GtkMozilla -a \
 # should be temporary until mozilla/chimera joins another
 # major module.  -mcafee
 #
+# 3/3/03: Chimera -> Camino name change.  Temporarily adding
+# new camino directory to Chimera, also adding new Camino
+# module.  -mcafee
 #############################################################
 Chimera -a \
     mozilla/chimera \
+    mozilla/camino \
+    SeaMonkeyAll
+
+Camino -a \
+    mozilla/camino \
     SeaMonkeyAll
 
 #############################################################
