@@ -631,6 +631,14 @@ SeaMonkeyEditor -a \
 	mozilla/editor \
 	mozilla/mailnews
 
+SeaMonkeyL10n -a \
+	mozilla/l10n/makefile.win \
+	mozilla/l10n/makefiles.all \
+	mozilla/l10n/Makefile.in \
+	mozilla/l10n/langpacks/makefile.win \
+	mozilla/l10n/langpacks/Makefile.in \
+	mozilla/l10n/langpacks/en-GB
+
 #############################################################
 # This module is the whole banana, and this
 # is the module that tinderbox and bonsai should 
