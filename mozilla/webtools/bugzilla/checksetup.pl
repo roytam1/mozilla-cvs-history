@@ -1589,8 +1589,8 @@ $table{member_group_map} =
      maptype smallint default 0,
      isderived tinyint not null default 0,
 
-     unique(member_id, group_id, maptype),
-     index(group_id, member_id, maptype)';
+     unique(member_id, group_id, maptype, isderived),
+     index(group_id, member_id, maptype, isderived)';
 
 # This table determines in which groups a user must be a member to have
 # permission to see a bug
