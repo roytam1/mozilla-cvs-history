@@ -1073,8 +1073,8 @@ sub status_table_row {
       # If the current build is broken, show what to see what has
       # changed in VC during the last build.
 
-      my ($maxdate) = $current_rec->{'previousbuildtime'};
-      my ($mindate) = $current_rec->{'starttime'};
+      my ($maxdate) = $current_rec->{'starttime'};
+      my ($mindate) = $current_rec->{'previousbuildtime'};
 
       $links .= (
                  "\n". 
