@@ -1087,7 +1087,7 @@ if( $GroupSet eq "" ) {
 	if( lsearch( \@db_bits, $bit ) == -1 ) {
 	    # Bit not found !
 	    my $Text = "Checking the Group-Settings: You sent the Groupset-Bit $bit\n" .
-		"which is not a valid Groupset-Bit. It will be scipped !\n\n";
+		"which is not a valid Groupset-Bit. It will be skipped !\n\n";
 	    BugMailError( 0, $Text );
 	} else {
 	    # Cool bit, add to the result-String
