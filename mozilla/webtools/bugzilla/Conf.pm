@@ -47,8 +47,9 @@ use Exporter;
 $controller = "Conf::DefaultController"; 
 
 
-unless (eval("use $controller")) {
-	die "ack, something went wrong when I tried to use controller $controller $@";
+eval("use $controller");
+if ($@) { # an error
+	die "ack, something went wrong when I tried to use controller $controller"
 }
 
 eval("use Conf::Supplies::Config"); # do this in an eval because it may not exist yet

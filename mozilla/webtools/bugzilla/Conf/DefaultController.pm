@@ -77,7 +77,7 @@ sub _holduntilkey() {
 }
 
 sub _output($$) {
-	my ($output, $loud) = @_
+	my ($output, $loud) = @_;
     print $output;
 }
 
