@@ -502,16 +502,10 @@ JSBriano -a \
 	JSGRR
 
 JSClient -a \
-	mozilla/js/macbuild \
+	mozilla/js/Makefile.in \
+	mozilla/js/makefile.win \
 	mozilla/js/src \
-	mozilla/js/src/fdlibm \
-	mozilla/js/src/liveconnect \
-	mozilla/js/src/liveconnect/_jni \
-	mozilla/js/src/liveconnect/classes \
-	mozilla/js/src/liveconnect/classes/netscape \
-	mozilla/js/src/liveconnect/classes/netscape/javascript \
-	mozilla/js/src/macbuild \
-	mozilla/js/src/xpconnect
+	mozilla/js/macbuild
 
 #######################################################################
 # Modules for SeaMonkey 
