@@ -304,8 +304,25 @@ sub round {
                     $number);
  return $out;
 }
+
  
- 
+sub clean_times {
+    my (@in) = @_;
+
+    # Round all times to nearest minute, so that we do not get two times
+    # appearing in the time column which display as the same string.
+    # We do however want times which are odd numbers of minutes.
+    
+    @out = map { ( $_ - ($_%60) ) } @in;
+    @out = main::uniq(@out);
+    
+    # sort numerically descending
+    @out = sort {$b <=> $a} @out ;
+    
+    return @out;
+}
+
+
 # make a directory (and all of its parents if need be).
 
 # You can optionally specify the permssions for all the directories
