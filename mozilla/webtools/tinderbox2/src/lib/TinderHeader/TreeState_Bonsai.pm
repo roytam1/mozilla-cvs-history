@@ -72,8 +72,9 @@ sub new {
 
 
 sub gettree_header {
+  my ($self, $tree,) = @_;
 
-  my ($treestate) = BonsaiData::get_tree_state();
+  my ($treestate) = BonsaiData::get_tree_state($tree);
 
   return $treestate;
 }
