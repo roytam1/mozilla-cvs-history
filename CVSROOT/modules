@@ -487,6 +487,7 @@ JSRef -a \
 # is illegal on some operating systems.
 #
 JSClient -l \
+	mozilla \
 	mozilla/js \
 	mozilla/js/macbuild \
 	mozilla/js/src \
