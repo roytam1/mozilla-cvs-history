@@ -3150,9 +3150,13 @@ if (GetFieldDef("profiles", "groupset")) {
         while (my ($n) = $sth2->fetchrow_array) {
             push @logrem, $n;
         }
+        my $ladd = "";
+        my $lrem = "";
+        $ladd = join(", ", @logadd) . '?' if @logadd;
+        $lrem = join(", ", @logrem) . '?' if @logrem;
         $dbh->do("UPDATE profiles_activity SET fieldid = $bgfid, newvalue = " .
-                  $dbh->quote(join(", ", @logadd)) . ", oldvalue = " . 
-                  $dbh->quote(join(", ", @logrem)) .
+                  $dbh->quote($ladd) . ", oldvalue = " . 
+                  $dbh->quote($lrem) .
                   " WHERE userid = $uid AND profiles_when = " . 
                   $dbh->quote($uwhen) .
                   " AND who = $uwho AND fieldid = $gsid");

@@ -318,7 +318,7 @@ if ($action eq 'list') {
       $query = "SELECT login_name,realname,disabledtext " .
           "FROM profiles WHERE " . $::FORM{'query'} . " ORDER BY login_name";
     } elsif (exists $::FORM{'group'}) {
-      $query = "SELECT DISTINCTROW login_name,realname,disabledtext " .
+      $query = "SELECT DISTINCT login_name,realname,disabledtext " .
           "FROM profiles, user_group_map WHERE profiles.userid = user_group_map.user_id
            AND group_id=" . $::FORM{'group'} . " ORDER BY login_name";
     } else {

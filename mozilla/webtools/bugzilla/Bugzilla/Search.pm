@@ -321,10 +321,6 @@ sub init {
              push(@wherepart, "$table.bug_id = bugs.bug_id");
              $f = "$table.thetext";
          },
-         "^groupset,(?!changed)" => sub {
-             &::ThrowUserError("Bugs no longer have a groupset field.
-                 Instead, you can search on the bug group");
-         },
          "^bug_group,(?!changed)" => sub {
             push(@supptables, "LEFT JOIN bug_group_map bug_group_map_$chartid ON bugs.bug_id = bug_group_map_$chartid.bug_id");
 
@@ -760,8 +756,9 @@ sub init {
                         "If you think you're getting this in error, please copy the " .
                         "entire URL out of the address bar at the top of your browser " .
                         "window and email it to <109679\@bugzilla.org>";
+                    $::vars->{'fieldname'} = html_quote($f);
                     die "Internal error: $errstr" if $chart < 0;
-                    return Error($errstr);
+                    &::ThrowUserError("illegal_fieldname");
                 }
 
                 # This is either from the internal chart (in which case we

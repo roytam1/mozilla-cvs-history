@@ -155,6 +155,10 @@
     [% title = "Your Query Makes No Sense" %]
     '<tt>[% date %]</tt>' is not a legal date.
     
+  [% ELSIF message_tag == "illegal_fieldname" %]
+    [% title = "Your Query Makes No Sense" %]
+    '<tt>[% fieldname %]</tt>' is not a legal fieldname.
+    
   [% ELSIF message_tag == "illegal_is_obsolete" %]
     [% title = "Your Query Makes No Sense" %]
      The only legal values for the <em>Attachment is obsolete</em> field are
