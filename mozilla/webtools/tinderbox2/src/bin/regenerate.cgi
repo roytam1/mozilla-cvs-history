@@ -60,13 +60,18 @@ use FileStructure;
 
     my ($tree) = $form{'tree'};
 
-    $url = (
-            FileStructure::get_filename($tree, 'tree_URL').
-            '/'.
-            $FileStructure::DEFAULT_HTML_PAGE
-            );
+    my ($url) = (
+               FileStructure::get_filename($tree, 'tree_URL').
+                 '/'.
+                 $FileStructure::DEFAULT_HTML_PAGE
+                 );
 
-    $out = <<EOF;
+    my ($link) = HTMLPopUp::Link(
+                                 "linktxt"=>"Tinderbox page",
+                                 "href"=>$url,
+                                 );
+
+    my ($out) = <<EOF;
 Content-type: text/html
 
 <TITLE>tinderbox</TITLE>
@@ -78,7 +83,7 @@ Content-type: text/html
 <FONT SIZE="+2">
 Regenerating HTML now.<br>
 Please refresh the page when the redirect is complete.<br>
-Sending you back to the regenerated <A HREF="$url">Tinderbox page</A>.
+Sending you back to the regenerated $link.<br>
 </FONT>
 </TD></TR></TABLE>
 </CENTER>
