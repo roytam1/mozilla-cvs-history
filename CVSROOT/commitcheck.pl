@@ -165,6 +165,9 @@ $fullname{'91'} = 'XP Miscellany';
 $mode{'97'} = 'Open';
 $branch{'97'} = 'HEAD';
 $fullname{'97'} = 'XP Widgets';
+$mode{'105'} = 'Open';
+$branch{'105'} = 'HEAD';
+$fullname{'105'} = 'XPApps';
 $mode{'89'} = 'Open';
 $branch{'89'} = 'HEAD';
 $fullname{'89'} = 'XPCOM';
@@ -241,6 +244,7 @@ if (m:^mozilla/layout/.*$:) {return '98';}
 if (m:^mozilla/webshell/.*$:) {return '101';}
 if (m:^mozilla/htmlparser/.*$:) {return '102';}
 if (m:^mozilla/dom/.*$:) {return '103';}
+if (m:^mozilla/xpfe$:) {return '105';}
 }
 return '';
 }
