@@ -536,6 +536,7 @@ SeaMonkeyCore -a \
 	mozilla/lib/mac/PowerPlant \
 	mozilla/lib/xp \
 	mozilla/modules/libimg \
+	mozilla/modules/libjar \
 	mozilla/modules/libpref \
 	mozilla/modules/libreg \
 	mozilla/modules/libutil \
@@ -551,6 +552,7 @@ SeaMonkeyCore -a \
 	mozilla/rdf \
 	mozilla/sun-java \
 	mozilla/xpcom \
+	mozilla/xpinstall \
 	MozillaLicense
 
 SeaMonkeyLayout -a \
