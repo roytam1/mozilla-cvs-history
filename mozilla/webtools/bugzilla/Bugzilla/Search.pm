@@ -324,7 +324,7 @@ sub init {
              &::ThrowUserError("Bugs no longer have a groupset field.
                  Instead, you can search on the bug group");
          },
-         "^bug_group," => sub {
+         "^bug_group,(?!changed)" => sub {
             push(@supptables, "LEFT JOIN bug_group_map bug_group_map_$chartid ON bugs.bug_id = bug_group_map_$chartid.bug_id");
 
             push(@supptables, "LEFT JOIN groups groups_$chartid ON groups_$chartid.id = bug_group_map_$chartid.group_id");

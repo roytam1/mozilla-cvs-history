@@ -22,6 +22,7 @@
 #                 Jake <jake@acutex.net>
 #                 Bradley Baetz <bbaetz@cs.mcgill.ca>
 #                 Christopher Aillon <christopher@aillon.com>
+#                 Joel Peshkin <bugreport@peshkin.net> 
 
 # Contains some global variables and routines used throughout bugzilla.
 
