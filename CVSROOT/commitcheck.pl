@@ -131,6 +131,9 @@ $super{'78'} = ['wtc%netscape.com','larryh%netscape.com','srinivas%netscape.com'
 $mode{'111'} = 'Open';
 $branch{'111'} = 'HEAD';
 $fullname{'111'} = 'PerlConnect';
+$mode{'113'} = 'Open';
+$branch{'113'} = 'HEAD';
+$fullname{'113'} = 'Photon';
 $mode{'80'} = 'Open';
 $branch{'80'} = 'HEAD';
 $fullname{'80'} = 'PICS';
@@ -254,6 +257,9 @@ if (m:^mozilla/htmlparser/.*$:) {return '102';}
 if (m:^mozilla/dom/.*$:) {return '103';}
 if (m:^js/src/perlconnect$:) {return '111';}
 if (m:^mozilla/silentdl/.*$:) {return '110';}
+if (m:^base/src/photon/.*$:) {return '113';}
+if (m:^gfx/src/photon/.*$:) {return '113';}
+if (m:^widget/src/photon/.*$:) {return '113';}
 if (m:^mozilla/xpfe$:) {return '105';}
 if (m:^mozilla/tools/.*$:) {return '112';}
 }
