@@ -150,6 +150,13 @@ if (exists $::FORM{'rebuildvotecache'}) {
     Status("Vote cache has been rebuilt.");
 }
 
+if (exists $::FORM{'rederivegroups'}) {
+    Status("OK, now rederiving groups.");
+    SendSQL("SELECT id FROM groups");
+    while ((my $id) = FetchSQLData()) {
+        DeriveGroup($id);
+    }
+}
 print "OK, now running sanity checks.<p>\n";
 
 # This one goes first, because if this is wrong, then the below tests
