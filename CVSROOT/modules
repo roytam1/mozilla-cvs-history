@@ -39,7 +39,6 @@ MozillaSourceUnix -a MozillaSourceCommon MozillaSourceUnixOnly
 MozillaSourceCommon -a \
     mozilla/LEGAL  \
     mozilla/LICENSE  \
-    mozilla/CHANGES.html  \
     mozilla/base \
     mozilla/build  \
     mozilla/include  \
