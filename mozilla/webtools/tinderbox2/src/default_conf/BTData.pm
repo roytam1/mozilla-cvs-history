@@ -222,7 +222,11 @@ $STATUS_FIELD_NAME = 'Status';
 # This function should return the null list '()' if the bug report
 # should be ignored by the tinderbox server.  The function returns a
 # list of trees which should display the data about this bug update.
-
+# Any trees which are not known by the tinderbox server will be
+# ignored so it is fine to return a tree for every ticket parsed even
+# if some tickets do not map to tinderbox trees.
+# It is cleaner to ignore trees we do not know about in the mail processor 
+# then to make the BTData module depend on the TreeData module.
 
 sub update2tree {
   my ($tinderbox_ref) = @_;
@@ -246,7 +250,8 @@ sub update2tree {
 # return a 'mailto: ' to someone who cares about the bug.
 
 sub bug_id2bug_url {
-  my ($bug_id) = @_;
+  my ($tinderbox_ref) = @_;
+  my ($bug_id) = $tinderbox{$BTData::BUGID_FIELD_NAME};
 
   my ($out);
 
