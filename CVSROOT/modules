@@ -659,3 +659,22 @@ SeaMonkeyBlackwood -a \
 #############################################################
 GtkMozilla -a \
 	mozilla/webshell/embed/gtk
+
+#############################################################
+#
+# Modules For Webtools
+#
+#############################################################
+Bugzilla -a \
+	mozilla/webtools/bugzilla
+Bonsai -a \
+	mozilla/webtools/bonsai
+LXR -a \
+	mozilla/webtools/lxr
+Tinderbox -a \
+	mozilla/webtools/tinderbox
+Webtools -a \
+	Bugzilla \
+	Bonsai \
+	LXR \
+	Tinderbox
