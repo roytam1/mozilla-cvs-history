@@ -532,9 +532,10 @@ SeaMonkeyLayout -a \
 	mozilla/gfx \
 	mozilla/htmlparser \
 	mozilla/layout \
+	mozilla/view \
 	mozilla/webshell \
 	mozilla/widget \
-	mozilla/view
+	mozilla/xpfe
 
 SeaMonkeyXPToolKit -a \
 	SeaMonkeyLayout \
