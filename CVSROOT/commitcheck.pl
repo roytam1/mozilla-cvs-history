@@ -311,7 +311,6 @@ if (m:^mozilla/directory/ldapsdk\.mak$:) {return '59';}
 if (m:^mozilla/directory/ldapsdk\.mk$:) {return '59';}
 if (m:^mozilla/directory/Makefile$:) {return '59';}
 if (m:^gfx/src/ps/.*$:) {return '62';}
-if (m:^mozilla/modules/libimg/.*$:) {return '63';}
 if (m:^mozilla/modules/libpr0n/.*$:) {return '63';}
 if (m:^modules/libimg/png/.*$:) {return '65';}
 if (m:^mozilla/intl/.*$:) {return '67';}
