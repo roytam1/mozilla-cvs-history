@@ -78,10 +78,7 @@ sub dirname {
     if ($filename eq '..') {
 	return(&fileref("Parent directory", $parentdir));
     } else {
-	return("<a href=\"".$Conf->{'virtroot'}."/source".$Path->{'virt'}.$filename.
-        "\" onMouseOver=\"return js_dir_menu(\'".
-        $Path->{'virt'}.$filename."\', event)\">".$filename."</a>"
-        );
+	return(&fileref($filename, $Path->{'virt'}.$filename));
     }
 }
 
@@ -107,11 +104,7 @@ sub fileicon {
 
 
 sub filename {
-    return("<a href=\"".$Conf->{'virtroot'}."/source".$Path->{'virt'}.$filename.
-        "\" onMouseOver=\"return js_file_menu(\'". $Path->{'virt'}.
-        $filename."\', event)\">".$filename."</a>"
-        );
-
+    return(&fileref($filename, $Path->{'virt'}.$filename));
 }
 
 
