@@ -756,7 +756,7 @@ sub status_table_row {
   my ($cell_color) = TreeData::TreeState2color($LAST_TREESTATE);
   my ($char) = TreeData::TreeState2char($LAST_TREESTATE);
 
-  my $cell_options;
+  my $cell_options = '';
   my $text_browser_color_string;
   my $empty_cell_contents = $HTMLPopUp::EMPTY_TABLE_CELL;
 
