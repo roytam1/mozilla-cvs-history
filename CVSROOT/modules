@@ -312,7 +312,7 @@ RaptorLayout -a \
 	mozilla/layout \
 	mozilla/view \
 	mozilla/webshell \
-	mozilla/widget \
+	mozilla/widget
 
 Raptor -a \
 	RaptorDoc \
@@ -321,11 +321,11 @@ Raptor -a \
 
 RaptorWin -a \
 	Raptor \
-	mozilla/nglayout.mak \
+	mozilla/nglayout.mak
 
 RaptorUnix -a \
 	Raptor \
-	mozilla/nglayout.mk \
+	mozilla/nglayout.mk
 
 RaptorMac -a \
 	Raptor \
