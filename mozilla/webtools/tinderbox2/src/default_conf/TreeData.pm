@@ -210,6 +210,21 @@ foreach $tree (keys %VC_TREE) {
 		    );
 
 
+# Sort the buildnames, into a display order.  It may make sense to
+# define a local replacement function which sorts different trees into
+# locally meaningful orders (build columns in dependency order, test
+# columns last, etc)
+
+sub sort_tree_buildnames {
+  my ($tree, $buildnames_ref);
+
+  my (@out) = sort @{ $buildnames_ref };
+
+  return @out;
+}
+
+
+
 sub TreeState2color {
   my ($state) = @_;
 
