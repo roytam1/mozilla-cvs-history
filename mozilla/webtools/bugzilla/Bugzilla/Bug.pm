@@ -31,20 +31,25 @@ require "globals.pl";
 require "CGI.pl";
 package Bug;
 use CGI::Carp qw(fatalsToBrowser);
-my %ok_field;
+my %ok_fields;
 
+# ok_fields is a quick hash of all the fields that can be touched by outsiders.
+# 
 for my $key (qw (bug_id product version rep_platform op_sys bug_status 
                 resolution priority bug_severity component assigned_to
                 reporter bug_file_loc short_desc target_milestone 
-                qa_contact status_whiteboard creation_ts groupset 
-                delta_ts votes whoid usergroupset comment query error) ){
-    $ok_field{$key}++;
+                qa_contact status_whiteboard 
+                votes dependson blocking attachments keywords
+                comment) ){
+    $ok_fields{$key}++;
     }
+
 
 # create a new empty bug
 #
 sub new {
   my $type = shift();
+  my $class = ref($type) || $type;
   my %bug;
 
   # create a ref to an empty hash and bless it
@@ -90,13 +95,8 @@ sub initBug  {
      }
   }
      
-
   &::ConnectToDatabase();
   &::GetVersionTable();
-
-  # this verification should already have been done by caller
-  # my $loginok = quietly_check_login();
-
 
   $self->{'whoid'} = $user_id;
   &::SendSQL("SELECT groupset FROM profiles WHERE userid=$self->{'whoid'}");
@@ -146,14 +146,6 @@ sub initBug  {
     }
   }
 
-  if ($self->{'short_desc'}) {
-    $self->{'short_desc'} = QuoteXMLChars( $self->{'short_desc'} );
-  }
-
-  if (defined $self->{'status_whiteboard'}) {
-    $self->{'status_whiteboard'} = QuoteXMLChars($self->{'status_whiteboard'});
-  }
-
   $self->{'assigned_to'} = &::DBID_to_name($self->{'assigned_to'});
   $self->{'reporter'} = &::DBID_to_name($self->{'reporter'});
 
@@ -177,12 +169,12 @@ sub initBug  {
              WHERE keywords.bug_id = $bug_id 
                AND keyworddefs.id = keywords.keywordid
           ORDER BY keyworddefs.name");
-    my @list;
+    my @keywordlist;
     while (&::MoreSQLData()) {
-        push(@list, &::FetchOneColumn());
+        push(@keywordlist, &::FetchOneColumn());
     }
-    if (@list) {
-      $self->{'keywords'} = &::html_quote(join(', ', @list));
+    if (@keywordlist) {
+      $self->{'keywords'} = \@keywordlist;
     }
   }
 
@@ -197,7 +189,7 @@ sub initBug  {
       my %attach;
       $attach{'attachid'} = $attachid;
       $attach{'date'} = $date;
-      $attach{'desc'} = &::html_quote($desc);
+      $attach{'desc'} = $desc;
       push @attachments, \%attach;
     }
   }
@@ -205,16 +197,15 @@ sub initBug  {
     $self->{'attachments'} = \@attachments;
   }
 
-  &::SendSQL("select bug_id, who, bug_when, thetext 
+  &::SendSQL("select bug_id, who, bug_when
            from longdescs 
-           where bug_id = $bug_id");
+           where bug_id = $bug_id order by bug_when");
   my @longdescs;
   while (&::MoreSQLData()) {
-    my ($bug_id, $who, $bug_when, $thetext) = (&::FetchSQLData());
+    my ($bug_id, $who, $bug_when) = (&::FetchSQLData());
     my %longdesc;
     $longdesc{'who'} = $who;
     $longdesc{'bug_when'} = $bug_when;
-    $longdesc{'thetext'} = &::html_quote($thetext);
     push @longdescs, \%longdesc;
   }
   if (@longdescs) {
@@ -231,11 +222,10 @@ sub initBug  {
       $self->{'blocks'} = \@blocks;
     }
   }
-
+  $self->{'query'} = "UPDATE bugs\nSET";
+  $self->{'comma'} = "";
   return $self;
 }
-
-
 
 # given a bug hash, emit xml for it. with file header provided by caller
 #
@@ -305,11 +295,10 @@ sub emitXML {
 sub EmitDependList {
   my ($myfield, $targetfield, $bug_id) = (@_);
   my @list;
-  &::SendSQL("select dependencies.$targetfield, bugs.bug_status
-           from dependencies, bugs
+  &::SendSQL("select dependencies.$targetfield
+           from dependencies
            where dependencies.$myfield = $bug_id
-             and bugs.bug_id = dependencies.$targetfield
-           order by dependencies.$targetfield");
+           order by dependencies.$targetfield;");
   while (&::MoreSQLData()) {
     my ($i, $stat) = (&::FetchSQLData());
     push @list, $i;
@@ -368,7 +357,7 @@ sub UserInGroup {
     return 0;
 }
 
-sub CanChangeField {
+sub CheckCanChangeField {
    my $self = shift();
    my ($f, $oldvalue, $newvalue) = (@_);
    my $UserInEditGroupSet = -1;
@@ -436,10 +425,10 @@ sub CanChangeField {
     }
     $self->{'error'} = "
 Only the owner or submitter of the bug, or a sufficiently
-empowered user, may make that change to the $f field."
+empowered user, may make that change to the $f field.";
 }
 
-sub Collision {
+sub CheckCollision {
     my $self = shift();
     my $write = "WRITE";        # Might want to make a param to control
                                 # whether we do LOW_PRIORITY ...
@@ -458,6 +447,8 @@ sub Collision {
     }
 }
 
+# need to check if user can even see this bug
+# also might remove this altogether
 sub AppendComment  {
     my $self = shift();
     my ($comment) = (@_);
@@ -473,6 +464,18 @@ sub AppendComment  {
     &::SendSQL("UPDATE bugs SET delta_ts = now() WHERE bug_id = $self->{'bug_id'}");
 }
 
+sub AddComment {
+   my $self = shift;
+   my ($comment) = (@_);
+   $comment =~ s/\r\n/\n/g;     # Get rid of windows-style line endings.
+   $comment =~ s/\r/\n/g;       # Get rid of mac-style line endings.
+   if ($comment =~ /^\s*$/) {  # Nothin' but whitespace.
+       $self->{'comment'} = "";
+       return;
+   }
+   $self->{'comment'} = $comment;
+} 
+   
 
 #from o'reilley's Programming Perl
 sub display {
@@ -488,9 +491,142 @@ sub display {
     }
 }
 
-sub CommitChanges {
+sub ShowQuery {
+    my $self = shift;
+    print $self->{'query'} . "\n";
+}
 
-#snapshot bug
+sub SnapShotBugInDB {
+    my $self = shift;
+    &::SendSQL("select delta_ts, " . join(',', @::log_columns) .
+            " from bugs where bug_id = $self->{'bug_id'}");
+    my (@row) = &::FetchSQLData();
+    my $delta_ts = shift @row;
+
+    return @row;
+}
+
+sub SnapShotSelf {
+    my $self = shift;
+    my @row;
+    foreach my $col (@::log_columns) {
+        push (@row, $self->{$col});
+    }
+    return @row;
+}
+
+sub DoConfirm {
+    my $self = shift;
+    my $UserInEditGroupSet = -1;
+    my $UserInCanConfirmGroupSet = -1;
+    if ($UserInEditGroupSet < 0) {
+        $UserInEditGroupSet = &::UserInGroup($self, "editbugs");
+    }
+    if ($UserInCanConfirmGroupSet < 0) {
+        $UserInCanConfirmGroupSet = &::UserInGroup($self, "canconfirm");
+    }
+    if ($UserInEditGroupSet || $UserInCanConfirmGroupSet) {
+        DoComma();
+        $self->{'query'} .= "everconfirmed = 1";
+    }
+}
+
+
+sub MarkResolvedFixed {
+    my $self = shift;
+
+    $self->{'bug_status'} = 'RESOLVED';
+    $self->{'resolution'} = 'FIXED';
+
+}
+
+sub MarkResolvedInvalid {
+    my $self = shift;
+    
+    $self->{'bug_status'} = 'RESOLVED';
+    $self->{'resolution'} = 'INVALID';
+
+}
+
+sub MarkResolvedWontFix {
+    my $self = shift;
+    
+    $self->{'bug_status'} =  'RESOLVED';
+    $self->{'resolution'} = 'WONTFIX';
+
+}
+
+sub MarkResolvedLater {
+    my $self = shift;
+    
+    $self->{'bug_status'} = 'RESOLVED';
+    $self->{'resolution'} = 'LATER';
+
+}
+
+sub MarkResolvedRemind {
+    my $self = shift;
+    
+    $self->{'bug_status'} = 'RESOLVED';
+    $self->{'resolution'} = 'REMIND';
+
+}
+
+sub MarkResolvedWorksForMe {
+    my $self = shift;
+    
+    $self->{'bug_status'} = 'RESOLVED';
+    $self->{'resolution'} = 'WORKSFORME';
+
+}
+
+sub WriteChanges {
+    my $self = shift;
+
+    my $write = "WRITE";        # Might want to make a param to control
+                                # whether we do LOW_PRIORITY ...
+    &::SendSQL("LOCK TABLES bugs $write, bugs_activity $write, cc $write, " .
+            "profiles $write, dependencies $write, votes $write, " .
+            "keywords $write, longdescs $write, fielddefs $write, " .
+            "keyworddefs READ, groups READ, attachments READ, products READ");   
+    &::SendSQL($self->{'query'});
+    &::SendSQL("UNLOCK TABLES");
+} 
+
+sub CommitChanges {
+   my $self = shift();
+
+   if ($self->{'dirty'}) {
+
+      undef ($self->{'error'});
+      undef ($self->{'query'});
+      my @oldvalues = SnapShotBugInDB($self);
+      my @newvalues = SnapShotSelf($self);
+
+      $self->{'query'} = "UPDATE bugs set ";
+      foreach my $i (@oldvalues) {
+        if ($oldvalues[$i] ne $newvalues[$i]) {
+          $self->{'error'} = CheckCanChangeField($self, $::log_columns[$i], $oldvalues[$i], 
+                           $newvalues[$i]);
+        }
+        if (defined($self->{'error'})) {
+           return;
+        }
+        else {
+           AddQuery($self, $::log_columns[$i], $newvalues[$i]); 
+        }
+      }
+      if (CheckCollision($self)) {
+          $self->{'error'} = "midair collision";
+          return;
+      }
+      WriteChanges($self);
+  } # if dirty
+
+  foreach my $ick (@::log_columns) {
+    print $::log_columns[$ick] . "\n";
+  }
+   
 #snapshot dependencies
 #check can change fields
 #check collision
@@ -508,15 +644,15 @@ sub AUTOLOAD {
   $attr =~ s/.*:://;
   return unless $attr=~ /[^A-Z]/;
   if (@_) {
+    confess ("invalid bug attribute $attr") unless $ok_fields{$attr};
     $self->{$attr} = shift;
     return;
   }
-  confess ("invalid bug attribute $attr") unless $ok_field{$attr};
+  confess ("invalid bug attribute $attr") unless $ok_fields{$attr};
   if (defined $self->{$attr}) {
     return $self->{$attr};
   } else {
     return '';
   }
 }
-
 1;
