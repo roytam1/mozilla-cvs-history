@@ -64,8 +64,8 @@ use FileStructure;
     my ($out) = '';
 
     if (defined($tree)) {
-        // called from a tinderbox web page.
-        // send them back to the status page.
+        # called from a tinderbox web page.
+        # send them back to the status page.
 
         my ($url) = (
                      FileStructure::get_filename($tree, 'tree_URL').
@@ -104,8 +104,8 @@ EOF
 ;
 
     } else {
-        // called via HTTPPost
-        // Tell the webserver that everythings fine.
+        # called via HTTPPost
+        # Tell the webserver that everythings fine.
 
         $out = <<EOF;
 Content-type: text/html
