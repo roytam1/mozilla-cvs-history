@@ -144,9 +144,6 @@ $fullname{'83'} = 'Progress Window';
 $mode{'84'} = 'Open';
 $branch{'84'} = 'HEAD';
 $fullname{'84'} = 'Registry';
-$mode{'85'} = 'Open';
-$branch{'85'} = 'HEAD';
-$fullname{'85'} = 'Scheduler';
 $mode{'86'} = 'Open';
 $branch{'86'} = 'HEAD';
 $fullname{'86'} = 'Security Stubs';
@@ -240,7 +237,6 @@ if (m:^mozilla/modules/plugin/.*$:) {return '81';}
 if (m:^mozilla/modules/libpref/.*$:) {return '82';}
 if (m:^mozilla/modules/progress/.*$:) {return '83';}
 if (m:^mozilla/modules/libreg/.*$:) {return '84';}
-if (m:^mozilla/modules/schedulr/.*$:) {return '85';}
 if (m:^mozilla/modules/security/.*$:) {return '86';}
 if (m:^mozilla/modules/softupdt/.*$:) {return '87';}
 if (m:^mozilla/modules/xml/.*$:) {return '88';}
