@@ -66,7 +66,7 @@ sub page_header {
   my ($refresh) = '';
 
   ($args{'refresh'}) &&
-    ( $refresh =  "<META HTTP-EQUIV=\"Refresh: $args{'refresh'}\" CONTENT=\"300\">" );
+    ( $refresh =  "<META HTTP-EQUIV=\"Refresh\" CONTENT=\"$args{'refresh'}\">" );
   
 $header .=<<EOF;
 <HTML>
