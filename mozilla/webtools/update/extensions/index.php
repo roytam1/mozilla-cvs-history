@@ -109,8 +109,8 @@ echo"<SPAN class=\"itemdescription\">$body</SPAN><BR>\n";
 </DIV>
 <?php
 //Temporary!! Current Version Array Code
-$currentver_array = array("firefox"=>"0.95", "thunderbird"=>"0.8", "mozilla"=>"1.7");
-$currentver_display_array = array("firefox"=>"1.0 Preview Release", "thunderbird"=>"0.8", "mozilla"=>"1.7.x");
+$currentver_array = array("firefox"=>"0.95", "thunderbird"=>"0.9", "mozilla"=>"1.7");
+$currentver_display_array = array("firefox"=>"1.0 Preview Release", "thunderbird"=>"0.9", "mozilla"=>"1.7.x");
 $currentver = $currentver_array[$application];
 $currentver_display = $currentver_display_array[$application];
 ?>

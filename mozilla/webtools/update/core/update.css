@@ -94,10 +94,10 @@ DIV.sidelinks {
 	BORDER-RIGHT: #ccc 2px solid; PADDING-RIGHT: 5px; BORDER-TOP: #ccc 2px solid; MARGIN-TOP: 3px; PADDING-LEFT: 5px; FONT-WEIGHT: bold; FONT-SIZE: 14pt; MIN-HEIGHT: 200px; MARGIN-BOTTOM: 15px; PADDING-BOTTOM: 5px; MARGIN-LEFT: 1px; BORDER-LEFT: #ccc 2px solid; WIDTH: 230px; PADDING-TOP: 5px; BORDER-BOTTOM: #ccc 2px solid; POSITION: absolute; -moz-border-radius: 10px
 }
 .frontpagecontainer {
-	MIN-HEIGHT: 360px; WIDTH: 100%
+	MIN-HEIGHT: 150px; WIDTH: 100%
 }
 .contentbox {
-	BORDER-RIGHT: #ccc 2px solid; PADDING-RIGHT: 5px; BORDER-TOP: #ccc 2px solid; PADDING-LEFT: 5px; FONT-WEIGHT: bold; FONT-SIZE: 14pt; PADDING-BOTTOM: 5px; MARGIN: 0px 5px 15px 0px; BORDER-LEFT: #ccc 2px solid; PADDING-TOP: 5px; BORDER-BOTTOM: #ccc 2px solid; -moz-border-radius: 10px
+	BORDER-RIGHT: #ccc 1px solid; PADDING-RIGHT: 5px; BORDER-TOP: #ccc 1px solid; PADDING-LEFT: 5px; FONT-WEIGHT: bold; FONT-SIZE: 14pt; PADDING-BOTTOM: 5px; MARGIN: 0px 5px 15px 0px; BORDER-LEFT: #ccc 1px solid; PADDING-TOP: 5px; BORDER-BOTTOM: #ccc 1px solid; -moz-border-radius: 10px
 }
 .contentcolumns {
 	FLOAT: left; WIDTH: 48%

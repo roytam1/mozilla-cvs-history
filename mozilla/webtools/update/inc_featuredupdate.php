@@ -39,20 +39,17 @@
 
 
 <DIV class="contentbox" style="margin-left: 2px; border-color: #00E;">
-<DIV class="boxheader">Firefox 1.0 Preview Release and Thunderbird 0.8 Released!</DIV>
+<DIV class="boxheader">Thunderbird 0.9 Released!</DIV>
 <SPAN class="itemdescription">
-<P>The Firefox 1.0 Preview Release is now available. Three large new features - Live Bookmarks, the Find bar and a new plugin
-installer - have landed since 0.9, along with a host of critical bugfixes.</P>
-
-<P>Mozilla Thunderbird 0.8 has just been released! This latest milestone adds a frequently requested feature: support for
-filtering all POP mail into a Global Inbox under Local Folders. In addition, this release sees the debut of
-Thunderbird's support for RSS and Atom feeds. Users can set up an RSS News & Blogs account and then subscribe to feeds
-from their favourite news sites and weblogs. Each feed appears as a folder with each individual item appearing as a message.</P>
+<P><IMG SRC="images/product-front-thunderbird.png" width="96" height="105" alt="" align=left border=0>Thunderbird 0.9 is now available for download! New features include Saved Search Folders (aka Virtual Folders)
+which allow you to display messages based on previously set search criteria across multiple folders. Message Grouping
+allows you to organize e-mail in a folder by grouping them based on various attributes like Date, Sender, Label, etc.
+Thunderbird 0.9 also includes numerous bug fixes and other improvements.</P>
 
 <SPAN style="font-size: 16pt; text-align: center;">
-<a href="http://www.mozilla.org/products/firefox/">Get Firefox 1.0 PR!</a> <a href="http://www.mozilla.org/products/thunderbird/">Get Thunderbird 0.8!</a></SPAN><BR>
+<a href="http://www.mozilla.org/products/thunderbird/">Get Thunderbird 0.9!</a></SPAN><BR>
 
-<a href="http://www.mozilla.org/products/firefox/releases/0.10.html">Firefox Release Notes</a> | <a href="http://www.mozilla.org/products/thunderbird/releases/">Thunderbird Release Notes</a> | <a href="http://www.mozilla.org/press/mozilla-2004-09-14-02.html">Press Release</a><BR>
+<!--<a href="http://www.mozilla.org/products/firefox/releases/0.10.html">Firefox Release Notes</a> | --><a href="http://www.mozilla.org/products/thunderbird/releases/">Thunderbird Release Notes</a> | <!--<a href="http://www.mozilla.org/press/mozilla-2004-09-14-02.html">--><span style="color: #999;">Press Release</span><!--</a>--><BR>
 
 
 </SPAN>
