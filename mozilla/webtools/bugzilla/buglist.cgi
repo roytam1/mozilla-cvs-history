@@ -360,7 +360,7 @@ sub GenerateSQL {
     my @legal_fields = ("product", "version", "rep_platform", "op_sys",
                         "bug_status", "resolution", "priority", "bug_severity",
                         "assigned_to", "reporter", "component",
-                        "target_milestone", "groupset");
+                        "target_milestone");
 
     foreach my $field (keys %F) {
         if (lsearch(\@legal_fields, $field) != -1) {
@@ -1039,8 +1039,6 @@ sub GenerateSQL {
                   " FROM $suppstring" .
                   " WHERE " . join(' AND ', (@wherepart, @andlist)));
 
-    $query = SelectVisible($query, $::userid, $::usergroupset);
-
     if ($debug) {
         print "<p><code>" . value_quote($query) . "</code></p>\n";
         exit;
@@ -1210,7 +1208,6 @@ sub DefineColumn {
 
 # Column:     ID                    Name                           Title
 DefineColumn("id"                , "bugs.bug_id"                , "ID"               );
-DefineColumn("groupset"          , "bugs.groupset"              , "Groupset"         );
 DefineColumn("opendate"          , "bugs.creation_ts"           , "Opened"           );
 DefineColumn("changeddate"       , "bugs.delta_ts"              , "Changed"          );
 DefineColumn("severity"          , "bugs.bug_severity"          , "Severity"         );
@@ -1268,9 +1265,6 @@ else {
 # and are hard-coded into the display templates.
 @displaycolumns = grep($_ ne 'id', @displaycolumns);
 
-# IMPORTANT! Never allow the groupset column to be displayed!
-@displaycolumns = grep($_ ne 'groupset', @displaycolumns);
-
 # Add the votes column to the list of columns to be displayed
 # in the bug list if the user is searching for bugs with a certain
 # number of votes and the votes column is not already on the list.
@@ -1289,10 +1283,8 @@ if (trim($::FORM{'votes'}) && !grep($_ eq 'votes', @displaycolumns)) {
 
 # Generate the list of columns that will be selected in the SQL query.
 
-# The bug ID and groupset are always selected because bug IDs are always
-# displayed and we need the groupset to determine whether or not the bug
-# is visible to the user.
-my @selectcolumns = ("id", "groupset");
+# The bug ID is always selected because bug IDs are always displayed 
+my @selectcolumns = ("id");
 
 # Display columns are selected because otherwise we could not display them.
 push (@selectcolumns, @displaycolumns);
@@ -1450,21 +1442,24 @@ while (my @row = FetchSQLData()) {
         $bug->{$column} = shift @row;
     }
 
-    # Process certain values further (i.e. date format conversion).
-    if ($bug->{'changeddate'}) {
-        $bug->{'changeddate'} =~ 
-          s/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})$/$1-$2-$3 $4:$5:$6/;
-        $bug->{'changeddate'} = DiffDate($bug->{'changeddate'});
+    # check to see if this user can see this bug
+    if (CanSeeBug($bug->{'id'}, $::userid)) {
+        # Process certain values further (i.e. date format conversion).
+        if ($bug->{'changeddate'}) {
+            $bug->{'changeddate'} =~ 
+              s/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})$/$1-$2-$3 $4:$5:$6/;
+            $bug->{'changeddate'} = DiffDate($bug->{'changeddate'});
+        }
+        ($bug->{'opendate'} = DiffDate($bug->{'opendate'})) if $bug->{'opendate'};
+    
+        # Record the owner, product, and status in the big hashes of those things.
+        $bugowners->{$bug->{'owner'}} = 1 if $bug->{'owner'};
+        $bugproducts->{$bug->{'product'}} = 1 if $bug->{'product'};
+        $bugstatuses->{$bug->{'status'}} = 1 if $bug->{'status'};
+    
+        # Add the record to the list.
+        push(@bugs, $bug);
     }
-    ($bug->{'opendate'} = DiffDate($bug->{'opendate'})) if $bug->{'opendate'};
-
-    # Record the owner, product, and status in the big hashes of those things.
-    $bugowners->{$bug->{'owner'}} = 1 if $bug->{'owner'};
-    $bugproducts->{$bug->{'product'}} = 1 if $bug->{'product'};
-    $bugstatuses->{$bug->{'status'}} = 1 if $bug->{'status'};
-
-    # Add the record to the list.
-    push(@bugs, $bug);
 }
 
 # Switch back from the shadow database to the regular database so PutFooter()

@@ -51,19 +51,19 @@ use vars qw(
 );
 
 ConnectToDatabase();
-
+my $userid = 0;
 if (defined $::FORM{"GoAheadAndLogIn"}) {
     # We got here from a login page, probably from relogin.cgi.  We better
     # make sure the password is legit.
-    confirm_login();
+    $userid = confirm_login();
 } else {
-    quietly_check_login();
+    $userid = quietly_check_login();
 }
 
 # Backwards compatibility hack -- if there are any of the old QUERY_*
 # cookies around, and we are logged in, then move them into the database
 # and nuke the cookie. This is required for Bugzilla 2.8 and earlier.
-if ($::userid) {
+if ($userid) {
     my @oldquerycookies;
     foreach my $i (keys %::COOKIE) {
         if ($i =~ /^QUERY_(.*)$/) {
@@ -80,12 +80,12 @@ if ($::userid) {
             if ($value) {
                 my $qname = SqlQuote($name);
                 SendSQL("SELECT query FROM namedqueries " .
-                        "WHERE userid = $::userid AND name = $qname");
+                        "WHERE userid = $userid AND name = $qname");
                 my $query = FetchOneColumn();
                 if (!$query) {
                     SendSQL("REPLACE INTO namedqueries " .
                             "(userid, name, query) VALUES " .
-                            "($::userid, $qname, " . SqlQuote($value) . ")");
+                            "($userid, $qname, " . SqlQuote($value) . ")");
                 }
             }
             print "Set-Cookie: $cookiename= ; path=" . Param("cookiepath") . 
@@ -95,17 +95,17 @@ if ($::userid) {
 }
 
 if ($::FORM{'nukedefaultquery'}) {
-    if ($::userid) {
+    if ($userid) {
         SendSQL("DELETE FROM namedqueries " .
-                "WHERE userid = $::userid AND name = '$::defaultqueryname'");
+                "WHERE userid = $userid AND name = '$::defaultqueryname'");
     }
     $::buffer = "";
 }
 
 my $userdefaultquery;
-if ($::userid) {
+if ($userid) {
     SendSQL("SELECT query FROM namedqueries " .
-            "WHERE userid = $::userid AND name = '$::defaultqueryname'");
+            "WHERE userid = $userid AND name = '$::defaultqueryname'");
     $userdefaultquery = FetchOneColumn();
 }
 
@@ -298,7 +298,7 @@ $vars->{'rep_platform'} = \@::legal_platform;
 $vars->{'op_sys'} = \@::legal_opsys;
 $vars->{'priority'} = \@::legal_priority;
 $vars->{'bug_severity'} = \@::legal_severity;
-$vars->{'userid'} = $::userid;
+$vars->{'userid'} = $userid;
 
 # Boolean charts
 my @fields;
@@ -345,10 +345,10 @@ for (my $chart = 0; $::FORM{"field$chart-0-0"}; $chart++) {
 $default{'charts'} = \@charts;
 
 # Named queries
-if ($::userid) {
+if ($userid) {
     my @namedqueries;
     SendSQL("SELECT name FROM namedqueries " .
-            "WHERE userid = $::userid AND name != '$::defaultqueryname' " .
+            "WHERE userid = $userid AND name != '$::defaultqueryname' " .
             "ORDER BY name");
     while (MoreSQLData()) {
         push(@namedqueries, FetchOneColumn());

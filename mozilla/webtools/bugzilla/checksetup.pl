@@ -1590,7 +1590,7 @@ $table{member_group_map} =
      isderived tinyint not null default 0,
 
      unique(member_id, group_id, maptype),
-     index(group_id)';
+     index(group_id, member_id, maptype)';
 
 # This table determines in which groups a user must be a member to have
 # permission to see a bug

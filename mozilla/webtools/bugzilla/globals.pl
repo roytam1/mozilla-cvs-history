@@ -735,7 +735,7 @@ sub GenerateRandomPassword {
     return $password;
 }
 
-sub SelectVisible {
+sub RemovedSelectVisible {
     my ($query, $userid, $usergroupset) = @_;
 
     # Run the SQL $query with the additional restriction that
@@ -810,22 +810,27 @@ sub SelectVisible {
 }
 
 sub CanSeeBug {
-    # Note that we pass in the usergroupset, since this is known
-    # in most cases (ie viewing bugs). Maybe make this an optional
-    # parameter?
 
-    my ($id, $userid, $usergroupset) = @_;
+    my ($id, $userid) = @_;
 
     # Query the database for the bug, retrieving a boolean value that
     # represents whether or not the user is authorized to access the bug.
 
+    # if no groups are found --> user is permitted to access
+    # if no user is found for a group --> user is not permitted to access
+    my $query = "SELECT bugs.bug_id, ISNULL(bug_group_map.group_id), 
+        ISNULL(member_group_map.member_id) FROM bugs 
+        LEFT JOIN bug_group_map ON bugs.bug_id = bug_group_map.bug_id 
+        LEFT JOIN member_group_map ON 
+        member_group_map.group_id = bug_group_map.group_id  
+        AND member_group_map.maptype = 0 
+        AND member_group_map.member_id = $userid  
+        WHERE bugs.bug_id = $id ORDER BY member_group_map.member_id";
     PushGlobalSQLState();
-    SendSQL(SelectVisible("SELECT bugs.bug_id FROM bugs WHERE bugs.bug_id = $id",
-                          $userid, $usergroupset));
-
-    my $ret = defined(FetchSQLData());
+    SendSQL($query);
+    my ($found_id, $found_group, $found_member) = FetchSQLData();
     PopGlobalSQLState();
-
+    my $ret = (($found_group == 1) || ($found_member == 0)) ? 1 : 0;
     return $ret;
 }
 
@@ -1246,14 +1251,15 @@ sub SqlQuote {
 
 sub UserInGroup {
     my ($groupname) = (@_);
-    if ($::usergroupset eq "0") {
-        return 0;
-    }
     PushGlobalSQLState();
-    SendSQL("select (bit & $::usergroupset) != 0 from groups where name = " . SqlQuote($groupname));
-    my $bit = FetchOneColumn();
+    SendSQL("SELECT groups.group_id FROM groups, member_group_map 
+        WHERE groups.group_id = member_group_map.group_id 
+        AND member_group_map.member_id = $::userid
+        AND maptype = 0
+        AND groups.name = " . SqlQuote($groupname));
+    my $rslt = FetchOneColumn();
     PopGlobalSQLState();
-    if ($bit) {
+    if ($rslt) {
         return 1;
     }
     return 0;

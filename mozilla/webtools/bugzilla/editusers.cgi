@@ -98,9 +98,9 @@ sub EmitElement ($$)
 # Displays the form to edit a user parameters
 #
 
-sub EmitFormElements ($$$$$)
+sub EmitFormElements ($$$$)
 {
-    my ($user, $realname, $groupset, $blessgroupset, $disabledtext) = @_;
+    my ($user_id, $user, $realname, $disabledtext) = @_;
 
     print "  <TH ALIGN=\"right\">Login name:</TH>\n";
     EmitElement("user", $user);
@@ -135,11 +135,15 @@ sub EmitFormElements ($$$$$)
     
     if($user ne "") {
         print "</TR><TR><TH VALIGN=TOP ALIGN=RIGHT>Group Access:</TH><TD><TABLE><TR>";
-        SendSQL("SELECT bit,name,description,bit & $groupset != 0, " .
-                "       bit & $blessgroupset " .
-                "FROM groups " .
-                "WHERE bit & $opblessgroupset != 0 AND isbuggroup " .
-                "ORDER BY name");
+        SendSQL("SELECT groups.group_id, groups.name, groups.description, " .
+                "ISNULL(member_group_map.member_id) = 0 " .
+                "FROM groups INNER JOIN groups as G " .
+                "ON groups.group_id = G.group_id " .
+                "LEFT JOIN member_group_map " .
+                "ON member_group_map.group_id = G.group_id " .
+                "AND member_group_map.maptype = 0 " .
+                "AND member_group_map.member_id = $user_id " .
+                "ORDER BY groups.name");
         if (MoreSQLData()) {
             if ($editall) {
                 print "<TD COLSPAN=3 ALIGN=LEFT><B>Can turn this bit on for other users</B></TD>\n";
@@ -147,7 +151,19 @@ sub EmitFormElements ($$$$$)
             }
             print "<TD COLSPAN=2 ALIGN=LEFT><B>User is a member of these groups</B></TD>\n";
             while (MoreSQLData()) {
-                my ($bit,$name,$description,$checked,$blchecked) = FetchSQLData();
+                my ($bit, $name, $description, $checked) = FetchSQLData();
+                PushGlobalSQLState();
+                SendSQL("SELECT ISNULL(member_group_map.member_id) = 0 " .
+                        "FROM groups " .
+                        "LEFT JOIN member_group_map " .
+                        "ON member_group_map.group_id = groups.group_id " .
+                        "AND member_group_map.maptype = 1 " .
+                        "AND member_group_map.member_id = $user_id " .
+                        "WHERE groups.group_id = $bit");
+                my ($blchecked) = FetchSQLData();
+                PopGlobalSQLState();
+                print "<INPUT TYPE=HIDDEN NAME=\"oldbit_$name\" VALUE=\"$checked\">\n";
+                print "<INPUT TYPE=HIDDEN NAME=\"oldblbit_$name\" VALUE=\"$blchecked\">\n";
                 print "</TR><TR>\n";
                 if ($editall) {
                     $blchecked = ($blchecked) ? "CHECKED" : "";
@@ -156,41 +172,10 @@ sub EmitFormElements ($$$$$)
                 $checked = ($checked) ? "CHECKED" : "";
                 print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"bit_$name\" $checked VALUE=\"$bit\"></TD>";
                 print "<TD><B>" . ucfirst($name) . "</B>: $description</TD>\n";
+                }
             }
         }
         print "</TR></TABLE></TD>\n";
-    
-        print "</TR><TR><TH VALIGN=TOP ALIGN=RIGHT>Privileges:</TH><TD><TABLE><TR>";
-        SendSQL("SELECT bit,name,description,bit & $groupset != 0, " .
-                "       bit & $blessgroupset " .
-                "FROM groups " .
-                "WHERE bit & $opblessgroupset != 0 AND !isbuggroup " .
-                "ORDER BY name");
-        if (MoreSQLData()) {
-            if ($editall) {
-                print "<TD COLSPAN=3 ALIGN=LEFT><B>Can turn this bit on for other users</B></TD>\n";
-                print "</TR><TR>\n<TD ALIGN=CENTER><B>|</B></TD>\n";
-            }
-            print "<TD COLSPAN=2 ALIGN=LEFT><B>User has these privileges</B></TD>\n";
-            while (MoreSQLData()) {
-                my ($bit,$name,$description,$checked,$blchecked) = FetchSQLData();
-                print "</TR><TR>\n";
-                if ($editall) {
-                    $blchecked = ($blchecked) ? "CHECKED" : "";
-                    print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"blbit_$name\" $blchecked VALUE=\"$bit\"></TD>";
-                }
-                $checked = ($checked) ? "CHECKED" : "";
-                print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"bit_$name\" $checked VALUE=\"$bit\"></TD>";
-                print "<TD><B>" . ucfirst($name) . "</B>: $description</TD>\n";
-            }
-        }
-    } else {
-        print "</TR><TR><TH ALIGN=RIGHT>Groups and<br>Privileges:</TH><TD><TABLE><TR>";        
-        print "<TD COLSPAN=3>The new user will be inserted into groups " .
-          "based on their userregexps.<BR>To change the group " .
-          "permissions for this user, you must edit the account after ".
-          "creating it.</TD>\n";
-    }
     print "</TR></TABLE></TD>\n";
 
 }
@@ -397,7 +382,7 @@ if ($action eq 'add') {
     print "<FORM METHOD=POST ACTION=editusers.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
-    EmitFormElements('', '', 0, 0, '');
+    EmitFormElements(0, '', '', '');
 
     print "</TR></TABLE>\n<HR>\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Add\">\n";
@@ -486,13 +471,12 @@ if ($action eq 'new') {
 
     # Add the new user
     SendSQL("INSERT INTO profiles ( " .
-            "login_name, cryptpassword, realname, groupset, " .
+            "login_name, cryptpassword, realname,  " .
             "disabledtext" .
             " ) VALUES ( " .
             SqlQuote($user) . "," .
             SqlQuote(Crypt($password)) . "," .
             SqlQuote($realname) . "," .
-            $bits . "," .
             SqlQuote($disabledtext) . ")" );
 
     #+++ send e-mail away
@@ -696,23 +680,20 @@ if ($action eq 'edit') {
     CheckUser($user);
 
     # get data of user
-    SendSQL("SELECT realname, groupset, blessgroupset, disabledtext
+    SendSQL("SELECT userid, realname, disabledtext
              FROM profiles
              WHERE login_name=" . SqlQuote($user));
-    my ($realname, $groupset, $blessgroupset,
-        $disabledtext) = FetchSQLData();
+    my ($thisuserid, $realname, $disabledtext) = FetchSQLData();
 
     print "<FORM METHOD=POST ACTION=editusers.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
-    EmitFormElements($user, $realname, $groupset, $blessgroupset, $disabledtext);
+    EmitFormElements($thisuserid, $user, $realname, $disabledtext);
     
     print "</TR></TABLE>\n";
 
     print "<INPUT TYPE=HIDDEN NAME=\"userold\" VALUE=\"$user\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"realnameold\" VALUE=\"$realname\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"groupsetold\" VALUE=\"$groupset\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"blessgroupsetold\" VALUE=\"$blessgroupset\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"disabledtextold\" VALUE=\"" .
         value_quote($disabledtext) . "\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"update\">\n";
