@@ -31,7 +31,7 @@ Chapter: Using Bugzilla
 <title>Using Bugzilla</title>
   <epigraph>
     <para>
-      What, Why, How, & Where?
+      What, Why, How, &amp; Where?
     </para>
   </epigraph>
 
@@ -328,9 +328,9 @@ system against which all others are measured.
 	for your perusal.
       </para>
       <para>
-	At this point, please visit the main Bugzilla site,
-	<ulink url="http://bugzilla.mozilla.org/query.cgi">
-	bugzilla.mozilla.org</ulink>, to see a more fleshed-out query page.
+	At this point, let's visit the query page.
+	<ulink url="http://landfill.tequilarista.org/bugzilla-tip/query.cgi">
+	landfill.tequilarista.org/bugzilla-tip/query.cgi</ulink>
       </para>
       <para>
 	The first thing you need to notice about the Bugzilla Query
@@ -612,7 +612,7 @@ system against which all others are measured.
 	<para>And all this time, I thought we were taking bugs <emphasis>out</emphasis>...</para>
       </epigraph>
       
-      <section id="bug_writing">
+      <section id="bug-writing">
 	<title>Writing a Great Bug Report</title>
 	<para>
 	  Before we plunge into writing your first bug report, I
@@ -701,7 +701,7 @@ system against which all others are measured.
 	</para>
       </section>
 
-      <section id="bug_manage">
+      <section id="bug-manage">
 	<title>Managing your Bug Reports</title>
 	<para>
 	  OK, you should have a link to the bug you just created near
@@ -744,20 +744,20 @@ system against which all others are measured.
 	</para>
 	<para>
 	  There is a <ulink
-			    url="http://bugzilla.mozilla.org/help.html">CLUE</ulink> on the Query page that will teach you more how to use the form.
+			    url="http://landfill.tequilarista.org/bugzilla-tip/help.html">CLUE</ulink> on the Query page that will teach you more how to use the form.
 	</para>
 	<para>
 	  If you click the hyperlink on the <ulink
-						   url="http://bugzilla.mozilla.org/describecomponents.cgi">Component</ulink> box of the Query page, you will be presented a form that will describe what all the components are.
+						   url="http://landfill.tequilarista.org/bugzilla-tip/describecomponents.cgi">Component</ulink> box of the Query page, you will be presented a form that will describe what all the components are.
 	</para>
 	<para>
 	  Possibly the most powerful feature of the Query page is the
 	  <ulink
-		 url="http://bugzilla.mozilla.org/booleanchart.html">Boolean Chart</ulink> section. It's a bit confusing to use the first time, but can provide unparalleled flexibility in your queries, allowing you to build extremely powerful requests.
+		 url="http://landfill.tequilarista.org/bugzilla-tip/booleanchart.html">Boolean Chart</ulink> section. It's a bit confusing to use the first time, but can provide unparalleled flexibility in your queries, allowing you to build extremely powerful requests.
 	</para>
 	<para>
 	  Finally, you can build some nifty  <ulink
-						    url="http://bugzilla.mozilla.org/reports.cgi">Reports</ulink> using the "Bug Reports" link near the bottom of the query page, and also available via the "Reports" link at the footer of each page.
+						    url="http://landfill.tequilarista.org/bugzilla-tip/reports.cgi">Reports</ulink> using the "Bug Reports" link near the bottom of the query page, and also available via the "Reports" link at the footer of each page.
 	</para>
       </section>
     </section>
@@ -812,7 +812,7 @@ system against which all others are measured.
 	  their flow charts and know when it is time to pull the bug
 	  onto a quality assurance platform for inspection.  Other
 	  people set up email gateways to
-	    <xref linkend="bonsai"> or <xref linkend="tinderbox">, and
+	    <xref linkend="bonsai" /> or <xref linkend="tinderbox" />, and
 	  restrict which types of Bugzilla information are fed to
 	  these systems..
 	</para>

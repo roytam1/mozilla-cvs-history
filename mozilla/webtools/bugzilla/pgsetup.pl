@@ -1378,17 +1378,17 @@ sub AddFDef ($$$) {
     my $sth = $dbh->prepare($query);
     $sth->execute();
     my ($fieldid) = $sth->fetchrow_array();
-    print "FieldID = $fieldid\n"; 
+    # print "FieldID = $fieldid\n"; 
     if (!$fieldid) {
         $query = "INSERT INTO fielddefs (name, description, mailhead, sortkey) VALUES " .
                  "($name, $description, $mailhead, $headernum)"; 
-        print "$query\n";
+        # print "$query\n";
         $dbh->do($query);
     } else {
         $query = "UPDATE fielddefs set name = $name, description = $description, " . 
                  "mailhead = $mailhead, sortkey = $headernum" . 
                  "WHERE fieldid = $fieldid";
-        print "$query\n";
+        # print "$query\n";
         $dbh->do($query);
     }
     $headernum++;

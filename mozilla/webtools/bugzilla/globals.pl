@@ -115,7 +115,7 @@ sub ConnectToDatabase {
                      "If the problem persists, please contact " . Param("maintainer") .
                      ". The error you should quote is: " . $DBI::errstr;
         } elsif ($::driver eq 'Pg') {
-            $::db = DBI->connect("DBI:$::driver:dbname=$name", $::db_user, $::db_pass)
+            $::db = DBI->connect("DBI:$::driver:dbname=$name;host=$::db_host", $::db_user, $::db_pass)
                 || die "Bugzilla is currently broken. Please try again later. " . 
                          "If the problem persists, please contact " . Param("maintainer") .
                           ". The error you should quote is: " . $DBI::errstr;
