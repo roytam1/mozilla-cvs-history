@@ -107,8 +107,8 @@ $DEFAULT_POPUP_TITLE = '';
 # these varaibles are a hack, I need them to make the popup window
 # auto size correctly.  I wish there was a javascript way to autosize.
 
-$DEFAULT_POPUP_HEIGHT = 150;
-$DEFAULT_POPUP_WIDTH = 350;
+$DEFAULT_POPUP_HEIGHT = 225;
+$DEFAULT_POPUP_WIDTH = 425;
 
 
 
