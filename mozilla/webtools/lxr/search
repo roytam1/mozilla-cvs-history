@@ -49,7 +49,7 @@ sub search {
     $s = $searchtext;
     $s =~ s/"/\&quot;/g;
     print("<B>Search for: </B></TD><TD><input type=text name=\"string\" ",
-	  "value=\"",$s,"\" size=50>\n",
+	  "value=\"",$s,"\" size=32>\n",
 	  "<input type=submit value=\"search\"><BR>\n",
           "</TD></TR><TR><TD></TD><TD>\n",
 	  "<input type=\"checkbox\" name=\"regexp\"");
@@ -96,6 +96,8 @@ sub search {
 	if ($retval == 0) {
 	    if (@glimpselines == 0) {
 		print("No matching files<br>\n");
+	    } elsif (@glimpselines[0] =~ /pattern too long/) {
+                print ("Pattern too long. Use a maximum 32 characters.\n");
 	    } else {
 		if ($numlines > $maxhits) {
 		    print("<b> Too many hits, displaying first $maxhits</b><br>\n");
