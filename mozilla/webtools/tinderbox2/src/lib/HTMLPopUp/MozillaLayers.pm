@@ -254,15 +254,38 @@ sub Link {
     
 
 
-    $out .= "onClick=\" ";
+    $out .= "onMouseOver=\" ";
     ($args{'windowtxt'}) &&
       ($out .= "log(".(
                        "event,".
                        "\'$#POPUPTXT\'".
                       "").
        "); ");
-
     $out .= "return true\" ";
+
+    # It is safer to define some null action for the events to ensure
+    # the window is shut down on mouse out and click, but this leaves
+    # a strange box on the screen.
+
+
+    $out .= "onClick=\" ";
+    ($args{'windowtxt'}) &&
+      ($out .= "log(".(
+                       "event,".
+                       "\'0\'".
+                      "").
+       "); ");
+    $out .= "return true\" ";
+
+    $out .= "onMouseOut=\" ";
+    ($args{'windowtxt'}) &&
+      ($out .= "log(".(
+                       "event,".
+                       "\'0\'".
+                      "").
+       "); ");
+    $out .= "return true\" ";
+
   }
 
   $out .= ">$args{'linktxt'}</a>";
