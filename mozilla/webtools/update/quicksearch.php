@@ -38,15 +38,8 @@
 // the terms of any one of the MPL, the GPL or the LGPL.
 //
 // ***** END LICENSE BLOCK *****
-?>
-<?php
-require"core/config.php";
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html lang="en">
-<head>
+require_once('./core/init.php');
 
-<?php
 // Prints which items are being displayed and what page is being displayed
 // i.e. "X - Y of Z | Page M of N"
 function print_page_list($startitem, $enditem, $totalresults, $num_pages, $pageid)
@@ -94,14 +87,15 @@ if ($_GET["q"]) {
   $section = escape_string($_GET["section"]);
 }
 
-?>
-  <title>Mozilla Update :: Search<?php if ($didSearch) {echo " - Results - Page $pageid"; } ?></title>
-<?php
-include"$page_header";
-
 // -----------------------------------------------
 // Begin Content of the Page Here
 // -----------------------------------------------
+
+$page_title = 'Mozilla Update :: Search';
+if ($didSearch) {
+    $page_title .= ' - Results - Page'.$pageid;
+}
+require_once(HEADER);
 
 ?>
 <div id="mBody">
@@ -245,7 +239,5 @@ if ($didSearch) {
 ?>
 </div>
 <?php
-include"$page_footer";
+require_once(FOOTER);
 ?>
-</body>
-</html>

@@ -1,6 +1,6 @@
 <?php
-require"core/sessionconfig.php";
-require"../core/config.php";
+require_once('../core/init.php');
+require_once('./core/sessionconfig.php');
 
 $function = $_GET["function"];
 //Kill access to flagged comments for users.
@@ -9,19 +9,16 @@ if ($_SESSION["level"] !=="admin" and $_SESSION["level"] !=="editor") {
         unset($function);
     }
 }
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
-<HTML>
-<HEAD>
-<TITLE>Mozilla Update :: Developer Control Panel :: Comments Manager</TITLE>
-<?php
-include"$page_header";
+
+$page_title = 'Mozilla Update :: Developer Control Panel :: Comments Manager';
+require_once(HEADER);
 
 if ($function=="flaggedcomments") {
     $skipcomments = true;
 }
 
-include"inc_sidebar.php";
+require_once('./inc_sidebar.php');
+
 ?>
 <?php
 if (!$function) {
@@ -322,13 +319,7 @@ echo"<h2>Processing Changes to the Flagged Comments List, please wait...</h2>\n"
             }
 
         }
-
-    
-
     }
-
-
-
 }
 unset($i);
 ?>
@@ -418,7 +409,5 @@ echo"<TR><TD COLSPAN=4 align=center>No Comments are Currently Flagged for Editor
 </div>
 
 <?php
-include"$page_footer";
+require_once(FOOTER);
 ?>
-</BODY>
-</HTML>

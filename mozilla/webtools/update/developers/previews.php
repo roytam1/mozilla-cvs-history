@@ -1,14 +1,9 @@
 <?php
-require"../core/config.php";
-require"core/sessionconfig.php";
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
-<HTML>
-<HEAD>
-<TITLE>Mozilla Update :: Developer Control Panel :: Item Previews</TITLE>
-<?php
-include"$page_header";
-include"inc_sidebar.php";
+require_once('../core/init.php');
+require_once('./core/sessionconfig.php');
+$page_title = 'Mozilla Update :: Developer Control Panel :: Item Previews';
+require_once(HEADER);
+require_once('inc_sidebar.php');
 
 //Kill access to items this user doesn't own...
 if ($_SESSION["level"] !=="admin" and $_SESSION["level"] !=="editor") {
@@ -20,8 +15,7 @@ if ($_SESSION["level"] !=="admin" and $_SESSION["level"] !=="editor") {
     if (mysql_num_rows($sql_result)=="0") {
     echo"<h1>Access Denied</h1>\n";
     echo"You do not have access to this item.";
-    include"$page_footer";
-    echo"</body></html>\n";
+    require_once(FOOTER);
     exit;
     }
 }
@@ -71,7 +65,7 @@ $sql = "SELECT `PreviewURI` from `previews` WHERE `PreviewID`='$previewid' LIMIT
   $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     $row = mysql_fetch_array($sql_result);
     $file = $row["PreviewURI"];
-    $file = "$websitepath/$file";
+    $file = FILE_PATH.'/'.$file;
     
     $imagesize = @getimagesize($file);
 if ($_POST["preview"]==$previewid AND $imagesize[0]<="$preview_width" AND $imagesize[1]<="$preview_height") {$preview="YES"; } else {$preview="NO";}
@@ -114,8 +108,8 @@ if ($num_results>"0") {
     $filename_array[$i] = $filename;
     $caption = $row["caption"];
     $preview = $row["preview"];
-    list($src_width, $src_height, $type, $attr) = getimagesize("$websitepath/$uri");
-    $filesize = round(filesize("$websitepath/$uri")/1024,1);
+    list($src_width, $src_height, $type, $attr) = getimagesize(FILE_PATH.'/'.$uri);
+    $filesize = round(filesize(FILE_PATH.'/'.$uri)/1024,1);
     $popup_width = $src_width+25;
     $popup_height = $src_height+25;
 
@@ -229,7 +223,7 @@ $dest_height = $dest_height_fixed;
 $dest_width = ($src_width * $dest_height) / $src_height;
 }
 $quality="80"; // JPEG Image Quality
-$outputpath="$websitepath/$previewpath"; //path of output image ;-)
+$outputpath=FILE_PATH.'/'.$previewpath; //path of output image ;-)
 
 if ($type=="2") {
 $src_img = imagecreatefromjpeg("$sourcepath");
@@ -297,7 +291,5 @@ Image Caption: <input name="caption" type="text" size="30"><br>
 </div>
 
 <?php
-include"$page_footer";
+require_once(FOOTER);
 ?>
-</BODY>
-</HTML>

@@ -38,14 +38,14 @@
 ?>
     <div id="side">
     <?php
-    $type="E";
+    $type='E';
     $types = array("E"=>"Extensions","T"=>"Themes");
-    $typename = $types["$type"];
+    $typename = $types[$type];
     $uriparams_skip="category";
 
     echo"<ul id=\"nav\">\n";
 
-    echo"        <li"; if (!$category AND $index !="yes") { echo" class=\"selected\""; }  echo"><A HREF=\"showlist.php?".uriparams()."&amp;category=All\" TITLE=\"Show All ".ucwords($typename)." Alphabetically\"><strong>All Extensions</strong></A></li>\n";
+    echo"        <li"; if (!$category AND $index != 'yes') { echo" class=\"selected\""; }  echo"><A HREF=\"showlist.php?".uriparams()."&amp;category=All\" TITLE=\"Show All ".ucwords($typename)." Alphabetically\"><strong>All Extensions</strong></A></li>\n";
 
     echo"        <li><ul>\n";
 

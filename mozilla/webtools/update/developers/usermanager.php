@@ -1,6 +1,6 @@
 <?php
-require"core/sessionconfig.php";
-require"../core/config.php";
+require_once('../core/init.php');
+require_once('./core/sessionconfig.php');
 
 class PermissionsManager {
   var $modes;
@@ -53,31 +53,24 @@ class PermissionsManager {
     
     }
   }
-  
 }
 
-$function = $_GET["function"];
-$perms=new PermissionsManager($function);
+$function = $_GET['function'];
+$perms = new PermissionsManager($function);
 
 //Access Level: only admins can edit somebody else's profile
-if ($_SESSION["level"] !=="admin") {
+if ($_SESSION['level'] !=='admin') {
   //Kill access to add user.
-  $function="edituser";
-  $userid=$_SESSION["uid"];
+  $function = 'edituser';
+  $userid=$_SESSION['uid'];
 }
 
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
-<HTML>
-<HEAD>
-<TITLE>Mozilla Update :: Developer Control Panel :: User Manager</TITLE>
-<?php
-include"$page_header";
-include"inc_sidebar.php";
-?>
-<?php
+$page_title = 'Mozilla Update :: Developer Control Panel :: User Manager';
+require_once(HEADER);
+require_once('./inc_sidebar.php');
+
 //Security Check for EditUser/ChangePassword function.
-if ($function=="edituser" or $function=="changepassword") {
+if ($function=="edituser" || $function=="changepassword") {
   $postuid = escape_string($_GET["userid"]);
   $userid = escape_string($_SESSION["uid"]);
   // All users users may change their own accounts, check when trying to change other accounts
@@ -101,8 +94,7 @@ if ($function=="edituser" or $function=="changepassword") {
       echo"<h1>Error Accessing Record</h1>\n";
       echo"You do not appear to have permission to edit this record.<br>\n";
       echo"<a href=\"?function=\">&#171;&#171; Go Back</a>\n";
-      include"$page_footer";
-      echo"</body>\n<html>\n";
+      require_once(FOOTER);
       exit;
     } else {
       $userid = $postuid;
@@ -319,8 +311,7 @@ if ($_POST["submit"]=="Update") {
       $username = htmlspecialchars($_POST["username"]);
       echo"<h1>Deleting User... Please wait...</h1>\n";
       echo"You've successfully deleted the user profile for $username...<br>\n";
-      include"$page_footer";
-      echo"</body>\n</html>\n";
+      require_once(FOOTER);
       exit;
     }
   }
@@ -540,7 +531,5 @@ if (!$userid) { $userid = escape_string($_POST["userid"]); }
 </div>
 
 <?php
-include"$page_footer";
+require_once(FOOTER);
 ?>
-</BODY>
-</HTML>

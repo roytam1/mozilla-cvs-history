@@ -36,15 +36,10 @@
 //
 // ***** END LICENSE BLOCK *****
 
-require"../core/config.php";
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html lang="en">
+require_once('../core/init.php');
 
-<head>
-<?php
 //Bookmarking-Friendly Page Title
-$id = escape_string($_GET["id"]);
+$id = escape_string($_GET['id']);
 $sql = "SELECT  Name FROM `main`  WHERE ID = '$id' AND Type = 'E' LIMIT 1";
 $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     if (mysql_num_rows($sql_result)===0) {
@@ -54,25 +49,27 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
     $row = mysql_fetch_array($sql_result);
 
 //Page Titles
-    $pagetitles = array("releases"=>"All Releases", "previews"=>"Preview Images", "comments"=>"User Comments", "staffreview"=>"Editor Review", "opinion"=>" My Opinion");
-    $pagetitle = $pagetitles[$_GET["page"]];
-?>
+$titles = array('releases'=>'All Releases', 'previews'=>'Preview Images', 'comments'=>'User Comments', 'staffreview'=>'Editor Review', 'opinion'=>' My Opinion');
+$title = strip_tags($titles[$_GET['page']]);
+$page_title = 'Mozilla Update :: Extensions -- More Info:'.$row['Name'];
+if (!empty($title)) 
+{
+    $page_title .= ' - '.$title;
+}
 
-    <title>Mozilla Update :: Extensions -- More Info: <?php echo"$row[Name]"; if ($pagetitle) {echo" - $pagetitle"; } ?></title>
-
-    <?php
-    installtrigger("extensions");
+installtrigger('extensions');
     
-    include"$page_header";
-    ?>
+require_once(HEADER);
+
+?>
 
 <div id="mBody">
 
 <?php
-$type = "E";
-$index = yes;
-$category=$_GET["category"];
-include"inc_sidebar.php";
+$type = 'E';
+$index = 'yes';
+$category=$_GET['category'];
+require_once('./inc_sidebar.php');
 ?>
 
 <?php
@@ -141,9 +138,6 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
         }
         if ($category) {
             $sql .="AND CatName LIKE '$category' ";
-        }
-        if ($app_version) {
-            $sql .=" AND TV.MinAppVer_int <= '".strtolower($app_version)."' AND TV.MaxAppVer_int >= '".strtolower($app_version)."' ";
         }
         if ($OS) {
             $sql .=" AND (TOS.OSName = '$OS' OR TOS.OSName = 'All') ";
@@ -265,8 +259,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
         echo"</select>&nbsp;<input name=\"go\" type=\"submit\" value=\"Go\">";
         echo"</form>";
         echo"</div>\n</div>\n";
-	    include"$page_footer";
-        echo"</body>\n</html>\n";
+        require_once(FOOTER);
         exit;
     }
 
@@ -284,17 +277,17 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
     ?>
 		<div class="rating" title="<?php echo"$rating"; ?> Stars out of 5">Rating: <?php
         for ($i = 1; $i <= floor($rating); $i++) {
-            echo"<IMG SRC=\"/images/stars/star_icon.png\" width=\"17\" height=\"20\" ALT=\""; if ($i==1) {echo"$rating stars out of 5 ";} echo"\">";
+            echo"<IMG SRC=\"../images/stars/star_icon.png\" width=\"17\" height=\"20\" ALT=\""; if ($i==1) {echo"$rating stars out of 5 ";} echo"\">";
         }
 
         if ($rating>floor($rating)) {
             $val = ($rating-floor($rating))*10;
-            echo"<IMG SRC=\"/images/stars/star_0$val.png\" width=\"17\" height=\"20\" ALT=\"\">";
+            echo"<IMG SRC=\"../images/stars/star_0$val.png\" width=\"17\" height=\"20\" ALT=\"\">";
             $i++;
         }
 
         for ($i = $i; $i <= 5; $i++) {
-            echo"<IMG SRC=\"/images/stars/graystar_icon.png\" width=\"17\" height=\"20\" ALT=\""; if ($i==1) {echo"$rating stars out of 5 ";} echo"\">";
+            echo"<IMG SRC=\"../images/stars/graystar_icon.png\" width=\"17\" height=\"20\" ALT=\""; if ($i==1) {echo"$rating stars out of 5 ";} echo"\">";
         }
         ?>
         </div>
@@ -323,8 +316,8 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
         <A HREF="?<?php echo"".uriparams()."&amp;id=$id&amp;page=previews"; ?>">
         <?php } ?>
         <?php
-            list($width, $height, $attr) = getimagesize("$websitepath"."$previewuri");
-            echo"<img src=\"$previewuri\" height=$height width=$width alt=\"$name preview - $caption\" title=\"$caption\">\n";
+            list($width, $height, $attr) = getimagesize(FILE_PATH.$previewuri);
+            echo"<img src=\"..$previewuri\" height=$height width=$width alt=\"$name preview - $caption\" title=\"$caption\">\n";
         ?>
         <?php if (mysql_num_rows($sql_result)>"0") { ?>
         </a>
@@ -345,10 +338,10 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
         }
         ?>
         </p>
-		<p class="requires">Requires: <?php echo ucwords($appname).": $minappver - $maxappver"; ?> <img src="/images/<?php echo strtolower($appname); ?>_icon.png" width="34" height="34" alt="<?php echo ucwords($appname); ?>">
+		<p class="requires">Requires: <?php echo ucwords($appname).": $minappver - $maxappver"; ?> <img src="../images/<?php echo strtolower($appname); ?>_icon.png" width="34" height="34" alt="<?php echo ucwords($appname); ?>">
         <?php
         if($osname !=="ALL") {
-            echo"on ".ucwords($osname)." <IMG SRC=\"/images/".strtolower($osname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"<?php echo ucwords($osname); ?>\">";
+            echo"on ".ucwords($osname)." <IMG SRC=\"../images/".strtolower($osname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"<?php echo ucwords($osname); ?>\">";
         }
         ?>
         </p>
@@ -357,9 +350,9 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
 
             if ($appname=="Thunderbird") { 
               $downloadURL=mozupd_buildDownloadURL($uri,$name,$version);
-              echo "<a href=\"$downloadURL\" onclick=\"return install(event,'$name $version for Thunderbird', '/images/default.png');\"  title=\"Right-Click to Download $name $version\">";
+              echo "<a href=\"$downloadURL\" onclick=\"return install(event,'$name $version for Thunderbird', '../images/default.png');\"  title=\"Right-Click to Download $name $version\">";
             } else {
-                echo"<b><a href=\"$uri\" onclick=\"return install(event,'$name $version', '/images/default.png');\" TITLE=\"Install $name $version (Right-Click to Download)\">";
+                echo"<b><a href=\"$uri\" onclick=\"return install(event,'$name $version', '../images/default.png');\" TITLE=\"Install $name $version (Right-Click to Download)\">";
             }
         ?>Install Now</a></b> (<?php echo"$filesize"; ?>&nbsp;KB&nbsp;File)</div></div>
 
@@ -416,7 +409,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
 		<p><strong><a href="?<?php echo"".uriparams()."&amp;id=$id&amp;page=opinion"; ?>">Add your own opinion &#187;</a></strong></p>
 		<ul id="opinions">
         <?php
-        $sql = "SELECT CommentName, CommentTitle, CommentNote, CommentDate, CommentVote FROM  `feedback` WHERE ID = '$id' AND CommentNote IS NOT NULL ORDER  BY `CommentDate` DESC LIMIT 5";
+        $sql = "SELECT CommentName, CommentTitle, CommentNote, CommentDate, CommentVote FROM  feedback WHERE ID = '$id' AND CommentNote IS NOT NULL ORDER  BY `CommentDate` DESC LIMIT 5";
         $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
             $num_results = mysql_num_rows($sql_result);
             while ($row = mysql_fetch_array($sql_result)) {
@@ -437,10 +430,10 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
             if ($rating != NULL) {
                 echo"<p class=\"opinions-rating\" title=\"$rating of 5 stars\">";
                 for ($i = 1; $i <= $rating; $i++) {
-                    echo"<IMG SRC=\"/images/stars/star_icon.png\" WIDTH=17 HEIGHT=20 ALT=\"*\">";
+                    echo"<IMG SRC=\"../images/stars/star_icon.png\" WIDTH=17 HEIGHT=20 ALT=\"*\">";
                 }
                 for ($i = $i; $i <= 5; $i++) {
-                echo"<IMG SRC=\"/images/stars/graystar_icon.png\" WIDTH=17 HEIGHT=20 ALT=\"\">";
+                echo"<IMG SRC=\"../images/stars/graystar_icon.png\" WIDTH=17 HEIGHT=20 ALT=\"\">";
                 }
                 echo"</p>\n";
             }
@@ -450,7 +443,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
             if ($num_results=="0") {
                 echo"<li>\n";
                 echo"<h4>Nobody's Commented on this Extension Yet</h4>\n";
-                echo"<p class=\"opinions-text\">Be the First! <A HREF=\"moreinfo.php?".uriparams()."&amp;id=$id&amp;page=opinion\">Rate It!</A></p>";
+                echo"<p class=\"opinions-text\">Be the First! <A HREF=\"./moreinfo.php?".uriparams()."&amp;id=$id&amp;page=opinion\">Rate It!</A></p>";
                 echo"</li>\n";
             }
         ?>
@@ -535,7 +528,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
             echo"<DIV>"; //Open Version DIV
 
             //Description & Version Notes
-            echo"<h3><A HREF=\"moreinfo.php?".uriparams()."&amp;id=$id&amp;vid=$vid\">$name $version</A></h3>\n";
+            echo"<h3><A HREF=\"./moreinfo.php?".uriparams()."&amp;id=$id&amp;vid=$vid\">$name $version</A></h3>\n";
             echo"Released on $releasedate<br>\n";
             if ($notes) {
                 echo"$notes<br><br>\n";
@@ -546,14 +539,14 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
             echo"<DIV class=\"iconbar\">";
             if ($appname=="Thunderbird") {
               $downloadURL=mozupd_buildDownloadURL($uri,$name,$version);
-              echo "<a href=\"$downloadURL\" onclick=\"return install(event,'$name $version for Thunderbird', '/images/default.png');\">";
+              echo "<a href=\"$downloadURL\" onclick=\"return install(event,'$name $version for Thunderbird', '../images/default.png');\">";
             } else {
-                echo"<a href=\"$uri\" onclick=\"return install(event,'$name $version', '/images/default.png');\">";
+                echo"<a href=\"$uri\" onclick=\"return install(event,'$name $version', '../images/default.png');\">";
             }
-            echo"<IMG SRC=\"/images/download.png\" HEIGHT=34 WIDTH=34 TITLE=\"Install $name (Right-Click to Download)\" ALT=\"\">Install</A><BR><SPAN class=\"filesize\">Size: $filesize kb</SPAN></DIV>";
-            echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($appname)."_icon.png\" HEIGHT=34 WIDTH=34 ALT=\"\">&nbsp;For $appname:<BR>&nbsp;&nbsp;$minappver - $maxappver</DIV>";
+            echo"<IMG SRC=\"../images/download.png\" HEIGHT=34 WIDTH=34 TITLE=\"Install $name (Right-Click to Download)\" ALT=\"\">Install</A><BR><SPAN class=\"filesize\">Size: $filesize kb</SPAN></DIV>";
+            echo"<DIV class=\"iconbar\"><IMG SRC=\"../images/".strtolower($appname)."_icon.png\" HEIGHT=34 WIDTH=34 ALT=\"\">&nbsp;For $appname:<BR>&nbsp;&nbsp;$minappver - $maxappver</DIV>";
             if($osname !=="ALL") {
-                echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($osname)."_icon.png\" HEIGHT=34 WIDTH=34 ALT=\"\">For&nbsp;$osname<BR>only</DIV>";
+                echo"<DIV class=\"iconbar\"><IMG SRC=\"../images/".strtolower($osname)."_icon.png\" HEIGHT=34 WIDTH=34 ALT=\"\">For&nbsp;$osname<BR>only</DIV>";
             }
             echo"</DIV><BR>\n";
 
@@ -618,10 +611,10 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
             if ($rating != NULL) {
                 echo"<p class=\"opinions-rating\" title=\"$rating of 5 stars\">";
                 for ($i = 1; $i <= $rating; $i++) {
-                    echo"<IMG SRC=\"/images/stars/star_icon.png\" WIDTH=17 HEIGHT=20 ALT=\"*\">";
+                    echo"<IMG SRC=\"../images/stars/star_icon.png\" WIDTH=17 HEIGHT=20 ALT=\"*\">";
                 }
                 for ($i = $i; $i <= 5; $i++) {
-                echo"<IMG SRC=\"/images/stars/graystar_icon.png\" WIDTH=17 HEIGHT=20 ALT=\"\">";
+                echo"<IMG SRC=\"../images/stars/graystar_icon.png\" WIDTH=17 HEIGHT=20 ALT=\"\">";
                 }
 
                 //XXX Meta-Ratings not Production Ready, disabled. Bug 247144.
@@ -643,7 +636,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
             if ($num_results=="0") {
                 echo"<li>\n";
                 echo"<h4>Nobody's Commented on this Extension Yet</h4>\n";
-                echo"<p class=\"opinions-text\">Be the First! <A HREF=\"moreinfo.php?".uriparams()."&amp;id=$id&amp;page=opinion\">Rate It!</A></p>";
+                echo"<p class=\"opinions-text\">Be the First! <A HREF=\"./moreinfo.php?".uriparams()."&amp;id=$id&amp;page=opinion\">Rate It!</A></p>";
                 echo"</li>\n";
             }
         ?>
@@ -713,7 +706,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
             $caption = $row["caption"];
 
             echo"<h4>$caption</h4>";
-            list($src_width, $src_height, $type, $attr) = getimagesize("$websitepath/$uri");
+            list($src_width, $src_height, $type, $attr) = getimagesize(FILE_PATH.'/'.$uri);
 
             //Scale Image Dimensions
             $dest_width="690"; // Destination Width /$tn_size_width
@@ -773,7 +766,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
         if ($num_results=="0") {
             echo"This $typename has not yet been reviewed.<BR><BR>
 
-            To see what other users think of this $typename, view the <A HREF=\"moreinfo.php?".uriparams()."&amp;id=$id&amp;page=comments\">User Comments...</A>
+            To see what other users think of this $typename, view the <A HREF=\"./moreinfo.php?".uriparams()."&amp;id=$id&amp;page=comments\">User Comments...</A>
             ";
         }
 
@@ -838,7 +831,5 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
 <!-- closes #mBody-->
 
 <?php
-include"$page_footer";
+require_once(FOOTER);
 ?>
-</body>
-</html>

@@ -37,7 +37,7 @@
 // ***** END LICENSE BLOCK *****
 ?>
 <?php 
-require"../core/config.php";
+require_once('../core/init.php');
 
 //Get Full Information for the file requested.
 $uri = escape_string(str_replace(" ","+",$_GET["uri"]));

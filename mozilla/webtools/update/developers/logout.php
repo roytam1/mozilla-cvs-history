@@ -1,10 +1,10 @@
 <?php
-require"core/sessionconfig.php";
+require_once('../core/init.php');
+require_once('./core/sessionconfig.php');
 
 session_unset();
 session_destroy();
 
-$return_path="developers/index.php?logout=true";
-
-header("Location: http://$_SERVER[SERVER_NAME]/$return_path");
+header('Location: https://'.HOST_NAME.WEB_PATH.'/developers/');
+exit;
 ?>

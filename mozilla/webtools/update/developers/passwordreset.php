@@ -1,13 +1,8 @@
 <?php
-require"../core/config.php";
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<HTML>
-<HEAD>
-<TITLE>Mozilla Update :: Password Reset</TITLE>
+require_once('../core/init.php');
+$page_title = 'Mozilla Update :: Password Reset';
+require_once(HEADER);
 
-<?php
-include"$page_header";
 ?>
 <hr class="hide">
 <div id="mBody">
@@ -40,12 +35,10 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
    echo"An error was encountered when trying to reset your password, verify the e-mail you entered is correct and try again.<br>\n";
    }
 
-include"$page_footer";
-echo"</body>\n</html>\n";
+require_once(FOOTER);
 exit;
 }
 ?>
-
 
 <h2>Reset Your Password</h2>
 <P>Forgot the password to your Mozilla Update account? No problem. Just put your e-mail address in the form below, and a new password will
@@ -65,8 +58,7 @@ be generated and e-mailed to the e-mail address you have on file.</P>
 </form>
 
 </div>
+
 <?php
-include"$page_footer";
+require_once(FOOTER);
 ?>
-</BODY>
-</HTML>

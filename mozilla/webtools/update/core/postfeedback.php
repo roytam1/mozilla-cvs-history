@@ -37,7 +37,7 @@
 // ***** END LICENSE BLOCK *****
 
 //Submit Review/Rating Feedback to Table
-require"../core/config.php";
+require_once('../core/init.php');
 
 
 //Check and see if the ID/vID is valid.
@@ -156,6 +156,6 @@ if (!$action) {
 }
 
 $return_path="$type/moreinfo.php?id=$id&vid=$vid&page=comments&action=$action";
-header("Location: http://$sitehostname/$return_path");
+header('Location: http://'.HOST_NAME.'/'.$return_path);
 exit;
 ?>

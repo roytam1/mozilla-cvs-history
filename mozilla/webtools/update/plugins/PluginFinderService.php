@@ -38,13 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/// config bits:
-$db_server = "";
-$db_user = "";
-$db_pass = "";
-$db_name = "";
-
-include("uniqueUrl.php");
+require_once('uniqueUrl.php');
 
 // error handling
 function bail ($errstr) {

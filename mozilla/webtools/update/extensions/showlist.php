@@ -37,14 +37,8 @@
 // ***** END LICENSE BLOCK *****
 ?>
 <?php
-require"../core/config.php";
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html lang="en">
+require_once('../core/init.php');
 
-<head>
-
-<?php
 //----------------------------
 //Global $_GET variables
 //----------------------------
@@ -58,7 +52,7 @@ $type="E"; //Default Type is E
 
 unset($typename);
 $types = array("E"=>"Extensions","T"=>"Themes","U"=>"Updates");
-$typename = $types["$type"];
+$typename = $types[$type];
 
 //RSS Autodiscovery Link Stuff
 switch ($_SESSION["category"]) {
@@ -76,26 +70,28 @@ switch ($_SESSION["category"]) {
 $rssfeed = "rss/?application=" . $application . "&type=" . $type . "&list=" . $rsslist;
 
 if (!$category) {$categoryname = "All $typename"; } else {$categoryname = $category; }
-?>
 
-<TITLE>Mozilla Update :: Extensions - List - <?php echo"$categoryname"; if ($pageid) {echo" - Page $pageid"; } ?></TITLE>
-
-<?php
-if ($rsslist) {
-echo"<link rel=\"alternate\" type=\"application/rss+xml\" title=\"RSS\" href=\"http://$sitehostname/$rssfeed\">";
+$page_title = 'Mozilla Update :: Extensions - List - '.$categoryname;
+if ($pageid) {
+    $page_title .= ' - Page '.$pageid; 
 }
-?>
 
-<?php
+if ($rsslist) {
+    $page_headers = '<link rel="alternate" type="application/rss+xml"
+        title="RSS" href="http://'.HOST_NAME.'/'.$rssfeed.'>';
+}
+
+ob_start();
 installtrigger("extensions");
-
-include"$page_header";
+$page_headers = ob_get_clean();
+require_once(HEADER);
 
 ?>
 <div id="mBody">
-    <?php
-    include"inc_sidebar.php";
-    ?>
+
+<?php
+require_once('./inc_sidebar.php');
+?>
 
 	<div id="mainContent">
 
@@ -369,17 +365,17 @@ echo"<DIV class=\"item\">\n";
         echo"<div class=\"rating\" title=\"$rating Stars out of 5\">Rating: ";
 
         for ($i = 1; $i <= floor($rating); $i++) {
-            echo"<IMG SRC=\"/images/stars/star_icon.png\" width=\"17\" height=\"20\" ALT=\""; if ($i==1) {echo"$rating stars out of 5 ";} echo"\">";
+            echo"<IMG SRC=\"../images/stars/star_icon.png\" width=\"17\" height=\"20\" ALT=\""; if ($i==1) {echo"$rating stars out of 5 ";} echo"\">";
         }
 
         if ($rating>floor($rating)) {
             $val = ($rating-floor($rating))*10;
-            echo"<IMG SRC=\"/images/stars/star_0$val.png\" width=\"17\" height=\"20\" ALT=\"\">";
+            echo"<IMG SRC=\"../images/stars/star_0$val.png\" width=\"17\" height=\"20\" ALT=\"\">";
             $i++;
         }
 
         for ($i = $i; $i <= 5; $i++) {
-            echo"<IMG SRC=\"/images/stars/graystar_icon.png\" width=\"17\" height=\"20\" ALT=\""; if ($i==1) {echo"$rating stars out of 5 ";} echo"\">";
+            echo"<IMG SRC=\"../images/stars/graystar_icon.png\" width=\"17\" height=\"20\" ALT=\""; if ($i==1) {echo"$rating stars out of 5 ";} echo"\">";
         }
 
 
@@ -392,7 +388,7 @@ echo"<h2 class=\"first\"><A HREF=\"moreinfo.php?".uriparams()."&amp;id=$id\">$na
 
         echo"<p class=\"screenshot\">\n";
 
-            list($width, $height, $attr) = getimagesize("$websitepath"."$previewuri");
+            list($width, $height, $attr) = getimagesize(FILE_PATH.'/'.$previewuri);
             echo"<a href=\"moreinfo.php?".uriparams()."&amp;id=$id\"><img src=\"$previewuri\" height=$height width=$width alt=\"$name preview - $caption\" title=\"$caption\"></a>\n";
 
         echo"</p>\n";
@@ -418,14 +414,15 @@ echo"</p>";
 echo"<DIV style=\"margin-top: 30px; height: 34px\">";
 echo"<DIV class=\"iconbar\">";
 if ($appname=="Thunderbird") {
-    echo"<A HREF=\"moreinfo.php?".uriparams()."&amp;id=$id\"><IMG SRC=\"/images/download.png\" HEIGHT=32 WIDTH=32 TITLE=\"More Info about $name\" ALT=\"\">More Info</A>";
+    echo"<A HREF=\"moreinfo.php?".uriparams()."&amp;id=$id\"><IMG SRC=\"../images/download.png\" HEIGHT=32 WIDTH=32 TITLE=\"More Info about $name\" ALT=\"\">More Info</A>";
 } else {
-    echo"<a href=\"$uri\" onclick=\"return install(event,'$name $version', '/images/default.png');\"><IMG SRC=\"/images/download.png\" HEIGHT=32 WIDTH=32 TITLE=\"Install $name\" ALT=\"\">Install</A>";
+    echo"<a href=\"$uri\" onclick=\"return install(event,'$name $version',
+    '../images/default.png');\"><IMG SRC=\"../images/download.png\" HEIGHT=32 WIDTH=32 TITLE=\"Install $name\" ALT=\"\">Install</A>";
 }
 echo"<BR><SPAN class=\"filesize\">&nbsp;&nbsp;$filesize kb</SPAN></DIV>";
-echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($appname)."_icon.png\" HEIGHT=34 WIDTH=34 ALT=\"\">&nbsp;For $appname:<BR>&nbsp;&nbsp;$minappver - $maxappver</DIV>";
-if($osname !=="ALL") { echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($osname)."_icon.png\" HEIGHT=34 WIDTH=34 ALT=\"\">For&nbsp;$osname<BR>only</DIV>"; }
-//if ($homepage) {echo"<DIV class=\"iconbar\"><A HREF=\"$homepage\"><IMG SRC=\"/images/home.png\" HEIGHT=34 WIDTH=34 TITLE=\"$name Homepage\" ALT=\"\">Homepage</A></DIV>";}
+echo"<DIV class=\"iconbar\"><IMG SRC=\"../images/".strtolower($appname)."_icon.png\" HEIGHT=34 WIDTH=34 ALT=\"\">&nbsp;For $appname:<BR>&nbsp;&nbsp;$minappver - $maxappver</DIV>";
+if($osname !=="ALL") { echo"<DIV class=\"iconbar\"><IMG SRC=\"../images/".strtolower($osname)."_icon.png\" HEIGHT=34 WIDTH=34 ALT=\"\">For&nbsp;$osname<BR>only</DIV>"; }
+//if ($homepage) {echo"<DIV class=\"iconbar\"><A HREF=\"$homepage\"><IMG //SRC=\"../images/home.png\" HEIGHT=34 WIDTH=34 TITLE=\"$name Homepage\" ALT=\"\">Homepage</A></DIV>";}
 echo"</DIV>";
 
 echo"<DIV class=\"baseline\">$datestring";
@@ -503,8 +500,5 @@ if ($i==$pageid) {
 ?>
 </div>
 <?php
-include"$page_footer";
+require_once(FOOTER);
 ?>
-</div>
-</BODY>
-</HTML>

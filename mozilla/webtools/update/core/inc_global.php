@@ -67,8 +67,6 @@ function escape_string($value)
    return $value;
 }
 
-
-
 //Remove HTML tags and escape enities from GET/POST vars.
 foreach ($_GET as $key => $val) {
     $_GET["$key"] = htmlentities(str_replace("\\","",strip_tags($_GET["$key"])));
@@ -105,11 +103,8 @@ if (!is_numeric($_GET["numpg"])) { unset($_GET["numpg"]); }
 // page_error() function
 
 function page_error($reason, $custom_message) {
-    global $page_header, $page_footer;
-
-    echo"<TITLE>Mozilla Update :: Error</TITLE>\n";
-
-    include"$page_header";
+    $page_title = 'Mozilla Update :: Error';
+    require_once(HEADER);
     echo"<div id=\"mBody\">";
     echo"<h1>Mozilla Update :: Error</h1>\n";
     echo"<SPAN style=\"font-size: 12pt\">\n";
@@ -120,8 +115,7 @@ function page_error($reason, $custom_message) {
     &nbsp;&nbsp;&nbsp;<A HREF=\"javascript:history.back()\">&#171;&#171; Go Back to Previous Page</A>";
     echo"</SPAN>\n";
     echo"</div>\n";
-    include"$page_footer";
-    echo"</body>\n</html>\n";
+    require_once(FOOTER);
     exit;
 }
 
@@ -180,7 +174,7 @@ function installtrigger($functionname) {
 
         function install( aEvent, extName, iconURL)  {   
             var p = new XMLHttpRequest();
-            p.open("GET", "'.$sitehostname.'/core/install.php?uri="+aEvent.target.href, false);
+            p.open("GET", "'.WEB_PATH.'/core/install.php?uri="+aEvent.target.href, false);
             p.send(null);
 
             var params = new Array();
@@ -204,7 +198,7 @@ function installtrigger($functionname) {
         <!--
             function installTheme( aEvent, extName) {
                 var p = new XMLHttpRequest();
-                p.open("GET", "/core/install.php?uri="+aEvent.target.href, false);
+                p.open("GET", "'.WEB_PATH.'/core/install.php?uri="+aEvent.target.href, false);
                 p.send(null);
 
                 InstallTrigger.installChrome(InstallTrigger.SKIN,aEvent.target.href,extName);
@@ -247,5 +241,14 @@ function mozupd_buildDownloadURL($uri, $name, $version,
  
   return htmlspecialchars( // if we don't escape '&' and friends validator cries
     "/core/install.php/$filename?passthrough=yes&uri=$uri");
+}
+
+/**
+ * Get time as a float.
+ * @return float
+ */
+function getmicrotime() {
+	list($usec, $sec) = explode(" ", microtime());
+    return ((float)$usec + (float)$sec);
 }
 ?>

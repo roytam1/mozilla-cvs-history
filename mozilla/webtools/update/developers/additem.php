@@ -1,19 +1,12 @@
 <?php
-require"../core/config.php";
-require"core/sessionconfig.php";
-$function = $_GET["function"];
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
-<HTML>
-<HEAD>
-<TITLE>Mozilla Update :: Developer Control Panel :: Add Item</TITLE>
-<?php
-include"$page_header";
-include"inc_sidebar.php";
-include"parse_install_manifest.php";
-?>
+require_once('../core/init.php');
+require_once('./core/sessionconfig.php');
+$function = $_GET['function'];
+$page_title = 'Mozilla Update :: Developer Control Panel :: Add Item';
+require_once(HEADER);
+require_once('./inc_sidebar.php');
+require_once('./parse_install_manifest.php');
 
-<?php
 if (!$function or $function=="additem") {
 if (!$_GET["type"]) {$_GET["type"] = "E"; }
 $typearray = array("E"=>"Extension","T"=>"Theme");
@@ -52,7 +45,7 @@ if ($status==0) {$statusresult="Success!";
 } else if ($status==4) {$statusresult="Error: No File Was Uploaded";
 }
 $manifest_exists = "FALSE";
-$destination = "$repositorypath/temp/$filename";
+$destination = REPO_PATH."/temp/$filename";
 if (move_uploaded_file($uploadedfile, $destination)) {
 $uploadedfile = $destination;
 $chmod_result = chmod("$uploadedfile", 0644); //Make the file world readable. prevent nasty permissions issues.
@@ -62,7 +55,7 @@ $chmod_result = chmod("$uploadedfile", 0644); //Make the file world readable. pr
 if ($_POST["legacy"]=="TRUE") {
 $filename = escape_string($_POST["filename"]);
 $filesize = escape_string($_POST["filesize"]);
-$uploadedfile="$repositorypath/temp/$filename";
+$uploadedfile=REPO_PATH."/temp/$filename";
 }
 $zip = @zip_open("$uploadedfile");
 if ($zip) {
@@ -482,8 +475,7 @@ if ($sql_result) {echo"Updating/Adding record for $name...<br>\n";
     //Handle Error Case and Abort
     $failure = "true";
     echo"Failure to successfully add/update main record. Unrecoverable Error, aborting.<br>\n";
-    include"$page_footer";
-    echo"</body>\n</html>\n";
+    require_once(FOOTER);
     exit;
     }
 
@@ -492,8 +484,7 @@ if ($sql_result) {echo"Updating/Adding record for $name...<br>\n";
     //Handle Error Case and Abort
     $failure = "true";
     echo"<strong>Error!</strong> The Name for your extension or theme already exists in the Update database.<br>\nCannot Continue, aborting.<br>\n";
-    include"$page_footer";
-    echo"</body>\n</html>\n";
+    require_once(FOOTER);
     exit;
 }
 
@@ -652,13 +643,13 @@ $newfilename .=".$fileext";
 
 
 //Move temp XPI to home for approval queue items...
-$oldpath = "$repositorypath/temp/$_POST[filename]";
-$newpath = "$repositorypath/approval/".strtolower($newfilename);
+$oldpath = REPO_PATH."/temp/{$_POST['filename']}";
+$newpath = REPO_PATH."/approval/".strtolower($newfilename);
 if (file_exists($oldpath)) { 
   rename("$oldpath","$newpath");
   echo"File $newfilename saved to disk...<br>\n";
 }
-$uri = str_replace("$repositorypath/approval/","http://$sitehostname/developers/approvalfile.php/",$newpath);
+$uri = str_replace(REPO_PATH.'/approval/','http://'.HOST_NAME.'/developers/approvalfile.php/',$newpath);
 //echo"$newfilename ($oldpath) ($newpath) ($uri)<br>\n";
 
 foreach ($vid_array as $vid) {
@@ -772,7 +763,5 @@ $authors = $_POST["authors"];
 </div>
 
 <?php
-include"$page_footer";
+require_once(FOOTER);
 ?>
-</BODY>
-</HTML>

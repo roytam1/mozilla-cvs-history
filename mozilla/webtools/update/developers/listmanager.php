@@ -1,22 +1,16 @@
 <?php
-require"../core/config.php";
-require"core/sessionconfig.php";
-$function = $_GET["function"];
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
-<HTML>
-<HEAD>
-<TITLE>Mozilla Update :: Developer Control Panel :: List Manager</TITLE>
-<?php
-include"$page_header";
-include"inc_sidebar.php";
+require"../core/init.php";
+require"./core/sessionconfig.php";
+$function = $_GET['function'];
+$page_title = 'Mozilla Update :: Developer Control Panel :: List Manager';
+require_once(HEADER);
+require_once('./inc_sidebar.php');
 
 //this screen is only for admins
 if ($_SESSION["level"] !=="admin") {
   echo"<h1>Access Denied</h1>\n";
   echo"You do not have access to this item.";
-  include"$page_footer";
-  echo"</body></html>\n";
+  include(FOOTER);
   exit;
 }
 ?>
@@ -215,10 +209,10 @@ echo"<h1>Deleting $name, please wait...</h1>\n";
 
     //Delete File(s) from server
       if (strpos("$uri","approvalfile.php/")) {
-        $file = str_replace("http://$sitehostname/developers/approvalfile.php/","$repositorypath/approval/",$uri);
+        $file = str_replace('http://'.HOST_NAME.'/developers/approvalfile.php/',REPO_PATH.'/approval/',$uri);
       } else if (strpos("$uri","ftp.mozilla.org")) {
         $ftppath = $uri;
-        $file = str_replace("http://ftp.mozilla.org/pub/mozilla.org/","$repositorypath/ftp/",$uri);
+        $file = str_replace("http://ftp.mozilla.org/pub/mozilla.org/",REPO_PATH.'/ftp/',$uri);
       }
 
       if (file_exists($file)) {
@@ -237,7 +231,7 @@ echo"<h1>Deleting $name, please wait...</h1>\n";
     if ($ftppath) {
     $basename = basename($ftppath);
     $ftppath = str_replace("/$basename","",$ftppath);
-    $ftppath = str_replace("http://ftp.mozilla.org/pub/mozilla.org","$repositorypath/ftp",$ftppath);
+    $ftppath = str_replace("http://ftp.mozilla.org/pub/mozilla.org",REPO_PATH."/ftp",$ftppath);
     if (@rmdir($ftppath)) {
     echo"Removed Directory for $name...<br>\n";
     } else {
@@ -251,8 +245,7 @@ echo"<h1>Deleting $name, please wait...</h1>\n";
     if ($sql_result) {
     echo"$name has been deleted...<br>\n";
     echo"<a href=\"./\">&#171;&#171; Back to Main Page...</a><br>\n";
-    include"$page_footer";
-    echo"</body>\n</html>\n";
+    require_once(FOOTER);
     exit;
     }
    }
@@ -472,9 +465,9 @@ $sql = "SELECT `Name` FROM `main` WHERE `ID` = '$id'";
     if ($sql_result) {
     //Delete File from server
     if (strpos("$uri","approvalfile.php/")) {
-    $file = str_replace("http://$sitehostname/developers/approvalfile.php/","$repositorypath/approval/",$uri);
+    $file = str_replace('http://'.HOST_NAME.'/developers/approvalfile.php/',REPO_PATH.'/approval/',$uri);
     } else if (strpos("$uri","ftp.mozilla.org")) {
-    $file = str_replace("http://ftp.mozilla.org/pub/mozilla.org/","$repositorypath/ftp/",$uri);
+    $file = str_replace('http://ftp.mozilla.org/pub/mozilla.org/',REPO_PATH.'/ftp/',$uri);
     }
 
     if (file_exists($file)) {
@@ -489,7 +482,7 @@ $sql = "SELECT `Name` FROM `main` WHERE `ID` = '$id'";
     
     echo"<DIV>$name $version has been deleted...<br>
     <a href=\"itemoverview.php?id=$id\">&#171;&#171; Back to the $name overview page...</a></DIV>";
-    include"$page_footer";
+    require_once(FOOTER);
     echo"</BODY></HTML>";
     exit;
     }
@@ -621,7 +614,5 @@ $sql = "SELECT * FROM `os` ORDER BY `OSName` ASC";
 </div>
 
 <?php
-include"$page_footer";
+require_once(FOOTER);
 ?>
-</BODY>
-</HTML>

@@ -36,13 +36,8 @@
 //
 // ***** END LICENSE BLOCK *****
 
-require"../core/config.php";
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html lang="en">
+require_once('../core/init.php');
 
-<head>
-<?php
 //Bookmarking-Friendly Page Title
 $id = escape_string($_GET["id"]);
 $sql = "SELECT  Name FROM `main`  WHERE ID = '$id' AND Type = 'T' LIMIT 1";
@@ -54,17 +49,18 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
     $row = mysql_fetch_array($sql_result);
 
 //Page Titles
-    $pagetitles = array("releases"=>"All Releases", "previews"=>"Preview Images", "comments"=>"User Comments", "staffreview"=>"Editor Review", "opinion"=>" My Opinion");
-    $pagetitle = $pagetitles[$_GET["page"]];
+    $titles = array('releases'=>'All Releases', 'previews'=>'Preview Images', 'comments'=>'User Comments', 'staffreview'=>'Editor Review', 'opinion'=>' My Opinion');
+    $title = $titles[$_GET['page']];
+$page_title = 'Mozilla Update :: Themes -- More Info: '.$row['Name']; 
+if ($title) {
+    $page_title .= ' - '.$title;
+}
+
+installtrigger("themes");
+
+require_once(HEADER);
+
 ?>
-
-    <title>Mozilla Update :: Themes -- More Info: <?php echo"$row[Name]"; if ($pagetitle) {echo" - $pagetitle"; } ?></title>
-
-    <?php
-    installtrigger("themes");
-    
-    include"$page_header";
-    ?>
 
 <div id="mBody">
 
@@ -72,7 +68,7 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
 $type = "T";
 $index = yes;
 $category=$_GET["category"];
-include"inc_sidebar.php";
+require_once('./inc_sidebar.php');
 
 $id = escape_string($_GET["id"]);
 
@@ -154,10 +150,6 @@ if ($_GET["vid"]) {
     $sql .="AND CatName LIKE '$category' ";
   }
 
-  if ($app_version) {
-    $sql .=" AND TV.MinAppVer_int <= '".strtolower($app_version)."' AND TV.MaxAppVer_int >= '".strtolower($app_version)."' ";
-  }
-
   if ($OS) {
     $sql .=" AND (TOS.OSName = '$OS' OR TOS.OSName = 'All') ";
   }
@@ -221,7 +213,7 @@ if ($_GET["vid"]) {
   foreach ($authors as $author) {
     $userid = $authorids[$author];
     $n++;
-    $authorstring .= "<A HREF=\"authorprofiles.php?".uriparams()."&amp;id=$userid\">$author</A>";
+    $authorstring .= "<A HREF=\"authorprofiles.php?id=$userid\">$author</A>";
     if ($authorcount != $n) {
       $authorstring .=", ";
     }
@@ -283,8 +275,7 @@ if ($_GET["vid"]) {
     echo"</select>&nbsp;<input name=\"go\" type=\"submit\" value=\"Go\">";
     echo"</form>";
     echo"</div>\n</div>\n";
-	  include"$page_footer";
-    echo"</body>\n</html>\n";
+    require_once(FOOTER);
     exit;
   }
 
@@ -302,23 +293,23 @@ if ($_GET["vid"]) {
     ?>
 		<div class="rating" title="<?php echo"$rating"; ?> Stars out of 5">Rating: <?php
         for ($i = 1; $i <= floor($rating); $i++) {
-            echo"<IMG SRC=\"/images/stars/star_icon.png\" width=\"17\" height=\"20\" ALT=\""; if ($i==1) {echo"$rating stars out of 5 ";} echo"\">";
+            echo"<IMG SRC=\"../images/stars/star_icon.png\" width=\"17\" height=\"20\" ALT=\""; if ($i==1) {echo"$rating stars out of 5 ";} echo"\">";
         }
 
         if ($rating>floor($rating)) {
             $val = ($rating-floor($rating))*10;
-            echo"<IMG SRC=\"/images/stars/star_0$val.png\" width=\"17\" height=\"20\" ALT=\"\">";
+            echo"<IMG SRC=\"../images/stars/star_0$val.png\" width=\"17\" height=\"20\" ALT=\"\">";
             $i++;
         }
 
         for ($i = $i; $i <= 5; $i++) {
-            echo"<IMG SRC=\"/images/stars/graystar_icon.png\" width=\"17\" height=\"20\" ALT=\""; if ($i==1) {echo"$rating stars out of 5 ";} echo"\">";
+            echo"<IMG SRC=\"../images/stars/graystar_icon.png\" width=\"17\" height=\"20\" ALT=\""; if ($i==1) {echo"$rating stars out of 5 ";} echo"\">";
         }
         ?>
         </div>
     <?php } ?>
 		<h2 class="first"><strong><?php echo"$name"; ?></strong> - <?php echo ucwords("$application")." Theme"; ?></h2>
-		<p class="first"><a href="?<?php echo uriparams()."&amp;id=$id"; ?>"><?php echo"$name $version"; ?></a>, by <?php echo"$authors"; ?>, released on <?php echo"$releasedate"; ?></p>
+		<p class="first"><a href="./moreinfo.php?id=<?php echo $id; ?>"><?php echo"$name $version"; ?></a>, by <?php echo"$authors"; ?>, released on <?php echo"$releasedate"; ?></p>
 
 
     <?php
@@ -341,7 +332,7 @@ if ($_GET["vid"]) {
         <A HREF="?<?php echo"".uriparams()."&amp;id=$id&amp;page=previews"; ?>">
         <?php } ?>
         <?php
-            list($width, $height, $attr) = getimagesize("$websitepath"."$previewuri");
+            list($width, $height, $attr) = getimagesize(FILE_PATH.'/'.$previewuri);
             echo"<img src=\"$previewuri\" height=$height width=$width alt=\"$name preview - $caption\" title=\"$caption\">\n";
         ?>
         <?php if (mysql_num_rows($sql_result)>"0") { ?>
@@ -363,10 +354,11 @@ if ($_GET["vid"]) {
         }
         ?>
         </p>
-		<p class="requires">Requires: <?php echo ucwords($appname).": $minappver - $maxappver"; ?> <img src="/images/<?php echo strtolower($appname); ?>_icon.png" width="34" height="34" alt="<?php echo ucwords($appname); ?>">
+		<p class="requires">Requires: <?php echo ucwords($appname).": $minappver
+        - $maxappver"; ?> <img src="../images/<?php echo strtolower($appname); ?>_icon.png" width="34" height="34" alt="<?php echo ucwords($appname); ?>">
         <?php
         if($osname !=="ALL") {
-            echo"on ".ucwords($osname)." <IMG SRC=\"/images/".strtolower($osname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"<?php echo ucwords($osname); ?>\">";
+            echo"on ".ucwords($osname)." <IMG SRC=\"../images/".strtolower($osname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"<?php echo ucwords($osname); ?>\">";
         }
         ?>
         </p>
@@ -434,7 +426,7 @@ if ($_GET["vid"]) {
 		<p><strong><a href="?<?php echo"".uriparams()."&amp;id=$id&amp;page=opinion"; ?>">Add your own opinion &#187;</a></strong></p>
 		<ul id="opinions">
         <?php
-        $sql = "SELECT CommentName, CommentTitle, CommentNote, CommentDate, CommentVote FROM  `feedback` WHERE ID = '$id' AND CommentNote IS NOT NULL ORDER  BY `CommentDate` DESC LIMIT 5";
+        $sql = "SELECT CommentName, CommentTitle, CommentNote, CommentDate, CommentVote FROM  feedback WHERE ID = '$id' AND CommentNote IS NOT NULL ORDER  BY `CommentDate` DESC LIMIT 5";
         $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
             $num_results = mysql_num_rows($sql_result);
             while ($row = mysql_fetch_array($sql_result)) {
@@ -455,10 +447,10 @@ if ($_GET["vid"]) {
             if ($rating != NULL) {
                 echo"<p class=\"opinions-rating\" title=\"$rating of 5 stars\">";
                 for ($i = 1; $i <= $rating; $i++) {
-                    echo"<IMG SRC=\"/images/stars/star_icon.png\" WIDTH=17 HEIGHT=20 ALT=\"*\">";
+                    echo"<IMG SRC=\"../images/stars/star_icon.png\" WIDTH=17 HEIGHT=20 ALT=\"*\">";
                 }
                 for ($i = $i; $i <= 5; $i++) {
-                echo"<IMG SRC=\"/images/stars/graystar_icon.png\" WIDTH=17 HEIGHT=20 ALT=\"\">";
+                echo"<IMG SRC=\"../images/stars/graystar_icon.png\" WIDTH=17 HEIGHT=20 ALT=\"\">";
                 }
                 echo"</p>\n";
             }
@@ -468,7 +460,7 @@ if ($_GET["vid"]) {
             if ($num_results=="0") {
                 echo"<li>\n";
                 echo"<h4>Nobody's Commented on this Theme Yet</h4>\n";
-                echo"<p class=\"opinions-text\">Be the First! <A HREF=\"moreinfo.php?".uriparams()."&amp;id=$id&amp;page=opinion\">Rate It!</A></p>";
+                echo"<p class=\"opinions-text\">Be the First! <A HREF=\"./moreinfo.php?id=$id&amp;page=opinion\">Rate It!</A></p>";
                 echo"</li>\n";
             }
         ?>
@@ -500,11 +492,11 @@ if ($_GET["vid"]) {
         <li><?php if ($categories) { echo"$categories"; } ?></li>
 		<li><?php echo"$datestring"; // Last Updated: September 11, 2004 5:38am ?></li>
 		<li>Total Downloads: <?php echo"$downloadcount"; ?> &nbsp;&#8212;&nbsp; Downloads this Week: <?php echo"$populardownloads"; ?></li>
-		<li>See <a href="?<?php echo"".uriparams()."&amp;id=$id&amp;page=releases"; ?>">all previous releases</a> of this theme.</li>
+		<li>See <a href="./moreinfo.php?<?php echo "id={$id}&amp;page=releases"; ?>">all previous releases</a> of this theme.</li>
         <?php
         if ($homepage) {
         ?>
-		<li>View the Author's <a href="<?php echo"$homepage"; ?>">Homepage</a> for this Theme.</li>
+		<li>View the Author's <a href="<?php echo $homepage; ?>">Homepage</a> for this Theme.</li>
         <?php
         }
         ?>
@@ -517,7 +509,7 @@ if ($_GET["vid"]) {
     echo"<h3>All Releases</h3>";
 
     $sql = "SELECT TV.vID, TV.Version, TV.MinAppVer, TV.MaxAppVer, TV.Size, TV.URI, TV.Notes, TV.DateAdded AS VerDateAdded, TA.AppName, TOS.OSName
-            FROM  `version` TV
+            FROM  version TV
             INNER  JOIN applications TA ON TV.AppID = TA.AppID
             INNER  JOIN os TOS ON TV.OSID = TOS.OSID
             WHERE TV.ID = '$id' AND `approved` = 'YES' AND TA.AppName = '$application'
@@ -548,7 +540,7 @@ if ($_GET["vid"]) {
             echo"<DIV>"; //Open Version DIV
 
             //Description & Version Notes
-            echo"<h3><A HREF=\"moreinfo.php?".uriparams()."&amp;id=$id&amp;vid=$vid\">$name $version</A></h3>\n";
+            echo"<h3><A HREF=\"moreinfo.php?id=$id&amp;vid=$vid\">$name $version</A></h3>\n";
             echo"Released on $releasedate<br>\n";
             if ($notes) {
                 echo"$notes<br><br>\n";
@@ -563,10 +555,10 @@ if ($_GET["vid"]) {
             } else {
                 echo"<a href=\"$uri\" onclick=\"return installTheme(event,'$name $version');\">";
             }
-            echo"<IMG SRC=\"/images/download.png\" HEIGHT=34 WIDTH=34 TITLE=\"Install $name (Right-Click to Download)\" ALT=\"\">Install</A><BR><SPAN class=\"filesize\">Size: $filesize kb</SPAN></DIV>";
-            echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($appname)."_icon.png\" HEIGHT=34 WIDTH=34 ALT=\"\">&nbsp;For $appname:<BR>&nbsp;&nbsp;$minappver - $maxappver</DIV>";
+            echo"<IMG SRC=\"../images/download.png\" HEIGHT=34 WIDTH=34 TITLE=\"Install $name (Right-Click to Download)\" ALT=\"\">Install</A><BR><SPAN class=\"filesize\">Size: $filesize kb</SPAN></DIV>";
+            echo"<DIV class=\"iconbar\"><IMG SRC=\"../images/".strtolower($appname)."_icon.png\" HEIGHT=34 WIDTH=34 ALT=\"\">&nbsp;For $appname:<BR>&nbsp;&nbsp;$minappver - $maxappver</DIV>";
             if($osname !=="ALL") {
-                echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($osname)."_icon.png\" HEIGHT=34 WIDTH=34 ALT=\"\">For&nbsp;$osname<BR>only</DIV>";
+                echo"<DIV class=\"iconbar\"><IMG SRC=\"../images/".strtolower($osname)."_icon.png\" HEIGHT=34 WIDTH=34 ALT=\"\">For&nbsp;$osname<BR>only</DIV>";
             }
             echo"</DIV><BR>\n";
 
@@ -581,7 +573,7 @@ if ($_GET["vid"]) {
     if (!$_GET["pageid"]) {$pageid="1"; } else { $pageid = escape_string($_GET["pageid"]); } //Default PageID is 1
     $startpoint = ($pageid-1)*$items_per_page;
 
-    $sql = "SELECT CommentID FROM  `feedback` WHERE ID = '$id'";
+    $sql = "SELECT CommentID FROM  feedback WHERE ID = '$id'";
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
         $num_pages = ceil(mysql_num_rows($sql_result)/$items_per_page);
 
@@ -631,10 +623,10 @@ if ($_GET["vid"]) {
             if ($rating != NULL) {
                 echo"<p class=\"opinions-rating\" title=\"$rating of 5 stars\">";
                 for ($i = 1; $i <= $rating; $i++) {
-                    echo"<IMG SRC=\"/images/stars/star_icon.png\" WIDTH=17 HEIGHT=20 ALT=\"*\">";
+                    echo"<IMG SRC=\"../images/stars/star_icon.png\" WIDTH=17 HEIGHT=20 ALT=\"*\">";
                 }
                 for ($i = $i; $i <= 5; $i++) {
-                echo"<IMG SRC=\"/images/stars/graystar_icon.png\" WIDTH=17 HEIGHT=20 ALT=\"\">";
+                echo"<IMG SRC=\"../images/stars/graystar_icon.png\" WIDTH=17 HEIGHT=20 ALT=\"\">";
                 }
 
                 //XXX Meta-Ratings not Production Ready, disabled. Bug 247144.
@@ -656,7 +648,7 @@ if ($_GET["vid"]) {
             if ($num_results=="0") {
                 echo"<li>\n";
                 echo"<h4>Nobody's Commented on this Theme Yet</h4>\n";
-                echo"<p class=\"opinions-text\">Be the First! <A HREF=\"moreinfo.php?".uriparams()."&amp;id=$id&amp;page=opinion\">Rate It!</A></p>";
+                echo"<p class=\"opinions-text\">Be the First! <A HREF=\"moreinfo.php?id=$id&amp;page=opinion\">Rate It!</A></p>";
                 echo"</li>\n";
             }
         ?>
@@ -719,14 +711,15 @@ if ($_GET["vid"]) {
     // Item Previews Tab
     echo"<h2>Previews for $name</h2>\n";
 
-    $sql = "SELECT `PreviewURI`,`caption` from `previews` WHERE `ID`='$id' and `preview`='NO' ORDER BY `PreviewID` ASC";
+    $sql = "SELECT `PreviewURI`,`caption` from previews WHERE `ID`='$id' and `preview`='NO' ORDER BY `PreviewID` ASC";
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
         while ($row = mysql_fetch_array($sql_result)) {
             $uri = $row["PreviewURI"];
             $caption = $row["caption"];
 
             echo"<h4>$caption</h4>";
-            list($src_width, $src_height, $type, $attr) = getimagesize("$websitepath/$uri");
+            list($src_width, $src_height, $type, $attr) =
+            getimagesize(FILE_PATH.'/'.$uri);
 
             //Scale Image Dimensions
             $dest_width="690"; // Destination Width /$tn_size_width
@@ -785,7 +778,7 @@ if ($_GET["vid"]) {
         if ($num_results=="0") {
             echo"This $typename has not yet been reviewed.<BR><BR>
 
-            To see what other users think of this $typename, view the <A HREF=\"moreinfo.php?".uriparams()."&amp;id=$id&amp;page=comments\">User Comments...</A>
+            To see what other users think of this $typename, view the <A HREF=\"moreinfo.php?id=$id&amp;page=comments\">User Comments...</A>
             ";
         }
 
@@ -849,7 +842,5 @@ if ($_GET["vid"]) {
 <!-- closes #mBody-->
 
 <?php
-include"$page_footer";
+require_once(FOOTER);
 ?>
-</body>
-</html>

@@ -4,7 +4,7 @@
 // Returns true on success, false on failure.
 
 function process_approval($type, $file, $action) {
-global $connection, $sitehostname, $ftpurl, $repositorypath;
+global $connection;
 if ($action=="approve") {
   $action_comment = "Approval+";
   $action_email = "Approval Granted";
@@ -33,13 +33,13 @@ global $installation, $uninstallation, $newchrome, $appworks, $visualerrors, $al
     if ($sql_result) {} else { $operations_failed="true";}
 
 //Secondly, If Stage 1 was successful (and we're approving the file), let's move the file to it's new home in /ftp/ for staging...
-$filename = str_replace ("http://$sitehostname/developers/approvalfile.php", "$repositorypath/approval", $file);
+$filename = str_replace ('http://'.HOST_NAME.'/developers/approvalfile.php', REPO_PATH.'/approval', $file);
 if ($action=="approve") {
     if (file_exists($filename)) {
         if ($type=="T") {$type="themes";} else if ($type=="E") {$type="extensions";}
         $path = strtolower("$type/$name");
         $destination = str_replace("approval",strtolower("ftp/$path"),$filename);
-        $dirpath = "$repositorypath/ftp/$path";
+        $dirpath = REPO_PATH.'/ftp/'.$path;
         if (!file_exists($dirpath)) {
             mkdir($dirpath,0755);
         }
@@ -55,8 +55,8 @@ if ($action=="approve") {
             //A File exists, not safe to rename, throw error.
             $operations_failed="true";
         }
-        //$ftpurl defined in config.php
-        $uri = str_replace("$repositorypath/ftp","$ftpurl","$destination");
+        //FTP_URL defined in config.php
+        $uri = str_replace(REPO_PATH.'/ftp',FTP_URL,$destination);
     }
 
 } else if ($action=="deny") {

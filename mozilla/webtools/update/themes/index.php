@@ -35,24 +35,19 @@
 // the terms of any one of the MPL, the GPL or the LGPL.
 //
 // ***** END LICENSE BLOCK *****
-?>
-<?php
-require"../core/config.php";
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html lang="en">
 
-<head>
-<TITLE>Mozilla Update :: Themes - Change the Look of Mozilla Software</TITLE>
- <link rel="alternate" type="application/rss+xml" title="New <?php echo ucwords($application); ?> Theme Additions" href="/rss/?application=<?php echo"$application"; ?>&amp;type=T&amp;list=newest">
-<?php
-include"$page_header";
+require"../core/init.php";
+$page_title = 'Mozilla Update :: Themes - Change the Look of Mozilla Software';
+$page_headers = '<link rel="alternate" type="application/rss+xml" title="New
+    '.ucwords($application).' Theme Additions"
+    href="/rss/?application='.$application.'&amp;type=T&amp;list=newest">';
+require_once(HEADER);
 ?>
 
 <div id="mBody">
     <?php
     $index="yes";
-    include"inc_sidebar.php";
+    require_once('./inc_sidebar.php');
     ?>
 
 	<div id="mainContent">
@@ -204,7 +199,5 @@ include"$page_header";
 <!-- closes #mBody-->
 
 <?php
-include"$page_footer";
+require_once(FOOTER);
 ?>
-</body>
-</html>

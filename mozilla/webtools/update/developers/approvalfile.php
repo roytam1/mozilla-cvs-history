@@ -1,6 +1,6 @@
 <?php
-require"core/sessionconfig.php";
-require"../core/config.php";
+require_once('../core/init.php');
+require_once('./core/sessionconfig.php');
 
 if ($_SESSION["level"]=="admin" or $_SESSION["level"]=="editor") {
     //Do Nothing, they're good. :-)
@@ -11,7 +11,7 @@ if ($_SESSION["level"]=="admin" or $_SESSION["level"]=="editor") {
 }
 
 $filename = basename($_SERVER["PATH_INFO"]);
-$file = "$repositorypath/approval/$filename";
+$file = REPO_PATH . "/approval/$filename";
 header('Content-Description: File Transfer');
 header('Content-Type: application/octet-stream');
 header('Content-Length: ' . filesize($file));

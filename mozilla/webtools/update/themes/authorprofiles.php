@@ -35,15 +35,9 @@
 // the terms of any one of the MPL, the GPL or the LGPL.
 //
 // ***** END LICENSE BLOCK *****
-?>
-<?php
-require"../core/config.php";
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html lang="en">
 
-<head>
-<?php
+require_once('../core/init.php');
+
 //Bookmarking-Friendly Page Title
 $id = escape_string($_GET["id"]);
 $sql = "SELECT  UserName FROM `userprofiles`  WHERE UserID = '$id' LIMIT 1";
@@ -54,19 +48,15 @@ exit;
 
 }
   $row = mysql_fetch_array($sql_result);
-?>
 
-    <TITLE>Mozilla Update :: Themes - Author Profile: <?php echo"$row[UserName]"; ?></TITLE>
-
-
-<?php
-include"$page_header";
+$page_title = 'Mozilla Update :: Themes - Author Profile: '.$row['UserName'];
+require_once(HEADER);
 ?>
 
 <div id="mBody">
     <?php
     $index="yes";
-    include"inc_sidebar.php";
+    require_once('./inc_sidebar.php');
     ?>
 
 	<div id="mainContent">
@@ -165,7 +155,5 @@ echo"No Extensions or Themes in the Database for $username";
 
 </DIV>
 <?php
-include"$page_footer";
+require_once(FOOTER);
 ?>
-</BODY>
-</HTML>

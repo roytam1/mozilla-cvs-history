@@ -37,16 +37,9 @@
 // ***** END LICENSE BLOCK *****
 ?>
 <?php
-require"../core/config.php";
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html lang="en">
-
-<head>
-    <title>Mozilla Update :: Frequently Asked Questions</title>
-
-<?php
-include"$page_header";
+require_once('../core/init.php');
+$page_title = 'Mozilla Update :: Frequently Asked Questions';
+require_once(HEADER);
 ?>
 
 <div id="mBody">
@@ -55,18 +48,18 @@ include"$page_header";
 
 <?php
 $sql = "SELECT `title`, `text` FROM  `faq` WHERE `active` = 'YES' ORDER  BY  `index` ASC, `title` ASC";
- $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-  while ($row = mysql_fetch_array($sql_result)) {
-   $title = $row["title"];
-   $text = nl2br($row["text"]);
+$sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 
-echo"<h2>$title</h2>\n";
-echo"$text\n";
+while ($row = mysql_fetch_array($sql_result)) {
+    $title = $row['title'];
+    $text = nl2br($row['text']);
+
+    echo "<h2>$title</h2>\n";
+    echo "$text\n";
 }
 ?>
 </div>
+
 <?php
-include"$page_footer";
+require_once(FOOTER);
 ?>
-</BODY>
-</HTML>

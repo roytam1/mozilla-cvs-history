@@ -1,14 +1,9 @@
 <?php
-require"../core/config.php";
-require"core/sessionconfig.php";
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
-<HTML>
-<HEAD>
-<TITLE>Mozilla Update :: Developer Control Panel :: Overview</TITLE>
-<?php
-include"$page_header";
-include"inc_sidebar.php";
+require_once('../core/init.php');
+require_once('./core/sessionconfig.php');
+$page_title = 'Mozilla Update :: Developer Control Panel :: Overview';
+require_once(HEADER);
+require_once('./inc_sidebar.php');
 ?>
 <h2>Welcome <?php echo"$_SESSION[name]";?>!</h2>
 
@@ -111,7 +106,5 @@ echo"</DIV>";
 </div>
 
 <?php
-include"$page_footer";
+require_once(FOOTER);
 ?>
-</BODY>
-</HTML>

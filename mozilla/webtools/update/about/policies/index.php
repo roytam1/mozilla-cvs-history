@@ -37,16 +37,9 @@
 // ***** END LICENSE BLOCK *****
 ?>
 <?php
-require"../../core/config.php";
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html lang="en">
-
-<head>
-    <title>Mozilla Update :: Terms of Use</title>
-
-<?php
-include"$page_header";
+require_once('../../core/init.php');
+$page_title = 'Mozilla Update :: Terms of Use';
+require_once(HEADER);
 ?>
 
 <div id="mBody">
@@ -56,8 +49,7 @@ This section has not yet been completed. This page serves as a placeholder for c
 
 
 </div>
+
 <?php
-include"$page_footer";
+require_once(FOOTER);
 ?>
-</BODY>
-</HTML>

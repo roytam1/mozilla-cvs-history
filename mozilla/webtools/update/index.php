@@ -37,19 +37,17 @@
 // ***** END LICENSE BLOCK *****
 ?>
 <?php
-require"core/config.php";
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html lang="en">
+require_once('./core/init.php');
 
-<head>
- <title>Mozilla Update</title>
- <link rel="alternate" type="application/rss+xml" title="New <?php echo ucwords($application); ?> Additions" href="/rss/?application=<?php echo"$application"; ?>&amp;list=newest">
-<?php
-include"$page_header";
-?>
+$page_title = 'Mozilla Update';
+$page_headers = "\n".'
+    <link rel="alternate" type="application/rss+xml" 
+          title="New '.ucwords($application).' Additions"
+          href="./rss/?application="'.$application.'"&amp;list=newest">
+'."\n";
 
-<?php
+require_once(HEADER);
+
 //Get Current Version for Detected Application
 $sql = "SELECT `Version`, `major`, `minor`, `release`, `SubVer` FROM `applications` WHERE `AppName` = '$application' AND `public_ver` = 'YES'  ORDER BY `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC LIMIT 1";
 $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
@@ -64,39 +62,72 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
     $currentver_display = $version;
     unset($version,$subver,$release);
 
-?>
-
-<?php
+// security update
 $securitywarning=false;
 if ($securitywarning=="true") {
 ?>
+
 <!-- Don't display if no urgent security updates -->
-<div class="key-point"><p class="security-update"><strong>Important Firefox Security Update:</strong><br>Lorem ipsum dolor sit amet, <a href="#securitydownload">consectetuer adipiscing</a> elit. Curabitur viverra ultrices ante. Aliquam nec lectus. Praesent vitae risus. Aenean vulputate sapien et leo. Nullam euismod tortor id wisi.</p></div>
+<div class="key-point">
+<p class="security-update"><strong>Important Firefox
+Security Update:</strong><br>Lorem ipsum dolor sit amet, 
+<a href="#securitydownload">consectetuer adipiscing</a> elit. Curabitur 
+viverra ultrices ante. Aliquam nec lectus. Praesent vitae risus. Aenean 
+vulputate sapien et leo. Nullam euismod tortor id wisi.
+</p>
+</div>
+
 <hr class="hide">
+
 <!-- close security update -->
 <?php } ?>
 
 <div id="mBody">
 	<div id="mainContent" class="right">
-	<h2>What is Mozilla Update?</h2>
-    <p class="first">Mozilla Update is the place to get updates and extras for your <a href="http://www.mozilla.org/">Mozilla</a> products.  This service is undergoing <a href="/about/update.php">several changes</a> that we hope will make the site better.  We will be posting frequent <a href="./about/update.php">status updates</a> as to our progress with the UMO service.</p>
 
-    <?php
-    $uriparams_skip="application";
-    ?>
+	<h2>What is Mozilla Update?</h2>
+
+    <p class="first">Mozilla Update is the place to get updates and extras for
+    your <a href="http://www.mozilla.org/">Mozilla</a> products.  This service
+    is undergoing <a href="./about/update.php">several changes</a> that we hope
+    will make the site better.  We will be posting frequent 
+    <a href="./about/update.php">status updates</a> as to our progress with the 
+    UMO service.</p>
+
 	<dl>
-		<dt>Extensions</dt>
-		<dd>Extensions are small add-ons that add new functionality to your Mozilla program. They can add anything from a toolbar button to a completely new feature. Browse extensions for: <a href="/extensions/?<?php echo"".uriparams()."&amp;"; ?>application=firefox">Firefox</a>, <a href="/extensions/?<?php echo"".uriparams()."&amp;"; ?>application=thunderbird">Thunderbird</a>, <a href="/extensions/?<?php echo"".uriparams()."&amp;"; ?>application=mozilla">Mozilla&nbsp;Suite</a></dd>
-		<dt>Themes</dt>
-		<dd>Themes allow you to change the way your Mozilla program looks. New graphics and colors. Browse themes for: <a href="/themes/?<?php echo"".uriparams()."&amp;"; ?>application=firefox">Firefox</a>, <a href="/themes/?<?php echo"".uriparams()."&amp;"; ?>application=thunderbird">Thunderbird</a>, <a href="/themes/?<?php echo"".uriparams()."&amp;"; ?>application=mozilla">Mozilla&nbsp;Suite</a></dd>
-		<dt>Plugins</dt>
-		<dd>Plugins are programs that allow websites to provide content to you and have it appear in your browser. Examples of Plugins are Flash, RealPlayer, and Java. Browse plug-ins for <a href="/plugins/">Mozilla Suite and Firefox</a></dd>
-		<!--<dt>Search Engines</dt>
-		<dd>In Firefox, you can add search engines that will be available in the search in the top of the browser. Browse search engines for <a href="/searchengines/">Firefox</a></dd>-->
+    <dt>Extensions</dt>
+    <dd>Extensions are small add-ons that add new functionality to your
+    Mozilla program. They can add anything from a toolbar button to a
+    completely new feature. Browse extensions for: 
+    <a href="./extensions/?application=firefox">Firefox</a>, 
+    <a href="./extensions/?application=thunderbird">Thunderbird</a>,
+    <a href="./extensions/?application=mozilla">Mozilla Suite</a>
+    </dd>
+
+    <dt>Themes</dt>
+    <dd>Themes allow you to change the way your Mozilla program looks. 
+    New graphics and colors. Browse themes for: 
+    <a href="./themes/?application=firefox">Firefox</a>,
+    <a href="./themes/?application=thunderbird">Thunderbird</a>,
+    <a href="./themes/?application=mozilla">Mozilla Suite</a>
+    </dd>
+
+    <dt>Plugins</dt>
+    <dd>Plugins are programs that allow websites to provide content to
+    you and have it appear in your browser. Examples of Plugins are Flash,
+    RealPlayer, and Java. Browse plug-ins for: 
+    <a href="./plugins/">Mozilla Suite &amp; Firefox</a>
+    </dd>
+
+    <?php /*
+    <dt>Search Engines</dt>
+    <dd>In Firefox, you can add search engines that will be available in 
+    the search in the top of the browser. Browse search engines for: 
+    <a href="/searchengines/">Firefox</a></dd>
+    */ ?>
+
 	</dl>
-    <?php
-    unset($uriparams_skip);
-    ?>
+
     <?php
     $featuredate = date("Ym");
     $sql = "SELECT TM.ID, TM.Type, TM.Name, TR.Title, TR.Body, TR.ExtendedBody, TP.PreviewURI FROM `main` TM
@@ -116,18 +147,18 @@ if ($securitywarning=="true") {
         $body = nl2br($row["Body"]);
         $extendedbody = $row["ExtendedBody"];
         $previewuri = $row["PreviewURI"];
-        $attr = getimagesize("$websitepath/$previewuri");
+        $attr = getimagesize(FILE_PATH.'/'.$previewuri);
         $attr = $attr[3];
 
     ?>
 	<h2>Currently Featuring... <?php echo"$name"; ?></a></h2>
-	<a href="<?php echo"/$typename/moreinfo.php?".uriparams()."&amp;id=$id"; ?>"><img src="<?php echo"$previewuri"; ?>" <?php echo"$attr"; ?> alt="<?php echo"$name for $application"; ?>" class="imgright"></a>
+	<a href="./<?php echo"./$typename/moreinfo.php?".uriparams()."&amp;id=$id"; ?>"><img src="<?php echo"$previewuri"; ?>" <?php echo"$attr"; ?> alt="<?php echo"$name for $application"; ?>" class="imgright"></a>
     <p class="first">
-    <strong><a href="<?php echo"/$typename/moreinfo.php?".uriparams()."&amp;id=$id"; ?>" style="text-decoration: none"><?php echo"$title"; ?></a></strong><br>
+    <strong><a href="./<?php echo"/$typename/moreinfo.php?".uriparams()."&amp;id=$id"; ?>" style="text-decoration: none"><?php echo"$title"; ?></a></strong><br>
     <?php
     echo"$body";  
     if ($extendedbody) {
-        echo" <a href=\"/$typename/moreinfo.php?".uriparams()."&amp;id=$id&amp;page=staffreview#more\">More...</a>";
+        echo" <a href=\"./$typename/moreinfo.php?".uriparams()."&amp;id=$id&amp;page=staffreview#more\">More...</a>";
     }
     ?></p>
     <?php } ?>
@@ -138,12 +169,14 @@ if ($securitywarning=="true") {
 
         <?php
         $i=0;
+        // Took out the compatibility stuff to avoid a blank front page.
+        // `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND 
         $sql = "SELECT TM.ID, TV.vID,TM.Name, TV.Version, TM.TotalDownloads, TM.downloadcount
             FROM  `main` TM
             INNER  JOIN version TV ON TM.ID = TV.ID
             INNER  JOIN applications TA ON TV.AppID = TA.AppID
             INNER  JOIN os TOS ON TV.OSID = TOS.OSID
-            WHERE  `Type`  =  'E' AND `AppName` = '$application' AND `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND (`OSName` = '$OS' OR `OSName` = 'ALL') AND `downloadcount` > '0' AND `approved` = 'YES' ORDER BY `downloadcount` DESC ";
+            WHERE  `Type`  =  'E' AND `AppName` = '$application' AND (`OSName` = '$OS' OR `OSName` = 'ALL') AND `downloadcount` > '0' AND `approved` = 'YES' ORDER BY `downloadcount` DESC ";
         $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
             if (mysql_num_rows($sql_result)=="0") {
                 echo"        <li>No Popular Extensions</li>\n";
@@ -163,7 +196,7 @@ if ($securitywarning=="true") {
                 }
 
                 echo"		<li>";
-                echo"<a href=\"/$typename/moreinfo.php?".uriparams()."&amp;id=$id\">$name</a>";
+                echo"<a href=\"./$typename/moreinfo.php?".uriparams()."&amp;id=$id\">$name</a>";
                 echo"<span class=\"downloads\"> ($downloadcount downloads)</span>";
                 echo"</li>\n";
 
@@ -179,12 +212,14 @@ if ($securitywarning=="true") {
 
         <?php
         $i=0;
+        // Took out the compatibility stuff to avoid a blank front page.
+        // `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND 
         $sql = "SELECT TM.ID, TV.vID,TM.Name, TV.Version, TM.TotalDownloads, TM.downloadcount
             FROM  `main` TM
             INNER  JOIN version TV ON TM.ID = TV.ID
             INNER  JOIN applications TA ON TV.AppID = TA.AppID
             INNER  JOIN os TOS ON TV.OSID = TOS.OSID
-            WHERE  `Type`  =  'T' AND `AppName` = '$application' AND `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND (`OSName` = '$OS' OR `OSName` = 'ALL') AND `downloadcount` > '0' AND `approved` = 'YES' ORDER BY `downloadcount` DESC ";
+            WHERE  `Type`  =  'T' AND `AppName` = '$application' AND (`OSName` = '$OS' OR `OSName` = 'ALL') AND `downloadcount` > '0' AND `approved` = 'YES' ORDER BY `downloadcount` DESC ";
         $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
             if (mysql_num_rows($sql_result)=="0") {
                 echo"        <li>No Popular Themes</li>\n";
@@ -204,7 +239,7 @@ if ($securitywarning=="true") {
                 }
 
                 echo"		<li>";
-                echo"<a href=\"/$typename/moreinfo.php?".uriparams()."&amp;id=$id\">$name</a>";
+                echo"<a href=\"./$typename/moreinfo.php?".uriparams()."&amp;id=$id\">$name</a>";
                 echo"<span class=\"downloads\"> ($downloadcount downloads)</span>";
                 echo"</li>\n";
 
@@ -215,18 +250,20 @@ if ($securitywarning=="true") {
             }
         ?>
 	</ol>
-	<a href="/rss/?application=<?php echo"$application"; ?>&amp;list=newest"><img src="images/rss.png" width="16" height="16" class="rss" alt="News Additions in RSS"></a>
+	<a href="./rss/?application=<?php echo"$application"; ?>&amp;list=newest"><img src="images/rss.png" width="16" height="16" class="rss" alt="News Additions in RSS"></a>
 	<h2>New Additions</h2>
 	<ol class="popularlist">
 
         <?php
         $i=0;
+        // Took out the compatibility stuff to avoid a blank front page.
+        // `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND 
         $sql = "SELECT TM.ID, TM.Type, TV.vID, TM.Name, TV.Version, TV.DateAdded
             FROM  `main` TM
             INNER  JOIN version TV ON TM.ID = TV.ID
             INNER  JOIN applications TA ON TV.AppID = TA.AppID
             INNER  JOIN os TOS ON TV.OSID = TOS.OSID
-            WHERE  `AppName` = '$application' AND `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND (`OSName` = '$OS' OR `OSName` = 'ALL') AND `approved` = 'YES' ORDER BY `DateAdded` DESC ";
+            WHERE  `AppName` = '$application' AND (`OSName` = '$OS' OR `OSName` = 'ALL') AND `approved` = 'YES' ORDER BY `DateAdded` DESC ";
         $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
             if (mysql_num_rows($sql_result)=="0") {
                 echo"        <li>Nothing Recently Added</li>\n";
@@ -254,7 +291,7 @@ if ($securitywarning=="true") {
                 }
 
                 echo"		<li>";
-                echo"<a href=\"/$typename/moreinfo.php?".uriparams()."&amp;id=$id\">$name $version</a>";
+                echo"<a href=\"./$typename/moreinfo.php?".uriparams()."&amp;id=$id\">$name $version</a>";
                 echo"<span class=\"downloads\"> ($dateadded)</span>";
                 echo"</li>\n";
 
@@ -271,8 +308,5 @@ if ($securitywarning=="true") {
 <!-- closes #mBody-->
 
 <?php
-include"$page_footer";
+require_once(FOOTER);
 ?>
-
-</body>
-</html>

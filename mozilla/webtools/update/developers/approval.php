@@ -1,26 +1,19 @@
 <?php
-require"../core/config.php";
-require"core/sessionconfig.php";
-$function = $_GET["function"];
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
-<HTML>
-<HEAD>
-<TITLE>Mozilla Update :: Developer Control Panel :: Manage Approval Queue</TITLE>
-<?php
-include"$page_header";
-$skipqueue="true";
-include"inc_sidebar.php";
-?>
+require_once('../core/init.php');
+require_once('./core/sessionconfig.php');
+$function = $_GET['function'];
+$page_title = 'Mozilla Update :: Developer Control Panel :: Manage Approval
+Queue';
+require_once(HEADER);
+$skipqueue='true';
+require_once('./inc_sidebar.php');
 
-<?php
 if ($_SESSION["level"]=="admin" or $_SESSION["level"]=="editor") {
     //Do Nothing, they're good. :-)
 } else {
     echo"<h1>Access Denied</h1>\n";
     echo"You do not have access to the Approval Queue.";
-    include"$page_footer";
-    echo"</body></html>\n";
+    require_once(FOOTER);
     exit;
 }
 ?>
@@ -315,7 +308,5 @@ $sql ="SELECT * FROM `approvallog` ORDER BY `date` DESC";
 </div>
 
 <?php
-include"$page_footer";
+require_once(FOOTER);
 ?>
-</BODY>
-</HTML>

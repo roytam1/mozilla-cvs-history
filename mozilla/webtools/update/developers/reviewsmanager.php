@@ -1,22 +1,15 @@
 <?php
-require"../core/config.php";
-require"core/sessionconfig.php";
-$function = $_GET["function"];
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
-<HTML>
-<HEAD>
-<TITLE>Mozilla Update :: Developer Control Panel :: Reviews Manager</TITLE>
-<?php
-include"$page_header";
-include"inc_sidebar.php";
-?>
-<?php
+require_once('../core/init.php');
+require_once('./core/sessionconfig.php');
+$function = $_GET['function'];
+$page_title = 'Mozilla Update :: Developer Control Panel :: Reviews Manager';
+require_once(HEADER);
+require_once('./inc_sidebar.php');
+
 if ($_SESSION["level"] !=="admin" and $_SESSION["level"] !=="editor") {
     echo"<h1>Access Denied</h1>\n";
     echo"You do not have access to the Editor Reviews Manager";
-    include"$page_footer";
-    echo"</body></html>\n";
+    require_once(FOOTER);
     exit;
 }
 ?>
@@ -123,8 +116,7 @@ $sql = "SELECT  TM.ID, TM.Name, TR.Body as Description, TR.DateAdded  FROM  `mai
             if ($sql_result) {
                 echo"The review for $name has been deleted...<br>\n";
                 echo"<a href=\"?type=$type\">&#171;&#171; Back to Main Page...</a><br>\n";
-                include"$page_footer";
-                echo"</body>\n</html>\n";
+                require_once(FOOTER);
                 exit;
             }
 
@@ -215,7 +207,5 @@ if ($featured=="YES") {
 </div>
 
 <?php
-include"$page_footer";
+require_once(FOOTER);
 ?>
-</BODY>
-</HTML>

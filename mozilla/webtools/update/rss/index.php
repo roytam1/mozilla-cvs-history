@@ -36,9 +36,8 @@
 // the terms of any one of the MPL, the GPL or the LGPL.
 //
 // ***** END LICENSE BLOCK *****
-?>
-<?php
-require"../core/config.php";
+
+require_once('../core/init.php');
 
 $app = strtolower($_GET["application"]);  // Firefox, Thunderbird, Mozilla
 $type = escape_string($_GET["type"]); //E, T, [P]
@@ -53,7 +52,7 @@ $sitecopyright = "Copyright 2004-2005 The Mozilla Organization";
 $currenttime = gmdate(r);// GMT 
 $rssttl = "120"; //Life of feed in minutes
 
-header("Content-Type: application/xml; charset=utf-8");
+header("Content-Type: text/xml; charset=utf-8");
 
 // Firefox, extensions, by date added
 
@@ -98,9 +97,5 @@ switch ($list) {
 
 $sql = $select . " " . $from . " WHERE " . $where . " ORDER BY " . $orderby . " LIMIT 0, 10";
 
-//echo $sql;
-
-include"inc_rssfeed.php";
-
-
+require_once('inc_rssfeed.php');
 ?>

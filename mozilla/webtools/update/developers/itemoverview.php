@@ -1,14 +1,9 @@
 <?php
-require"../core/config.php";
-require"core/sessionconfig.php";
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
-<HTML>
-<HEAD>
-<TITLE>Mozilla Update :: Developer Control Panel :: Item Overview</TITLE>
-<?php
-include"$page_header";
-include"inc_sidebar.php";
+require_once('../core/init.php');
+require_once('./core/sessionconfig.php');
+$page_title = 'Mozilla Update :: Developer Control Panel :: Item Overview';
+require_once(HEADER);
+require_once('./inc_sidebar.php');
 
 //Kill access to items this user doesn't own...
 if ($_SESSION["level"] !=="admin" and $_SESSION["level"] !=="editor") {
@@ -20,8 +15,7 @@ if ($_SESSION["level"] !=="admin" and $_SESSION["level"] !=="editor") {
     if (mysql_num_rows($sql_result)=="0") {
     echo"<h1>Access Denied</h1>\n";
     echo"You do not have access to this item.";
-    include"$page_footer";
-    echo"</body></html>\n";
+    require_once(FOOTER);
     exit;
     }
 }
@@ -182,7 +176,7 @@ $sql = "SELECT * FROM `previews` TP WHERE `ID`='$id' AND `preview`='YES' ORDER B
     $filename_array[$i] = $filename;
     $caption = $row["caption"];
     $preview = $row["preview"];
-    list($src_width, $src_height, $type, $attr) = getimagesize("$websitepath/$uri");
+    list($src_width, $src_height, $type, $attr) = getimagesize(FILE_PATH.'/'.$uri);
 
     echo"<a href=\"previews.php?id=$id\"><img src=\"$uri\" border=0 $attr alt=\"$caption\"></a><br>$caption\n";
    }
@@ -198,7 +192,5 @@ $sql = "SELECT * FROM `previews` TP WHERE `ID`='$id' AND `preview`='YES' ORDER B
 </div>
 
 <?php
-include"$page_footer";
+require_once(FOOTER);
 ?>
-</BODY>
-</HTML>

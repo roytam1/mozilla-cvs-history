@@ -1,6 +1,6 @@
 <?php
-require"../core/config.php";
-require"core/sessionconfig.php";
+require_once('../core/init.php');
+require_once('./core/sessionconfig.php');
 
 $password = md5($_POST[password]);
 $email = escape_string($_POST["email"]);
@@ -35,15 +35,13 @@ $_SESSION["level"] = "$usermode";
 $_SESSION["trusted"] = "$usertrusted";
 $_SESSION["logoncheck"] = "$logoncheck";
 
-$return_path="developers/main.php";
-
-header("Location: http://$_SERVER[SERVER_NAME]/$return_path");
+header('Location: https://'.HOST_NAME.WEB_PATH.'/developers/main.php');
 exit;
 
 
 } else {
-$return_path ="developers/index.php?login=failed";
-header("Location: http://$_SERVER[SERVER_NAME]/$return_path");
+$return_path ="";
+header('Location: https://'.HOST_NAME.WEB_PATH.'/developers/index.php?login=failed');
 exit;
 }
 ?>

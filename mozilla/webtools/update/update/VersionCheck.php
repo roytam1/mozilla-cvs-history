@@ -37,289 +37,332 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/// config bits:
-/// dbconfig.php sets up a connection for us, we should use it...
-include("../core/dbconfig.php");
+/**
+ * VersionCheck.php is a dynamic RDF that compares version information for
+ * extensions and determines whether or not an update is needed.  If an update
+ * is needed, the correct update file is referenced based on the UMO database
+ * and repository.  The script is set to die silently instead of echoing errors
+ * clients don't use anyway.  For testing, if you would like to debug, supply
+ * the script with ?debug=true
+ *
+ * @package umo
+ * @subpackage pub
+ */
 
-// map the mysql main.type enum into the right type
+
+
+/*
+ *  VARIABLES
+ *
+ *  Initialize, set up and clean variables.
+ */
+
+
+
+// Map the mysql main.type enum into the right type.
 $ext_typemap = array('T' => 'theme',
                      'E' => 'extension',
                      'P' => 'plugin');
 
-header("Content-type: text/rdf");
+// Required variables that we need to run the script.
+$required_vars = array('reqVersion',
+                       'id',
+                       'version',
+                       'appID',
+                       'appVersion');
 
-// error handling
-function bail ($errstr) {
-    die("Error: " . $errstr);
+// Array to hold errors for debugging.
+$errors = array();
+
+// Check for existence of required variables.
+foreach ($required_vars as $var) {
+    if (empty($_GET[$var])) {
+        $errors[] = 'Required variable '.$var.' not set.'; // set debug error
+    }
+}
+
+// If we have all of our data, clean it up for our queries.
+if (empty($errors)) {
+
+    // $reqVersion dictates the behavior of this script.
+    // Default should be 1 until the expected behavior of this script is changed.
+    // This will be apparent in a switch() statement later in this script.
+    $reqVersion = intval($_GET['reqVersion']);
+
+    // Main id for the item.
+    $reqItemGuid = mysql_real_escape_string($_GET['id']);
+
+    // Item version.
+    $reqItemVersion = mysql_real_escape_string($_GET['version']);
+
+    // ID of the client app (firefox, thunderbird, etc.).
+    $reqTargetAppGuid = mysql_real_escape_string($_GET['appID']);
+
+    // Version of that app.
+    $reqTargetAppVersion = mysql_real_escape_string($_GET['appVersion']);
+
+    // For backwards compatibility, not required.
+    $reqTargetOS = mysql_real_escape_string($_GET['appOS']);
+
+    // Get the os_id based on _GET; fall back  _SERVER (UA string).
+    $os_id = get_os_id($reqTargetOS);
+
+
+
+    /*
+     *  QUERIES  
+     *  
+     *  All of our variables are cleaned.
+     *  Now attempt to retrieve update information.
+     */ 
+
+
+
+    // Config, connect to DB, select DB.
+    require_once("../core/config.php");
+
+    $connection = @mysql_connect(DB_HOST,DB_USER,DB_PASS);
+    if (!is_resource($connection)) {
+        $errors[] = 'MySQL connection failed.';
+    } elseif (!@mysql_select_db(DB_NAME, $connection)) {
+        $errors[] = 'Could not select MySQL database.';
+    }
+
+    // Set up OSID piece of query based on $os_id.
+    $os_query = ($os_id) ? " OR version.OSID = '{$os_id}' " : '';
+
+    // Query for possible updates.
+    $query = "
+        SELECT
+            main.guid AS extguid,
+            main.type AS exttype,
+            version.version AS extversion,
+            version.uri AS exturi,
+            version.minappver AS appminver,
+            version.maxappver AS appmaxver,
+            applications.guid AS appguid
+        FROM
+            main
+        INNER JOIN
+            version
+        ON
+            main.id = version.id
+        INNER JOIN
+            applications
+        ON
+            version.appid = applications.appid
+        WHERE
+            main.guid = '{$reqItemGuid}' AND
+            applications.guid = '{$reqTargetAppGuid}' AND
+            (version.OSID = 1 {$os_query} ) AND
+            version.approved = 'YES' AND
+            '{$reqTargetAppVersion}+' >= version.minappver AND
+            '{$reqItemVersion}' <= version.version
+        ORDER BY
+            extversion DESC,
+            version.MaxAppVer_int DESC,
+            version.OSID DESC 
+        LIMIT 1       
+    ";
+
+    $result = mysql_query($query);
+
+    // Did our query execute?  Did we get any information?
+    if (!is_resource($result)) {
+        $errors[] = 'MySQL query for item information failed.'; 
+    } elseif (mysql_num_rows($result) < 1) {
+        $errors[] = 'No matching update for given item/GUID.'; 
+    } else {
+
+        // An update exists.  Retrieve it.
+        $update = mysql_fetch_array($result, MYSQL_ASSOC);
+
+
+
+        /*
+         *  GENERATE OUTPUT
+         *
+         *  If we get to this point, we're ready to output the RDF.
+         *  We want to store the string then echo it if we are not debugging.
+         */
+
+
+
+        // VersionCheck.php output depends on $reqVersion.
+        // Future cases could be added for future client versions.
+        // Case 1: Firefox versions up to 1.0.1
+        switch ($reqVersion) {
+            case '1':
+            default:
+                // Build RDF output.
+                $output = <<<OUT
+<?xml version="1.0"?>
+<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+<RDF:Description about="urn:mozilla:{$update['exttype']}:{$reqItemGuid}">
+ <em:updates><RDF:Seq>
+  <RDF:li resource="urn:mozilla:{$update['exttype']}:{$reqItemGuid}:{$update['extversion']}"/>
+ </RDF:Seq></em:updates>
+</RDF:Description>
+
+<RDF:Description about="urn:mozilla:{$update['exttype']}:{$update['extguid']}:{$update['extversion']}">
+ <em:version>{$update['extversion']}</em:version>
+ <em:targetApplication>
+  <RDF:Description>
+   <em:id>{$update['appguid']}</em:id>
+   <em:minVersion>{$update['appminver']}</em:minVersion>
+   <em:maxVersion>{$update['appmaxver']}</em:maxVersion>
+   <em:updateLink>{$update['exturi']}</em:updateLink>
+  </RDF:Description>
+ </em:targetApplication>
+</RDF:Description>
+
+</RDF:RDF>
+OUT;
+                break;
+        }
+
+
+
+        /*
+         *  ECHO OUTPUT
+         *
+         *  If we have valid RDF output set, now stream it to the client.
+         */
+
+
+
+        if (!empty($output) && $_GET['debug']!=true) {
+            header("Content-type: text/xml");
+            echo $output;
+            exit;
+        }
+    }
+} 
+
+
+
+/*
+ *  DEBUG
+ *
+ *  If we get here, something went wrong.  For testing purposes, we can
+ *  optionally display errors based on $_GET['debug'].
+ *
+ *  By default, no errors are ever displayed because humans do not read this
+ *  script.
+ *
+ *  Until there is some sort of API for how clients handle errors, 
+ *  things should remain this way.
+ */
+
+
+
+// If we have the debug flag set and errors exist, show them.
+if ($_GET['debug'] == true) {
+    echo '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">';
+    echo '<html lang="en">';
+
+    echo '<head>';
+    echo '<title>VersionCheck.php Debug Information</title>';
+    echo '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">';
+    echo '</head>';
+
+    echo '<body>';
+
+    echo '<h1>Parameters</h1>';
+    echo '<pre>';
+    print_r($_GET);
+    echo '</pre>';
+
+    echo '<h1>Query</h1>';
+    echo '<pre>';
+    echo $query;
+    echo '</pre>';
+
+    if (!empty($update)) {
+        echo '<h1>Result</h1>';
+        echo '<pre>';
+        print_r($update);
+        echo '</pre>';
+    }
+
+    if (!empty($errors) && is_array($errors)) {
+        echo '<h1>Errors Found</h1>';
+        echo '<pre>';
+        print_r($errors);
+        echo '</pre>';
+    } else {
+        echo '<h1>No Errors Found (output below)</h1>';
+        echo '<pre>';
+        echo str_replace('<','&lt;',str_replace('>','&gt;',$output));
+        echo '</pre>';
+    }
+
+    echo '</body>';
+
+    echo '</html>';
 }
 
 
-// major.minor.release.build[+]
-// make sure this is a valid version
-function expandversion ($vstr) {
-    $v = explode('.', $vstr);
 
-    if ($vstr == '' || count($v) == 0 || count($v) > 4) {
-        bail ('Bogus version.');
-    }
+/*
+ *  FUNCTIONS
+ */
 
-    $vlen = count($v);
-    $ret = array();
-    $hasplus = 0;
 
-    for ($i = 0; $i < 4; $i++) {
-        if ($i > $vlen-1) {
-            // this version chunk was not specified; give 0
-            $ret[] = 0;
-        } else {
-            $s = $v[$i];
-            if ($i == 3) {
-                // need to check for +
-                $slen = strlen($s);
-                if ($s{$slen-1} == '+') {
-                    $s = substr($s, 0, $slen-1);
-                    $hasplus = 1;
-                }
+
+/**
+ * Determine the os_id based on passed OS or guess based on UA string.
+ * @param string $os optional passed OS
+ * @return int|bool $id ID of the OS in the UMO database
+ */
+function get_os_id($os=null)
+{
+    /* OS from UMO database
+    2 	Linux
+    3 	MacOSX
+    4 	BSD
+    5 	Solaris
+    6 	Windows
+    */
+
+    // If we have $os passed, try to match it
+    if (!empty($os)) {
+        // possible matches
+        $os_get = array(
+            'WINNT'=>6,
+            'Linux'=>2,
+            'Darwin'=>3,
+            'BSD_OS'=>4,
+            'SunOS'=>5
+        );
+
+        // try to match
+        foreach($os_get as $string=>$id) {
+            if ($os == $string) {
+                return $id;
             }
-
-            $ret[] = intval($s);
         }
     }
 
-    $ret[] = $hasplus;
+    // Fall back on user agent string if $os is not passed or is invalid
+    $os_ua_string = array(
+        'WIN'=>6,
+        'Linux'=>2,
+        'MAC'=>3,
+        'BSD'=>4,
+        'SOLARIS'=>5
+    );
 
-    return $ret;
-}
-
-function vercmp ($a, $b) {
-    if ($a == $b)
-        return 0;
-
-    $va = expandversion($a);
-    $vb = expandversion($b);
-
-    for ($i = 0; $i < 5; $i++)
-        if ($va[$i] != $vb[$i])
-            return ($vb[$i] - $va[$i]);
-
-    return 0;
-}
-
-//
-// These are passed in the GET string / POST request
-//
-
-if (!array_key_exists('reqVersion', $_REQUEST))
-    bail ("Invalid request.");
-
-$reqVersion = $_REQUEST['reqVersion'];
-
-if ($reqVersion == 1) {
-
-    if (!array_key_exists('id', $_REQUEST) ||
-        !array_key_exists('version', $_REQUEST) ||
-        !array_key_exists('maxAppVersion', $_REQUEST) ||
-        !array_key_exists('appID', $_REQUEST) ||
-        !array_key_exists('appVersion', $_REQUEST))
-        bail ("Invalid request.");
-
-    // these three can have multiple values
-    $reqItemGuid          = explode(",",mysql_real_escape_string($_REQUEST['id']));
-    $reqItemVersion       = explode(",",mysql_real_escape_string($_REQUEST['version']));
-    // are we even using this?
-    $reqItemMaxAppVersion = explode(",",mysql_real_escape_string($_REQUEST['maxAppVersion']));
-    $reqTargetAppGuid     = mysql_real_escape_string($_REQUEST['appID']);
-    $reqTargetAppVersion  = mysql_real_escape_string($_REQUEST['appVersion']);
-
-    // For backwards compatibility, not required.
-    $reqTargetOS = mysql_real_escape_string($_REQUEST['appOS']);
-} else {
-    // bail
-    bail ("Bad request version received");
-}
-
-// check args
-if (empty($reqItemGuid) || empty($reqItemVersion) || empty($reqTargetAppGuid)
-	|| (count($reqItemGuid) != count($reqItemVersion))) {
-    bail ("Invalid request.");
-}
-
-// We need to fetch two things for the database:
-// 1) The current extension version's info, for a possibly updated max version
-// 2) The latest version available, if different from the above.
-//
-// We know:
-//  - $reqItemGuid
-//  - $reqItemVersion
-//  - $reqTargetAppGuid
-//  - $reqTargetAppVersion
-//  - $reqTargetOS
-//
-// We need to get:
-//  - extension GUID
-//  - extension version
-//  - extension xpi link
-//  - app ID
-//  - app min version
-//  - app max version
-
-/* os from UMO database
-1 	ALL
-2 	Linux
-3 	MacOSX
-4 	BSD
-5 	Solaris
-6 	Windows
-*/
-
-$osid = 0;
-
-/* If we do not get the OS from the URI, try the UA */
-
-if ( ( $reqTargetOS == 'Linux' )
-  || ( strpos(getenv("HTTP_USER_AGENT"),"Linux") > 0 ) 
-   )
-{
-  $osid = 2;
-}
-if ( ( $reqTargetOS == 'Darwin' )
-  || ( strpos(getenv("HTTP_USER_AGENT"),"MAC") > 0 ) 
-   )
-{
-  $osid = 3;
-}
-if ( ( $reqTargetOS == 'BSD_OS' )
-  || ( strpos(getenv("HTTP_USER_AGENT"),"BSD") > 0 ) 
-   )
-{
-  $osid = 4;
-}
-if ( ( $reqTargetOS == 'SunOS' ) 
-  || ( strpos(getenv("HTTP_USER_AGENT"),"SOLARIS") > 0 ) 
-   )
-{
-  $osid = 5;
-}
-if ( ( $reqTargetOS == 'WINNT' )
-  || ( strpos(getenv("HTTP_USER_AGENT"),"WIN") > 0 ) 
-   )
-{
-  $osid = 6;
-}
-
-//
-// Now to spit out the RDF.  We hand-generate because the data is pretty simple.
-//
-
-print "<?xml version=\"1.0\"?>\n";
-print "<RDF:RDF xmlns:RDF=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" xmlns:em=\"http://www.mozilla.org/2004/em-rdf#\">\n\n";
-
-function print_update ($data) {
-    global $ext_typemap;
-    $dataItemType = $ext_typemap[$data['exttype']];
-    print "<RDF:Description about=\"urn:mozilla:{$dataItemType}:{$data['extguid']}:{$data['extversion']}\">\n";
-    print " <em:version>{$data['extversion']}</em:version>\n";
-    print " <em:targetApplication>\n";
-    print "  <RDF:Description>\n";
-    print "   <em:id>{$data['appguid']}</em:id>\n";
-    print "   <em:minVersion>{$data['appminver']}</em:minVersion>\n";
-    print "   <em:maxVersion>{$data['appmaxver']}</em:maxVersion>\n";
-    print "   <em:updateLink>{$data['exturi']}</em:updateLink>\n";
-    print "  </RDF:Description>\n";
-    print " </em:targetApplication>\n";
-    print "</RDF:Description>\n\n";
-}
-
-// now we query for each item
-for($i=0; $i < count($reqItemGuid); $i++)
-{
-  $query = 
-    "SELECT main.guid AS extguid,
-        main.type AS exttype,
-        version.version AS extversion,
-        version.uri AS exturi,
-        version.minappver AS appminver,
-        version.maxappver AS appmaxver,
-        applications.guid AS appguid
- FROM main
-   INNER JOIN version ON main.id = version.id
-   INNER JOIN applications ON version.appid = applications.appid ";
-
-  /* We want to filter the results so that only OS=ALL and OS specific
-results show up. */
-
-  $where = " WHERE main.guid = '" . $reqItemGuid[$i] . "' 
-             AND applications.guid = '" . $reqTargetAppGuid . "'
-             AND (version.OSID = 1 OR version.OSID = " . $osid . ")
-             AND version.approved = 'YES'";
-
-  /* Sort the result set so that the greatest OS Specific is the last one
-at each level. */
-
-  $order = " ORDER BY version.MaxAppVer_int DESC, version.version 
-DESC, version.osid DESC";
-
-  $result = mysql_query ($query . $where . $order);
-
-  if (!$result) {
-    bail ('Query error: ' . mysql_error());
-  }
-
-  // info for this version
-  $thisVersionData = '';
-
-  // info for highest version
-  $highestVersionData = '';
-
-  $itemType = '';
-
-  while ($line = mysql_fetch_array($result, MYSQL_ASSOC)) {
-    if (empty($itemType)) {
-      $itemType = $ext_typemap[$line['exttype']];
+    // Check UA string for a match
+    foreach ($os_ua_string as $string=>$id) {
+        if (strpos($_SERVER['HTTP_USER_AGENT'],$string) !== false) {
+            return $id;
+        }
     }
 
-    // Do we already have the current or a newer one?
-    if (vercmp($line['extversion'], $reqItemVersion[$i]) <= 0) {
-      $thisVersionData = $line;
-      break;
-    }
-
-    // Is this one compatible?
-    if (vercmp($line['appmaxver'], $reqTargetAppVersion) >= 0 &&
-	vercmp($line['appminver'], $reqTargetAppVersion) <= 0) {
-      $highestVersionData = $line;
-      break;
-    }
-    // Keep going until we find one that is
-  }
-
-  print "<RDF:Description about=\"urn:mozilla:{$itemType}:{$reqItemGuid[$i]}\">\n";
-
-  // output list of updates (just highest and this)
-  print " <em:updates><RDF:Seq>\n";
-  if (!empty($thisVersionData))
-    print "  <RDF:li resource=\"urn:mozilla:{$itemType}:{$reqItemGuid[$i]}:{$thisVersionData['extversion']}\"/>\n";
-  if (!empty($highestVersionData))
-    print "  <RDF:li resource=\"urn:mozilla:{$itemType}:{$reqItemGuid[$i]}:{$highestVersionData['extversion']}\"/>\n";
-  print " </RDF:Seq></em:updates>\n";
-
-  // output compat bits for firefox 0.9
-  if (!empty($highestVersionData)) {
-    print " <em:version>{$highestVersionData['extversion']}</em:version>\n";
-    print " <em:updateLink>{$highestVersionData['exturi']}</em:updateLink>\n";
-  }
-
-  print "</RDF:Description>\n\n";
-
-  if (!empty($thisVersionData))
-    print_update ($thisVersionData);
-  if (!empty($highestVersionData))
-    print_update ($highestVersionData);
-
-  mysql_free_result ($result);
+    // If we get here, there is no defined OS
+    // This OS is undetermined, and the query will instead rely on "ALL" (1) in the OR
+    return false;
 }
-
-print "</RDF:RDF>\n";
-
 ?>
-

@@ -1,24 +1,17 @@
 <?php
-require"core/sessionconfig.php";
-require"../core/config.php";
-$function = $_GET["function"];
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
-<HTML>
-<HEAD>
-<TITLE>Mozilla Update :: Developer Control Panel :: Category Manager</TITLE>
-<?php
-include"$page_header";
-include"inc_sidebar.php";
-?>
-<?php
+require_once('../core/init.php');
+require_once('./core/sessionconfig.php');
+$function = $_GET['function'];
+$page_title = 'Mozilla Update :: Developer Control Panel :: Category Manager';
+require_once(HEADER);
+require_once('inc_sidebar.php');
+
 if ($_SESSION["level"]=="admin") {
     //Do Nothing, they're good. :-)
 } else {
     echo"<h1>Access Denied</h1>\n";
     echo"You do not have access to the Category Manager";
-    include"$page_footer";
-    echo"</body></html>\n";
+    require_once(FOOTER);
     exit;
 }
 ?>
@@ -181,7 +174,5 @@ if (!$categoryid) { $categoryid = escape_string($_POST["categoryid"]); }
 </div>
 
 <?php
-include"$page_footer";
+require_once(FOOTER);
 ?>
-</BODY>
-</HTML>

@@ -35,23 +35,15 @@
 // the terms of any one of the MPL, the GPL or the LGPL.
 //
 // ***** END LICENSE BLOCK *****
-?>
-<?php
-require"../core/config.php";
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html lang="en">
 
-<head>
+require_once('../core/init.php');
 
-<?php
 //----------------------------
 //Global $_GET variables
 //----------------------------
 if ($_GET["numpg"]) {$items_per_page = escape_string($_GET["numpg"]); } else {$items_per_page="10";}//Default Num per Page is 10
 if ($_GET["category"]) { $category = escape_string($_GET["category"]); }
 if ($category=="All") {$category="";}
-
 
 if (!$_GET["pageid"]) {$pageid="1"; } else { $pageid = escape_string($_GET["pageid"]); } //Default PageID is 1
 $type="T"; //Default Type is T
@@ -76,20 +68,21 @@ switch ($_SESSION["category"]) {
 $rssfeed = "rss/?application=" . $application . "&type=" . $type . "&list=" . $rsslist;
 
 if (!$category) {$categoryname = "All $typename"; } else {$categoryname = $category; }
-?>
 
-<TITLE>Mozilla Update :: Themes - List - <?php echo"$categoryname"; if ($pageid) {echo" - Page $pageid"; } ?></TITLE>
-
-<?php
-if ($rsslist) {
-echo"<link rel=\"alternate\" type=\"application/rss+xml\" title=\"RSS\" href=\"http://$_SERVER[HTTP_HOST]/$rssfeed\">";
+$page_title = 'Mozilla Update :: Themes - List - '.$categoryname; 
+if ($pageid) 
+{
+    $page_title .= ' - Page $pageid'; 
 }
-?>
 
-<?php
+if ($rsslist) {
+    $page_headers = '<link rel="alternate" type="application/rss+xml"
+    title="RSS" href="http://'.$_SERVER['HTTP_HOST'].'/'.$rssfeed.'">"';
+}
+
 installtrigger("themes");
 
-include"$page_header";
+require_once(HEADER);
 
 ?>
 <div id="mBody">
@@ -393,7 +386,7 @@ echo"<h2 class=\"first\"><A HREF=\"moreinfo.php?".uriparams()."&amp;id=$id\">$na
 
         echo"<p class=\"screenshot\">\n";
 
-            list($width, $height, $attr) = getimagesize("$websitepath"."$previewuri");
+            list($width, $height, $attr) = getimagesize(FILE_PATH.'/'.$previewuri);
             echo"<a href=\"moreinfo.php?".uriparams()."&amp;id=$id\"><img src=\"$previewuri\" height=$height width=$width alt=\"$name preview - $caption\" title=\"$caption\"></a>\n";
 
         echo"</p>\n";
@@ -503,9 +496,8 @@ if ($i==$pageid) {
 
 ?>
 </div>
-<?php
-include"$page_footer";
-?>
 </div>
-</BODY>
-</HTML>
+
+<?php
+require_once(FOOTER);
+?>

@@ -1,6 +1,6 @@
 <?php
-include_once("../core/config.php");
-include_once("../core/class_rdf_parser.php");
+require_once('../core/init.php');
+require_once('../core/class_rdf_parser.php');
 
 define("EM_NS", "http://www.mozilla.org/2004/em-rdf#");
 define("MF_RES", "urn:mozilla:install-manifest");

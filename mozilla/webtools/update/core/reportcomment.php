@@ -37,8 +37,7 @@
 // ***** END LICENSE BLOCK *****
 
 //Inappropriate Comment Reporting Tool
-require"../core/config.php";
-
+require_once('../core/init.php');
 
 //Check and see if the CommentID/ID is valid.
 $sql = "SELECT `ID`, `CommentID` FROM `feedback` WHERE `ID` = '".escape_string($_GET[id])."' AND `CommentID`='".escape_string($_GET["commentid"])."' LIMIT 1";
@@ -75,16 +74,10 @@ if ($_GET["type"]=="E") {
 
 //$return_path="$type/moreinfo.php?id=$id&vid=$vid&".uriparams()."&page=comments&pageid=$_GET[pageid]#$commentid";
 
+$page_title = 'Mozilla Update :: Report a Comment';
+require_once(HEADER);
 ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
-<html lang="EN" dir="ltr">
-<head>
-<title>Mozilla Update :: Report a Comment</title>
-</head>
-<body>
-<?php
-include"$page_header";
-?>
+
 <h1>Mozilla Update :: Report a Comment Tool</h1>
 <p>You have sucessfully reported this comment to Mozilla Update staff.</p>
 <p>A staff member will review your submission and take the appropriate action.</p>
@@ -94,7 +87,5 @@ include"$page_header";
 echo"$return_path"; ?>">click this link</a>. */ ?>
 
 <?php
-include"$page_footer";
+require_once(FOOTER);
 ?>
-</body>
-</html>

@@ -36,20 +36,36 @@
 //
 // ***** END LICENSE BLOCK *****
 ?>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
 
+<head>
+
+    <?php
+    $page_title = (empty($page_title)) ? 'Mozilla Update' : $page_title;
+    echo '<title>'.$page_title.'</title>'."\n";
+    ?>
+
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    
 	<meta name="keywords" content="mozilla update, mozilla extensions, mozilla plugins, thunderbird themes, thunderbird extensions, firefox extensions, firefox themes">
 	
-	<link rel="stylesheet" type="text/css" href="/css/print.css" media="print">
+	<link rel="stylesheet" type="text/css" href="<?php echo WEB_PATH; ?>/css/print.css" media="print">
 	
-	<link rel="stylesheet" type="text/css" href="/css/base/content.css" media="all">
-	<link rel="stylesheet" type="text/css" href="/css/cavendish/content.css" title="Cavendish" media="all">
+	<link rel="stylesheet" type="text/css" href="<?php echo WEB_PATH; ?>/css/base/content.css" media="all">
+	<link rel="stylesheet" type="text/css" href="<?php echo WEB_PATH; ?>/css/cavendish/content.css" title="Cavendish" media="all">
 	
-	<link rel="stylesheet" type="text/css" href="/css/base/template.css" media="screen">
-	<link rel="stylesheet" type="text/css" href="/css/cavendish/template.css" title="Cavendish" media="screen">
+	<link rel="stylesheet" type="text/css" href="<?php echo WEB_PATH; ?>/css/base/template.css" media="screen">
+	<link rel="stylesheet" type="text/css" href="<?php echo WEB_PATH; ?>/css/cavendish/template.css" title="Cavendish" media="screen">
 	
-	<link rel="icon" href="/favicon.ico" type="image/png">
+	<link rel="icon" href="<?php echo WEB_PATH; ?>/favicon.ico" type="image/png">
 	
 	<link rel="home" title="Home" href="http://update.mozilla.org/">
+<?php
+if (!empty($page_headers)) {
+    echo $page_headers;
+}
+?>
 </head>
 
 <body id="update-mozilla-org">
@@ -61,13 +77,13 @@
 <div id="header">
 	
 	<div id="key-title">
-	<h1><a href="/" title="Return to home page" accesskey="1">Mozilla Update: Beta</a></h1>
+	<h1><a href="<?php echo WEB_PATH; ?>/" title="Return to home page" accesskey="1">Mozilla Update: Beta</a></h1>
 	<ul>
-		<li><a href="/" title="Learn More About Mozilla Updates">home</a></li>
-		<li><a href="/about/" title="Learn More About Mozilla Updates">about</a></li>
-		<li><a href="/developers/" title="Find Tools and Information for Developers">developers</a></li>
+		<li><a href="<?php echo WEB_PATH; ?>/" title="Learn More About Mozilla Updates">home</a></li>
+		<li><a href="<?php echo WEB_PATH; ?>/about/" title="Learn More About Mozilla Updates">about</a></li>
+		<li><a href="<?php echo WEB_PATH; ?>/developers/" title="Find Tools and Information for Developers">developers</a></li>
 		<li>
-		<form id="search" method="get" action="/quicksearch.php" title="Search Mozilla Update">
+		<form id="search" method="get" action="<?php echo WEB_PATH; ?>/quicksearch.php" title="Search Mozilla Update">
 		<div>
 		<label for="q" title="Search Mozilla Update">search:</label>
 		<input type="text" id="q" name="q" accesskey="s" size="10">
@@ -92,15 +108,15 @@
 	<div id="key-menu">	
 		<dl id="menu-firefox">
 		<dt>Firefox:</dt>
-		<dd><a href="/extensions/?<?php echo"".uriparams()."&amp;"; ?>application=firefox" title="Get Extensions for the Firefox Browser">Extensions</a>, <a href="/themes/?<?php echo"".uriparams()."&amp;"; ?>application=firefox" title="Get Themes for the Firefox Browser">Themes</a>, <a href="/plugins/" title="Get Plugins for Firefox">Plugins</a><!--, <a href="/searchengines/" title="Get New Search Engines for the Search Box in Firefox">Search Engines</a>--></dd>
+		<dd><a href="<?php echo WEB_PATH; ?>/extensions/?<?php echo"".uriparams()."&amp;"; ?>application=firefox" title="Get Extensions for the Firefox Browser">Extensions</a>, <a href="<?php echo WEB_PATH; ?>/themes/?<?php echo"".uriparams()."&amp;"; ?>application=firefox" title="Get Themes for the Firefox Browser">Themes</a>, <a href="<?php echo WEB_PATH; ?>/plugins/" title="Get Plugins for Firefox">Plugins</a><?php /*, <a href="<?php echo WEB_PATH; ?>/searchengines/" title="Get New Search Engines for the Search Box in Firefox">Search Engines</a>--> */ ?></dd>
 		</dl>
 		<dl id="menu-thunderbird">
 		<dt>Thunderbird:</dt>
-		<dd><a href="/extensions/?<?php echo"".uriparams()."&amp;"; ?>application=thunderbird" title="Get Extensions for Thunderbird Email">Extensions</a>, <a href="/themes/?<?php echo"".uriparams()."&amp;"; ?>application=thunderbird" title="Get Themes for Thunderbird Email">Themes</a></dd>
+		<dd><a href="<?php echo WEB_PATH; ?>/extensions/?<?php echo"".uriparams()."&amp;"; ?>application=thunderbird" title="Get Extensions for Thunderbird Email">Extensions</a>, <a href="<?php echo WEB_PATH; ?>/themes/?<?php echo"".uriparams()."&amp;"; ?>application=thunderbird" title="Get Themes for Thunderbird Email">Themes</a></dd>
 		</dl>
 		<dl id="menu-mozillasuite">
 		<dt>Mozilla Suite:</dt>
-		<dd><a href="/extensions/?<?php echo"".uriparams()."&amp;"; ?>application=mozilla" title="Get Extensions for the Mozilla Suite">Extensions</a>, <a href="/themes/?<?php echo"".uriparams()."&amp;"; ?>application=mozilla" title="Get Themes for the Mozilla Suite">Themes</a>, <a href="/plugins/" title="Get Plugins for Mozilla Suite">Plugins</a></dd>
+		<dd><a href="<?php echo WEB_PATH; ?>/extensions/?<?php echo"".uriparams()."&amp;"; ?>application=mozilla" title="Get Extensions for the Mozilla Suite">Extensions</a>, <a href="<?php echo WEB_PATH; ?>/themes/?<?php echo"".uriparams()."&amp;"; ?>application=mozilla" title="Get Themes for the Mozilla Suite">Themes</a>, <a href="<?php echo WEB_PATH; ?>/plugins/" title="Get Plugins for Mozilla Suite">Plugins</a></dd>
 		</dl>
 		<div class="ie-clear-menu">&nbsp;</div>
 	</div>
@@ -112,3 +128,4 @@
 <!-- closes #header-->
 
 <hr class="hide">
+

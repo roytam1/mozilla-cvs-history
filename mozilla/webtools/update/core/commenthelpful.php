@@ -36,12 +36,9 @@
 //
 // ***** END LICENSE BLOCK *****
 
-//XXX -- Meta-Ratings not yet production ready. Disabled for Update 1.0. Bug 247144.
-exit("Meta-Ratings Disabled");
-
 
 //Submit Review/Rating Feedback to Table
-require"../core/config.php";
+require_once('../core/init.php');
 
 
 //Check and see if the CommentID/ID is valid.
@@ -57,7 +54,7 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
     //Make Sure action is as expected.
     if ($_GET["action"]=="yes") {
         $action="yes";
-    } else if ($_GET["action"]=="no") {
+    } else {
         $action="no";
     }
 
@@ -95,15 +92,14 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
     $sql = "UPDATE `feedback` SET `helpful-yes`='$helpful_yes',`helpful-no`='$helpful_no',`helpful-rating`='$helpful_rating' WHERE `CommentID`='$commentid' LIMIT 1";
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 
-
-
-if ($_GET["type"]=="E") {
-    $type="extensions";
-} else if ($_GET["type"]=="T") {
-    $type="themes";
+if ($_GET['type']=='T') {
+    $type='themes';
+} else {
+    $type='extensions';
 }
 
-$return_path="$type/moreinfo.php?id=$id&vid=$vid&".uriparams()."&page=comments&pageid=$_GET[pageid]#$commentid";
-header("Location: http://$sitehostname/$return_path");
+$pageid = intval($_GET['pageid']);
+$return_path="$type/moreinfo.php?id=$id&vid=$vid&".uriparams()."&page=comments&pageid=$pageid#$commentid";
+header('Location: https://'.HOST_NAME.'/'.$return_path);
 exit;
 ?>

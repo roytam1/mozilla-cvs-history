@@ -36,32 +36,36 @@
 //
 // ***** END LICENSE BLOCK *****
 
-// ******  Mozilla Update -- Configuration File  ******
-// All common PHP Variables/functions are defined here
+/**
+ * Mozilla Update Initialization Script
+ * 
+ * Configuration, libraries and includes are processed here.
+ *
+ * @package umo
+ * @subpackage core
+ * @author Mike Morgan
+ */
 
+// Process configuration file.
+require_once('config.php');
 
-// MySQL Server Configuration Variables
-include"dbconfig.php"; // Include Database Server Configuration File
+// Connect to DB.
+//
+// The core includes depend on this, so taking this out for use in static pages
+// is not possible.
+//
+// For completely static pages, do not require init.php, require only config.php.
+// This prevents unnecessary database connections.
+//
+// DB_HOST, DB_USER, DB_PASS, DB_NAME are set in ./config.php
+$connection = mysql_connect(DB_HOST,DB_USER,DB_PASS) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
+$db = mysql_select_db(DB_NAME, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
 
-// General Website Configuration Variables
-$websitepath = "/opt/update-beta";                 // Local Path to Site Files
-$repositorypath = "/opt/update-beta/files";        //Path to XPI/JAR Respository
-$sitehostname = $_SERVER["SERVER_NAME"]; // DNS Hostname, ex. "update.mozilla.org"
-$ftpurl = "http://ftp.mozilla.org/pub/mozilla.org"; // URL to FTP site
+// Includes.
+require_once('inc_guids.php'); // GUID --> AppName Handler
+require_once('inc_global.php'); // Global Functions - Variable Cleanup
+require_once('inc_browserdetection.php'); // Browser Detection - App Variable Handling
 
-// Page Header and Footer Path Variables
-$page_header = "$websitepath/core/inc_header.php";  // Path to Page Header on Disk
-$page_footer = "$websitepath/core/inc_footer.php";  // Path to Page Footer on Disk
-
-//Function: getmicrotime() - Page Load Timing Debug Function
-function getmicrotime() {
-	list($usec, $sec) = explode(" ", microtime());
-    return ((float)$usec + (float)$sec);
-}
+// Start timer.
 $time_start = getmicrotime();
-
-// Update Core Include Files
-include"inc_guids.php"; // GUID --> AppName Handler
-include"inc_global.php"; // Global Functions - Variable Cleanup
-include"inc_browserdetection.php"; //Browser Detection - App Variable Handling
 ?>

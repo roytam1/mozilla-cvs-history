@@ -15,30 +15,35 @@ if (($_SESSION["level"] == "admin" or $_SESSION["level"] == "editor") and $skipq
 <ul id="nav">
 <li><A HREF="main.php">Overview</A></li>
 <?php
-if ($_SESSION["level"] == "user") {
+
+if ($_SESSION['level'] == 'user') {
 ?>
 <li><A HREF="usermanager.php">Your Profile</A></li>
 
 <?php
-} else if ($_SESSION["level"] == "editor") {
+} 
+
+if ($_SESSION['level'] == 'editor') {
 ?>
-<li><A HREF="usermanager.php?function=edituser&amp;userid=<?php echo"$_SESSION[uid]"; ?>">Your Profile</A></li>
-<li><A HREF="approval.php">Approval Queue <?php if ($skipqueue != "true") { echo"($queuenum)"; } ?></A></li>
-<li><a href="commentsmanger.php?function=flaggedcomments">Comments Manager <?php if ($skipcomments != "true") { echo"($commentsnum)"; } ?></a></li>
-<li><a href="reviewsmanager.php">Reviews Manager</a></li>
+<li><A HREF="<?=WEB_PATH?>/developers/usermanager.php?function=edituser&amp;userid=<?php echo"$_SESSION[uid]"; ?>">Your Profile</A></li>
+<li><A HREF="<?=WEB_PATH?>/developers/approval.php">Approval Queue <?php if ($skipqueue != "true") { echo"($queuenum)"; } ?></A></li>
+<li><a href="<?=WEB_PATH?>/developers/commentsmanger.php?function=flaggedcomments">Comments Manager <?php if ($skipcomments != "true") { echo"($commentsnum)"; } ?></a></li>
+<li><a href="<?=WEB_PATH?>/developers/reviewsmanager.php">Reviews Manager</a></li>
 <?php
-} else {
+} 
+
+if ($_SESSION['level'] == 'admin') {
 ?>
-<li><A HREF="usermanager.php?function=edituser&amp;userid=<?php echo"$_SESSION[uid]"; ?>">Your Profile</A></li>
-<li><A HREF="approval.php">Approval Queue <?php if ($skipqueue != "true") { echo"($queuenum)"; } ?></A></li>
-<li><A HREF="listmanager.php?type=T">Themes list</A></li>
-<li><A HREF="listmanager.php?type=E">Extensions list</A></li>
-<li><A HREF="usermanager.php">Users Manager</A></li>
-<li><a href="appmanager.php">Application Manager</a></li>
-<li><a href="categorymanager.php">Category Manager</A></li>
-<li><a href="faqmanager.php">FAQ Manager</A></li>
-<li><a href="commentsmanager.php?function=flaggedcomments">Comments Manager <?php if ($skipcomments != "true") { echo"($commentsnum)"; } ?></a></li>
-<li><a href="reviewsmanager.php">Reviews Manager</a></li>
+<li><A HREF="<?=WEB_PATH?>/developers/usermanager.php?function=edituser&amp;userid=<?php echo"$_SESSION[uid]"; ?>">Your Profile</A></li>
+<li><A HREF="<?=WEB_PATH?>/developers/approval.php">Approval Queue <?php if ($skipqueue != "true") { echo"($queuenum)"; } ?></A></li>
+<li><A HREF="<?=WEB_PATH?>/developers/listmanager.php?type=T">Themes list</A></li>
+<li><A HREF="<?=WEB_PATH?>/developers/listmanager.php?type=E">Extensions list</A></li>
+<li><A HREF="<?=WEB_PATH?>/developers/usermanager.php">Users Manager</A></li>
+<li><a href="<?=WEB_PATH?>/developers/appmanager.php">Application Manager</a></li>
+<li><a href="<?=WEB_PATH?>/developers/categorymanager.php">Category Manager</A></li>
+<li><a href="<?=WEB_PATH?>/developers/faqmanager.php">FAQ Manager</A></li>
+<li><a href="<?=WEB_PATH?>/developers/commentsmanager.php?function=flaggedcomments">Comments Manager <?php if ($skipcomments != "true") { echo"($commentsnum)"; } ?></a></li>
+<li><a href="<?=WEB_PATH?>/developers/reviewsmanager.php">Reviews Manager</a></li>
 <?php } ?>
 <li><a href="logout.php">Logout</A></li>
 </ul>

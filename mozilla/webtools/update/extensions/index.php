@@ -37,22 +37,19 @@
 // ***** END LICENSE BLOCK *****
 ?>
 <?php
-require"../core/config.php";
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html lang="en">
-
-<head>
-    <TITLE>Mozilla Update :: Extensions - Add Features to Mozilla Software</TITLE>
- <link rel="alternate" type="application/rss+xml" title="New <?php echo ucwords($application); ?> Extensions Additions" href="/rss/?application=<?php echo"$application"; ?>&amp;type=E&amp;list=newest">
-<?php
-include"$page_header";
+require_once('../core/init.php');
+$page_title = 'Mozilla Update :: Extensions - Add Features to Mozilla Software';
+$page_headers = '<link rel="alternate" type="application/rss+xml"
+   title="New '.ucwords($application).' Extensions Additions"
+   href="/rss/?application='.$application.'&amp;type=E&amp;list=newest">';
+require_once(HEADER);
 ?>
 
 <div id="mBody">
+
     <?php
-    $index="yes";
-    include"inc_sidebar.php";
+    $index = 'yes';
+    require_once('./inc_sidebar.php');
     ?>
 
 	<div id="mainContent">
@@ -103,7 +100,7 @@ print(ucwords($application)); ?> small to download <?php } ?>.</p>
 
 
             echo"		<li>";
-            echo"<a href=\"moreinfo.php?".uriparams()."&amp;id=$id\"><strong>$name</strong></a>, $rating stars<br>";
+            echo"<a href=\"./moreinfo.php?".uriparams()."&amp;id=$id\"><strong>$name</strong></a>, $rating stars<br>";
             echo"$description";
             echo"</li>\n";
 
@@ -144,7 +141,7 @@ print(ucwords($application)); ?> small to download <?php } ?>.</p>
                 }
 
                 echo"		<li>";
-                echo"<a href=\"/$typename/moreinfo.php?".uriparams()."&amp;id=$id\"><strong>$name</strong></a>, $downloadcount downloads<br>";
+                echo"<a href=\"../$typename/moreinfo.php?".uriparams()."&amp;id=$id\"><strong>$name</strong></a>, $downloadcount downloads<br>";
                 echo"$description";
                 echo"</li>\n";
 
@@ -190,7 +187,7 @@ print(ucwords($application)); ?> small to download <?php } ?>.</p>
                 }
 
                 echo"		<li>";
-                echo"<a href=\"/$typename/moreinfo.php?".uriparams()."&amp;id=$id\"><strong>$name $version</strong></a>, $dateadded<br>";
+                echo"<a href=\"../$typename/moreinfo.php?".uriparams()."&amp;id=$id\"><strong>$name $version</strong></a>, $dateadded<br>";
                 echo"$description";
                 echo"</li>\n";
 
@@ -207,7 +204,5 @@ print(ucwords($application)); ?> small to download <?php } ?>.</p>
 <!-- closes #mBody-->
 
 <?php
-include"$page_footer";
+require_once(FOOTER);
 ?>
-</body>
-</html>

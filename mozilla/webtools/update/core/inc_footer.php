@@ -39,8 +39,8 @@
 <hr class="hide">
 	<div id="footer">
 		<ul id="bn">
-		<li><a href="/about/policies/">Terms of Use</a></li>
-		<li><a href="/about/contact/">Contact Us</a></li>
+		<li><a href="<?php echo WEB_PATH; ?>/about/policies/">Terms of Use</a></li>
+		<li><a href="<?php echo WEB_PATH; ?>/about/contact/">Contact Us</a></li>
 		<li><a href="http://www.mozilla.org/foundation/donate.html">Donate to
             Mozilla</a></li>
 		</ul>
@@ -52,3 +52,6 @@
 
 </div>
 <!-- closes #container -->
+
+</body>
+</html>

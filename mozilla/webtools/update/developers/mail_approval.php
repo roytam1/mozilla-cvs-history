@@ -32,7 +32,7 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
     $message .= "Your item was tested by the editor using $testbuild on $testos.\n";
     $message .= "Editor's Comments:\n $comments\n";
     $message .= "----\n";
-    $message .= "Mozilla Update: https://$sitehostname/\n";
+    $message .= 'Mozilla Update: https://'.HOST_NAME.'/'."\n";
 
     mail($to_address, $subject, $message, $headers);
 

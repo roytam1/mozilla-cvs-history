@@ -36,14 +36,34 @@
 //
 // ***** END LICENSE BLOCK *****
 
-// ******  Mozilla Update -- Database Configuration File  ******
+/**
+ * Mozilla Update configuration.
+ *
+ * Define central configuration variables.  Use CAPS for constants to flag them
+ * as being defined in this document.
+ *
+ * Copy this document (config-dist.php) to (config.php).  This prevents
+ * committing database or working directory information back to CVS.
+ *
+ * @package umo
+ * @subpackage core
+ * @author Mike Morgan
+ */
 
-// MySQL Server Configuration Variables
-    $db_server = "localhost"; //MySQL Server Hostname
-    $db_user = ""; // MySQL Username
-    $db_pass = ""; // MySQL Password  
-    $db_name = "update-beta"; // MySQL Database Name
+// Path information.  No trailing slashes. (old variable)
+define('FILE_PATH',''); // Root filepath of application. ($websitepath)
+define('WEB_PATH',''); // Relative webpath. ('' if at root).
+define('REPO_PATH',FILE_PATH.'/files'); // XPI repo path. ($repositorypath)
+define('FTP_URL','http://ftp.mozilla.org/pub/mozilla.org'); // FTP. ($ftpurl)
+define('HOST_NAME',$_SERVER['SERVER_NAME']); // Host (*.*.*) ($sitehostname)
 
-    $connection = mysql_connect("$db_server","$db_user","$db_pass") or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
-    $db = mysql_select_db("$db_name", $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
+// Site template includes. 
+define('HEADER',FILE_PATH.'/core/inc_header.php');
+define('FOOTER',FILE_PATH.'/core/inc_footer.php');
+
+// DB config.
+define('DB_HOST',''); // MySQL host
+define('DB_USER',''); // MySQL username
+define('DB_PASS',''); // MySQL password
+define('DB_NAME',''); // MySQL database
 ?>

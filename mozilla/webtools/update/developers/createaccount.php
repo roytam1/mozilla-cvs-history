@@ -1,14 +1,9 @@
 <?php
-require"../core/config.php";
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<HTML>
-<HEAD>
-<TITLE>Mozilla Update :: Create An Account</TITLE>
+require_once('../core/init.php');
+$page_title = 'Mozilla Update :: Create An Account';
+require_once(HEADER);
+$function = $_GET['function'];
 
-<?php
-include"$page_header";
-$function = $_GET["function"];
 if (!$function or $function=="step1") {
 ?>
 <hr class="hide">
@@ -85,8 +80,7 @@ if ($emailvalid=="no") {echo"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Your e-mail addresses
 if ($passwordvalid=="no") {echo"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The passwords you entered did not match.<BR>\n"; }
 if ($namevalid=="no") {echo"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The name field cannot be left blank.<BR>\n"; }
 
-include"$page_footer";
-echo"</BODY>\n</HTML>\n";
+require_once(FOOTER);
 exit;
 }
 
@@ -142,7 +136,5 @@ $sql = "SELECT `UserID` from `userprofiles` WHERE `UserEmail`='$email' and `Conf
 </div>
 
 <?php
-include"$page_footer";
+require_once(FOOTER);
 ?>
-</BODY>
-</HTML>

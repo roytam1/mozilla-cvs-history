@@ -84,7 +84,7 @@ echo "  </image>\n";
     echo "    <item>\n";
     echo "      <pubDate>" . $dateupdated . "</pubDate>\n";
     echo "      <title>" . $title . " " . $version . " for " . $appname . "</title>\n";
-    echo "      <link>http://$sitehostname/" . strtolower($listType) . "/moreinfo.php?id=" . $id . "&amp;vid=" . $vid . "</link>\n";
+    echo "      <link>http://" . HOST_NAME . "/" . strtolower($listType) . "/moreinfo.php?id=" . $id . "&amp;vid=" . $vid . "</link>\n";
     echo "      <description>" . $description . "</description>\n";
     echo "    </item>\n";
 
@@ -92,5 +92,4 @@ echo "  </image>\n";
 
 echo "</channel>\n";
 echo "</rss>\n";
-
 ?>

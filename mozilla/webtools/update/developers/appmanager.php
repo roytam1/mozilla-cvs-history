@@ -1,22 +1,15 @@
 <?php
-require"core/sessionconfig.php";
-require"../core/config.php";
-$function = $_GET["function"];
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
-<HTML>
-<HEAD>
-<TITLE>Mozilla Update :: Developer Control Panel :: Application Manager</TITLE>
-<?php
-include"$page_header";
-include"inc_sidebar.php";
-?>
-<?php
+require_once('../core/init.php');
+require_once('./core/sessionconfig.php');
+$function = $_GET['function'];
+$page_title = 'Mozilla Update :: Developer Control Panel :: Application Manager';
+require_once(HEADER);
+require_once('./inc_sidebar.php');
+
 if ($_SESSION["level"]!="admin") {
     echo"<h1>Access Denied</h1>\n";
     echo"You do not have access to the Application Manager";
-    include"$page_footer";
-    echo"</body></html>\n";
+    require_once(FOOTER);
     exit;
 }
 ?>
@@ -147,8 +140,7 @@ Public Version: Yes: <input name="public_ver" type="radio" value="YES" checked> 
     $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
     if ($sql_result) {
         echo"You've successfully deleted the application '$appname $version'<br>";
-        include"$page_footer";
-        echo"</body>\n</html>\n";
+        require_once(FOOTER);
         exit;
     }
 }
@@ -227,7 +219,5 @@ SubVer: <input name="SubVer" size="5" maxlength="5" title="SubVersion Value (Ex.
 </div>
 
 <?php
-include"$page_footer";
+require_once(FOOTER);
 ?>
-</body>
-</html>
