@@ -19,9 +19,6 @@ $super{'3'} = ['despotdaemon%netscape.com',];
 $mode{'46'} = 'Open';
 $branch{'46'} = 'HEAD';
 $fullname{'46'} = 'ef';
-$mode{'21'} = 'Open';
-$branch{'21'} = 'HEAD';
-$fullname{'21'} = 'gnomefe';
 $mode{'12'} = 'Open';
 $branch{'12'} = 'HEAD';
 $fullname{'12'} = 'jpeg';
@@ -42,7 +39,6 @@ if (m:^CVSROOT/commitcheck\.pl$:) {return '3';}
 if (m:^CVSROOT/passwd$:) {return '3';}
 if (m:^jpeg/.*$:) {return '12';}
 if (m:^mozilla/[^/]*$:) {return '19';}
-if (m:^mozilla/cmd/gnomefe/.*$:) {return '21';}
 if (m:^nsprpub/.*$:) {return '24';}
 if (m:^mozilla/ef/.*$:) {return '46';}
 }
