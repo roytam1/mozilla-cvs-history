@@ -632,7 +632,7 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
     }
 
         
-    SendSQL("SELECT userid, (refreshed_when > " . SqlQuote($::group_when) . ") " .
+    SendSQL("SELECT userid, (refreshed_when > " . SqlQuote($::last_changed) . ") " .
             "FROM profiles WHERE login_name = " . SqlQuote($person));
     my ($userid, $current) = (FetchSQLData());
 
@@ -783,8 +783,8 @@ if (open(FID, "<data/nomail")) {
 # is once and determine the need to rederive users using the same DB access
 # that gets the user's email address each time a person is processed.
 #
-SendSQL("SELECT MAX(group_when) FROM groups");
-($::group_when) = FetchSQLData();
+SendSQL("SELECT MAX(last_changed) FROM groups");
+($::last_changed) = FetchSQLData();
 
 if ($#ARGV >= 0 && $ARGV[0] eq "regenerate") {
     print "Regenerating is no longer required or supported\n";
