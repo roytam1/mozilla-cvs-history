@@ -497,8 +497,7 @@ NSPR -a \
 	mozilla/nsprpub
 
 SeaMonkeyCore -a \
-	mozilla/README/nglayout \
-	mozilla/build/mac \
+	mozilla/README \
 	mozilla/client.mk \
 	mozilla/client.mak \
 	mozilla/configure.in \
