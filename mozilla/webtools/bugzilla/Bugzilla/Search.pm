@@ -813,9 +813,9 @@ sub init {
         }
     }
     my $query =  ("SELECT DISTINCT " . 
-                  " COUNT(ugmap.user_id) AS cntuseringroups, " .
-                  " COUNT(bgmap.group_id) AS cntbugingroups, " .
-                  " ((COUNT(ccmap.who) AND cclist_accessible) " .
+                  " COUNT(DISTINCT ugmap.user_id) AS cntuseringroups, " .
+                  " COUNT(DISTINCT bgmap.group_id) AS cntbugingroups, " .
+                  " ((COUNT(DISTINCT ccmap.who) AND cclist_accessible) " .
                   "  OR ((bugs.reporter = $::userid) AND bugs.reporter_accessible) " .
                   "  OR bugs.assigned_to = $::userid ) AS canseeanyway, " .
                     join(', ', @fields) .
