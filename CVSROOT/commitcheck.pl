@@ -298,13 +298,6 @@ $fullname{'93'} = 'Zlib';
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'HEAD') {
-if (m:^js/src/liveconnect/.*$:) {return '72';}
-if (m:^mozilla/extensions/cookie$:) {return '171';}
-if (m:^mozilla/netwerk/.*$:) {return '77';}
-if (m:^mozilla/gfx/src/beos$:) {return '172';}
-if (m:^mozilla/widget/src/beos$:) {return '172';}
-if (m:^mozilla/nsprpub/.*$:) {return '78';}
-if (m:^mozilla/modules/plugin/.*$:) {return '81';}
 if (m:^mozilla/modules/libpref/.*$:) {return '82';}
 if (m:^mozilla/modules/progress/.*$:) {return '83';}
 if (m:^mozilla/modules/libreg/.*$:) {return '84';}
@@ -423,6 +416,13 @@ if (m:^js/src/*akefile.*$:) {return '70';}
 if (m:^mozilla/extensions/jsd/.*$:) {return '71';}
 if (m:^mozilla/js/jsd/.*$:) {return '71';}
 if (m:^mozilla/mail/.*$:) {return '170';}
+if (m:^js/src/liveconnect/.*$:) {return '72';}
+if (m:^mozilla/extensions/cookie$:) {return '171';}
+if (m:^mozilla/netwerk/.*$:) {return '77';}
+if (m:^mozilla/gfx/src/beos$:) {return '172';}
+if (m:^mozilla/widget/src/beos$:) {return '172';}
+if (m:^mozilla/nsprpub/.*$:) {return '78';}
+if (m:^mozilla/modules/plugin/.*$:) {return '81';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
