@@ -140,25 +140,6 @@ sub clean_bug_input {
 }
 
 
-# remove all records from the database which are older then last_time.
-
-sub trim_db_history {
-  my ($self, $tree,) = (@_);
-
-  my ($last_time) =  $main::TIME - $TinderDB::TRIM_SECONDS;
-
-  # sort numerically ascending
-  my (@times) = sort {$a <=> $b} keys %{ $DATABASE{$tree} };
-  foreach $time (@times) {
-    ($time >= $last_time) && last;
-
-    delete $DATABASE{$tree}{$time};
-  }
-
-  return ;
-}
-
-
 
 # get the recent data from the Req log file.  There is one log file
 # per tree.
@@ -287,7 +268,7 @@ sub apply_db_updates {
         $TinderDB::MAX_UPDATES_SINCE_TRIM)
        ) {
       $METADATA{$tree}{'updates_since_trim'}=0;
-      trim_db_history(@_);
+      $self->trim_db_history(@_);
   }
   
   $self->savetree_db($tree);
