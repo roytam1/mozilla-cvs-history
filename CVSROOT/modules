@@ -44,32 +44,32 @@ MozillaSourceUnix -a \
 	MozillaSourceUnixOnly
 
 MozillaSourceMotif -a \
-        MozillaSourceCommon \
+	MozillaSourceCommon \
 	mozilla/cmd/xfe \
-        MozillaSourceUnixOnly
+	MozillaSourceUnixOnly
 
 MozillaSourceQtfe -a \
-        MozillaSourceCommon \
+	MozillaSourceCommon \
 	mozilla/cmd/qtfe \
-        MozillaSourceUnixOnly
+	MozillaSourceUnixOnly
 
 MozillaSourceGnomefe -a \
-        MozillaSourceCommon \
+	MozillaSourceCommon \
 	mozilla/cmd/gnomefe \
-        MozillaSourceUnixOnly
+	MozillaSourceUnixOnly
 
 MozillaSourceYbfe -a \
-        MozillaSourceCommon \
+	MozillaSourceCommon \
 	mozilla/cmd/ybfe \
-        MozillaSourceUnixOnly
+	MozillaSourceUnixOnly
 
 MozillaSourceUnixAllFE -a \
-        MozillaSourceCommon \
+	MozillaSourceCommon \
 	mozilla/cmd/xfe \
 	mozilla/cmd/gnomefe \
 	mozilla/cmd/qtfe \
-        mozilla/cmd/ybfe \
-        MozillaSourceUnixOnly
+	mozilla/cmd/ybfe \
+	MozillaSourceUnixOnly
 
 MozillaSourceCommon -a \
 	mozilla/LEGAL \
