@@ -210,7 +210,18 @@ sub get_current_ignore_builds  {
   # longer apply.
   
   my (@build_names) = get_build_names($tree);
-  my ($pat) = "\^".join("\$\|\^", @build_names)."\$";
+
+  my ($pat) = '';
+
+  foreach $build_name (@build_names) {
+      # careful some buildnames may have '()' or 
+      # other metacharacters in them.
+
+      $pat .= "\^". quotemeta($build_name)."\$".
+          "\|";
+  }
+  chop $pat;
+
   @ignore_builds = grep(/$pat/, @ignore_builds);
 
   
