@@ -70,6 +70,9 @@ $fullname{'49'} = 'GTK';
 $mode{'144'} = 'Open';
 $branch{'144'} = 'HEAD';
 $fullname{'144'} = 'GTK Embedding Widget';
+$mode{'174'} = 'Open';
+$branch{'174'} = 'HEAD';
+$fullname{'174'} = 'Help System';
 $mode{'62'} = 'Open';
 $branch{'62'} = 'HEAD';
 $fullname{'62'} = 'HTML to Text/PostScript Translation';
@@ -298,26 +301,6 @@ $fullname{'93'} = 'Zlib';
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'HEAD') {
-if (m:^mozilla/modules/libpref/.*$:) {return '82';}
-if (m:^mozilla/modules/progress/.*$:) {return '83';}
-if (m:^mozilla/modules/libreg/.*$:) {return '84';}
-if (m:^mozilla/modules/security/.*$:) {return '86';}
-if (m:^mozilla/modules/softupdt/.*$:) {return '87';}
-if (m:^mozilla/content/xml/.*$:) {return '88';}
-if (m:^mozilla/expat/.*$:) {return '88';}
-if (m:^mozilla/extensions/xmlextras/.*$:) {return '88';}
-if (m:^mozilla/xpcom/.*$:) {return '89';}
-if (m:^xpcom/io$:) {return '90';}
-if (m:^mozilla/modules/zlib/.*$:) {return '93';}
-if (m:^mozilla/gfx/public/.*$:) {return '95';}
-if (m:^mozilla/gfx/src/windows/.*$:) {return '95';}
-if (m:^mozilla/view/.*$:) {return '96';}
-if (m:^mozilla/layout/base/.*$:) {return '98';}
-if (m:^mozilla/layout/build/.*$:) {return '98';}
-if (m:^mozilla/layout/doc/.*$:) {return '98';}
-if (m:^mozilla/layout/html/.*$:) {return '98';}
-if (m:^mozilla/layout/macbuild/.*$:) {return '98';}
-if (m:^mozilla/layout/tools/.*$:) {return '98';}
 if (m:^modules/libpr0n/decoders/mng/.*$:) {return '155';}
 if (m:^mozilla/modules/libimg/mng/.*$:) {return '155';}
 if (m:^mozilla/content/html/style/.*$:) {return '100';}
@@ -422,7 +405,28 @@ if (m:^mozilla/netwerk/.*$:) {return '77';}
 if (m:^mozilla/gfx/src/beos$:) {return '172';}
 if (m:^mozilla/widget/src/beos$:) {return '172';}
 if (m:^mozilla/nsprpub/.*$:) {return '78';}
+if (m:^mozilla/extensions/help$:) {return '174';}
 if (m:^mozilla/modules/plugin/.*$:) {return '81';}
+if (m:^mozilla/modules/libpref/.*$:) {return '82';}
+if (m:^mozilla/modules/progress/.*$:) {return '83';}
+if (m:^mozilla/modules/libreg/.*$:) {return '84';}
+if (m:^mozilla/modules/security/.*$:) {return '86';}
+if (m:^mozilla/modules/softupdt/.*$:) {return '87';}
+if (m:^mozilla/content/xml/.*$:) {return '88';}
+if (m:^mozilla/expat/.*$:) {return '88';}
+if (m:^mozilla/extensions/xmlextras/.*$:) {return '88';}
+if (m:^mozilla/xpcom/.*$:) {return '89';}
+if (m:^xpcom/io$:) {return '90';}
+if (m:^mozilla/modules/zlib/.*$:) {return '93';}
+if (m:^mozilla/gfx/public/.*$:) {return '95';}
+if (m:^mozilla/gfx/src/windows/.*$:) {return '95';}
+if (m:^mozilla/view/.*$:) {return '96';}
+if (m:^mozilla/layout/base/.*$:) {return '98';}
+if (m:^mozilla/layout/build/.*$:) {return '98';}
+if (m:^mozilla/layout/doc/.*$:) {return '98';}
+if (m:^mozilla/layout/html/.*$:) {return '98';}
+if (m:^mozilla/layout/macbuild/.*$:) {return '98';}
+if (m:^mozilla/layout/tools/.*$:) {return '98';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
