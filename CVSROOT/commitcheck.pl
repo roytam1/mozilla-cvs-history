@@ -220,9 +220,6 @@ $fullname{'141'} = 'xmlterm';
 $mode{'90'} = 'Open';
 $branch{'90'} = 'HEAD';
 $fullname{'90'} = 'XP File Handling';
-$mode{'91'} = 'Open';
-$branch{'91'} = 'HEAD';
-$fullname{'91'} = 'XP Miscellany';
 $mode{'137'} = 'Open';
 $branch{'137'} = 'HEAD';
 $fullname{'137'} = 'XPApps';
@@ -306,8 +303,6 @@ if (m:^mozilla/modules/softupdt/.*$:) {return '87';}
 if (m:^mozilla/expat/.*$:) {return '88';}
 if (m:^mozilla/xpcom/.*$:) {return '89';}
 if (m:^xpcom/io$:) {return '90';}
-if (m:^mozilla/include/shist\.h/.*$:) {return '91';}
-if (m:^mozilla/lib/libmisc/.*$:) {return '91';}
 if (m:^mozilla/modules/zlib/.*$:) {return '93';}
 if (m:^mozilla/view/.*$:) {return '96';}
 if (m:^mozilla/layout/.*$:) {return '98';}
