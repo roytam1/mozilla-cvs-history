@@ -50,7 +50,7 @@ my %nomail;
 my @excludedAddresses = ();
 
 # disable email flag for offline debugging work
-my $enableSendMail = 1;
+my $enableSendMail = 0;
 
 my %force;
 @{$force{'QAcontact'}} = ();

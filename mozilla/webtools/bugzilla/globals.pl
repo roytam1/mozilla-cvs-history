@@ -853,25 +853,28 @@ sub SelectVisible {
                      selectVisible_bugs.bug_id = selectVisible_cc.bug_id AND 
                      selectVisible_cc.who = $userid "
     }
-
-    if ($::driver eq 'mysql') {
+   
+    if ($::driver eq 'mysql') { 
         $replace .= "WHERE ((bugs.groupset & $usergroupset) = bugs.groupset ";
     } elsif ($::driver eq 'Pg') {
         $replace .= "WHERE ((bugs.groupset & int8($usergroupset)) = bugs.groupset ";
     }
+
     if ($userid) {
         # There is a mysql bug affecting v3.22 and 3.23 (at least), where this will
         # cause all rows to be returned! We work arround this by adding an not isnull
         # test to the JOINed cc table. See http://lists.mysql.com/cgi-ez/ezmlm-cgi?9:mss:11417
         # Its needed, even though it shouldn't be
-#        $replace .= "OR (bugs.reporter_accessible = 1 AND bugs.reporter = $userid) 
-#                   OR (bugs.assignee_accessible = 1 AND bugs.assigned_to = $userid) 
-#                   OR (bugs.qacontact_accessible = 1 AND bugs.qa_contact = $userid) 
-#                   OR (bugs.cclist_accessible = 1 AND selectVisible_cc.who = $userid AND not isnull(selectVisible_cc.who))";
         $replace .= "OR (bugs.reporter_accessible = 1 AND bugs.reporter = $userid) 
                    OR (bugs.assignee_accessible = 1 AND bugs.assigned_to = $userid) 
-                   OR (bugs.qacontact_accessible = 1 AND bugs.qa_contact = $userid) 
-                   OR (selectVisible_bugs.cclist_accessible = 1 AND selectVisible_cc.who = $userid AND selectVisible_cc.who IS NOT NULL)";
+                   OR (bugs.qacontact_accessible = 1 AND bugs.qa_contact = $userid)";
+        if ($::driver eq 'mysql') {
+            $replace .= " 
+                   OR (bugs.cclist_accessible = 1 AND selectVisible_cc.who = $userid AND not isnull(selectVisible_cc.who))";
+        } elsif ($::driver eq 'Pg') {
+            $replace .= " 
+                   OR (bugs.cclist_accessible = 1 AND selectVisible_cc.who = $userid AND selectVisible_cc.who IS NOT NULL)";
+        }
     }
 
     $replace .= ") AND ";
@@ -886,19 +889,98 @@ sub CanSeeBug {
     # in most cases (ie viewing bugs). Maybe make this an optional
     # parameter?
 
-    my ($id, $userid, $usergroupset) = @_;
+    my ($bugs, $userid, $usergroupset) = @_;
+    my %cansee;
+    my @buglist;
 
+    if (ref($bugs)) {
+        @buglist = @{$bugs};
+    } else {
+        push(@buglist, $bugs);
+    }
+
+    if (@buglist < 1) {
+        return 0;
+    }
+   
     # Query the database for the bug, retrieving a boolean value that
     # represents whether or not the user is authorized to access the bug.
 
+    # Users are authorized to access bugs if they are a member of all 
+    # groups to which the bug is restricted.  User group membership and 
+    # bug restrictions are stored as bits within bitsets, so authorization
+    # can be determined by comparing the intersection of the user's
+    # bitset with the bug's bitset.  If the result matches the bug's bitset
+    # the user is a member of all groups to which the bug is restricted
+    # and is authorized to access the bug.
+    
+    # A user is also authorized to access a bug if she is the reporter, 
+    # assignee, QA contact, or member of the cc: list of the bug and the bug 
+    # allows users in those roles to see the bug.  The boolean fields 
+    # reporter_accessible, assignee_accessible, qacontact_accessible, and 
+    # cclist_accessible identify whether or not those roles can see the bug.
+
+    # Bit arithmetic is performed by MySQL instead of Perl because bitset
+    # fields in the database are 64 bits wide (BIGINT), and Perl installations
+    # may or may not support integers larger than 32 bits.  Using bitsets
+    # and doing bitset arithmetic is probably not cross-database compatible,
+    # however, so these mechanisms are likely to change in the future.
+
+    # Get data from the database about whether or not the user belongs to
+    # all groups the bug is in, and who are the bug's reporter and qa_contact
+    # along with which roles can always access the bug.
+
     PushGlobalSQLState();
-    SendSQL(SelectVisible("SELECT bugs.bug_id FROM bugs WHERE bugs.bug_id = $id",
-                          $userid, $usergroupset));
 
-    my $ret = defined(FetchSQLData());
+    if ($::driver eq 'mysql') {
+        SendSQL("SELECT bug_id, ((groupset & $usergroupset) = groupset) , reporter , assigned_to , qa_contact , 
+                        reporter_accessible , assignee_accessible , qacontact_accessible , cclist_accessible 
+                FROM   bugs 
+                WHERE  bug_id IN (" . join(',', @buglist) . ")");
+    } elsif ($::driver eq 'Pg') {
+        SendSQL("SELECT bug_id, CASE WHEN ((groupset & int8($usergroupset)) = groupset) 
+                        THEN 1 ELSE 0 END as isauthorized, 
+                        reporter, assigned_to, qa_contact, reporter_accessible, 
+                        assignee_accessible, qacontact_accessible, cclist_accessible 
+                FROM   bugs 
+                WHERE  bug_id IN (" . join(',', @buglist) . ")");
+    }
+
+    while (my @row = FetchSQLData()) {
+        my ($bug_id, $isauthorized, $reporter, $assignee, $qacontact, $reporter_accessible,
+            $assignee_accessible, $qacontact_accessible, $cclist_accessible) = @row;
+        
+        # Record bug number and continue if the user is a member of all groups to which the bug belongs.
+        if ($isauthorized) {
+            $cansee{$bug_id} = 1;
+            next;
+        }
+
+        # Record bug number and continue if the user is in a role that has access to the bug. 
+        if (($reporter_accessible && $reporter == $userid)
+                || ($assignee_accessible && $assignee == $userid)
+                    || ($qacontact_accessible && $qacontact == $userid)) {
+            $cansee{$bug_id} = 1;
+            next;
+        }
+
+        # Try to authorize the user one more time by seeing if they are on 
+        # the cc: list.  If so, finish validation and return.
+        if ( $cclist_accessible ) {
+            PushGlobalSQLState();
+            SendSQL("SELECT who FROM cc WHERE  bug_id = $bug_id AND who = $userid");
+            my $ccwho = FetchOneColumn();
+            # more efficient to just check the var here instead of
+            # creating a potentially huge array to grep against
+            if ($ccwho) { 
+                $cansee{$bug_id} = 1;
+            }
+            PopGlobalSQLState();
+        }
+    }       
+    
     PopGlobalSQLState();
-
-    return $ret;
+    return \%cansee;
 }
 
 sub ValidatePassword {

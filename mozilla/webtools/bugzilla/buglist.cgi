@@ -845,7 +845,7 @@ sub GenerateSQL {
                   " WHERE " . join(' AND ', (@wherepart, @andlist)) .
                   " GROUP BY " . join(", ", @groupbylist));
 
-    $query = SelectVisible($query, $::userid, $::usergroupset);
+    # $query = SelectVisible($query, $::userid, $::usergroupset);
 
     if ($debug) {
         print "<P><CODE>" . value_quote($query) . "</CODE><P>\n";
@@ -1275,6 +1275,7 @@ $tablestart .= "\n";
 my @row;
 my %seen;
 my @bugarray;
+my %valuehash;
 my %prodhash;
 my %statushash;
 my %ownerhash;
@@ -1299,39 +1300,75 @@ my $maxemailsize = 30;
 
 while (@row = FetchSQLData()) {
     my $bug_id = shift @row;
-    my $g = shift @row;         # Bug's group set.
+    push @bugarray, $bug_id;
+
+    $valuehash{$bug_id} = [];
+    push (@{$valuehash{$bug_id}}, shift @row);  # Bug's groupset
+
+    foreach my $col ( @collist ) {
+        if ( exists $::needquote{$col} ) {
+             my $value = shift @row;
+            push (@{$valuehash{$bug_id}}, $value);
+        }
+    }
+
+    if ($dotweak) {
+        my $value = shift @row;
+        $prodhash{$value} = 1;
+        $value = shift @row;
+        $statushash{$value} = 1;
+    }
+}
+
+# Find out which ones we can see
+my @newbugarray;
+my $canseeref = CanSeeBug(\@bugarray, $::userid, $::usergroupset);
+
+#while (@row = FetchSQLData()) {
+#    my $bug_id = shift @row;
+#    my $g = shift @row;         # Bug's group set.
+
+foreach my $bug_id (@bugarray) {
+    # Do not show this bug if the user does not have permission to see it
+    next if !$canseeref->{$bug_id};
+    push (@newbugarray, $bug_id);
+    
     if (!defined $seen{$bug_id}) {
         $seen{$bug_id} = 1;
+
         $count++;
         if ($count % 200 == 0) {
             # Too big tables take too much browser memory...
             pnl "</TABLE>$tablestart";
         }
-        push @bugarray, $bug_id;
 
-        # retrieve this bug's priority and severity, if available,
-        # by looping through all column names -- gross but functional
-        my $priority = "unknown";
-        my $severity;
-        if ($pricol >= 0) {
-            $priority = $row[$pricol];
-        }
-        if ($sevcol >= 0) {
-            $severity = $row[$sevcol];
-        }
-        my $customstyle = "";
-        if ($severity) {
-            if ($severity eq "enh") {
-                $customstyle = "style='font-style:italic ! important'";
-            }
-            if ($severity eq "blo") {
-                $customstyle = "style='color:red ! important; font-weight:bold ! important'";
-            }
-            if ($severity eq "cri") {
-                $customstyle = "style='color:red; ! important'";
-            }
-        }
-        pnl "<TR VALIGN=TOP ALIGN=LEFT CLASS=$priority $customstyle><TD>";
+        my $g = shift @{$valuehash{$bug_id}};
+
+#        # retrieve this bug's priority and severity, if available,
+#        # by looping through all column names -- gross but functional
+#        my $priority = "unknown";
+#        my $severity;
+#        if ($pricol >= 0) {
+#            $priority = $row[$pricol];
+#        }
+#        if ($sevcol >= 0) {
+#            $severity = $row[$sevcol];
+#        }
+#        my $customstyle = "";
+#        if ($severity) {
+#            if ($severity eq "enh") {
+#                $customstyle = "style='font-style:italic ! important'";
+#            }
+#            if ($severity eq "blo") {
+#                $customstyle = "style='color:red ! important; font-weight:bold ! important'";
+#            }
+#            if ($severity eq "cri") {
+#                $customstyle = "style='color:red; ! important'";
+#            }
+#        }
+#        pnl "<TR VALIGN=TOP ALIGN=LEFT CLASS=$priority $customstyle><TD>";
+
+        pnl "<TR VALIGN=TOP ALIGN=LEFT><TD>";
         if ($dotweak) {
             pnl "<input type=checkbox name=id_$bug_id>";
         }
@@ -1341,7 +1378,8 @@ while (@row = FetchSQLData()) {
         pnl " ";
         foreach my $c (@collist) {
             if (exists $::needquote{$c}) {
-                my $value = shift @row;
+#                my $value = shift @row;
+                my $value = shift @{$valuehash{$bug_id}};
                 if (!defined $value) {
                     pnl "<TD>";
                     next;
@@ -1378,15 +1416,17 @@ while (@row = FetchSQLData()) {
             }
         }
         if ($dotweak) {
-            my $value = shift @row;
+#            my $value = shift @row;
+            my $value = shift @{$valuehash{$bug_id}};
             $prodhash{$value} = 1;
-            $value = shift @row;
+#            $value = shift @row;
+            $value = shift @{$valuehash{$bug_id}};
             $statushash{$value} = 1;
         }
         pnl "\n";
     }
 }
-my $buglist = join(":", @bugarray);
+my $buglist = join(":", @newbugarray);
 
 
 # This is stupid.  We really really need to move the quip list into the DB!
@@ -1426,7 +1466,6 @@ if (length($buglist) < 4000) {
     $toolong = 1;
 }
 PutHeader($::querytitle, undef, "", "", navigation_links($buglist));
-
 
 print "
 <CENTER>

@@ -268,39 +268,37 @@ FIN
     my $query;
     if ($::driver eq 'mysql') {
         $query = <<FIN;
-select 
+SELECT
     bugs.bug_id,
     bugs.bug_status,
     assign.login_name,
     unix_timestamp(date_format(bugs.creation_ts, '%Y-%m-%d %h:%m:%s'))
-
-from   bugs,
-       profiles assign
-where  bugs.assigned_to = assign.userid
+FROM
+    bugs,
+    profiles assign
+WHERE
+    bugs.assigned_to = assign.userid
 FIN
     } elsif ($::driver eq 'Pg') {
         $query = <<FIN;
-select 
-    bugs.bug_id, bugs.assigned_to, bugs.bug_severity,
-    bugs.bug_status, bugs.product, 
+SELECT 
+    bugs.bug_id, 
+    bugs.bug_status, 
     assign.login_name,
-    report.login_name,
-    timestamp(bugs.creation_ts)
-
-from   bugs,
-       profiles assign,
-       profiles report,
-       versions projector
-where  bugs.assigned_to = assign.userid
-and    bugs.reporter = report.userid
+    bugs.creation_ts
+FROM
+    bugs,
+    profiles assign
+WHERE
+    bugs.assigned_to = assign.userid
 FIN
     }
 
     if ($FORM{'product'} ne "-All-" ) {
-        $query .= "and    bugs.product=".SqlQuote($FORM{'product'});
+        $query .= " AND bugs.product = ".SqlQuote($FORM{'product'});
     }
 
-    $query .= "AND bugs.bug_status IN ('NEW', 'ASSIGNED', 'REOPENED')";
+    $query .= " AND bugs.bug_status IN ('NEW', 'ASSIGNED', 'REOPENED')";
 # End build up $query string
 
     print "<font color=purple><tt>$query</tt></font><p>\n" 
@@ -690,9 +688,9 @@ sub most_doomed_for_milestone {
     
     # Build up $query string
     my $query;
-    $query = "select distinct assigned_to from bugs where target_milestone=\"$ms\"";
+    $query = "select distinct assigned_to from bugs where target_milestone = '$ms' ";
     if ($FORM{'product'} ne "-All-" ) {
-        $query .= "and    bugs.product=".SqlQuote($FORM{'product'});
+        $query .= " and bugs.product=".SqlQuote($FORM{'product'});
     }
     $query .= <<FIN;
 and      
@@ -716,9 +714,9 @@ FIN
     my $person = "";
     my $bugtotal = 0;
     foreach $person (@people) {
-        my $query = "select count(bug_id) from bugs,profiles where target_milestone=\"$ms\" and userid=assigned_to and userid=\"$person\"";
+        my $query = "select count(bug_id) from bugs,profiles where target_milestone = '$ms' and userid=assigned_to and userid = '$person' ";
         if( $FORM{'product'} ne "-All-" ) {
-            $query .= "and    bugs.product=".SqlQuote($FORM{'product'});
+            $query .= "and bugs.product=".SqlQuote($FORM{'product'});
         }
         $query .= <<FIN;
 and      
