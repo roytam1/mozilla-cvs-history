@@ -17,7 +17,7 @@ echo copying include files to %MOZ_TOOLS%\include\libIDL
 if not exist %MOZ_TOOLS%\include\libIDL\NUL mkdir %MOZ_TOOLS%\include\libIDL >NUL
 copy include\libIDL\* %MOZ_TOOLS%\include\libIDL  >NUL
 
-echo copying lib files to %MOZ_TOOLS%\lib 
+echo copying lib files to %MOZ_TOOLS%\lib
 if not exist %MOZ_TOOLS%\lib\NUL mkdir %MOZ_TOOLS%\lib >NUL
 copy lib\* %MOZ_TOOLS%\lib >NUL
 
