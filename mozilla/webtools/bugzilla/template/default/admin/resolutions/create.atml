@@ -1,3 +1,0 @@
-[% INCLUDE admin/common/create.atml
-  resttemplate = 'admin/resolutions/rest'
-%]
