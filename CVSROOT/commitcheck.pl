@@ -8,11 +8,6 @@ $fullname{'95'} = '2-D Graphics';
 $mode{'52'} = 'Open';
 $branch{'52'} = 'HEAD';
 $fullname{'52'} = 'Aurora/RDF BE';
-$mode{'94'} = 'Closed';
-$branch{'94'} = 'HEAD';
-$fullname{'94'} = 'Base XPCOM Classes';
-$blessed{'94'} = [];
-$super{'94'} = ['dp%netscape.com','kipp%netscape.com','scullin%netscape.com',];
 $mode{'53'} = 'Open';
 $branch{'53'} = 'HEAD';
 $fullname{'53'} = 'Berkeley DB';
@@ -266,7 +261,6 @@ if (m:^mozilla/xpcom/.*$:) {return '89';}
 if (m:^mozilla/include/shist\.h/.*$:) {return '91';}
 if (m:^mozilla/lib/libmisc/.*$:) {return '91';}
 if (m:^mozilla/modules/zlib/.*$:) {return '93';}
-if (m:^mozilla/base/.*$:) {return '94';}
 if (m:^mozilla/view/.*$:) {return '96';}
 if (m:^mozilla/layout/.*$:) {return '98';}
 if (m:^mozilla/webshell/.*$:) {return '101';}
