@@ -282,6 +282,3 @@ if (!($Path->{'file'} =~ /\.(html)$/)) {
 	&makefooter('sourcedir');
     }
 }
-
-#$len = length($file);
-#print ("length is: ", $len) ;

@@ -526,6 +526,11 @@ sub pathname {
 }
 
 
+sub treename {
+    return $Conf->{'treename'};
+}
+
+
 sub titleexpand {
     if ($who eq 'source' || $who eq 'sourcedir' || $who eq 'diff') {
 	return($Conf->sourcerootname.$Path->{'virtf'});
@@ -739,6 +744,7 @@ sub makeheader {
 			  ('dotdoturl',	\&dotdoturl),
 			  ('thisurl',	\&thisurl),
 			  ('pathname',	\&pathname),
+			  ('treename',	\&treename),
     			  ('modes',	\&modeexpand),
     			  ('variables',	\&varexpand)));
 }
