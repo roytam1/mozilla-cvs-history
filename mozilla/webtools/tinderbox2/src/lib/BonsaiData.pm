@@ -111,7 +111,7 @@ sub get_file_variable {
     my ($value) = undef;
 
     while (<DATA>) { 
-	if (/^\$\:\:$variable = '(\d+)';/) {
+	if (/^\$\:\:$variable = '?(\d+)'?;/) {
 	    $value = $1;
 	    last;
 	}
@@ -130,7 +130,7 @@ sub get_file_variable {
 
 # Bonsai has no function to return if the tree is open or closed.
 # This data handled internally via a global boolean variable
-# $::TreeOpen; We will peek at the curreent batch file to get the
+# $::TreeOpen; We will peek at the current batch file to get the
 # data.
 
 sub get_tree_state {
@@ -138,8 +138,15 @@ sub get_tree_state {
     
     load_bonsai_libs();
 
+    # The default file is in the data directory, other files are in
+    # directories with their own name.  If there is no directory the
+    # tree is assumed open.
+
     my ($dir) = "$BONSAI_DIR/data/$bonsai_tree";
     $dir =~ s!/default$!!;
+
+    (-d $dir) ||
+        return 'Open';
 
     # find the current batch file
     my ($file) = "$dir/batchid.pl";
