@@ -621,7 +621,9 @@ SeaMonkeyBrowser -a \
 # This needs work!
 SeaMonkeyMailNews -a \
 	SeaMonkeyLayout \
-	mozilla/mailnews
+	mozilla/mailnews \
+	!mozilla/mailnews/db/mdb \
+	!mozilla/mailnews/db/mork \
 
 SeaMonkeyEditor -a \
 	SeaMonkeyBrowser \
