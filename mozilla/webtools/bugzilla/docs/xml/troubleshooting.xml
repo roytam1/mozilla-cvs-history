@@ -305,6 +305,31 @@ at /usr/lib/perl5/site_perl/5.6.0/File/Temp.pm line 233.</programlisting>
 
   </section>
 
+  <section id="trbl-passwd-encryption">
+    <title>
+      checksetup.pl reports "Client does not support authentication protocol
+      requested by server..."
+    </title>
+
+    <para>
+      This error is occurring because you are using the new password
+      encryption that comes with MySQL 4.1, while your
+      <filename>DBD::mysql</filename> module was compiled against an
+      older version of MySQL. If you recompile <filename>DBD::mysql</filename>
+      against the current MySQL libraries (or just obtain a newer version
+      of this module) then the error may go away.
+    </para>
+
+    <para>
+      If that does not fix the problem, or if you cannot recompile the
+      existing module (e.g. you're running Windows) and/or don't want to
+      replace it (e.g. you want to keep using a packaged version), then a
+      workaround is available from the MySQL docs:
+      <ulink url="http://dev.mysql.com/doc/mysql/en/Old_client.html"/>
+    </para>
+
+  </section>
+
 </appendix> 
 
 <!-- Keep this comment at the end of the file 
