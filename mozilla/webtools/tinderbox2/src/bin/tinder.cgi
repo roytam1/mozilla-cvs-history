@@ -311,7 +311,7 @@ sub HTML_status_page {
   ($ignore_builds) &&
     ($html_ignore_builds .= (
                              "Unmonitored Builds: ".
-                             join(", ", split (/\s+/, 
+                             join(", ", split (/,/, 
                                                $ignore_builds
                                         )).
                              "<br>\n"));
