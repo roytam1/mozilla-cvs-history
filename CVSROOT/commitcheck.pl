@@ -150,9 +150,6 @@ $fullname{'86'} = 'Security Stubs';
 $mode{'87'} = 'Open';
 $branch{'87'} = 'HEAD';
 $fullname{'87'} = 'SmartUpdate';
-$mode{'50'} = 'Open';
-$branch{'50'} = 'HEAD';
-$fullname{'50'} = 'StubFE';
 $mode{'48'} = 'Open';
 $branch{'48'} = 'HEAD';
 $fullname{'48'} = 'Windows FE';
@@ -193,9 +190,6 @@ if (m:^mozilla/cmd/wincom/.*$:) {return '48';}
 if (m:^mozilla/cmd/winfe/.*$:) {return '48';}
 if (m:^mozilla/gfx/src/gtk/.*$:) {return '49';}
 if (m:^mozilla/widget/src/gtk/.*$:) {return '49';}
-if (m:^mozilla/cmd/stubfe/.*$:) {return '50';}
-if (m:^mozilla/include/fe_proto\.h/.*$:) {return '50';}
-if (m:^mozilla/include/structs\.h/.*$:) {return '50';}
 if (m:^mozilla/modules/rdf/.*$:) {return '52';}
 if (m:^mozilla/dbm/.*$:) {return '53';}
 if (m:^mozilla/modules/libhook/.*$:) {return '54';}
