@@ -43,8 +43,10 @@ eval "use Conf::Supplies::Config";
 # call me like this:
 # ask('questionname','question?','default answer');
 sub ask {
-    my ($name, $question) = @_;
-    $default = $PConfig{$name};
+    my ($name, $question, $default) = @_;
+    if ($Conf::Supplies::Config::answers{$name}) { 
+        $default = $Conf::Supplies::Config::answers{$name};
+    }
     print "$question [$default]";
     $answer = <STDIN>;
     $answer = chomp($answer);
