@@ -37,8 +37,8 @@ confirm_login();
 
 my $id = $::FORM{'id'};
 
-PutHeader("Create an attachment", "Create attachment", "Bug $id");
 print "Content-type: text/html\n\n";
+PutHeader("Create an attachment", "Create attachment", "Bug $id");
 
 if (!defined($::FORM{'data'})) {
     print qq{
