@@ -439,7 +439,7 @@ sub daemon_main {
 
     overwrite_file($outfile, @out);
 
-    $summary_data = Summaries::summary_pages($tree, $summary_data);
+    $summary_data = Summaries::summary_pages($tree, $summary_data, $REFRESH_TIME);
 
     # There are automated bots who need the header data, they extract
     # it from this file.
