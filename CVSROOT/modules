@@ -60,6 +60,7 @@ MozillaSourceCommon -a \
     mozilla/lib/plugin  \
     mozilla/lib/xlate \
     mozilla/lib/xp  \
+    mozilla/modules/calendar  \
     mozilla/modules/edtplug/classes  \
     mozilla/modules/edtplug/src  \
     mozilla/modules/edtplug/include \
