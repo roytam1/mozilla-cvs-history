@@ -17,9 +17,11 @@ $fullname{'55'} = 'Build Config';
 $mode{'108'} = 'Open';
 $branch{'108'} = 'HEAD';
 $fullname{'108'} = 'CCK';
-$mode{'146'} = 'Open';
-$branch{'146'} = 'HEAD';
+$mode{'146'} = 'Restricted';
+$branch{'146'} = 'NSPRPUB_CLIENT_BRANCH';
 $fullname{'146'} = 'Client NSPR';
+$blessed{'146'} = [];
+$super{'146'} = ['wtc%netscape.com','cls%seawood.org','leaf%mozilla.org',];
 $mode{'96'} = 'Open';
 $branch{'96'} = 'HEAD';
 $fullname{'96'} = 'Clipping and Compositing';
@@ -82,9 +84,6 @@ $fullname{'130'} = 'Java APIs for DOM';
 $mode{'127'} = 'Open';
 $branch{'127'} = 'HEAD';
 $fullname{'127'} = 'Java APIs to WebShell';
-$mode{'131'} = 'Open';
-$branch{'131'} = 'HEAD';
-$fullname{'131'} = 'Java Front End';
 $mode{'68'} = 'Open';
 $branch{'68'} = 'HEAD';
 $fullname{'68'} = 'Java Stubs';
@@ -339,11 +338,13 @@ if (m:^mozilla/java/xpcom/.*$:) {return '128';}
 if (m:^mozilla/java/plugins/.*$:) {return '129';}
 if (m:^mozilla/java/webclient/.*$:) {return '127';}
 if (m:^mozilla/java/dom/.*$:) {return '130';}
-if (m:^mozilla/java/fe/.*$:) {return '131';}
 if (m:^mozilla/java/util/.*$:) {return '133';}
 if (m:^mozilla/extensions/xmlterm/.*$:) {return '141';}
 if (m:^xpcom/remote$:) {return '143';}
 if (m:^mozilla/mstone/.*$:) {return '147';}
+}
+if ($b eq 'NSPRPUB_CLIENT_BRANCH') {
+if (m:^mozilla/nsprpub/.*$:) {return '146';}
 }
 return '';
 }
