@@ -278,7 +278,8 @@ RaptorDist -a \
 	mozilla/modules/libimg \
 	mozilla/lib/xp \
 	mozilla/lib/libnet \
-	mozilla/base
+	mozilla/base \
+	mozilla/network
 
 Raptor -a \
 	mozilla/htmlparser \
