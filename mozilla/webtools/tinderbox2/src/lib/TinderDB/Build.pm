@@ -1202,9 +1202,9 @@ sub status_table_row {
 
     if  ( $current_rec->{'timenow'} < $row_times->[$row_index] ) {
 
-      my ($rowspan) = 1;
+      my ($rowspan) = 0;
       while ( 
-             ( ($row_index + $rowspan) <= $#{$row_times}) &&
+             ( ($row_index + $rowspan) < $#{$row_times}) &&
              ( $current_rec->{'timenow'}  <  
                $row_times->[$row_index + $rowspan] ) 
             ) {
