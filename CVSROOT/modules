@@ -572,6 +572,7 @@ SeaMonkeyCore -a \
 	mozilla/plugin/oji/MRJ \
 	mozilla/profile \
 	mozilla/rdf \
+	mozilla/string \
 	mozilla/sun-java \
 	mozilla/tools/leaky \
 	mozilla/tools/elf-dynstr-gc \
