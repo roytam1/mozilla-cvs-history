@@ -1,0 +1,156 @@
+<FORM METHOD=POST ACTION="post_bug.cgi">
+<INPUT TYPE=HIDDEN NAME=bug_status VALUE=NEW>
+<INPUT TYPE=HIDDEN NAME=reporter VALUE="[+ $::COOKIE{'Bugzilla_login'} +]">
+<INPUT TYPE=HIDDEN NAME=product VALUE="[+ $product +]">
+<TABLE CELLSPACING=2 CELLPADDING=0 WIDTH=800 ALIGN=center>
+  <TR>
+	<TD COLSPAN=4>[+ $entryheaderhtml +]<BR><HR></TD>
+  </TR><TR>
+    <TD ALIGN=right valign=top><B>Reporter:</B></TD>
+    <TD VALIGN=top>[+ $::COOKIE{'Bugzilla_login'} +]</TD>
+    <TD ALIGN=right valign=top><B>Product:</B></TD>
+    <TD VALIGN=top>[+ $product +]</TD>
+  </TR>
+  <TR>
+    <TD VALIGN=center ALIGN=right>
+
+<!-- start version selection -->
+[+ $version_element +]
+<!-- end version selection -->
+
+	</TD>
+	<TD VALIGN=center ALIGN=right>
+
+<!-- start component selection -->
+[+ $component_popup +]
+<!-- end component selection -->
+
+	</TD>
+  </TR>
+  <TR><TD>&nbsp</TD><TD> </TD><TD>&nbsp;</TD><TD><B>OR</B></TD></TR>
+  <TR>
+    <TD ALIGN=right>
+
+<!-- start platform selection -->
+[+ $platform_popup +]
+<!-- end platform selection -->
+
+	</TD>
+	<TD ALIGN=right>
+
+<!-- start component text selection -->
+[+ $component_text +]
+<!-- end component text selection -->
+
+	</TD>
+  </TR>
+  <TR>
+	<TD ALIGN=right>
+
+<!-- start priority selection -->
+[+ $priority_popup +]
+<!-- end priority selection -->
+	
+	</TD>
+    <TD ALIGN=right>
+
+<!-- start severity selection -->
+[+ $severity_popup +]
+<!-- end severity selection -->
+
+	</TD>
+  </TR><TR>
+    <TD ALIGN=right>
+
+<!-- start op_sys selection -->
+[+ $opsys_popup +]
+<!-- end op_sys selection -->
+
+	</TD>
+    <TD ALIGN=right>
+
+<!-- start initialstate selection -->
+[+ $initialstate_popup +]
+<!-- end initialstate selection -->
+
+	</TD>
+  </TR>
+</TABLE>
+<P>
+<TABLE WIDTH=800 CELLPADDING=3 CELLSPACING=0>
+  <TR>
+    <TD ALIGN=right>
+
+<!-- start assigned_to selection -->
+[+ $assign_element +]
+<!-- end assigned_to selection -->
+   
+	 <BR>(Leave blank to assign to default component owner)</TD>
+   </TR>
+  <TR>
+    <TD ALIGN=right>
+
+<!-- start cc selection -->
+[+ $cc_element +]
+<!-- end cc selection -->
+
+	</TD>
+  </TR>
+  <TR>
+    <TD ALIGN=right>
+  
+<!-- start url selection -->
+[+ $url_element +]
+<!-- end url selection -->
+
+	</TD>
+  </TR>
+  <TR>
+    <TD ALIGN=RIGHT>
+ 
+<!-- start summary selection -->
+[+ $summary_element +]
+<!-- end summary selection -->
+ 
+	</TD>
+  </TR>
+  <TR><TD ALIGN=right VALIGN=top><B>Description:</B></TD>
+    <TD><TEXTAREA WRAP=HARD NAME=comment ROWS=15 COLS=75>[+ $comment +]</TEXTAREA></TD>
+  </TR>
+</TABLE>
+<P>
+
+<TABLE WIDTH=800 ALIGN=center CELLPADDING=3 CELLSPACING=0>
+<TR>
+	<TD ALIGN=left>
+
+<!-- start contract selection -->
+[+ $contract_checkbox +] 
+<!-- end contract selection -->
+
+	</TD>
+</TR><TR>
+	<TD ALIGN=left>
+
+<!-- start group selection -->
+[+ $group_select +]
+<!-- end group selection -->
+
+	</TD>
+</TR><TR>
+	<TD ALIGN=left>
+	<INPUT TYPE="submit" VALUE="    Commit    ">
+	<INPUT TYPE="reset" VALUE="Reset">
+	<INPUT TYPE="submit" NAME=maketemplate VALUE="Remember values as bookmarkable template">
+	</TD>
+</TR><TR>
+	<TD ALIGN=center>	
+	<HR>
+	[+ $browserinfo +]
+	<INPUT TYPE=hidden name=form_name VALUE=enter_bug>
+	</TD>
+</TR>
+</TABLE>
+
+</FORM>
+

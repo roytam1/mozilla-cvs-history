@@ -976,7 +976,7 @@ sub PutHeader {
 
 	$header{'title'} = $title;
 	$header{'header'} = "$h1 $h2";	
-	$header{'navigation'} = navigation_header();
+	$header{'navigator'} = navigation_header();
 	$header{'jscript'} = $jscript;
 	$header{'login'} = "";
 	$header{'bannerhtml'} = PerformSubsts(Param("bannerhtml"), undef);
@@ -1002,7 +1002,9 @@ sub PutHeader {
 # returns:		none
 
 sub PutFooter {
-	print LoadTemplate('footer_redhat.tmpl');
+	my %footer;
+
+	print LoadTemplate('footer_redhat.tmpl', \%footer);
 #    print PerformSubsts(Param("footerhtml"));
     SyncAnyPendingShadowChanges();
 }
@@ -1134,7 +1136,7 @@ sub DumpBugActivity {
 	} else {
        $query = 
         	"select fielddefs.name, " . 
-			"TO_CHAR(bugs_activity.bug_when, 'YYYY-mm-dd HH:MI:SS'), " .
+			"TO_CHAR(bugs_activity.bug_when, 'YYYY-MM-DD HH24:MI:SS'), " .
         	"bugs_activity.oldvalue, bugs_activity.newvalue, " .
         	"profiles.login_name " . 
         	"from bugs_activity, profiles, fielddefs " .
@@ -1309,10 +1311,10 @@ sub LoadTemplate {
 									  SOURCE => "$template_dir/$filename",
 									  DELIMITERS => ['[+', '+]']);
 
-	if (defined($hashref)) {
+	if (defined ($hashref)) {
 		$html = $template->fill_in(HASH => $hashref);
 	} else {
-		$html = $template->fill_in();
+		$html = $template->fill_in(PACKAGE => 'P');
 	}
 
 	if (defined($html)) {
@@ -1334,10 +1336,10 @@ sub GetHeadlines {
 	my $success = 0;
 
     if ($::driver eq 'mysql') {
-        $query = "select id, DATE_FORMAT(add_date, '\%b \%d, \%Y \%l:\%i'), headline " .
+        $query = "select id, " . SqlDate('add_date') . ", headline " .
                  "from news where to_days(now()) - to_days(add_date) < 30";
     } else {
-        $query = "select id, TO_CHAR(add_date, 'MON DD, YYYY HH:MI'), headline " .
+        $query = "select id, " . SqlDate('add_date') . ", headline " .
                  "from news where sysdate - add_date < 30";
     }
 

@@ -1,6 +1,6 @@
 <!-- start javascript -->
 
-[+ $::query_form{'jscript'} +]
+[+ $jscript +]
 
 <!-- end javascript -->
 
@@ -27,21 +27,21 @@
         <TD ALIGN=left VALIGN=top>
 <!-- start product selection -->
 
-[+ $::query_form{'product_popup'} +]
+[+ $product_popup +]
 
 <!-- end product selection -->
         </TD>
         <TD ALIGN=left VALIGN=top>
 <!-- start version selection -->
 
-[+ $::query_form{'version_popup'} +]
+[+ $version_popup +]
 
 <!-- end version selection -->
         </TD>
         <TD ALIGN=left VALIGN=top>
 <!-- start component selection -->
 
-[+ $::query_form{'component_popup'} +]
+[+ $component_popup +]
 
 <!-- end component selection -->
         </TD>
@@ -66,47 +66,47 @@
                 <TD ALIGN=left><A HREF="bug_status.cgi#rep_platform">Platform</A></TD>
                 <TD ALIGN=left><A HREF="bug_status.cgi#priority">Priority</A></TD>
                 <TD ALIGN=left><A HREF="bug_status.cgi#severity">Severity</A></TD>
-				[+ $::query_form{'targetmilestone_header'} +]
+				[+ $targetmilestone_header +]
         </TR><TR>
                 <TD ALIGN=left VALIGN=top>
 <!-- begin bugs status selection -->
 
-[+ $::query_form{'status_popup'} +]
+[+ $status_popup +]
 
 <!-- end bug status selection -->
                 </TD>
                 <TD ALIGN=left VALIGN=top>
 <!-- start resolution selection -->
 
-[+ $::query_form{'resolution_popup'} +]
+[+ $resolution_popup +]
 
 <!-- end resolution selection -->
                 </TD>
                 <TD ALIGN=left VALIGN=top>
 <!-- start platform selection -->
 
-[+ $::query_form{'platform_popup'} +]
+[+ $platform_popup +]
 
 <!-- end platform selection -->
                 </TD>
                 <TD ALIGN=left VALIGN=top>
 <!-- start priority selection -->
 
-[+ $::query_form{'priority_popup'} +]
+[+ $priority_popup +]
 
 <!-- end priority selection -->
                 </TD>
                 <TD ALIGN=left VALIGN=top>
 <!-- start severity selection -->
 
-[+ $::query_form{'severity_popup'} +]
+[+ $severity_popup +]
 
 <!-- end severity selection -->
         		</TD>
 				<TD ALIGN=left VALIGN=top>
 <!-- start targetmilestone selection -->
 
-[+ $::query_form{'targetmilestone_popup'} +]
+[+ $targetmilestone_popup +]
 
 <!-- end targetmilestone selection -->
 				</TD>
@@ -127,11 +127,11 @@
                 <TD ALIGN=center>
 
 <!-- start email selection 1 -->
-[+ $::query_form{'emailinput1'} +]
+[+ $emailinput1 +]
 <!-- end email selection 1 -->
 
 <!-- start email selection 2 -->
-[+ $::query_form{'emailinput2'} +]
+[+ $emailinput2 +]
 <!-- end email selection 2 -->                
 
                 </TD>
@@ -160,7 +160,7 @@
         <TD ROWSPAN=2>
 
 <!-- start chfield selection -->
-[+ $::query_form{'chfield_popup'} +]
+[+ $chfield_popup +]
 <!--end chfield selection -->
 
 		</TD>
@@ -188,25 +188,25 @@
 	<TR>
 
 <!-- start short description selection -->
-[+ $::query_form{'summary_popup'} +]
+[+ $summary_popup +]
 <!-- end short description selection -->
 
 	</TR><TR>
 
 <!-- start description selection -->
-[+ $::query_form{'description_popup'} +]
+[+ $description_popup +]
 <!-- end description selection -->
 
 	</TR><TR>
 
 <!-- start bug file selection -->
-[+ $::query_form{'url_popup'} +]
+[+ $url_popup +]
 <!-- end bug file selection -->
 
 	</TR><TR>
 
 <!-- start whiteboard selection -->
-[+ $::query_form{'whiteboard_popup'} +]
+[+ $whiteboard_popup +]
 <!-- end whiteboard selection -->
 
     </TABLE>
@@ -222,13 +222,13 @@
 		<TD ALIGN=left>
 
 <!-- begin query selection -->
-[+ $::query_form{'query_selection'} +]
+[+ $query_selection +]
 <!-- end query selection -->
 
         <NOBR>Sort By:
 
 <!-- begin order selection -->
-[+ $::query_form{'sort_popup'} +]
+[+ $sort_popup +]
 <!-- end order selection -->
 		
 		</NOBR>
@@ -249,7 +249,7 @@
         Give me a <A HREF="help.cgi">clue</A> about how to use this form.<P>
 
 <!-- start admin menu selection -->
-[+ $::query_form{'admin_menu'} +]
+[+ $admin_menu +]
 <!-- end admin menu selection -->
 
 <P>

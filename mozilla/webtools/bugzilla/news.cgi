@@ -39,17 +39,11 @@ sub PutStory {
 
 }
 
+my $query = "";
 
 if (defined ($::FORM{'id'}) && $::FORM{'id'} ne '') {
 	# Show an individual news article
-	my $query = "";
-	if ($::driver eq 'mysql') {
-		$query = "select add_date, headline, story from news where id = " . $::FORM{'id'};
-	} else {
-		$query = "select TO_CHAR(add_date, 'YYYY-MM-DD HH:MI:SS'), " .
-				 "headline, story from news " .
-				 "where id = " . $::FORM{'id'}; 	
-	}
+	$query = "select " . SqlDate('add_date') . ", headline, story from news where id = " . $::FORM{'id'};
 	SendSQL($query);
 	my ($add_date, $headline, $story) = FetchSQLData();
 	PutStory($add_date, $headline, \$story);
@@ -57,13 +51,7 @@ if (defined ($::FORM{'id'}) && $::FORM{'id'} ne '') {
 } else {
 	# Show all the news
 	print "<CENTER><H2>All the News...</H2></CENTER>\n";
-	my $query = "";
-	if ($::driver eq 'mysql') {
-		$query = "select id, add_date, headline, story from news order by id";
-	} else {
-		$query = "select id, TO_CHAR(add_date, 'YYYY-MM-DD HH:MI:SS'), " .
-				 "headline, story from news order by id";
-	}
+	$query = "select id, " . SqlDate('add_date') . ", headline, story from news order by id";
 	SendSQL($query);
 	while (my @row = FetchSQLData()) {
 		my ($id, $add_date, $headline, $story) = (@row);

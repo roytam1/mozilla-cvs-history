@@ -33,16 +33,12 @@ sub Punt {
     exit;
 }
 
-print "Content-type: text/html\n\n";
-
 confirm_login();
-
-print "Content-type: text/html\n\n";
 
 my $id = $::FORM{'id'};
 
 PutHeader("Create an attachment", "Create attachment", "Bug $id");
-
+print "Content-type: text/html\n\n";
 
 if (!defined($::FORM{'data'})) {
     print qq{

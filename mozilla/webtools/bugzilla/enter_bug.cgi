@@ -24,7 +24,7 @@
 
 ########################################################################
 #
-# ::enter_bug.cgi
+# enter_bug.cgi
 # -------------
 # Displays bug entry form. Bug fields are specified through popup menus, 
 # drop-down lists, or text fields. Default for these values can be passed
@@ -50,7 +50,7 @@ sub sillyness {
 }
 
 # hash to hold values to be passed to the html fill in template
-# my %::enter_bug;
+my %enter_bug;
 
 confirm_login();
 
@@ -211,37 +211,37 @@ sub pickos {
 
 GetVersionTable();
 
-$::enter_bug{'assign_element'} = "<A HREF=\"bug_status.cgi#assigned_to\"><B>Assigned To:</B></A></TD><TD>" . 
+$enter_bug{'assign_element'} = "<A HREF=\"bug_status.cgi#assigned_to\"><B>Assigned To:</B></A></TD><TD>" . 
 							   GeneratePeopleInput('assigned_to', formvalue('assigned_to'));
 
-$::enter_bug{'cc_element'} = "<B>Cc:</B></TD><TD>" .
+$enter_bug{'cc_element'} = "<B>Cc:</B></TD><TD>" .
 						   GeneratePeopleInput('cc', formvalue('cc'));
 
 my $priority = Param('defaultpriority');
 
-$::enter_bug{'severity_popup'} = "<A HREF=\"bug_status.cgi#bug_severity\"><B>Severity:</B></A></TD><TD>" . 
+$enter_bug{'severity_popup'} = "<A HREF=\"bug_status.cgi#bug_severity\"><B>Severity:</B></A></TD><TD>" . 
 							   make_popup('bug_severity', \@::legal_severity,
                            	   formvalue('bug_severity', 'normal'), 0);
 
-$::enter_bug{'platform_popup'} = "<A HREF=\"bug_status.cgi#rep_platform\"><B>Platform:<B></A></TD><TD>" . 
+$enter_bug{'platform_popup'} = "<A HREF=\"bug_status.cgi#rep_platform\"><B>Platform:<B></A></TD><TD>" . 
 							   make_popup('rep_platform', \@::legal_platform,
                                pickplatform(), 0) ;
 
-# $::enter_bug{'opsys_popup'} = "<A HREF=\"bug_status.cgi#op_sys\"><B>OpSys:</B></A></TD><TD>" . 
+# $enter_bug{'opsys_popup'} = "<A HREF=\"bug_status.cgi#op_sys\"><B>OpSys:</B></A></TD><TD>" . 
 							make_popup('op_sys', \@::legal_opsys, pickos(), 0);
-$::enter_bug{'opsys_popup'} = "<INPUT TYPE=hidden NAME=op_sys VALUE=\"" . value_quote(pickos()) ."\"></TD><TD>\n"; 
+$enter_bug{'opsys_popup'} = "<INPUT TYPE=hidden NAME=op_sys VALUE=\"" . value_quote(pickos()) ."\"></TD><TD>\n"; 
 
 if (1 == @{$::components{$product}}) {
     # Only one component; just pick it.
     $::FORM{'component'} = $::components{$product}->[0];
 }
 
-$::enter_bug{'component_popup'} = "<A HREF=\"describecomponents.cgi?product=" . value_quote($product) . "\">" .
+$enter_bug{'component_popup'} = "<A HREF=\"describecomponents.cgi?product=" . value_quote($product) . "\">" .
 								"<B>Component:</B></A></TD><TD>" . 
 								make_popup('component', $::components{$product},
                                 formvalue('component'), 1);
 
-$::enter_bug{'component_text'} = "<A HREF=\"bug_status.cgi#component\"><B>Component Text:</B></A></TD><TD>" .
+$enter_bug{'component_text'} = "<A HREF=\"bug_status.cgi#component\"><B>Component Text:</B></A></TD><TD>" .
 							   GeneratePeopleInput('component_text', formvalue('component_text'));
 
 PutHeader ("Enter Bug", "Enter Bug");
@@ -283,50 +283,50 @@ if(Param("usebuggroups") && GroupExists($product)) {
 
 
 if (Param("entryheaderhtml")){
-	$::enter_bug{'entryheaderhtml'} = Param("entryheaderhtml"); 
+	$enter_bug{'entryheaderhtml'} = Param("entryheaderhtml"); 
 }
 
-$::enter_bug{'version_element'} = "<B>Version:</B></TD><TD>" . 
+$enter_bug{'version_element'} = "<B>Version:</B></TD><TD>" . 
 								Version_element(pickversion(), $product);
     
-$::enter_bug{'component_describe'} = url_quote($product);
+$enter_bug{'component_describe'} = url_quote($product);
 
 if (Param('letsubmitterchoosepriority')) {
-    $::enter_bug{'priority_popup'} = "<B><A HREF=\"bug_status.cgi#priority\">Priority</A>:</B></TD><TD>" . 
+    $enter_bug{'priority_popup'} = "<B><A HREF=\"bug_status.cgi#priority\">Priority</A>:</B></TD><TD>" . 
 								   make_popup('priority', \@::legal_priority,
     							   formvalue('priority', $priority), 0);
 } else {
-    $::enter_bug{'priority_popup'} = "<INPUT TYPE=HIDDEN NAME=priority VALUE=\"" .
+    $enter_bug{'priority_popup'} = "<INPUT TYPE=HIDDEN NAME=priority VALUE=\"" .
         						   value_quote($priority) . "\"></TD><TD>\n";
 }
 
-$::enter_bug{'url_element'} = "<B>URL:</B></TD><TD>" . 
+$enter_bug{'url_element'} = "<B>URL:</B></TD><TD>" . 
 							GeneratePeopleInput('bug_file_loc', formvalue('bug_file_loc'));
 
-$::enter_bug{'summary_element'} = "<B>Summary:</B></TD><TD>" .
+$enter_bug{'summary_element'} = "<B>Summary:</B></TD><TD>" .
 								GeneratePeopleInput('short_desc', formvalue('short_desc'));
 
-$::enter_bug{'comment'} = value_quote(formvalue('comment'));
+$enter_bug{'comment'} = value_quote(formvalue('comment'));
 
 if (UserInGroup("editbugs") || UserInGroup("canconfirm")) {
     SendSQL("SELECT votestoconfirm FROM products WHERE product = " .
             SqlQuote($product));
     if (FetchOneColumn()) {
-        $::enter_bug{'initialstate_popup'} = qq{
+        $enter_bug{'initialstate_popup'} = qq{
     <B><A HREF="bug_status.html#status">Initial state:</B></A></TD>
     <TD>
 };
-        $::enter_bug{'initialstate_popup'} = BuildPulldown("bug_status",
+        $enter_bug{'initialstate_popup'} = BuildPulldown("bug_status",
                             			   [[$::unconfirmedstate], ["NEW"]],
                             			   "NEW");
     }
 } else {
-	$::enter_bug{'initialstate_popup'} = "<INPUT TYPE=hidden NAME=bug_status VALUE=\"NEW\">\n";
+	$enter_bug{'initialstate_popup'} = "<INPUT TYPE=hidden NAME=bug_status VALUE=\"NEW\">\n";
 }
 
 # Red Hat contract bug support
 if (Param('contract') && UserInGroup('setcontract')) {
-	$::enter_bug{'contract_checkbox'} = qq{
+	$enter_bug{'contract_checkbox'} = qq{
 <INPUT TYPE="checkbox" NAME="iscontract" VALUE="1">&nbsp;<B>This is a contract bug</B></TD>
 };
 
@@ -344,7 +344,7 @@ if($group_bit && $::driver eq 'mysql') {
   # coming from a template, and we don't have group_bit set, so turn it off.
   my $check0 = (formvalue("groupset",$group_bit) == $group_bit) ? "" : " SELECTED";
   my $check1 = ($check0 eq "") ? " SELECTED" : "";
-  $::enter_bug{'group_select'} = "
+  $enter_bug{'group_select'} = "
   <table>
   <tr>
     <td align=right><B>Access:</td>
@@ -381,7 +381,7 @@ if($group_bit && $::driver eq 'mysql') {
 	}
 	
 	if ($flag) {
-		$::enter_bug{'group_select'} = qq{
+		$enter_bug{'group_select'} = qq{
 <TABLE CELLSPACING=0 CELLPADDING=3 BORDER=1>
 <TR BGCOLOR="#CFCFCF">
 	<TD ALIGN=left><B>Groups that can see this bug.</B><BR> 
@@ -391,11 +391,11 @@ if($group_bit && $::driver eq 'mysql') {
 };
 
 		foreach my $group (keys %grouplist) {
-			$::enter_bug{'group_select'} .= "<INPUT TYPE=checkbox NAME=group-$group VALUE=1>\n";
-			$::enter_bug{'group_select'} .= "<B>$grouplist{$group}</B> can only see this bug.<BR>\n";
+			$enter_bug{'group_select'} .= "<INPUT TYPE=checkbox NAME=group-$group VALUE=1>\n";
+			$enter_bug{'group_select'} .= "<B>$grouplist{$group}</B> can only see this bug.<BR>\n";
 		}
 
-		$::enter_bug{'group_select'} .= qq{
+		$enter_bug{'group_select'} .= qq{
 	</TD>
 </TR>
 </TABLE>
@@ -405,7 +405,7 @@ if($group_bit && $::driver eq 'mysql') {
 }
 
 if ( Param('usebrowserinfo') ) {
-   $::enter_bug{'browserinfo'} = "
+   $enter_bug{'browserinfo'} = "
      Some fields initialized from your user-agent, 
      <B>$ENV{'HTTP_USER_AGENT'}</B>.  If you think it got it wrong, 
      please tell " . Param('maintainer') . " what it should have been.
@@ -414,12 +414,12 @@ if ( Param('usebrowserinfo') ) {
 }
 
 foreach my $key (keys %::FORM) {
-	$::enter_bug{$key} = $::FORM{$key};
+	$enter_bug{$key} = $::FORM{$key};
 }
 
 # we should have enough now to fill in the template
 
-print LoadTemplate('enterbug_redhat.tmpl', \%::enter_bug);
+print LoadTemplate('enterbug_redhat.tmpl', \%enter_bug);
 
 PutFooter();
 

@@ -59,7 +59,7 @@ sub globals_pl_sillyness {
 # here
 # 
 
-#$::driver = 'mysql';
+# $::driver = 'mysql';
 $::driver = 'Oracle';
 
 # database setup
@@ -72,7 +72,7 @@ if ($::driver eq "mysql") {
 	$dbhost = "localhost";
 	$dbname = "bugs";
 	$dbuser = "bugs";
-	$dbpass = "";
+	$dbpass = "bugsPWD";
 	do 'localconfig';
 
 } else {
@@ -256,6 +256,43 @@ sub FetchOneColumn {
 sub OracleQuote {
 	my ($str) = (@_);
 	return $::db->quote($str);
+}
+
+
+# subroutine: 	SqlDate
+# description: 	Depending upon which database you are using and whether you are inserting or selecting
+#				properly format the SQL statement to work with a date field
+# params:		$field = name of date field in the database (scalar)
+#				$date = date to insert into database (scalar)
+# returns:		$sql = string with properly formed sql text (scalar)
+
+sub SqlDate {
+	my ($field, $date) = (@_);
+	my $sql = "";
+
+	# This is being used in an insert statement so form is 
+	# Oracle: to_date('$date', 'FORMAT') 
+	# Mysql: 
+	if (defined ($date) && $date ne '') {
+		if ($::driver eq 'mysql') {
+		
+		} else {
+			$sql = " to_date('$date', 'YYYY-MM-DD HH24:MI:SS') ";
+		}
+
+	# this is being used in a select so form is 
+	# Oracle: to_char(field, 'FORMAT')
+	# Mysql: date_format(field, 'FORMAT')
+	} elsif (defined ($field) && $field ne '') {
+		if ($::driver eq 'mysql') {
+			$sql = " date_format($field, '%Y-%m-%d %H:%i:%S') "; 
+		} else {
+			$sql = " to_char($field, 'YYYY-MM-DD HH24:MI:SS') ";
+		}
+	} else {
+		die "Illegal date information passed to SqlDate\n";
+	}	
+	return $sql;
 }
 
 
@@ -551,8 +588,17 @@ sub Milestone_element {
 # returns:		quoted string (scalar)
 
 sub PerlQuote {
-    my ($str) = (@_);
-    return SqlQuote($str);
+	my ($str) = (@_);
+    if (!defined $str) {
+         confess("Undefined passed to SqlQuote");
+    }
+    $str =~ s/([\\\'])/\\$1/g;
+    $str =~ s/\0/\\0/g;
+    return "'$str'";
+
+# FIXME: Changed this because Oracle uses a different method of escaping characters than Mysql so
+# therefore a ' in Mysql is escaped as \' and in Oracle it is ''. So therefore PerlQuote and
+# SqlQuote could not really be one in the same.
 
 # The below was my first attempt, but I think just using SqlQuote makes more 
 # sense...
@@ -1256,10 +1302,14 @@ sub SqlQuote {
     my ($str) = (@_);
     if (!defined $str) {
          confess("Undefined passed to SqlQuote");
-     }
-    $str =~ s/([\\\'])/\\$1/g;
+    }
+	if ($::driver eq 'mysql') {
+    	$str =~ s/([\\\'])/\\$1/g;
+	} else {
+		$str =~ s/([\\\'])/\'$1/g;
+	}
     $str =~ s/\0/\\0/g;	
-#	$str = $::db->quote($str);
+#	return $::db->quote($str);
     return "'$str'";
 }
 

@@ -53,8 +53,8 @@ use vars
   %::components,
   %::FORM;
 
-# Hash to hold values to be passed to the html fill in template
-#my %::query_form = ();
+# Hash variable for holding values to send to template
+my %query_form;
 
 # Uncomment for debugging.
 # print "Content-type: text/html\n\n";
@@ -282,13 +282,13 @@ sub GenerateEmailInput {
 }
 
 
-$::query_form{'emailinput1'} = GenerateEmailInput(1);
-$::query_form{'emailinput2'} = GenerateEmailInput(2);
+$query_form{'emailinput1'} = GenerateEmailInput(1);
+$query_form{'emailinput2'} = GenerateEmailInput(2);
 
 
 # javascript
     
-$::query_form{'jscript'} = << 'ENDSCRIPT';
+$query_form{'jscript'} = << 'ENDSCRIPT';
 <script language="Javascript1.1" type="text/javascript">
 <!--
 var cpts = new Array();
@@ -303,30 +303,30 @@ my $i = 0;
 my $j = 0;
 
 foreach $c (@::legal_components) {
-    $::query_form{'jscript'} .= "cpts['$c'] = new Array();\n";
+    $query_form{'jscript'} .= "cpts['$c'] = new Array();\n";
 }
 
 foreach $v (@::legal_versions) {
-    $::query_form{'jscript'} .= "vers['$v'] = new Array();\n";
+    $query_form{'jscript'} .= "vers['$v'] = new Array();\n";
 }
 
 
 for $p (@::legal_product) {
     if ($::components{$p}) {
         foreach $c (@{$::components{$p}}) {
-            $::query_form{'jscript'} .= "cpts['$c'][cpts['$c'].length] = '$p';\n";
+            $query_form{'jscript'} .= "cpts['$c'][cpts['$c'].length] = '$p';\n";
         }
     }
 
     if ($::versions{$p}) {
         foreach $v (@{$::versions{$p}}) {
-            $::query_form{'jscript'} .= "vers['$v'][vers['$v'].length] = '$p';\n";
+            $query_form{'jscript'} .= "vers['$v'][vers['$v'].length] = '$p';\n";
         }
     }
 }
 
 $i = 0;
-$::query_form{'jscript'} .= q{
+$query_form{'jscript'} .= q{
 
 // Only display versions/components valid for selected product(s)
 
@@ -451,35 +451,35 @@ if (Param('contract')) {
 my @logfields = ("[Bug creation]", @::log_columns);
 
 
-$::query_form{'status_popup'} = make_selection_widget("bug_status", \@::legal_bug_status, 
+$query_form{'status_popup'} = make_selection_widget("bug_status", \@::legal_bug_status, 
 							  $default{'bug_status'}, $type{'bug_status'}, 1);
 
-$::query_form{'resolution_popup'} = make_selection_widget("resolution", \@::legal_resolution, 
+$query_form{'resolution_popup'} = make_selection_widget("resolution", \@::legal_resolution, 
 								  $default{'resolution'}, $type{'resolution'}, 1);
 
-$::query_form{'platform_popup'} = make_selection_widget("rep_platform", \@::legal_platform, 
+$query_form{'platform_popup'} = make_selection_widget("rep_platform", \@::legal_platform, 
 							    $default{'platform'}, $type{'platform'}, 1);
 
-$::query_form{'opsys_popup'} = make_selection_widget("op_sys", \@::legal_opsys, 
+$query_form{'opsys_popup'} = make_selection_widget("op_sys", \@::legal_opsys, 
 							 $default{'op_sys'}, $type{'op_sys'}, 1);
 
 if (Param('contract')) {
     if (UserInContract($userid)) {
-        $::query_form{'priority_popup'} .= make_selection_widget("priority", \@::legal_priority_contract, 
+        $query_form{'priority_popup'} .= make_selection_widget("priority", \@::legal_priority_contract, 
 										 $default{'priority'}, $type{'priority'}, 1);
     } else {
-        $::query_form{'priority_popup'} .= make_selection_widget("priority", \@::legal_priority, 
+        $query_form{'priority_popup'} .= make_selection_widget("priority", \@::legal_priority, 
 										 $default{'priority'}, $type{'priority'}, 1);
     }
 } else {
-    $::query_form{'priority_popup'} .=  make_selection_widget("priority", \@::legal_priority, 
+    $query_form{'priority_popup'} .=  make_selection_widget("priority", \@::legal_priority, 
 							          $default{'priority'}, $type{'priority'}, 1);
 }
 
-$::query_form{'priority_popup'} = make_selection_widget("priority", \@::legal_priority, 
+$query_form{'priority_popup'} = make_selection_widget("priority", \@::legal_priority, 
 								$default{'priority'}, $type{'priority'}, 1);
 
-$::query_form{'severity_popup'} = make_selection_widget("bug_severity", \@::legal_severity, 
+$query_form{'severity_popup'} = make_selection_widget("bug_severity", \@::legal_severity, 
 								$default{'bug_severity'}, $type{'bug_severity'}, 1);
 
 
@@ -493,7 +493,7 @@ if ($default{'bugidtype'} eq "exclude") {
 }
 my $bug_id = value_quote($default{'bug_id'}); 
 
-$::query_form{'bugid_element'} = qq{
+$query_form{'bugid_element'} = qq{
 <TR>
 	<TD COLSPAN="3">
 	<SELECT NAME="bugidtype">
@@ -506,37 +506,37 @@ $::query_form{'bugid_element'} = qq{
 </TR>
 };
 
-$::query_form{'changedin_element'} = qq{
+$query_form{'changedin_element'} = qq{
 Changed in the <NOBR>last <INPUT NAME=changedin SIZE=2 VALUE="$default{'changedin'}"> days.</NOBR>
 };
 
-$::query_form{'votes_element'} = qq {
+$query_form{'votes_element'} = qq {
 At <NOBR>least <INPUT NAME=votes SIZE=3 VALUE="$default{'votes'}"> votes.</NOBR>
 };
 
-$::query_form{'chfield_popup'} = make_selection_widget("chfield", \@logfields,
+$query_form{'chfield_popup'} = make_selection_widget("chfield", \@logfields,
                                $default{'chfield'}, $type{'chfield'}, 1);
 
-$::query_form{'chfieldfrom_element'} = "<INPUT NAME=chfieldfrom SIZE=10 VALUE=\"$default{'chfieldfrom'}\">\n";
+$query_form{'chfieldfrom_element'} = "<INPUT NAME=chfieldfrom SIZE=10 VALUE=\"$default{'chfieldfrom'}\">\n";
 
-$::query_form{'chfieldto_element'} = "<INPUT NAME=chfieldto SIZE=10 VALUE=\"$default{'chfieldto'}\">\n";
+$query_form{'chfieldto_element'} = "<INPUT NAME=chfieldto SIZE=10 VALUE=\"$default{'chfieldto'}\">\n";
 
-$::query_form{'chfieldvalue_element'} = "<INPUT NAME=chfieldvalue SIZE=10>\n";
+$query_form{'chfieldvalue_element'} = "<INPUT NAME=chfieldvalue SIZE=10>\n";
 
 
-$::query_form{'product_popup'} = "<SELECT NAME=\"product\" MULTIPLE SIZE=5 onChange=\"selectProduct(this.form);\">\n" .
+$query_form{'product_popup'} = "<SELECT NAME=\"product\" MULTIPLE SIZE=5 onChange=\"selectProduct(this.form);\">\n" .
 							   make_options(\@::legal_product, $default{'product'}, $type{'product'}) .
 							   "</SELECT>\n";
 
-$::query_form{'version_popup'} = "<SELECT NAME=\"version\" MULTIPLE SIZE=5>\n" .
+$query_form{'version_popup'} = "<SELECT NAME=\"version\" MULTIPLE SIZE=5>\n" .
 							   make_options(\@::legal_versions, $default{'version'}, $type{'version'}) .
 							   "</SELECT>\n";
 
-$::query_form{'component_popup'} = "<SELECT NAME=\"component\" MULTIPLE SIZE=5>\n" .
+$query_form{'component_popup'} = "<SELECT NAME=\"component\" MULTIPLE SIZE=5>\n" .
 								 make_options(\@::legal_components, $default{'component'}, $type{'component'}) .
 								 "</SELECT>\n";
 
-$::query_form{'milestone_popup'} = "<SELECT NAME=\"target_milestone\" MULTIPLE SIZE=5>\n" .
+$query_form{'milestone_popup'} = "<SELECT NAME=\"target_milestone\" MULTIPLE SIZE=5>\n" .
 								 make_options(\@::legal_target_milestone, $default{'target_milestone'},
 								 $type{'target_milestone'}) .
 								 "</SELECT>\n";
@@ -581,19 +581,19 @@ sub StringSearch {
 }
 
 
-$::query_form{'summary_popup'} = StringSearch("Summary", "short_desc");
-$::query_form{'description_popup'} = StringSearch("Description", "long_desc");
-$::query_form{'url_popup'} = StringSearch("URL", "bug_file_loc");
+$query_form{'summary_popup'} = StringSearch("Summary", "short_desc");
+$query_form{'description_popup'} = StringSearch("Description", "long_desc");
+$query_form{'url_popup'} = StringSearch("URL", "bug_file_loc");
 
 if (Param("usestatuswhiteboard")) {
-    $::query_form{'whiteboard_popup'} = StringSearch("Status whiteboard", "status_whiteboard");
+    $query_form{'whiteboard_popup'} = StringSearch("Status whiteboard", "status_whiteboard");
 }
 
-$::query_form{'keywords_popup'} = ();
+$query_form{'keywords_popup'} = ();
 
 if (@::legal_keywords) {
     my $def = value_quote($default{'keywords'});
-    $::query_form{'keywords_popup'} = qq{
+    $query_form{'keywords_popup'} = qq{
 <TR>
 <TD ALIGN="right"><A HREF="describekeywords.cgi">Keywords</A>:</TD>
 <TD><INPUT NAME="keywords" SIZE=30 VALUE="$def"></TD>
@@ -603,12 +603,12 @@ if (@::legal_keywords) {
     if ($type eq "or") {        # Backward compatability hack.
         $type = "anywords";
     }
-    $::query_form{'keywords_popup'} .= BuildPulldown("keywords_type",
+    $query_form{'keywords_popup'} .= BuildPulldown("keywords_type",
                         [["anywords", "Any of the listed keywords set"],
                          ["allwords", "All of the listed keywords set"],
                          ["nowords", "None of the listed keywords set"]],
                         $type);
-    $::query_form{'keywords_popup'} .= qq{</TD></TR>};
+    $query_form{'keywords_popup'} .= qq{</TD></TR>};
 }
 
 
@@ -642,7 +642,7 @@ my @types = (
 	     );
 
 
-$::query_form{'chart_popup'} = qq{<A NAME="chart"> </A>\n};
+$query_form{'chart_popup'} = qq{<A NAME="chart"> </A>\n};
 
 foreach my $cmd (grep(/^cmd-/, keys(%::FORM))) {
     if ($cmd =~ /^cmd-add(\d+)-(\d+)-(\d+)$/) {
@@ -683,24 +683,24 @@ for ($chart=0 ; exists $::FORM{"field$chart-0-0"} ; $chart++) {
 	push(@rows, "<TR>" . join(qq{<TD ALIGN="center"> or </TD>\n}, @cols) .
 	     qq{<TD><INPUT TYPE="submit" VALUE="Or" NAME="cmd-add$chart-$row-$col" $jsmagic></TD></TR>});
    }
-    $::query_form{'chart_popup'} .= qq{
+    $query_form{'chart_popup'} .= qq{
 <HR>
 <TABLE>
 };
-    $::query_form{'chart_popup'} .= join('<TR><TD>And</TD></TR>', @rows);
-    $::query_form{'chart_popup'} .= qq{
+    $query_form{'chart_popup'} .= join('<TR><TD>And</TD></TR>', @rows);
+    $query_form{'chart_popup'} .= qq{
 <TR><TD><INPUT TYPE="submit" VALUE="And" NAME="cmd-add$chart-$row-0" $jsmagic>
 };
     my $n = $chart + 1;
     if (!exists $::FORM{"field$n-0-0"}) {
-        $::query_form{'chart_popup'} .= qq{
+        $query_form{'chart_popup'} .= qq{
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <INPUT TYPE="submit" VALUE="Add another boolean chart" NAME="cmd-add$n-0-0" $jsmagic>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <NOBR><A HREF="booleanchart.html">What is this stuff?</A></NOBR>
 };
     }
-    $::query_form{'chart_popup'} .= qq{
+    $query_form{'chart_popup'} .= qq{
 </TD>
 </TR>
 </TABLE>
@@ -708,12 +708,12 @@ for ($chart=0 ; exists $::FORM{"field$chart-0-0"} ; $chart++) {
 }
 
 
-$::query_form{'query_selection'} = ();
+$query_form{'query_selection'} = ();
 
 if (!$userid) {
-    $::query_form{'query_selection'} .= qq{<INPUT TYPE="hidden" NAME="cmdtype" VALUE="doit">};
+    $query_form{'query_selection'} .= qq{<INPUT TYPE="hidden" NAME="cmdtype" VALUE="doit">};
 } else {
-    $::query_form{'query_selection'} .= "
+    $query_form{'query_selection'} .= "
 <BR>
 <INPUT TYPE=radio NAME=cmdtype VALUE=doit CHECKED> Run this query
 <BR>
@@ -737,7 +737,7 @@ if (!$userid) {
     
     if (@namedqueries) {
         my $namelist = make_options(\@namedqueries);
-        $::query_form{'query_selection'} .= qq{
+        $query_form{'query_selection'} .= qq{
 <table cellspacing=0 cellpadding=0><tr>
 <td><INPUT TYPE=radio NAME=cmdtype VALUE=editnamed> Load the remembered query:</td>
 <td rowspan=3><select name=namedcmd>$namelist</select>
@@ -748,7 +748,7 @@ if (!$userid) {
 </tr></table>};
     }
 
-    $::query_form{'query_selection'} .= "
+    $query_form{'query_selection'} .= "
 <INPUT TYPE=radio NAME=cmdtype VALUE=asdefault> Remember this as the default query
 <BR>
 <INPUT TYPE=radio NAME=cmdtype VALUE=asnamed> Remember this query, and name it:
@@ -757,7 +757,7 @@ if (!$userid) {
 "
 }
 
-$::query_form{'sort_popup'} = qq{<SELECT NAME=order>\n};
+$query_form{'sort_popup'} = qq{<SELECT NAME=order>\n};
 
 # my $deforder = "Importance";
 # my @orders = ('Bug Number', $deforder, 'Assignee');
@@ -769,7 +769,7 @@ $::query_form{'sort_popup'} = qq{<SELECT NAME=order>\n};
 
 # my $defquerytype = $userdefaultquery ? "my" : "the";
 
-# $::query_form{'sort_popup'} .= make_options(\@orders, $deforder);
+# $query_form{'sort_popup'} .= make_options(\@orders, $deforder);
 
 foreach my $order ("Bug Number Ascending", "Bug Number Descending",
                    "Importance", "Assignee") {
@@ -777,23 +777,21 @@ foreach my $order ("Bug Number Ascending", "Bug Number Descending",
     if (defined($::FORM{'order'}) && $::FORM{'order'} eq $order) {
         $selected = "SELECTED";
     }
-    $::query_form{'sort_popup'} .= "<OPTION $selected>$order\n";
+    $query_form{'sort_popup'} .= "<OPTION $selected>$order\n";
 }
-$::query_form{'sort_popup'} .= qq{</SELECT>\n};
+$query_form{'sort_popup'} .= qq{</SELECT>\n};
 
 if ($userdefaultquery) {
-	$::query_form{'nukedefaultquery_link'} = "<BR><A HREF=\"query.cgi?nukedefaultquery=1\">Set my default query back to the system default</A>";
+	$query_form{'nukedefaultquery_link'} = "<BR><A HREF=\"query.cgi?nukedefaultquery=1\">Set my default query back to the system default</A>";
 }
 
-$::query_form{'admin_menu'} = GetAdminMenu();
+$query_form{'admin_menu'} = GetAdminMenu();
 
 if ($userid) {
-    $::query_form{'relogin_link'} = "<a href=relogin.cgi>Log in as someone besides <b>$::COOKIE{'Bugzilla_login'}</b></a><br>\n";
+    $query_form{'relogin_link'} = "<a href=relogin.cgi>Log in as someone besides <b>$::COOKIE{'Bugzilla_login'}</b></a><br>\n";
 }
 
-$::query_form{'foo'} = "Hey!<BR>";
-
 # We are ready to load the template and print
-print LoadTemplate('query_redhat.tmpl', \%::query_form);
+print LoadTemplate('query_redhat.tmpl', \%query_form);
 
 PutFooter();
