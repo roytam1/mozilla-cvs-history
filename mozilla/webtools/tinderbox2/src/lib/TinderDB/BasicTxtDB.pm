@@ -241,4 +241,52 @@ sub savetree_db {
   return ;
 }
 
+# -------------------------------------------------------------- 
+
+# These functions assume that the data is stored in a structure which
+# looks like:
+# 		$DATABASE{$tree}{$time};
+
+
+# remove all records from the database which are older then last_time.
+
+sub trim_db_history {
+  my ($self, $tree,) = (@_);
+
+  my ($last_time) =  $main::TIME - $TinderDB::TRIM_SECONDS;
+
+  # sort numerically ascending
+  my (@times) = sort {$a <=> $b} keys %{ $DATABASE{$tree} };
+  foreach $time (@times) {
+    ($time >= $last_time) && last;
+
+    delete $DATABASE{$tree}{$time};
+  }
+
+  return ;
+}
+
+# return a list of all the times where an even occured.
+
+sub event_times_vec {
+  my ($self, $start_time, $end_time, $tree) = (@_);
+
+  my ($name_space) = ref($self);
+  my ($name_db) = "${name_space}::DATABASE";
+
+  # sort numerically descending
+  my (@times) = sort {$b <=> $a} keys %{ $ { $name_db }{$tree} };
+
+  my @out;
+  foreach $time (@times) {
+    ($time <= $start_time) || next;
+    ($time <= $end_time) && last;
+    push @out, $time;
+  }
+
+  return @out;
+}
+
+
+
 1;
