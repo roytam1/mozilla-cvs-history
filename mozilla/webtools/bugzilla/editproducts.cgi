@@ -344,7 +344,7 @@ if ($action eq 'new') {
 
     # If we're using bug groups, then we need to create a group for this
     # product as well.  -JMR, 2/16/00
-    if(Param("usebuggroups")) {
+    if(Param("makeproductgroups")) {
         # Next, we insert into the groups table
         SendSQL("INSERT INTO groups " .
                 "(name, description, group_type, group_when) " .
@@ -356,7 +356,7 @@ if ($action eq 'new') {
         my $gid = FetchOneColumn();
         # Then, we set the initial permissions and restrictions
         # on the new group to match the traditional system
-        if(Param("usebuggroupsentry")) {
+        if(Param("useentrygroupdefault")) {
             SendSQL("INSERT INTO group_control_map
                      (control_id, control_id_type, control_type, group_id)
                      VALUES ($product_id, $::Tcontrol_id_type->{'product'},
@@ -1010,7 +1010,7 @@ if ($action eq 'update') {
         SendSQL("UPDATE versions SET program=$qp WHERE program=$qpold");
         SendSQL("UPDATE milestones SET product=$qp WHERE product=$qpold");
         # Need to do an update to groups as well.  If there is a corresponding
-        # bug group, whether usebuggroups is currently set or not, we want to
+        # bug group, whether makeproductgroups is currently set or not, we want to
         # update it so it will match in the future.  If there is no group, this
         # update statement will do nothing, so no harm done.  -JMR, 3/8/00
         SendSQL("UPDATE groups " .

@@ -146,7 +146,7 @@ unless ($action) {
     }
 
     print "<tr>\n";
-    print "<td colspan=6></td>\n";
+    print "<td colspan=5></td>\n";
     print "<td><a href=\"editgroups.cgi?action=add\">Add Group</a></td>\n";
     print "</tr>\n";
     print "</table>\n";
@@ -368,6 +368,19 @@ if ($action eq 'new') {
     my $admin = GroupNameToId('admin');
     SendSQL("INSERT INTO member_group_map (member_id, group_id, maptype)
              VALUES ($admin, $gid, $::Tmaptype->{'gBg'})");
+    if (Param('makeproductgroups') && ($group_type == $::Tgroup_type->{'buggroup'})) {
+        SendSQL("SELECT product_id from products");
+        while (MoreSQLData()) {
+            my ($pid) = FetchSQLData();
+            PushGlobalSQLState();
+            SendSQL("INSERT INTO group_control_map
+                     (control_id, control_id_type, control_type, group_id)
+                     VALUES ($pid, $::Tcontrol_id_type->{'product'},
+                     $::Tcontrol_type->{'permitted'}, $gid)");
+            PopGlobalSQLState();
+        }
+
+    }
     print "OK, done.<p>\n";
     PutTrailer("<a href=\"editgroups.cgi?action=add\">Add another group</a>",
                "<a href=\"editgroups.cgi\">Back to the group list</a>");

@@ -120,9 +120,7 @@ sub show_bug {
             next;
         }
 
-        if (Param("usebuggroupsentry")
-          && GroupExists($product)
-          && !UserInGroup($product))
+        if (!UserCanActOnProduct($product,'entry'))
         {
             # If we're using bug groups to restrict entry on products, and
             # this product has a bug group, and the user is not in that

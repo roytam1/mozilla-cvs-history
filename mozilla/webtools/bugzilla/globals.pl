@@ -1316,6 +1316,29 @@ sub UserCanBlessAnything {
     return 0;
 }
 
+sub UserCanActOnProduct {
+    # Determines if current user can enter a bug against a named product
+    # in order to enter, the product must have no group restrictions
+    # for groups of which the user is not a member. Return product id permitted
+    my ($p, $control) = (@_);
+    SendSQL("SELECT product_id, 
+             (ISNULL(control_id) = 0) as C, (ISNULL(member_id) = 0) as M
+             FROM products
+             LEFT JOIN group_control_map
+             ON control_id = product_id
+             AND control_id_type = $::Tcontrol_id_type->{'product'}
+             AND control_type = $::Tcontrol_type->{$control}
+             LEFT JOIN member_group_map
+             ON member_group_map.group_id = group_control_map.group_id
+             AND member_id = $::userid
+             AND member_group_map.maptype = $::Tmaptype->{'u2gm'}
+             WHERE product = " . SqlQuote($p) .
+             " ORDER BY C DESC, M");
+    my ($pid, $ctlid, $memid) = FetchSQLData();
+    return (($ctlid == 0) || ($memid == 1)) ? $pid : 0; 
+}
+
+
 sub BugInGroup {
     my ($bugid, $groupname) = (@_);
     PushGlobalSQLState();

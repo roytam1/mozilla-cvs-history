@@ -38,6 +38,7 @@ use strict;
 use lib qw(.);
 
 require "CGI.pl";
+require "globals.pl";
 
 use vars qw(
   $unconfirmedstate
@@ -58,9 +59,7 @@ use vars qw(
 # to get deleted from the database, which needs a database connection.
 ConnectToDatabase();
 
-# If we're using bug groups to restrict bug entry, we need to know who the 
-# user is right from the start. 
-confirm_login() if (Param("usebuggroupsentry"));
+confirm_login(); 
 
 if (!defined $::FORM{'product'}) {
     GetVersionTable();
@@ -69,10 +68,9 @@ if (!defined $::FORM{'product'}) {
     my %products;
 
     foreach my $p (@enterable_products) {
-        if (!(Param("usebuggroupsentry") 
-              && GroupExists($p) 
-              && !UserInGroup($p)))
-        {
+        # in order to enter, the product must have no group restrictions
+        # for groups of which the user is not a member
+        if (UserCanActOnProduct($p, 'entry')) {
             $products{$p} = $::proddesc{$p};
         }
     }
@@ -216,18 +214,37 @@ sub pickos {
     # default
     return "other";
 }
+
+#sub UserCanEnterProduct {
+#    # in order to enter, the product must have no group restrictions
+#    # for groups of which the user is not a member. Return product id permitted
+#    my ($p) = (@_);
+#    SendSQL("SELECT product_id, 
+#             ISNULL(control_id) = 0, (ISNULL(member_id) = 0) as M
+#             FROM products
+#             LEFT JOIN group_control_map
+#             ON control_id = product_id
+#             AND control_id_type = $::Tcontrol_id_type->{'product'}
+#             AND control_type = $::Tcontrol_type->{'entry'}
+#             LEFT JOIN member_group_map
+#             ON member_group_map.group_id = group_control_map.group_id
+#             AND member_id = $::userid
+#             AND member_group_map.maptype = $::Tmaptype->{'u2gm'}
+#             WHERE product = " . SqlQuote($p) .
+#             " ORDER BY M DESC");
+#    my ($pid, $ctlid, $memid) = FetchSQLData();
+#    return (($ctlid == 0) || ($memid == 1)) ? $pid : 0; 
+#}
+
 ##############################################################################
 # End of subroutines
 ##############################################################################
 
-confirm_login() if (!(Param("usebuggroupsentry")));
 
-# If the usebuggroupsentry parameter is set, we need to check and make sure
-# that the user has permission to enter a bug against this product.
-if(Param("usebuggroupsentry") 
-   && GroupExists($product) 
-   && !UserInGroup($product)) 
-{
+# We need to check and make sure that the user has permission to 
+# enter a bug against this product.
+my $pid = UserCanActOnProduct($product, 'entry');
+if (!$pid) {
     DisplayError("Sorry; you do not have the permissions necessary to " .
                  "enter a bug against this product.\n");         
     exit;
@@ -323,50 +340,68 @@ if (UserInGroup("editbugs") || UserInGroup("canconfirm")) {
 $vars->{'bug_status'} = \@status; 
 $default{'bug_status'} = $status[0];
 
-# Select whether to restrict this bug to the product's bug group or not, 
-# if the usebuggroups parameter is set, and if this product has a bug group.
-# First we get the bit and description for the group.
-my $group_id = '0';
-
-if(Param("usebuggroups") && GroupExists($product)) {
-    SendSQL("SELECT group_id FROM groups ".
-            "WHERE name = " . SqlQuote($product) . " " .
-            "AND group_type = $::Tgroup_type->{'buggroup'}");
-    ($group_id) = FetchSQLData();
-}
-
-SendSQL("SELECT groups.group_id, groups.name, groups.description " .
-        "FROM groups, member_group_map " .
-        "WHERE member_group_map.group_id = groups.group_id " .
-        "AND member_group_map.member_id = $::userid " .
-        "AND member_group_map.maptype = $::Tmaptype->{'u2gm'} " .
-        "AND group_type = $::Tgroup_type->{'buggroup'} AND isactive = 1 ORDER BY description");
+# Group checkboxes should be generated if the user is a member of the group
+# AND it is permitted AND it is not required
+# 
+SendSQL("SELECT groups.group_id, name, groups.description,
+         ISNULL(D.control_id) = 0,
+         ISNULL(P.control_id) = 0,
+         ISNULL(R.control_id) = 0,
+         ISNULL(C.control_id) = 0,
+         ISNULL(member_id) = 0
+         FROM groups
+         LEFT JOIN group_control_map as D
+         ON groups.group_id = D.group_id
+         AND D.control_id = $pid
+         AND D.control_id_type = $::Tcontrol_id_type->{'product'}
+         AND D.control_type = $::Tcontrol_type->{'default'}
+         LEFT JOIN group_control_map as P
+         ON groups.group_id = P.group_id
+         AND P.control_id = $pid
+         AND P.control_id_type = $::Tcontrol_id_type->{'product'}
+         AND P.control_type = $::Tcontrol_type->{'permitted'}
+         LEFT JOIN group_control_map as R
+         ON groups.group_id = R.group_id
+         AND R.control_id = $pid
+         AND R.control_id_type = $::Tcontrol_id_type->{'product'}
+         AND R.control_type = $::Tcontrol_type->{'required'}
+         LEFT JOIN group_control_map as C
+         ON groups.group_id = C.group_id
+         AND C.control_id = $pid
+         AND C.control_id_type = $::Tcontrol_id_type->{'product'}
+         AND C.control_type = $::Tcontrol_type->{'canedit'}
+         LEFT JOIN member_group_map
+         ON member_group_map.group_id = groups.group_id 
+         AND member_id = $::userid 
+         AND maptype = $::Tmaptype->{'u2gm'} 
+         WHERE group_type = $::Tgroup_type->{'buggroup'} 
+         AND isactive = 1 
+         ORDER BY description");
 
 my @groups;
 
 while (MoreSQLData()) {
-    my ($id, $prodname, $description) = FetchSQLData();
-    # Don't want to include product groups other than this product.
-    next unless($prodname eq $product || 
-                !defined($::proddesc{$prodname}));
-
+    my ($id, $prodname, $description, $dflag, $pflag, $rflag, $cflag, $uflag) = FetchSQLData();
     my $check;
 
-    # If this is the group for this product, make it checked.
-    if(formvalue("maketemplate") eq 
-                               "Remember values as bookmarkable template") 
-    {
+    next if (!$uflag || !$pflag || $rflag);
+    $check = $dflag;
+
+    # FIXME
+    # if(formvalue("maketemplate") eq 
+    #"Remember values as bookmarkable template") 
+    #{
         # If this is a bookmarked template, then we only want to set the
         # bit for those bits set in the template.        
-        $check = formvalue("bit-$id", 0);
-    }
-    else {
+        #$check = formvalue("bit-$id", 0);
+        #}
+        #else {
         # $group_bit will only have a non-zero value if we're using
         # bug groups and have one for this product.
         # If $group_bit is 0, it won't match the current group, so compare 
         # it to the current bit instead of checking for non-zero.
-        $check = ($group_id == $id);
-    }
+        # FIXME $check = ($group_id == $id);
+        #}
 
     my $group = 
     {

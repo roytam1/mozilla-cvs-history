@@ -3156,10 +3156,10 @@ if(-e "data/params") {
     $sth = $dbh->prepare("SELECT COUNT(*) FROM group_control_map");
     $sth->execute();
     my ($mapcnt) = $sth->fetchrow_array();
-    if (($mapcnt == 0) && $::param{'usebuggroups'}) {
+    if (($mapcnt == 0) && $::param{'makeproductgroups'}) {
         # initially populate group_control_map
         my @clist = ("default", "permitted");
-        if ($::param{'usebuggroupsentry'}) {
+        if ($::param{'useentrygroupdefault'}) {
             push(@clist,"entry");
         }
         $sth = $dbh->prepare("SELECT product_id, group_id

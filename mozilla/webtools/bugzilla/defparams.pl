@@ -149,17 +149,19 @@ DefParam("usequip",
         "b",
         1);
 
-# Added parameter - JMR, 2/16/00
-DefParam("usebuggroups",
-         "If this is on, Bugzilla will associate a bug group with each product in the database, and use it for querying bugs.",
+# for compatibility with 2.16 and prior, makeproductgroups defaults to
+# the old usebuggroups parameter if it exists
+DefParam("makeproductgroups",
+         "If this is on, Bugzilla will associate a bug group with each product in the database.",
          "b",
-         0); 
+         $::param{'usebuggroups'} || 0); 
 
-# Added parameter - JMR, 2/16/00
-DefParam("usebuggroupsentry",
-         "If this is on, Bugzilla will use product bug groups to restrict who can enter bugs.  Requires usebuggroups to be on as well.",
+# for compatibility with 2.16 and prior, useentrygroupdefault defaults to
+# the old usebuggroups parameter if it exists
+DefParam("useentrygroupdefault",
+         "If this is on, Bugzilla will set defaults to use product bug groups to restrict who can enter bugs.  Requires makeproductgroups to be on as well.",
          "b",
-         0); 
+         $::param{'usebuggroupsentry'} || 0); 
 
 DefParam("shadowdb",
          "If non-empty, then this is the name of another database in which Bugzilla will keep a shadow read-only copy of everything.  This is done so that long slow read-only operations can be used against this db, and not lock up things for everyone else.  Turning on this parameter will create the given database; be careful not to use the name of an existing database with useful data in it!",
