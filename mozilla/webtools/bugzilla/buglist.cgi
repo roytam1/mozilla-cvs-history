@@ -56,7 +56,7 @@ my $serverpush = 0;
 ConnectToDatabase();
 
 #print "Content-type: text/plain\n\n";    # Handy for debugging.
-#$::FORM{'debug'} = 1;
+#$::FORM{'debug'} = 0;
 
 
 if (grep(/^cmd-/, keys(%::FORM))) {
@@ -104,7 +104,7 @@ sub GetByWordList {
             $word =~ s/^'//;
             $word =~ s/'$//;
             $word = '(^|[^a-z0-9])' . $word . '($|[^a-z0-9])';
-            push(@list, "lower($field) regexp '$word'");
+            push(@list, SqlRegEx($field, SqlQuote($word)));
         }
     }
 
@@ -120,7 +120,7 @@ sub GetByWordListSubstr {
 
     foreach my $word (split(/[\s,]+/, $strs)) {
         if ($word ne "") {
-            push(@list, "INSTR(LOWER($field), " . lc(SqlQuote($word)) . ")");
+            push(@list, SqlStrSearch($field, SqlQuote($word), "lower"));
         }
     }
 
@@ -142,11 +142,13 @@ sub Error {
 
 sub GenerateSQL {
     my $debug = 0;
-    my ($fieldsref, $supptablesref, $wherepartref, $urlstr) = (@_);
+    my ($fieldsref, $supptablesref, $wherepartref, $urlstr, $groupbyref) = (@_);
     my @fields;
+    my @groupbylist;
     my @supptables;
     my @wherepart;
     @fields = @$fieldsref if $fieldsref;
+    @groupbylist = @$groupbyref if $groupbyref;
     @supptables = @$supptablesref if $supptablesref;
     @wherepart = @$wherepartref if $wherepartref;
     my %F;
@@ -157,10 +159,15 @@ sub GenerateSQL {
 
     # First, deal with all the old hard-coded non-chart-based poop.
 
+#    unshift(@supptables,
+#            ("profiles map_assigned_to",
+#             "profiles map_reporter",
+#             "LEFT JOIN profiles map_qa_contact  ON bugs.qa_contact = map_qa_contact.userid"));
+
     unshift(@supptables,
             ("profiles map_assigned_to",
-             "profiles map_reporter",
-             "LEFT JOIN profiles map_qa_contact ON bugs.qa_contact = map_qa_contact.userid"));
+             "profiles map_reporter"));
+
     unshift(@wherepart,
             ("bugs.assigned_to = map_assigned_to.userid",
              "bugs.reporter = map_reporter.userid"));
@@ -524,19 +531,19 @@ sub GenerateSQL {
              $term = "$ff != $q";
          },
          ",casesubstring" => sub {
-             $term = "INSTR($ff, $q)";
+            $term = SqlStrSearch($ff, $q);
          },
          ",(substring|substr)" => sub {
-             $term = "INSTR(LOWER($ff), " . lc($q) . ")";
+            $term = SqlStrSearch($ff, $q, "lower", "not");
          },
          ",notsubstring" => sub {
-             $term = "INSTR(LOWER($ff), " . lc($q) . ") = 0";
+            $term = SqlStrSearch($ff, $q, "lower");
          },
          ",regexp" => sub {
-             $term = "LOWER($ff) REGEXP $q";
+            $term = SqlRegEx($ff, $q);
          },
-         ",notregexp" => sub {
-             $term = "LOWER($ff) NOT REGEXP $q";
+         ",notregexp" => sub {    
+            $term = SqlRegEx($ff, $q);
          },
          ",lessthan" => sub {
              $term = "$ff < $q";
@@ -656,7 +663,6 @@ sub GenerateSQL {
         }
         $row++;
     }
-
 
 # A boolean chart is a way of representing the terms in a logical 
 # expression.  Bugzilla builds SQL queries depending on how you enter
@@ -797,6 +803,7 @@ sub GenerateSQL {
             }
         }
     }
+
     my %suppseen = ("bugs" => 1);
     my $suppstring = "bugs";
     foreach my $str (@supptables) {
@@ -812,7 +819,7 @@ sub GenerateSQL {
     my $query =  ("SELECT " . join(', ', @fields) .
                   " FROM $suppstring" .
                   " WHERE " . join(' AND ', (@wherepart, @andlist)) .
-                  " GROUP BY bugs.bug_id");
+                  " GROUP BY " . join(", ", @groupbylist));
 
     $query = SelectVisible($query, $::userid, $::usergroupset);
 
@@ -884,9 +891,23 @@ OK, the <B>$::FORM{'namedcmd'}</B> query is gone.
         confirm_login();
         my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
         print "Content-type: text/html\n\n";
-        SendSQL("REPLACE INTO namedqueries (userid, name, query) VALUES " .
-                "($userid, '$::defaultqueryname'," .
-                SqlQuote($::buffer) . ")");
+        if ($::driver eq 'mysql') {
+            SendSQL("REPLACE INTO namedqueries (userid, name, query) VALUES " .
+                    "($userid, '$::defaultqueryname'," .
+                    SqlQuote($::buffer) . ")");
+        } elsif ($::driver eq 'Pg') {
+            SendSQL("SELECT userid FROM namedqueries WHERE userid = $userid " .
+                    "AND name = '$::defaultqueryname'");
+            my $result = FetchOneColumn();
+            if ( $result ) {
+                SendSQL("UPDATE namedqueries SET query = " . SqlQuote($::buffer) . 
+                        " WHERE userid = $userid AND name = '$::defaultqueryname'");
+            } else {    
+                SendSQL("INSERT INTO namedqueries (userid, name, query, watchfordiffs, linkinfooter) VALUES " .
+                        "($userid, '$::defaultqueryname'," .
+                        SqlQuote($::buffer) . ", '', '')");
+            }        
+        }
         PutHeader("OK, default is set");
         print qq{
 OK, you now have a new default query.  You may also bookmark the result of any
@@ -916,8 +937,8 @@ individual query.
         SendSQL("SELECT query FROM namedqueries " .
                 "WHERE userid = $userid AND name = $qname");
         if (!FetchOneColumn()) {
-            SendSQL("REPLACE INTO namedqueries (userid, name, query, linkinfooter) " .
-                    "VALUES ($userid, $qname, ". SqlQuote($::buffer) .", ". $tofooter .")");
+            SendSQL("INSERT INTO namedqueries (userid, name, query, watchfordiffs, linkinfooter) " .
+                    "VALUES ($userid, $qname, " . SqlQuote($::buffer) . ", '', " . $tofooter . ")");
         } else {
             SendSQL("UPDATE namedqueries SET query = " . SqlQuote($::buffer) . "," .
                    " linkinfooter = " . $tofooter .
@@ -959,6 +980,7 @@ Content-type: text/html\n
     print "Content-disposition: inline; filename=bugzilla_bug_list.html\n";
     # Note! Don't finish HTML header yet!  Only one newline so far!
 }
+
 sub DefCol {
     my ($name, $k, $t, $s, $q) = (@_);
 
@@ -973,10 +995,18 @@ sub DefCol {
     $::needquote{$name} = $q;
 }
 
-DefCol("opendate", "unix_timestamp(bugs.creation_ts)", "Opened",
-       "bugs.creation_ts");
-DefCol("changeddate", "unix_timestamp(bugs.delta_ts)", "Changed",
-       "bugs.delta_ts");
+if ($::driver eq 'mysql') {
+    DefCol("opendate", "unix_timestamp(bugs.creation_ts)", "Opened",
+           "bugs.creation_ts");
+    DefCol("changeddate", "unix_timestamp(bugs.delta_ts)", "Changed",
+           "bugs.delta_ts");
+} elsif ($::driver eq 'Pg') {
+    DefCol("opendate", "bugs.creation_ts", "Opened",
+           "bugs.creation_ts");
+    DefCol("changeddate", "bugs.delta_ts", "Changed",
+           "bugs.delta_ts");
+}
+
 DefCol("severity", "substring(bugs.bug_severity, 1, 3)", "Sev",
        "bugs.bug_severity");
 DefCol("priority", "substring(bugs.priority, 1, 3)", "Pri", "bugs.priority");
@@ -1000,7 +1030,7 @@ DefCol("version", "substring(bugs.version, 1, 5)", "Vers", "bugs.version");
 DefCol("os", "substring(bugs.op_sys, 1, 4)", "OS", "bugs.op_sys");
 DefCol("target_milestone", "bugs.target_milestone", "TargetM",
        "bugs.target_milestone");
-DefCol("votes", "bugs.votes", "Votes", "bugs.votes desc");
+DefCol("votes", "bugs.votes", "Votes", "bugs.votes");
 DefCol("keywords", "bugs.keywords", "Keywords", "bugs.keywords", 5);
 
 my @collist;
@@ -1040,16 +1070,19 @@ at once.
 
 
 my @fields = ("bugs.bug_id", "bugs.groupset");
+my @groupbylist = ("bugs.bug_id", "bugs.groupset");
 
 foreach my $c (@collist) {
     if (exists $::needquote{$c}) {
         push(@fields, "$::key{$c}");
+        push(@groupbylist, "$::sortkey{$c}");
     }
 }
 
 
 if ($dotweak) {
     push(@fields, "bugs.product", "bugs.bug_status");
+    push(@groupbylist, "bugs.product", "bugs.bug_status");
 }
 
 
@@ -1076,7 +1109,7 @@ query.  You will have to start over at the <A HREF="query.cgi">query page</A>.
 
 ReconnectToShadowDatabase();
 
-my $query = GenerateSQL(\@fields, undef, undef, $::buffer);
+my $query = GenerateSQL(\@fields, undef, undef, $::buffer, \@groupbylist);
 
 if ($::COOKIE{'LASTORDER'}) {
     if ((!$::FORM{'order'}) || $::FORM{'order'} =~ /^reuse/i) {
@@ -1106,7 +1139,7 @@ if (defined $::FORM{'order'} && $::FORM{'order'} ne "") {
             last ORDER;
         };
         /Assign/ && do {
-            $::FORM{'order'} = "map_assigned_to.login_name, bugs.bug_status, priority, bugs.bug_id";
+            $::FORM{'order'} = "map_assigned_to.login_name, bugs.bug_status, bugs.priority, bugs.bug_id";
             last ORDER;
         };
         /Changed/ && do {
@@ -1137,7 +1170,9 @@ if ($::FORM{'debug'} && $serverpush) {
 
 
 if (Param('expectbigqueries')) {
-    SendSQL("set option SQL_BIG_TABLES=1");
+    if ($::driver eq 'mysql') {
+        SendSQL("set option SQL_BIG_TABLES=1");
+    }    
 }
 
 SendSQL($query);
@@ -1489,7 +1524,7 @@ document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCh
     if (Param("useqacontact")) {
         print "
 <TR>
-<TD><B>QA Contact:</B></TD>
+<TD ALIGN=\"right\"><B>QA Contact:</B></TD>
 <TD COLSPAN=3><INPUT NAME=qa_contact SIZE=32 VALUE=\"" .
             value_quote($::dontchange) . "\"></TD>
 </TR>";
@@ -1508,7 +1543,7 @@ document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCh
 
     if (@::legal_keywords) {
         print qq{
-<TR><TD><B><A HREF="describekeywords.cgi">Keywords</A>:</TD>
+<TR><TD ALIGN=\"RIGHT\"><B><A HREF="describekeywords.cgi">Keywords</A>:</TD>
 <TD COLSPAN=3><INPUT NAME=keywords SIZE=32 VALUE="">
 <SELECT NAME="keywordaction">
 <OPTION VALUE="add">Add these keywords
@@ -1530,10 +1565,18 @@ document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCh
 <TEXTAREA WRAP=HARD NAME=comment ROWS=5 COLS=80></TEXTAREA><BR>";
 
 if($::usergroupset ne '0') {
-    SendSQL("select bit, name, description, isactive ".
-            "from groups where bit & $::usergroupset != 0 ".
-            "and isbuggroup != 0 ".
-            "order by description");
+    if ($::driver eq 'mysql') {
+        SendSQL("select bit, name, description, isactive ".
+                "from groups where (bit & $::usergroupset) != 0 ".
+                "and isbuggroup != 0 ".
+                "order by description");
+    } elsif ($::driver eq 'Pg') {
+        SendSQL("select group_bit, name, description, isactive ".
+                "from groups where (group_bit & int8($::usergroupset)) != 0 ".
+                "and isbuggroup != 0 ".
+                "order by description");
+    }
+
     # We only print out a header bit for this section if there are any
     # results.
     my $groupFound = 0;
@@ -1720,7 +1763,9 @@ if ($count > 0) {
 # Switch back from the shadow database to the regular database 
 # so that PutFooter() can determine the current user even if
 # the "logincookies" table is corrupted in the shadow database.
-SendSQL("USE $::db_name");
+if ($::driver eq 'mysql') {
+    SendSQL("USE $::db_name");
+}
 
 PutFooter();
 

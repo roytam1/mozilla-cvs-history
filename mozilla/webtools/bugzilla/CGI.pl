@@ -281,7 +281,7 @@ sub ValidateBugID {
 
     FetchOneColumn()
       || DisplayError("Bug #$id does not exist.")
-        && exit;
+      && exit;
 
     return if CanSeeBug($id, $::userid, $::usergroupset);
 
@@ -868,21 +868,6 @@ sub confirm_login {
          exit;
        }
 
-       # if no password was provided, then fail the authentication
-       # while it may be valid to not have an LDAP password, when you
-       # bind without a password (regardless of the binddn value), you
-       # will get an anonymous bind.  I do not know of a way to determine
-       # whether a bind is anonymous or not without making changes to the
-       # LDAP access control settings
-       if ( ! $::FORM{"LDAP_password"} ) {
-         print "Content-type: text/html\n\n";
-         PutHeader("Login Failed");
-         print "You did not provide a password.\n";
-         print "Please click <b>Back</b> and try again.\n";
-         PutFooter();
-         exit;
-       }
-
        # We've got our anonymous bind;  let's look up this user.
        my $dnEntry = $LDAPconn->search(Param("LDAPBaseDN"),"subtree","uid=".$::FORM{"LDAP_login"});
        if(!$dnEntry) {
@@ -952,9 +937,10 @@ sub confirm_login {
        if (!defined $ENV{'REMOTE_HOST'}) {
          $ENV{'REMOTE_HOST'} = $ENV{'REMOTE_ADDR'};
        }
-       SendSQL("insert into logincookies (userid,cryptpassword,hostname) values (@{[DBNameToIdAndCheck($enteredlogin)]}, @{[SqlQuote($realcryptpwd)]}, @{[SqlQuote($ENV{'REMOTE_HOST'})]})");
-       SendSQL("select LAST_INSERT_ID()");
-       my $logincookie = FetchOneColumn();
+       SendSQL("insert into logincookies (userid,cryptpassword,hostname) " . 
+               "values (@{[DBNameToIdAndCheck($enteredlogin)]}, " .
+               "@{[SqlQuote($realcryptpwd)]}, @{[SqlQuote($ENV{'REMOTE_HOST'})]})");
+        my $logincookie = CurrId("logincookies_cookie_seq");
 
        $::COOKIE{"Bugzilla_logincookie"} = $logincookie;
        my $cookiepath = Param("cookiepath");
@@ -1028,6 +1014,12 @@ Content-type: text/html
 </tr>
 </table>
 ";
+        foreach my $i (keys %::FORM) {
+            if ($i =~ /^Bugzilla_/) {
+                next;
+            }
+            print "<input type=hidden name=$i value=\"@{[value_quote($::FORM{$i})]}\">\n";
+        }
         # Add all the form fields into the form as hidden fields
         # (except for Bugzilla_login and Bugzilla_password which we
         # already added as text fields above).
@@ -1071,8 +1063,13 @@ Content-type: text/html
         # crufty junk in the logincookies table.  Get rid of any entry
         # that hasn't been used in a month.
         if ($::dbwritesallowed) {
-            SendSQL("DELETE FROM logincookies " .
-                    "WHERE TO_DAYS(NOW()) - TO_DAYS(lastused) > 30");
+            if ($::driver eq 'mysql') {
+                SendSQL("DELETE FROM logincookies " .
+                        "WHERE TO_DAYS(NOW()) - TO_DAYS(lastused) > 30");
+            } elsif ($::driver eq 'Pg') {
+                 SendSQL("DELETE FROM logincookies " .
+                         "WHERE NOW() - lastused > 30");
+            }
         }
 
         
@@ -1082,7 +1079,7 @@ Content-type: text/html
 
     # Update the timestamp on our logincookie, so it'll keep on working.
     if ($::dbwritesallowed) {
-        SendSQL("UPDATE logincookies SET lastused = null " .
+        SendSQL("UPDATE logincookies SET lastused = NULL " .
                 "WHERE cookie = $::COOKIE{'Bugzilla_logincookie'}");
     }
     return $::userid;
@@ -1102,6 +1099,7 @@ sub PutHeader {
        $extra = "";
     }
     $jscript ||= "";
+
     # If we are shutdown, we want a very basic page to give that
     # information.  Also, the page title should indicate that
     # we are down.  
@@ -1187,7 +1185,9 @@ sub PuntTryAgain ($) {
     my ($str) = (@_);
     print PerformSubsts(Param("errorhtml"),
                         {errormsg => $str});
-    SendSQL("UNLOCK TABLES");
+    if ($::driver eq 'mysql') {
+        SendSQL("UNLOCK TABLES");
+    } 
     PutFooter();
     exit;
 }
@@ -1227,24 +1227,38 @@ sub CheckIfVotedConfirmed {
 sub DumpBugActivity {
     my ($id, $starttime) = (@_);
     my $datepart = "";
+    my $query = "";
 
     die "Invalid id: $id" unless $id=~/^\s*\d+\s*$/;
 
     if (defined $starttime) {
         $datepart = "and bugs_activity.bug_when > " . SqlQuote($starttime);
     }
-    my $query = "
-        SELECT IFNULL(fielddefs.description, bugs_activity.fieldid),
-                bugs_activity.attach_id,
-                bugs_activity.bug_when,
-                bugs_activity.removed, bugs_activity.added,
-                profiles.login_name
-        FROM bugs_activity LEFT JOIN fielddefs ON 
-                                     bugs_activity.fieldid = fielddefs.fieldid,
-             profiles
-        WHERE bugs_activity.bug_id = $id $datepart
-              AND profiles.userid = bugs_activity.who
-        ORDER BY bugs_activity.bug_when";
+        
+    if ($::driver eq 'mysql') {
+        $query = "
+        SELECT 
+            IFNULL(fielddefs.name, bugs_activity.fieldid), ";
+    } elsif ($::driver eq 'Pg') {
+        $query = "
+        SELECT 
+            COALESCE(fielddefs.name, chr(bugs_activity.fieldid)), ";
+    }
+
+    $query .= "
+            bugs_activity.attach_id,
+            bugs_activity.bug_when,
+            bugs_activity.removed, bugs_activity.added,
+            profiles.login_name
+        FROM 
+            bugs_activity LEFT JOIN fielddefs ON 
+            bugs_activity.fieldid = fielddefs.fieldid,
+            profiles
+        WHERE 
+            bugs_activity.bug_id = $id $datepart
+            AND profiles.userid = bugs_activity.who
+        ORDER BY 
+            bugs_activity.bug_when";
 
     SendSQL($query);
     
@@ -1370,7 +1384,7 @@ Edit <a href="userprefs.cgi">prefs</a>
             $html = $html . "<A HREF=\"$mybugsurl\">My&nbsp;bugs</A>\n";
         }
         SendSQL("SELECT name FROM namedqueries " .
-                "WHERE userid = $userid AND linkinfooter");
+                "WHERE userid = $userid AND linkinfooter != 0");
         my $anynamedqueries = 0;
         while (MoreSQLData()) {
             my ($name) = (FetchSQLData());
