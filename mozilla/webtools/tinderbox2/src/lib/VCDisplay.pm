@@ -66,6 +66,36 @@ $IMPLS = ( ($TinderConfig::VCDisplayImpl) ||
 
 main::require_modules($IMPLS);
 
+
+@ISA=($IMPLS);
+
+$VCDisplay = VCDisplay->new();
+
 $DEBUG = 1;
+
+sub new {
+
+  my $type = shift;
+  my %params = @_;
+  my $self = {};
+  bless $self, $type;
+}
+
+# call the implemenation defined functions, OO notionation looks
+# peculiar for this package so we do this instead.
+
+sub source {
+    return $VCDisplay->SUPER::source(@_);
+}
+
+sub guess {
+    return $VCDisplay->SUPER::guess(@_);
+}
+
+sub query {
+    return $VCDisplay->SUPER::query(@_);
+}
+
+
 
 1;
