@@ -69,6 +69,7 @@ sub ForkAndWait($$$) {
         }
 
         kill("TERM", $pid);
+        POSIX::waitpid($pid, 0);
         return -1;
     }
     else {
