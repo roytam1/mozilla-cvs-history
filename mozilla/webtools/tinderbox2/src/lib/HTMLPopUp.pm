@@ -121,6 +121,34 @@ $DEFAULT_POPUP_WIDTH = 425;
 
 
 
+# People who use the text browser 'links'
+# (http://artax.karlin.mff.cuni.cz/~mikulas/links/) would like to
+# see colors in the tinderbox table cells. Links will not render
+# background colors but it will render foreground colors. So we
+# add characters in the same color as the background just for
+# these browsers, others will not see these characters because
+# they will disapear into the background color.
+
+sub text_browser_color_string {
+    my ($cell_color, $char) = @_;
+
+    my $cell_options;
+    if ( $cell_color ) {
+        $cell_options = "color=$cell_color";
+    }
+
+    my $out = (
+                
+                "<font $cell_options>".
+                "$char".
+                "</font>".
+                
+                "");
+
+    return $out;
+}
+
+
 # Turn a time in 'time() format' into a string suitable for html
 # printing. eg '05/31&nbsp;14:59'
 
