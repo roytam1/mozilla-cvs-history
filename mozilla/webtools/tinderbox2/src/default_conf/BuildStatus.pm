@@ -263,4 +263,15 @@ sub status2descriptions {
   return @out;
 }
 
+
+sub get_TinderboxPrint_separator{
+
+# How should the TinderboxPrint statements be rendered?
+# obvious choices are <br> or &nbsp;
+
+
+    return "<br>";
+}
+
+
 1;

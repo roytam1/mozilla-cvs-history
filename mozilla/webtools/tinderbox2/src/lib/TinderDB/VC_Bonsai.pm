@@ -487,6 +487,14 @@ sub status_table_row {
                           "windowwidth" => ($max_length * 10) + 100,
                          );
 
+      my $mailto_author=$author;
+      $mailto_author =~ s/\%/\@/;
+
+      # Do not display the full mail address in the status column
+
+      my $display_author=$author;
+      $display_author =~ s/\%.*//;
+
       # If you have a VCDisplay implementation you should make the
       # link point to its query method otherwise you want a 'mailto:'
       # link
@@ -500,7 +508,7 @@ sub status_table_row {
         
         $query_link .= 
           HTMLPopUp::Link(
-                          "href" => "mailto: $author",
+                          "href" => "mailto: $mailto_author",
                           
                           %popup_args,
                          );
@@ -511,7 +519,7 @@ sub status_table_row {
                            'tree' => $tree,
                            'mindate' => $mindate,
                            'maxdate' => $maxdate,
-                           'who' => $author,
+                           'who' => $display_author,
                            
                            %popup_args,
                              );

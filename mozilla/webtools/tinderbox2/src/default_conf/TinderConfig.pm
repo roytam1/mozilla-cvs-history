@@ -122,9 +122,9 @@ $REFRESH_TIME = (60 * 15);
  
 $PopUpImpl = (
 	      # 'HTMLPopUp::MozillaLayers',
-	      # 'HTMLPopUp::MajorCoolWindow',
+	       'HTMLPopUp::MajorCoolWindow',
 	      # 'HTMLPopUp::None',
-	       'HTMLPopUp::PortableLayers',
+	      # 'HTMLPopUp::PortableLayers',
 	     );
 
 
