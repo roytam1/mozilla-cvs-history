@@ -151,8 +151,13 @@ if (exists $::FORM{'rebuildvotecache'}) {
 }
 
 if (exists $::FORM{'rederivegroups'}) {
+    Status("OK, now setting all users to redrive groups on next access.");
+    SendSQL("UPDATE profiles SET refreshed_when = 0 ");
+}
+
+if (exists $::FORM{'rederivegroupsnow'}) {
     Status("OK, now rederiving groups.");
-    SendSQL("SELECT id FROM groups");
+    SendSQL("SELECT userid FROM profiles");
     while ((my $id) = FetchSQLData()) {
         DeriveGroup($id);
     }
