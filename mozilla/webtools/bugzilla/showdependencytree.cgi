@@ -21,6 +21,7 @@
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Andreas Franke <afranke@mathweb.org>
 #                 Christian Reis <kiko@async.com.br>
+#                 Myk Melez <myk@mozilla.org>
 
 use diagnostics;
 use strict;
@@ -28,375 +29,164 @@ use strict;
 use lib qw(.);
 require "CGI.pl";
 
+# Use global template variables.
+use vars qw($template $vars);
+
 use vars %::FORM;
 
 ConnectToDatabase();
 
 quietly_check_login();
 
-$::usergroupset = $::usergroupset; # More warning suppression silliness.
+# More warning suppression silliness.
+$::userid = $::userid;
+$::usergroupset = $::usergroupset;
 
-######################################################################
-# Begin Data/Security Validation
-######################################################################
+################################################################################
+# Data/Security Validation                                                     #
+################################################################################
 
 # Make sure the bug ID is a positive integer representing an existing
-# bug that the user is authorized to access
+# bug that the user is authorized to access.
 ValidateBugID($::FORM{'id'});
-
 my $id = $::FORM{'id'};
-my $hide_resolved = $::FORM{'hide_resolved'} || 0;
+
+my $hide_resolved = $::FORM{'hide_resolved'} ? 1 : 0;
+
 my $maxdepth = $::FORM{'maxdepth'} || 0;
-
 if ($maxdepth !~ /^\d+$/) { $maxdepth = 0 };
-if ($hide_resolved !~ /^\d+$/ || $hide_resolved != 1) { $hide_resolved = 0 };
 
-######################################################################
-# End Data/Security Validation
-######################################################################
+################################################################################
+# Main Section                                                                 #
+################################################################################
 
-#
-# Globals
+# The column/value to select as the target milestone for bugs,
+# either the target_milestone column or the empty string value
+# (for installations that don't use target milestones).  Makes
+# it easier to query the database for bugs because we don't
+# have to embed a conditional statement into each query.
+my $milestone_column = Param('usetargetmilestone') ? "target_milestone" : "''";
 
-# A hash to count visited bugs, and also to avoid processing repeated bugs
-my %seen;
-
-# A hash to keep track of the bugs we print for the 'as buglist' links.
-my %printed;
-
-# HTML output generated in the parse of the dependency tree. This is a
-# global only to avoid excessive complication in the recursion invocation
-my $html;
-
-# Saves the largest of the two actual depths of the trees
+# The greatest depth to which either tree goes.
 my $realdepth = 0;
 
-# The scriptname for use as FORM ACTION.
-my $scriptname = $::ENV{'SCRIPT_NAME'}; # showdependencytree.cgi
+# Generate the tree of bugs that this bug depends on and a list of IDs
+# appearing in the tree.
+my $dependson_tree = { $id => GetBug($id) };
+my $dependson_ids = {};
+GenerateTree($id, "dependson", 1, $dependson_tree, $dependson_ids);
+$vars->{'dependson_tree'} = $dependson_tree;
+$vars->{'dependson_ids'} = [keys(%$dependson_ids)];
 
-#
-# Functions
+# Generate the tree of bugs that this bug blocks and a list of IDs
+# appearing in the tree.
+my $blocked_tree = { $id => GetBug($id) };
+my $blocked_ids = {};
+GenerateTree($id, "blocked", 1, $blocked_tree, $blocked_ids);
+$vars->{'blocked_tree'} = $blocked_tree;
+$vars->{'blocked_ids'} = [keys(%$blocked_ids)];
 
-# DumpKids recurses through the bug hierarchy starting at bug i, and
-# appends the bug information found to the html global variable. The
-# parameters are not straightforward, so look at the examples.
-#
-# DumpKids(i, target [, depth])
-#
-# Params
-#   i: The bug id to analyze
-#   target: The type we are looking for; either "blocked" or "dependson"
-# Optional
-#   depth: The current dependency depth we are analyzing, used during
-#          recursion
-# Globals Modified
-#   html: Bug descriptions are appended here
-#   realdepth: We set the maximum depth of recursion reached
-#   seen: We store the bugs analyzed so far
-#   printed: We store those bugs we actually print, for the "buglist" link
-# Globals Referenced
-#   maxdepth
-#   hide_resolved
-#
-# Examples:
-#   DumpKids(163, "blocked");
-#       will look for bugs that depend on bug 163
-#   DumpKids(163, "dependson");
-#       will look for bugs on which bug 163 depends
+$vars->{'realdepth'}      = $realdepth;
 
-sub DumpKids {
-    my ($i, $target, $depth) = (@_);
-    my $bgcolor = "#d9d9d9";
-    my $fgcolor = "#000000";
-    my $me;
-    if (! defined $depth) { $depth = 1; }
-    if (exists $seen{$i}) { return; }
-    $seen{$i} = 1;
-    if ($target eq "blocked") {
-        $me = "dependson";
-    } else {
-        $me = "blocked";
-    }
-    SendSQL("select $target from dependencies where $me=$i order by $target");
-    my @list;
-    while (MoreSQLData()) {
-        push(@list, FetchOneColumn());
-    }
-    if (@list) {
-        my $list_started = 0;
-        foreach my $kid (@list) {
-            my ($bugid, $stat, $milestone) = ("", "", "");
-            my ($userid, $short_desc) = ("", "");
-            if (Param('usetargetmilestone')) {
-                SendSQL("select bug_id, bug_status, target_milestone, assigned_to, short_desc from bugs where bug_id = $kid and bugs.groupset & $::usergroupset = bugs.groupset");
-                ($bugid, $stat, $milestone, $userid, $short_desc) = (FetchSQLData());
-            } else {
-                SendSQL("select bug_id, bug_status, assigned_to, short_desc from bugs where bug_id = $kid and bugs.groupset & $::usergroupset = bugs.groupset");
-                ($bugid, $stat, $userid, $short_desc) = (FetchSQLData());
+$vars->{'bugid'}          = $id;
+$vars->{'maxdepth'}       = $maxdepth;
+$vars->{'hide_resolved'}  = $hide_resolved;
+$vars->{'canedit'}        = UserInGroup("editbugs");
 
-            }
-            if (! defined $bugid) { next; }
-            my $opened = IsOpenedState($stat);
-            if ($hide_resolved && ! $opened) { next; }
+print "Content-Type: text/html\n\n";
+$template->process("bug/dependency-tree.html.tmpl", $vars)
+  || ThrowTemplateError($template->error());
 
-            # If we specify a maximum depth, we hide the output when
-            # that depth has occured, but continue recursing so we know
-            # the real maximum depth of the tree.
-            if (! $maxdepth || $depth <= $maxdepth) {
-                if (! $list_started) { $html .= "<ul>"; $list_started = 1 }
-                $html .= "<li>"; 
-                if (! $opened) {
-                    $html .= qq|<strike><span style="color: $fgcolor; background-color: $bgcolor;">
-                    |;
-                }
-                $short_desc = html_quote($short_desc);
-                SendSQL("select login_name from profiles where userid = $userid");
-                my ($owner) = (FetchSQLData());
-                if ((Param('usetargetmilestone')) && ($milestone)) {
-                    $html .= qq|
-                    <a href="show_bug.cgi?id=$kid">$kid [$milestone, $owner]
-                        - $short_desc.</a>
-                    |;  
-                } else {
-                    $html .= qq|
-                    <a href="show_bug.cgi?id=$kid">$kid [$owner] -
-                        $short_desc.</a>\n|; 
-                }
-                if (! $opened) { $html .= "</span></strike>"; }
-                
-                $printed{$kid} = 1;
-            } # End hideable output
+################################################################################
+# Recursive Tree Generation Function                                           #
+################################################################################
 
-            # Store the maximum depth so far
-            $realdepth = $realdepth < $depth ? $depth : $realdepth;
-            DumpKids($kid, $target, $depth + 1);
+sub GenerateTree {
+    # Generates a dependency tree for a given bug.  Calls itself recursively
+    # to generate sub-trees for the bug's dependencies.
+    
+    my ($bug_id, $relationship, $depth, $bugs, $ids) = @_;
+    
+    # Query the database for bugs with the given dependency relationship.
+    my @dependencies = GetDependencies($bug_id, $relationship);
+    
+    # Don't do anything if this bug doesn't have any dependencies.
+    return unless scalar(@dependencies);
+    
+    # Record this depth in the global $realdepth variable if it's farther 
+    # than we've gone before.
+    $realdepth = max($realdepth, $depth);
+
+    foreach my $dep_id (@dependencies) {
+        # Get this dependency's record from the database and generate
+        # its sub-tree if we haven't already done so (which happens
+        # when bugs appear in dependency trees multiple times).
+        if (!$bugs->{$dep_id}) {
+            $bugs->{$dep_id} = GetBug($dep_id);
+            GenerateTree($dep_id, $relationship, $depth+1, $bugs, $ids);
         }
-        if ($list_started) { $html .= "</ul>"; }
+
+        # Add this dependency to the list of this bug's dependencies 
+        # if it exists, if we haven't exceeded the maximum depth the user 
+        # wants the tree to go, and if the dependency isn't resolved 
+        # (if we're ignoring resolved dependencies).
+        if ($bugs->{$dep_id}->{'exists'}
+            && (!$maxdepth || $depth <= $maxdepth) 
+            && ($bugs->{$dep_id}->{'open'} || !$hide_resolved))
+        {
+            push (@{$bugs->{$bug_id}->{'dependencies'}}, $dep_id);
+            $ids->{$dep_id} = 1;
+        }
     }
 }
 
-# makeTreeHTML calls DumpKids and generates the HTML output for a
-# dependency/blocker section.
-#
-# makeTreeHTML(i, linked_id, target);
-#
-# Params
-#   i: Bug id
-#   linked_id: Linkified bug_id used to linkify the bug
-#   target: The type we are looking for; either "blocked" or "dependson"
-# Globals modified
-#   html [Also modified in our call to DumpKids]
-# Globals referenced
-#   seen [Also modified by DumpKids]
-#   maxdepth
-#   realdepth
-#
-# Example:
-#   $depend_html = makeTreeHTML(83058, <A HREF="...">83058</A>, "dependson");
-#       Will generate HTML for bugs that depend on bug 83058
-
-sub makeTreeHTML {
-    my ($i, $linked_id, $target) = @_;
-
-    # Clean up globals for this run
-    $html = "";
-    %seen = ();
-    %printed = ();
-
-    DumpKids($i, $target);
-    my $tmphtml = $html;
-
-    # Output correct heading
-    $html = "<h3>Bugs that bug $linked_id ".($target eq "blocked" ? 
-        "blocks" : "depends on");
-
-    if ((scalar keys %printed) > 0) {
-        $html .= ' (<a href="buglist.cgi?bug_id=' . join(',', keys %printed) . 
-                 '">view as bug list</a>)';        
-    }
+sub GetBug {
+    # Retrieves the necessary information about a bug, stores it in the bug cache,
+    # and returns it to the calling code.
+    my ($id) = @_;
     
-    # Provide feedback for omitted bugs
-    if ($maxdepth || $hide_resolved) {
-        $html .= " <small><b>(Only ";
-        if ($hide_resolved) { $html .= "open "; }
-        $html .= "bugs ";
-        if ($maxdepth) { $html .= "whose depth is less than $maxdepth "; }
-        $html .= "will be shown)</b></small>";
-    }
-
-    $html .= "</h3>";
-    $html .= $tmphtml;
-
-    # If no bugs were found, say so
-    if ((scalar keys %printed) == 0) {
-        $html .= "&nbsp;&nbsp;&nbsp;&nbsp;None<p>\n";
-    }
-
-    return $html;
+    SendSQL(SelectVisible("SELECT 1, 
+                                  bug_status, 
+                                  short_desc, 
+                                  $milestone_column, 
+                                  assignee.userid, 
+                                  assignee.login_name
+                             FROM bugs, profiles AS assignee
+                            WHERE bugs.bug_id = $id
+                              AND bugs.assigned_to = assignee.userid", 
+                          $::userid, 
+                          $::usergroupset));
+    
+    my $bug = {};
+    
+    ($bug->{'exists'}, 
+     $bug->{'status'}, 
+     $bug->{'summary'}, 
+     $bug->{'milestone'}, 
+     $bug->{'assignee_id'}, 
+     $bug->{'assignee_email'}) = FetchSQLData();
+    
+    $bug->{'open'} = IsOpenedState($bug->{'status'});
+    $bug->{'dependencies'} = [];
+    
+    return $bug;
 }
 
-# Draw the actual form controls that make up the hide/show resolved and
-# depth control toolbar. 
-#
-# drawDepForm()
-#
-# Params
-#   none
-# Globals modified
-#   none
-# Globals referenced
-#   hide_resolved
-#   maxdepth
-#   realdepth
-
-sub drawDepForm {
-    my $bgcolor = "#d0d0d0";
-    my ($hide_msg, $hide_input);
-
-    # Set the text and action for the hide resolved button.
-    if ($hide_resolved) {
-        $hide_input = '<input type="hidden" name="hide_resolved" value="0">';
-        $hide_msg = "Show Resolved";
-    } else {
-        $hide_input = '<input type="hidden" name="hide_resolved" value="1">';
-        $hide_msg = "Hide Resolved";
-    }
-
-    print qq|
-    <table cellpadding="3" border="0" cellspacing="0">
-    <tr>
-
-    <!-- Hide/show resolved button 
-         Swaps text depending on the state of hide_resolved -->
-    <td bgcolor="$bgcolor" align="center"> 
-    <form method="get" action="$scriptname" 
-        style="display: inline; margin: 0px;">
-    <input name="id" type="hidden" value="$id">
-    | . ( $maxdepth ? 
-        qq|<input name="maxdepth" type="hidden" value="$maxdepth">|
-        : "" ) . qq|
-    $hide_input
-    <input type="submit" value="$hide_msg">
-
-    </form>
-    </td>
-    <td bgcolor="$bgcolor">
-
-    <!-- depth section -->
-    Max Depth:
+sub GetDependencies {
+    # Returns a list of dependencies for a given bug.
     
-    </td>
-    <td bgcolor="$bgcolor">
-
-    </td>
-    <td bgcolor="$bgcolor">
-    <form method="get" action="$scriptname" 
-        style="display: inline; margin: 0px;">
+    my ($id, $relationship) = @_;
     
-    <!-- set to one form -->
-    <input type="submit" value="&nbsp;1&nbsp;" | 
-        . ( $realdepth < 2 || $maxdepth == 1 ? "disabled" : "" ) . qq|>
-    <input name="id" type="hidden" value="$id">
-    <input name="maxdepth" type="hidden" value="1">
-    <input name="hide_resolved" type="hidden" value="$hide_resolved">
-    </form>
-    </td>
-    <td bgcolor="$bgcolor">
-    <form method="get" action="$scriptname" 
-        style="display: inline; margin: 0px;">
-
-    <!-- Minus one form  
-         Allow subtracting only when realdepth and maxdepth > 1 -->
-    <input name="id" type="hidden" value="$id">
-    <input name="maxdepth" type="hidden" value="| 
-        .  ( $maxdepth == 1 ? 1 : ( $maxdepth ? 
-            $maxdepth-1 : $realdepth-1 ) ) . qq|">
-    <input name="hide_resolved" type="hidden" value="$hide_resolved">
-    <input type="submit" value="&nbsp;&lt;&nbsp;" | 
-        . ( $realdepth < 2 || ( $maxdepth && $maxdepth < 2 ) ?
-            "disabled" : "" ) . qq|>
-
-    </form>
-    </td>
-    <td bgcolor="$bgcolor">
-    <form method="get" action="$scriptname" 
-        style="display: inline; margin: 0px;">
-
-    <!-- Limit entry form: the button can not do anything when total depth
-         is less than two, so disable it -->
-    <input name="maxdepth" size="4" maxlength="4" value="| 
-        . ( $maxdepth > 0 ? $maxdepth : "" ) . qq|">
-    <input name="id" type="hidden" value="$id">
-    <input name="hide_resolved" type="hidden"
-        value="$hide_resolved">
-    <noscript>
-    <input type="submit" value="Change" | 
-        . ( $realdepth < 2 ? "disabled" : "" ) . qq|>
-    </noscript>
-
-    </form>
-    </td>
-    <td bgcolor="$bgcolor">
-    <form method="get" action="$scriptname" 
-        style="display: inline; margin: 0px;">
+    my $bug_type = ($relationship eq "blocked") ? "dependson" : "blocked";
     
-    <!-- plus one form 
-        Disable button if total depth < 2, or if depth set to unlimited -->
-    <input name="id" type="hidden" value="$id">
-    | . ( $maxdepth ? qq|
-    <input name="maxdepth" type="hidden" value="|.($maxdepth+1).qq|">| : "" ) 
-    . qq| 
-    <input name="hide_resolved" type="hidden" value="$hide_resolved">
-    <input type="submit" value="&nbsp;&gt;&nbsp;" | 
-        .  ( $realdepth < 2 || ! $maxdepth || $maxdepth >= $realdepth ?
-            "disabled" : "" ) . qq|>
-
-    </form>
-    </td>
-    <td bgcolor="$bgcolor">
-    <form method="get" action="$scriptname" 
-        style="display: inline; margin: 0px;">
+    SendSQL("  SELECT $relationship 
+                 FROM dependencies 
+                WHERE $bug_type = $id 
+             ORDER BY $relationship");
     
-    <!-- Unlimited button -->
-    <input name="id" type="hidden" value="$id">
-    <input name="hide_resolved" type="hidden" value="$hide_resolved">
-    <input type="submit" value="&nbsp;Unlimited&nbsp;">
-
-    </form>
-    </td>
-    </tr></table>
-    |;
+    my @dependencies = ();
+    push(@dependencies, FetchOneColumn()) while MoreSQLData();
+    
+    return @dependencies;
 }
 
-######################################################################
-# Main Section
-######################################################################
-
-my $linked_id = qq|<a href="show_bug.cgi?id=$id">$id</a>|;
-
-# Start the tree walk and save results. The tree walk generates HTML but
-# needs to be called before the page output starts so we have the
-# realdepth, which is necessary for generating the control toolbar.
-
-# Get bugs we depend on
-my $depend_html = makeTreeHTML($id, $linked_id, "dependson");
-
-my $tmpdepth = $realdepth; 
-$realdepth = 0;
-
-# Get bugs we block
-my $block_html = makeTreeHTML($id, $linked_id, "blocked");
-
-# Select maximum depth found for use in the toolbar
-$realdepth = $realdepth < $tmpdepth ? $tmpdepth : $realdepth;
-
-#
-# Actual page output happens here
-
-print "Content-type: text/html\n\n";
-PutHeader("Dependency tree for Bug $id", "Dependency tree for Bug $linked_id");
-drawDepForm();
-print $depend_html;
-print $block_html;
-drawDepForm();
-PutFooter();
