@@ -91,9 +91,6 @@ $fullname{'12'} = 'jpeg';
 $mode{'64'} = 'Open';
 $branch{'64'} = 'HEAD';
 $fullname{'64'} = 'JPEG Image Handling';
-$mode{'74'} = 'Open';
-$branch{'74'} = 'HEAD';
-$fullname{'74'} = 'LibMocha';
 $mode{'47'} = 'Open';
 $branch{'47'} = 'HEAD';
 $fullname{'47'} = 'Macintosh FE';
@@ -238,9 +235,6 @@ if (m:^mozilla/js/ref/.*$:) {return '70';}
 if (m:^mozilla/js/src/.*$:) {return '70';}
 if (m:^mozilla/js/jsd/.*$:) {return '71';}
 if (m:^mozilla/js/jsj/.*$:) {return '72';}
-if (m:^mozilla/include/libevent\.h/.*$:) {return '74';}
-if (m:^mozilla/include/libmocha\.h/.*$:) {return '74';}
-if (m:^mozilla/lib/libmocha/.*$:) {return '74';}
 if (m:^mozilla/lib/mailto/.*$:) {return '75';}
 if (m:^mozilla/lib/libmime/.*$:) {return '76';}
 if (m:^mozilla/network/.*$:) {return '77';}
