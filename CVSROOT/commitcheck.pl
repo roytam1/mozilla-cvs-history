@@ -147,6 +147,9 @@ $fullname{'84'} = 'Registry';
 $mode{'86'} = 'Open';
 $branch{'86'} = 'HEAD';
 $fullname{'86'} = 'Security Stubs';
+$mode{'110'} = 'Open';
+$branch{'110'} = 'HEAD';
+$fullname{'110'} = 'Silent Download';
 $mode{'87'} = 'Open';
 $branch{'87'} = 'HEAD';
 $fullname{'87'} = 'SmartUpdate';
@@ -248,6 +251,7 @@ if (m:^mozilla/layout/.*$:) {return '98';}
 if (m:^mozilla/webshell/.*$:) {return '101';}
 if (m:^mozilla/htmlparser/.*$:) {return '102';}
 if (m:^mozilla/dom/.*$:) {return '103';}
+if (m:^mozilla/silentdl/.*$:) {return '110';}
 if (m:^mozilla/xpfe$:) {return '105';}
 }
 return '';
