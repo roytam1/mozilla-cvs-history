@@ -79,6 +79,7 @@ Content-type: text/html
 <TABLE BORDER=0 WIDTH="100%" HEIGHT="100%"><TR><TD ALIGN=CENTER VALIGN=CENTER>
 <FONT SIZE="+2">
 Regenerating HTML now.<br>
+Please refresh the page when the redirect is complete.<br>
 Sending you to the <A HREF="$url">default Tinderbox page</A>.
 </FONT>
 </TD></TR></TABLE>
