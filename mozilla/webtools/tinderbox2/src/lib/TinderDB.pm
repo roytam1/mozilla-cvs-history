@@ -392,7 +392,7 @@ sub notice_association {
   my (@outrow) = ();
 
   foreach $db (@{$DB}) {
-    push @outrow, $db->status_table_header(@_);
+    push @outrow, $db->notice_association(@_);
   }
 
   return (@outrow);

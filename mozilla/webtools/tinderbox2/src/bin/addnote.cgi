@@ -52,6 +52,7 @@ use TreeData;
 use Persistence;
 use HTMLPopUp;
 use Utils;
+use TinderDB;
 
 
 
@@ -160,9 +161,9 @@ sub get_params {
   $NOTE = extract_html_chars($NOTE);
 
   {
-    TinderDB::loadtree_db($tree);
+    TinderDB::loadtree_db($TREE);
       
-      @ASSOCIATIONS = TinderDB::notice_association($tree);
+      @ASSOCIATIONS = TinderDB::notice_association($TREE);
   }
 
   @CHOSEN_ASSOCIATIONS = param("associations");
