@@ -281,7 +281,13 @@ sub Link {
     $name = "name=\"$args{'name'}\"";
   }
 
-
+    
+  if (!($args{'windowtxt'})) {
+      $out .= "<a $name href=\"$args{'href'}\">";
+      $out .= "$args{'linktxt'}</a>\n";
+      
+      return $out;
+  }
 
   if (! scalar(@POPUPTXT)) {
     # Make the first item blank so we can shut down the windows.
@@ -320,14 +326,6 @@ sub Link {
     $args{'windowwidth'} = ($args{'windowwidth'} ||
                             $HTMLPopUp::DEFAULT_POPUP_WIDTH);
 
-
-    
-    if (!($args{'windowtxt'})) {
-        $out .= "<a $name href=\"$args{'href'}\">";
-        $out .= "$args{'linktxt'}</a>\n";
-        
-        return $out;
-    }
 
     if ($args{'windowtxt'}) {
 
