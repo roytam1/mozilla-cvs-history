@@ -766,14 +766,14 @@ sub CanSeeBug {
     WHERE 
         bugs.bug_id IN (" . join(',', @buglist) . ") 
         AND ((";
-    if ($#groups > 0) {
+    if ($#groups >= 0) {
         $query .= "bug_group_map.group_id IN (" . join(',', @groups) . ") OR ";
     }
     $query .= "bug_group_map.group_id IS NULL) ";
     if ($userid) {
         $query .= "OR (bugs.reporter_accessible = 1 AND bugs.reporter = $userid) 
-        OR (bugs.assignee_accessible = 1 AND bugs.assigned_to = $userid) 
-        OR (bugs.qacontact_accessible = 1 AND bugs.qa_contact = $userid)
+          OR (bugs.assignee_accessible = 1 AND bugs.assigned_to = $userid) 
+          OR (bugs.qacontact_accessible = 1 AND bugs.qa_contact = $userid) 
           OR (bugs.cclist_accessible = 1 AND cc.who = $userid)";
     }
     $query .= ") GROUP BY bugs.bug_id";
@@ -1056,7 +1056,7 @@ sub GetBugLink {
     
         # If the bug exists, save its data off for use later in the sub
         if (MoreSQLData()) {
-            my ($bug_state, $bug_res, $bug_desc, $bug_grp) = FetchSQLData();
+            my ($bug_state, $bug_res, $bug_desc) = FetchSQLData();
             # Initialize these variables to be "" so that we don't get warnings
             # if we don't change them below (which is highly likely).
             my ($pre, $title, $post) = ("", "", "");
@@ -1245,8 +1245,8 @@ sub UserInGroup {
     ConnectToDatabase();
     SendSQL("SELECT user_id FROM user_group_map, groups
             WHERE user_group_map.group_id = groups.group_id 
-            AND groups.name = '$groupname'
-            AND user_id = $userid");
+            AND groups.name = " . SqlQuote($groupname) .
+            " AND user_id = $userid");
     my $result = FetchOneColumn();
     return 1 if $result;
     return 0;

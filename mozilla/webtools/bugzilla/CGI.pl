@@ -1299,7 +1299,7 @@ sub DumpBugActivity {
 
 
 sub GetCommandMenu {
-    my $userid = quietly_check_login() || 0;
+    my $userid = quietly_check_login();
     if (!defined $::anyvotesallowed) {
         GetVersionTable();
     }
@@ -1325,13 +1325,10 @@ Actions:
         if ($::anyvotesallowed) {
             $html .= " | <A HREF=\"showvotes.cgi\">My votes</A>\n";
         }
-    }
-    if ($userid) {
         #a little mandatory SQL, used later on
-        SendSQL("SELECT mybugslink, userid FROM profiles " .
-                "WHERE login_name = " . SqlQuote($::COOKIE{'Bugzilla_login'}));
-        my ($mybugslink, $userid) = (FetchSQLData());
-        SendSQL("SELECT COUNT(*) FROM user_group_map WHERE user_id = $userid AND canbless = 1"); 
+        SendSQL("SELECT mybugslink FROM profiles WHERE userid = $userid");
+        my $mybugslink = FetchOneColumn();
+        SendSQL("SELECT COUNT(*) FROM user_group_map WHERE user_id = $userid AND canbless >= 1"); 
         my $canbless = FetchOneColumn();
         
         #Begin settings

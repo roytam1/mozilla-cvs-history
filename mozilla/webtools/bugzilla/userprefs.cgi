@@ -519,9 +519,9 @@ sub ShowPermissions {
         print "<LI>(No extra permissions have been set).\n";
     }
     print "</UL>\n";
-      SendSQL("SELECT COUNT(*) FROM user_group_map WHERE user_id = $userid AND canbless = 1");
-      my $blessgroupset = FetchOneColumn();
-      if ( $blessgroupset ) {
+      SendSQL("SELECT COUNT(*) FROM user_group_map WHERE user_id = $userid AND canbless >= 1");
+      my $blessgroups = FetchOneColumn();
+      if ( $blessgroups ) {
              print "And you can turn on or off the following permissions for\n";
           print qq{<A HREF="editusers.cgi">other users</A>:\n};
              print "<P><UL>\n";

@@ -760,8 +760,6 @@ sub update
 
     # Get the user's login name since the AppendComment function needs it.
     my $who = DBID_to_name($userid);
-    # Mention $userid again so Perl doesn't give me a warning about it.
-    my $neverused = $userid;
 
     # Append the comment to the list of comments in the database.
     AppendComment($bugid, $who, $wrappedcomment);

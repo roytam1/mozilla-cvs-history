@@ -655,8 +655,6 @@ sub NewProcessOnePerson ($$$$$$$$$$$$) {
       return;
     }
        
-    detaint_natural($person);
- 
     my $userid = DBname_to_id($person);
 
     $seen{$person} = 1;

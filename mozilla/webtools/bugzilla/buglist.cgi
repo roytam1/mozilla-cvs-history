@@ -1283,7 +1283,7 @@ while (@row = FetchSQLData()) {
 
     foreach my $col ( @collist ) {
         if ( exists $::needquote{$col} ) {
-             my $value = shift @row;
+            my $value = shift @row;
             push (@{$valuehash{$bug_id}}, $value);
         }
     }
@@ -1603,7 +1603,7 @@ document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCh
         my ($groupid, $groupname, $description, $isactive) = (FetchSQLData());
         if(($prodhash{$groupname}) || (!defined($::proddesc{$groupname}))) {
           if(!$groupFound) {
-            print "<B>Groupset:</B><BR>\n";
+            print "<B>Groups:</B><BR>\n";
             print "<TABLE BORDER=1><TR>\n";
             print "<TH ALIGN=center VALIGN=middle>Don't<br>change<br>this group<br>restriction</TD>\n";
             print "<TH ALIGN=center VALIGN=middle>Remove<br>bugs<br>from this<br>group</TD>\n";
@@ -1630,7 +1630,7 @@ document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCh
             print "</I>";
           }
           print "</TD></TR>\n";
-        }
+      }
     }
     # Add in some blank space for legibility
     if($groupFound) {

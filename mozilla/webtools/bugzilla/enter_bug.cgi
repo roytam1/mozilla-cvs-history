@@ -116,7 +116,7 @@ if (!defined $::FORM{'product'}) {
 
 my $product = $::FORM{'product'};
 
-confirm_login();
+$userid = confirm_login();
 
 print "Content-type: text/html\n\n";
 
@@ -342,7 +342,7 @@ if(Param("usebuggroupsentry")
 my $product_group_id = 0;
 if(Param("usebuggroups") && GroupExists($product)) {
     SendSQL("SELECT group_id FROM groups ".
-            "WHERE name = ".SqlQuote($product)." ".
+            "WHERE name = " . SqlQuote($product) .
             " AND isbuggroup != 0");
     $product_group_id = FetchOneColumn();
 }

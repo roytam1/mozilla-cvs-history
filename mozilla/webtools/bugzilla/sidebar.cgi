@@ -68,6 +68,7 @@ my $userid = quietly_check_login();
 
 $vars->{'username'} = $::COOKIE{'Bugzilla_login'} || '';
 $vars->{'anyvotesallowed'} = $::anyvotesallowed;
+$vars->{'userid'} = $userid;
 
 if ($userid) {
     SendSQL("SELECT mybugslink FROM profiles WHERE user_id = $userid");
