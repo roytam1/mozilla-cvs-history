@@ -37,14 +37,7 @@
 # Contributor(s): 
 
 
-# We need this empty package namespace for our dependency analysis, it
-# gets confused if there is not a package name which matches the file
-# name and in this case the file is one of several possible
-# implementations.
-
 package HTMLPopUp::PortableLayers;
-
-package HTMLPopUp;
 
 $VERSION = '#tinder_version#';
 
@@ -58,6 +51,7 @@ $VERSION = '#tinder_version#';
 
 
 sub page_header {
+  my $self = shift @_;
   my (%args) = @_;
 
   my ($html_time) = $main::LOCALTIME;
@@ -242,6 +236,7 @@ sub Link {
 #	  "windowwidth"=>"",
 #	 );
 
+  my $self = shift @_;
   my (%args) = @_;
   my $out = '';
 
@@ -264,7 +259,7 @@ sub Link {
     # set the defaults
 
     $args{'windowtitle'} = $args{'windowtitle'} || 
-      $DEFAULT_POPUP_TITLE;
+      $HTMLPopUp::DEFAULT_POPUP_TITLE;
 
 
     # These characters inside the popupwindow will confuse my popup
@@ -300,6 +295,7 @@ sub Link {
 
 
 sub define_structures {
+    my $self = shift @_;
 
     my $out = "</div>\n\n\n";
 

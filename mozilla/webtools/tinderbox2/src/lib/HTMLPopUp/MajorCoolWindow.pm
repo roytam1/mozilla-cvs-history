@@ -38,14 +38,7 @@
 # Contributor(s): 
 
 
-# We need this empty package namespace for our dependency analysis, it
-# gets confused if there is not a package name which matches the file
-# name and in this case the file is one of several possible
-# implementations.
-
 package HTMLPopUp::MajorCoolWindow;
-
-package HTMLPopUp;
 
 $VERSION = '#tinder_version#';
 
@@ -73,6 +66,7 @@ $VERSION = '#tinder_version#';
 
 
 sub page_header {
+  my $self = shift @_;
   my (%args) = @_;
 
   my ($html_time) = $main::LOCALTIME;
@@ -346,6 +340,7 @@ sub Link {
 #	  "windowwidth"=>"",
 #	 );
 
+  my $self = shift @_;
   my (%args) = @_;
   my $out = '';
 
@@ -389,10 +384,10 @@ sub Link {
     # determine what a HTML row is.
 
     $args{'windowheight'} = ($args{'windowheight'} || 
-                             $DEFAULT_POPUP_HEIGHT);
+                             $HTMLPopUp::DEFAULT_POPUP_HEIGHT);
 
     $args{'windowwidth'} = ($args{'windowwidth'} ||
-                            $DEFAULT_POPUP_WIDTH);
+                            $HTMLPopUp::DEFAULT_POPUP_WIDTH);
 
     #
 
@@ -442,6 +437,7 @@ sub Link {
 #    don't forget that tip() is recursive )
 
 sub test_define_structures {
+  my $self = shift @_;
   my (@out) =();
 
   push @out, "popuptxt = new Array();\n";
