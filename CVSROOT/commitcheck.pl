@@ -11,9 +11,6 @@ $fullname{'52'} = 'Aurora/RDF BE';
 $mode{'53'} = 'Open';
 $branch{'53'} = 'HEAD';
 $fullname{'53'} = 'Berkeley DB';
-$mode{'54'} = 'Open';
-$branch{'54'} = 'HEAD';
-$fullname{'54'} = 'Browser Hooks';
 $mode{'55'} = 'Open';
 $branch{'55'} = 'HEAD';
 $fullname{'55'} = 'Build Config';
@@ -217,7 +214,6 @@ if (m:^mozilla/gfx/src/gtk/.*$:) {return '49';}
 if (m:^mozilla/widget/src/gtk/.*$:) {return '49';}
 if (m:^mozilla/rdf/.*$:) {return '52';}
 if (m:^mozilla/dbm/.*$:) {return '53';}
-if (m:^mozilla/modules/libhook/.*$:) {return '54';}
 if (m:^mozilla/build/.*$:) {return '55';}
 if (m:^mozilla/config/.*$:) {return '55';}
 if (m:^mozilla/l10n/.*$:) {return '55';}
