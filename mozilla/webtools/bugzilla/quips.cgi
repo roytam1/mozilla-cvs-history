@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -19,47 +19,61 @@
 # Rights Reserved.
 #
 # Contributor(s): Owen Taylor <otaylor@redhat.com>
+#                 Gervase Markham <gerv@gerv.net>
+#                 David Fallon <davef@tetsubo.com>
 
 use diagnostics;
 use strict;
-use vars ( %::FORM );
+
+use vars qw(
+  %FORM
+  $userid
+  $template
+  $vars
+);
+
+use lib qw(.);
 
 require "CGI.pl";
 
-print "Content-type: text/html\n\n";
+ConnectToDatabase();
+confirm_login();
 
-PutHeader("Quips for the impatient", "Add your own clever headline");
+my $action = $::FORM{'action'} || "";
 
-print qq{
-The buglist picks a random quip for the headline, and 
-you can extend the quip list.  Type in something clever or
-funny or boring and bonk on the button.
+if ($action eq "show") {
+    # Read in the entire quip list
+    SendSQL("SELECT quip FROM quips");
 
-<FORM METHOD=POST ACTION="new_comment.cgi">
-<INPUT SIZE=80 NAME="comment"><BR>
-<INPUT TYPE="submit" VALUE="Add This Quip">
-</FORM>
-};
-
-if (exists $::FORM{show_quips}) {
-
-    print qq{
-<H2>Existing headlines</H2>
-};
-
-    if (open (COMMENTS, "<data/comments")) {
-        while (<COMMENTS>) {
-            print $_,"<br>\n";
-        }
-        close COMMENTS;
+    my @quips;
+    while (MoreSQLData()) {
+        my ($quip) = FetchSQLData();
+        push(@quips, $quip);
     }
-    print "<P>";
-} else {
-    print qq{
-For the impatient, you can 
-<A HREF="quips.cgi?show_quips=yes">view the whole quip list</A>.
-};
-    print "<P>";
+
+    $vars->{'quips'} = \@quips;
+    $vars->{'show_quips'} = 1;
 }
 
-PutFooter();
+if ($action eq "add") {
+    # Add the quip 
+    my $comment = $::FORM{"quip"};
+    if (!$comment) {
+        DisplayError("Please enter a quip in the text field.");
+        exit();
+    }
+    
+    if ($comment =~ m/</) {
+        DisplayError("Sorry - for security reasons, support for HTML tags has 
+                      been turned off in quips.");
+        exit();
+    }
+
+    SendSQL("INSERT INTO quips (userid, quip) VALUES (". $userid . ", " . SqlQuote($comment) . ")");
+
+    $vars->{'added_quip'} = $comment;
+}
+
+print "Content-type: text/html\n\n";
+$template->process("list/quips.html.tmpl", $vars)
+  || ThrowTemplateError($template->error());

@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -20,38 +20,37 @@
 #
 # Contributor(s): Dawn Endico    <endico@mozilla.org>
 #                 Terry Weissman <terry@mozilla.org>
+#                 Gervase Markham <gerv@gerv.net>
 
 use diagnostics;
 use strict;
+
+use lib qw(.);
+
 use Bug;
 require "CGI.pl";
 
-if (!defined $::FORM{'id'} || $::FORM{'id'} !~ /^\s*\d+(,\d+)*\s*$/) {
-  print "Content-type: text/html\n\n";
-  PutHeader("Display as XML");
-  print "<FORM METHOD=GET ACTION=\"xml.cgi\">\n";
-  print "Display bugs as XML by entering a list of bug numbers here:\n";
-  print "<INPUT NAME=id>\n";
-  print "<INPUT TYPE=\"submit\" VALUE=\"Display as XML\"><br>\n";
-  print "  (e.g. 1000,1001,1002)\n";
-  print "</FORM>\n";
-  PutFooter();
-  exit;
-}
+use vars qw($template $vars);
 
+ConnectToDatabase();
 quietly_check_login();
-my $exporter;
-if (defined $::COOKIE{"Bugzilla_login"}) {
-  $exporter = $::COOKIE{"Bugzilla_login"};
+
+if (!defined $::FORM{'id'} || !$::FORM{'id'}) {
+    print "Content-Type: text/html\n\n";
+    $template->process("bug/choose-xml.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
+    exit;
 }
 
-my @ids = split ( /,/, $::FORM{'id'} );
+my $exporter = $::COOKIE{"Bugzilla_login"} || undef;
 
-print "Content-type: text/plain\n\n";
-print Bug::XML_Header( Param("urlbase"), $::param{'version'}, 
-                        Param("maintainer"), $exporter );
+my @ids = split (/[, ]+/, $::FORM{'id'});
+
+print "Content-type: text/xml\n\n";
+print Bug::XML_Header(Param("urlbase"), $::param{'version'}, 
+                      Param("maintainer"), $exporter);
 foreach my $id (@ids) {
-  my $bug = new Bug($id, $::userid);
+  my $bug = new Bug(trim($id), $::userid);
   print $bug->emitXML;
 }
 
