@@ -494,6 +494,8 @@ NSPR -a \
 	mozilla/nsprpub
 
 SeaMonkeyCore -a \
+	mozilla/client.mk \
+	mozilla/client.mak \
 	mozilla/configure.in \
 	mozilla/Makefile.in \
 	mozilla/aclocal.m4 \
@@ -541,8 +543,6 @@ SeaMonkeyXPToolKit -a \
 	mozilla/xpfe
 
 SeaMonkeyBrowser -a \
-	mozilla/client.mk \
-	mozilla/client.mak \
 	mozilla/modules/softupdt \
 	mozilla/editor/Makefile.in \
 	mozilla/editor/public \
