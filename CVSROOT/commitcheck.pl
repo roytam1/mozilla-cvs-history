@@ -10,11 +10,14 @@ $branch{'3'} = 'HEAD';
 $fullname{'3'} = 'despotaccess';
 $blessed{'3'} = [];
 $super{'3'} = ['despotdaemon%netscape.com',];
+$mode{'12'} = 'Open';
+$branch{'12'} = 'HEAD';
+$fullname{'12'} = 'jpeg';
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'HEAD') {
-if (m:CVSROOT/commitcheck\.pl:) {return '3';}
-if (m:CVSROOT/passwd:) {return '3';}
+if (m:CVSROOT/commitcheck\.pl:) {return '12';}
+if (m:CVSROOT/passwd:) {return '12';}
 }
 return '';
 }
