@@ -1,4 +1,0 @@
-If you change the modules file, you *MUST* run:
- check-modules.pl modules
-
-*before* cvs committing the new modules file.
