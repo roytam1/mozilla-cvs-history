@@ -305,13 +305,6 @@ sub mailstring2time {
 sub write_update_file {
   my ($update_type, $uniq_id, $tree, %tinderbox) = @_;
 
-  # first we try and make the file name legal, then we check by using
-  # the definiative legal filename checker.
-
-  $update_file =~ s/([^0-9a-zA-Z\.\-\_\/\:]+)/\./g;
-
-  $update_file = main::extract_filename_chars($update_file);
-
   # write out an build update file so that the server to know about
   # the new info.
 
@@ -320,6 +313,13 @@ sub write_update_file {
   
   my ($update_file) = (FileStructure::get_filename($tree, 'TinderDB_Dir').
                        "/$update_type.Update.$uniq_id");
+
+  # first we try and make the file name legal, then we check by using
+  # the definiative legal filename checker.
+
+  $update_file =~ s/([^0-9a-zA-Z\.\-\_\/\:]+)/\./g;
+
+  $update_file = main::extract_filename_chars($update_file);
 
   # We are done, tell the tinderserver about this build.  
 
