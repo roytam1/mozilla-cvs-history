@@ -537,7 +537,6 @@ SeaMonkeyCore -a \
 	mozilla/intl \
 	mozilla/jpeg \
 	JSClient \
-	mozilla/lib/liblayer \
 	mozilla/lib/libpwcac \
 	mozilla/lib/mac/MacMemoryAllocator \
 	mozilla/lib/mac/Misc \
