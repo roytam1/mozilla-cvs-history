@@ -26,14 +26,14 @@ do pathfix('Conf/Supplies/localconfig.vars'); #read in the vars which are in ano
 if ($newstuff == "") {
 	output <<'EOF';
 	
-	After further checking, it has been realized that you do not require any localconfig 
-	configuration.
+After further checking, it has been realized that you do not require any localconfig 
+configuration.
 	
 	EOF
 }
 
 if ($newstuff ne "") {
-	system(getConf('editor')."Conf/Supplies/localconfig")l
+	system(getConf('editor')."Conf/Supplies/localconfig");
 }
 
 # 2000-Dec-18 - justdave@syndicomm.com - see Bug 52921
