@@ -78,6 +78,11 @@ sub trim_db_history {
 }
 
 
+sub event_times_vec {
+  return ;
+}
+
+
 sub apply_db_updates {
   return 0;
 }
