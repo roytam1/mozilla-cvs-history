@@ -1227,12 +1227,12 @@ sub GroupExists {
 
 # Determines whether or not a group is active by checking 
 # the "isactive" column for the group in the "groups" table.
-# Note: This function selects groups by bit rather than by name.
+# Note: This function selects groups by id rather than by name.
 sub GroupIsActive {
-    my ($groupbit) = (@_);
-    $groupbit ||= 0;
+    my ($groupid) = (@_);
+    $groupid ||= 0;
     PushGlobalSQLState();
-    SendSQL("select isactive from groups where bit=$groupbit");
+    SendSQL("select isactive from groups where group_id=$groupid");
     my $isactive = FetchOneColumn();
     PopGlobalSQLState();
     return $isactive;

@@ -325,62 +325,60 @@ $default{'bug_status'} = $status[0];
 
 # Select whether to restrict this bug to the product's bug group or not, 
 # if the usebuggroups parameter is set, and if this product has a bug group.
-if ($::usergroupset ne '0') {
-    # First we get the bit and description for the group.
-    my $group_id = '0';
+# First we get the bit and description for the group.
+my $group_id = '0';
 
-    if(Param("usebuggroups") && GroupExists($product)) {
-        SendSQL("SELECT group_id FROM groups ".
-                "WHERE name = " . SqlQuote($product) . " " .
-                "AND isbuggroup != 0");
-        ($group_id) = FetchSQLData();
-    }
-
-    SendSQL("SELECT groups.group_id, groups.name, groups.description " .
-            "FROM groups, member_group_map " .
-            "WHERE member_group_map.group_id = groups.group_id " .
-            "AND member_group_map.member_id = $::userid " .
-            "AND member_group_map.maptype = 0 " .
-            "AND isbuggroup != 0 AND isactive = 1 ORDER BY description");
-
-    my @groups;
-
-    while (MoreSQLData()) {
-        my ($id, $prodname, $description) = FetchSQLData();
-        # Don't want to include product groups other than this product.
-        next unless($prodname eq $product || 
-                    !defined($::proddesc{$prodname}));
-
-        my $check;
-
-        # If this is the group for this product, make it checked.
-        if(formvalue("maketemplate") eq 
-                                   "Remember values as bookmarkable template") 
-        {
-            # If this is a bookmarked template, then we only want to set the
-            # bit for those bits set in the template.        
-            $check = formvalue("bit-$id", 0);
-        }
-        else {
-            # $group_bit will only have a non-zero value if we're using
-            # bug groups and have one for this product.
-            # If $group_bit is 0, it won't match the current group, so compare 
-            # it to the current bit instead of checking for non-zero.
-            $check = ($group_id == $id);
-        }
-
-        my $group = 
-        {
-            'bit' => $id , 
-            'checked' => $check , 
-            'description' => $description 
-        };
-
-        push @groups, $group;        
-    }
-
-    $vars->{'group'} = \@groups;
+if(Param("usebuggroups") && GroupExists($product)) {
+    SendSQL("SELECT group_id FROM groups ".
+            "WHERE name = " . SqlQuote($product) . " " .
+            "AND isbuggroup != 0");
+    ($group_id) = FetchSQLData();
 }
+
+SendSQL("SELECT groups.group_id, groups.name, groups.description " .
+        "FROM groups, member_group_map " .
+        "WHERE member_group_map.group_id = groups.group_id " .
+        "AND member_group_map.member_id = $::userid " .
+        "AND member_group_map.maptype = 0 " .
+        "AND isbuggroup != 0 AND isactive = 1 ORDER BY description");
+
+my @groups;
+
+while (MoreSQLData()) {
+    my ($id, $prodname, $description) = FetchSQLData();
+    # Don't want to include product groups other than this product.
+    next unless($prodname eq $product || 
+                !defined($::proddesc{$prodname}));
+
+    my $check;
+
+    # If this is the group for this product, make it checked.
+    if(formvalue("maketemplate") eq 
+                               "Remember values as bookmarkable template") 
+    {
+        # If this is a bookmarked template, then we only want to set the
+        # bit for those bits set in the template.        
+        $check = formvalue("bit-$id", 0);
+    }
+    else {
+        # $group_bit will only have a non-zero value if we're using
+        # bug groups and have one for this product.
+        # If $group_bit is 0, it won't match the current group, so compare 
+        # it to the current bit instead of checking for non-zero.
+        $check = ($group_id == $id);
+    }
+
+    my $group = 
+    {
+        'bit' => $id , 
+        'checked' => $check , 
+        'description' => $description 
+    };
+
+    push @groups, $group;        
+}
+
+$vars->{'group'} = \@groups;
 
 $vars->{'default'} = \%default;
 
@@ -389,3 +387,4 @@ my $format = ValidateOutputFormat($::FORM{'format'}, "create", "bug/create");
 print "Content-type: $format->{'contenttype'}\n\n";
 $template->process("bug/create/$format->{'template'}", $vars)
   || ThrowTemplateError($template->error());          
+

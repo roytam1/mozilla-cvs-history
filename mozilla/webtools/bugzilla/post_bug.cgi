@@ -35,7 +35,6 @@ require "bug_form.pl";
 sub sillyness {
     my $zz;
     $zz = $::buffer;
-    $zz = $::usergroupset;
     $zz = %::COOKIE;
     $zz = %::components;
     $zz = %::versions;
@@ -220,7 +219,7 @@ if (defined $::FORM{'cc'}) {
 
 # Build up SQL string to add bug.
 my $sql = "INSERT INTO bugs " . 
-  "(" . join(",", @used_fields) . ", reporter, creation_ts, groupset) " . 
+  "(" . join(",", @used_fields) . ", reporter, creation_ts) " . 
   "VALUES (";
 
 foreach my $field (@used_fields) {
@@ -233,14 +232,15 @@ $comment = trim($comment);
 # OK except for the fact that it causes e-mail to be suppressed.
 $comment = $comment ? $comment : " ";
 
-$sql .= "$::userid, now(), (0";
+$sql .= "$::userid, now() )";
 
 # Groups
+my @groupstoadd = ();
 foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
     if ($::FORM{$b}) {
         my $v = substr($b, 4);
         $v =~ /^(\d+)$/
-          || ThrowCodeError("One of the group bits submitted was invalid.",
+          || ThrowCodeError("One of the group ids submitted was invalid.",
                                                                 undef, "abort");
         if (!GroupIsActive($v)) {
             # Prevent the user from adding the bug to an inactive group.
@@ -250,18 +250,22 @@ foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
             ThrowCodeError("Attempted to add bug to an inactive group, " . 
                            "identified by the bit '$v'.", undef, "abort");
         }
-        $sql .= " + $v";    # Carefully written so that the math is
-                            # done by MySQL, which can handle 64-bit math,
-                            # and not by Perl, which I *think* can not.
+        SendSQL("SELECT member_id FROM member_group_map 
+                 WHERE member_id = $::userid
+                 AND group_id = $v
+                 AND maptype = 0");
+        my ($member) = FetchSQLData();
+        if ($member) {
+            push(@groupstoadd,$v)
+        }
     }
 }
 
-$sql .= ") & $::usergroupset)\n";
 
 # Lock tables before inserting records for the new bug into the database
 # if we are using a shadow database to prevent shadow database corruption
 # when two bugs get created at the same time.
-SendSQL("LOCK TABLES bugs WRITE, longdescs WRITE, cc WRITE, profiles READ") if Param("shadowdb");
+SendSQL("LOCK TABLES bugs WRITE, bug_group_map WRITE, longdescs WRITE, cc WRITE, profiles READ") if Param("shadowdb");
 
 # Add the bug report to the DB.
 SendSQL($sql);
@@ -270,6 +274,11 @@ SendSQL($sql);
 SendSQL("select LAST_INSERT_ID()");
 my $id = FetchOneColumn();
 
+# Add the group restrictions
+foreach my $grouptoadd (@groupstoadd) {
+    SendSQL("INSERT IGNORE INTO bug_group_map (bug_id, group_id)
+             VALUES ($id, $grouptoadd)");
+}
 # Add the comment
 SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) 
          VALUES ($id, $::userid, now(), " . SqlQuote($comment) . ")");
