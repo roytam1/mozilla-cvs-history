@@ -390,8 +390,8 @@ sub HTML_status_page {
   $out .= "<br>\n";
   $out .= HTMLPopUp::Link("name"=>"Legend",)."\n";
   $out .= "<!-- Table Legend -->\n";
-  $out .= "<FONT SIZE=\"+3\"><B><NOBR>Table Legend</NOBR></B></FONT>";
-  $out .= "<table width=\"100%\" cellpadding=0 cellspacing=0>\n";
+  $out .= "<FONT SIZE=\"+3\"><B><NOBR>Table Legend</NOBR></B></FONT>\n";
+  $out .= "<table width=\"100%\" border=1 cellpadding=0 cellspacing=0>\n";
   $out .= "	@legend\n\n";
   $out .= "</table>\n\n";
   my (@structures) = HTMLPopUp::define_structures();
