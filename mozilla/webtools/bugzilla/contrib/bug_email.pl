@@ -1151,8 +1151,7 @@ END
     if( ! $test ) {
 	SendSQL($query);
 
-	SendSQL("select LAST_INSERT_ID()");
-	$id = FetchOneColumn();
+	$id = Bugzilla->dbh->bz_last_key('bugs', 'bug_id');
 
 	my $long_desc_query = "INSERT INTO longdescs SET bug_id=$id, who=$userid, bug_when=\'$bug_when\', thetext=" . SqlQuote($comment);
 	SendSQL($long_desc_query);
