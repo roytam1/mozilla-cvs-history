@@ -89,6 +89,7 @@ MozillaSourceCommon -a \
     mozilla/xpcom \
     mozilla/l10n \
     mozilla/dbm  \
+    mozilla/privacy \
     mozilla/README 
 
 MozillaSourceWinOnly -a \
