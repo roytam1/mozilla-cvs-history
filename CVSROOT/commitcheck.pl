@@ -312,6 +312,7 @@ if (m:^mozilla/gfx/public/.*$:) {return '95';}
 if (m:^mozilla/gfx/src/windows/.*$:) {return '95';}
 if (m:^mozilla/view/.*$:) {return '96';}
 if (m:^mozilla/layout/.*$:) {return '98';}
+if (m:^mozilla/embedding/.*$:) {return '101';}
 if (m:^mozilla/webshell/.*$:) {return '101';}
 if (m:^mozilla/htmlparser/.*$:) {return '102';}
 if (m:^mozilla/dom/.*$:) {return '103';}
