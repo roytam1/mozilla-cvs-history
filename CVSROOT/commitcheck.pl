@@ -354,7 +354,7 @@ if (m:^embedding/browser/gtk$:) {return '144';}
 if (m:^mozilla/mstone/.*$:) {return '147';}
 if (m:^mozilla/xpinstall/.*$:) {return '150';}
 if (m:^mozilla/extensions/psm-glue/.*$:) {return '151';}
-if (m:^mozilla/extensions/vixen$:) {return '156';}
+if (m:^mozilla/extensions/vixen/.*$:) {return '156';}
 }
 if ($b eq 'NSPRPUB_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
