@@ -303,6 +303,7 @@ if (Param('useattachmenttracker')) {
         }
         my $link = "showattachment.cgi?attach_id=$attachid";
         $desc = value_quote($desc);
+        $mimetype = html_quote($mimetype);
         print qq{<td><a href="$link">$date</a></td><td colspan=6>$desc&nbsp;&nbsp;&nbsp;($mimetype)</td></tr><tr><td></td>};
     }
     print "<td colspan=7><a href=\"createattachment.cgi?id=$id\">Create a new attachment</a> (proposed patch, testcase, etc.)</td></tr></table>\n";
@@ -584,11 +585,11 @@ if ( Param("move-enabled") && (defined $::COOKIE{"Bugzilla_login"}) && ($::COOKI
 
 print "<BR></FORM>";
 
-print "
-<table><tr><td align=left><B>Description:</B></td>
+print qq|
+<table><tr><td align=left><B><a name="0" href="#c0">Description:</a></B></td>
 <td align=right width=100%>Opened: $bug{'creation_ts'}</td></tr></table>
 <HR>
-";
+|;
 print $bug{'long_desc'};
 print "
 <HR>\n";
