@@ -63,7 +63,7 @@ include"inc_sidebar.php";
 <DIV class="boxheader" style="width: 100%">What is an Extension?</DIV>
 <SPAN class="itemdescription">Extensions are small add-ons that add new functionality to <?php print(ucwords($application)); ?>.
 They can add anything from a toolbar button to a completely new feature. They allow the browser to be customized to fit the
-personal needs of each user if they need addtional features<?php if ($application !=="mozilla") { ?>, while keeping <?php print(ucwords($application)); ?> small
+personal needs of each user if they need additional features<?php if ($application !=="mozilla") { ?>, while keeping <?php print(ucwords($application)); ?> small
 to download <?php } ?>.</SPAN>
 </DIV>
 
