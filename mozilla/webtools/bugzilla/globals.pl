@@ -1337,12 +1337,10 @@ sub UserCanActOnProduct {
     my ($p, $control) = (@_);
     PushGlobalSQLState();
     SendSQL("SELECT product_id, 
-             (ISNULL(control_id) = 0) as C, (ISNULL(member_id) = 0) as M
+             ctl_$control as C, (ISNULL(member_id) = 0) as M
              FROM products
              LEFT JOIN group_control_map
              ON control_id = product_id
-             AND control_id_type = $::Tcontrol_id_type->{'product'}
-             AND control_type = $::Tcontrol_type->{$control}
              LEFT JOIN member_group_map
              ON member_group_map.group_id = group_control_map.group_id
              AND member_id = $::userid
@@ -1351,7 +1349,7 @@ sub UserCanActOnProduct {
              " ORDER BY C DESC, M");
     my ($pid, $ctlid, $memid) = FetchSQLData();
     PopGlobalSQLState();
-    return (($ctlid == 0) || ($memid == 1)) ? $pid : 0; 
+    return (($ctlid != 1) || ($memid == 1)) ? $pid : 0; 
 }
 
 
@@ -1888,16 +1886,11 @@ $::vars =
     'T' => {
         'group_type' => {'system' => 0, 'buggroup' => 1, 'user' => 2},
         'maptype' => {'u2gm' => 0, 'uBg' => 1, 'g2gm' => 2, 'gBg' => 3},
-        'control_id_type' => {'product' => 0},
-        'control_type' => {'entry' => 0, 'default' => 1, 'required' => 2,
-            'permitted' => 3, 'canedit' => 4},
     }
 
   };
 
   $::Tgroup_type = $::vars->{'T'}{'group_type'};
   $::Tmaptype = $::vars->{'T'}{'maptype'};
-  $::Tcontrol_id_type = $::vars->{'T'}{'control_id_type'};
-  $::Tcontrol_type = $::vars->{'T'}{'control_type'};
 
 1;

@@ -206,33 +206,16 @@ sub show_bug {
              . SqlQuote($bug{'product'}));
     my ($pid) = FetchSQLData();
     SendSQL("SELECT groups.group_id, name, groups.description,
-             ISNULL(D.control_id) = 0,
-             ISNULL(P.control_id) = 0,
-             ISNULL(R.control_id) = 0,
-             ISNULL(C.control_id) = 0,
+             ctl_default,
+             ctl_permitted,
+             ctl_required,
+             ctl_canedit,
              ISNULL(B.group_id) = 0,
              ISNULL(member_id) = 0
              FROM groups
-             LEFT JOIN group_control_map as D
-             ON groups.group_id = D.group_id
-             AND D.control_id = $pid
-             AND D.control_id_type = $::Tcontrol_id_type->{'product'}
-             AND D.control_type = $::Tcontrol_type->{'default'}
-             LEFT JOIN group_control_map as P
-             ON groups.group_id = P.group_id
-             AND P.control_id = $pid
-             AND P.control_id_type = $::Tcontrol_id_type->{'product'}
-             AND P.control_type = $::Tcontrol_type->{'permitted'}
-             LEFT JOIN group_control_map as R
-             ON groups.group_id = R.group_id
-             AND R.control_id = $pid
-             AND R.control_id_type = $::Tcontrol_id_type->{'product'}
-             AND R.control_type = $::Tcontrol_type->{'required'}
-             LEFT JOIN group_control_map as C
-             ON groups.group_id = C.group_id
-             AND C.control_id = $pid
-             AND C.control_id_type = $::Tcontrol_id_type->{'product'}
-             AND C.control_type = $::Tcontrol_type->{'canedit'}
+             LEFT JOIN group_control_map 
+             ON groups.group_id = group_control_map.group_id
+             AND control_id = $pid
              LEFT JOIN bug_group_map as B
              ON B.group_id = groups.group_id
              AND B.bug_id = $bug{'bug_id'}

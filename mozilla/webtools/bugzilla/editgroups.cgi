@@ -373,10 +373,11 @@ if ($action eq 'new') {
         while (MoreSQLData()) {
             my ($pid) = FetchSQLData();
             PushGlobalSQLState();
-            SendSQL("INSERT INTO group_control_map
-                     (control_id, control_id_type, control_type, group_id)
-                     VALUES ($pid, $::Tcontrol_id_type->{'product'},
-                     $::Tcontrol_type->{'permitted'}, $gid)");
+            SendSQL("INSERT IGNORE INTO group_control_map 
+                     (control_id, group_id) VALUES ($pid, $gid)");
+            SendSQL("UPDATE group_control_map
+                     SET ctl_permitted = 1
+                     WHERE control_id = $pid AND group_id = $gid");
             PopGlobalSQLState();
         }
 

@@ -356,20 +356,12 @@ if ($action eq 'new') {
         my $gid = FetchOneColumn();
         # Then, we set the initial permissions and restrictions
         # on the new group to match the traditional system
-        if(Param("useentrygroupdefault")) {
-            SendSQL("INSERT INTO group_control_map
-                     (control_id, control_id_type, control_type, group_id)
-                     VALUES ($product_id, $::Tcontrol_id_type->{'product'},
-                     $::Tcontrol_type->{'entry'}, $gid)");
-        }
-        SendSQL("INSERT INTO group_control_map
-                 (control_id, control_id_type, control_type, group_id)
-                 VALUES ($product_id, $::Tcontrol_id_type->{'product'},
-                 $::Tcontrol_type->{'default'}, $gid)");
-        SendSQL("INSERT INTO group_control_map
-                 (control_id, control_id_type, control_type, group_id)
-                 VALUES ($product_id, $::Tcontrol_id_type->{'product'},
-                 $::Tcontrol_type->{'permitted'}, $gid)");
+        SendSQL("INSERT IGNORE INTO group_control_map 
+                 (control_id, group_id) VALUES ($product_id, $gid)");
+        SendSQL("UPDATE group_control_map
+                 SET ctl_entry = " . Param("useentrygroupdefault")
+                 . ", ctl_default = 1, ctl_permitted = 1
+                 WHERE control_id = $product_id AND group_id = $gid");
         # FIXME -- add all the other buggroups who are not named same 
         # as products
         SendSQL("SELECT group_id, ISNULL(product_id) 
@@ -381,10 +373,11 @@ if ($action eq 'new') {
             my ($ogid, $flg) = FetchSQLData();
             if ($flg) {
                 PushGlobalSQLState();
-                SendSQL("INSERT INTO group_control_map
-                         (control_id, control_id_type, control_type, group_id)
-                         VALUES ($product_id, $::Tcontrol_id_type->{'product'},
-                         $::Tcontrol_type->{'permitted'}, $ogid)");
+                SendSQL("INSERT IGNORE INTO group_control_map 
+                         (control_id, group_id) VALUES ($product_id, $ogid)");
+                SendSQL("UPDATE group_control_map
+                         SET ctl_permitted = 1
+                         WHERE control_id = $product_id AND group_id = $ogid");
                 PopGlobalSQLState();
             }
         }
@@ -615,8 +608,7 @@ if ($action eq 'delete') {
              WHERE product=" . SqlQuote($product));
     my $product_id = FetchOneColumn();
     SendSQL("DELETE FROM group_control_map
-             WHERE control_id = $product_id 
-             AND control_id_type = $::Tcontrol_id_type->{'product'}");
+             WHERE control_id = $product_id");
     print "Group Controls for Product deleted.<BR>\n";
 
     SendSQL("DELETE FROM products
@@ -786,37 +778,15 @@ if ($action eq 'edit') {
     my $product_id = FetchOneColumn();
 
     SendSQL("SELECT groups.group_id, name, description,
-             ISNULL(E.group_id) = 0,
-             ISNULL(D.group_id) = 0,
-             ISNULL(R.group_id) = 0,
-             ISNULL(P.group_id) = 0,
-             ISNULL(C.group_id) = 0
+             ctl_entry,
+             ctl_default,
+             ctl_required,
+             ctl_permitted,
+             ctl_canedit
              FROM groups
-             LEFT JOIN group_control_map AS E
-             ON E.group_id = groups.group_id
-             AND E.control_id = $product_id
-             AND E.control_id_type = $::Tcontrol_id_type->{'product'}
-             AND E.control_type = $::Tcontrol_type->{'entry'}
-             LEFT JOIN group_control_map AS D
-             ON D.group_id = groups.group_id
-             AND D.control_id = $product_id
-             AND D.control_id_type = $::Tcontrol_id_type->{'product'}
-             AND D.control_type = $::Tcontrol_type->{'default'}
-             LEFT JOIN group_control_map AS R
-             ON R.group_id = groups.group_id
-             AND R.control_id = $product_id
-             AND R.control_id_type = $::Tcontrol_id_type->{'product'}
-             AND R.control_type = $::Tcontrol_type->{'required'}
-             LEFT JOIN group_control_map AS P
-             ON P.group_id = groups.group_id
-             AND P.control_id = $product_id
-             AND P.control_id_type = $::Tcontrol_id_type->{'product'}
-             AND P.control_type = $::Tcontrol_type->{'permitted'}
-             LEFT JOIN group_control_map AS C
-             ON C.group_id = groups.group_id
-             AND C.control_id = $product_id
-             AND C.control_id_type = $::Tcontrol_id_type->{'product'}
-             AND C.control_type = $::Tcontrol_type->{'canedit'}
+             LEFT JOIN group_control_map 
+             ON group_control_map.group_id = groups.group_id
+             AND group_control_map.control_id = $product_id
              WHERE group_type = $::Tgroup_type->{'buggroup'}
              ORDER BY name 
             ");
@@ -1098,17 +1068,17 @@ if ($action eq 'update') {
             $nfld =~ s/oldctl/ctl/;
             if (($::FORM{$ofld} == 1) && !($::FORM{$nfld})) {
                 # delete it
-                SendSQL("DELETE FROM group_control_map
+                SendSQL("UPDATE group_control_map
+                         SET ctl_$col = 0
                          WHERE control_id = $product_id
-                         AND control_id_type = $::Tcontrol_id_type->{'product'}
-                         AND control_type = $::Tcontrol_type->{$col}
                          AND group_id = $gid");
             } elsif (($::FORM{$ofld} != 1) && ($::FORM{$nfld})) {
                 # add it
-                SendSQL("INSERT INTO group_control_map
-                         (control_id, control_id_type, control_type, group_id)
-                         VALUES ($product_id, $::Tcontrol_id_type->{'product'},
-                         $::Tcontrol_type->{$col}, $gid)");
+                SendSQL("INSERT IGNORE INTO group_control_map 
+                         (control_id, group_id) VALUES ($product_id, $gid)");
+                SendSQL("UPDATE group_control_map
+                         SET ctl_$col = 1
+                         WHERE control_id = $product_id AND group_id = $gid");
 
             }
         }

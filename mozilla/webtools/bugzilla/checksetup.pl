@@ -1609,10 +1609,14 @@ $table{bug_group_map} =
 # are required, are permitted, and canedit a bug
 $table{group_control_map} =
     'control_id mediumint not null,
-     control_id_type smallint not null,
-     control_type smallint not null,
      group_id mediumint not null,
-     index(control_id_type, control_id)';
+     ctl_entry smallint not null default 0,
+     ctl_default smallint not null default 0,
+     ctl_required smallint not null default 0,
+     ctl_permitted smallint not null default 0,
+     ctl_canedit smallint not null default 0,
+     unique(control_id, group_id),
+     index(control_id)';
 
 
 ###########################################################################
@@ -3168,12 +3172,13 @@ if(-e "data/params") {
                               AND group_type = $::Tgroup_type->{'buggroup'}");
         $sth->execute();
         while (my ($pid, $gid) = $sth->fetchrow_array()) {
-            foreach my $ctype (@clist) {
-                $dbh->do("INSERT INTO group_control_map 
-                          (control_id, control_id_type, control_type, group_id) 
-                          VALUES ($pid, $::Tcontrol_id_type->{'product'}, 
-                          $::Tcontrol_type->{$ctype}, $gid)");    
-            }
+                $dbh->do("INSERT IGNORE INTO group_control_map 
+                          (control_id, group_id)
+                          VALUES ($pid, $gid)");
+                $dbh->do("UPDATE group_control_map 
+                          SET ctl_entry = $::param{'useentrygroupdefault'},
+                          ctl_default = 1, ctl_permitted = 1
+                          WHERE control_id = $pid AND group_id = $gid");
         }
         $sth = $dbh->prepare("SELECT products.product_id, group_id, 
                               ISNULL(P.product_id)
@@ -3183,10 +3188,12 @@ if(-e "data/params") {
         $sth->execute();
         while (my ($pid, $gid, $flg) = $sth->fetchrow_array()) {
             if ($flg) {
-                $dbh->do("INSERT INTO group_control_map 
-                          (control_id, control_id_type, control_type, group_id) 
-                          VALUES ($pid, $::Tcontrol_id_type->{'product'}, 
-                          $::Tcontrol_type->{'permitted'}, $gid)");    
+                $dbh->do("INSERT IGNORE INTO group_control_map 
+                          (control_id, group_id)
+                          VALUES ($pid, $gid)");
+                $dbh->do("UPDATE group_control_map 
+                          SET ctl_permitted = 1
+                          WHERE control_id = $pid AND group_id = $gid");
             }
         }
     }

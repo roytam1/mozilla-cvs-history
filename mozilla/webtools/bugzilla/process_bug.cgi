@@ -211,7 +211,7 @@ if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct)
     # If the product-specific fields need to be verified, or we need to verify
     # whether or not to add the bugs to their new product's group, display
     # a verification form.
-    if (!$vok || !$cok || !$mok || (0 && Param('usebuggroups') && !defined($::FORM{'addtonewgroup'}))) {
+    if (!$vok || !$cok || !$mok || (0 && Param('makeproductgroups') && !defined($::FORM{'addtonewgroup'}))) {
         $vars->{'form'} = \%::FORM;
         
         if (!$vok || !$cok || !$mok) {
@@ -927,8 +927,7 @@ foreach my $id (@idlist) {
             "keywords $write, longdescs $write, fielddefs $write, " .
             "bug_group_map $write, " .
             "member_group_map READ, " .
-            "group_control_map as P READ, " .
-            "group_control_map as R READ, " .
+            "group_control_map READ, " .
             "keyworddefs READ, groups READ, attachments READ, products READ");
     my @oldvalues = SnapShotBug($id);
     my %oldhash;
@@ -1097,27 +1096,22 @@ foreach my $id (@idlist) {
     }
     my $groupAddNames = '';
     my $groupDelNames = '';
+    
     SendSQL("SELECT groups.group_id, name, 
-             ISNULL(P.control_id) = 0,
-             ISNULL(R.control_id) = 0,
+             ctl_permitted,
+             ctl_required,
              ISNULL(member_id) = 0
              FROM groups, products
-             LEFT JOIN group_control_map as P
-             ON groups.group_id = P.group_id
-             AND P.control_id = product_id
-             AND P.control_id_type = $::Tcontrol_id_type->{'product'}
-             AND P.control_type = $::Tcontrol_type->{'permitted'}
-             LEFT JOIN group_control_map as R
-             ON groups.group_id = R.group_id
-             AND R.control_id = product_id
-             AND R.control_id_type = $::Tcontrol_id_type->{'product'}
-             AND R.control_type = $::Tcontrol_type->{'required'}
+             LEFT JOIN group_control_map 
+             ON groups.group_id = group_control_map.group_id
+             AND control_id = product_id
              LEFT JOIN member_group_map
              ON member_group_map.group_id = groups.group_id 
              AND member_id = $::userid 
              AND maptype = $::Tmaptype->{'u2gm'} 
              WHERE group_type = $::Tgroup_type->{'buggroup'} 
              AND product = " . SqlQuote($oldhash{'product'}) );
+
     while (MoreSQLData()) {
         my ($gid, $grpname, $pflag, $rflag, $uflag) = FetchSQLData();
         my $bflag = BugInGroupId($id, $gid);
@@ -1242,16 +1236,54 @@ foreach my $id (@idlist) {
     # group or add it to the new one.  There are a very specific series of
     # conditions under which these activities take place, more information
     # about which can be found in comments within the conditionals below.
-    if ( 
-      # the "usebuggroups" parameter is on, indicating that products
-      0 && # are associated with groups of the same name;
-      Param('usebuggroups')
-
-      # the user has changed the product to which the bug belongs;
-      && defined $::FORM{'product'} 
+    if ( 0 && defined $::FORM{'product'} 
         && $::FORM{'product'} ne $::dontchange 
           && $::FORM{'product'} ne $oldhash{'product'} 
     ) {
+        my $groupAddNames = '';
+        my $groupDelNames = '';
+        
+        SendSQL("SELECT groups.group_id, name, 
+                 ctl_permitted,
+                 ctl_required,
+                 ISNULL(member_id) = 0
+                 FROM groups, products
+                 LEFT JOIN group_control_map 
+                 ON groups.group_id = group_control_map.group_id
+                 AND control_id = product_id
+                 LEFT JOIN member_group_map
+                 ON member_group_map.group_id = groups.group_id 
+                 AND member_id = $::userid 
+                 AND maptype = $::Tmaptype->{'u2gm'} 
+                 WHERE group_type = $::Tgroup_type->{'buggroup'} 
+                 AND product = " . SqlQuote($oldhash{'product'}) );
+    
+        while (MoreSQLData()) {
+            my ($gid, $grpname, $pflag, $rflag, $uflag) = FetchSQLData();
+            my $bflag = BugInGroupId($id, $gid);
+            if (!$bflag && ($rflag || 
+                ($pflag && $uflag && ($::FORM{"bit-$gid"} == 1)))) {
+                $groupAddNames .= $grpname . ' ';
+                PushGlobalSQLState();
+                SendSQL("INSERT IGNORE INTO bug_group_map (bug_id, group_id) 
+                         VALUES ($id, $gid)");
+                PopGlobalSQLState();
+            } elsif ($bflag && !$rflag &&
+                    (!$pflag || ($uflag & (abs($::FORM{"bit-$gid"}) != 1)))) {
+                $groupDelNames .= $grpname . ' ';
+                PushGlobalSQLState();
+                SendSQL("DELETE FROM bug_group_map 
+                         WHERE bug_id = $id AND  group_id = $gid");
+                PopGlobalSQLState();
+            }
+        }
+    
+        SendSQL("select now()");
+        $timestamp = FetchOneColumn();
+    
+        $groupDelNames =~ s/ $//;
+        $groupAddNames =~ s/ $//;
+        LogActivityEntry($id,"bug_group_map.group_id",$groupDelNames,$groupAddNames); 
         if (
           # the user wants to add the bug to the new product's group;
           ($::FORM{'addtonewgroup'} eq 'yes' 
