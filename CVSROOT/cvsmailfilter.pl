@@ -90,7 +90,7 @@ if ($urlbase ne "" && $cvsargs ne "") {
         }
     }
     $url = $urlbase . "/cvsview2.cgi?command=DIRECTORY&subdir=$dir&files=" .
-        join('+', @list);
+        join('%2B', @list);
 }
 
 my $message = "";
