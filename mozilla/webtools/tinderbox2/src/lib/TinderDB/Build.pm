@@ -583,7 +583,7 @@ sub status_table_header {
     my $current_endtime = $DATABASE{$tree}{$buildname}{'recs'}[0]{'endtime'};
     my $current_status = $DATABASE{$tree}{$buildname}{'recs'}[0]{'status'};
     my $previous_endtime = $DATABASE{$tree}{$buildname}{'recs'}[1]{'endtime'};
-    my $current_finnished = BuildStatus::is_status_final($buildstatus);
+    my $current_finnished = BuildStatus::is_status_final($current_status);
 
     my $txt ='';    
     my $num_lines;
@@ -668,7 +668,12 @@ sub status_table_header {
     if ($estimated_remaining) {
       my $min =  sprintf ("%.0f",         # round
                           ($estimated_remaining/60) );
+      my $estimate_end_time = $main::TIME + $estimated_remaining;
       $txt .= "time_remaining (estimate): &nbsp;$min<br>";
+      $num_lines++;
+
+      $txt .= "estimated_end_time: &nbsp;";
+      $txt .= &HTMLPopUp::timeHTML($estimate_end_time)."<br>";
       $num_lines++;
     }
 
