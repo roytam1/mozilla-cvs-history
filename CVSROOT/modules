@@ -338,7 +338,6 @@ RaptorDist -a \
 	mozilla/configure.in \
 	mozilla/allmakefiles.sh \
 	mozilla/Makefile.in \
-	mozilla/base \
 	mozilla/build \
 	mozilla/caps \
 	mozilla/config \
@@ -368,13 +367,17 @@ RaptorDist -a \
 	mozilla/xpfe
 
 RaptorLayout -a \
+	mozilla/base \
 	mozilla/dom \
+	mozilla/editor \
 	mozilla/gfx \
+	mozilla/expat \
 	mozilla/htmlparser \
 	mozilla/layout \
 	mozilla/view \
 	mozilla/webshell \
-	mozilla/widget
+	mozilla/widget \
+	mozilla/xpfe
 
 Raptor -a \
 	RaptorDoc \
@@ -382,8 +385,7 @@ Raptor -a \
 	RaptorLayout
 
 RaptorWin -a \
-	Raptor \
-	mozilla/nglayout.mak
+	Raptor
 
 RaptorUnix -a \
 	Raptor \
