@@ -228,7 +228,7 @@ sub get_response_code {
 
 
 sub mail_notification {
-    chop(my $hostname = `hostname`);
+    chop(my $hostname = `/bin/hostname`);
 
     my ($remote,$port, $iaddr, $paddr, $proto, $line);
 

@@ -38,7 +38,7 @@ foreach $i (@ARGV) {
     push(@mailto, $i);
 }
     
-chop(my $hostname = `hostname`);
+chop(my $hostname = `/bin/hostname`);
 
 my ($remote,$port, $iaddr, $paddr, $proto, $line);
 
