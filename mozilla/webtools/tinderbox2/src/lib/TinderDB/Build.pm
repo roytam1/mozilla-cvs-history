@@ -1146,8 +1146,8 @@ sub status_table_row {
     if ($current_rec->{'print'}) {
         $links .= (
                    "\t\t". 
-                   BuildStatus::get_TinderboxPrint_separator().
-                   $current_rec->{'print'}."\n".
+                   $current_rec->{'print'}.
+                   "\n".
                    "");
     }
 

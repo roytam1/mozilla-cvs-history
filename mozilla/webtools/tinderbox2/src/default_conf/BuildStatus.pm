@@ -263,22 +263,5 @@ sub status2descriptions {
   return @out;
 }
 
-sub get_display_number_errors {
-
-# should the tinderbox build page show the number of errors found in
-# the log file?
-
-    return 0;
-}
-
-sub get_TinderboxPrint_separator{
-
-# How should the TinderboxPrint statements be rendered?
-# obvious choices are <br> or &nbsp;
-
-
-    return "<br>";
-}
-
 
 1;
