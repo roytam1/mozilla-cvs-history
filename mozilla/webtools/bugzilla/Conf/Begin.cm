@@ -1,0 +1,21 @@
+package Conf::Finish;
+use Conf;
+no warnings;
+
+output <<"END";
+Welcome to Configure.
+Configure version 0.0.0 devel 1
+
+Welcome to Bugzilla!
+
+I'm going to ask you a few questions about how you would like your 
+new bugzilla installation to be setup. If you have configured Bugzilla 
+before, I will load defaults from that installation, otherwise, 
+I will display recomended values.
+
+Thanks for using Bugzilla,
+
+The Bugzilla Team
+
+END
+1;

@@ -37,8 +37,9 @@ use File::Spec;
 use Conf;
 
 # Insert lines in this space to run .cm files like:
-# runconf('Conf/Begin.cm'); 
+# runconf('Conf/Foo.cm'); 
 # runconf() will handle the path mapping for XP purposes
+runconf('Conf/Begin.cm');
 runconf('Conf/Finish.cm');
 
 sub runconf {
