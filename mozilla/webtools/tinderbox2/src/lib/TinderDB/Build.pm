@@ -267,6 +267,52 @@ sub latest_status {
   return @outrow;
 }
 
+# return find the most recent error count for each build of this tree
+
+sub latest_errors {
+  my ($tree) = (@_);
+  
+  if (!($DISPLAY_BUILD_ERRORS)) {
+      # We're not collecting error status, return indication of that
+      return ();
+  }
+
+  my (@outrow) = ();
+  my (@build_names) = build_names($tree);
+
+  foreach $buildname (@build_names) {
+
+      my ($last_err);
+      foreach $db_index (0 .. $#{ $DATABASE{$tree}{$buildname}{'recs'} }) {
+      
+        my ($rec) = $DATABASE{$tree}{$buildname}{'recs'}[$db_index];
+        my ($builderrs) = $rec->{'errors'};
+        my ($buildstatus) = $rec->{'status'};
+      
+        (BuildStatus::is_status_final($buildstatus))  ||
+          next;
+
+        $last_err = $builderrs;
+        last;
+      } # foreach $db_index
+
+      if ($last_err) {
+        push @outrow, $last_err;
+      } else {
+
+        # If we really have no data try and get 
+        # 'not running'/'in progress' information
+
+        my ($rec) = $DATABASE{$tree}{$buildname}{'recs'}[0];
+        push @outrow, $rec->{'errors'};
+      }
+
+  } # foreach $buildname
+
+  return @outrow;
+}
+
+
 
 # where can people attach notices to?
 # Really this is the names the columns produced by this DB
