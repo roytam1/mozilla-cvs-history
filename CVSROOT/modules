@@ -553,6 +553,7 @@ SeaMonkeyCore -a \
 	mozilla/include \
 	mozilla/intl \
 	mozilla/jpeg \
+	mozilla/js/jsd \
 	JSClient \
 	mozilla/lib/mac/MacMemoryAllocator \
 	mozilla/lib/mac/Misc \
