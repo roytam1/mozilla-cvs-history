@@ -72,6 +72,15 @@ $fullname{'67'} = 'I18N Library';
 $mode{'66'} = 'Open';
 $branch{'66'} = 'HEAD';
 $fullname{'66'} = 'Image Conversion Library';
+$mode{'64'} = 'Open';
+$branch{'64'} = 'HEAD';
+$fullname{'64'} = 'Image Handling: JPEG';
+$mode{'155'} = 'Open';
+$branch{'155'} = 'HEAD';
+$fullname{'155'} = 'Image Handling: MNG';
+$mode{'65'} = 'Open';
+$branch{'65'} = 'HEAD';
+$fullname{'65'} = 'Image Handling: PNG';
 $mode{'63'} = 'Open';
 $branch{'63'} = 'HEAD';
 $fullname{'63'} = 'ImageLib';
@@ -102,9 +111,6 @@ $fullname{'70'} = 'JavaScript';
 $mode{'71'} = 'Open';
 $branch{'71'} = 'HEAD';
 $fullname{'71'} = 'JavaScript Debugger';
-$mode{'64'} = 'Open';
-$branch{'64'} = 'HEAD';
-$fullname{'64'} = 'JPEG Image Handling';
 $mode{'114'} = 'Open';
 $branch{'114'} = 'HEAD';
 $fullname{'114'} = 'js-tests';
@@ -168,9 +174,6 @@ $fullname{'80'} = 'PICS';
 $mode{'81'} = 'Open';
 $branch{'81'} = 'HEAD';
 $fullname{'81'} = 'Plugins';
-$mode{'65'} = 'Open';
-$branch{'65'} = 'HEAD';
-$fullname{'65'} = 'PNG Image Handling';
 $mode{'82'} = 'Open';
 $branch{'82'} = 'HEAD';
 $fullname{'82'} = 'Preferences';
@@ -312,6 +315,8 @@ if (m:^mozilla/gfx/public/.*$:) {return '95';}
 if (m:^mozilla/gfx/src/windows/.*$:) {return '95';}
 if (m:^mozilla/view/.*$:) {return '96';}
 if (m:^mozilla/layout/.*$:) {return '98';}
+if (m:^modules/libimg/mng/.*$:) {return '155';}
+if (m:^modules/libimg/mngcom/.*$:) {return '155';}
 if (m:^mozilla/embedding/.*$:) {return '101';}
 if (m:^mozilla/webshell/.*$:) {return '101';}
 if (m:^mozilla/htmlparser/.*$:) {return '102';}
