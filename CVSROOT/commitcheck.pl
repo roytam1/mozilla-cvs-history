@@ -20,6 +20,9 @@ $fullname{'54'} = 'Browser Hooks';
 $mode{'55'} = 'Open';
 $branch{'55'} = 'HEAD';
 $fullname{'55'} = 'Build Config';
+$mode{'108'} = 'Open';
+$branch{'108'} = 'HEAD';
+$fullname{'108'} = 'CCK';
 $mode{'96'} = 'Open';
 $branch{'96'} = 'HEAD';
 $fullname{'96'} = 'Clipping and Compositing';
@@ -222,6 +225,7 @@ if (m:^mozilla/js/ref/.*$:) {return '70';}
 if (m:^mozilla/js/src/.*$:) {return '70';}
 if (m:^mozilla/js/jsd/.*$:) {return '71';}
 if (m:^mozilla/js/jsj/.*$:) {return '72';}
+if (m:^mozilla/cck/.*$:) {return '108';}
 if (m:^mozilla/lib/mailto/.*$:) {return '75';}
 if (m:^mozilla/lib/libmime/.*$:) {return '76';}
 if (m:^mozilla/network/.*$:) {return '77';}
