@@ -529,6 +529,7 @@ NSPR -a \
 SeaMonkeyCore -a \
 	mozilla/.cvsignore \
 	mozilla/README \
+	mozilla/README.txt \
 	mozilla/client.mk \
 	mozilla/client.mak \
 	mozilla/configure \
