@@ -47,6 +47,7 @@ use lib '#tinder_libdir#';
 
 use TinderConfig;
 use TreeData;
+use Utils;
 use HTMLPopUp;
 use FileStructure;
 
@@ -54,6 +55,9 @@ use FileStructure;
 
 #       Main        
 {
+    # must call set_static_vars() to ensure that we are taint safe.
+    set_static_vars();
+
     my (%form) = HTMLPopUp::split_cgi_args(
                                            'cgi_remove_args' => ['daemon-mode'],
                                            );
