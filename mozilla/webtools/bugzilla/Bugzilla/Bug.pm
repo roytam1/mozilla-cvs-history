@@ -465,12 +465,6 @@ sub DeleteErrors {
    return 1;
 }
 
-sub SetDirtyFlag {
-   my $self = shift;
-
-   $self->{'dirty'} = 1;
-   return 1;
-}
 
 sub SetComment {
    my $self = shift;
@@ -482,7 +476,6 @@ sub SetComment {
        return;
    }
    $self->{'comment'} = $comment;
-   SetDirtyFlag($self);
 } 
    
 
@@ -573,7 +566,6 @@ sub SetDependsOn {
       }
    }
    $self->{'dependson'} = \@list;
-   SetDirtyFlag($self);
    return 1;
 }
 
@@ -589,7 +581,6 @@ sub SetBlocking {
       }
    }
    $self->{'blocking'} = \@list;
-   SetDirtyFlag($self);
    return 1;
 }
 
@@ -606,7 +597,6 @@ sub SetKeywords {
       }
    }
    $self->{'keywords'} = \@keywords;
-   SetDirtyFlag($self);
    return 1;
 }
 
@@ -624,7 +614,6 @@ sub SetProductComponent {
    if ($okay) {
       $self->{'product'} = $product;
       $self->{'component'} = $component;
-      SetDirtyFlag($self);
       return 1;
    }
    else {
@@ -646,7 +635,6 @@ sub SetVersion {
       return 0;
    }
    $self->{'version'} = $version;
-   SetDirtyFlag($self);
    return 1;
 }
 
@@ -663,7 +651,6 @@ sub SetPlatform {
       return 0;
    }
    $self->{'rep_platform'} = "$platform";
-   SetDirtyFlag($self);
    return 1;
 }
 
@@ -680,7 +667,6 @@ sub SetOperatingSystem {
       return 0;
    }
    $self->{'op_sys'} = $os;
-   SetDirtyFlag($self);
    return 1;
 }
 
@@ -697,7 +683,6 @@ sub SetPriority {
       return 0;
    }
    $self->{'priority'} = $priority;
-   SetDirtyFlag($self);
    return 1;
 }
 
@@ -714,7 +699,6 @@ sub SetSeverity {
       return 0;
    }
    $self->{'bug_severity'} = $severity;
-   SetDirtyFlag($self);
    return 1;
 }
 
@@ -768,7 +752,6 @@ sub SetShortDescription {
       return 0;
    }
    $self->{'short_desc'} = $desc;
-   SetDirtyFlag($self);
    return 1;
 }
 
@@ -787,7 +770,6 @@ sub SetTargetMilestone {
           return 0;
        }    
       $self->{'target_milestone'} = $stone;
-      SetDirtyFlag($self);
       return 1;
    }
    else {
@@ -808,7 +790,6 @@ sub SetQAContact {
        }
        if ($id) {
           $self->{'qa_contact'} = $contact;
-          SetDirtyFlag($self);
        }
        else {
            PushError($self, "No such userid \'$contact\'");
@@ -831,7 +812,6 @@ sub SetStatusWhiteboard {
            return 0;
        }
        $self->{'status_whiteboard'} = $white;
-       SetDirtyFlag($self);
        return 1;
    }
    else {
@@ -850,7 +830,6 @@ sub SetURL {
       return 0;
    }
    $self->{'bug_file_loc'} = $url;
-   SetDirtyFlag($self);
    return 1;
 }
 
@@ -863,7 +842,6 @@ sub SetStatus {
       return 0;
    }
    $self->{'bug_status'} = $status;
-   SetDirtyFlag($self);
    return 1; 
 }
 
@@ -876,7 +854,6 @@ sub SetResolution {
       return 0;
    }
    $self->{'resolution'} = $resolution;
-   SetDirtyFlag($self);
    return 1;
 }
 
@@ -1335,7 +1312,7 @@ sub Commit {
    my @changed = ();
 
    print "committing\n"; 
-   if (($self->{'dirty'}) && !(defined($self->{'error'}))) {
+   if (!(defined($self->{'error'}))) {
        print "locking\n";
        LockDatabase();
        print "locked\n";
@@ -1347,7 +1324,6 @@ sub Commit {
                WriteChanges($self, \@changed, \%snapshot);
                UnlockDatabase();
                DoMailNotification($self);
-               delete $self->{'dirty'};
                return 1;
            }
            UnlockDatabase();
