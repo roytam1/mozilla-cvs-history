@@ -93,6 +93,9 @@ sub url_quote {
 
 
 sub ParseUrlString {
+    # We don't want to detaint the user supplied data...
+    use re 'taint';
+
     my ($buffer, $f, $m) = (@_);
     undef %$f;
     undef %$m;
@@ -118,6 +121,7 @@ sub ParseUrlString {
             $name = $item;
             $value = "";
         }
+
         if ($value ne "") {
             if (defined $f->{$name}) {
                 $f->{$name} .= $value;
@@ -140,7 +144,6 @@ sub ParseUrlString {
         }
     }
 }
-
 
 sub ProcessFormFields {
     my ($buffer) = (@_);
@@ -259,17 +262,17 @@ sub ValidateBugID {
     # Validates and verifies a bug ID, making sure the number is a 
     # positive integer, that it represents an existing bug in the
     # database, and that the user is authorized to access that bug.
+    # We detaint the number here, too
 
-    my ($id) = @_;
-
-    # Make sure the bug number is a positive integer.
-    # Whitespace can be ignored because the SQL server will ignore it.
-    $id =~ /^\s*([1-9][0-9]*)\s*$/
+    $_[0] = trim($_[0]); # Allow whitespace arround the number
+    detaint_natural($_[0])
       || DisplayError("The bug number is invalid. If you are trying to use " .
                       "QuickSearch, you need to enable JavaScript in your " .
                       "browser. To help us fix this limitation, look " .
                       "<a href=\"http://bugzilla.mozilla.org/show_bug.cgi?id=70907\">here</a>.") 
       && exit;
+
+    my ($id) = @_;
 
     # Get the values of the usergroupset and userid global variables
     # and write them to local variables for use within this function,
@@ -685,6 +688,8 @@ sub quietly_check_login() {
                     $::COOKIE{"Bugzilla_login"} = $loginname; # Makes sure case
                                                               # is in
                                                               # canonical form.
+                    # We've just verified that this is ok
+                    detaint_natural($::COOKIE{"Bugzilla_logincookie"});
                 } else {
                     $::disabledreason = $disabledtext;
                 }
@@ -742,11 +747,6 @@ sub MailPassword {
     open SENDMAIL, "|/usr/lib/sendmail -t";
     print SENDMAIL $msg;
     close SENDMAIL;
-
-    print "The password for the e-mail address\n";
-    print "$login has been e-mailed to that address.\n";
-    print "<p>When the e-mail arrives, you can click <b>Back</b>\n";
-    print "and enter your password in the form there.\n";
 }
 
 
@@ -786,9 +786,17 @@ sub confirm_login {
         # into the database, and email their password to them.
         if ( defined $::FORM{"PleaseMailAPassword"} && !$userid ) {
             my $password = InsertNewUser($enteredlogin, "");
+            # There's a template for this - account_created.tmpl - but
+            # it's easier to wait to use it until templatisation has progressed
+            # further; we want to avoid sprinkling multiple copies of the
+            # template setup code everywhere - Gerv.
             print "Content-Type: text/html\n\n";
             PutHeader("Account Created");
             MailPassword($enteredlogin, $password);
+            print "The password for the e-mail address\n";
+            print "$enteredlogin has been e-mailed to that address.\n";
+            print "<p>When the e-mail arrives, you can click <b>Back</b>\n";
+            print "and enter your password in the form there.\n";
             PutFooter();
             exit;
         }
@@ -1033,7 +1041,7 @@ Content-type: text/html
         # (except for Bugzilla_login and Bugzilla_password which we
         # already added as text fields above).
         foreach my $i ( grep( $_ !~ /^Bugzilla_/ , keys %::FORM ) ) {
-          if (scalar(@{$::MFORM{$i}}) > 1) {
+          if (defined $::MFORM{$i} && scalar(@{$::MFORM{$i}}) > 1) {
             # This field has multiple values; add each one separately.
             foreach my $val (@{$::MFORM{$i}}) {
               print qq|<input type="hidden" name="$i" value="@{[value_quote($val)]}">\n|;
@@ -1285,7 +1293,7 @@ sub DumpBugActivity {
     while (@row = FetchSQLData()) {
         my ($field,$attachid,$when,$removed,$added,$who) = (@row);
         $field =~ s/^Attachment/<a href="attachment.cgi?id=$attachid&amp;action=view">Attachment #$attachid<\/a>/ 
-          if (Param('useattachmenttracker') && $attachid);
+          if $attachid;
         $removed = html_quote($removed);
         $added = html_quote($added);
         $removed = "&nbsp;" if $removed eq "";
@@ -1364,7 +1372,7 @@ Edit <a href="userprefs.cgi">prefs</a>
         if (UserInGroup("editcomponents")) {
             $html .= ", <a href=\"editproducts.cgi\">products</a>\n";
             $html .= ", <a href=\"editattachstatuses.cgi\">
-              attachment&nbsp;statuses</a>\n" if Param('useattachmenttracker');
+              attachment&nbsp;statuses</a>\n";
         }
         if (UserInGroup("creategroups")) {
             $html .= ", <a href=\"editgroups.cgi\">groups</a>\n";
@@ -1453,6 +1461,8 @@ if (defined $ENV{"REQUEST_METHOD"}) {
 
 
 if (defined $ENV{"HTTP_COOKIE"}) {
+    # Don't trust anything which came in as a cookie
+    use re 'taint';
     foreach my $pair (split(/;/, $ENV{"HTTP_COOKIE"})) {
         $pair = trim($pair);
         if ($pair =~ /^([^=]*)=(.*)$/) {

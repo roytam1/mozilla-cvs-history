@@ -167,10 +167,10 @@ sub have_vers {
   $vnum = ${"${pkg}::VERSION"} || ${"${pkg}::Version"} || 0;
   $vnum = -1 if $@;
 
-  if ($vnum < 0) {
+  if ($vnum eq "-1") { # string compare just in case it's non-numeric
     $vstr = "not found";
   }
-  elsif ($vnum > 0) {
+  elsif (vers_cmp($vnum,"0") > -1) {
     $vstr = "found v$vnum";
   }
   else {
@@ -933,11 +933,9 @@ $table{attachments} =
     index(bug_id),
     index(creation_ts)';
 
-# 2001-05-05 myk@mozilla.org: Tables to support the attachment tracker.
+# 2001-05-05 myk@mozilla.org: Tables to support attachment statuses.
 # "attachstatuses" stores one record for each status on each attachment.
 # "attachstatusdefs" defines the statuses that can be set on attachments.
-# Note: These tables are only used if the parameter "useattachmenttracker"
-# is turned on via editparameters.cgi.
 
 $table{attachstatuses} =
    '

@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -144,7 +144,7 @@ sub validateID
   # Validate the value of the "id" form field, which must contain an
   # integer that is the ID of an existing attachment.
 
-  $::FORM{'id'} =~ /^[1-9][0-9]*$/
+  detaint_natural($::FORM{'id'})
     || DisplayError("You did not enter a valid attachment number.") 
       && exit;
   

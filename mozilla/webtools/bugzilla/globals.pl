@@ -61,6 +61,7 @@ sub globals_pl_sillyness {
 # 
 
 $::db_host = "localhost";
+$::db_port = 5432;
 $::db_name = "bugs";
 $::db_user = "bugs";
 $::db_pass = "";
@@ -109,17 +110,17 @@ sub ConnectToDatabase {
             $name = Param("shadowdb");
             $::dbwritesallowed = 0;
         }
+        my $connectstring = "DBI:$::driver:";
         if ($::driver eq 'mysql') {
-            $::db = DBI->connect("DBI:mysql:host=$::db_host;database=$name", $::db_user, $::db_pass)
-            || die "Bugzilla is currently broken. Please try again later. " . 
-                     "If the problem persists, please contact " . Param("maintainer") .
-                     ". The error you should quote is: " . $DBI::errstr;
+            $connectstring .= "database=$name;port=$::db_port";
         } elsif ($::driver eq 'Pg') {
-            $::db = DBI->connect("DBI:$::driver:dbname=$name;host=$::db_host", $::db_user, $::db_pass)
-                || die "Bugzilla is currently broken. Please try again later. " . 
-                         "If the problem persists, please contact " . Param("maintainer") .
-                          ". The error you should quote is: " . $DBI::errstr;
+            $connectstring .= "dbname=$name";
         }
+        $connectstring .= ";host=$::db_host";
+        $::db = DBI->connect($connectstring, $::db_user, $::db_pass)
+            || die "Bugzilla is currently broken. Please try again later. " . 
+                   "If the problem persists, please contact " . Param("maintainer") .
+                   ". The error you should quote is: " . $DBI::errstr;
     }
 }
 
@@ -207,8 +208,27 @@ sub SqlLog {
     }
 }
 
+# This is from the perlsec page, slightly modifed to remove a warning
+# From that page:
+#      This function makes use of the fact that the presence of
+#      tainted data anywhere within an expression renders the
+#      entire expression tainted.
+# Don't ask me how it works...
+sub is_tainted {
+    return not eval { my $foo = join('',@_), kill 0; 1; };
+}
+
 sub SendSQL {
     my ($str, $dontshadow) = (@_);
+
+    # Don't use DBI's taint stuff yet, because:
+    # a) We don't want out vars to be tainted (yet)
+    # b) We want to know who called SendSQL...
+    # Is there a better way to do b?
+    if (is_tainted($str)) {
+        die "Attempted to send tainted string '$str' to the database";
+    }
+
     my $iswrite =  ($str =~ /^(INSERT|REPLACE|UPDATE|DELETE)/i);
     if ($iswrite && !$::dbwritesallowed) {
         die "Evil code attempted to write stuff to the shadow database.";
@@ -1200,7 +1220,7 @@ sub quoteUrls {
         my $num = $2;
         $item = value_quote($item); # Not really necessary, since we know
                                     # there's no special chars in it.
-        $item = qq{<A HREF="showattachment.cgi?attach_id=$num">$item</A>};
+        $item = qq{<A HREF="attachment.cgi?id=$num&action=view">$item</A>};
         $things[$count++] = $item;
     }
     while ($text =~ s/\*\*\* This bug has been marked as a duplicate of (\d+) \*\*\*/"##$count##"/ei) {
@@ -1215,7 +1235,7 @@ sub quoteUrls {
         my $item = $&;
         my $num = $1;
         if ($knownattachments->{$num}) {
-            $item = qq{<A HREF="showattachment.cgi?attach_id=$num">$item</A>};
+            $item = qq{<A HREF="attachment.cgi?id=$num&action=view">$item</A>};
         }
         $things[$count++] = $item;
     }

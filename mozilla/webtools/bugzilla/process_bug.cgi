@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -29,6 +29,8 @@ use strict;
 my $UserInEditGroupSet = -1;
 my $UserInCanConfirmGroupSet = -1;
 
+use lib qw(.);
+
 require "CGI.pl";
 use RelationSet;
 
@@ -42,6 +44,7 @@ use vars %::versions,
     %::legal_opsys,
     %::legal_platform,
     %::legal_priority,
+    %::settable_resolution,
     %::target_milestone,
     %::legal_severity,
     %::superusergroupset;
@@ -58,13 +61,18 @@ my $requiremilestone = 0;
 # This list will either consist of a single bug number from the "id"
 # form/URL field or a series of numbers from multiple form/URL fields
 # named "id_x" where "x" is the bug number.
+# For each bug being modified, make sure its ID is a valid bug number 
+# representing an existing bug that the user is authorized to access.
 my @idlist;
 if (defined $::FORM{'id'}) {
+    ValidateBugID($::FORM{'id'});
     push @idlist, $::FORM{'id'};
 } else {
     foreach my $i (keys %::FORM) {
         if ($i =~ /^id_([1-9][0-9]*)/) {
-            push @idlist, $1;
+            my $id = $1;
+            ValidateBugID($id);
+            push @idlist, $id;
         }
     }
 }
@@ -74,12 +82,6 @@ scalar(@idlist)
   || DisplayError("You did not select any bugs to modify.")
   && exit;
 
-# For each bug being modified, make sure its ID is a valid bug number 
-# representing an existing bug that the user is authorized to access.
-foreach my $id (@idlist) {
-    ValidateBugID($id);
-}
-
 # If we are duping bugs, let's also make sure that we can change 
 # the original.  This takes care of issue A on bug 96085.
 if (defined $::FORM{'dup_id'} && $::FORM{'knob'} eq "duplicate") {
@@ -88,20 +90,6 @@ if (defined $::FORM{'dup_id'} && $::FORM{'knob'} eq "duplicate") {
     # Also, let's see if the reporter has authorization to see the bug
     # to which we are duping.  If not we need to prompt.
     DuplicateUserConfirm();
-}
-
-# If the user has a bug list and is processing one bug, then after
-# we process the bug we are going to show them the next bug on their
-# list.  Thus we have to make sure this bug ID is also valid,
-# since a malicious cracker might alter their cookies for the purpose
-# gaining access to bugs they are not authorized to access.
-if ( defined $::COOKIE{"BUGLIST"} && defined $::FORM{'id'} ) {
-    my @buglist = split( /:/ , $::COOKIE{"BUGLIST"} );
-    my $idx = lsearch( \@buglist , $::FORM{"id"} );
-    if ($idx < $#buglist) {
-        my $nextbugid = $buglist[$idx + 1];
-        ValidateBugID($nextbugid);
-    }
 }
 
 ######################################################################
@@ -484,6 +472,18 @@ if ($action eq Param("move-button-text")) {
 print "<TITLE>Update Bug " . join(" ", @idlist) . "</TITLE>\n";
 if (defined $::FORM{'id'}) {
     navigation_header();
+    if (defined $::next_bug) {
+        # If there is another bug, then we're going to display it,
+        # so check that its a legal bug
+        # We need to check that its a number first
+        if (!(detaint_natural($::next_bug) && CanSeeBug($::next_bug))) {
+            # This isn't OK
+            # Rather than error out (which could validly happen if there
+            # was a bug in the list whose group was changed in the meantime)
+            # just remove references to it
+            undef $::next_bug;
+        }
+    }
 }
 print "<HR>\n";
 $::query = "update bugs\nset";
@@ -550,7 +550,7 @@ sub ChangeResolution {
     my ($str) = (@_);
     if ($str ne $::dontchange) {
         DoComma();
-        $::query .= "resolution = '$str'";
+        $::query .= "resolution = " . SqlQuote($str);
     }
 }
 
@@ -724,6 +724,8 @@ SWITCH: for ($::FORM{'knob'}) {
         last SWITCH;
     };
     /^resolve$/ && CheckonComment( "resolve" ) && do {
+        # Check here, because its the only place we require the resolution
+        CheckFormField(\%::FORM, 'resolution', \@::settable_resolution);
         ChangeStatus('RESOLVED');
         ChangeResolution($::FORM{'resolution'});
         last SWITCH;
@@ -1071,8 +1073,15 @@ The changes made were:
             foreach my $i (split('[\s,]+', $::FORM{$target})) {
                 if ($i eq "") {
                     next;
-
                 }
+
+                my $orig = $i;
+                if (!detaint_natural($i)) {
+                    PuntTryAgain("$orig is not a legal bug number");
+                }
+
+                # Don't use CanSeeBug, since we want to keep deps to bugs a
+                # user can't see
                 SendSQL("select bug_id from bugs where bug_id = " .
                         SqlQuote($i));
                 my $comp = FetchOneColumn();
@@ -1090,7 +1099,8 @@ The changes made were:
             my @stack = @{$deps{$target}};
             while (@stack) {
                 my $i = shift @stack;
-                SendSQL("select $target from dependencies where $me = $i");
+                SendSQL("select $target from dependencies where $me = " .
+                        SqlQuote($i));
                 while (MoreSQLData()) {
                     my $t = FetchOneColumn();
                     if ($t == $id) {
