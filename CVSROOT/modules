@@ -95,7 +95,7 @@ MozillaSourceCommon -a \
     mozilla/xpcom \
     mozilla/l10n \
     mozilla/dbm  \
-    mozilla/README 
+    mozilla/README
 
 MozillaSourceWinOnly -a \
     mozilla/client.mak  \
@@ -340,3 +340,5 @@ DirectorySDKSourceBuild -a \
 	mozilla/cmd/winfe/mkfiles32 \
 	mozilla/config
 
+PerLDAP -a \
+	mozilla/directory/perldap
