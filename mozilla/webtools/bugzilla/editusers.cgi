@@ -22,6 +22,7 @@
 #                 Dave Miller <justdave@syndicomm.com>
 #                 Joe Robins <jmrobins@tgix.com>
 #                 Dan Mosedale <dmose@mozilla.org>
+#                 Joel Peshkin <bugreport@peshkin.net>
 #
 # Direct any questions on this source code to
 #
@@ -160,6 +161,14 @@ sub EmitFormElements ($$$$)
                         "AND user_id = $user_id " .
                         "AND group_id = $groupid");
                 my ($blchecked) = FetchSQLData() ? 1 : 0;
+                SendSQL("SELECT parent_id FROM user_group_map, 
+                    group_group_map 
+                    WHERE $groupid = parent_id 
+                    AND user_group_map.user_id = $user_id
+                    AND user_group_map.isbless = 0
+                    AND group_group_map.isbless = 1
+                    AND user_group_map.group_id = child_id");
+                my $derivedbless = FetchOneColumn();
                 PopGlobalSQLState();
                 print "</TR><TR";
                 print ' bgcolor=#cccccc' if ($isderived);
@@ -168,12 +177,18 @@ sub EmitFormElements ($$$$)
                 print "<INPUT TYPE=HIDDEN NAME=\"oldbless_$groupid\" VALUE=\"$blchecked\">\n";
                 if ($editall) {
                     $blchecked = ($blchecked) ? "CHECKED" : "";
-                    print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"bless_$groupid\" $blchecked VALUE=\"$groupid\"></TD>\n";
+                    print "<TD ALIGN=CENTER>";
+                    print "[" if $derivedbless;
+                    print "<INPUT TYPE=CHECKBOX NAME=\"bless_$groupid\" $blchecked VALUE=\"$groupid\">";
+                    print "]" if $derivedbless;
+                    print "</TD>\n";
                 }
                 $checked = ($checked) ? "CHECKED" : "";
-                print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"group_$groupid\" $checked VALUE=\"$groupid\"></TD>";
-                print "<TD><B>";
-                print '*' if ($isderived);
+                print "<TD ALIGN=CENTER>";
+                print '[' if ($isderived);
+                print "<INPUT TYPE=CHECKBOX NAME=\"group_$groupid\" $checked VALUE=\"$groupid\">";
+                print ']' if ($isderived);
+                print "</TD><TD><B>";
                 print ucfirst($name) . "</B>: $description</TD>\n";
                 }
             }
@@ -684,9 +699,14 @@ if ($action eq 'edit') {
         value_quote($disabledtext) . "\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"update\">\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Update\">\n";
-    print "<BR>* User is a member of any groups shown with grey bars and
-           marked with an asterisk as a result of a regular expression match 
-           or membership in another group.<BR>";
+    print "<BR>User is a member of any groups shown with grey bars and
+           marked with brackets surrounding the membership checkbox as a 
+           result of a regular expression match 
+           or membership in another group.
+           User can bless any group 
+           marked with brackets surrounding the bless checkbox as a 
+           result of membership in another group.
+       <BR>";
 
     print "</FORM>";
 
