@@ -173,18 +173,18 @@ $VERSION = '#tinder_version#';
  
 	    'Project_A' =>  {
                    root => '/cvsroot',
-                   module => 'SeaMonkeyAll',
-                   branch => 'main',
+                   module => '',
+                   branch => 'HEAD',
                   },
 	    'Project_B' =>  {
                    root => '/cvsroot',
-                   module => 'Grendel',
-                   branch => 'main',
+                   module => 'MozillaTinderboxAll',
+                   branch => 'HEAD',
                   },
 	    'Project_C' =>  {
                    root => '/cvsroot',
-                   module => 'NSPR',
-                   branch => 'main',
+                   module => 'NSS',
+                   branch => 'HEAD',
                   },
 
 	   );
