@@ -18,6 +18,9 @@ $super{'3'} = ['despotdaemon%netscape.com',];
 $mode{'12'} = 'Open';
 $branch{'12'} = 'HEAD';
 $fullname{'12'} = 'jpeg';
+$mode{'18'} = 'Open';
+$branch{'18'} = 'HEAD';
+$fullname{'18'} = 'macfe';
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'ColorSync_19980824_BRANCH') {
