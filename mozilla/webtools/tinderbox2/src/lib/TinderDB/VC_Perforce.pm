@@ -629,7 +629,7 @@ sub status_table_row {
           $link_choices .= "<br>";
           
           my ($href) = (FileStructure::get_filename($tree, 'tree_URL').
-                        "/all_vc.html#$checkin_page_reference");
+                        "/all_vc.html#$mindate");
           
           $link_choices .= 
               HTMLPopUp::Link(
