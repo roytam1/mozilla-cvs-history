@@ -20,7 +20,7 @@
 #   V = old version number (pre-checkin)
 #   v = new version number (post-checkin)
 #
-ALL			$CVSROOT/CVSROOT/dolog.pl -h 127.0.0.1 -r /cvsroot bonsai-new-checkin-daemon@lounge.mozilla.org mzci@imajes.info bonsai-new-checkin-daemon@mecha.mozilla.org
+ALL			$CVSROOT/CVSROOT/dolog.pl -h 127.0.0.1 -r /cvsroot bonsai-new-checkin-daemon@lounge.mozilla.org mozci@justdave.net
 
 # send mail for new files added
 ALL			$CVSROOT/CVSROOT/cvsmailfilter.pl -a -u http://bonsai.mozilla.org -r /cvsroot -s %s cvs-adds@mozilla.org
