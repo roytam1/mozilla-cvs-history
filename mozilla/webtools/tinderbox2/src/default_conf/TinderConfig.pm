@@ -269,7 +269,12 @@ $VCDisplayImpl = (
 # The name of the version control system as it should appear on the
 # column heading.
 
-$VC_NAME = "CVS";
+#$VC_NAME = "CVS";
+$VC_NAME = "Guilty";
+
+# a regular expression to find bug ticket numbers in checkin comments.
+
+$VC_BUGNUM_REGEXP = "(\d\d\d+)";
 
 # Pick one method for storting data, Data::Dumper is slow but text
 # files allows great debugging capabilities and Storable, available
