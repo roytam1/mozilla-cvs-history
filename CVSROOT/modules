@@ -278,37 +278,65 @@ JavaStubWin -a \
 # until raptor is integrated into the mainline build.
 #
 
-RaptorDist -a \
-	mozilla/nsprpub \
+RaptorDoc -a
+	mozilla/LICENSE \
+	mozilla/LEGAL \
+	mozilla/README/nglayout
+
+RaptorDist -a
+	mozilla/base \
+	mozilla/config \
+	mozilla/dbm \
 	mozilla/include \
 	mozilla/jpeg \
-	mozilla/modules/libreg \
-	mozilla/xpcom \
-	mozilla/modules/zlib \
-	mozilla/modules/libutil \
-	mozilla/sun-java \
-	mozilla/nav-java \
 	mozilla/js \
-	mozilla/modules/security/freenav \
-	mozilla/modules/libpref \
-	mozilla/modules/libimg \
+	mozilla/lib/liblayer \
+	mozilla/lib/libpwc \
 	mozilla/lib/xp \
-	mozilla/lib/libnet \
-	mozilla/base \
-	mozilla/network
+	mozilla/modules/libimg \
+	mozilla/modules/libpref \
+	mozilla/modules/libreg \
+	mozilla/modules/libutil \
+	mozilla/modules/plugin \
+	mozilla/modules/security/freenav \
+	mozilla/modules/zlib \
+	mozilla/nav-java \
+	mozilla/network \
+	mozilla/nsprpub \
+	mozilla/sun-java \
+	mozilla/xpcom
 
-Raptor -a \
-	mozilla/htmlparser \
+RaptorLayout -a
 	mozilla/dom \
 	mozilla/gfx \
-	mozilla/view \
-	mozilla/widget \
+	mozilla/htmlparser \
 	mozilla/layout \
-	mozilla/webshell
+	mozilla/view \
+	mozilla/webshell \
+	mozilla/widget \
 
-RaptorAll -a \
+Raptor -a \
+	RaptorDoc \
 	RaptorDist \
+	RaptorLayout
+
+RaptorWin -a
 	Raptor
+	mozilla/nglayout.mak \
+
+RaptorUnix -a
+	Raptor
+	mozilla/nglayout.mk \
+
+RaptorMac -a
+	Raptor \
+	mozilla/build/mac \
+	mozilla/cmd/macfe \
+	mozilla/lib/mac/MacMemoryAllocator \
+	mozilla/lib/mac/Misc \
+	mozilla/lib/mac/MoreFiles \
+	mozilla/lib/mac/NSRuntime \
+	mozilla/lib/mac/NSStdLib
 
 #####################################################################
 # Module for the Normandy landing.
