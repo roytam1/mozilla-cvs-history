@@ -216,7 +216,7 @@ foreach $tree (keys %VC_TREE) {
 # columns last, etc)
 
 sub sort_tree_buildnames {
-  my ($tree, $buildnames_ref);
+  my ($tree, $buildnames_ref) = @_;
 
   my (@out) = sort @{ $buildnames_ref };
 
