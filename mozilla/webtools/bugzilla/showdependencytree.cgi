@@ -121,18 +121,20 @@ sub DumpKids {
     }
     if (@list) {
         my $list_started = 0;
+        my $cansee = CanSeeBug(\@list, $userid);
         foreach my $kid (@list) {
-            my ($bugid, $stat, $milestone) = ("", "", "");
-            my ($userid, $short_desc) = ("", "");
-            if (CanSeeBug($kid, $userid)) {
-                if (Param('usetargetmilestone')) {
-                    SendSQL("select bugs.bug_id, bug_status, target_milestone, assigned_to, short_desc from bugs where bugs.bug_id = $kid", $userid);
-                    ($bugid, $stat, $milestone, $userid, $short_desc) = (FetchSQLData());
-                } else {
-                    SendSQL("select bugs.bug_id, bug_status, assigned_to, short_desc from bugs where bugs.bug_id = $kid", $userid);
-                    ($bugid, $stat, $userid, $short_desc) = (FetchSQLData());
+            # If we can't see this bug, skip it
+            next if !$cansee->{$kid};
 
-                }
+            my ($bugid, $stat, $milestone, $short_desc);
+            if (Param('usetargetmilestone')) {
+                SendSQL("select bugs.bug_id, bug_status, target_milestone, assigned_to, short_desc " . 
+                        "from bugs where bugs.bug_id = $kid", $userid);
+                ($bugid, $stat, $milestone, $userid, $short_desc) = (FetchSQLData());
+            } else {
+                SendSQL("select bugs.bug_id, bug_status, assigned_to, short_desc " . 
+                        "from bugs where bugs.bug_id = $kid", $userid);
+                ($bugid, $stat, $userid, $short_desc) = (FetchSQLData());
             }
             if (! defined $bugid) { next; }
             my $opened = IsOpenedState($stat);

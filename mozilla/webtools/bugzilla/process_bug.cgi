@@ -64,13 +64,13 @@ my $requiremilestone = 0;
 # representing an existing bug that the user is authorized to access.
 my @idlist;
 if (defined $::FORM{'id'}) {
-    ValidateBugID($::FORM{'id'});
+    ValidateBugID($::FORM{'id'}, $whoid);
     push @idlist, $::FORM{'id'};
 } else {
     foreach my $i (keys %::FORM) {
         if ($i =~ /^id_([1-9][0-9]*)/) {
             my $id = $1;
-            ValidateBugID($id);
+            ValidateBugID($id, $whoid);
             push @idlist, $id;
         }
     }
@@ -80,12 +80,6 @@ if (defined $::FORM{'id'}) {
 scalar(@idlist)
   || DisplayError("You did not select any bugs to modify.")
   && exit;
-
-# For each bug being modified, make sure its ID is a valid bug number 
-# representing an existing bug that the user is authorized to access.
-foreach my $id (@idlist) {
-    ValidateBugID($id, $whoid);
-}
 
 # If we are duping bugs, let's also make sure that we can change 
 # the original.  This takes care of issue A on bug 96085.
@@ -578,9 +572,9 @@ if (defined $::FORM{'qa_contact'}) {
 # and cc list can see the bug even if they are not members of all groups 
 # to which the bug is restricted.
 if ( $::FORM{'id'} ) {
-    SendSQL("SELECT count(group_id) FROM bug_group_map WHERE bug_id = $::FORM{'id'}");
-    my $groupset = FetchOneColumn();
-    if ( $groupset ) {
+    SendSQL("SELECT count(*) FROM bug_group_map WHERE bug_id = $::FORM{'id'}");
+    my $groups = FetchOneColumn();
+    if ( $groups ) {
         DoComma();
         $::FORM{'reporter_accessible'} = $::FORM{'reporter_accessible'} ? '1' : '0';
         $::query .= "reporter_accessible = $::FORM{'reporter_accessible'}";
@@ -1345,9 +1339,7 @@ The changes made were:
     # select lists.  This means that instead of looking for the group-X values in
     # the form, we need to loop through all the bug groups this user has access
     # to, and for each one, see if it's selected.
-    # In addition, adding a little extra work so that we don't clobber groupsets
-    # for bugs where the user doesn't have access to the group, but does to the
-    # bug (as with the proposed reporter access patch.)
+    # Also, we don't want to clobber existing groups.
     if ($whoid) {
         my %buggroups = ();
 

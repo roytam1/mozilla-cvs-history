@@ -655,8 +655,9 @@ sub NewProcessOnePerson ($$$$$$$$$$$$) {
       return;
     }
        
-    SendSQL("SELECT userid FROM profiles WHERE login_name = " . SqlQuote($person));
-    my ($userid) = FetchOneColumn();
+    detaint_natural($person);
+ 
+    my $userid = DBname_to_id($person);
 
     $seen{$person} = 1;
 

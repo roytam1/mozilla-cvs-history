@@ -542,9 +542,7 @@ while (MoreSQLData()) {
 
 print "</table><p>\n";
 
-my $userid = 0;
-quietly_check_login();
-$userid = DBname_to_id($::FORM{'Bugzilla_login'});
+my $userid = quietly_check_login();
 
 if (UserInGroup($userid, "editkeywords")) {
     print qq{<p><a href="editkeywords.cgi">Edit keywords</a>\n};

@@ -206,7 +206,7 @@ sub SendSQL {
     # b) We want to know who called SendSQL...
     # Is there a better way to do b?
     if (is_tainted($str)) {
-        die "Attempted to send tainted string to the database";
+        die "Attempted to send tainted string '$str' to the database";
     }
 
     my $iswrite =  ($str =~ /^(INSERT|REPLACE|UPDATE|DELETE)/i);
@@ -682,18 +682,18 @@ sub InsertNewUser {
     # Determine what groups the user should be in by default
     # and add them to those groups.
     SendSQL("select group_id, userregexp from groups where userregexp != ''");
-    my @groupset = ();
+    my @groups = ();
     while (MoreSQLData()) {
         my @row = FetchSQLData();
         # Modified -Joe Robins, 2/17/00
         # Making this case insensitive, since usernames are email addresses,
         # and could be any case.
         if ($username =~ m/$row[1]/i) {
-            push(@groupset, $row[0]);  
+            push(@groups, $row[0]);  
         }
     }
 
-    foreach my $groupid (@groupset) {
+    foreach my $groupid (@groups) {
         SendSQL("INSERT INTO user_group_map VALUES ($userid, $groupid)");
     }
 
@@ -727,150 +727,11 @@ sub GenerateRandomPassword {
     return $password;
 }
 
-sub SelectVisible {
-    my ($query, $userid) = @_;
-    
-    # Run the SQL $query with the additional restriction that
-    # the bugs can be seen by $userid.     
-    # Assumes that 'bugs' is mentioned as a table name. You should
-    # also make sure that bug_id is qualified bugs.bug_id!
-    # Your query must have a WHERE clause. This is unlikely to be a problem.
-
-    # Also, note that mySQL requires aliases for tables to be locked, as well
-    # This means that if you change the name from selectVisible_cc (or add
-    # additional tables), you will need to update anywhere which does a
-    # LOCK TABLE, and then calls routines which call this
-
-#    my @usergroupset = ();
-#    if ($userid) {
-#        PushGlobalSQLState();
-#        SendSQL("SELECT group_id FROM user_group_map WHERE user_id = $userid");
-#        while (my @row = FetchSQLData()) {
-#            push (@usergroupset, $row[0]);
-#        }
-#        PopGlobalSQLState();
-#    }
-
-    # Users are authorized to access bugs if they are a member of all 
-    # groups to which the bug is restricted.  User group membership and 
-    # bug restrictions are stored as bits within bitsets, so authorization
-    # can be determined by comparing the intersection of the user's
-    # bitset with the bug's bitset.  If the result matches the bug's bitset
-    # the user is a member of all groups to which the bug is restricted
-    # and is authorized to access the bug.
-
-    # A user is also authorized to access a bug if she is the reporter, 
-    # assignee, QA contact, or member of the cc: list of the bug and the bug 
-    # allows users in those roles to see the bug.  The boolean fields 
-    # reporter_accessible, assignee_accessible, qacontact_accessible, and 
-    # cclist_accessible identify whether or not those roles can see the bug.
-
-    # Bit arithmetic is performed by MySQL instead of Perl because bitset
-    # fields in the database are 64 bits wide (BIGINT), and Perl installations
-    # may or may not support integers larger than 32 bits.  Using bitsets
-    # and doing bitset arithmetic is probably not cross-database compatible,
-    # however, so these mechanisms are likely to change in the future.
-
-    my $replace = "";
-
-#    if ($userid) {
-#        $replace .= "LEFT JOIN cc selectVisible_cc ON 
-#                     bugs.bug_id = selectVisible_cc.bug_id AND 
-#                     selectVisible_cc.who = $userid "
-#    }
-
-#    $replace .= "LEFT JOIN bug_group_map selectVisible_bug_groups ON
-#                bugs.bug_id = selectVisible_bug_groups.bug_id ";
-
-#    if ($userid) {
-#        $replace .= "LEFT JOIN user_group_map selectVisible_user_groups ON
-#                    selectVisible_bug_groups.group_id = selectVisible_user_groups.group_id AND
-#                    selectVisible_user_groups.user_id = $userid ";
-#    }
-
-    # $replace .= "WHERE ((selectVisible_groups.group_id IN (" . join(',', @usergroupset) . ")) ";
-    # $replace .= "WHERE ((isnull(selectVisible_user_groups.group_id)) ";
-#    if (@usergroupset) {
-#        $replace .= "WHERE ((selectVisible_bug_groups.group_id IN (" . join(',',@usergroupset) . ")) ";
-#    } else {
-#        $replace .= "WHERE ((selectVisible_bug_groups.group_id IS NULL) ";    
-#    }
-
-#    if (@canseelist) {
-#        $replace .= "WHERE ((bugs.bug_id IN (" . join(',', @canseelist) . ")) ";
-#    } else {
-#        $replace .= "WHERE ((selectVisible_bug_groups.group_id IS NULL) ";
-#    }
-
-    $query =~ /^SELECT\s+(.*)\s+FROM/i;
-    my $selectedCols = $1;
-
-    $query =~ /FROM\s+(.*)\s+WHERE/i;
-    my $frompart = $1;
-    $frompart =~ s/bugs,//;
-
-    $query =~ /WHERE\s+(.*)\s+(GROUP|ORDER)/i;
-    my $wherecond = $1;
-
-    $replace = "
-    SELECT 
-        $selectedCols, 
-        bugs.bug_id SV_bugid, 
-        bugs.reporter SV_reporter,
-        bugs.reporter_accessible SV_reporter_accessible, 
-        bugs.assigned_to SV_assigned_to, 
-        bugs.assignee_accessible SV_assignee_accessible, 
-        bugs.qa_contact SV_qa_contact, 
-        bugs.qacontact_accessible SV_qacontact_accessible, 
-        SV_cc.who, 
-        bugs.cclist_accessible SV_cclist_accessible 
-    FROM 
-        $frompart, bugs 
-        LEFT JOIN bug_group_map USING (bug_id) 
-        LEFT JOIN user_group_map ON bug_group_map.group_id = user_group_map.group_id 
-            AND user_group_map.user_id = $userid 
-        LEFT JOIN cc SV_cc ON bugs.bug_id = SV_cc.bug_id 
-            AND SV_cc.who = $userid 
-    WHERE 
-        $wherecond 
-    GROUP BY
-        bugs.bug_id HAVING (COUNT(user_group_map.group_id) = COUNT(bug_group_map.group_id))";
-
-    if ($userid) {
-        $replace .= " 
-        OR (SV_reporter = $userid AND SV_reporter_accessible = 1) 
-        OR (SV_assigned_to = $userid AND SV_assignee_accessible = 1) 
-        OR (SV_qa_contact = $userid AND SV_qacontact_accessible = 1) 
-        OR (NOT isnull(SV_cc.who) AND SV_cc.who = $userid AND SV_cclist_accessible = 1)";
-    }
-
-
-#    if ($userid) {
-#        # There is a mysql bug affecting v3.22 and 3.23 (at least), where this will
-#        # cause all rows to be returned! We work arround this by adding an not isnull
-#        # test to the JOINed cc table. See http://lists.mysql.com/cgi-ez/ezmlm-cgi?9:mss:11417
-#        # Its needed, even though it shouldn't be
-#        $replace .= "OR (bugs.reporter_accessible = 1 AND bugs.reporter = $userid) 
-#                    OR (bugs.assignee_accessible = 1 AND bugs.assigned_to = $userid) 
-#                    OR (bugs.qacontact_accessible = 1 AND bugs.qa_contact = $userid) 
-#                    OR (bugs.cclist_accessible = 1 AND selectVisible_cc.who = $userid 
-#                    AND not isnull(selectVisible_cc.who))";
-#    }
-
-#    $replace .= ") AND ";
-
-#    $query =~ s/\sWHERE\s/$replace/i;
-
-#    return $query;
-
-    return $replace;
-}
-
 sub CanSeeBug {
     my ($bugs, $userid) = @_;
     my %cansee;
     my @buglist;
-    my @usergroupset; 
+    my @groups; 
  
     if(ref($bugs)) {
         @buglist = @{$bugs};
@@ -887,14 +748,12 @@ sub CanSeeBug {
     if ($userid) {
         SendSQL("SELECT group_id FROM user_group_map WHERE user_id = $userid");
         while (my @row = FetchSQLData()) {
-            push(@usergroupset, $row[0]);
+            # Processmail requires everything coming out of the db to be detainted
+            detaint_natural($row[0]);
+            push(@groups, $row[0]);
         }
     } else {
         $userid = 0;
-    }
-
-    if (@usergroupset < 1) {
-        @usergroupset = (0);
     }
 
     my $query = "
@@ -906,13 +765,18 @@ sub CanSeeBug {
         LEFT JOIN cc ON bugs.bug_id = cc.bug_id 
     WHERE 
         bugs.bug_id IN (" . join(',', @buglist) . ") 
-        AND ((bug_group_map.group_id IN (" . join(',', @usergroupset) . ") OR bug_group_map.group_id IS NULL) 
-        OR (bugs.reporter_accessible = 1 AND bugs.reporter = $userid) 
+        AND ((";
+    if ($#groups > 0) {
+        $query .= "bug_group_map.group_id IN (" . join(',', @groups) . ") OR ";
+    }
+    $query .= "bug_group_map.group_id IS NULL) ";
+    if ($userid) {
+        $query .= "OR (bugs.reporter_accessible = 1 AND bugs.reporter = $userid) 
         OR (bugs.assignee_accessible = 1 AND bugs.assigned_to = $userid) 
         OR (bugs.qacontact_accessible = 1 AND bugs.qa_contact = $userid)
-        OR (bugs.cclist_accessible = 1 AND cc.who = $userid))
-    GROUP BY 
-        bugs.bug_id";
+          OR (bugs.cclist_accessible = 1 AND cc.who = $userid)";
+    }
+    $query .= ") GROUP BY bugs.bug_id";
 
     SendSQL($query);
     
@@ -1035,27 +899,17 @@ sub DBname_to_id {
 
 
 sub DBNameToIdAndCheck {
-    my ($name, $forceok) = (@_);
+    my ($name) = (@_);
     $name = html_quote($name);
     my $result = DBname_to_id($name);
     if ($result > 0) {
         return $result;
     }
-    if ($forceok) {
-        InsertNewUser($name, "");
-        $result = DBname_to_id($name);
-        if ($result > 0) {
-            return $result;
-        }
-        print "Yikes; couldn't create user $name.  Please report problem to " .
-            Param("maintainer") ."\n";
-    } else {
-        print "\n";  # http://bugzilla.mozilla.org/show_bug.cgi?id=80045
-        print "The name <TT>$name</TT> is not a valid username.  Either you\n";
-        print "misspelled it, or the person has not registered for a\n";
-        print "Bugzilla account.\n";
-        print "<P>Please hit the <B>Back</B> button and try again.\n";
-    }
+    print "\n";  # http://bugzilla.mozilla.org/show_bug.cgi?id=80045
+    print "The name <TT>$name</TT> is not a valid username.  Either you\n";
+    print "misspelled it, or the person has not registered for a\n";
+    print "Bugzilla account.\n";
+    print "<P>Please hit the <B>Back</B> button and try again.\n";
     exit(0);
 }
 
@@ -1090,8 +944,6 @@ sub quoteUrls {
 
     my $protocol = join '|',
     qw(afs cid ftp gopher http https mid news nntp prospero telnet wais);
-
-    my %options = ( metachars => 1, @_ );
 
     my $count = 0;
 
@@ -1406,8 +1258,8 @@ sub BugInGroup {
     PushGlobalSQLState();
     SendSQL("SELECT bug_id FROM bug_group_map 
             WHERE bug_group_map.group_id = groups.group_id
-            AND groups.name = '$groupname'
-            AND bug_id = $bugid");
+            AND groups.name = " . SqlQuote($groupname) .
+            " AND bug_id = $bugid");
     my $bugingroup = FetchOneColumn();
     PopGlobalSQLState();
     return $bugingroup;
@@ -1656,10 +1508,10 @@ sub max {
 # Trim whitespace from front and back.
 
 sub trim {
-    ($_) = (@_);
-    s/^\s+//g;
-    s/\s+$//g;
-    return $_;
+    my ($str) = @_;
+    $str =~ s/^\s+//g;
+    $str =~ s/\s+$//g;
+    return $str;
 }
 
 1;

@@ -1083,7 +1083,8 @@ $table{logincookies} =
 
 
 $table{products} =
-   'product varchar(64),
+   'product_id mediumint primary key auto_increment not null,
+    product varchar(64),
     description mediumtext,
     milestoneurl tinytext not null,
     disallownew tinyint not null,
@@ -1222,7 +1223,7 @@ $table{user_group_map} =
     'user_id mediumint not null,
      group_id mediumint not null,
      canbless smallint default 0,
-
+    
      index(user_id)';
 
 # This table determines which groups have permission to see a bug
@@ -1278,6 +1279,24 @@ while (my ($tabname, $fielddef) = each %table) {
 ###########################################################################
 # Populate groups table
 ###########################################################################
+
+# We need to add a couple of columns first if this is our first time
+# using the new group schema and populate the group ids
+# 2002/01/23 dkl@redhat.com
+if (&GetFieldDef('groups', 'bit')) {
+    &AddField('groups', 'group_id', 'mediumint primary key auto_increment not null');
+    &AddField('profiles', 'admin', 'smallint default 0');
+    my $currentgroupid = 1;
+    my $query = "select bit from groups order by bit";
+    my $sth = $dbh->prepare($query);
+    $sth->execute();
+    while (my ($bit) = $sth->fetchrow_array()) {
+        my $query = "update groups set group_id = $currentgroupid where bit = $bit";
+        my $sth2 = $dbh->prepare($query);
+        $sth2->execute();
+        $currentgroupid++;
+    }
+}
 
 sub GroupExists ($)
 {
@@ -1693,9 +1712,9 @@ _End_Of_SQL_
         $sth->execute();
 
         if ( !$sth->fetchrow_array() ) {
-            $dbh->do("INSERT INTO user_group_map VALUES ($userid, $group, 2)");
+            $dbh->do("INSERT INTO user_group_map VALUES ($userid, $group, 1)");
         } else {
-            $dbh->do("UPDATE user_group_map SET canbless = 2 WHERE user_id = $userid AND group_id = $group");
+            $dbh->do("UPDATE user_group_map SET canbless = 1 WHERE user_id = $userid AND group_id = $group");
         }
     }
 
@@ -1718,9 +1737,9 @@ _End_Of_SQL_
         $sth->execute();
 
         if ( !$sth->fetchrow_array() ) {
-            $dbh->do("INSERT INTO user_group_map VALUES ($userid, $group, 2)");
+            $dbh->do("INSERT INTO user_group_map VALUES ($userid, $group, 1)");
         } else {
-            $dbh->do("UPDATE user_group_map SET canbless = 2 WHERE user_id = $userid AND group_id = $group");
+            $dbh->do("UPDATE user_group_map SET canbless = 1 WHERE user_id = $userid AND group_id = $group");
         }
     }
   }
@@ -2194,7 +2213,7 @@ if (!GetFieldDef('bugs', 'lastdiffed')) {
 # in my database.  This code detects that, cleans up the duplicates, and
 # then tweaks the table to declare the field to be unique.  What a pain.
 
-if (GetIndexDef('profiles', 'login_name')->[1]) {
+if (GetIndexDef('profiles', 'login_name')) {
     print "Searching for duplicate entries in the profiles table ...\n";
     while (1) {
         # This code is weird in that it loops around and keeps doing this
@@ -2657,55 +2676,86 @@ AddField("bugs_activity", "attach_id", "mediumint null");
 # Drop bit, groupset, blessgroupset fields from certain tables after converting 
 # all users and bugs to new group schema
 if (GetFieldDef('groups', 'bit')) {
-    my $superusergroupset = '';
+    print "Converting bug database to new group schema format...\n";
+    my $superusergroupset = '9223372036854775807';
     my %bit_groups = ();
-    my $currentgroupid = 1;
-    AddField('groups', 'group_id', 'mediumint auto_increment not null');
-    AddField('profiles', 'admin', 'smallint default(0)');
-    SendSQL("select bit from groups order by bit");
-    while (my ($bit) = FetchSQLData()) {
-        $bit_groups{$bit} = $currentgroupid++;
+    my $sth;
+    my $sth2;
+    my $sth3;
+    
+    $sth = $dbh->prepare("select bit, group_id from groups order by bit");
+    $sth->execute();
+    while (my ($bit, $groupid) = $sth->fetchrow_array()) {
+        $bit_groups{$bit} = $groupid;
     }
+    $sth->finish;
 
+    print "Populating user_group_map and bless_group_map table from users in profiles...\n";
     foreach my $bit (sort keys %bit_groups) {
         # Fix profiles table first
-        SendSQL("select userid from profiles where groupset & $bit != 0 order by userid");
-        while (my ($userid) = FetchSQLData()) {
-            PushGlobalSQLState();
-            SendSQL("insert into user_group_map values ($userid, $bit_groups{$bit}, 0)");
-            PopGlobalSQLState();
-        }
-        SendSQL("select userid from profiles where blessgroupset & $bit != 0 order by userid");
-        while (my ($userid) = FetchSQLData()) {
-            PushGlobalSQLState();
-            SendSQL("select user_id from user_group_map where user_id = $userid " . 
-                    "and group_id = $bit_groups{$bit}");
-            if (MoreSQLdata()) {
-                SendSQL("update user_group_map set canbless = 1 where user_id = $userid " . 
-                        "and group_id = $bit_groups{$bit}");
-            } else {
-                SendSQL("insert into user_group_map values ($userid, $bit_groups{$bit}, 1)");
+        $sth = $dbh->prepare("select userid from profiles where (groupset & $bit) != 0 order by userid");
+        $sth->execute();
+        while (my ($userid) = $sth->fetchrow_array()) {
+            $sth2 = $dbh->prepare("select user_id from user_group_map where " . 
+                                  "user_id = $userid and group_id = $bit_groups{$bit}");
+            $sth2->execute();
+            my ($result) = $sth2->fetchrow_array();
+            if (!$result) { 
+                $sth2 = $dbh->prepare("insert into user_group_map values ($userid, $bit_groups{$bit}, 0)");
+                $sth2->execute();
             }
-            PopGlobalSQLState();
+            $sth2->finish;   
         }
+        # Next fix bless group privileges
+        $sth = $dbh->prepare("select userid from profiles where blessgroupset & $bit != 0 order by userid");
+        $sth->execute();
+        while (my ($userid) = $sth->fetchrow_array()) {
+            $sth2 = $dbh->prepare("select user_id from user_group_map " . 
+                                  "where user_id = $userid and group_id = $bit_groups{$bit}");
+            $sth2->execute();
+            my ($result) = $sth->fetchrow_array();
+            if (!$result) {
+                $sth2->prepare("update user_group_map set canbless = 1 where user_id = $userid " . 
+                               "and group_id = $bit_groups{$bit}");
+                $sth2->execute();
+            } else {
+                $sth2 = $dbh->prepare("insert into user_group_map values ($userid, $bit_groups{$bit}, 1)");
+                $sth2->execute();
+            }
+            $sth2->finish;
+        }
+        $sth->finish;
     }
     
-    # Fix super users
-    SendSQL("select userid from profiles where groupset = $superusergroupset order by userid");
-    while (my ($userid) = FetchSQLData()) {
-        PushGlobalSQLState();
-        SendSQL("update profiles set admin = 1 where userid = $userid");
-        PopGlobalSQLState();
+    # Fix super users by adding 1 to admin column
+    # We shouldn't need to add them to any groups since that would have been done earlier.
+    print "Populating profile's admin column for super users...\n";
+    $sth = $dbh->prepare("select userid from profiles where groupset = $superusergroupset order by userid");
+    $sth->execute();
+    while (my ($userid) = $sth->fetchrow_array()) {
+        my $sth2 = $dbh->prepare("update profiles set admin = 1 where userid = $userid");
+        $sth2->execute();
+        $sth2->finish;
     }
+    $sth->finish;
 
-    # Fix bug groupsets   
+    # Fix bug groupsets
+    print "Populating bug_group_map table with bugs that are marked private...\n";   
     foreach my $bit (sort keys %bit_groups) {
-        SendSQL("select bug_id from bugs where groupset & $bit != 0 order by bug_id");
-        while (my ($id) = FetchSQLData()) {
-            PushGlobalSQLState();
-            SendSQL("insert into bug_group_map values ($id, $bit_groups{$bit})");
-            PopGlobalSQLState();
+        $sth = $dbh->prepare("select bug_id from bugs where (groupset & $bit) != 0 order by bug_id");
+        $sth->execute();
+        while (my ($id) = $sth->fetchrow_array()) {
+            $sth2 = $dbh->prepare("select bug_id from bug_group_map " .
+                                  "where bug_id = $id and group_id = $bit_groups{$bit}");
+            $sth2->execute();
+            my ($result) = $sth->fetchrow_array();
+            if (!$result) {
+                $sth2 = $dbh->prepare("insert into bug_group_map values ($id, $bit_groups{$bit})");
+                $sth2->execute();
+            }
+            $sth2->finish;
         }
+        $sth->finish;
     }
 
     DropField('bugs', 'groupset');

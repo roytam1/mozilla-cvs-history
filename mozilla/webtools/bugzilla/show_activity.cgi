@@ -28,11 +28,6 @@ use lib qw(.);
 
 require "CGI.pl";
 
-sub globals_pl_sillyness {
-    my $zz;
-    $zz = %::COOKIE;
-}
-
 ConnectToDatabase();
 
 ######################################################################
@@ -40,9 +35,7 @@ ConnectToDatabase();
 ######################################################################
 
 # Check whether or not the user is currently logged in. 
-my $userid = 0;
-quietly_check_login();
-$userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
+my $userid = quietly_check_login();
 
 # Make sure the bug ID is a positive integer representing an existing
 # bug that the user is authorized to access.

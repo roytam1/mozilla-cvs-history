@@ -39,7 +39,7 @@ my $userid;
 
 my $showNewEmailTech;
 
-# Note the use of arrays instead of hashes: we want the items
+# Not the use of arrays instead of hashes: we want the items
 # displayed in the same order as they appear in the array.
 
 my @emailGroups = (
@@ -503,7 +503,7 @@ sub SaveFooter {
 
 
 sub ShowPermissions {
-    print "<TR><TD>You have the following extra permission set on your account:\n";
+    print "<TR><TD>You have the following extra permissions on your account:\n";
     print "<P><UL>\n";
     my $found = 0;
     SendSQL("SELECT description FROM groups, user_group_map " .
@@ -516,10 +516,10 @@ sub ShowPermissions {
         $found = 1;
     }
     if ($found == 0) {
-        print "<LI>(No extra permission has been set).\n";
+        print "<LI>(No extra permissions have been set).\n";
     }
     print "</UL>\n";
-      SendSQL("SELECT COUNT(group_id) FROM user_group_map WHERE user_id = $userid AND canbless = 1");
+      SendSQL("SELECT COUNT(*) FROM user_group_map WHERE user_id = $userid AND canbless = 1");
       my $blessgroupset = FetchOneColumn();
       if ( $blessgroupset ) {
              print "And you can turn on or off the following permissions for\n";

@@ -156,9 +156,7 @@ sub GenerateSQL {
     my @specialchart;
     my @andlist;
 
-    my $userid = 0;
-    quietly_check_login();
-    $userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
+    my $userid = quietly_check_login();
 
     # First, deal with all the old hard-coded non-chart-based poop.
 
@@ -1064,8 +1062,7 @@ at once.
         exit();
     }
 } else {
-    quietly_check_login();
-    $userid = DBname_to_id($::COOKIE{'Bugzilla_login'});
+    $userid = quietly_check_login();
 }
 
 
@@ -1170,9 +1167,9 @@ if (defined $::FORM{'order'} && $::FORM{'order'} ne "") {
 }
 
 
-#if ($::FORM{'debug'} && $serverpush) {
-#    print "<P><CODE>" . value_quote($query) . "</CODE><P>\n";
-#}
+if ($::FORM{'debug'} && $serverpush) {
+    print "<P><CODE>" . value_quote($query) . "</CODE><P>\n";
+}
 
 
 if (Param('expectbigqueries')) {
@@ -1278,102 +1275,11 @@ my @weekday= qw( Sun Mon Tue Wed Thu Fri Sat );
 # Truncate email to 30 chars per bug #103592
 my $maxemailsize = 30;
 
-#while (@row = FetchSQLData()) {
-#    my $bug_id = shift @row;
-#    my $g = shift @row;         # Bug's group set.
-#    if (!defined $seen{$bug_id}) {
-#        $seen{$bug_id} = 1;
-#        $count++;
-#        if ($count % 200 == 0) {
-#            # Too big tables take too much browser memory...
-#            pnl "</TABLE>$tablestart";
-#        }
-#        push @bugarray, $bug_id;
-#
-#        # retrieve this bug's priority and severity, if available,
-#        # by looping through all column names -- gross but functional
-#        my $priority = "unknown";
-#        my $severity;
-#        if ($pricol >= 0) {
-#            $priority = $row[$pricol];
-#        }
-#        if ($sevcol >= 0) {
-#            $severity = $row[$sevcol];
-#        }
-#        my $customstyle = "";
-#        if ($severity) {
-#            if ($severity eq "enh") {
-#                $customstyle = "style='font-style:italic ! important'";
-#            }
-#            if ($severity eq "blo") {
-#                $customstyle = "style='color:red ! important; font-weight:bold ! important'";
-#            }
-#            if ($severity eq "cri") {
-#                $customstyle = "style='color:red; ! important'";
-#            }
-#        }
-#        pnl "<TR VALIGN=TOP ALIGN=LEFT CLASS=$priority $customstyle><TD>";
-#        if ($dotweak) {
-#            pnl "<input type=checkbox name=id_$bug_id>";
-#        }
-#        pnl "<A HREF=\"show_bug.cgi?id=$bug_id\">";
-#        pnl "$bug_id</A>";
-#        if ($g != "0") { pnl "*"; }
-#        pnl " ";
-#        foreach my $c (@collist) {
-#            if (exists $::needquote{$c}) {
-#                my $value = shift @row;
-#                if (!defined $value) {
-#                    pnl "<TD>";
-#                    next;
-#                }
-#                if ($c eq "owner") {
-#                    $ownerhash{$value} = 1;
-#                }
-#                if ($c eq "qa_contact") {
-#                    $qahash{$value} = 1;
-#                }
-#                if ( ($c eq "owner" || $c eq "qa_contact" ) &&
-#                        length $value > $maxemailsize )  {
-#                    my $trunc = substr $value, 0, $maxemailsize;
-#                    $value = value_quote($value);
-#                    $value = qq|<SPAN TITLE="$value">$trunc...</SPAN>|;
-#                } elsif( $c eq 'changeddate' or $c eq 'opendate' ) {
-#                    my $age = time() - $value;
-#                    my ($s,$m,$h,$d,$mo,$y,$wd)= localtime $value;
-#                    if( $age < 18*60*60 ) {
-#                        $value = sprintf "%02d:%02d:%02d", $h,$m,$s;
-#                    } elsif ( $age < 6*24*60*60 ) {
-#                        $value = sprintf "%s %02d:%02d", $weekday[$wd],$h,$m;
-#                    } else {
-#                        $value = sprintf "%04d-%02d-%02d", 1900+$y,$mo+1,$d;
-#                    }
-#                }
-#                if ($::needquote{$c} || $::needquote{$c} == 5) {
-#                    $value = html_quote($value);
-#                } else {
-#                    $value = "<nobr>$value</nobr>";
-#                }
-#
-#                pnl "<td class=$c>$value";
-#            }
-#        }
-#        if ($dotweak) {
-#            my $value = shift @row;
-#            $prodhash{$value} = 1;
-#            $value = shift @row;
-#            $statushash{$value} = 1;
-#        }
-#        pnl "\n";
-#    }
-#}
-
 while (@row = FetchSQLData()) {
     my $bug_id = shift @row;
     push @bugarray, $bug_id;
 
     $valuehash{$bug_id} = [];
-    push (@{$valuehash{$bug_id}}, shift @row);  # Bug's groupset
 
     foreach my $col ( @collist ) {
         if ( exists $::needquote{$col} ) {
@@ -1478,12 +1384,6 @@ foreach my $bug_id (@bugarray) {
 
                 pnl "<td class=$c>$value";
             }
-        }
-        if ($dotweak) {
-            my $value = shift @{$valuehash{$bug_id}};
-            $prodhash{$value} = 1;
-            $value = shift @{$valuehash{$bug_id}};
-            $statushash{$value} = 1;
         }
         pnl "\n";
     }
@@ -1690,18 +1590,15 @@ document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCh
 <BR>
 <TEXTAREA WRAP=HARD NAME=comment ROWS=5 COLS=80></TEXTAREA><BR>";
 
-SendSQL("SELECT COUNT(*) FROM user_group_map WHERE user_id = $userid");
-my $usergroupset = FetchOneColumn();
-
-if($usergroupset) {
-    SendSQL("select groups.group_id, name, description, isactive ".
-            "from groups, user_group_map where groups.group_id = user_group_map.group_id ".
-            "and user_group_map.user_id = $userid and isbuggroup != 0 ".
-            "order by description");
     # We only print out a header bit for this section if there are any
     # results.
     my $groupFound = 0;
     my $inactiveFound = 0;
+    SendSQL("SELECT groups.group_id, name, description, isactive ".
+            "FROM groups, user_group_map WHERE " .
+            "groups.group_id = user_group_map.group_id ".
+            "AND user_group_map.user_id = $userid AND isbuggroup != 0 ".
+            "ORDER BY description");
     while (MoreSQLData()) {
         my ($groupid, $groupname, $description, $isactive) = (FetchSQLData());
         if(($prodhash{$groupname}) || (!defined($::proddesc{$groupname}))) {
@@ -1743,7 +1640,6 @@ if($usergroupset) {
       }
       print "<BR><BR>\n";
     }
-}
 
 
 

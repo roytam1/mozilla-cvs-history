@@ -57,10 +57,7 @@ sub sillyness {
 # doing it now instead of a bit later.  -JMR, 2/18/00
 # Except that it will cause people without cookies enabled to have to log
 # in an extra time.  Only do it here if we really need to.  -terry, 3/10/00
-my $userid = 0;
-if (Param("usebuggroupsentry")) {
-    $userid = confirm_login();
-}
+my $userid = confirm_login();
 
 if (!defined $::FORM{'product'}) {
     GetVersionTable();
@@ -342,12 +339,12 @@ if(Param("usebuggroupsentry")
 # when the select boxes for all the groups this user has access to are read
 # in later on.
 # First we get the bit and description for the group.
-my $group_id = 0;
+my $product_group_id = 0;
 if(Param("usebuggroups") && GroupExists($product)) {
-    SendSQL("select group_id from groups ".
-            "where name = ".SqlQuote($product)." ".
-            "and isbuggroup != 0");
-    ($group_id) = FetchSQLData();
+    SendSQL("SELECT group_id FROM groups ".
+            "WHERE name = ".SqlQuote($product)." ".
+            " AND isbuggroup != 0");
+    $product_group_id = FetchOneColumn();
 }
 
 print "
@@ -464,40 +461,38 @@ print "
    <td></td><td colspan=5>
 ";
 
-if ($userid ne '0') {
-    SendSQL("SELECT groups.group_id, name, description FROM groups, user_group_map " .
-            "WHERE groups.group_id = user_group_map.group_id " .
-            "AND user_group_map.user_id = $userid " . 
-            "AND isbuggroup != 0 AND isactive = 1 ORDER BY description");
-    # We only print out a header bit for this section if there are any
-    # results.
-    my $groupFound = 0;
-    while (MoreSQLData()) {
-        my ($group_id, $prodname, $description) = (FetchSQLData());
-        # Don't want to include product groups other than this product.
-        unless(($prodname eq $product) || (!defined($::proddesc{$prodname}))) {
-            next;
-        }
-        if(!$groupFound) {
-          print "<br><b>Only users in the selected groups can view this bug:</b><br>\n";
-          print "<font size=\"-1\">(Leave all boxes unchecked to make this a public bug.)</font><br><br>\n";
-          $groupFound = 1;
-        }
-        # Modifying this to use checkboxes instead of a select list.
-        # -JMR, 5/11/01
-        # If this is the group for this product, make it checked.
-        my $check = ($group_id);
-        # If this is a bookmarked template, then we only want to set the bit
-        # for those bits set in the template.
-        if(formvalue("maketemplate","") eq "Remember values as bookmarkable template") {
-          $check = formvalue("group-$group_id",0);
-        }
-        my $checked = $check ? " CHECKED" : "";
-        # indent these a bit
-        print "&nbsp;&nbsp;&nbsp;&nbsp;";
-        print "<input type=checkbox name=\"group-$group_id\" value=1 $checked>\n";
-        print "$description<br>\n";
+SendSQL("SELECT groups.group_id, groups.name, groups.description " .
+        "FROM groups, user_group_map " .
+        "AND user_group_map.user_id = $userid " . 
+        "AND isbuggroup != 0 AND isactive = 1 ORDER BY description");
+# We only print out a header bit for this section if there are any
+# results.
+my $groupFound = 0;
+while (MoreSQLData()) {
+    my ($group_id, $prodname, $description) = (FetchSQLData());
+    # Don't want to include product groups other than this product.
+    unless(($prodname eq $product) || (!defined($::proddesc{$prodname}))) {
+        next;
     }
+    if(!$groupFound) {
+        print "<br><b>Only users in the selected groups can view this bug:</b><br>\n";
+        print "<font size=\"-1\">(Leave all boxes unchecked to make this a public bug.)</font><br><br>\n";
+        $groupFound = 1;
+    }
+    # Modifying this to use checkboxes instead of a select list.
+    # -JMR, 5/11/01
+    # If this is the group for this product, make it checked.
+    my $check = ($group_id == $product_group_id);
+    # If this is a bookmarked template, then we only want to set the bit
+    # for those bits set in the template.
+    if(formvalue("maketemplate","") eq "Remember values as bookmarkable template") {
+        $check = formvalue("group-$group_id",0);
+    }
+    my $checked = $check ? " CHECKED" : "";
+    # indent these a bit
+    print "&nbsp;&nbsp;&nbsp;&nbsp;";
+    print "<input type=checkbox name=\"group-$group_id\" value=1 $checked>\n";
+    print "$description<br>\n";
 }
 
 print "

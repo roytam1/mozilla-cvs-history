@@ -698,10 +698,8 @@ function Search(url, input, searchLong) {
 //    --> search summary, product, component, keywords, status whiteboard
 //        (and URL if it's an IP address, a host.name, or an absolute://URL)
 
-function QuickSearch ()
+function QuickSearch (input)
 {
-    var input = document.f.id.value;
-
     //remove leading and trailing whitespace
     input = input.replace(/^[\s]+/,"").replace(/[\s]+$/,"");
 

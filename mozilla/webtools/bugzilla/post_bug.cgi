@@ -204,16 +204,9 @@ $comment = $comment ? $comment : " ";
 $query .= "$userid, now())";
 
 my %ccids;
+my @groupids;
 
 # print "<PRE>$query</PRE>\n";
-
-SendSQL($query);
-
-SendSQL("select LAST_INSERT_ID()");
-my $id = FetchOneColumn();
-
-SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) VALUES " .
-        "($id, $userid, now(), " . SqlQuote($comment) . ")");
 
 if (defined $::FORM{'cc'}) {
     foreach my $person (split(/[ ,]/, $::FORM{'cc'})) {
@@ -221,10 +214,6 @@ if (defined $::FORM{'cc'}) {
             $ccids{DBNameToIdAndCheck($person)} = 1;
         }
     }
-}
-
-foreach my $person (keys %ccids) {
-    SendSQL("insert into cc (bug_id, who) values ($id, $person)");
 }
 
 foreach my $b (grep(/^group-\d*$/, keys %::FORM)) {
@@ -241,9 +230,38 @@ foreach my $b (grep(/^group-\d*$/, keys %::FORM)) {
                          "identified by the group_id '$v'. This shouldn't happen, " .
                          "so it may indicate a bug in Bugzilla.");
         }
-        SendSQL("insert into bug_group_map values ($id, $v)");
+        SendSQL("SELECT user_id FROM user_group_map WHERE " .
+                "user_id=$userid AND group_id=$v");
+        if (!FetchOneColumn()) {
+            PutTryAgain("You tried to submit a bug to group '$v', which you " .
+                        "are not a member of.");
+        }
+        push @groupids, $v;
     }
 }
+
+# We need to lock the bugs table for write here, else someone could see the
+# bug before we add the groups
+# We need to rethink our locking system entirely
+
+SendSQL("LOCK TABLE bugs WRITE, longdescs WRITE, cc WRITE, bug_group_map WRITE");
+SendSQL($query);
+
+SendSQL("select LAST_INSERT_ID()");
+my $id = FetchOneColumn();
+
+SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) VALUES " .
+        "($id, $userid, now(), " . SqlQuote($comment) . ")");
+
+foreach my $person (keys %ccids) {
+    SendSQL("insert into cc (bug_id, who) values ($id, $person)");
+}
+
+foreach my $group (@groupids) {
+    SendSQL("INSERT INTO bug_group_map (bug_id, group_id) VALUES ($id, $group)");
+}
+
+SendSQL("UNLOCK TABLES");
 
 print "<TABLE BORDER=1><TD><H2>Bug $id posted</H2>\n";
 system("./processmail", $id, $::COOKIE{'Bugzilla_login'});

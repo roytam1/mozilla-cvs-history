@@ -264,17 +264,27 @@ sub ValidateBugID {
     # database, and that the user is authorized to access that bug.
     # We detaint the number here, too
 
-    my ($id, $userid) = @_;
-
     # Make sure the bug number is a positive integer.
     # Whitespace can be ignored because the SQL server will ignore it.
-    $id = trim($id); # Allow whitespace arround the number
-    detaint_natural($id)
-      || DisplayError("The bug number is invalid. If you are trying to use " .
+    $_[0] = trim($_[0]); # Allow whitespace arround the number
+    detaint_natural($_[0])
+        || DisplayError("The bug number is invalid. If you are trying to use " .
                       "QuickSearch, you need to enable JavaScript in your " .
                       "browser. To help us fix this limitation, look " .
                       "<a href=\"http://bugzilla.mozilla.org/show_bug.cgi?id=70907\">here</a>.") 
       && exit;
+
+    # Only assign vars here, because we ahve to detaint the reference so that
+    # it passses taint checks in the caller
+    my ($id, $userid) = @_;
+
+    # Users are authorized to access bugs if they are a member of one of
+    # groups to which the bug is restricted.    
+    # A user is also authorized to access a bug if she is the reporter, 
+    # assignee, QA contact, or member of the cc: list of the bug and the bug 
+    # allows users in those roles to see the bug.  The boolean fields 
+    # reporter_accessible, assignee_accessible, qacontact_accessible, and 
+    # cclist_accessible identify whether or not those roles can see the bug.
 
     # First check that the bug exists
     SendSQL("SELECT bug_id FROM bugs WHERE bug_id = $id");
@@ -653,6 +663,7 @@ sub PasswordForLogin {
 
 sub quietly_check_login {
     my ($userid, $loginname, $ok, $disabledtext);
+    $userid = 0;
     $::disabledreason = '';
     if (defined $::COOKIE{"Bugzilla_login"} &&
         defined $::COOKIE{"Bugzilla_logincookie"}) {
@@ -1028,7 +1039,7 @@ Content-type: text/html
         # (except for Bugzilla_login and Bugzilla_password which we
         # already added as text fields above).
         foreach my $i ( grep( $_ !~ /^Bugzilla_/ , keys %::FORM ) ) {
-          if (scalar(@{$::MFORM{$i}}) > 1) {
+          if (defined $::MFORM{$i} && scalar(@{$::MFORM{$i}}) > 1) {
             # This field has multiple values; add each one separately.
             foreach my $val (@{$::MFORM{$i}}) {
               print qq|<input type="hidden" name="$i" value="@{[value_quote($val)]}">\n|;
@@ -1321,7 +1332,7 @@ Actions:
                 "WHERE login_name = " . SqlQuote($::COOKIE{'Bugzilla_login'}));
         my ($mybugslink, $userid) = (FetchSQLData());
         SendSQL("SELECT COUNT(*) FROM user_group_map WHERE user_id = $userid AND canbless = 1"); 
-        my $blessgroupset = FetchOneColumn();
+        my $canbless = FetchOneColumn();
         
         #Begin settings
         $html .= qq{
@@ -1333,7 +1344,7 @@ Edit <a href="userprefs.cgi">prefs</a>
         if (UserInGroup($userid, "tweakparams")) {
             $html .= ", <a href=\"editparams.cgi\">parameters</a>\n";
         }
-        if (UserInGroup($userid, "editusers") || $blessgroupset) {
+        if (UserInGroup($userid, "editusers") || $canbless) {
             $html .= ", <a href=\"editusers.cgi\">users</a>\n";
         }
         if (UserInGroup($userid, "editcomponents")) {

@@ -70,8 +70,7 @@ my $vars =
     'PerformSubsts' => \&PerformSubsts
   };
 
-# Check whether or not the user is logged in and, if so, set the $::userid 
-# and $::usergroupset variables.
+# Validate the login name, for the username stuff below
 quietly_check_login();
 
 ###############################################################################

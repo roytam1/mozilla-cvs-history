@@ -130,7 +130,7 @@ node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
             SendSQL("select bug_status from bugs where bug_id = $k");
             $stat = FetchOneColumn();
         }
-        if (!ValidateBugID($k, $userid) ) {
+        if (!CanSeeBug($k, $userid) ) {
             next;
         }
         my @params;

@@ -89,9 +89,9 @@ sub EmitElement ($$)
 # Displays the form to edit a user parameters
 #
 
-sub EmitFormElements ($$$$$)
+sub EmitFormElements ($$$$$$)
 {
-    my ($user, $realname, $disabledtext, $groups_belong, $can_bless) = @_;
+    my ($user, $realname, $disabledtext, $groups_belong, $can_bless, $adminuser) = @_;
 
     print "  <TH ALIGN=\"right\">Login name:</TH>\n";
     EmitElement("user", $user);
@@ -125,6 +125,13 @@ sub EmitFormElements ($$$$$)
         
     
     if($user ne "") {
+        # Select admin access if user has 'edituser' privileges
+        if ($editall) {
+            my $adminchecked = $adminuser ? "CHECKED" : "";
+            print "</TR><TR><TH VALIGN=TOP ALIGN=RIGHT>Admin User:</TH>\n";
+            print "<TD><INPUT TYPE=\"checkbox\" NAME=\"admin\" VALUE=\"1\" $adminchecked></TD>\n";
+        }
+
         # Edit bug groups
         print "</TR><TR><TH VALIGN=TOP ALIGN=RIGHT>Group Access:</TH><TD>\n<TABLE><TR>\n";
         SendSQL("SELECT group_id, name, description FROM groups " .
@@ -422,7 +429,7 @@ if ($action eq 'add') {
     print "<FORM METHOD=POST ACTION=editusers.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
-    EmitFormElements('', '', '', '', '');
+    EmitFormElements('', '', '', '', '', 0);
 
     print "</TR></TABLE>\n<HR>\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Add\">\n";
@@ -742,14 +749,14 @@ if ($action eq 'edit') {
         $bless_belong->{$row[0]} = 1;
     }
 
-    #print "Groups: " . join(', ', @{$groups_belong}) . "<br>\n";
-    #print "Bless: " . join(', ', @{$bless_belong}) . "<br>\n";
-    #print "Op Bless: " . join(', ', @opblessgroupset) . "<br>\n";
+    # Determine if this user is an administrator or not
+    SendSQL("SELECT admin FROM profiles WHERE userid = $userid");
+    my $adminuser = FetchOneColumn();
 
     print "<FORM METHOD=POST ACTION=editusers.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
-    EmitFormElements($user, $realname, $disabledtext, $groups_belong, $bless_belong);
+    EmitFormElements($user, $realname, $disabledtext, $groups_belong, $bless_belong, $adminuser);
     
     print "</TR></TABLE>\n";
 
@@ -802,6 +809,17 @@ if ($action eq 'update') {
 
     SendSQL("SELECT userid, admin FROM profiles WHERE login_name = " . SqlQuote($userold));
     my ($userid, $admin) = FetchSQLData();
+
+    if ($editall) {
+        if (defined $::FORM{'admin'} && $::FORM{'admin'} == 1) {
+            SendSQL("UPDATE profiles SET admin = 1 WHERE login_name = " . SqlQuote($userold));
+            print "Added administrator status.<br>\n";
+        } elsif (!defined $::FORM{'admin'} && $::FORM{'admin'} == 0) {
+            SendSQL("UPDATE profiles SET admin = 0 WHERE login_name = " . SqlQuote($userold));
+            $admin = 0;
+            print "Removed administrator status.<br>\n";
+        }
+    }
 
     if (!$admin) {
         my %groups = ();

@@ -60,7 +60,7 @@ my $vars =
 GetVersionTable();
 
 # Check to see if the user has logged in yet.
-quietly_check_login();
+my $userid = quietly_check_login();
 
 ###############################################################################
 # Main Body Execution
@@ -69,12 +69,9 @@ quietly_check_login();
 $vars->{'username'} = $::COOKIE{'Bugzilla_login'} || '';
 $vars->{'anyvotesallowed'} = $::anyvotesallowed;
 
-if (defined $::COOKIE{'Bugzilla_login'}) {
-    SendSQL("SELECT mybugslink, userid, blessgroupset FROM profiles " .
-            "WHERE login_name = " . SqlQuote($::COOKIE{'Bugzilla_login'}));
-    my ($mybugslink, $userid, $blessgroupset) = (FetchSQLData());
-    $vars->{'userid'} = $userid;
-    $vars->{'blessgroupset'} = $blessgroupset;
+if ($userid) {
+    SendSQL("SELECT mybugslink FROM profiles WHERE user_id = $userid");
+    my $mybugslink = FetchOneColumn();
     if ($mybugslink) {
         my $mybugstemplate = Param("mybugstemplate");
         my %substs = ( 'userid' => url_quote($::COOKIE{'Bugzilla_login'}) );
@@ -85,6 +82,8 @@ if (defined $::COOKIE{'Bugzilla_login'}) {
         my ($name) = FetchSQLData();
         push(@{$vars->{'namedqueries'}}, $name);
     }
+    SendSQL("SELECT COUNT(*) FROM user_group_map WHERE user_id = $userid AND canbless >= 1");
+    $vars->{'canbless'} = FetchOneColumn();
 }
 
 # This sidebar is currently for use with Mozilla based web browsers.
