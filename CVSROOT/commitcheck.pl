@@ -319,8 +319,12 @@ if (m:^mozilla/view/.*$:) {return '96';}
 if (m:^mozilla/layout/base/.*$:) {return '98';}
 if (m:^mozilla/layout/build/.*$:) {return '98';}
 if (m:^mozilla/layout/doc/.*$:) {return '98';}
+if (m:^mozilla/layout/forms/.*$:) {return '98';}
+if (m:^mozilla/layout/generic/.*$:) {return '98';}
 if (m:^mozilla/layout/html/.*$:) {return '98';}
 if (m:^mozilla/layout/macbuild/.*$:) {return '98';}
+if (m:^mozilla/layout/printing/.*$:) {return '98';}
+if (m:^mozilla/layout/tables/.*$:) {return '98';}
 if (m:^mozilla/layout/tools/.*$:) {return '98';}
 if (m:^modules/libpr0n/decoders/mng/.*$:) {return '155';}
 if (m:^mozilla/modules/libimg/mng/.*$:) {return '155';}
