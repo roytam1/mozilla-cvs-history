@@ -206,6 +206,42 @@ $VERSION = '#tinder_version#';
 	   );
 
 
+sub TreeName2Root {
+    my ($treename) = @_;
+
+    my $root = $VC_TREE{$treename}{'root'};
+
+    return $root;
+}
+
+sub TreeName2Module {
+    my ($treename) = @_;
+
+    my $module = $VC_TREE{$treename}{'module'};
+
+    return $module;
+}
+
+sub TreeName2Branch {
+    my ($treename) = @_;
+
+    my $branch = $VC_TREE{$treename}{'branch'};
+
+    return $branch;
+}
+
+sub TreeName2DirPattern {
+    my ($treename) = @_;
+
+    my $dir_pattern = $VC_TREE{$treename}{'dir_pattern'};
+
+    return $dir_pattern;
+}
+
+sub TreeName2is_bonsai_default {
+}
+
+
 # We group trees into sets so that individual managers can get a page
 # of all the projects they manage.  This is a mapping from managers
 # email address to the set of projects they are interested in.  This
