@@ -396,7 +396,6 @@ if (m:^gfx/src/photon/.*$:) {return '113';}
 if (m:^widget/src/photon/.*$:) {return '113';}
 if (m:^mozilla/content/xul/.*$:) {return '106';}
 if (m:^mozilla/layout/xul/.*$:) {return '106';}
-if (m:^mozilla/widget/public/.*$:) {return '134';}
 if (m:^mozilla/profile$:) {return '120';}
 if (m:^mozilla/tools/.*$:) {return '112';}
 if (m:^xpcom/typelib$:) {return '117';}
