@@ -189,7 +189,7 @@ MozillaUnixOnly -a \
     ns/lib/mariner  
 
 
-MozillaMacOnly
+MozillaMacOnly -a \
     ns/cmd/macfe \
     ns/lib/mac/AutoAdmin  \
     ns/lib/mac/Includes  \
