@@ -141,8 +141,8 @@ $PopUpImpl = (
 # you are a first time user you may find that setting this to "&nbsp;"
 # is clearer.
 
-#$EMPTY_TABLE_CELL = "&nbsp;";
-$EMPTY_TABLE_CELL = "";
+$EMPTY_TABLE_CELL = "&nbsp;";
+#$EMPTY_TABLE_CELL = "";
 
 
 # Use the DB implementations you wish to use.
