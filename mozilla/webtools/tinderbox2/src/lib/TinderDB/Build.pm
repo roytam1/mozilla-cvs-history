@@ -183,7 +183,7 @@ sub build_names {
                                            $tree,
                                            [@outrow],
                                           );
-
+  
   return @outrow;
 }
 
@@ -289,7 +289,7 @@ sub gettree_header {
       my ($rec) = $DATABASE{$tree}{$buildname}{'recs'}[$db_index];
       my ($buildstatus) = $rec->{'status'};
 
-      (BuildStatus::is_status_final($buildstatus))  ||
+      (BuildStatus::is_status_final($buildstatus)) ||
         next;
 
       if ($buildstatus eq 'success') {
@@ -779,8 +779,11 @@ sub apply_db_updates {
       # spacing.  There can be very frequent updates for any build
       # but different builds must be spaced apart.
       
-      my ($safe_separation) = (TinderDB::TABLE_SPACING + 
+      my ($safe_separation) = ($TinderDB::TABLE_SPACING * 
                                $main::SECONDS_PER_MINUTE);
+
+      # add a few seconds for safety
+      $safe_separation += 100; 
       
       my ($separation) = ($record->{'starttime'} - 
                           $previous_rec->{'starttime'});
