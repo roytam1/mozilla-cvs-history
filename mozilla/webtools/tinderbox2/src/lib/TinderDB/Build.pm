@@ -155,7 +155,7 @@ use VCDisplay;
 use Utils;
 use TinderConfig;
 use TinderDB::Notice;
-use TinderHeader;
+#use TinderHeader;
 
 
 $VERSION = '#tinder_version#';
@@ -282,22 +282,22 @@ sub latest_errors {
 
   foreach $buildname (@build_names) {
 
-      my ($last_err);
+      my ($last_error);
       foreach $db_index (0 .. $#{ $DATABASE{$tree}{$buildname}{'recs'} }) {
       
         my ($rec) = $DATABASE{$tree}{$buildname}{'recs'}[$db_index];
-        my ($builderrs) = $rec->{'errors'};
+        my ($builderrors) = $rec->{'errors'};
         my ($buildstatus) = $rec->{'status'};
       
         (BuildStatus::is_status_final($buildstatus))  ||
           next;
 
-        $last_err = $builderrs;
+        $last_error = $builderrors;
         last;
       } # foreach $db_index
 
-      if ($last_err) {
-        push @outrow, $last_err;
+      if ($last_error) {
+        push @outrow, $last_error;
       } else {
 
         # If we really have no data try and get 
