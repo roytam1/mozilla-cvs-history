@@ -517,7 +517,7 @@ sub status_table_row {
       # the group of links.
 
       my (%popup_args) = (
-                          "linktxt" => "\t\t<tt>$author</tt>".
+                          "linktxt" => "\t\t<tt>$author</tt>",
                           
                           "windowtxt" => $table,
                           "windowtitle" => "VC Info",
