@@ -201,6 +201,7 @@ sub gen_rnd_build {
   
   my ($begin) = $end - ($runtime + $run_gap) ;
   $begin =~ s/\..*//;
+  $end =~ s/\..*//;
 
   return ($end, $begin);
 }
