@@ -560,6 +560,7 @@ SeaMonkeyCore -a \
 	mozilla/modules/libpref \
 	mozilla/modules/libreg \
 	mozilla/modules/libutil \
+	mozilla/modules/mpfilelocprovider \
 	mozilla/modules/oji \
 	mozilla/modules/plugin \
 	mozilla/modules/security/freenav \
