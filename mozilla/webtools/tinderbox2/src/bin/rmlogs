@@ -3,7 +3,8 @@
 #
 
 # rmlogs - remove the log files which are older then the number of
-#          days set in TinderConfig.  This program should be run from cron.
+#          days set in TinderConfig.  This program should be 
+# 	   run from cron daily.
 
 # $Revision$ 
 # $Date$ 

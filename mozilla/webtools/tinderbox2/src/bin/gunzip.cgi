@@ -2,6 +2,14 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
+# gunzip.cgi - This cgi script will gunzip a file and send the result
+# to standard out in a form that a webserver can display.  Filenames
+# are passed in via an abreviated form.  It is assumed that all files
+# are either brief or full log files which are stored in known
+# Tinderbox directories.  The file id is the basename of the file
+# without the '.gz.html' extension.
+
+
 # $Revision$ 
 # $Date$ 
 # $Author$ 

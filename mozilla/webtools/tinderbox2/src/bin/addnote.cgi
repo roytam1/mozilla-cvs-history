@@ -2,6 +2,10 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
+# addnote.cgi - the webform which users enter notices to be displayed
+#		 on the tinderbox status page.
+
+
 # $Revision$ 
 # $Date$ 
 # $Author$ 

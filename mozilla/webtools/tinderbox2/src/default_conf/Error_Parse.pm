@@ -1,8 +1,9 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
-# Error_Parser.pm - parsing functions for build errors reported by
-# various tools/OS's.  Used by processmail to turn the build logs into
-# HTML.
+# Error_Parser.pm - Used by processmail to turn the build logs into
+# HTML.  Contains the parsing functions for highlighting the build
+# errors and creating links into the source code where the errors
+# occurred.
 
 # $Revision$ 
 # $Date$ 

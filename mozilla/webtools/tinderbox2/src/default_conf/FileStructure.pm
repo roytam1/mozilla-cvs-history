@@ -3,8 +3,8 @@
 # FileStructure.pm - The lookup for where different file/directories,
 # for each tree, are stored on the filesystem.  Local system
 # administrator may need to put different trees onto different disk
-# partitions and this will require making get_filename() less regular
-# then we have defined it here.
+# partitions and this will require making directory structure in
+# get_filename() less regular then we have defined it here.
 
 # $Revision$ 
 # $Date$ 

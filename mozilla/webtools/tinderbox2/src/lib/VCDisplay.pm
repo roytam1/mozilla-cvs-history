@@ -1,6 +1,6 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
-# The VCDisplay module describes how tinderbox should prepeare URLS to
+# VCDisplay.pm - describes how tinderbox should prepeare URLS to
 # show the source tree allow VC queries.  Currently there are two
 # implementations one for users of the bonsai system (cvsquery,
 # cvsguess, cvsblame) and one for users who have no web based access
