@@ -27,25 +27,13 @@ use diagnostics;
 use strict;
 use lib ".";
 
+use vars qw(
+  $template
+  $vars
+);
+
 # Include the Bugzilla CGI and general utility library.
 require "CGI.pl";
-
-# Use the template toolkit (http://www.template-toolkit.org/) to generate
-# the user interface (HTML pages and mail messages) using templates in the
-# "template/" subdirectory.
-use Template;
-
-# Create the global template object that processes templates and specify
-# configuration parameters that apply to all templates processed in this script.
-my $template = Template->new( {
-
-    # Colon-separated list of directories containing templates.
-    INCLUDE_PATH => "template/custom:template/default" ,
-
-    # Allow templates to be specified with relative paths.
-    RELATIVE => 1
-
-} );
 
 ################################################################################
 # Some constants callers might want to use
@@ -232,8 +220,6 @@ sub ValidateSortKey ($) {
 
 }
 
-my $vars;
-
 sub CheckWarnings (%) {
 
     my (%fields) = @_;
@@ -288,30 +274,11 @@ sub AdminEditor() {
         exit;
     }
 
-    # Define the global variables and functions that will be passed to the UI 
-    # template.  Individual functions add their own values to this hash before
-    # sending them to the templates they process.
-    $vars = {
-        # Function for retrieving global parameters.
-        'Param' => \&Param,
-
-        # Function for processing global parameters that contain references
-        # to other global parameters.
-        'PerformSubsts' => \&PerformSubsts,
-        
-        # Uses for links that point back to this script.
-        'thiscgi' => $::thiscgi,
-        
-        # What we are actually editing.
-        'valuetype' => $::valuetype,
-        'valuetypeicap' => $::valuetypeicap,
-        
-        # Maximum size allowed for a name of this value.
-        'maxnamesize' => $::maxnamesize,
-
-        # Whether we're using sortkeys for this value.
-        'usesortkeys' => $::usesortkeys
-    };
+    $vars->{'thiscgi'} = $::thiscgi;
+    $vars->{'valuetype'} = $::valuetype;
+    $vars->{'valuetypeicap'} = $::valuetypeicap;
+    $vars->{'maxnamesize'} = $::maxnamesize;
+    $vars->{'usesortkeys'} = $::usesortkeys;
 
     &$::extravarsref($vars);
 
