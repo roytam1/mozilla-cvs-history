@@ -79,22 +79,59 @@ close(TYPES);
 # now we get to go construct a shell script to handle the installation
 
 # but first, we need to know about any variables to define
+# on the way through, we setup the loc_foo hashes as well
+# and we add mkdir lines to the script
 
 my $count = 0;
+my $script;
 my $layoutchoice = getConf('layoutchoice');
 while ($count-1 ne $#{$installtypes[$layoutchoice-1]}) {
 	my $line = $installtypes[layoutchoice][$count];
-	if ($line =~ /^\$(\w+)\|(.+)\|(.+)$/) {
+	$count++;
+	if ($line =~ /^\$(\w+)\|(.+)\|(.+)/) {
 		output "You will need to choose a location for the following variable:\n";
 		output "A directory will be created if it does not already exist\n";
 		output "$1: $2\n";
 		ask("locvar_$1","Please specify a full path (begining with a /):",$3);
+		next;
+	} elsif ($line =~ /^\!(.*)\|(.*)$/) { # it's a mapping line
+		my $name = $1;
+		my $loc = $2;
+		if ($loc =~ /\$(\w+)/) { # it has a var to substitute
+			$var = $1;
+			my $varvalue = getConf('locvar_'.$var);
+			$loc =~ s/\$$var/$varvalue/;
+			setConf("loc_$name",$loc);
+			$script .= "mkdir $loc\n";
+			next;
+		} else {
+			setConf("loc_$name",$loc);
+			$script .= "mkdir $loc\n";
+		}
+		
 	}
-	$count++;
 }
 
-# time for the real fun to begin, generating the shell script
+# generate the shell script
 
 output "generating installation script\n";
+open(FILES,'Conf/Supplies/filemappings') ||
+	die "can't open filemappings";
+
+while (<FILES>) {
+	my $line = $_;
+	chomp($line);
+	@line = split('\|',$line);
+	# $line[0] has the file and $line[1] has the filetype
+	my $type = $line[1];
+	my $loc = getConf("loc_$type");
+	$script .= "cp -R ".$line[0]." $loc\n";
+}
+
+close(FILES);
+
+setConf('installscript',$script);
+
+output "installation script generated\n";
 
 1;
