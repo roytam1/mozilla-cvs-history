@@ -67,7 +67,7 @@ require_once(HEADER);
 <?php
 $type = "T";
 $index = yes;
-$category=$_GET["category"];
+$category=escape_string($_GET["category"]);
 require_once('./inc_sidebar.php');
 
 $id = escape_string($_GET["id"]);
@@ -133,7 +133,7 @@ if ($editorpick=="true") {
 $sql .=" WHERE TM.ID = '$id'";
 
 if ($_GET["vid"]) {
-  $vid=$_GET["vid"];
+  $vid=escape_string($_GET["vid"]);
   $sql .=" AND TV.vID = '$vid' AND `approved` = 'YES' ";
 
 } else {

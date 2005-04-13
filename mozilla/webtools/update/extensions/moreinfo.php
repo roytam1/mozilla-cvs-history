@@ -68,7 +68,7 @@ require_once(HEADER);
 <?php
 $type = 'E';
 $index = 'yes';
-$category=$_GET['category'];
+$category= escape_string($_GET['category']);
 require_once('./inc_sidebar.php');
 ?>
 
@@ -127,7 +127,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
     $sql .=" WHERE TM.ID = '$id'";
 
     if ($_GET["vid"]) {
-        $vid=$_GET["vid"];
+        $vid=escape_string($_GET["vid"]);
         $sql .=" AND TV.vID = '$vid' AND `approved` = 'YES' ";
 
     } else {
