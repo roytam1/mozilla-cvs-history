@@ -37,12 +37,51 @@
 // ***** END LICENSE BLOCK *****
 ?>
 <?php
-require_once('./core/init.php');
+function renderPopularList($typename) {
+  global $titleCaseApp, $application, $uriparams, $connection;
+  $titleCaseType=ucwords($typename);
+  $type=$titleCaseType{0};
+  echo <<<EOS
+	<h2>Most Popular $titleCaseApp $titleCaseType</h2>
+	<ol class="popularlist">
+EOS;
+  // Took out the compatibility stuff to avoid a blank front page.
+  // `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND 
+ $sql = "SELECT DISTINCT TM.ID id, TM.Name name, TM.downloadcount dc
+         FROM  main TM
+         INNER  JOIN version TV ON TM.ID = TV.ID
+         INNER  JOIN applications TA ON TV.AppID = TA.AppID
+         INNER  JOIN os TOS ON TV.OSID = TOS.OSID
+         WHERE  Type  = '$type' AND AppName = '$application' 
+         AND (`OSName` = '$OS' OR OSName = 'ALL')
+         AND downloadcount > '0' AND approved = 'YES' 
+         ORDER BY downloadcount DESC LIMIT 5";
+ $sql_result = mysql_query($sql, $connection) 
+   or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error(), 
+        E_USER_NOTICE);
+ if (mysql_num_rows($sql_result)=="0") {
+   echo "        <li>No Popular $titleCaseType<li>\n";
+ }
+ while ($row = mysql_fetch_array($sql_result)) {
+  echo <<<EOS
 
+          <li><a href="{$typename}/moreinfo.php?{$uriparams}&amp;id={$row['id']}"
+              >{$row['name']}</a><span class="downloads"> ({$row['dc']} downloads)</span></li>
+EOS;
+            }
+  echo "
+        </ol>\n";
+}
+	
+
+
+require_once('./core/init.php');
+$titleCaseApp=ucwords($applications); // cache results!
+$uriparams=uriparams(); // cache results!
 $page_title = 'Mozilla Update';
 $page_headers = "\n".'
     <link rel="alternate" type="application/rss+xml" 
-          title="New '.ucwords($application).' Additions"
+          title="New '.$titleCaseApp.' Additions"
           href="./rss/?application="'.$application.'"&amp;list=newest">
 '."\n";
 
@@ -152,154 +191,56 @@ vulputate sapien et leo. Nullam euismod tortor id wisi.
 
     ?>
 	<h2>Currently Featuring... <?php echo"$name"; ?></a></h2>
-	<a href="./<?php echo"./$typename/moreinfo.php?".uriparams()."&amp;id=$id"; ?>"><img src="<?php echo"$previewuri"; ?>" <?php echo"$attr"; ?> alt="<?php echo"$name for $application"; ?>" class="imgright"></a>
+	<a href="./<?php echo"./$typename/moreinfo.php?$uriparams&amp;id=$id"; ?>"><img src="<?php echo"$previewuri"; ?>" <?php echo"$attr"; ?> alt="<?php echo"$name for $application"; ?>" class="imgright"></a>
     <p class="first">
-    <strong><a href="./<?php echo"/$typename/moreinfo.php?".uriparams()."&amp;id=$id"; ?>" style="text-decoration: none"><?php echo"$title"; ?></a></strong><br>
+    <strong><a href="./<?php echo"/$typename/moreinfo.php?$uriparams&amp;id=$id"; ?>" style="text-decoration: none"><?php echo"$title"; ?></a></strong><br>
     <?php
     echo"$body";  
     if ($extendedbody) {
-        echo" <a href=\"./$typename/moreinfo.php?".uriparams()."&amp;id=$id&amp;page=staffreview#more\">More...</a>";
+        echo" <a href=\"./$typename/moreinfo.php?$uriparams&amp;id=$id&amp;page=staffreview#more\">More...</a>";
     }
     ?></p>
     <?php } ?>
 	</div>
 	<div id="side" class="right">
-	<h2>Most Popular <?php echo ucwords($application); ?> Extensions</h2>
-	<ol class="popularlist">
-
-        <?php
-        $i=0;
-        // Took out the compatibility stuff to avoid a blank front page.
-        // `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND 
-        $sql = "SELECT TM.ID, TV.vID,TM.Name, TV.Version, TM.TotalDownloads, TM.downloadcount
-            FROM  `main` TM
-            INNER  JOIN version TV ON TM.ID = TV.ID
-            INNER  JOIN applications TA ON TV.AppID = TA.AppID
-            INNER  JOIN os TOS ON TV.OSID = TOS.OSID
-            WHERE  `Type`  =  'E' AND `AppName` = '$application' AND (`OSName` = '$OS' OR `OSName` = 'ALL') AND `downloadcount` > '0' AND `approved` = 'YES' ORDER BY `downloadcount` DESC ";
-        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-            if (mysql_num_rows($sql_result)=="0") {
-                echo"        <li>No Popular Extensions</li>\n";
-            }
-            while ($row = mysql_fetch_array($sql_result)) {
-                $i++;
-                $id = $row["ID"];
-                $vid = $row["vID"];
-                $name = $row["Name"];
-                $version = $row["Version"];
-                $downloadcount = $row["downloadcount"];
-                $totaldownloads = $row["TotalDownloads"];
-                $typename="extensions";
-                if ($lastname == $name) {
-                    $i--;
-                    continue;
-                }
-
-                echo"		<li>";
-                echo"<a href=\"./$typename/moreinfo.php?".uriparams()."&amp;id=$id\">$name</a>";
-                echo"<span class=\"downloads\"> ($downloadcount downloads)</span>";
-                echo"</li>\n";
-
-                $lastname = $name;
-                if ($i >= "5") {
-                    break;
-                }
-            }
-        ?>
-	</ol>
-	<h2>Most Popular <?php echo ucwords($application); ?> Themes</h2>
-	<ol class="popularlist">
-
-        <?php
-        $i=0;
-        // Took out the compatibility stuff to avoid a blank front page.
-        // `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND 
-        $sql = "SELECT TM.ID, TV.vID,TM.Name, TV.Version, TM.TotalDownloads, TM.downloadcount
-            FROM  `main` TM
-            INNER  JOIN version TV ON TM.ID = TV.ID
-            INNER  JOIN applications TA ON TV.AppID = TA.AppID
-            INNER  JOIN os TOS ON TV.OSID = TOS.OSID
-            WHERE  `Type`  =  'T' AND `AppName` = '$application' AND (`OSName` = '$OS' OR `OSName` = 'ALL') AND `downloadcount` > '0' AND `approved` = 'YES' ORDER BY `downloadcount` DESC ";
-        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-            if (mysql_num_rows($sql_result)=="0") {
-                echo"        <li>No Popular Themes</li>\n";
-            }
-            while ($row = mysql_fetch_array($sql_result)) {
-                $i++;
-                $id = $row["ID"];
-                $vid = $row["vID"];
-                $name = $row["Name"];
-                $version = $row["Version"];
-                $downloadcount = $row["downloadcount"];
-                $totaldownloads = $row["TotalDownloads"];
-                $typename="themes";
-                if ($lastname == $name) {
-                    $i--;
-                    continue;
-                }
-
-                echo"		<li>";
-                echo"<a href=\"./$typename/moreinfo.php?".uriparams()."&amp;id=$id\">$name</a>";
-                echo"<span class=\"downloads\"> ($downloadcount downloads)</span>";
-                echo"</li>\n";
-
-                $lastname = $name;
-                if ($i >= "5") {
-                    break;
-                }
-            }
-        ?>
-	</ol>
-	<a href="./rss/?application=<?php echo"$application"; ?>&amp;list=newest"><img src="images/rss.png" width="16" height="16" class="rss" alt="News Additions in RSS"></a>
+    <?php
+      renderPopularList("extensions");
+      renderPopularList("themes");
+    ?>
+	<a href="./rss/?application=<?php echo $application; ?>&amp;list=newest"><img src="images/rss.png" width="16" height="16" class="rss" alt="News Additions in RSS"></a>
 	<h2>New Additions</h2>
 	<ol class="popularlist">
 
         <?php
-        $i=0;
         // Took out the compatibility stuff to avoid a blank front page.
         // `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND 
-        $sql = "SELECT TM.ID, TM.Type, TV.vID, TM.Name, TV.Version, TV.DateAdded
+        $sql = "SELECT TM.ID, TM.Type, TM.Name, MAX(TV.Version) Version, MAX(TV.DateAdded) DateAdded
             FROM  `main` TM
             INNER  JOIN version TV ON TM.ID = TV.ID
             INNER  JOIN applications TA ON TV.AppID = TA.AppID
             INNER  JOIN os TOS ON TV.OSID = TOS.OSID
-            WHERE  `AppName` = '$application' AND (`OSName` = '$OS' OR `OSName` = 'ALL') AND `approved` = 'YES' ORDER BY `DateAdded` DESC ";
-        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-            if (mysql_num_rows($sql_result)=="0") {
-                echo"        <li>Nothing Recently Added</li>\n";
-            }
-            while ($row = mysql_fetch_array($sql_result)) {
-                $i++;
-                $id = $row["ID"];
-                $vid = $row["vID"];
-                $type = $row["Type"];
-                $name = $row["Name"];
-                $version = $row["Version"];
-                $dateadded = $row["DateAdded"];
-                $dateadded = gmdate("M d, Y", strtotime("$dateadded")); 
-                //$dateupdated = gmdate("F d, Y g:i:sa T", $timestamp);
+            WHERE  `AppName` = '$application' AND 
+            (`OSName` = '$OS' OR `OSName` = 'ALL')
+            AND `approved` = 'YES' 
+            GROUP BY TM.ID
+            ORDER BY DateAdded DESC LIMIT 8";
+        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error());
+        if (mysql_num_rows($sql_result)==0) {
+          echo"        <li>Nothing Recently Added</li>\n";
+        }
+        while ($row = mysql_fetch_array($sql_result)) {
+          $id = $row['ID'];
+          $typename = $row['Type']=='T'?'themes':'extensions';
+          $name = $row['Name'];
+          $version = $row['Version'];
+          $dateadded = gmdate('M d, Y', strtotime($row['DateAdded'])); 
 
-                if ($type=="E") {
-                    $typename = "extensions";
-                } else if ($type=="T") {
-                    $typename = "themes";
-                }
+          echo "		<li>";
+          echo "<a href=\"./$typename/moreinfo.php?$uriparams&amp;id=$id\">$name $version</a>";
+          echo "<span class=\"downloads\"> ($dateadded)</span>";
+          echo "</li>\n";
 
-                if ($lastname == $name) {
-                    $i--;
-                    continue;
-                }
-
-                echo"		<li>";
-                echo"<a href=\"./$typename/moreinfo.php?".uriparams()."&amp;id=$id\">$name $version</a>";
-                echo"<span class=\"downloads\"> ($dateadded)</span>";
-                echo"</li>\n";
-
-                $lastname = $name;
-                if ($i >= "8") {
-                    break;
-                }
-            }
+        }
         ?>
 	</ol>
 	</div>
