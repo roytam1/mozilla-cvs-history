@@ -18,7 +18,7 @@ WHERE `approved` = '?' GROUP BY `URI` ORDER BY TV.DateUpdated ASC";
   $num_result = mysql_num_rows($sql_result);
 ?>
 <P>
-<SPAN STYLE="font-weight:bold">Approval Queue Status: <A HREF="approval.php"><?php echo"$num_result"; ?> Pending Approval</A></SPAN>
+<SPAN STYLE="font-weight:bold">Approval Queue Status: <A HREF="./approval.php"><?php echo"$num_result"; ?> Pending Approval</A></SPAN>
 </P>
 <?php } ?>
 
@@ -47,13 +47,13 @@ $v++;
     $totaldownloads = $row["TotalDownloads"];
     $rating = $row["Rating"];
 
-echo"<h4><A HREF=\"itemoverview.php?id=$id\">$name</A></h4>\n";
+echo"<h4><A HREF=\"./itemoverview.php?id=$id\">$name</A></h4>\n";
 echo"$description\n";
 //Icon Bar
 echo"<DIV style=\"margin-top: 10px; height: 34px\">";
-echo"<DIV class=\"iconbar\"><A HREF=\"itemoverview.php?id=$id\"><IMG SRC=\"/images/edit.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">&nbsp;Edit Item</A></DIV>";
+echo"<DIV class=\"iconbar\"><A HREF=\"./itemoverview.php?id=$id\"><IMG SRC=\"/images/edit.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">&nbsp;Edit Item</A></DIV>";
 echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">Downloads: $downloadcount<BR>&nbsp;&nbsp;$totaldownloads total</DIV>";
-echo"<DIV class=\"iconbar\" title=\"$rating of 5 stars\"><A HREF=\"/extensions/moreinfo.php?id=$id&page=comments\"><IMG SRC=\"/images/ratings.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">Rated<br>&nbsp;&nbsp;$rating of 5</A></DIV>";
+echo"<DIV class=\"iconbar\" title=\"$rating of 5 stars\"><A HREF=\"../extensions/moreinfo.php?id=$id&page=comments\"><IMG SRC=\"/images/ratings.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">Rated<br>&nbsp;&nbsp;$rating of 5</A></DIV>";
 echo"</DIV>";
 
 }
@@ -85,13 +85,13 @@ ORDER  BY  `Type` , `Name` ";
     $totaldownloads = $row["TotalDownloads"];
     $rating = $row["Rating"];
 
-echo"<h4><A HREF=\"itemoverview.php?id=$id\">$name</A></h4>\n";
+echo"<h4><A HREF=\"./itemoverview.php?id=$id\">$name</A></h4>\n";
 echo"$description\n";
 //Icon Bar
 echo"<DIV style=\"margin-top: 10px; height: 34px\">";
-echo"<DIV class=\"iconbar\"><A HREF=\"itemoverview.php?id=$id\"><IMG SRC=\"/images/edit.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">&nbsp;Edit Item</A></DIV>";
-echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">Downloads: $downloadcount<BR>&nbsp;&nbsp;$totaldownloads total</DIV>";
-echo"<DIV class=\"iconbar\" title=\"$rating of 5 stars\"><A HREF=\"/themes/moreinfo.php?id=$id&page=comments\"><IMG SRC=\"/images/ratings.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">Rated<br>&nbsp;&nbsp;$rating of 5</A></DIV>";
+echo"<DIV class=\"iconbar\"><A HREF=\"./itemoverview.php?id=$id\"><IMG SRC=\"/images/edit.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">&nbsp;Edit Item</A></DIV>";
+echo"<DIV class=\"iconbar\"><IMG SRC=\"../images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">Downloads: $downloadcount<BR>&nbsp;&nbsp;$totaldownloads total</DIV>";
+echo"<DIV class=\"iconbar\" title=\"$rating of 5 stars\"><A HREF=\"../themes/moreinfo.php?id=$id&page=comments\"><IMG SRC=\"/images/ratings.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">Rated<br>&nbsp;&nbsp;$rating of 5</A></DIV>";
 echo"</DIV>";
 
 

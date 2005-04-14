@@ -134,7 +134,7 @@ TR;
 */
 ?>
 
-<?php $catname = "Popular"; echo "<a href=\"showlist.php?".uriparams()."&amp;category=$catname&numpg=10&pageid=2\" title=\"$catdesc\">"; ?>
+<?php $catname = "Popular"; echo "<a href=\"showlist.php?category=$catname&numpg=10&pageid=2\" title=\"$catdesc\">"; ?>
 <h2>Most Popular <?php print(ucwords($application)); ?> Extensions</h2></a>
 <p class="first">The most popular downloads over the last week.</p>
 
@@ -187,7 +187,7 @@ MP;
 ?>
 
 <a href="/rss/?application=<?php echo"$application"; ?>&amp;type=E&amp;list=newest"><img src="../images/rss.png" width="16" height="16" class="rss" alt="News Additions in RSS"></a>
-<?php $catname = "Newest"; echo "<a href=\"showlist.php?".uriparams()."&amp;category=$catname&numpg=10&pageid=2\" title=\"$catdesc\">"; ?>
+<?php $catname = "Newest"; echo "<a href=\"showlist.php?category=$catname&numpg=10&pageid=2\" title=\"$catdesc\">"; ?>
 <h2>Newest <?php print(ucwords($application)); ?> Extensions</h2></a>
 <p class="first">New and updated extensions. Subscribe to <a href="/rss/?application=<?php echo"$application"; ?>&amp;type=E&amp;list=newest">our RSS feed</a> to be notified when new extensions are added.</p>
 

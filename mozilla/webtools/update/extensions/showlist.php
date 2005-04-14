@@ -128,7 +128,6 @@ if ($editorpick=="true") { $sql .="INNER JOIN reviews TR ON TM.ID = TR.ID "; }
 $sql .="WHERE Type = '$type' AND AppName = '$application' AND `approved` = 'YES' ";
 if ($editorpick=="true") { $sql .="AND TR.Pick = 'YES' "; }
 if ($category && $category !=="%") {$sql .="AND CatName LIKE '$category' ";}
-if ($app_version) { $sql .=" AND TV.MinAppVer_int <= '".strtolower($app_version)."' AND TV.MaxAppVer_int >= '".strtolower($app_version)."' ";}
 if ($OS) { $sql .=" AND (TOS.OSName = '$OS' OR TOS.OSName = 'All') "; }
 if ($catname == "Popular") { $sql .=" AND TM.downloadcount > '5'"; }
 $sql .="GROUP BY `Name` ";
