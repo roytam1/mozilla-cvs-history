@@ -39,7 +39,7 @@
 //inc_global.php -- Stuff that needs to be done globally to all of Mozilla Update
 
 //Cache Control Headers
-if ($nocache==TRUE) {
+if (isset($nocache) && $nocache == TRUE) {
     $expstr = gmdate("D, d M Y H:i:s", time() - 1800) . " GMT";
     header("Expires: $expstr");
     header("Cache-Control: public, max-age=0");
@@ -79,7 +79,7 @@ foreach ($_POST as $key => $val) {
 }
 
 // Bug 250596 Fixes for incoming $_GET variables.
-if ($_GET["application"]) {
+if (isset($_GET["application"]) && $_GET["application"]) {
 $_GET["application"] = escape_string(strtolower($_GET["application"]));
 $sql = "SELECT AppID FROM  `applications` WHERE `AppName` = '".ucwords(strtolower($_GET["application"]))."' LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
@@ -87,7 +87,7 @@ $sql = "SELECT AppID FROM  `applications` WHERE `AppName` = '".ucwords(strtolowe
 }
 
 
-if ($_GET["category"] AND $_GET["category"] !=="All"
+if (isset($_GET["category"]) AND $_GET["category"] !=="All"
     AND $_GET["category"] !=="Editors Pick" AND $_GET["category"] !=="Popular"
     AND $_GET["category"] !=="Top Rated" AND $_GET["category"] !=="Newest") {
 $sql = "SELECT CatName FROM  `categories` WHERE `CatName` = '".escape_string(ucwords(strtolower($_GET["category"])))."' LIMIT 1";
@@ -95,10 +95,10 @@ $sql = "SELECT CatName FROM  `categories` WHERE `CatName` = '".escape_string(ucw
    if (mysql_num_rows($sql_result)===0) {unset($_GET["category"]);}
 }
 
-if (!is_numeric($_GET["id"])) { unset($_GET["id"]); }
-if (!is_numeric($_GET["vid"])) { unset($_GET["vid"]); }
-if (!is_numeric($_GET["pageid"])) { unset($_GET["pageid"]); }
-if (!is_numeric($_GET["numpg"])) { unset($_GET["numpg"]); }
+if (isset($_GET["id"]) && !is_numeric($_GET["id"])) { unset($_GET["id"]); }
+if (isset($_GET["vid"]) && !is_numeric($_GET["vid"])) { unset($_GET["vid"]); }
+if (isset($_GET["pageid"]) && !is_numeric($_GET["pageid"])) { unset($_GET["pageid"]); }
+if (isset($_GET["numpg"]) && !is_numeric($_GET["numpg"])) { unset($_GET["numpg"]); }
 
 // page_error() function
 

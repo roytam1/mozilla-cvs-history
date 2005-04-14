@@ -50,7 +50,13 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
 
 //Page Titles
 $titles = array('releases'=>'All Releases', 'previews'=>'Preview Images', 'comments'=>'User Comments', 'staffreview'=>'Editor Review', 'opinion'=>' My Opinion');
-$title = strip_tags($titles[$_GET['page']]);
+if (isset($_GET['page'])) {
+    $title = strip_tags($titles[$_GET['page']]);
+}
+else {
+    $title = $titles['releases'];
+}
+
 $page_title = 'Mozilla Update :: Extensions -- More Info:'.$row['Name'];
 if (!empty($title)) 
 {
@@ -68,7 +74,10 @@ require_once(HEADER);
 <?php
 $type = 'E';
 $index = 'yes';
-$category= escape_string($_GET['category']);
+$category = "";
+if (isset($_GET['category'])) {
+    $category = escape_string($_GET['category']);
+} 
 require_once('./inc_sidebar.php');
 ?>
 
@@ -84,8 +93,8 @@ $sql2 = "SELECT  TM.Name, TU.UserName, TU.UserID, TU.UserEmail FROM  `main`  TM
         ORDER  BY  `Type` , `Name`  ASC ";
 $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     while ($row2 = mysql_fetch_array($sql_result2)) {
-        $authorarray[$row2[Name]][] = $row2["UserName"];
-        $authorids[$row2[UserName]] = $row2["UserID"];
+        $authorarray[$row2['Name']][] = $row2["UserName"];
+        $authorids[$row2['UserName']] = $row2["UserID"];
    }
 
 //Assemble a display application version array
@@ -120,20 +129,20 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
         $sql .=" INNER  JOIN categoryxref TCX ON TM.ID = TCX.ID
         INNER JOIN categories TC ON TCX.CategoryID = TC.CategoryID ";
     }
-    if ($editorpick=="true") {
+    if (isset($editorpick) && $editorpick=="true") {
         $sql .=" INNER JOIN reviews TR ON TM.ID = TR.ID ";
     }
 
     $sql .=" WHERE TM.ID = '$id'";
 
-    if ($_GET["vid"]) {
+    if (isset($_GET["vid"]) && $_GET["vid"]) {
         $vid=escape_string($_GET["vid"]);
         $sql .=" AND TV.vID = '$vid' AND `approved` = 'YES' ";
 
     } else {
 
         $sql .=" AND Type = '$type' AND AppName = '$application' AND `approved` = 'YES' ";
-        if ($editorpick=="true") {
+        if (isset($editorpick) && $editorpick=="true") {
             $sql .="AND TR.Pick = 'YES' ";
         }
         if ($category) {
@@ -149,7 +158,6 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     $row = mysql_fetch_array($sql_result);
 
-        $v++;
         $vid = $row["vID"];
         $name = $row["Name"];
         $dateadded = $row["DateAdded"];
@@ -169,7 +177,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
         $downloadcount = $row["TotalDownloads"];
         $populardownloads = $row["downloadcount"];
 
-        if (!$_GET['vid']) {
+        if (!isset($_GET['vid'])) {
             $_GET['vid']=$vid;
         }
 
@@ -198,6 +206,8 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
     if (!$authors) {
         $authors = array();
     }
+    $n = 0;
+    $authorstring = "";
     foreach ($authors as $author) {
         $userid = $authorids[$author];
         $n++;
@@ -298,6 +308,9 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
 
     <?php
     //Begin Pages
+    if (!isset($_GET['page'])) {
+        $_GET['page'] = "general";
+    }
     $page = $_GET["page"];
     if (!$page or $page=="general") {
     //General Page / Default
@@ -505,12 +518,12 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
      $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
         while ($row = mysql_fetch_array($sql_result)) {
             $vid = $row["vID"];
-            if ($appvernames[$row["MinAppVer"]]) {
+            if (isset($appvernames[$row["MinAppVer"]])) {
                 $minappver = $appvernames[$row["MinAppVer"]];
             } else {
                 $minappver = $row["MinAppVer"];
             }
-            if ($appvernames[$row["MaxAppVer"]]) {
+            if (isset($appvernames[$row["MaxAppVer"]])) {
                 $maxappver = $appvernames[$row["MaxAppVer"]];
             } else {
                 $maxappver = $row["MaxAppVer"];

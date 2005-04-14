@@ -42,12 +42,23 @@ require_once('../core/init.php');
 //----------------------------
 //Global $_GET variables
 //----------------------------
-if ($_GET["numpg"]) {$items_per_page = escape_string($_GET["numpg"]); } else {$items_per_page="10";}//Default Num per Page is 10
-if ($_GET["category"]) { $category = escape_string($_GET["category"]); }
-if ($category=="All") {$category="";}
+if (isset($_GET["numpg"])) {
+    $items_per_page = escape_string($_GET["numpg"]); 
+}
+else {
+    //Default Num per Page is 10
+    $items_per_page="10";
+}
+if (isset($_GET["category"])) { 
+    $category = escape_string($_GET["category"]); 
+}
+if (!isset($category) || $category=="All") {
+    $category="";
+}
 
 
-if (!$_GET["pageid"]) {$pageid="1"; } else { $pageid = escape_string($_GET["pageid"]); } //Default PageID is 1
+if (!isset($_GET["pageid"])) {$pageid="1"; } else { $pageid = escape_string($_GET["pageid"]); } 
+//Default PageID is 1
 $type="E"; //Default Type is E
 
 unset($typename);
@@ -55,7 +66,8 @@ $types = array("E"=>"Extensions","T"=>"Themes","U"=>"Updates");
 $typename = $types[$type];
 
 //RSS Autodiscovery Link Stuff
-switch ($_SESSION["category"]) {
+$rsslist = "newest";
+switch ($category) {
   case "Newest":
     $rsslist = "newest";
     break;
@@ -99,7 +111,9 @@ require_once('./inc_sidebar.php');
 
 //Query for List Creation
 $s = "0";
+$editorpick = "false";
 $startpoint = ($pageid-1)*$items_per_page;
+$orderby = false;
 if ($category=="Editors Pick" or $category=="Newest" or $category=="Popular" or $category=="Top Rated") {
 if ($category =="Editors Pick") {
 $editorpick="true";
@@ -153,7 +167,7 @@ unset($sql);
     if ($enditem>$totalresults) {$enditem=$totalresults;} //Verify EndItem
 
 
-if ($_GET[nextnum]) {$startpoint = escape_string($_GET["nextnum"]); }
+if (isset($_GET['nextnum'])) {$startpoint = escape_string($_GET["nextnum"]); }
 //$resultsquery = str_replace("GROUP BY `Name` ", "", $resultsquery);
 $resultsquery .= " LIMIT $startpoint , $items_per_page"; //Append LIMIT clause to result query
 
@@ -266,8 +280,8 @@ INNER JOIN userprofiles TU ON TAX.UserID = TU.UserID
 ORDER  BY  `Type` , `Name`  ASC ";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
-     $authorarray[$row[Name]][] = $row["UserName"];
-     $authorids[$row[UserName]] = $row["UserID"];
+     $authorarray[$row['Name']][] = $row["UserName"];
+     $authorids[$row['UserName']] = $row["UserID"];
    }
 
 //Assemble a display application version array
@@ -289,7 +303,6 @@ $sql = "$resultsquery";
   while ($row = mysql_fetch_array($sql_result)) {
 
     $id = $row["ID"];
-    $type = $row["Type"];
     $name = $row["Name"];
     $dateadded = $row["DateAdded"];
     $dateupdated = $row["DateUpdated"];
@@ -308,12 +321,23 @@ INNER  JOIN applications TA ON TV.AppID = TA.AppID
 INNER  JOIN os TOS ON TV.OSID = TOS.OSID
 WHERE TV.ID = '$id' AND TV.Version = '$row[Version]' AND TA.AppName = '$appname' AND TOS.OSName = '$osname' LIMIT 1";
  $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-$vid = $row[MAXvID];
+$vid = $row['MAXvID'];
   $row = mysql_fetch_array($sql_result2);
 
    $vid = $row["vID"];
-if ($appvernames[$row["MinAppVer"]]) {$minappver = $appvernames[$row["MinAppVer"]]; } else { $minappver = $row["MinAppVer"]; }
-if ($appvernames[$row["MaxAppVer"]]) {$maxappver = $appvernames[$row["MaxAppVer"]]; } else { $maxappver = $row["MaxAppVer"]; }
+if (isset($appvernames[$row["MinAppVer"]])) {
+    $minappver = $appvernames[$row["MinAppVer"]]; 
+} 
+else { 
+    $minappver = $row["MinAppVer"]; 
+}
+
+if (isset($appvernames[$row["MaxAppVer"]])) {
+    $maxappver = $appvernames[$row["MaxAppVer"]]; 
+} 
+else { 
+    $maxappver = $row["MaxAppVer"]; 
+}
    $VerDateAdded = $row["VerDateAdded"];
    $VerDateUpdated = $row["VerDateUpdated"];
    $filesize = $row["Size"];
@@ -334,6 +358,8 @@ if ($VerDateUpdated > $dateupdated) {$dateupdated = $VerDateUpdated; }
 
 //Turn Authors Array into readable string...
 $authorcount = count($authors);
+$n = 0;
+$authorstring = "";
 foreach ($authors as $author) {
 $userid = $authorids[$author];
 $n++;
@@ -473,8 +499,8 @@ $i = 01;
 //Dynamic Starting Point
 if ($pageid>11) {
 $nextpage=$pageid-10;
-}
 $i=$nextpage;
+}
 
 //Dynamic Ending Point
 $maxpagesonpage=$pageid+$pagesperpage;

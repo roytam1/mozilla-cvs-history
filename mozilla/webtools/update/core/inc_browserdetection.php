@@ -44,9 +44,10 @@
 //$_SERVER["HTTP_USER_AGENT"] = "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.3) Gecko/20041001 Firefox/0.10.1";
 
 
-if ($_GET["version"]=="auto-detect") {$_GET["version"]="";}//Clear Version For AutoDetect 
+if (isset($_GET["version"]) && $_GET["version"]=="auto-detect") {$_GET["version"]="";}//Clear Version For AutoDetect 
 
 //Change OS Support for showlist.php
+if (isset($_GET["os"])) {
   switch ( $_GET["os"] )
   {
     case 'windows':
@@ -71,21 +72,27 @@ if ($_GET["version"]=="auto-detect") {$_GET["version"]="";}//Clear Version For A
       unset($_GET["os"]);
       break;
   }
+}
 
-$application = escape_string($_GET["application"]);
-$app_version = escape_string($_GET["version"]);
-$OS = escape_string($_GET["os"]);
-
+if (isset($_GET["application"])) {
+    $application = escape_string($_GET["application"]);
+}
+if (isset($_GET["version"])) {
+    $app_version = escape_string($_GET["version"]);
+}
+if (isset($_GET["os"])) {
+    $OS = escape_string($_GET["os"]);
+}
 //print("$application, $app_version, $OS<br>\n");
 
 
 include"browser_detection.php"; //Script that defines the browser_detection() function
 
-if (!$OS) {$OS = browser_detection('os');}
-if (!$application or !$app_version) {$moz_array = browser_detection('moz_version');}
+if (!isset($OS)) {$OS = browser_detection('os');}
+if (!isset($application) or !isset($app_version)) {$moz_array = browser_detection('moz_version');}
 
 //Turn $OS into something usable.
-if ( $moz_array[0] !== '' )
+if ( isset($moz_array) && $moz_array[0] !== '' )
 {
   switch ( $OS )
   {
@@ -114,11 +121,13 @@ if ( $moz_array[0] !== '' )
 //Print what it's found, debug item.
 //echo ( 'Your Mozilla product is ' . $moz_array[0] . ' ' . $moz_array[1] . ' running on '. $OS . '<br>');
 
-if (!$application) {$application = $moz_array[0];}
-if (!$app_version) {$app_version = $moz_array[1];}
+if (!isset($application)) {$application = $moz_array[0];}
+if (!isset($app_version)) {$app_version = $moz_array[1];}
 
 //If the applicatin is user-defined and not the same as what was detected, ignore the detected version and use the user-defined.
-if ($_GET["application"] and $_GET["application"] !==$moz_array[0]) {$app_version = escape_string($_GET["version"]); }
+if (isset($_GET["application"]) and $_GET["application"] !==$moz_array[0]) {
+    $app_version = escape_string($_GET["version"]); 
+}
 
 
 } else {
@@ -130,11 +139,11 @@ if ($_GET["application"] and $_GET["application"] !==$moz_array[0]) {$app_versio
 //----------------------------
 
 //Application
-if (!$application) { $application="firefox"; } //Default App is Firefox
+if (!isset($application) || !$application) { $application="firefox"; } //Default App is Firefox
 
 //App_Version
 //Get Max Version for Application Specified
-if (!$app_version) {
+if (!isset($app_version) || !$app_version) {
     $sql = "SELECT `major`,`minor`,`release`,`SubVer` FROM `applications` WHERE `AppName` = '$application' ORDER BY `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC LIMIT 1";
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     $row = mysql_fetch_array($sql_result);
@@ -175,4 +184,8 @@ if (!$app_version) {
 //$application
 //$app_version
 //$OS
+if (!isset($OS)) {
+    $OS = "unknown";
+}
+
 ?>

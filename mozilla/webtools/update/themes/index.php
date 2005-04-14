@@ -85,6 +85,7 @@ require_once(HEADER);
         if (mysql_num_rows($sql_result)=="0") {
             echo"        <li>No Top Rated Themes</li>\n";
         }
+        $s = 0;
         while ($row = mysql_fetch_array($sql_result)) {
             $r++;
             $s++;
@@ -121,10 +122,10 @@ require_once(HEADER);
             if (mysql_num_rows($sql_result)=="0") {
                 echo"        <li>No Popular Themes</li>\n";
             }
+            $lastname = "";
             while ($row = mysql_fetch_array($sql_result)) {
                 $i++;
                 $id = $row["ID"];
-                $vid = $row["vID"];
                 $name = $row["Name"];
                 $description = $row["Description"];
                 $downloadcount = $row["downloadcount"];

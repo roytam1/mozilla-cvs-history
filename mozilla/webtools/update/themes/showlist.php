@@ -307,7 +307,7 @@ INNER  JOIN applications TA ON TV.AppID = TA.AppID
 INNER  JOIN os TOS ON TV.OSID = TOS.OSID
 WHERE TV.ID = '$id' AND TV.Version = '$row[Version]' AND TA.AppName = '$appname' AND TOS.OSName = '$osname' LIMIT 1";
  $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-$vid = $row[MAXvID];
+$vid = $row['MAXvID'];
   $row = mysql_fetch_array($sql_result2);
 
    $vid = $row["vID"];

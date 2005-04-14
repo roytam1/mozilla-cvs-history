@@ -50,7 +50,10 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
 
 //Page Titles
     $titles = array('releases'=>'All Releases', 'previews'=>'Preview Images', 'comments'=>'User Comments', 'staffreview'=>'Editor Review', 'opinion'=>' My Opinion');
+$title = "releases";
+if (isset($_GET['page'])) {
     $title = $titles[$_GET['page']];
+}
 $page_title = 'Mozilla Update :: Themes -- More Info: '.$row['Name']; 
 if ($title) {
     $page_title .= ' - '.$title;
@@ -66,8 +69,11 @@ require_once(HEADER);
 
 <?php
 $type = "T";
-$index = yes;
-$category=escape_string($_GET["category"]);
+$index = "yes";
+$category = "";
+if (isset($_GET["category"])) {
+    $category=escape_string($_GET["category"]);
+}
 require_once('./inc_sidebar.php');
 
 $id = escape_string($_GET["id"]);
@@ -83,8 +89,8 @@ $sql2 = "SELECT  TM.Name, TU.UserName, TU.UserID, TU.UserEmail
 
 $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     while ($row2 = mysql_fetch_array($sql_result2)) {
-        $authorarray[$row2[Name]][] = $row2["UserName"];
-        $authorids[$row2[UserName]] = $row2["UserID"];
+        $authorarray[$row2['Name']][] = $row2["UserName"];
+        $authorids[$row2['UserName']] = $row2["UserID"];
    }
 
 //Assemble a display application version array
@@ -126,13 +132,13 @@ if ($category) {
            INNER JOIN categories TC ON TCX.CategoryID = TC.CategoryID ";
 }
 
-if ($editorpick=="true") {
+if (isset($editorpick) && $editorpick=="true") {
   $sql .=" INNER JOIN reviews TR ON TM.ID = TR.ID ";
 }
 
 $sql .=" WHERE TM.ID = '$id'";
 
-if ($_GET["vid"]) {
+if (isset($_GET["vid"])) {
   $vid=escape_string($_GET["vid"]);
   $sql .=" AND TV.vID = '$vid' AND `approved` = 'YES' ";
 
@@ -142,7 +148,7 @@ if ($_GET["vid"]) {
            AND AppName = '$application' 
            AND `approved` = 'YES' ";
 
-  if ($editorpick=="true") {
+  if (isset($editorpick) && $editorpick=="true") {
     $sql .="AND TR.Pick = 'YES' ";
   }
 
@@ -160,7 +166,6 @@ if ($_GET["vid"]) {
   $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $row = mysql_fetch_array($sql_result);
 
-  $v++;
   $vid = $row["vID"];
   $name = $row["Name"];
   $dateadded = $row["DateAdded"];
@@ -180,7 +185,7 @@ if ($_GET["vid"]) {
   $downloadcount = $row["TotalDownloads"];
   $populardownloads = $row["downloadcount"];
 
-  if (!$_GET['vid']) {
+  if (!isset($_GET['vid'])) {
     $_GET['vid']=$vid;
   }
 
@@ -210,6 +215,8 @@ if ($_GET["vid"]) {
     $authors = array();
   }
 
+  $n = 0;
+  $authorstring = "";
   foreach ($authors as $author) {
     $userid = $authorids[$author];
     $n++;
@@ -314,7 +321,10 @@ if ($_GET["vid"]) {
 
     <?php
     //Begin Pages
+    $page = "general";
+    if (isset($_GET["page"])) {
     $page = $_GET["page"];
+    }
     if (!$page or $page=="general") {
     //General Page / Default
     ?>

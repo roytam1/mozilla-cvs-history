@@ -42,6 +42,9 @@
     $types = array("E"=>"Extensions","T"=>"Themes");
     $typename = $types[$type];
     $uriparams_skip="category";
+    if (!isset($index)) {
+        $index = 'yes';
+    }
 
     echo"<ul id=\"nav\">\n";
 

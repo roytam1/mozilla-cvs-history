@@ -38,7 +38,7 @@
 ?>
 <?php
 function renderPopularList($typename) {
-  global $titleCaseApp, $application, $uriparams, $connection;
+  global $titleCaseApp, $application, $uriparams, $connection, $OS;
   $titleCaseType=ucwords($typename);
   $type=$titleCaseType{0};
   echo <<<EOS
@@ -62,6 +62,7 @@ EOS;
  if (mysql_num_rows($sql_result)=="0") {
    echo "        <li>No Popular $titleCaseType<li>\n";
  }
+ else {
  while ($row = mysql_fetch_array($sql_result)) {
   echo <<<EOS
 
@@ -69,6 +70,7 @@ EOS;
               >{$row['name']}</a><span class="downloads"> ({$row['dc']} downloads)</span></li>
 EOS;
             }
+  }
   echo "
         </ol>\n";
 }
@@ -76,7 +78,8 @@ EOS;
 
 
 require_once('./core/init.php');
-$titleCaseApp=ucwords($applications); // cache results!
+
+$titleCaseApp=ucwords($application); // cache results!
 $uriparams=uriparams(); // cache results!
 $page_title = 'Mozilla Update';
 $page_headers = "\n".'
