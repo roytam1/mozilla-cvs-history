@@ -67,7 +67,7 @@ switch ($_SESSION["category"]) {
     break;
 }
 
-$rssfeed = "rss/?application=" . $application . "&type=" . $type . "&list=" . $rsslist;
+$rssfeed = "/rss/?application=" . $application . "&type=" . $type . "&list=" . $rsslist;
 
 if (!$category) {$categoryname = "All $typename"; } else {$categoryname = $category; }
 
@@ -78,7 +78,7 @@ if ($pageid) {
 
 if ($rsslist) {
     $page_headers = '<link rel="alternate" type="application/rss+xml"
-        title="RSS" href="http://'.HOST_NAME.'/'.$rssfeed.'>';
+        title="RSS" href="'.WEB_PATH.$rssfeed.'>';
 }
 
 ob_start();

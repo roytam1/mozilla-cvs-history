@@ -215,7 +215,7 @@ echo"<input name=\"maxvid\" type=\"hidden\" value=\"$i\">\n";
 ?>
 <?php if ($num_results > "0") { ?>
 <TR><TD COLSPAN=4 style="height: 8px"></td></tr>
-<TR><TD COLSPAN=4><img src="/images/faq_small.png" border=0 height=16 width=16 alt=""> Before pressing submit, please make sure all the information you entered above is complete and correct. For themes, a preview screenshot is required for approval. A preview image is recommended for extensions.</TD></TR>
+<TR><TD COLSPAN=4><img src="../images/faq_small.png" border=0 height=16 width=16 alt=""> Before pressing submit, please make sure all the information you entered above is complete and correct. For themes, a preview screenshot is required for approval. A preview image is recommended for extensions.</TD></TR>
 <TR><TD COLSPAN=4 ALIGN=CENTER><input name="submit" type="submit" value="Submit">&nbsp;&nbsp;<input name="reset" type="reset" value="Reset"></TD></TR>
 <?php } else { ?>
 <TR><TD COLSPAN=4 ALIGN=CENTER>No items are pending approval at this time</TD></TR>

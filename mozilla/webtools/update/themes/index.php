@@ -40,7 +40,7 @@ require"../core/init.php";
 $page_title = 'Mozilla Update :: Themes - Change the Look of Mozilla Software';
 $page_headers = '<link rel="alternate" type="application/rss+xml" title="New
     '.ucwords($application).' Theme Additions"
-    href="/rss/?application='.$application.'&amp;type=T&amp;list=newest">';
+    href="'.WEB_PATH.'/rss/?application='.$application.'&amp;type=T&amp;list=newest">';
 require_once(HEADER);
 ?>
 
@@ -147,9 +147,9 @@ require_once(HEADER);
             }
         ?>
 	</ol>
-	<a href="/rss/?application=<?php echo"$application"; ?>&amp;type=T&amp;list=newest"><img src="../images/rss.png" width="16" height="16" class="rss" alt="News Additions in RSS"></a>
+	<a href="<?=WEB_PATH?>/rss/?application=<?php echo"$application"; ?>&amp;type=T&amp;list=newest"><img src="../images/rss.png" width="16" height="16" class="rss" alt="News Additions in RSS"></a>
 	<h2>Newest <?php print(ucwords($application)); ?> Themes</h2>
-	<p class="first">New and updated themes. Subscribe to <a href="/rss/?application=<?php echo"$application"; ?>&amp;type=T&amp;list=newest">our RSS feed</a> to be notified when new themes are added.</p>
+	<p class="first">New and updated themes. Subscribe to <a href="<?=WEB_PATH?>/rss/?application=<?php echo"$application"; ?>&amp;type=T&amp;list=newest">our RSS feed</a> to be notified when new themes are added.</p>
 	<ol>
 
         <?php

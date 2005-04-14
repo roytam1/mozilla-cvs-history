@@ -156,6 +156,6 @@ if (!$action) {
 }
 
 $return_path="$type/moreinfo.php?id=$id&vid=$vid&page=comments&action=$action";
-header('Location: http://'.HOST_NAME.'/'.$return_path);
+header('Location: http://'.HOST_NAME.WEB_PATH.'/'.$return_path);
 exit;
 ?>
