@@ -54,12 +54,7 @@ require_once(HEADER);
 	<div id="mainContent">
 	<h2><?php print(ucwords($application)); ?> Themes</h2>
 
-	<p class="first">Themes are small add-ons that add new functionality to
-<?php print(ucwords($application)); ?>. They can add anything from a toolbar
-button to a completely new feature. They allow the application to be customized
-to fit the personal needs of each user if they need additional features<?php if
-($application !=="mozilla") { ?>, while keeping <?php
-print(ucwords($application)); ?> small to download <?php } ?>.</p>
+	<p class="first">Themes are skins for <?php print(ucwords($application)); ?>.  They allow you to change the look and feel of the user interface and personalize it to your tastes. A theme can simply change the colors of <?php print(ucwords($application)); ?> or it can change every piece of its appearance.</p>
 
     <?php
     //Get Current Version for Detected Application
