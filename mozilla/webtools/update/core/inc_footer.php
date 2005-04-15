@@ -49,8 +49,6 @@
 	</div>
   <!-- closes #footer-->
 
-  <!-- thanks you xramp! -->
-
 </div>
 <!-- closes #container -->
 
