@@ -63,10 +63,10 @@ if (!empty($title))
     $page_title .= ' - '.$title;
 }
 
-installtrigger('extensions');
     
 require_once(HEADER);
 
+installtrigger('extensions');
 ?>
 
 <div id="mBody">

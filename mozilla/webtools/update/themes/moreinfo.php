@@ -59,10 +59,10 @@ if ($title) {
     $page_title .= ' - '.$title;
 }
 
-installtrigger("themes");
 
 require_once(HEADER);
 
+installtrigger("themes");
 ?>
 
 <div id="mBody">

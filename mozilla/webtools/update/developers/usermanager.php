@@ -33,7 +33,7 @@ class PermissionsManager {
       echo "<input name=\"usermode\" type=\"hidden\" value=\"$this->mode\">"
         . ( $umDes?$umDes:"Unknown ($this->mode)" );
       
-      if ($this->trusted=="TRUE") {
+      if ($this->trusted==='TRUE') {
         echo"Trusted <INPUT NAME=\"trusted\" TYPE=\"HIDDEN\" VALUE=\"TRUE\">\n";
       }
     } else if( $level=='admin' 
@@ -48,7 +48,7 @@ class PermissionsManager {
       }
       
       echo '<input name="trusted" type="checkbox" value="TRUE"';
-      if($this->trusted) echo ' checked="checked"';
+      if($this->trusted==='TRUE') echo ' checked="checked"';
       echo ">Trusted\n";
     
     }

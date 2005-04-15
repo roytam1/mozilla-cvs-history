@@ -86,7 +86,7 @@ $page_title = 'Mozilla Update';
 $page_headers = "\n".'
     <link rel="alternate" type="application/rss+xml" 
           title="New '.$titleCaseApp.' Additions"
-          href="./rss/?application="'.$application.'"&amp;list=newest">
+          href="./rss/?application='.$application.'&amp;list=newest">
 '."\n";
 
 require_once(HEADER);
