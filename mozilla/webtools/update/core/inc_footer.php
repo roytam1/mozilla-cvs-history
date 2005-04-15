@@ -45,10 +45,11 @@
             Mozilla</a></li>
 		</ul>
 		<p>Copyright &copy; 2004-2005 The Mozilla Organization</p>
-        <p>256-bit SSL Encryption secure by <a href="http://www.xramp.com/">
-            XRamp</a>.</p>
+        <div id="xramp"><script type="text/javascript" src="https://seal.xramp.com/seal.asp?type=G"></script></div>
 	</div>
   <!-- closes #footer-->
+
+  <!-- thanks you xramp! -->
 
 </div>
 <!-- closes #container -->

@@ -35,8 +35,7 @@
 // the terms of any one of the MPL, the GPL or the LGPL.
 //
 // ***** END LICENSE BLOCK *****
-?>
-<?php
+
 require_once('../core/config.php');
 $page_title = 'Mozilla Update :: Frequently Asked Questions';
 require_once(HEADER);
@@ -44,6 +43,25 @@ require_once(HEADER);
 
 <hr class="hide">
 <div id="mBody">
+
+<h1>Going Live :: 4/15/2005</h1>
+
+<p>It's time to get the Addons site back on track.  We have spent the last month working
+hard making the Addons site more secure so that users can trust the software they are
+using, downloading and installing.</p>
+
+<p>The the enabling of the developer section of the Addons site is absolutely critical
+to the success of Firefox.  We believe that the differentiating factor behind Firefox is
+more than just a great application; it's an enabled community of users and developers
+that have exactly what they want, when they want it.</p>
+
+<p>We are now going to be focusing our attention on Addons 
+<a href="http://wiki.mozilla.org/Update:Development:v2.0">v2.0</a> which is going to
+be a complete re-write of the current codebase focusing on ease of use, scalability,
+security and most importantly maintainability over time.  We want to build a platform
+that will make it easy for extension and theme developers to do what they do best;
+innovate.</p>
+
 
 <h1>Status Update :: 3/23/2005</h1>
 

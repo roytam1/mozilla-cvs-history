@@ -6,6 +6,10 @@ body, td, th, h3, input { /* redundant rules for bad browsers  */
 	font-size: small;
 }
 
+h2 a {
+    text-decoration: none;
+}
+
 body {
 	color: #333;
 	line-height: 140%;
