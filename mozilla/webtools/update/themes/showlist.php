@@ -35,25 +35,39 @@
 // the terms of any one of the MPL, the GPL or the LGPL.
 //
 // ***** END LICENSE BLOCK *****
-
+?>
+<?php
 require_once('../core/init.php');
 
 //----------------------------
 //Global $_GET variables
 //----------------------------
-if ($_GET["numpg"]) {$items_per_page = escape_string($_GET["numpg"]); } else {$items_per_page="10";}//Default Num per Page is 10
-if ($_GET["category"]) { $category = escape_string($_GET["category"]); }
-if ($category=="All") {$category="";}
+if (isset($_GET["numpg"])) {
+    $items_per_page = escape_string($_GET["numpg"]); 
+}
+else {
+    //Default Num per Page is 10
+    $items_per_page="10";
+}
+if (isset($_GET["category"])) { 
+    $category = escape_string($_GET["category"]); 
+}
+if (!isset($category) || $category=="All") {
+    $category="";
+}
 
-if (!$_GET["pageid"]) {$pageid="1"; } else { $pageid = escape_string($_GET["pageid"]); } //Default PageID is 1
-$type="T"; //Default Type is T
+
+if (!isset($_GET["pageid"])) {$pageid="1"; } else { $pageid = escape_string($_GET["pageid"]); } 
+//Default PageID is 1
+$type='T'; //Default Type is T
 
 unset($typename);
 $types = array("E"=>"Extensions","T"=>"Themes","U"=>"Updates");
-$typename = $types["$type"];
+$typename = $types[$type];
 
 //RSS Autodiscovery Link Stuff
-switch ($_SESSION["category"]) {
+$rsslist = "newest";
+switch ($category) {
   case "Newest":
     $rsslist = "newest";
     break;
@@ -65,30 +79,31 @@ switch ($_SESSION["category"]) {
     break;
 }
 
-$rssfeed = "rss/?application=" . $application . "&type=" . $type . "&list=" . $rsslist;
+$rssfeed = "/rss/?application=" . $application . "&type=" . $type . "&list=" . $rsslist;
 
 if (!$category) {$categoryname = "All $typename"; } else {$categoryname = $category; }
 
-$page_title = 'Mozilla Update :: Themes - List - '.$categoryname; 
-if ($pageid) 
-{
-    $page_title .= ' - Page $pageid'; 
+$page_title = 'Mozilla Update :: Themes - List - '.$categoryname;
+if ($pageid) {
+    $page_title .= ' - Page '.$pageid; 
 }
 
 if ($rsslist) {
     $page_headers = '<link rel="alternate" type="application/rss+xml"
-    title="RSS" href="http://'.$_SERVER['HTTP_HOST'].'/'.$rssfeed.'">"';
+        title="RSS" href="'.WEB_PATH.$rssfeed.'>';
 }
 
+ob_start();
 installtrigger("themes");
-
+$page_headers = ob_get_clean();
 require_once(HEADER);
 
 ?>
 <div id="mBody">
-    <?php
-    include"inc_sidebar.php";
-    ?>
+
+<?php
+require_once('./inc_sidebar.php');
+?>
 
 	<div id="mainContent">
 
@@ -96,7 +111,9 @@ require_once(HEADER);
 
 //Query for List Creation
 $s = "0";
+$editorpick = "false";
 $startpoint = ($pageid-1)*$items_per_page;
+$orderby = false;
 if ($category=="Editors Pick" or $category=="Newest" or $category=="Popular" or $category=="Top Rated") {
 if ($category =="Editors Pick") {
 $editorpick="true";
@@ -125,7 +142,6 @@ if ($editorpick=="true") { $sql .="INNER JOIN reviews TR ON TM.ID = TR.ID "; }
 $sql .="WHERE Type = '$type' AND AppName = '$application' AND `approved` = 'YES' ";
 if ($editorpick=="true") { $sql .="AND TR.Pick = 'YES' "; }
 if ($category && $category !=="%") {$sql .="AND CatName LIKE '$category' ";}
-if ($app_version) { $sql .=" AND TV.MinAppVer_int <= '".strtolower($app_version)."' AND TV.MaxAppVer_int >= '".strtolower($app_version)."' ";}
 if ($OS) { $sql .=" AND (TOS.OSName = '$OS' OR TOS.OSName = 'All') "; }
 if ($catname == "Popular") { $sql .=" AND TM.downloadcount > '5'"; }
 $sql .="GROUP BY `Name` ";
@@ -141,18 +157,17 @@ unset($sql);
 //Get Total Results from Result Query & Populate Page Control Vars.
  $sql_result = mysql_query($resultsquery, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $totalresults = mysql_num_rows($sql_result);
-
   $num_pages = ceil($totalresults/$items_per_page); //Total # of Pages
-  if ($pageid>$num_pages) {$pageid=$num_pages;} //Check PageId for Validity
-  $startpoint = ($pageid-1)*$items_per_page;
-if ($startpoint<0) {$startpoint=0; $startitem=0;}
-  $startitem = $startpoint+1;
-  $enditem = $startpoint+$items_per_page;
- if ($totalresults=="0") {$startitem = "0"; }
- if ($enditem>$totalresults) {$enditem=$totalresults;} //Verify EndItem
+    if ($pageid>$num_pages) {$pageid=$num_pages;} //Check PageId for Validity
+    $startpoint = ($pageid-1)*$items_per_page;
+    if ($startpoint<0) {$startpoint=0; $startitem=0;}
+    $startitem = $startpoint+1;
+    $enditem = $startpoint+$items_per_page;
+    if ($totalresults=="0") {$startitem = "0"; }
+    if ($enditem>$totalresults) {$enditem=$totalresults;} //Verify EndItem
 
 
-if ($_GET[nextnum]) {$startpoint = escape_string($_GET["nextnum"]); }
+if (isset($_GET['nextnum'])) {$startpoint = escape_string($_GET["nextnum"]); }
 //$resultsquery = str_replace("GROUP BY `Name` ", "", $resultsquery);
 $resultsquery .= " LIMIT $startpoint , $items_per_page"; //Append LIMIT clause to result query
 
@@ -265,8 +280,8 @@ INNER JOIN userprofiles TU ON TAX.UserID = TU.UserID
 ORDER  BY  `Type` , `Name`  ASC ";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
-     $authorarray[$row[Name]][] = $row["UserName"];
-     $authorids[$row[UserName]] = $row["UserID"];
+     $authorarray[$row['Name']][] = $row["UserName"];
+     $authorids[$row['UserName']] = $row["UserID"];
    }
 
 //Assemble a display application version array
@@ -288,7 +303,6 @@ $sql = "$resultsquery";
   while ($row = mysql_fetch_array($sql_result)) {
 
     $id = $row["ID"];
-    $type = $row["Type"];
     $name = $row["Name"];
     $dateadded = $row["DateAdded"];
     $dateupdated = $row["DateUpdated"];
@@ -311,8 +325,19 @@ $vid = $row['MAXvID'];
   $row = mysql_fetch_array($sql_result2);
 
    $vid = $row["vID"];
-if ($appvernames[$row["MinAppVer"]]) {$minappver = $appvernames[$row["MinAppVer"]]; } else { $minappver = $row["MinAppVer"]; }
-if ($appvernames[$row["MaxAppVer"]]) {$maxappver = $appvernames[$row["MaxAppVer"]]; } else { $maxappver = $row["MaxAppVer"]; }
+if (isset($appvernames[$row["MinAppVer"]])) {
+    $minappver = $appvernames[$row["MinAppVer"]]; 
+} 
+else { 
+    $minappver = $row["MinAppVer"]; 
+}
+
+if (isset($appvernames[$row["MaxAppVer"]])) {
+    $maxappver = $appvernames[$row["MaxAppVer"]]; 
+} 
+else { 
+    $maxappver = $row["MaxAppVer"]; 
+}
    $VerDateAdded = $row["VerDateAdded"];
    $VerDateUpdated = $row["VerDateUpdated"];
    $filesize = $row["Size"];
@@ -333,6 +358,8 @@ if ($VerDateUpdated > $dateupdated) {$dateupdated = $VerDateUpdated; }
 
 //Turn Authors Array into readable string...
 $authorcount = count($authors);
+$n = 0;
+$authorstring = "";
 foreach ($authors as $author) {
 $userid = $authorids[$author];
 $n++;
@@ -363,17 +390,17 @@ echo"<DIV class=\"item\">\n";
         echo"<div class=\"rating\" title=\"$rating Stars out of 5\">Rating: ";
 
         for ($i = 1; $i <= floor($rating); $i++) {
-            echo"<IMG SRC=\"/images/stars/star_icon.png\" width=\"17\" height=\"20\" ALT=\""; if ($i==1) {echo"$rating stars out of 5 ";} echo"\">";
+            echo"<IMG SRC=\"../images/stars/star_icon.png\" width=\"17\" height=\"20\" ALT=\""; if ($i==1) {echo"$rating stars out of 5 ";} echo"\">";
         }
 
         if ($rating>floor($rating)) {
             $val = ($rating-floor($rating))*10;
-            echo"<IMG SRC=\"/images/stars/star_0$val.png\" width=\"17\" height=\"20\" ALT=\"\">";
+            echo"<IMG SRC=\"../images/stars/star_0$val.png\" width=\"17\" height=\"20\" ALT=\"\">";
             $i++;
         }
 
         for ($i = $i; $i <= 5; $i++) {
-            echo"<IMG SRC=\"/images/stars/graystar_icon.png\" width=\"17\" height=\"20\" ALT=\""; if ($i==1) {echo"$rating stars out of 5 ";} echo"\">";
+            echo"<IMG SRC=\"../images/stars/graystar_icon.png\" width=\"17\" height=\"20\" ALT=\""; if ($i==1) {echo"$rating stars out of 5 ";} echo"\">";
         }
 
 
@@ -412,14 +439,15 @@ echo"</p>";
 echo"<DIV style=\"margin-top: 30px; height: 34px\">";
 echo"<DIV class=\"iconbar\">";
 if ($appname=="Thunderbird") {
-    echo"<A HREF=\"moreinfo.php?".uriparams()."&amp;id=$id\"><IMG SRC=\"/images/download.png\" HEIGHT=32 WIDTH=32 TITLE=\"More Info about $name\" ALT=\"\">More Info</A>";
+    echo"<A HREF=\"moreinfo.php?".uriparams()."&amp;id=$id\"><IMG SRC=\"../images/download.png\" HEIGHT=32 WIDTH=32 TITLE=\"More Info about $name\" ALT=\"\">More Info</A>";
 } else {
-    echo"<a href=\"$uri\" onclick=\"return installTheme(event,'$name $version');\"><IMG SRC=\"/images/download.png\" HEIGHT=32 WIDTH=32 TITLE=\"Install $name\" ALT=\"\">Install</A>";
+    echo"<a href=\"$uri\" onclick=\"return install(event,'$name $version',
+    '../images/default.png');\"><IMG SRC=\"../images/download.png\" HEIGHT=32 WIDTH=32 TITLE=\"Install $name\" ALT=\"\">Install</A>";
 }
 echo"<BR><SPAN class=\"filesize\">&nbsp;&nbsp;$filesize kb</SPAN></DIV>";
-echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($appname)."_icon.png\" HEIGHT=34 WIDTH=34 ALT=\"\">&nbsp;For $appname:<BR>&nbsp;&nbsp;$minappver - $maxappver</DIV>";
-if($osname !=="ALL") { echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($osname)."_icon.png\" HEIGHT=34 WIDTH=34 ALT=\"\">For&nbsp;$osname<BR>only</DIV>"; }
-//if ($homepage) {echo"<DIV class=\"iconbar\"><A HREF=\"$homepage\"><IMG SRC=\"/images/home.png\" HEIGHT=34 WIDTH=34 TITLE=\"$name Homepage\" ALT=\"\">Homepage</A></DIV>";}
+echo"<DIV class=\"iconbar\"><IMG SRC=\"../images/".strtolower($appname)."_icon.png\" HEIGHT=34 WIDTH=34 ALT=\"\">&nbsp;For $appname:<BR>&nbsp;&nbsp;$minappver - $maxappver</DIV>";
+if($osname !=="ALL") { echo"<DIV class=\"iconbar\"><IMG SRC=\"../images/".strtolower($osname)."_icon.png\" HEIGHT=34 WIDTH=34 ALT=\"\">For&nbsp;$osname<BR>only</DIV>"; }
+//if ($homepage) {echo"<DIV class=\"iconbar\"><A HREF=\"$homepage\"><IMG //SRC=\"../images/home.png\" HEIGHT=34 WIDTH=34 TITLE=\"$name Homepage\" ALT=\"\">Homepage</A></DIV>";}
 echo"</DIV>";
 
 echo"<DIV class=\"baseline\">$datestring";
@@ -471,8 +499,8 @@ $i = 01;
 //Dynamic Starting Point
 if ($pageid>11) {
 $nextpage=$pageid-10;
-}
 $i=$nextpage;
+}
 
 //Dynamic Ending Point
 $maxpagesonpage=$pageid+$pagesperpage;
@@ -496,8 +524,6 @@ if ($i==$pageid) {
 
 ?>
 </div>
-</div>
-
 <?php
 require_once(FOOTER);
 ?>

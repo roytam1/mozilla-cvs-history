@@ -102,28 +102,21 @@ if (!empty($page_headers)) {
 		</li>
 	</ul>
 	</div>
-    <?php
-    $uriparams_skip="application";
-    ?>
 	<div id="key-menu">	
 		<dl id="menu-firefox">
 		<dt>Firefox:</dt>
-		<dd><a href="<?php echo WEB_PATH; ?>/extensions/?<?php echo"".uriparams()."&amp;"; ?>application=firefox" title="Get Extensions for the Firefox Browser">Extensions</a>, <a href="<?php echo WEB_PATH; ?>/themes/?<?php echo"".uriparams()."&amp;"; ?>application=firefox" title="Get Themes for the Firefox Browser">Themes</a>, <a href="<?php echo WEB_PATH; ?>/plugins/" title="Get Plugins for Firefox">Plugins</a><?php /*, <a href="<?php echo WEB_PATH; ?>/searchengines/" title="Get New Search Engines for the Search Box in Firefox">Search Engines</a>--> */ ?></dd>
+		<dd><a href="<?php echo WEB_PATH; ?>/extensions/?application=firefox" title="Get Extensions for the Firefox Browser">Extensions</a>, <a href="<?php echo WEB_PATH; ?>/themes/?application=firefox" title="Get Themes for the Firefox Browser">Themes</a>, <a href="<?php echo WEB_PATH; ?>/plugins/" title="Get Plugins for Firefox">Plugins</a><?php /*, <a href="<?php echo WEB_PATH; ?>/searchengines/" title="Get New Search Engines for the Search Box in Firefox">Search Engines</a>--> */ ?></dd>
 		</dl>
 		<dl id="menu-thunderbird">
 		<dt>Thunderbird:</dt>
-		<dd><a href="<?php echo WEB_PATH; ?>/extensions/?<?php echo"".uriparams()."&amp;"; ?>application=thunderbird" title="Get Extensions for Thunderbird Email">Extensions</a>, <a href="<?php echo WEB_PATH; ?>/themes/?<?php echo"".uriparams()."&amp;"; ?>application=thunderbird" title="Get Themes for Thunderbird Email">Themes</a></dd>
+		<dd><a href="<?php echo WEB_PATH; ?>/extensions/?application=thunderbird" title="Get Extensions for Thunderbird Email">Extensions</a>, <a href="<?php echo WEB_PATH; ?>/themes/?application=thunderbird" title="Get Themes for Thunderbird Email">Themes</a></dd>
 		</dl>
 		<dl id="menu-mozillasuite">
 		<dt>Mozilla Suite:</dt>
-		<dd><a href="<?php echo WEB_PATH; ?>/extensions/?<?php echo"".uriparams()."&amp;"; ?>application=mozilla" title="Get Extensions for the Mozilla Suite">Extensions</a>, <a href="<?php echo WEB_PATH; ?>/themes/?<?php echo"".uriparams()."&amp;"; ?>application=mozilla" title="Get Themes for the Mozilla Suite">Themes</a>, <a href="<?php echo WEB_PATH; ?>/plugins/" title="Get Plugins for Mozilla Suite">Plugins</a></dd>
+		<dd><a href="<?php echo WEB_PATH; ?>/extensions/?application=mozilla" title="Get Extensions for the Mozilla Suite">Extensions</a>, <a href="<?php echo WEB_PATH; ?>/themes/?application=mozilla" title="Get Themes for the Mozilla Suite">Themes</a>, <a href="<?php echo WEB_PATH; ?>/plugins/" title="Get Plugins for Mozilla Suite">Plugins</a></dd>
 		</dl>
 		<div class="ie-clear-menu">&nbsp;</div>
 	</div>
-    <?php
-    unset($uriparams_skip);
-    ?>
-
 </div>
 <!-- closes #header-->
 
