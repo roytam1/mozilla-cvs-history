@@ -25,9 +25,11 @@ to the Mozilla Update Staff.</P>
 <div id="side" class="right">
 <h2>Developers Login</h2>
 
-<?php if ($_GET[login]=="failed") { ?>
+<?php if ($_GET['login']=="failed") { ?>
 <strong>You were not successfully logged in. Check your e-mail address and password and try again.</strong>
-<?php } else if ($_GET[logout]=="true") { ?>
+<?php } else if ($_GET['login']=="unconfirmed") { ?>
+<strong>Please check your email for instructions on how to confirm your account.</strong>
+<?php }else if ($_GET['logout']=="true") { ?>
 <strong>You've been successfully logged out.</strong>
 <?php } else {} ?>
 

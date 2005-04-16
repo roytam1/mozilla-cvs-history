@@ -11,12 +11,18 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF
 if ($num == 1) {
 
 $row = mysql_fetch_array($sql_result);
-
+if ($row['UserMode'] == 'D')
+{
+	$return_path ="";
+	header('Location: https://'.HOST_NAME.WEB_PATH.'/developers/index.php?login=unconfirmed');
+	exit;
+}
 $userid=$row["UserID"];
 $useremail=$row["UserEmail"];
 $username=$row["UserName"];
 $usermode=$row["UserMode"];
 $usertrusted=$row["UserTrusted"];
+
 $logoncheck="YES";
 
 //Update LastLogin Time to current.
