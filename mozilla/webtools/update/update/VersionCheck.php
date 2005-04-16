@@ -84,6 +84,16 @@ foreach ($required_vars as $var) {
 // If we have all of our data, clean it up for our queries.
 if (empty($errors)) {
 
+    // Config, connect to DB, select DB.
+    require_once("../core/config.php");
+
+    $connection = @mysql_connect(DB_HOST,DB_USER,DB_PASS);
+    if (!is_resource($connection)) {
+        $errors[] = 'MySQL connection failed.';
+    } elseif (!@mysql_select_db(DB_NAME, $connection)) {
+        $errors[] = 'Could not select MySQL database.';
+    }
+
     // $reqVersion dictates the behavior of this script.
     // Default should be 1 until the expected behavior of this script is changed.
     // This will be apparent in a switch() statement later in this script.
@@ -117,16 +127,6 @@ if (empty($errors)) {
      */ 
 
 
-
-    // Config, connect to DB, select DB.
-    require_once("../core/config.php");
-
-    $connection = @mysql_connect(DB_HOST,DB_USER,DB_PASS);
-    if (!is_resource($connection)) {
-        $errors[] = 'MySQL connection failed.';
-    } elseif (!@mysql_select_db(DB_NAME, $connection)) {
-        $errors[] = 'Could not select MySQL database.';
-    }
 
     // Set up OSID piece of query based on $os_id.
     $os_query = ($os_id) ? " OR version.OSID = '{$os_id}' " : '';
