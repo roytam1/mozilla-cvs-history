@@ -272,7 +272,7 @@ if ($_GET['debug'] == true) {
 
     echo '<h1>Parameters</h1>';
     echo '<pre>';
-    print_r($_GET)
+    print_r($_GET);
     echo '</pre>';
 
     echo '<h1>Query</h1>';
