@@ -114,7 +114,10 @@ if ($_POST["submit"] && $_GET["action"]=="update") {
 
     //Process Post Data, Make Changes to User Table.
     //Begin General Updating
-    for ($i=1; $i<=$_POST['maxuserid']; $i++) {
+     $sql='select UserID from userprofiles';
+     $sql_result_uids = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
+    while($row=mysql_fetch_row($sql_result_uids)) {
+      $i=$row[0]; // UserID
       $admin = escape_string($_POST["admin$i"]);
       $editor = escape_string($_POST["editor$i"]);
       $trusted = escape_string($_POST["trusted$i"]);
@@ -130,7 +133,7 @@ if ($_POST["submit"] && $_GET["action"]=="update") {
       if ($trusted !=="TRUE") {$trusted="FALSE"; }
 
       if (checkFormKey()) {
-        $sql = "UPDATE `userprofiles` SET `UserMode`= '$mode', `UserTrusted`= '$trusted' WHERE `UserID`='$selected'";
+        $sql = "UPDATE `userprofiles` SET `UserMode`= '$mode', `UserTrusted`= '$trusted' WHERE `UserID`='$i'";
         $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
       }
 
@@ -203,7 +206,7 @@ if ($_POST["submit"] && $_GET["action"]=="update") {
 
     }
   unset($i);
-
+  mysql_free_result($sql_result_uids);
   echo"Your changes to the User List have been succesfully completed<BR>\n";
 
  }
@@ -232,7 +235,6 @@ if ($_POST["submit"] && $_GET["action"]=="update") {
     $usermode = $row["UserMode"];
     $useremailhide = $row["UserEmailHide"];
     $t = $row["UserTrusted"];
-    if ($userid>$maxuserid) {$maxuserid =$userid;}
 
 if ($usermode=="A") {$a="TRUE"; $e="TRUE";
 } else if ($usermode=="E") {$e="TRUE"; $a="FALSE";
@@ -253,7 +255,6 @@ if ($usermode=="A") {$a="TRUE"; $e="TRUE";
   unset($a,$e,$t);
 }
 
-echo"<INPUT NAME=\"maxuserid\" TYPE=\"HIDDEN\" VALUE=\"$maxuserid\">";
 
 ?>
 <TR><TD COLSPAN=3 ALIGN=CENTER>
@@ -271,7 +272,7 @@ echo"<INPUT NAME=\"maxuserid\" TYPE=\"HIDDEN\" VALUE=\"$maxuserid\">";
 
 <form name="adduser" method="post" action="?function=adduser">
 <?writeFormKey();?>
-  E-Mail: <input name="email" type="text" size="30" maxlength="150" value="">
+  E-Mail: <input name="useremail" type="text" size="30" maxlength="150" value="">
 <input name="submit" type="submit" value="Add User"></SPAN>
 </form>
 </div>
@@ -294,8 +295,8 @@ if ($_POST["submit"]=="Update") {
   $useremailhide = escape_string($_POST["useremailhide"]);
 
   if (checkFormKey()) {
-    $sql = "UPDATE `userprofiles` SET `UserName`= '$username', `UserEmail`='$useremail', `UserWebsite`='$userwebsite', `UserMode`='$perms->mode', `UserTrusted`='$perms->trusted', `UserEmailHide`='$useremailhide' WHERE `UserID`='$userid'";
-    $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
+    $sql = "UPDATE `userprofiles` SET `UserName`= '$username', `UserEmail`='$useremail', `UserWebsite`='$userwebsite', `UserMode`='$perms->mode', `UserTrusted`='{$perms->trusted}', `UserEmailHide`='$useremailhide' WHERE `UserID`='$userid'";
+   $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
     if ($sql_result) {
       echo"<h1>Updating User Profile...</h1>\n";
       echo"The User Profile for $username, has been successfully updated...<br>\n";
@@ -329,7 +330,7 @@ if (!$userid) {$userid=escape_string($_POST["userid"]);}
     $userwebsite = $row["UserWebsite"];
     $userpass = $row["UserPass"];
     $perms->mode = $row["UserMode"];
-    $trusted = $row["UserTrusted"];
+    $perms->trusted = $row["UserTrusted"];
     $useremailhide = $row["UserEmailHide"];
     $userlastlogin = date("l, F, d, Y, g:i:sa", strtotime($row["UserLastLogin"]));
 ?>
@@ -374,8 +375,17 @@ if (!$userid) {$userid=escape_string($_POST["userid"]);}
 } else if ($function=="adduser") {
 
 if ($_POST["submit"]=="Create User") {
-echo"<h1>Adding User...</h1>\n";
+  echo"<h1>Adding User...</h1>\n";
+  if(strlen($_POST['username'])<2) {
+    echo '<b>Name is too short (min 2 characters)</b><br />';
+    $errors='true';
+  }
+
  //Verify Users Password and md5 encode it for storage...
+  if(strlen($_POST['userpass'])<4) {
+    echo '<b>Password is too short (min 4 characters)</b><br />';
+    $errors='true';
+  }
  if ($_POST['userpass']==$_POST['userpassconfirm']) {
  $_POST['userpass']=md5($_POST['userpass']);
  } else {
@@ -386,26 +396,18 @@ echo"<h1>Adding User...</h1>\n";
  //Add User to MySQL Table
 if ($errors !="true") {
    
-// Set user level, but only allow admins to set the admin flag
-if ($admin=="TRUE" && $_SESSION["level"]=="admin") { $mode="A"; 
-} else if ($editor=="TRUE") { $mode="E"; 
-} else if ($disabled=="TRUE") {$mode="D";
-} else { $mode="U"; }
-
-if ($trusted !=="TRUE") {$trusted="FALSE"; }
-
 $username = escape_string(htmlspecialchars($_POST["username"]));
 $useremail = escape_string($_POST['useremail']);
 $userwebsite = escape_string($_POST['userwebsite']);
 $userpass = escape_string($_POST['userpass']);
 $useremailhide = escape_string($_POST['useremailhide']);
   if (checkFormKey()) {
-    $sql = "INSERT INTO `userprofiles` (`UserName`, `UserEmail`, `UserWebsite`, `UserPass`, `UserMode`, `UserTrusted`, `UserEmailHide`) VALUES ('$username', '$useremail', '$userwebsite', '$userpass', '$mode', '$trusted', '$useremailhide');";
+    $sql = "INSERT INTO `userprofiles` (`UserName`, `UserEmail`, `UserWebsite`, `UserPass`, `UserMode`, `UserTrusted`, `UserEmailHide`) VALUES ('$username', '$useremail', '$userwebsite', '$userpass', '{$perms->mode}', '{$perms->trusted}', '$useremailhide');";
     $sql_result = mysql_query($sql) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
     if ($sql_result) {
       include"mail_newaccount.php"; 
       echo"The user $username has been added successfully...<br>\n";
-      echo"An E-Mail has been sent to the e-mail address specified with the login info they need to log in to their new account.<br>\n";
+      echo"An E-Mail has been sent to the e-mail address specified with the login info needed.<br>\n";
     }
   }
 }
@@ -417,7 +419,7 @@ $useremailhide = escape_string($_POST['useremailhide']);
 <FORM NAME="adduser" METHOD="POST" ACTION="?function=adduser">
 <?writeFormKey();?>
 <TABLE BORDER=0 CELLPADDING=2 CELLSPACING=2 ALIGN=CENTER STYLE="border: 0px; width: 95%">
-  <TR><TD><B>E-Mail:</B></TD><TD><INPUT NAME="useremail" TYPE="TEXT" VALUE="<?php echo"$_POST[email]"; ?>" SIZE=30 MAXLENGTH=100></TD></TR>
+  <TR><TD><B>E-Mail:</B></TD><TD><INPUT NAME="useremail" TYPE="TEXT" VALUE="<?php echo"$_POST[useremail]"; ?>" SIZE=30 MAXLENGTH=100></TD></TR>
   <TR><TD ALIGN=RIGHT><B>Show E-Mail:<B></TD><TD>Hidden: <INPUT NAME="useremailhide" TYPE="RADIO" VALUE="1" CHECKED> Visible: <INPUT NAME="useremailhide" TYPE="RADIO" VALUE="0"></TD></TR>
   <TR><TD STYLE="width: 150px"><B>Name:</B></TD><TD><INPUT NAME="username" TYPE="TEXT" VALUE="" SIZE=30 MAXLENGTH=100></TD></TR>
   <TR><TD><B>Website:</B></TD><TD><INPUT NAME="userwebsite" TYPE="TEXT" VALUE="" SIZE=30 MAXLENGTH=100></TD></TR>
