@@ -132,10 +132,12 @@ vulputate sapien et leo. Nullam euismod tortor id wisi.
 
     <p class="first">Mozilla Update is the place to get updates and extras for
     your <a href="http://www.mozilla.org/">Mozilla</a> products.  This service
-    is undergoing <a href="./about/update.php">several changes</a> that we hope
-    will make the site better.  We will be posting frequent 
+    has undergone <a href="./about/update.php">several changes</a> that we hope
+    will make the site better.  We have re-enabled access to the developers area
+    and look forward to serving the extension and theme developer community in the
+    future!  We will be posting frequent 
     <a href="./about/update.php">status updates</a> as to our progress with the 
-    UMO service.</p>
+    UMO service.  The best is yet to come!</p>
 
 	<dl>
     <dt>Extensions</dt>
