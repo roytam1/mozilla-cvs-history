@@ -50,7 +50,7 @@ require_once(HEADER);
 hard making the Addons site more secure so that users can trust the software they are
 using, downloading and installing.</p>
 
-<p>The the enabling of the developer section of the Addons site is absolutely critical
+<p>The enabling of the developer section of the Addons site is absolutely critical
 to the success of Firefox.  We believe that the differentiating factor behind Firefox is
 more than just a great application; it's an enabled community of users and developers
 that have exactly what they want, when they want it.</p>
