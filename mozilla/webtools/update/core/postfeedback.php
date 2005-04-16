@@ -41,6 +41,7 @@ require_once('../core/init.php');
 
 // Minimum number of seconds since the last comment.
 define("COMMENTS_MIN_BREAK", 90);
+
 /**
  * Check if client has posted recently.
  *
@@ -49,30 +50,118 @@ define("COMMENTS_MIN_BREAK", 90);
  * @return bool - True if the client has posted too often, false if they have not
  *                posted recently.
  */
-function comment_rate_limited($name, $addr) 
+function client_rate_limited($name, $addr) 
 {
-   global $connection;
+    global $connection;
 
-   $sql = "SELECT (UNIX_TIMESTAMP(CURRENT_TIMESTAMP()) - UNIX_TIMESTAMP(CommentDate)) as since_last_post
-           FROM `feedback` 
-           WHERE commentip = '".$addr."' OR
-                 CommentName = '".$name."'
-           ORDER BY CommentDate DESC LIMIT 1";
+    $sql = "SELECT (UNIX_TIMESTAMP(CURRENT_TIMESTAMP()) - UNIX_TIMESTAMP(CommentDate)) as since_last_post
+            FROM `feedback` 
+            WHERE commentip = '".$addr."' OR
+                  CommentName = '".$name."'
+            ORDER BY CommentDate DESC LIMIT 1";
    
-   $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
+    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
    
-   $count = mysql_num_rows($sql_result);
-   if($count == 0) {
-       return false;
-   }
-   else if ($count == 1) {
-       $row = mysql_fetch_array($sql_result);
-       if ($row['since_last_post'] > COMMENTS_MIN_BREAK) {
-           return false;
-       }
-   }
-   return true;
+    $count = mysql_num_rows($sql_result);
+    if ($count == 0) {
+        return false;
+    }
+    else if ($count == 1) {
+        $row = mysql_fetch_array($sql_result);
+        if ($row['since_last_post'] > COMMENTS_MIN_BREAK) {
+            return false;
+        }
+    }
+
+    return true;
 }
+
+/**
+ * @param string key - formkey to test for
+ * @return bool True if the formkey is valid, false if invalid.
+ */
+function valid_form_key($key) 
+{
+    global $connection;
+    //Check the Formkey against the DB, and see if this has already been posted...
+    $formkey = escape_string($key);
+    $date = date("Y-m-d H:i:s", mktime(0, 0, 0, date("m"), date("d")-1, date("Y")));
+    $sql = "SELECT `CommentID` FROM  `feedback` WHERE `formkey` = '$formkey' AND `CommentDate`>='$date'";
+    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
+    if (mysql_num_rows($sql_result) == 0) {
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Check if a client is banned from posting comments
+ * @param string address - IPv4 Client IP Address to check
+ * @return bool - True if the client is banned, false if they are not.
+ */
+function client_ip_banned($address) 
+{
+    global $connection;
+    $sql = "SELECT `bID` from `feedback_ipbans` WHERE `beginip` <= '$address' AND `endip` >='$address' LIMIT 1";
+    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
+    if (mysql_num_rows($sql_result)== 0) {
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Determine the Client IP Address as Logged
+ * @return string IP Address of the client
+ */
+function get_client_ip() 
+{
+    // Are we behind a proxy and given the IP via an alternate enviroment variable? If so, use it.
+    if (isset($_SERVER["HTTP_X_FORWARDED_FOR"])) {
+        return $_SERVER["HTTP_X_FORWARDED_FOR"];
+    } 
+    else {
+        return $_SERVER["REMOTE_ADDR"];
+    }
+}
+
+/**
+ * Update the Rating for an ID
+ * @param int ID
+ */
+function update_rating($id) 
+{
+    global $connection;
+
+    //Get Rating Data and Create $ratingarray
+    $date = date("Y-m-d H:i:s", mktime(0, 0, 0, date("m"), date("d")-30, date("Y")));
+    $sql = "SELECT ID, CommentVote FROM  `feedback` 
+            WHERE `ID` = '$id' AND `CommentDate`>='$date' AND `CommentVote` IS NOT NULL";
+    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+
+    while ($row = mysql_fetch_array($sql_result)) {
+        $ratingarray[$row['ID']][] = $row["CommentVote"];
+    }
+
+    // Compile Rating Average
+    if (!$ratingarray[$id]) {
+        $ratingarray[$id] = array();
+    }
+
+    $numratings = count($ratingarray[$id]);
+    $sumratings = array_sum($ratingarray[$id]);
+
+    if ($numratings > 0) {
+        $rating = round($sumratings/$numratings, 1);
+    } 
+    else {
+            $rating="2.5"; //Default Rating
+    }
+
+    $sql = "UPDATE `main` SET `Rating`='$rating' WHERE `ID`='$id' LIMIT 1";
+    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+}
+
 
 //Check and see if the ID/vID is valid.
 $sql = "SELECT TM.ID, TV.vID 
@@ -81,36 +170,38 @@ $sql = "SELECT TM.ID, TV.vID
         WHERE TM.ID = '".escape_string($_POST['id'])."' AND `vID`='".escape_string($_POST["vid"])."' LIMIT 1";
 
 $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
-    if(mysql_num_rows($sql_result)=="0") {
-        unset($_POST["id"],$_POST["vid"],$id,$vid);
-    } else {
-        $id = escape_string($_POST["id"]);
-        $vid = escape_string($_POST["vid"]);
-    }
+if (mysql_num_rows($sql_result)=="0") {
+    unset($_POST["id"],$_POST["vid"],$id,$vid);
+} 
+else {
+    $id = escape_string($_POST["id"]);
+    $vid = escape_string($_POST["vid"]);
+}
 
+$comments = nl2br(strip_tags(escape_string($_POST["comments"])));
+$email = escape_string($_POST["email"]);
+
+$name="Anonymous";
+if (isset($_POST["name"])) {
     $name = escape_string(strip_tags($_POST["name"]));
+}
+
+$title="No Title";
+if (isset($_POST["title"])) {
     $title = escape_string(strip_tags($_POST["title"]));
-    $rating = escape_string($_POST["rating"]);
-    $comments = nl2br(strip_tags(escape_string($_POST["comments"])));
-    $email = escape_string($_POST["email"]);
-    if (!$name) {
-        $name="Anonymous";
-    }
-    if (!$title) {
-        $title="No Title";
-    }
+}
 
-    //Make Sure Rating is as expected.
-    if (is_numeric($rating) and $rating<=5 and $rating>=0) {
-    } else {
-        unset($rating);
-    }
+$rating = escape_string($_POST["rating"]);
+// Make Sure Rating is as expected.
+if (!(is_numeric($rating) and $rating<=5 and $rating>=0)) {
+    unset($rating);
+} 
 
-    if (!$rating or !$comments ) {
+if (!$rating or !$comments ) {
     //No Rating or Comment Defined, throw an error.
-        page_error("3","Comment is Blank or Rating is Null.");
-        exit;
-    }
+    page_error("3","Comment is Blank or Rating is Null.");
+    exit;
+}
 
 
 //Compile Info about What Version of the item this comment is about.
@@ -119,68 +210,41 @@ $sql = "SELECT TV.Version, `OSName`, `AppName` FROM `version` TV
         INNER JOIN `applications` TA ON TA.AppID=TV.AppID
         WHERE TV.ID = '$id' AND TV.vID='$vid' LIMIT 1";
 $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
-    $row = mysql_fetch_array($sql_result);
-    $version = $row["Version"];
-    $os = $row["OSName"];
-    $appname = $row["AppName"];
-    $versiontagline = "version $version for $appname";
-    if ($os !=="ALL") {$versiontagline .=" on $os"; }
+$row = mysql_fetch_array($sql_result);
+$version = $row["Version"];
+$os = $row["OSName"];
+$appname = $row["AppName"];
+$versiontagline = "version $version for $appname";
 
-//Are we behind a proxy and given the IP via an alternate enviroment variable? If so, use it.
-    if (isset($_SERVER["HTTP_X_FORWARDED_FOR"])) {
-        $remote_addr = $_SERVER["HTTP_X_FORWARDED_FOR"];
-    } else {
-        $remote_addr = $_SERVER["REMOTE_ADDR"];
-    }
-
-//Check the Formkey against the DB, and see if this has already been posted...
-$formkey = escape_string($_POST["formkey"]);
-$date = date("Y-m-d H:i:s", mktime(0, 0, 0, date("m"), date("d")-1, date("Y")));
-$sql = "SELECT `CommentID` FROM  `feedback` WHERE `formkey` = '$formkey' AND `CommentDate`>='$date'";
-$sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
-if (mysql_num_rows($sql_result)=="0" && comment_rate_limited($name, $remote_addr) === false) {
-
-    //FormKey check passed, now let's see if this IP is banned...
-    $sql = "SELECT `bID` from `feedback_ipbans` WHERE `beginip` <= '$remote_addr' AND `endip` >='$remote_addr' LIMIT 1";
-    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
-    if (mysql_num_rows($sql_result)=="0") {
-    //No Bans Returned, Proceed...
-
-        //FormKey doesn't exist, go ahead and add their comment.
-        $sql = "INSERT INTO `feedback` (`ID`, `CommentName`, `CommentVote`, `CommentTitle`, `CommentNote`, `CommentDate`, `commentip`, `email`, `formkey`, `VersionTagline`) VALUES ('$id', '$name', '$rating', '$title', '$comments', NOW(NULL), '$remote_addr', '$email', '$formkey', '$versiontagline');";
-        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-
-
-        //Get Rating Data and Create $ratingarray
-        $date = date("Y-m-d H:i:s", mktime(0, 0, 0, date("m"), date("d")-30, date("Y")));
-        $sql = "SELECT ID, CommentVote FROM  `feedback` WHERE `ID` = '$id' AND `CommentDate`>='$date' AND `CommentVote` IS NOT NULL";
-        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-        while ($row = mysql_fetch_array($sql_result)) {
-            $ratingarray[$row['ID']][] = $row["CommentVote"];
-        }
-
-        //Compile Rating Average
-        if (!$ratingarray[$id]) {
-            $ratingarray[$id] = array();
-        }
-        $numratings = count($ratingarray[$id]);
-        $sumratings = array_sum($ratingarray[$id]);
-
-        if ($numratings>0) {
-            $rating = round($sumratings/$numratings, 1);
-        } else {
-            $rating="2.5"; //Default Rating
-        }
-
-
-        $sql = "UPDATE `main` SET `Rating`='$rating' WHERE `ID`='$id' LIMIT 1";
-        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-    } else {
-        //User is Banned, Add Param to URI to throw an error about this...
-        $action="ipbanned";
-    }
+if ($os !=="ALL") {
+    $versiontagline .=" on $os";
 }
 
+$remote_addr = get_client_ip();
+
+$form_key = "";
+if (!valid_form_key($_POST['formkey'])) {
+    page_error("5","Invalid formkey.");
+    exit;
+}
+else {
+    $formkey = escape_string($_POST['formkey']);
+}
+
+if (client_rate_limited($name, $remote_addr)) {
+    page_error("6","You may only post one comment every ". COMMENTS_MIN_BREAK ." seconds.");
+    exit;
+}
+
+if (client_ip_banned($remote_addr)) {
+    page_error("7","Your IP Address is Banned from Making Comments.");
+    exit;
+}
+
+$sql = "INSERT INTO `feedback` (`ID`, `CommentName`, `CommentVote`, `CommentTitle`, `CommentNote`, `CommentDate`, `commentip`, `email`, `formkey`, `VersionTagline`) VALUES ('$id', '$name', '$rating', '$title', '$comments', NOW(NULL), '$remote_addr', '$email', '$formkey', '$versiontagline');";
+$sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+
+update_rating($id);
 
 if ($_POST["type"]=="E") {
     $type="extensions";
@@ -188,11 +252,8 @@ if ($_POST["type"]=="E") {
     $type="themes";
 }
 
-if (!isset($action)) {
-    $action="successful";
-}
-
-$return_path="$type/moreinfo.php?id=$id&vid=$vid&page=comments&action=$action";
+$return_path="$type/moreinfo.php?id=$id&vid=$vid&page=comments&action=successful";
 header('Location: http://'.HOST_NAME.WEB_PATH.'/'.$return_path);
 exit;
+
 ?>
