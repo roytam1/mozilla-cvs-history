@@ -176,6 +176,7 @@ if (empty($errors)) {
 
         // An update exists.  Retrieve it.
         $update = mysql_fetch_array($result, MYSQL_ASSOC);
+        $update['exttype'] = $ext_typemap[$update['exttype']];
 
 
 
@@ -271,7 +272,7 @@ if ($_GET['debug'] == true) {
 
     echo '<h1>Parameters</h1>';
     echo '<pre>';
-    print_r($_GET);
+    print_r($_GET)
     echo '</pre>';
 
     echo '<h1>Query</h1>';
