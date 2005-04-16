@@ -42,8 +42,8 @@ function renderPopularList($typename) {
   $titleCaseType=ucwords($typename);
   $type=$titleCaseType{0};
   echo <<<EOS
-    <a href="./rss/?application={$application}&amp;type={$type}&amp;list=popular"><img src="./images/rss.png" width="16" height="16" class="rss" alt="Most Popular Additions in RSS"></a>
-	<h2><a href="./{$typename}/showlist.php?application={$application}&amp;category=Popular">Most Popular $titleCaseApp $titleCaseType</a></h2>
+    
+	<h2><a href="./rss/?application={$application}&amp;type={$type}&amp;list=popular"><img src="./images/rss.png" width="16" height="16" class="rss" alt="Most Popular Additions in RSS"></a><a href="./{$typename}/showlist.php?application={$application}&amp;category=Popular">Most Popular $titleCaseApp $titleCaseType</a></h2>
 	<ol class="popularlist">
 EOS;
   // Took out the compatibility stuff to avoid a blank front page.
@@ -211,8 +211,8 @@ vulputate sapien et leo. Nullam euismod tortor id wisi.
       renderPopularList("extensions");
       renderPopularList("themes");
     ?>
-	<a href="./rss/?application=<?php echo $application; ?>&amp;list=newest"><img src="images/rss.png" width="16" height="16" class="rss" alt="News Additions in RSS"></a>
-	<h2>New Additions</h2>
+	
+	<h2><a href="./rss/?application=<?php echo $application; ?>&amp;list=newest"><img src="images/rss.png" width="16" height="16" class="rss" alt="News Additions in RSS"></a>New Additions</h2>
 	<ol class="popularlist">
 
         <?php

@@ -4,6 +4,12 @@
 	margin-bottom: 0;
 }
 
+#mBody h2 a {
+    margin: 0;
+    padding: 0;
+    text-decoration: none;
+}
+
 #mBody h3 {
 	font: 120% arial,helvetica,verdana,sans-serif;
 	border-bottom: 1px solid #ccc;
