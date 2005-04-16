@@ -39,9 +39,47 @@
 //Submit Review/Rating Feedback to Table
 require_once('../core/init.php');
 
+// Minimum number of seconds since the last comment.
+define("COMMENTS_MIN_BREAK", 90);
+/**
+ * Check if client has posted recently.
+ *
+ * @param string name - Name that they User Submitted
+ * @param string addr - IPv4 Address of the client to check
+ * @return bool - True if the client has posted too often, false if they have not
+ *                posted recently.
+ */
+function comment_rate_limited($name, $addr) 
+{
+   global $connection;
+
+   $sql = "SELECT (UNIX_TIMESTAMP(CURRENT_TIMESTAMP()) - UNIX_TIMESTAMP(CommentDate)) as since_last_post
+           FROM `feedback` 
+           WHERE commentip = '".$addr."' OR
+                 CommentName = '".$name."'
+           ORDER BY CommentDate DESC LIMIT 1";
+   
+   $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
+   
+   $count = mysql_num_rows($sql_result);
+   if($count == 0) {
+       return false;
+   }
+   else if ($count == 1) {
+       $row = mysql_fetch_array($sql_result);
+       if ($row['since_last_post'] > COMMENTS_MIN_BREAK) {
+           return false;
+       }
+   }
+   return true;
+}
 
 //Check and see if the ID/vID is valid.
-$sql = "SELECT TM.ID, TV.vID FROM `main` TM INNER JOIN `version` TV ON TM.ID=TV.ID WHERE TM.ID = '".escape_string($_POST[id])."' AND `vID`='".escape_string($_POST["vid"])."' LIMIT 1";
+$sql = "SELECT TM.ID, TV.vID 
+        FROM `main` TM 
+        INNER JOIN `version` TV ON TM.ID=TV.ID 
+        WHERE TM.ID = '".escape_string($_POST['id'])."' AND `vID`='".escape_string($_POST["vid"])."' LIMIT 1";
+
 $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
     if(mysql_num_rows($sql_result)=="0") {
         unset($_POST["id"],$_POST["vid"],$id,$vid);
@@ -89,7 +127,7 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
     if ($os !=="ALL") {$versiontagline .=" on $os"; }
 
 //Are we behind a proxy and given the IP via an alternate enviroment variable? If so, use it.
-    if ($_SERVER["HTTP_X_FORWARDED_FOR"]) {
+    if (isset($_SERVER["HTTP_X_FORWARDED_FOR"])) {
         $remote_addr = $_SERVER["HTTP_X_FORWARDED_FOR"];
     } else {
         $remote_addr = $_SERVER["REMOTE_ADDR"];
@@ -100,14 +138,13 @@ $formkey = escape_string($_POST["formkey"]);
 $date = date("Y-m-d H:i:s", mktime(0, 0, 0, date("m"), date("d")-1, date("Y")));
 $sql = "SELECT `CommentID` FROM  `feedback` WHERE `formkey` = '$formkey' AND `CommentDate`>='$date'";
 $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
-if (mysql_num_rows($sql_result)=="0") {
+if (mysql_num_rows($sql_result)=="0" && comment_rate_limited($name, $remote_addr) === false) {
 
     //FormKey check passed, now let's see if this IP is banned...
     $sql = "SELECT `bID` from `feedback_ipbans` WHERE `beginip` <= '$remote_addr' AND `endip` >='$remote_addr' LIMIT 1";
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
     if (mysql_num_rows($sql_result)=="0") {
     //No Bans Returned, Proceed...
-    
 
         //FormKey doesn't exist, go ahead and add their comment.
         $sql = "INSERT INTO `feedback` (`ID`, `CommentName`, `CommentVote`, `CommentTitle`, `CommentNote`, `CommentDate`, `commentip`, `email`, `formkey`, `VersionTagline`) VALUES ('$id', '$name', '$rating', '$title', '$comments', NOW(NULL), '$remote_addr', '$email', '$formkey', '$versiontagline');";
@@ -119,7 +156,7 @@ if (mysql_num_rows($sql_result)=="0") {
         $sql = "SELECT ID, CommentVote FROM  `feedback` WHERE `ID` = '$id' AND `CommentDate`>='$date' AND `CommentVote` IS NOT NULL";
         $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
         while ($row = mysql_fetch_array($sql_result)) {
-            $ratingarray[$row[ID]][] = $row["CommentVote"];
+            $ratingarray[$row['ID']][] = $row["CommentVote"];
         }
 
         //Compile Rating Average
@@ -151,7 +188,7 @@ if ($_POST["type"]=="E") {
     $type="themes";
 }
 
-if (!$action) {
+if (!isset($action)) {
     $action="successful";
 }
 
