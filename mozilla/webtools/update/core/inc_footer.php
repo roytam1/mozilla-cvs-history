@@ -38,7 +38,6 @@
 ?>
 <hr class="hide">
 	<div id="footer">
-        <div id="xramp"><script type="text/javascript" src="https://seal.xramp.com/seal.asp?type=C"></script></div>
 		<ul id="bn">
 		<li><a href="<?php echo WEB_PATH; ?>/about/policies/">Terms of Use</a></li>
 		<li><a href="<?php echo WEB_PATH; ?>/about/contact/">Contact Us</a></li>
@@ -46,6 +45,7 @@
             Mozilla</a></li>
 		</ul>
 		<p>Copyright &copy; 2004-2005 The Mozilla Organization</p>
+        <p>256-bit SSL Encryption provided by <a href="http://www.xramp.com/">XRamp</a></p>
 	</div>
   <!-- closes #footer-->
 
