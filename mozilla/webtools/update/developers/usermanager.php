@@ -107,14 +107,15 @@ if (!$function) {
 ?>
 
 <?php
-if ($_POST["submit"] && $_GET["action"]=="update") {
+if ($_POST["submit"] && $_GET["action"]=="update" && checkFormKey()) {
 ?>
 <h1>Updating User List...</h1>
 <?php
 
     //Process Post Data, Make Changes to User Table.
     //Begin General Updating
-     $sql='select UserID from userprofiles';
+     $maxuserid=intval($_POST['maxuserid']);
+     $sql="select UserID from userprofiles where UserID<='$maxuserid'";
      $sql_result_uids = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
     while($row=mysql_fetch_row($sql_result_uids)) {
       $i=$row[0]; // UserID
@@ -132,10 +133,8 @@ if ($_POST["submit"] && $_GET["action"]=="update") {
 
       if ($trusted !=="TRUE") {$trusted="FALSE"; }
 
-      if (checkFormKey()) {
         $sql = "UPDATE `userprofiles` SET `UserMode`= '$mode', `UserTrusted`= '$trusted' WHERE `UserID`='$i'";
         $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
-      }
 
       //Do Special Disable, Delete, Enable Account Operations
       if ($_POST["selected$i"] AND $_POST["submit"] !=="Update") {
@@ -225,6 +224,7 @@ if ($_POST["submit"] && $_GET["action"]=="update") {
 <FORM NAME="updateusers" METHOD="POST" ACTION="?function=&action=update">
 <?writeFormKey();?>
 <?php
+ $maxuserid=-1;
  $sql = "SELECT * FROM `userprofiles` ORDER BY `UserMode`, `UserName` ASC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
    while ($row = mysql_fetch_array($sql_result)) {
@@ -251,11 +251,11 @@ if ($usermode=="A") {$a="TRUE"; $e="TRUE";
     echo"<TD CLASS=\"tablehighlight\"><INPUT NAME=\"trusted$userid\" TYPE=\"CHECKBOX\" VALUE=\"TRUE\" "; if ($t=="TRUE") {echo"CHECKED=\"CHECKED\""; } if ($d=="TRUE" or (($a=="TRUE" or $e=="TRUE") AND $_SESSION["level"]=="editor" )) {echo" DISABLED=\"DISABLED\"";}echo" TITLE=\"Trusted User\"></TD>";
     if ($d=="TRUE") {echo"<INPUT NAME=\"disabled$userid\" TYPE=\"HIDDEN\" VALUE=\"TRUE\">\n"; }
     echo"</TR>\n";
-
+  $maxuserid=max($userid,$maxuserid);
   unset($a,$e,$t);
 }
 
-
+echo "<INPUT NAME=\"maxuserid\" TYPE=\"HIDDEN\" VALUE=\"$maxuserid\">";
 ?>
 <TR><TD COLSPAN=3 ALIGN=CENTER>
 <INPUT NAME="submit" TYPE="SUBMIT" VALUE="Disable Selected" ONCLICK="return confirm('Disabling this account will hide all their extensions and themes from view and prevent them from logging in. Do you want to procede and disable this account?');">
