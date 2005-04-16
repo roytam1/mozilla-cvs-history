@@ -17,30 +17,30 @@ Joining Mozilla Update is easy just fill out the form below and click the join b
 <table border=0 cellpadding=0 cellspacing=0>
 <tr><td colspan=2>Your e-mail address is used as your username to login. You'll also receive confirmation e-mail to this address. In order for your account to be activated succesfully, you must specify a valid e-mail address.</td></tr>
 <tr>
-<td>E-Mail Address:</td>
+<td><strong>E-Mail Address:</strong></td>
 <td><input name="email" type="text" size=30></td>
 </tr>
 <tr>
-<td>Confirm E-Mail:</td>
+<td><strong>Confirm E-Mail:</strong></td>
 <td><input name="emailconfirm" type="text" size=30></td>
 </tr>
 <tr><td colspan=2>How do you want to be known to visitors of Mozilla Update? This is your "author name" it will be shown with your extension/theme listings on the site.</td></tr>
 <tr>
-<td>Your Name</td>
+<td><strong>Your Name</strong></td>
 <td><input name="name" type="text" size=30></td>
 </tr>
 <tr><td colspan=2>If you have a website, enter the URL here. (including the http:// ) Your website will be shown to site visitors on your author profile page. This field is optional, if you don't have a website or don't want it linked to from Mozilla Update, leave this box blank. </td></tr>
 <tr>
-<td>Your Website</td>
+<td><strong>Your Website</strong></td>
 <td><input name="website" type="text" size=30></td>
 </tr>
 <tr><td colspan=2>Your desired password. This along with your e-mail will allow you to login, so make it something memorable but not easy to guess. Type it in both fields below, the two fields must match.</td></tr>
 <tr>
-<td>Password:</td>
+<td><strong>Password:</strong></td>
 <td><input name="password" type="password" size=30></td>
 </tr>
 <tr>
-<td>Confirm Password:</td>
+<td><strong>Confirm Password:</strong></td>
 <td><input name="passwordconfirm" type="password" size=30></td>
 </tr>
 <tr><td colspan=2>Review what you entered above, if everything's correct, click the "Join Mozilla Update" button. If you want to start over, click "Clear Form".</td></tr>
