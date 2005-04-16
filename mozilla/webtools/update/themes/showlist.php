@@ -205,6 +205,7 @@ if ($categorydescription) {echo"$categorydescription<br>\n";}
 
 
 
+/*
 // Modify List Form
 
 echo"<DIV class=\"key-point\">";
@@ -269,6 +270,9 @@ echo"<INPUT NAME=\"submit\" TYPE=\"SUBMIT\" VALUE=\"Update\">";
 echo"</div></FORM>";
 echo"</DIV>\n";
 echo"&nbsp;<br>\n";
+*/
+
+echo '<br>';
 
 //---------------------------------
 // Begin List
@@ -414,7 +418,7 @@ echo"<h2 class=\"first\"><A HREF=\"moreinfo.php?".uriparams()."&amp;id=$id\">$na
         echo"<p class=\"screenshot\">\n";
 
             list($width, $height, $attr) = getimagesize(FILE_PATH.'/'.$previewuri);
-            echo"<a href=\"moreinfo.php?".uriparams()."&amp;id=$id\"><img src=\"$previewuri\" height=$height width=$width alt=\"$name preview - $caption\" title=\"$caption\"></a>\n";
+            echo"<a href=\"moreinfo.php?".uriparams()."&amp;id=$id\"><img src=\"..$previewuri\" height=$height width=$width alt=\"$name preview - $caption\" title=\"$caption\"></a>\n";
 
         echo"</p>\n";
         $preview_minheight=$height-50;

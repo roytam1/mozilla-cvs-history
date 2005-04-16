@@ -74,7 +74,6 @@ installtrigger('extensions');
 <?php
 $type = 'E';
 $index = 'yes';
-$category = "";
 if (isset($_GET['category'])) {
     $category = escape_string($_GET['category']);
 } 
@@ -735,7 +734,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
                 }
             }
 
-            echo"<img src=\"$uri\" alt=\"$caption\" width=\"$dest_width\" height=\"$dest_height\"><br>\n";
+            echo"<img src=\"..$uri\" alt=\"$caption\" width=\"$dest_width\" height=\"$dest_height\"><br>\n";
 
         }
 

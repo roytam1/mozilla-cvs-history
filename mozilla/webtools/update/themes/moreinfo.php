@@ -70,7 +70,6 @@ installtrigger("themes");
 <?php
 $type = "T";
 $index = "yes";
-$category = "";
 if (isset($_GET["category"])) {
     $category=escape_string($_GET["category"]);
 }
@@ -343,7 +342,7 @@ if (isset($_GET["vid"])) {
         <?php } ?>
         <?php
             list($width, $height, $attr) = getimagesize(FILE_PATH.'/'.$previewuri);
-            echo"<img src=\"$previewuri\" height=$height width=$width alt=\"$name preview - $caption\" title=\"$caption\">\n";
+            echo"<img src=\"..$previewuri\" height=$height width=$width alt=\"$name preview - $caption\" title=\"$caption\">\n";
         ?>
         <?php if (mysql_num_rows($sql_result)>"0") { ?>
         </a>
@@ -745,7 +744,7 @@ if (isset($_GET["vid"])) {
                 }
             }
 
-            echo"<img src=\"$uri\" alt=\"$caption\" width=\"$dest_width\" height=\"$dest_height\"><br>\n";
+            echo"<img src=\"..$uri\" alt=\"$caption\" width=\"$dest_width\" height=\"$dest_height\"><br>\n";
 
         }
 

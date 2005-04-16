@@ -150,11 +150,11 @@ function uriparams() {
     global $app_version, $application, $items_per_page, $category, $OS, $uriparams_skip;
     $uriparams = "";
 
-    if ($application and $uriparams_skip !="application") { $uriparams .="application=$application&amp;"; }
-    if ($app_version and $uriparams_skip !="application") { $uriparams .="version=$app_version&amp;"; }
-    if ($OS) { $uriparams .="os=$OS&amp;"; }
-    if ($category and $uriparams_skip !="category") { $uriparams .="category=$category&amp;"; }
-    if ($items_per_page) { $uriparams .="numpg=$items_per_page"; }
+    if (!empty($application) and $uriparams_skip !="application") { $uriparams .="application=$application&amp;"; }
+//    if ($app_version and $uriparams_skip !="application") { $uriparams .="version=$app_version&amp;"; }
+//    if ($OS) { $uriparams .="os=$OS&amp;"; }
+    if (!empty($category) and $uriparams_skip !="category") { $uriparams .="category=$category&amp;"; }
+    if (!empty($items_per_page)) { $uriparams .="numpg=$items_per_page"; }
     if (substr($uriparams, -1)==";") {
         $uriparams = substr($uriparams,0,strlen($uriparams)-5);
     }

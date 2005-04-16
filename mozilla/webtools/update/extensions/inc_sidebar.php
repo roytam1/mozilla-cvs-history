@@ -48,6 +48,18 @@
 
     echo"<ul id=\"nav\">\n";
 
+    $catname = "Newest";
+    $catdesc = "Most recent ".ucwords($typename);
+    echo"<li"; if (strtolower($category) == strtolower($catname)) { echo" class=\"selected\""; }  echo"><a href=\"showlist.php?".uriparams()."&amp;category=$catname\" title=\"$catdesc\"><strong>$catname</strong></a></li>\n";
+
+    $catname = "Popular";
+    $catdesc = ucwords($typename)." downloaded the most over the last week.";
+    echo"    <li"; if (strtolower($category) == strtolower($catname)) { echo" class=\"selected\""; }  echo"><a href=\"showlist.php?".uriparams()."&amp;category=$catname\" title=\"$catdesc\"><strong>$catname</strong></a></li>\n";
+
+    $catname = "Top Rated";
+    $catdesc = ucwords($typename)." rated the highest by site visitors";
+    echo"    <li"; if (strtolower($category) == strtolower($catname)) { echo" class=\"selected\""; }  echo"><a href=\"showlist.php?".uriparams()."&amp;category=$catname\" title=\"$catdesc\"><strong>$catname</strong></a></li>\n";
+
     echo"        <li"; if (!$category AND $index != 'yes') { echo" class=\"selected\""; }  echo"><A HREF=\"showlist.php?".uriparams()."&amp;category=All\" TITLE=\"Show All ".ucwords($typename)." Alphabetically\"><strong>All Extensions</strong></A></li>\n";
 
     echo"        <li><ul>\n";
@@ -63,21 +75,11 @@
 
     echo"        </ul></li>\n";
 
+/*
     $catname = "Editors Pick";
     $catdesc = ucwords($typename)." picked by the Mozilla Update Editors";
     echo"    <li"; if (strtolower($category) == strtolower($catname)) { echo" class=\"selected\""; }  echo"><a href=\"showlist.php?".uriparams()."&amp;category=$catname\" title=\"$catdesc\"><strong>Editor's Pick</strong></a></li>\n";
-
-    $catname = "Popular";
-    $catdesc = ucwords($typename)." downloaded the most over the last week.";
-    echo"    <li"; if (strtolower($category) == strtolower($catname)) { echo" class=\"selected\""; }  echo"><a href=\"showlist.php?".uriparams()."&amp;category=$catname\" title=\"$catdesc\"><strong>$catname</strong></a></li>\n";
-
-    $catname = "Top Rated";
-    $catdesc = ucwords($typename)." rated the highest by site visitors";
-    echo"    <li"; if (strtolower($category) == strtolower($catname)) { echo" class=\"selected\""; }  echo"><a href=\"showlist.php?".uriparams()."&amp;category=$catname\" title=\"$catdesc\"><strong>$catname</strong></a></li>\n";
-
-    $catname = "Newest";
-    $catdesc = "Most recent ".ucwords($typename);
-    echo"<li"; if (strtolower($category) == strtolower($catname)) { echo" class=\"selected\""; }  echo"><a href=\"showlist.php?".uriparams()."&amp;category=$catname\" title=\"$catdesc\"><strong>$catname</strong></a></li>\n";
+*/
 
     $uriparams_skip="";
     ?>
