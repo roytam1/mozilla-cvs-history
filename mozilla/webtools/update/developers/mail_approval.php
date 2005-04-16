@@ -22,7 +22,7 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
     $headers .= "From: ".$from_name." <".$from_address.">\r\n";
     $headers .= "X-Priority: 3\r\n";
     $headers .= "X-MSMail-Priority: Normal\r\n";
-    $headers .= "X-Mailer: Mozilla Update Mail System 1.0";
+    $headers .= "X-Mailer: UMO Mail System 1.0";
 
     $subject = "[$name $version] $action_email \n";
 
