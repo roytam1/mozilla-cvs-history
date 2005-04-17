@@ -61,7 +61,7 @@ $perms = new PermissionsManager($function);
 //Access Level: only admins can edit somebody else's profile
 if ($_SESSION['level'] !=='admin') {
   //Kill access to add user.
-  $function = 'edituser';
+  if($function != 'changepassword') $function = 'edituser';
   $userid=$_SESSION['uid'];
 }
 
@@ -74,7 +74,7 @@ if ($function=="edituser" || $function=="changepassword") {
   $postuid = escape_string($_GET["userid"]);
   $userid = escape_string($_SESSION["uid"]);
   // All users users may change their own accounts, check when trying to change other accounts
-  if ($postuid and $postuid != $userid) {
+  if ($postuid && ($postuid != $userid) ) {
     $allowed = false;
     if ($_SESSION["level"] == "admin") {
       // Admins may change any account
