@@ -37,7 +37,7 @@ $filename = str_replace ('http://'.HOST_NAME.'/developers/approvalfile.php', REP
 if ($action=="approve") {
     if (file_exists($filename)) {
         if ($type=="T") {$type="themes";} else if ($type=="E") {$type="extensions";}
-        $path = strtolower("$type/$name");
+        $path = str_replace(' ','_',strtolower("$type/$name"));
         $destination = str_replace("approval",strtolower("ftp/$path"),$filename);
         $dirpath = REPO_PATH.'/ftp/'.$path;
         if (!file_exists($dirpath)) {
