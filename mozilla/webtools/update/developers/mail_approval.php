@@ -10,12 +10,12 @@ $from_address = "update-daemon@mozilla.org";
 //Send To Address
 //Get E-Mail Addresses of the Authors of this item.
 
-$sql = "SELECT `email` FROM `authorxref` TAX INNER JOIN `userprofiles` TU ON TAX.UserID=TU.UserID WHERE TAX.ID='$id'";
+$sql = "SELECT `UserEmail` FROM `authorxref` TAX INNER JOIN `userprofiles` TU ON TAX.UserID=TU.UserID WHERE TAX.ID='$id'";
 $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     while ($row = mysql_fetch_array($sql_result)) {
 
 
-    $to_address = $row["email"];
+    $to_address = $row['UserEmail'];
 
     $headers .= "MIME-Version: 1.0\r\n";
     $headers .= "Content-type: text/plain; charset=iso-8859-1\r\n";
