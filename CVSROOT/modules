@@ -766,7 +766,7 @@ NSS -a \
 # Module for Mozilla Tinderbox
 #
 #############################################################
-MozillaTinderboxAll -a \
+CoreTinderboxAll -a \
 	SeaMonkeyAll \
         mozilla/security/psm \
         mozilla/accessible \
@@ -777,6 +777,11 @@ MozillaTinderboxAll -a \
         mozilla/toolkit \
         mozilla/storage \
         mozilla/db/sqlite3
+
+# should this be called SuiteTinderboxAll ?
+MozillaTinderboxAll -a \
+	CoreTinderboxAll \
+        mozilla/suite
 
 # mozilla uses mozilla/security/manager from 
 # the tip, not the nss branch
@@ -794,27 +799,32 @@ MozillaTinderboxAll -a \
 
 # This module will let us track branches where all the subcomponents
 # are on the same tag
-MozillaBranchTinderboxAll -a \
-	MozillaTinderboxAll \
+CoreBranchTinderboxAll -a \
+	CoreTinderboxAll \
 	NSS \
 	NSPR \
 	mozilla/directory/c-sdk
 
+# should this be called SuiteBranchTinderboxAll ?
+MozillaBranchTinderboxAll -a \
+	CoreBranchTinderboxAll \
+	mozilla/suite
+
 AviaryBranchTinderbox -a \
-	MozillaBranchTinderboxAll \
+	CoreBranchTinderboxAll \
 	mozilla/browser \
 	mozilla/chrome \
 	mozilla/mail
 
 # thunderbird's tinderbox module
 ThunderbirdTinderbox -a \
-	MozillaTinderboxAll \
+	CoreTinderboxAll \
 	mozilla/mail \
 	mozilla/chrome
 
 # this is for the phoenix tinderbox
 
 PhoenixTinderbox -a \
-	MozillaTinderboxAll \
+	CoreTinderboxAll \
 	mozilla/browser \
 	mozilla/chrome
