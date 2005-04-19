@@ -28,7 +28,7 @@ to the Mozilla Update Staff.</P>
 <?php if ($_GET['login']=="failed") { ?>
 <strong>You were not successfully logged in. Check your e-mail address and password and try again.</strong>
 <?php } else if ($_GET['login']=="unconfirmed") { ?>
-<strong>Please check your email for instructions on how to confirm your account.</strong>
+<strong>Please check your email for instructions on how to confirm your account.<br><a href="resendconfirmation.php">Click to request a new email confirmation.</a></strong>
 <?php }else if ($_GET['logout']=="true") { ?>
 <strong>You've been successfully logged out.</strong>
 <?php } else {} ?>
@@ -50,7 +50,10 @@ to the Mozilla Update Staff.</P>
 </tr>
 </table>
 </form>
-<a href="./passwordreset.php">Forgot your password?</a>
+<p>
+<a href="./passwordreset.php">Forgot your password?</a><br>
+<a href="./resendconfirmation.php">Resend Confirmation Email</a>
+</p>
 
 <h2>Create an Account</h2>
 <P>You need an account to access the features of the Developer Control Panel and add your extension or themes to Mozilla Update.</P>
