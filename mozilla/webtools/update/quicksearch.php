@@ -166,11 +166,11 @@ LIMIT $items_per_page OFFSET $startpoint";
         echo "<div class=\"item\">\n";
         $typedir = $typedirs[$itemtype];
         echo "<h2 class=\"first\"><a href=\"$typedir/moreinfo.php?id=$id\">";
-        echo htmlspecialchars($name);
+        echo $name;
         echo "</a></h2>";
 
         // Description
-        echo htmlspecialchars(substr($description,0,250));
+        echo substr($description,0,250);
         echo"</div>\n";
 
       } //End While Loop

@@ -289,7 +289,7 @@ if ($_POST["submit"]=="Update") {
   if ($_SESSION["level"] !=="admin" && $_SESSION["uid"] !== $_POST["userid"]) {$_POST["userid"]=$_SESSION["uid"];}
     
   $userid = escape_string($_POST["userid"]);
-  $username = escape_string(htmlspecialchars($_POST["username"]));
+  $username = escape_string($_POST["username"]);
   $useremail = escape_string($_POST["useremail"]);
   $userwebsite = escape_string($_POST["userwebsite"]);
   $useremailhide = escape_string($_POST["useremailhide"]);
@@ -309,7 +309,7 @@ if ($_POST["submit"]=="Update") {
     $sql = "DELETE FROM `userprofiles` WHERE `UserID`='$userid'";
     $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
     if ($sql_result) {
-      $username = htmlspecialchars($_POST["username"]);
+      $username = $_POST["username"];
       echo"<h1>Deleting User... Please wait...</h1>\n";
       echo"You've successfully deleted the user profile for $username...<br>\n";
       require_once(FOOTER);
@@ -396,7 +396,7 @@ if ($_POST["submit"]=="Create User") {
  //Add User to MySQL Table
 if ($errors !="true") {
    
-$username = escape_string(htmlspecialchars($_POST["username"]));
+$username = escape_string($_POST["username"]);
 $useremail = escape_string($_POST['useremail']);
 $userwebsite = escape_string($_POST['userwebsite']);
 $userpass = escape_string($_POST['userpass']);
