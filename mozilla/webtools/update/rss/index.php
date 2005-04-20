@@ -59,6 +59,7 @@ header("Content-Type: text/xml; charset=utf-8");
 $select = "SELECT DISTINCT 
 main.ID, 
 main.Name AS Title, 
+main.Type,
 main.Description,  
 version.Version, 
 version.vID,

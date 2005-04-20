@@ -40,17 +40,8 @@
 <?php
 //  http://blogs.law.harvard.edu/tech/rss
 
-switch ($type) {
-  case "E":
-    $listType = "Extensions";
-    break;
-  case "P":
-    $listType = "Plugins";
-    break;
-  case "T":
-    $listType = "Themes";
-    break;
-}
+$types = array("E"=>"Extensions","T"=>"Themes","U"=>"Updates","P"=>"Plugins");
+$listType = $types[$type];
 
 echo "<rss version=\"2.0\">\n";
 echo "<channel>\n";
@@ -80,11 +71,12 @@ echo "  </image>\n";
     $version = htmlspecialchars($row["Version"],ENT_NOQUOTES,"UTF-8");
     $vid = $row["vID"];
     $appname = htmlspecialchars($row["AppName"],ENT_NOQUOTES,"UTF-8");
-
+    $type = $row['Type'];
+    $extType = $types[$type];
     echo "    <item>\n";
     echo "      <pubDate>" . $dateupdated . "</pubDate>\n";
     echo "      <title>" . $title . " " . $version . " for " . $appname . "</title>\n";
-    echo "      <link>http://" . HOST_NAME . "/" . strtolower($listType) . "/moreinfo.php?id=" . $id . "&amp;vid=" . $vid . "</link>\n";
+    echo "      <link>http://" . HOST_NAME . WEB_PATH . "/" . strtolower($extType) . "/moreinfo.php?id=" . $id . "&amp;vid=" . $vid . "</link>\n";
     echo "      <description>" . $description . "</description>\n";
     echo "    </item>\n";
 
