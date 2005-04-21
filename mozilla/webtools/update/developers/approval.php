@@ -122,9 +122,11 @@ WHERE `approved` = '?' GROUP BY TV.URI ORDER BY TV.DateUpdated ASC";
    $type = $row["Type"];
    $uri = $row["URI"];
    $authors = ""; $j="";
-   $sql2 = "SELECT `UserName` from `authorxref` TAX INNER JOIN `userprofiles` TU ON TAX.UserID = TU.UserID WHERE TAX.ID='$row[ID]' ORDER BY `UserName` ASC";
+   $authid = array();
+   $sql2 = "SELECT `UserName`, TAX.`UserID` from `authorxref` TAX INNER JOIN `userprofiles` TU ON TAX.UserID = TU.UserID WHERE TAX.ID='$row[ID]' ORDER BY `UserName` ASC";
      $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
      while ($row2 = mysql_fetch_array($sql_result2)) { $j++;
+      $authid[] = $row2['UserID'];
       $authors .="$row2[UserName]"; if (mysql_num_rows($sql_result2) > $j) { $authors .=", "; } 
      }
    $categories = ""; $j="";
@@ -177,7 +179,9 @@ WHERE `approved` = '?' GROUP BY TV.URI ORDER BY TV.DateUpdated ASC";
     echo"<TD COLSPAN=2></TD>\n";
   }
   echo"</TR>\n";
- 
+  
+  // Author can not approve their own work unless they are an admin
+  $disabled = (in_array($_SESSION['uid'], $authid) && $_SESSION["level"]!="admin") ? ' disabled="disabled"' : '';
 //Approval Form for this Extension Item
   echo"<TR><TD COLSPAN=4><h3 style=\"margin-top: 0px\">Tested On:</h3></TD></TR>\n";
 
@@ -186,28 +190,28 @@ WHERE `approved` = '?' GROUP BY TV.URI ORDER BY TV.DateUpdated ASC";
   echo"<input name=\"file_$i\" type=\"hidden\" value=\"$uri\">\n";
   echo"<input name=\"name_$i\" type=\"hidden\" value=\"$row[Name]\">\n";
   echo"<input name=\"version_$i\" type=\"hidden\" value=\"$row[Version]\">\n";
-  echo"<span class=\"tooltip\" title=\"What OS(es) did you test in? Windows, Linux, MacOSX, etc\">OSes:</span> <input name=\"testos_$i\" type=\"text\" size=10>\n";
-  echo"<span class=\"tooltip\" title=\"What app(s) version(s)/build(s)? (Ex. Firefox 1.0RC1 or 0.10+ 20041010)\">Apps:</span> <input name=\"testbuild_$i\" type=\"text\" size=10>\n";
-  echo"<span class=\"tooltip\" title=\"Comments to Author (Will Be E-Mailed w/ Notice of your Action)\">Comments (to author):</span> <input name=\"comments_$i\" type=\"text\" size=\"35\">"; 
+  echo"<span class=\"tooltip\" title=\"What OS(es) did you test in? Windows, Linux, MacOSX, etc\">OSes:</span> <input name=\"testos_$i\" type=\"text\" size=\"10\"$disabled>\n";
+  echo"<span class=\"tooltip\" title=\"What app(s) version(s)/build(s)? (Ex. Firefox 1.0RC1 or 0.10+ 20041010)\">Apps:</span> <input name=\"testbuild_$i\" type=\"text\" size=\"10\"$disabled>\n";
+  echo"<span class=\"tooltip\" title=\"Comments to Author (Will Be E-Mailed w/ Notice of your Action)\">Comments (to author):</span> <input name=\"comments_$i\" type=\"text\" size=\"35\"$disabled>"; 
   echo"</TD></TR>\n";
   echo"<TR><TD COLSPAN=4 style=\"font-size: 8pt\">\n";
-  echo"<input name=\"installation_$i\" type=\"checkbox\" value=\"YES\"><span class=\"tooltip\" TITLE=\"Installs OK?\">Install?</span>\n";
-  echo"<input name=\"uninstallation_$i\" type=\"checkbox\" value=\"YES\"><span class=\"tooltip\" TITLE=\"Uninstalls OK?\">Uninstall?</span>\n";
-  echo"<input name=\"appworks_$i\" type=\"checkbox\" value=\"YES\"><span class=\"tooltip\" TITLE=\"App Works OK? (Loading pages/messages, Tabs, Back/Forward)\">App Works? </span>\n";
-  echo"<input name=\"cleanprofile_$i\" type=\"checkbox\" value=\"YES\"><span class=\"tooltip\" TITLE=\"Using a Clean Profile? (I.E. Works with No Major Extensions Installed, like TBE)\">Clean Profile?</span>\n";
+  echo"<input name=\"installation_$i\" type=\"checkbox\" value=\"YES\"$disabled><span class=\"tooltip\" TITLE=\"Installs OK?\">Install?</span>\n";
+  echo"<input name=\"uninstallation_$i\" type=\"checkbox\" value=\"YES\"$disabled><span class=\"tooltip\" TITLE=\"Uninstalls OK?\">Uninstall?</span>\n";
+  echo"<input name=\"appworks_$i\" type=\"checkbox\" value=\"YES\"$disabled><span class=\"tooltip\" TITLE=\"App Works OK? (Loading pages/messages, Tabs, Back/Forward)\">App Works? </span>\n";
+  echo"<input name=\"cleanprofile_$i\" type=\"checkbox\" value=\"YES\"$disabled><span class=\"tooltip\" TITLE=\"Using a Clean Profile? (I.E. Works with No Major Extensions Installed, like TBE)\">Clean Profile?</span>\n";
 if ($type=="E") {
-  echo"<input name=\"newchrome_$i\" type=\"checkbox\" value=\"YES\"><span class=\"tooltip\" TITLE=\"Extension Added Chrome to the UI?\">New Chrome?</span>\n";
-  echo"<input name=\"worksasdescribed_$i\" type=\"checkbox\" value=\"YES\"><span class=\"tooltip\" TITLE=\"Item Works as Author Describes\">Works?</span>\n";
+  echo"<input name=\"newchrome_$i\" type=\"checkbox\" value=\"YES\"$disabled><span class=\"tooltip\" TITLE=\"Extension Added Chrome to the UI?\">New Chrome?</span>\n";
+  echo"<input name=\"worksasdescribed_$i\" type=\"checkbox\" value=\"YES\"$disabled><span class=\"tooltip\" TITLE=\"Item Works as Author Describes\">Works?</span>\n";
 } else if ($type=="T") {
-  echo"<input name=\"visualerrors_$i\" type=\"checkbox\" value=\"YES\"><span class=\"tooltip\" TITLE=\"No Visual Errors / Rendering Problems\">Visual Errors?</span>\n";
-  echo"<input name=\"allelementsthemed_$i\" type=\"checkbox\" value=\"YES\"><span class=\"tooltip\" TITLE=\"All Components Themed? (Including No Missing Icons?)\">Theme Complete?</span>\n";
+  echo"<input name=\"visualerrors_$i\" type=\"checkbox\" value=\"YES\"$disabled><span class=\"tooltip\" TITLE=\"No Visual Errors / Rendering Problems\">Visual Errors?</span>\n";
+  echo"<input name=\"allelementsthemed_$i\" type=\"checkbox\" value=\"YES\"$disabled><span class=\"tooltip\" TITLE=\"All Components Themed? (Including No Missing Icons?)\">Theme Complete?</span>\n";
 }
   echo"</TD></TR>\n";
 
   echo"<TR><TD COLSPAN=4 style=\"font-size: 8pt\"><strong>Action:</strong> \n";
-  echo"<input name=\"approval_$i\" type=\"radio\" value=\"YES\">Approve&nbsp;&nbsp;";
-  echo"<input name=\"approval_$i\" type=\"radio\" value=\"NO\">Deny&nbsp;&nbsp;";
-  echo"<input name=\"approval_$i\" type=\"radio\" checked=\"checked\" VALUE=\"noaction\">No Action\n";
+  echo"<input name=\"approval_$i\" type=\"radio\" value=\"YES\"$disabled>Approve&nbsp;&nbsp;";
+  echo"<input name=\"approval_$i\" type=\"radio\" value=\"NO\"$disabled>Deny&nbsp;&nbsp;";
+  echo"<input name=\"approval_$i\" type=\"radio\" checked=\"checked\" VALUE=\"noaction\"$disabled>No Action\n";
   echo"</TD></TR>\n";
  }
 

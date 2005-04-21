@@ -27,7 +27,7 @@ if ($_SESSION['level'] == 'editor') {
 ?>
 <li><A HREF="<?=WEB_PATH?>/developers/usermanager.php?function=edituser&amp;userid=<?php echo"$_SESSION[uid]"; ?>">Your Profile</A></li>
 <li><A HREF="<?=WEB_PATH?>/developers/approval.php">Approval Queue <?=$queuenum?></A></li>
-<li><a href="<?=WEB_PATH?>/developers/commentsmanger.php?function=flaggedcomments">Comments Manager <?=$commentsnum?></a></li>
+<li><a href="<?=WEB_PATH?>/developers/commentsmanager.php?function=flaggedcomments">Comments Manager <?=$commentsnum?></a></li>
 <li><a href="<?=WEB_PATH?>/developers/reviewsmanager.php">Reviews Manager</a></li>
 <?php
 } 
