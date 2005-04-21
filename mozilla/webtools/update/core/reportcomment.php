@@ -21,6 +21,7 @@
 //
 // Contributor(s):
 //   Chris "Wolf" Crews <psychoticwolf@carolina.rr.com>
+//   Colin Ogilvie <colin.ogilvie@gmail.com>
 //
 // Alternatively, the contents of this file may be used under the terms of
 // either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,53 +40,60 @@
 //Inappropriate Comment Reporting Tool
 require_once('../core/init.php');
 
-//Check and see if the CommentID/ID is valid.
-$sql = "SELECT `ID`, `CommentID` FROM `feedback` WHERE `ID` = '".escape_string($_GET[id])."' AND `CommentID`='".escape_string($_GET["commentid"])."' LIMIT 1";
-$sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
-    if(mysql_num_rows($sql_result)=="0") {
-        unset($_GET["id"],$_GET["commentid"],$id,$commentid);
+if (strtolower($_SERVER['REQUEST_METHOD']) == 'post')
+{
+    $id = escape_string($_POST['id']);
+    $commentid = escape_string($_POST['commentid']);
+    
+    //Check and see if the CommentID/ID is valid.
+    $sql = "SELECT `ID`, `CommentID` FROM `feedback` WHERE `ID` = '".$id."' AND `CommentID`='" .$commentid."' LIMIT 1";
+    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
+    if(mysql_num_rows($sql_result)==0) {
+        page_error("4","Comment could not be found. Please go back and try again.");
     } else {
-        $id = escape_string($_GET["id"]);
-        $commentid = escape_string($_GET["commentid"]);
+        if ($_POST['action'] == 'reportconfirm')
+        {
+            $sql = "UPDATE `feedback` SET `flag`='YES' WHERE `CommentID`='".$commentid."' LIMIT 1";
+            $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+            if (mysql_affected_rows()==0)
+            {
+                page_error("5", "Comment could not be flagged for review. Please go back and try again.");
+            } else {
+                $page_title = 'Mozilla Update :: Report a Comment';
+                require_once(HEADER);
+                echo '<h1>Mozilla Update :: Report a Comment</h1>
+                <p>You have sucessfully reported this comment to Mozilla Update staff.</p>
+                <p>A staff member will review your submission and take the appropriate action.</p>
+                <p>Thank you for your assistance.</p>';
+                require_once(FOOTER);
+            }
+        }
     }
-
-    //Make Sure action is as expected.
-    if ($_GET["action"]=="report") {
-        $action="yes";
-    }
-
-    if (!$commentid or !$action ) {
-    //No CommentID / Invalid Action --> Error.
-        page_error("4","No Comment ID or Action is Invalid");
-        exit;
-    }
-
-//Set Flag on the Comment Record
-    $sql = "UPDATE `feedback` SET `flag`='YES' WHERE `CommentID`='$commentid' LIMIT 1";
-    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-
-
-
-if ($_GET["type"]=="E") {
-    $type="extensions";
-} else if ($_GET["type"]=="T") {
-    $type="themes";
 }
-
-//$return_path="$type/moreinfo.php?id=$id&vid=$vid&".uriparams()."&page=comments&pageid=$_GET[pageid]#$commentid";
-
-$page_title = 'Mozilla Update :: Report a Comment';
-require_once(HEADER);
+else
+{
+    $page_title = 'Mozilla Update :: Report a Comment';
+    require_once(HEADER);
+    $id = escape_string($_GET['id']);
+    $commentid = escape_string($_GET['commentid']);
+    // Check to see if Comment ID is valid
+    $sql = "SELECT `ID`, `CommentID` FROM `feedback` WHERE `ID` = '".$id."' AND `CommentID`='" .$commentid."' LIMIT 1";
+    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
+    if (mysql_num_rows($sql_result)==0)
+    {
+        page_error("4","Comment could not be found. Please go back and try again.");
+        // page_error automatically exists for us.
+    }
 ?>
-
-<h1>Mozilla Update :: Report a Comment Tool</h1>
-<p>You have sucessfully reported this comment to Mozilla Update staff.</p>
-<p>A staff member will review your submission and take the appropriate action.</p>
-<p>Thank you for your assistance.</p>
-
-<?php /* To return to where you were browsing, <a href="/<?php
-echo"$return_path"; ?>">click this link</a>. */ ?>
-
-<?php
-require_once(FOOTER);
+    <h1>Mozilla Update :: Report a Comment</h1>
+    <p>You have asked for a comment to be reviewed by the Mozilla Update staff. To confirm this action, please click 'Review this Comment' below.</p>
+    <form action="reportcomment.php" method="post">
+        <input type="hidden" name="id" value="<?=$id?>">
+        <input type="hidden" name="commentid" value="<?=$commentid?>">
+        <input type="hidden" name="action" value="reportconfirm">
+        <input type="submit" name="submit" value="Review this Comment">
+    </form>
+<?
+    require_once(FOOTER);
+}
 ?>

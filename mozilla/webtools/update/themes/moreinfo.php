@@ -645,7 +645,7 @@ if (isset($_GET["vid"])) {
                 //  }
 
                 //  echo"Was this comment helpful to you? <a href=\"../core/commenthelpful.php?".uriparams()."&amp;id=$id&amp;type=$type&amp;commentid=$commentid&amp;pageid=$pageid&amp;action=yes\">Yes</a>&nbsp;&nbsp;&nbsp;<a href=\"../core/commenthelpful.php?".uriparams()."&amp;id=$id&amp;type=$type&amp;commentid=$commentid&amp;pageid=$pageid&amp;action=no\">No</a>";
-                echo" <span style=\"font-size: xx-small\"><a href=\"../core/reportcomment.php?".uriparams()."&amp;id=$id&amp;type=$type&amp;commentid=$commentid&amp;pageid=$pageid&amp;action=report\" ONCLICK=\"return confirm('Report this comment as inappropriate on the site?');\">(Report Comment)</a></span>";
+                echo" <span style=\"font-size: xx-small\"><a href=\"../core/reportcomment.php?id=$id&amp;commentid=$commentid\">(Report Comment)</a></span>";
                 echo"<BR>";
 
                 echo"</p>\n";
