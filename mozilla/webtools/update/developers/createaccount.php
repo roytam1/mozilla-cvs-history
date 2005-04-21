@@ -11,11 +11,11 @@ if (!$function or $function=="step1") {
 <div id="mainContent" class="right">
 
 <h2>Create an Account</h2>
-Joining Mozilla Update is easy just fill out the form below and click the join button.
+<p>Joining Mozilla Update is easy!  Just fill out the form below and click the join button.</p>
 
 <form name="createaccount" method="post" action="createaccount.php?function=step2">
 <table border=0 cellpadding=0 cellspacing=0>
-<tr><td colspan=2>Your e-mail address is used as your username to login. You'll also receive confirmation e-mail to this address. In order for your account to be activated succesfully, you must specify a valid e-mail address.</td></tr>
+<tr><td colspan="2">Your e-mail address is used as your username to login. You'll also receive a confirmation e-mail to this address. In order for your account to be activated succesfully, you must specify a valid e-mail address.</td></tr>
 <tr>
 <td><strong>E-Mail Address:</strong></td>
 <td><input name="email" type="text" size=30></td>
@@ -24,17 +24,17 @@ Joining Mozilla Update is easy just fill out the form below and click the join b
 <td><strong>Confirm E-Mail:</strong></td>
 <td><input name="emailconfirm" type="text" size=30></td>
 </tr>
-<tr><td colspan=2>How do you want to be known to visitors of Mozilla Update? This is your "author name" it will be shown with your extension/theme listings on the site.</td></tr>
+<tr><td colspan="2">How do you want to be known to visitors of Mozilla Update? This is your "author name" and it will be shown with your extension/theme listings on the Mozilla Update web site.</td></tr>
 <tr>
 <td><strong>Your Name</strong></td>
 <td><input name="name" type="text" size=30></td>
 </tr>
-<tr><td colspan=2>If you have a website, enter the URL here. (including the http:// ) Your website will be shown to site visitors on your author profile page. This field is optional, if you don't have a website or don't want it linked to from Mozilla Update, leave this box blank. </td></tr>
+<tr><td colspan="2">If you have a website, enter the URL here. (including the http:// ) Your website will be shown to site visitors on your author profile page. This field is optional; if you don't have a website or don't want it linked to from Mozilla Update, leave this box blank. </td></tr>
 <tr>
 <td><strong>Your Website</strong></td>
 <td><input name="website" type="text" size=30></td>
 </tr>
-<tr><td colspan=2>Your desired password. This along with your e-mail will allow you to login, so make it something memorable but not easy to guess. Type it in both fields below, the two fields must match.</td></tr>
+<tr><td colspan="2">Your desired password. This along with your e-mail will allow you to login, so make it something memorable but not easy to guess. Type it in both fields below.  The two fields must match.</td></tr>
 <tr>
 <td><strong>Password:</strong></td>
 <td><input name="password" type="password" size=30></td>
@@ -43,9 +43,9 @@ Joining Mozilla Update is easy just fill out the form below and click the join b
 <td><strong>Confirm Password:</strong></td>
 <td><input name="passwordconfirm" type="password" size=30></td>
 </tr>
-<tr><td colspan=2>Review what you entered above, if everything's correct, click the "Join Mozilla Update" button. If you want to start over, click "Clear Form".</td></tr>
+<tr><td colspan="2">Review what you entered above. If everything's correct, click the "Join Mozilla Update" button. If you want to start over, click "Clear Form".</td></tr>
 <tr>
-<td colspan=2><input name="submit" type="submit" value="Join Mozilla Update"><input name="reset" type="reset" value="Clear Form"></td>
+<td colspan="2"><input name="submit" type="submit" value="Join Mozilla Update"><input name="reset" type="reset" value="Clear Form"></td>
 </tr>
 </table>
 
@@ -54,8 +54,8 @@ Joining Mozilla Update is easy just fill out the form below and click the join b
 </div>
 <div id="side" class="right">
 <h2>Already Have an Account?</h2>
-<P>If you already have signed-up for an account, you don't need to sign-up again. Just use your e-mail address and password and <a href="index.php">login</a>.</P>
-<P>If you don't remember the password for your acconut, you can <a href="passwordreset.php">recover a forgotten password</a>.</P>
+<P>If you already have signed up for an account, you don't need to sign-up again. Just use your e-mail address and password and <a href="index.php">login</a>.</P>
+<P>If you don't remember the password for your account, you can <a href="./passwordreset.php">recover a forgotten password</a>.</P>
 </div>
 
 <?php
