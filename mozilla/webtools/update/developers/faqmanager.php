@@ -31,27 +31,15 @@ if (!$function) {
 </tr>
 
 <?php
-  $sql = "SELECT * FROM `faq` ORDER BY `index` ASC, `title` ASC";
+  $sql = "SELECT id, title, active, UNIX_TIMESTAMP(lastupdated) as lastupdated FROM `faq` ORDER BY `index` ASC, `title` ASC";
   $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
-
-//Create Customizeable Timestamp
-   $date = $row["lastupdated"];
-	$day=substr($date,6,2);  //get the day
-    $month=substr($date,4,2); //get the month
-    $year=substr($date,0,4); //get the year
-    $hour=substr($date,8,2); //get the hour
-    $minute=substr($date,10,2); //get the minute
-    $second=substr($date,12,2); //get the sec
-    $timestamp = strtotime("$year-$month-$day $hour:$minute:$second");
-    $lastupdated = gmdate("F d, Y g:i:sa", $timestamp);
-
-  $applications[] = $row["AppName"];
+    $lastupdated = gmdate("F d, Y g:i:sa", $row['lastupdated']);
     echo"<tr>\n";
     echo"<td>".++$i."</td>\n";
     echo"<td>&nbsp;<a href=\"?function=edit&id=".$row["id"]."\">".$row["title"]."</a></td>\n";
     echo"<td>$lastupdated</td>\n";
-    echo"<td>$row[active]</td>\n";
+    echo"<td>".$row['active']."</td>\n";
     echo"</tr>\n";
 
 }
