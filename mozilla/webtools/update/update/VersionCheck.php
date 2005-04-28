@@ -112,7 +112,7 @@ if (empty($errors)) {
     $reqTargetAppVersion = mysql_real_escape_string($_GET['appVersion']);
 
     // For backwards compatibility, not required.
-    $reqTargetOS = mysql_real_escape_string($_GET['appOS']);
+    $reqTargetOS = (isset($_GET['appOS'])) ? mysql_real_escape_string($_GET['appOS']) : null;
 
     // Get the os_id based on _GET; fall back  _SERVER (UA string).
     $os_id = get_os_id($reqTargetOS);
