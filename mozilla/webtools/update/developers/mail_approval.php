@@ -29,6 +29,12 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
 	$message = "$name $version - $action_email\n";
     $message .= "Your item, $name $version, has been reviewed by a Mozilla Update editor who took the following action:\n";
     $message .= "$action_email\n\n";
+
+    if ($action == 'approve')
+    {
+       $message .= "Please Note: It may take up to 30 minutes for your extension to be available for download.\n\n";
+    }
+
     $message .= "Your item was tested by the editor using $testbuild on $testos.\n";
     $message .= "Editor's Comments:\n $comments\n";
     $message .= "----\n";
