@@ -33,11 +33,11 @@ global $installation, $uninstallation, $newchrome, $appworks, $visualerrors, $al
     if ($sql_result) {} else { $operations_failed="true";}
 
 //Secondly, If Stage 1 was successful (and we're approving the file), let's move the file to it's new home in /ftp/ for staging...
-$filename = str_replace ('http://'.HOST_NAME.'/developers/approvalfile.php', REPO_PATH.'/approval', $file);
+$filename = preg_replace('/http.*approvalfile\.php/', REPO_PATH.'/approval', $file);
 if ($action=="approve") {
     if (file_exists($filename)) {
         if ($type=="T") {$type="themes";} else if ($type=="E") {$type="extensions";}
-        $path = str_replace(' ','_',strtolower("$type/$name"));
+        $path = str_replace(' ','_',strtolower("$type/".addslashes($name)));
         $destination = str_replace("approval",strtolower("ftp/$path"),$filename);
         $dirpath = REPO_PATH.'/ftp/'.$path;
         if (!file_exists($dirpath)) {
@@ -59,13 +59,12 @@ if ($action=="approve") {
         $uri = str_replace(REPO_PATH.'/ftp',FTP_URL,$destination);
     }
 
-} else if ($action=="deny") {
+} elseif ($action=="deny") {
     //We're denying approval on this item, delete the file and set URI to null.
     if (file_exists($filename)) {unlink($filename); }
     $uri = "";
 
 }
-
 //Thirdly, update version record...
 $sql = "UPDATE `version` SET `URI`='$uri', `approved`='$approved', `DateUpdated`=NOW(NULL) WHERE `URI`='$file'";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);

@@ -8,10 +8,22 @@ require_once('./inc_sidebar.php');
 
 //this screen is only for admins
 if ($_SESSION["level"] !=="admin") {
-  echo"<h1>Access Denied</h1>\n";
-  echo"You do not have access to this item.";
-  include(FOOTER);
-  exit;
+
+  $id = escape_string($_GET["id"]);                                           
+  if (!$id) {
+    $id = escape_string($_POST["id"]); 
+  }                             
+  $sql = "SELECT `UserID` from `authorxref` TAX WHERE `ID` = '$id' AND `UserID` = '$_SESSION[uid]' LIMIT 1";
+  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+  if (mysql_num_rows($sql_result)=="0") {              
+    echo"<h1>Access Denied</h1>\n";
+    echo"You do not have access to this item.";
+    include(FOOTER);
+    exit;
+  }
+  if(!$function) {
+    $function = "editmain";
+  }
 }
 ?>
 
@@ -555,7 +567,7 @@ $sql = "SELECT `AppName`, `Version`, `major`, `minor`, `release`, `SubVer` FROM 
   
 $i=0;
 echo"<TR><TD COLSPAN=2><SPAN class=\"file\">Target Application(s):</SPAN></TD></TR>\n";
- $sql = "SELECT vID, TV.AppID,`AppName`,`MinAppVer`,`MaxAppVer` FROM  `version` TV INNER JOIN `applications` TA ON TA.AppID=TV.AppID WHERE `ID` = '$id' && TV.URI = '$uri' ORDER BY `AppName` ASC";
+ $sql = "SELECT vID, TV.AppID,`AppName`,`MinAppVer`,`MaxAppVer` FROM  `version` TV INNER JOIN `applications` TA ON TA.AppID=TV.AppID WHERE `ID` = '$id' && TV.URI = '".escape_string($uri)."' ORDER BY `AppName` ASC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
     $i++;

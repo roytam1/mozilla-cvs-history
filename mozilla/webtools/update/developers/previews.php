@@ -109,7 +109,7 @@ if ($num_results>"0") {
     $caption = $row["caption"];
     $preview = $row["preview"];
     list($src_width, $src_height, $type, $attr) = getimagesize(FILE_PATH.'/'.$uri);
-    $filesize = round(filesize(FILE_PATH.'/'.$uri)/1024,1);
+    $filesize = round(filesize(FILE_PATH.$uri)/1024,1);
     $popup_width = $src_width+25;
     $popup_height = $src_height+25;
 
@@ -130,8 +130,8 @@ if ($num_results>"0") {
 
 echo"<h3>Preview #$i - $caption </h3>\n";
 echo"$filename ($src_width x $src_height) $filesize"."Kb"; if ($preview=="YES") {echo"  (List Page Preview)";}echo"<br>\n";
-if ($nopopup != "true") {echo"<a href=\"javascript:void(window.open('$uri', '', 'scrollbars=yes,resizable=yes,width=$popup_width,height=$popup_height,left=30,top=20'));\">";}
-echo"<img src=\"$uri\" border=0 width=$dest_width height=$dest_height alt=\"$caption\" title=\"$caption\">";
+if ($nopopup != "true") {echo"<a href=\"javascript:void(window.open('".WEB_PATH."$uri', '', 'scrollbars=yes,resizable=yes,width=$popup_width,height=$popup_height,left=30,top=20'));\">";}
+echo"<img src=\"".WEB_PATH."$uri\" border=\"0\" width=\"$dest_width\" height=\"$dest_height\" alt=\"$caption\" title=\"$caption\">";
 if ($nopopup != "true") {echo"</a>";}
 echo"<br>\n";
 echo"<input name=\"previewid_$i\" type=\"hidden\" value=\"$previewid\">\n";

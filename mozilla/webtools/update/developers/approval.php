@@ -154,19 +154,33 @@ WHERE `approved` = '?' GROUP BY TV.URI ORDER BY TV.DateUpdated ASC";
 
   echo"<TR>";
   echo"<TD style=\"font-size: 8pt;\"><strong>Works with: </strong>";
-  $sql3 = "SELECT `shortname`, `MinAppVer`, `MaxAppVer` FROM `version` TV INNER JOIN `applications` TA ON TV.AppID = TA.AppID WHERE `URI`='$row[URI]' ORDER BY `AppName` ASC";
-    $sql_result3 = mysql_query($sql3, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-     while ($row3 = mysql_fetch_array($sql_result3)) {
-  echo"".ucwords($row3[shortname])." $row3[MinAppVer]-$row3[MaxAppVer] \n";
-    }
+  $sql3 = "SELECT `shortname`, `MinAppVer`, `MaxAppVer` FROM `version` TV INNER JOIN `applications` TA ON TV.AppID = TA.AppID WHERE `URI`='" . escape_string($row['URI']) . "' ORDER BY `AppName` ASC";
+  $sql_result3 = mysql_query($sql3, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+
+    // Array of applications this item is associated with.
+    $apps = array();
+
+  while ($row3 = mysql_fetch_array($sql_result3)) {
+    echo ucwords($row3['shortname']) . " {$row3['MinAppVer']}-{$row3['MaxAppVer']} \n";
+
+    // Throw application compatibility into array.
+    $apps[] = strtolower($row3['shortname']);
+  }
+
   if($row[OSName] != "ALL") { echo" ($row[OSName])"; }
 
+    // Escape each instance of name/uri for javascript.
     if ($type=="T") {
-        $installink = "javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'$row[URI]','$row[Name] $row[Version]'))";
-    } else if ($type=="E") {
-          $installink = "javascript:void(InstallTrigger.install({'$row[Name] $row[Version]':'$row[URI]'}))";
+        // Show Themes install link.
+        echo " <span>(<a href=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'".addslashes($row['URI'])."','".addslashes($row['Name']." ".$row['Version'])."'))\">Install Now</a>)</span>\n";
+    } else {
+        // Show extensions install link.
+        echo " <span>(<a href=\"javascript:void(InstallTrigger.install({'".addslashes($row['Name'].$row['Version'])."':'".addslashes($row['URI'])."'}))\">Install Now</a>)</span>";
     }
-  echo"<SPAN><a href=\"$installink\">( Install Now )</a></span>\n";
+
+    // Show a download now link.
+    echo '<span>(<a href="' . $row['URI'] . '">Download Now</a>)</span>'."\n";
+
   echo"</TD>\n";
   echo"</TR>\n";
 

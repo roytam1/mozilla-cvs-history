@@ -91,7 +91,7 @@ echo"<br>\n";
 
 $sql2 = "SELECT TV.Version, AppName, MinAppVer, MaxAppVer FROM `version` TV
     INNER JOIN applications TA ON TA.AppID = TV.AppID
-    WHERE `ID`='$id' AND `URI`='$uri' ORDER BY TV.Version, TA.AppName";
+    WHERE `ID`='$id' AND `URI`='".escape_string($uri)."' ORDER BY TV.Version, TA.AppName";
     $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     while($row2 = mysql_fetch_array($sql_result2)) {
 
