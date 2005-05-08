@@ -44,8 +44,8 @@ $type = escape_string($_GET["type"]); //E, T, [P]
 $list = ucwords(strtolower($_GET["list"])); // Newest, Updated, [Editors], Popular
 
 $sitetitle = "Mozilla Update";
-$siteicon = "http://www.mozilla.org/images/mozilla-16.png";
-$siteurl = $_SERVER["SERVER_NAME"];
+$siteurl = 'https://' . HOST_NAME . WEB_PATH;
+$siteicon = $siteurl . '/favicon.ico';
 $sitedescription = "the way to keep your mozilla software up-to-date";
 $sitelanguage = "en-US";
 $sitecopyright = "Copyright 2004-2005 The Mozilla Organization";
