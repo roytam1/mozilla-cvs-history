@@ -185,7 +185,7 @@ function installtrigger($functionname) {
                 IconURL: iconURL,
                 toString: function () { return this.URL; }
             };
-            InstallTrigger.install'.$rndNum.'(params);
+            InstallTrigger.install(params);
             return false;
         }
 
