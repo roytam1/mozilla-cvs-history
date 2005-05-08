@@ -175,7 +175,7 @@ WHERE `approved` = '?' GROUP BY TV.URI ORDER BY TV.DateUpdated ASC";
         echo " <span>(<a href=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'".addslashes($row['URI'])."','".addslashes($row['Name']." ".$row['Version'])."'))\">Install Now</a>)</span>\n";
     } else {
         // Show extensions install link.
-        echo " <span>(<a href=\"javascript:void(InstallTrigger.install$rndNum){'".addslashes($row['Name'].$row['Version'])."':'".addslashes($row['URI'])."'}))\">Install Now</a>)</span>";
+        echo " <span>(<a href=\"javascript:alert('Temporarily Disabled');\">Install Now</a>)</span>";
     }
 
     // Show a download now link.
