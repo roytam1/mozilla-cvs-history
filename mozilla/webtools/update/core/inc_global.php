@@ -165,14 +165,16 @@ function uriparams() {
 // function installtrigger() -- print installtrigger function for extension/theme installation on page.
 // Usage null uriparams(string functionname) 
 // -----------------------------
+    
+$rndNum = md5(rand(1, 1048576));
 
 function installtrigger($functionname) {
+    global $rndNum;
     if ($functionname=="extensions") {
     echo'
         <script type="text/javascript">
         <!--
-
-        function install( aEvent, extName, iconURL)  {   
+        function install'.$rndNum.'( aEvent, extName, iconURL)  {   
             var p = new XMLHttpRequest();
             p.open("GET", "'.WEB_PATH.'/core/install.php?uri="+aEvent.target.href, false);
             p.send(null);
@@ -183,7 +185,7 @@ function installtrigger($functionname) {
                 IconURL: iconURL,
                 toString: function () { return this.URL; }
             };
-            InstallTrigger.install(params);
+            InstallTrigger.install'.$rndNum.'(params);
             return false;
         }
 
@@ -196,7 +198,7 @@ function installtrigger($functionname) {
     echo'
         <script type="text/javascript">
         <!--
-            function installTheme( aEvent, extName) {
+            function installTheme'.$rndNum.'( aEvent, extName) {
                 var p = new XMLHttpRequest();
                 p.open("GET", "'.WEB_PATH.'/core/install.php?uri="+aEvent.target.href, false);
                 p.send(null);

@@ -445,7 +445,7 @@ echo"<DIV class=\"iconbar\">";
 if ($appname=="Thunderbird") {
     echo"<A HREF=\"moreinfo.php?".uriparams()."&amp;id=$id\"><IMG SRC=\"../images/download.png\" HEIGHT=32 WIDTH=32 TITLE=\"More Info about $name\" ALT=\"\">More Info</A>";
 } else {
-    echo"<a href=\"$uri\" onclick=\"return install(event,'".addslashes($name.' '.$version)."',
+    echo"<a href=\"$uri\" onclick=\"return installTheme$rndNum(event,'".addslashes($name.' '.$version)."',
     '../images/default.png');\"><IMG SRC=\"../images/download.png\" HEIGHT=32 WIDTH=32 TITLE=\"Install $name\" ALT=\"\">Install</A>";
 }
 echo"<BR><SPAN class=\"filesize\">&nbsp;&nbsp;$filesize kb</SPAN></DIV>";
