@@ -827,10 +827,15 @@ if (! CheckPermissions("CreateBugs", $SenderShort ) ) {
 
 # Set QA
 if (Param("useqacontact")) {
-    SendSQL("select initialqacontact from components, products where components.product_id = products.id AND products.name=" .
-            SqlQuote($Control{'product'}) .
-            " and components.name=" . SqlQuote($Control{'component'}));
-    $Control{'qa_contact'} = FetchOneColumn();
+    if (defined($Control{'qa_contact'}) 
+        && $Control{'qa_contact'} !~ /^\s*$/ ) {
+        $Control{'qa_contact'} = DBname_to_id($Control{'qa_contact'});
+    } else {
+        SendSQL("select initialqacontact from components, products where components.product_id = products.id AND products.name=" .
+                SqlQuote($Control{'product'}) .
+                " and components.name=" . SqlQuote($Control{'component'}));
+        $Control{'qa_contact'} = FetchOneColumn();
+    }
 }
 
 # Set Assigned - assigned_to depends on the product, cause initialowner 
