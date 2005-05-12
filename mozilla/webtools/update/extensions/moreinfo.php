@@ -362,9 +362,9 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
 
             if ($appname=="Thunderbird") { 
               $downloadURL=mozupd_buildDownloadURL($uri,$name,$version);
-              echo "<a href=\"$downloadURL\" title=\"Right-Click to Download $name $version\">";
+              echo "<a href=\"$downloadURL\" onclick=\"return install(event,'".addslashes($name)." $version for Thunderbird', '../images/default.png');\"  title=\"Right-Click to Download $name $version\">";
             } else {
-                echo"<b><a href=\"$uri\" TITLE=\"Install $name $version (Right-Click to Download)\">";
+                echo"<b><a href=\"$uri\" onclick=\"return install(event,'".addslashes($name)." $version', '../images/default.png');\" TITLE=\"Install $name $version (Right-Click to Download)\">";
             }
         ?>Install Now</a></b> (<?php echo"$filesize"; ?>&nbsp;KB&nbsp;File)</div></div>
 
@@ -551,9 +551,9 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
             echo"<DIV class=\"iconbar\">";
             if ($appname=="Thunderbird") {
               $downloadURL=mozupd_buildDownloadURL($uri,$name,$version);
-              echo "<a href=\"$downloadURL\">";
+              echo "<a href=\"$downloadURL\" onclick=\"return install(event,'".addslashes($name)." $version for Thunderbird', '../images/default.png');\">";
             } else {
-                echo"<a href=\"$uri\">";
+                echo"<a href=\"$uri\" onclick=\"return install(event,'".addslashes($name)." $version', '../images/default.png');\">";
             }
             echo"<IMG SRC=\"../images/download.png\" HEIGHT=34 WIDTH=34 TITLE=\"Install $name (Right-Click to Download)\" ALT=\"\">Install</A><BR><SPAN class=\"filesize\">Size: $filesize kb</SPAN></DIV>";
             echo"<DIV class=\"iconbar\"><IMG SRC=\"../images/".strtolower($appname)."_icon.png\" HEIGHT=34 WIDTH=34 ALT=\"\">&nbsp;For $appname:<BR>&nbsp;&nbsp;$minappver - $maxappver</DIV>";

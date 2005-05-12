@@ -378,7 +378,7 @@ if (isset($_GET["vid"])) {
               $downloadURL=mozupd_buildDownloadURL($uri,$name,$version);
               echo"<a href=\"$downloadURL\" onclick=\"return installTheme(event,'".addslashes($name)." $version for Thunderbird');\"  title=\"Right-Click to Download $name $version\">";
             } else {
-                echo"<b><a href=\"$uri\" TITLE=\"Install $name $version (Right-Click to Download)\">";
+                echo"<b><a href=\"$uri\" onclick=\"return installTheme(event,'".addslashes($name)." $version');\" TITLE=\"Install $name $version (Right-Click to Download)\">";
             }
         ?>Install Now</a></b>&nbsp;(<?php echo"$filesize"; ?>&nbsp;KB&nbsp;File)</div></div>
 

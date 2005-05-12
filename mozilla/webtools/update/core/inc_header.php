@@ -121,11 +121,4 @@ if (!empty($page_headers)) {
 <!-- closes #header-->
 
 <hr class="hide">
-<br>
-<table style="border: solid red 4px;"><tr>
-<td style="border: solid black 1px; font-size: 1.1em; font-weight: bold; padding: 10px 15px 10px 15px;">
-<p>To address security concerns, we have made a number of changes, including temporarily changing the URL for this site.  If prompted, please <b>DO NOT</b> add this new URL
-(do-not-add.mozilla.org) to your Allowed Sites or White List.</p>
-<p><a href="http://wiki.mozilla.org/Installing_Extensions">Instructions for Manually Installing Extensions and Themes</a></p>
-</td></tr></table>
 
