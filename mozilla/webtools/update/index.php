@@ -254,6 +254,27 @@ vulputate sapien et leo. Nullam euismod tortor id wisi.
 
 <!-- closes #mBody-->
 
-<?php
-require_once(FOOTER);
-?>
+<!-- custom front-page footer -->
+<hr class="hide">
+	<div id="footer">
+
+<div id="xramp" style="float:left;height:100px;">
+<script language=JavaScript src='https://seal.XRamp.com/seal.asp?type=H'></script>
+</div>
+
+		<ul id="bn">
+		<li><a href="<?php echo WEB_PATH; ?>/about/policies/">Terms of Use</a></li>
+		<li><a href="<?php echo WEB_PATH; ?>/about/contact/">Contact Us</a></li>
+		<li><a href="http://www.mozilla.org/foundation/donate.html">Donate to
+            Mozilla</a></li>
+		</ul>
+		<p>Copyright &copy; 2004-2005 The Mozilla Organization</p>
+        <p>256-bit SSL Encryption provided by <a href="http://www.xramp.com/">XRamp</a></p>
+	</div>
+  <!-- closes #footer-->
+
+</div>
+<!-- closes #container -->
+
+</body>
+</html>
