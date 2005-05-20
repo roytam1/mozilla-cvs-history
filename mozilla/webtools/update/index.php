@@ -259,7 +259,7 @@ vulputate sapien et leo. Nullam euismod tortor id wisi.
 	<div id="footer">
 
 <div id="xramp" style="float:left;height:100px;">
-<script language=JavaScript src='https://seal.XRamp.com/seal.asp?type=H'></script>
+<script type="text/javascript" src="https://seal.XRamp.com/seal.asp?type=H"></script>
 </div>
 
 		<ul id="bn">
