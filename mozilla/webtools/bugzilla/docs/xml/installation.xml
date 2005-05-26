@@ -1436,7 +1436,7 @@ close SENDMAIL;
 use Net::SMTP;
 my $smtp_server = 'smtp.mycompany.com';  # change this
 
-($enableSendMail && $rcpt_to) || return;
+($enableSendMail &amp;&amp; $rcpt_to) || return;
 
 # Use die on error, so that the mail will be in the 'unsent mails' and
 # can be sent from the sanity check page.
