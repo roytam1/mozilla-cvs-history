@@ -39,4 +39,5 @@ ti_files
 *.rc
 *.res
 Makefile
+*.pdb
 
