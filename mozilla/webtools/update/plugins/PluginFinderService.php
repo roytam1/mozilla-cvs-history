@@ -247,10 +247,10 @@ if (($mimetype == 'application/x-shockwave-flash' ||
 
   $name = 'Apple Quicktime';
   $guid = '{a42bb825-7eee-420f-8ee7-834062b6fefd}';
-  $version = '6.5.1';
   $XPILocation = getUriForNoXPI();
   $installerShowsUI = 'true';
-  $manualInstallationURL = 'http://www.apple.com/quicktime/download/standalone/';
+
+  $manualInstallationURL = 'http://www.apple.com/quicktime/download/';
 } else if (preg_match('/^application\/x-java-((applet|bean)(;jpi-version=1\.5|;version=(1\.(1(\.[1-3])?|(2|4)(\.[1-2])?|3(\.1)?|5)))?|vm)$/', $mimetype) &&
 	   preg_match('/^(Win|Linux|PPC Mac OS X)/', $clientOS)) {
   // We serve up the Java plugin for the following mimetypes:
