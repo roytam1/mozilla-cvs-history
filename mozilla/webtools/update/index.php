@@ -125,6 +125,11 @@ vulputate sapien et leo. Nullam euismod tortor id wisi.
 <!-- close security update -->
 <?php } ?>
 
+<div class="key-point"><p><strong>Want to get involved?</strong><br>
+We are looking for volunteers to help us with UMO. We are in need of PHP developers to help with redesigning the site, and people to review extensions and themes that get submitted to UMO. We especially need Mac and Thunderbird users. If you are interested in being a part of this exciting project, please send information such as your full name, timezone and experience to <a href="mailto:umo-reviewer@mozilla.org?subject=Review%20Application%20for%20[Name Here]">umo-reviewer@mozilla.org</a>. Also, please join us in #umo on irc.mozilla.org to start getting a feeling for what's up or for a more informal chat.
+</p>
+</div>
+
 <div id="mBody">
 	<div id="mainContent" class="right">
 
@@ -139,6 +144,7 @@ vulputate sapien et leo. Nullam euismod tortor id wisi.
     <a href="./about/update.php">status updates</a> as to our progress with the 
     UMO service.  The best is yet to come!</p>
 
+	<h2>What can I find here?</h2>
 	<dl>
     <dt>Extensions</dt>
     <dd>Extensions are small add-ons that add new functionality to your
