@@ -197,7 +197,7 @@ if (!(is_numeric($rating) and $rating<=5 and $rating>=0)) {
     unset($rating);
 } 
 
-if (!$rating or !$comments ) {
+if (!isset($rating) or !$comments ) {
     //No Rating or Comment Defined, throw an error.
     page_error("3","Comment is Blank or Rating is Null.");
     exit;
