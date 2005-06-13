@@ -152,9 +152,14 @@ $sql = "
         applications TA 
     ON 
         TV.AppID = TA.AppID
+    INNER
+        JOIN os TOS
+    ON
+        TV.OSID = TOS.OSID
     WHERE
         `Type` = 'T' AND
         `AppName` = '{$application}' AND
+        (`OSName` = '$OS' OR `OSName` = 'ALL') AND
         `approved` = 'YES' 
     ORDER BY
         `downloadcount` DESC,
