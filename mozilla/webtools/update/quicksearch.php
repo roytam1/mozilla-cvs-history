@@ -103,7 +103,8 @@ require_once(HEADER);
 if ($didSearch) {
   // build our query
   $sql = "FROM `main` TM
-WHERE (TM.name LIKE '%$searchStr%' OR TM.Description LIKE '%$searchStr%')";
+          WHERE (TM.name LIKE '%" . preg_replace('/[\s]+/','%',$searchStr) . "%' 
+              OR TM.Description LIKE '%" . preg_replace('/[\s]+/','%',$searchStr) . "%')";
 
   // search extensions/themes/etc
   if($section !== "A") {
