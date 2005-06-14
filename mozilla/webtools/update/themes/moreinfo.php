@@ -810,7 +810,7 @@ if (isset($_GET["vid"])) {
     <input name="formkey" type="hidden" value="<?php print(md5(substr(md5(mt_rand()),0,10))); ?>">
     <INPUT NAME="id" TYPE="HIDDEN" VALUE="<?php echo"$id"; ?>">
     <INPUT NAME="vid" TYPE="HIDDEN" VALUE="<?php echo"$vid"; ?>">
-    <INPUT name="type" type="hidden" value="E">
+    <INPUT name="type" type="hidden" value="T">
     Your Name:*<BR>
     <INPUT NAME="name" TYPE="TEXT" SIZE=30 MAXLENGTH=30><BR>
 
