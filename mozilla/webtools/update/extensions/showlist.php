@@ -396,7 +396,7 @@ echo"<DIV class=\"item\">\n";
         }
 
         if ($rating>floor($rating)) {
-            $val = ($rating-floor($rating))*10;
+            $val = floor(($rating-floor($rating))*10);
             echo"<IMG SRC=\"../images/stars/star_0$val.png\" width=\"17\" height=\"20\" ALT=\"\">";
             $i++;
         }
