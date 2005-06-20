@@ -26,7 +26,7 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
 
     $subject = "[$name $version] $action_email \n";
 
-	$message = "$name $version - $action_email\n";
+    $message = "$name $version - $action_email\n";
     $message .= "Your item, $name $version, has been reviewed by a Mozilla Update editor who took the following action:\n";
     $message .= "$action_email\n\n";
 
@@ -35,8 +35,11 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
        $message .= "Please Note: It may take up to 30 minutes for your extension to be available for download.\n\n";
     }
 
-    $message .= "Your item was tested by the editor using $testbuild on $testos.\n";
-    $message .= "Editor's Comments:\n $comments\n";
+    $message .= "Your item was tested by " . $_SESSION['name'] ;
+    $message .= " using $testbuild on $testos.\n";
+    if ($comments != "") {
+      $message .= "Editor's Comments:\n $comments\n";
+    }
     $message .= "----\n";
     $message .= 'Mozilla Update: https://'.HOST_NAME.WEB_PATH.'/'."\n";
 
