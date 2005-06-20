@@ -350,7 +350,6 @@ if (($mimetype == 'application/x-shockwave-flash' ||
 	   preg_match('/^Win/', $clientOS)) {
   $name = 'XStandard XHTML WYSIWYG Editor';
   $guid = '{3563d917-2f44-4e05-8769-47e655e92361}';
-  $version = '1.3.6';
   $iconUrl = 'http://xstandard.com/images/xicon32x32.gif';
   $XPILocation = 'http://xstandard.com/download/xstandard.xpi';
   $installerShowsUI = 'false';
