@@ -125,43 +125,6 @@ function get_client_ip()
     }
 }
 
-/**
- * Update the Rating for an ID
- * @param int ID
- */
-function update_rating($id) 
-{
-    global $connection;
-
-    //Get Rating Data and Create $ratingarray
-    $date = date("Y-m-d H:i:s", mktime(0, 0, 0, date("m"), date("d")-30, date("Y")));
-    $sql = "SELECT ID, CommentVote FROM  `feedback` 
-            WHERE `ID` = '$id' AND `CommentDate`>='$date' AND `CommentVote` IS NOT NULL";
-    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-
-    while ($row = mysql_fetch_array($sql_result)) {
-        $ratingarray[$row['ID']][] = $row["CommentVote"];
-    }
-
-    // Compile Rating Average
-    if (!$ratingarray[$id]) {
-        $ratingarray[$id] = array();
-    }
-
-    $numratings = count($ratingarray[$id]);
-    $sumratings = array_sum($ratingarray[$id]);
-
-    if ($numratings > 0) {
-        $rating = round($sumratings/$numratings, 1);
-    } 
-    else {
-            $rating="2.5"; //Default Rating
-    }
-
-    $sql = "UPDATE `main` SET `Rating`='$rating' WHERE `ID`='$id' LIMIT 1";
-    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-}
-
 
 //Check and see if the ID/vID is valid.
 $sql = "SELECT TM.ID, TV.vID 

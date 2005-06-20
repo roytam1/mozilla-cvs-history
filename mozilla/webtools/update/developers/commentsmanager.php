@@ -49,10 +49,20 @@ if ($_POST["submit"]=="Flag Selected" or $_POST["submit"]=="Delete Selected") {
 
      if (checkFormKey()) {
         if ($_POST["submit"]=="Delete Selected") {
+
+            // Get the ID of the addon whose comment is being deleted
+            // so we can recompute its rating after deleting the comment.
+            $sql = "SELECT ID FROM  `feedback` WHERE `CommentID`='$selected'";
+            $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
+            $id = mysql_result($sql_result, 0);
+
             $sql = "DELETE FROM `feedback` WHERE `CommentID`='$selected'";
             $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
+
             if ($sql_result) {
                 echo"Comment $selected deleted from database.<br>\n";
+                // Update the rating for this item, since it has potentially changed
+                update_rating($id);
             }
         } else if ($_POST["submit"]=="Flag Selected") {
             $sql = "UPDATE `feedback` SET `flag`= 'YES' WHERE `CommentID`='$selected'";
@@ -305,10 +315,16 @@ echo"<h2>Processing Changes to the Flagged Comments List, please wait...</h2>\n"
         if ($action=="skip") {continue;}
 
         if ($action=="delete") {
+            $sql = "SELECT ID FROM  `feedback` WHERE `CommentID`='$commentid'";
+            $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
+            $id = mysql_result($sql_result, 0);
+
             $sql = "DELETE FROM `feedback` WHERE `CommentID`='$commentid'";
             $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
             if ($sql_result) {
                 echo"Comment $commentid deleted from database.<br>\n";
+                // Update the rating for this item since it has potentially changed
+                update_rating($id);
             }
 
         } else if ($action=="clear") {

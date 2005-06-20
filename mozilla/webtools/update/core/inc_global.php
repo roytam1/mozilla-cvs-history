@@ -251,4 +251,37 @@ function getmicrotime() {
 	list($usec, $sec) = explode(" ", microtime());
     return ((float)$usec + (float)$sec);
 }
+
+/**
+ * Update the Rating for an ID
+ * @param int ID
+ */
+function update_rating($id) 
+{
+    global $connection;
+
+    // Sanatize $id
+    settype($id, "integer");
+    if ($id <= 0) {
+         page_error("15", "Invalid ID in call to update ratings");
+    }
+
+    // Select current average from the database; note we can now use the AVG
+    // function as the decision has been taken to make the average the average
+    // over the duration of the items life rather than the last 30 days.
+    // Added as part of Bug 296541 which changed the database schema
+
+    $sql = "SELECT AVG(CommentVote) AS CommentVote FROM `feedback` " .
+           "WHERE ID = $id GROUP BY ID;";
+    $sql_result = mysql_query($sql, $connection) or
+        trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+
+    $row = mysql_fetch_array($sql_result);
+    // Round to 2 decimal places, enough for the application
+    $average = round($row["CommentVote"], 2);
+    // Update the database with the new average
+    $sql = "UPDATE `main` SET `Rating`='$average' WHERE `ID`='$id' LIMIT 1";
+    $sql_result = mysql_query($sql, $connection) or
+        trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+}
 ?>
