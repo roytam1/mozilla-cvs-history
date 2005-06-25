@@ -648,7 +648,7 @@ $filename_array = explode(".",$filename);
 $filename_count = count($filename_array)-1;
 $fileext = $filename_array[$filename_count];
 
-$itemname = preg_replace('/(^\.+|[^\w\-\.]+)/','_',$name);
+$itemname = preg_replace('/(^\.+|[^\w\-\.]+)/','_',$name); // if you modify this, update inc_approval.php as well
 $j=0; $app="";
 $app_count = count($apps_array);
 foreach ($apps_array as $app_val) {

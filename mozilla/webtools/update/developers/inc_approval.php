@@ -37,7 +37,7 @@ $filename = preg_replace('/http.*approvalfile\.php/', REPO_PATH.'/approval', $fi
 if ($action=="approve") {
     if (file_exists($filename)) {
         $type=$type=='T'?'themes':'extensions';
-        $path = $type.'/'.strtolower(preg_replace('/(^\.+|[^\w\-\.]+)/','_',$name));
+        $path = $type.'/'.strtolower(preg_replace('/(^\.+|[^\w\-\.]+)/','_',$name)); // if you modify this, update additem.php as well
         $destination = str_replace("approval",strtolower("ftp/$path"),$filename);
         $dirpath = REPO_PATH.'/ftp/'.$path;
         if (!file_exists($dirpath)) {
