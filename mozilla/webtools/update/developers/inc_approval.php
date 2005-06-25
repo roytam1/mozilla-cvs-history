@@ -36,8 +36,8 @@ global $installation, $uninstallation, $newchrome, $appworks, $visualerrors, $al
 $filename = preg_replace('/http.*approvalfile\.php/', REPO_PATH.'/approval', $file);
 if ($action=="approve") {
     if (file_exists($filename)) {
-        if ($type=="T") {$type="themes";} else if ($type=="E") {$type="extensions";}
-        $path = str_replace(' ','_',strtolower("$type/".addslashes($name)));
+        $type=$type=='T'?'themes':'extensions';
+        $path = $type.'/'.strtolower(preg_replace('/(^\.+|[^\w\-\.]+)/','_',$name));
         $destination = str_replace("approval",strtolower("ftp/$path"),$filename);
         $dirpath = REPO_PATH.'/ftp/'.$path;
         if (!file_exists($dirpath)) {

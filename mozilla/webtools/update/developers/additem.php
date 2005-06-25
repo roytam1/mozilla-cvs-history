@@ -6,6 +6,22 @@ $page_title = 'Mozilla Update :: Developer Control Panel :: Add Item';
 require_once(HEADER);
 require_once('./inc_sidebar.php');
 require_once('./parse_install_manifest.php');
+/**
+   check_filename() function
+   checks a file name and die if it is "evil"
+   @param string $filename the file to be checked
+   @return the checked file
+*/
+function check_filename($filename) {
+  if(strlen($filename) && 
+    (preg_match('/[\/\\\\]/',$filename) // check for path traversal
+    || !preg_match('/\.(xpi|jar)$/',$filename) // check file extension
+    )
+  ) {
+    die('Error: bad file name "'.htmlentities($filename).'"');
+  }
+  return $filename;
+}
 
 if (!$function or $function=="additem") {
 if (!$_GET["type"]) {$_GET["type"] = "E"; }
@@ -28,7 +44,7 @@ Your <?php echo"$typename"?> File:<BR>
 <?php
 } else if ($function=="additem2") {
 
-$filename=$_FILES['file']['name'];
+$filename=check_filename($_FILES['file']['name']);
 $filetype=$_FILES['file']['type'];
 $filesize=$_FILES['file']['size'];
 $uploadedfile=$_FILES['file']['tmp_name'];
@@ -38,6 +54,8 @@ $status=$_FILES['file']['error'];
 $filesize = round($filesize/1024, 1);
 
 //Status
+// TODO: refactor this nonsense code to make some use of messages
+// (and perhaps die early)
 if ($status==0) {$statusresult="Success!";
 } else if ($status==1) {$statusresult="Error: File Exceeds upload_max_filesize (PHP)";
 } else if ($status==2) {$statusresult="Error: File Exceeds max_file_size (HTML)";
@@ -53,9 +71,9 @@ $chmod_result = chmod("$uploadedfile", 0644); //Make the file world readable. pr
 
 //If this was legacy mode, we're coming back from step1b so the file wasn't just submitted and we need to just pick it up again.
 if ($_POST["legacy"]=="TRUE") {
-$filename = escape_string($_POST["filename"]);
+$filename = check_filename(escape_string($_POST['filename']));
 $filesize = escape_string($_POST["filesize"]);
-$uploadedfile=REPO_PATH."/temp/$filename";
+$uploadedfile = REPO_PATH."/temp/$filename";
 }
 $zip = @zip_open("$uploadedfile");
 if ($zip) {
@@ -625,11 +643,12 @@ $sql = "SELECT `OSName` FROM `os` WHERE `OSID`='$osid' LIMIT 1";
 
 
 //Construct the New Filename
-$filename_array = explode(".",$_POST[filename]);
+$filename = check_filename($_POST['filename']);
+$filename_array = explode(".",$filename);
 $filename_count = count($filename_array)-1;
 $fileext = $filename_array[$filename_count];
 
-$itemname = str_replace(" ","_",$name);
+$itemname = preg_replace('/(^\.+|[^\w\-\.]+)/','_',$name);
 $j=0; $app="";
 $app_count = count($apps_array);
 foreach ($apps_array as $app_val) {
@@ -640,13 +659,13 @@ if ($j<$app_count) {$apps .="+"; }
 $newfilename = "$itemname-$version-$apps";
 if (strtolower($osname) !=="all") {$newfilename .="-".strtolower($osname).""; }
 $newfilename .=".$fileext";
-
+$newfilename=check_filename(strtolower($newfilename));
 
 //Move temp XPI to home for approval queue items...
-$oldpath = REPO_PATH."/temp/{$_POST['filename']}";
-$newpath = REPO_PATH."/approval/".strtolower($newfilename);
+$oldpath = REPO_PATH.'/temp/'.$filename;
+$newpath = REPO_PATH.'/approval/'.$newfilename;
 if (file_exists($oldpath)) { 
-  rename("$oldpath","$newpath");
+  rename($oldpath,$newpath) or die("Can't save $newpath to disk");
   echo"File $newfilename saved to disk...<br>\n";
 }
 $uri = str_replace(REPO_PATH.'/approval/','http://'.HOST_NAME.'/developers/approvalfile.php/',$newpath);
