@@ -10,7 +10,9 @@ class PermissionsManager {
   function PermissionsManager($function) {
     $this->func=$function;
     $this->modes=array('A'=>'Admin','E'=>'Editor','U'=>'User','D'=>'Disabled');
-    $mode=$_POST['usermode'];
+    $mode="";
+    if (isset($_POST['usermode']))
+      $mode=$_POST['usermode'];
     if( (!$this->decodeMode($mode)) // unknown mode degrades to U
         || ( $mode == 'A' && $_SESSION['level'] != 'admin' ) 
             // only admins can create admins  
@@ -18,7 +20,9 @@ class PermissionsManager {
       $mode='U';
     }
     $this->mode=$mode;
-    $this->trusted=$_POST['trusted']=='TRUE'?'TRUE':'FALSE';
+    $this->trusted='FALSE';
+    if (isset($_POST['trusted']))
+      $this->trusted=$_POST['trusted']=='TRUE'?'TRUE':'FALSE';
   }
   
   function decodeMode($mode) {
@@ -55,7 +59,9 @@ class PermissionsManager {
   }
 }
 
-$function = $_GET['function'];
+$function = "";
+if (isset($_GET['function']))
+  $function = $_GET['function'];
 $perms = new PermissionsManager($function);
 
 //Access Level: only admins can edit somebody else's profile
@@ -210,6 +216,14 @@ if ($_POST["submit"] && $_GET["action"]=="update" && checkFormKey()) {
 
  }
 ?>
+<?php
+ $startLimit = 0;
+ if (isset($_GET['start']))
+   $startLimit = $_GET['start'];
+ settype($startLimit, "integer");
+ $endLimit = $startLimit+100;
+?>
+<a href="usermanager.php?start=<?=($startLimit-100)>=0?$startLimit-100:0?>">Prev 100</a> <a href="usermanager.php?start=<?=$endLimit?>">Next 100</a>
 <h1>Manage User list</h1>
 <TABLE BORDER=0 CELLPADDING=1 CELLSPACING=1 ALIGN=CENTER STYLE="border: 0px; width: 100%" class="listing">
 <TR style="font-weight: bold">
@@ -225,8 +239,9 @@ if ($_POST["submit"] && $_GET["action"]=="update" && checkFormKey()) {
 <?writeFormKey();?>
 <?php
  $maxuserid=-1;
- $sql = "SELECT * FROM `userprofiles` ORDER BY `UserMode`, `UserName` ASC";
+ $sql = "SELECT * FROM `userprofiles` ORDER BY `UserMode`, `UserName` ASC LIMIT $startLimit, $endLimit";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+  $i = $startLimit;
    while ($row = mysql_fetch_array($sql_result)) {
     $userid = $row["UserID"];
     $username = $row["UserName"];
@@ -235,7 +250,7 @@ if ($_POST["submit"] && $_GET["action"]=="update" && checkFormKey()) {
     $usermode = $row["UserMode"];
     $useremailhide = $row["UserEmailHide"];
     $t = $row["UserTrusted"];
-
+$d = "FALSE";
 if ($usermode=="A") {$a="TRUE"; $e="TRUE";
 } else if ($usermode=="E") {$e="TRUE"; $a="FALSE";
 } else if ($usermode=="U") {$e="FALSE"; $a="FALSE";
@@ -267,6 +282,7 @@ echo "<INPUT NAME=\"maxuserid\" TYPE=\"HIDDEN\" VALUE=\"$maxuserid\">";
 </TR>
 </FORM>
 </TABLE>
+<a href="usermanager.php?start=<?=($startLimit-100)>=0?$startLimit-100:0?>">Prev 100</a> <a href="usermanager.php?start=<?=$endLimit?>">Next 100</a>
 <h2><a href="?function=adduser">Add New User</A></h2>
 <div style="width: 580px; border: 0px dotted #AAA; margin-top: 1px; margin-left: 50px; margin-bottom: 5px; font-size: 10pt; font-weight: bold">
 
