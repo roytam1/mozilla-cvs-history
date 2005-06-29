@@ -1008,7 +1008,6 @@ c:\perl\bin\perl.exe -xc:\bugzilla -wT "%s" %s
   ns_register_filter preauth GET /bugzilla/\#localconfig\# filter_deny
   ns_register_filter preauth GET /bugzilla/*.pl filter_deny
   ns_register_filter preauth GET /bugzilla/syncshadowdb filter_deny
-  ns_register_filter preauth GET /bugzilla/runtests.sh filter_deny
   ns_register_filter preauth GET /bugzilla/data/* filter_deny
   ns_register_filter preauth GET /bugzilla/template/* filter_deny
 
