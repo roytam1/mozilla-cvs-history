@@ -774,6 +774,8 @@ CoreTinderboxAll -a \
         mozilla/security/manager \
         mozilla/tools/trace-malloc \
         mozilla/modules/libpr0n \
+        mozilla/modules/libmar \
+        mozilla/modules/libbz2 \
         mozilla/toolkit \
         mozilla/storage \
         mozilla/db/sqlite3
