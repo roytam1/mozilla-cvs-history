@@ -112,6 +112,8 @@ my $restricted = 0;
 my $SenderShort;
 my $Message_ID;
 
+my $dbh = Bugzilla->dbh;
+
 # change to use default product / component functionality
 my $DEFAULT_PRODUCT = "PENDING";
 my $DEFAULT_COMPONENT = "PENDING";
@@ -1149,7 +1151,8 @@ END
     $query .=  $state . ", \'$bug_when\', \'$bug_when\', $ever_confirmed)\n";
 #    $query .=  SqlQuote( "NEW" ) . ", now(), " . SqlQuote($comment) . " )\n";
 
-    SendSQL("SELECT userid FROM profiles WHERE login_name=\'$reporter\'");
+    SendSQL("SELECT userid FROM profiles WHERE " .
+            $dbh->sql_istrcmp('login_name', $dbh->quote($reporter)));
     my $userid = FetchOneColumn();
 
     my $id;
