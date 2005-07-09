@@ -95,8 +95,8 @@
       If you don't have it and your OS doesn't provide official packages, 
       visit <ulink url="http://www.perl.com"/>.
       Although Bugzilla runs with Perl &min-perl-ver;,
-      it's a good idea to be using the latest stable version. 
-      As of this writing, that is Perl &newest-perl-ver;.</para>
+      it's a good idea to be using the latest stable version.
+      </para>
     </section>
 
     <section id="install-database">
