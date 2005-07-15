@@ -313,9 +313,6 @@ $fullname{'93'} = 'Zlib';
 sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'HEAD') {
-if (m:^mozilla/xpfe/.*$:) {return '137';}
-if (m:^mozilla/js/tests$:) {return '114';}
-if (m:^js/src/perlconnect$:) {return '111';}
 if (m:^mozilla/content/xsl/.*$:) {return '140';}
 if (m:^mozilla/extensions/transformiix/.*$:) {return '140';}
 if (m:^mozilla/calendar/.*$:) {return '183';}
@@ -466,6 +463,9 @@ if (m:^mozilla/content/html/content/.*$:) {return '103';}
 if (m:^mozilla/content/html/document/.*$:) {return '103';}
 if (m:^mozilla/dom/.*$:) {return '103';}
 if (m:^mozilla/js/rhino/.*$:) {return '138';}
+if (m:^mozilla/xpfe/.*$:) {return '137';}
+if (m:^mozilla/js/tests$:) {return '114';}
+if (m:^js/src/perlconnect$:) {return '111';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
