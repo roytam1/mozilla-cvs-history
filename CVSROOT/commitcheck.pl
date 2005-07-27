@@ -344,9 +344,9 @@ if (m:^mozilla/java/plugins/.*$:) {return '129';}
 if (m:^mozilla/java/webclient/.*$:) {return '127';}
 if (m:^mozilla/java/dom/.*$:) {return '130';}
 if (m:^mozilla/java/util/.*$:) {return '133';}
+if (m:^mozilla/extensions/xmlterm/.*$:) {return '141';}
 if (m:^CVSROOT/commitcheck\.pl$:) {return '3';}
 if (m:^CVSROOT/passwd$:) {return '3';}
-if (m:^mozilla/extensions/xmlterm/.*$:) {return '141';}
 if (m:^xpcom/remote$:) {return '143';}
 if (m:^mozilla/security/coreconf/.*$:) {return '145';}
 if (m:^mozilla/security/jss/.*$:) {return '145';}
