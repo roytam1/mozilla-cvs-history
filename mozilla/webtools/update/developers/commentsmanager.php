@@ -4,7 +4,7 @@ require_once('./core/sessionconfig.php');
 
 $function = $_GET["function"];
 //Kill access to flagged comments for users.
-if ($_SESSION["level"] !=="admin" and $_SESSION["level"] !=="editor") {
+if ($_SESSION["level"] !=="admin") {
     if ($function=="flaggedcomments") {
         unset($function);
     }
@@ -40,7 +40,7 @@ if ($_POST["submit"]=="Flag Selected" or $_POST["submit"]=="Delete Selected") {
       }
 
         //Admins/Editors can delete from here. Regular Users Can't.
-        if ($_SESSION["level"] !=="admin" and $_SESSION["level"] !=="editor") {
+        if ($_SESSION["level"] !=="admin") {
             if ($_POST["submit"]=="Delete Selected") {
                 $_POST["submit"]="Flag Selected";
             }
@@ -48,7 +48,8 @@ if ($_POST["submit"]=="Flag Selected" or $_POST["submit"]=="Delete Selected") {
 
 
      if (checkFormKey()) {
-        if ($_POST["submit"]=="Delete Selected") {
+        if ($_POST["submit"]=="Delete Selected" && !empty($_POST["note_$i"])) {
+	    $note = escape_string($_POST["note_$i"]);
 
             // Get the ID of the addon whose comment is being deleted
             // so we can recompute its rating after deleting the comment.
@@ -56,11 +57,12 @@ if ($_POST["submit"]=="Flag Selected" or $_POST["submit"]=="Delete Selected") {
             $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
             $id = mysql_result($sql_result, 0);
 
-            $sql = "DELETE FROM `feedback` WHERE `CommentID`='$selected'";
+            //$sql = "DELETE FROM `feedback` WHERE `CommentID`='$selected'";
+            $sql = "UPDATE `feedback` SET `CommentTitle` = '<i>Removed by Admin</i>', `CommentNote` = 'Deleted because: $note', `flag`='' WHERE `CommentID='$selected'";
             $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
 
             if ($sql_result) {
-                echo"Comment $selected deleted from database.<br>\n";
+                echo"Comment $selected removed.<br>\n";
                 // Update the rating for this item, since it has potentially changed
                 update_rating($id);
             }
@@ -101,7 +103,7 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
 <h1>Manage Comments for <?php echo"$name :: Page $pageid of $num_pages"; ?></h1>
 <?php
 //Flagged Comments Queue Link for Admins/Editors
-if ($_SESSION["level"] =="admin" or $_SESSION["level"]=="editor") {
+if ($_SESSION["level"] =="admin") {
     echo"<a href=\"?function=flaggedcomments\">View Flagged Comments Queue</a> | \n";
 }
 
@@ -170,6 +172,9 @@ echo"<BR>\n";
     echo"<TD NOWRAP>Rated $rating of 5</TD>\n";
     echo"<TD ALIGN=CENTER><INPUT NAME=\"selected_$i\" TYPE=\"CHECKBOX\" VALUE=\"$commentid\" TITLE=\"Selected User\"></TD>";
     echo"</TR>\n";
+    echo"<TR>\n";
+    echo"<TD colspan=3>Reason for deletion (if deleting): <INPUT NAME=\"note_$i\" TYPE=\"TEXT\" TITLE=\"Note on comment\"></TD>\n";
+    echo"</TR>\n";
 
 }
 
@@ -184,7 +189,7 @@ Found a duplicate or inappropriate comment? To Flag comments for review by Mozil
 </TR>
 <TR><TD COLSPAN=4 ALIGN=RIGHT>
 <?php
-if ($_SESSION["level"] =="admin" or $_SESSION["level"]=="editor") {
+if ($_SESSION["level"] =="admin") {
 //This user is an Admin or Editor, show the delete button.
 ?>
 <INPUT NAME="submit" TYPE="SUBMIT" VALUE="Delete Selected" ONCLICK="return confirm('Are you sure you want to delete all selected comments?');">
@@ -309,24 +314,29 @@ Need to make a reply comment or answer a question somebody left who didn't provi
 if ($_POST["submit"]=="Process Queue") {
 echo"<h2>Processing Changes to the Flagged Comments List, please wait...</h2>\n";
     
-    for ($i=1; $i<=$_POST[maxid]; $i++) {
+    for ($i=1; $i<=$_POST['maxid']; $i++) {
         $action = $_POST["action_$i"];
         $commentid = escape_string($_POST["selected_$i"]); 
         if ($action=="skip") {continue;}
 
-        if ($action=="delete") {
+        if ($action=="delete" && !empty($_POST["note_$i"])) {
+            $note = escape_string($_POST["note_$i"]);
+
             $sql = "SELECT ID FROM  `feedback` WHERE `CommentID`='$commentid'";
             $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
             $id = mysql_result($sql_result, 0);
 
-            $sql = "DELETE FROM `feedback` WHERE `CommentID`='$commentid'";
+            //$sql = "DELETE FROM `feedback` WHERE `CommentID`='$commentid'";
+            $sql = "UPDATE `feedback` SET `CommentTitle` = '<i>Removed by Admin</i>', `CommentNote` = 'Deleted because: $note', `flag`='' WHERE `CommentID`='$commentid'";
             $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
             if ($sql_result) {
-                echo"Comment $commentid deleted from database.<br>\n";
+                echo"Comment $commentid removed.<br>\n";
                 // Update the rating for this item since it has potentially changed
                 update_rating($id);
             }
-
+	} else if ($action=="delete") {
+	   echo "You must provide a reason for deleting comment $commentid<br>\n";
+	}
         } else if ($action=="clear") {
             $sql = "UPDATE `feedback` SET `flag`= '' WHERE `CommentID`='$commentid'";
             $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
@@ -359,6 +369,7 @@ unset($i);
 
 <?php
     }
+$i=0;
     while ($row = mysql_fetch_array($sql_result)) {
         $itemname = $row["Name"];
         $commentid = $row["CommentID"];
@@ -395,6 +406,9 @@ unset($i);
 
     echo"<TR>\n";
     echo"<TD COLSPAN=4><input name=\"action_$i\" type=\"radio\" value=\"delete\"> Delete Comment  <input name=\"action_$i\" type=\"radio\" value=\"clear\"> Clear Flag <input name=\"action_$i\" type=\"radio\" value=\"skip\" checked> No Action</TD>\n";
+    echo"</TR>\n";
+    echo"<TR>\n";
+    echo"<TD colspan=3>Reason for deletion (if deleting): <INPUT NAME=\"note_$i\" TYPE=\"TEXT\" TITLE=\"Note on comment\"></TD>\n";
     echo"</TR>\n";
 
 }
