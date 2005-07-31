@@ -590,7 +590,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
     $nextid=$pageid+1;
 
     if ($pageid <$num_pages) {
-        echo" &bull; <a href=\"?".uriparams()."$id&amp;page=$page&amp;pageid=$nextid\">Next &#187;</a>";
+        echo" &bull; <a href=\"?".uriparams()."&amp;id=$id&amp;page=$page&amp;pageid=$nextid\">Next &#187;</a>";
     }
     echo"<BR>\n";
     ?>
