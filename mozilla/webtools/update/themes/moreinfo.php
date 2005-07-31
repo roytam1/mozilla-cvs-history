@@ -599,7 +599,7 @@ if (isset($_GET["vid"])) {
     $nextid=$pageid+1;
 
     if ($pageid <$num_pages) {
-        echo" &bull; <a href=\"?".uriparams()."$id&amp;page=$page&amp;pageid=$nextid\">Next &#187;</a>";
+        echo" &bull; <a href=\"?".uriparams()."&amp;id=$id&amp;page=$page&amp;pageid=$nextid\">Next &#187;</a>";
     }
     echo"<BR>\n";
     ?>
