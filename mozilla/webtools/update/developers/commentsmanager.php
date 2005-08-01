@@ -336,8 +336,7 @@ echo"<h2>Processing Changes to the Flagged Comments List, please wait...</h2>\n"
             }
 	} else if ($action=="delete") {
 	   echo "You must provide a reason for deleting comment $commentid<br>\n";
-	}
-        } else if ($action=="clear") {
+	} else if ($action=="clear") {
             $sql = "UPDATE `feedback` SET `flag`= '' WHERE `CommentID`='$commentid'";
             $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
             if ($sql_result) {
