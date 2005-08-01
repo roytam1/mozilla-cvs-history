@@ -111,11 +111,8 @@ if (empty($errors)) {
     // Version of that app.
     $reqTargetAppVersion = mysql_real_escape_string($_GET['appVersion']);
 
-    // For backwards compatibility, not required.
-    $reqTargetOS = (isset($_GET['appOS'])) ? mysql_real_escape_string($_GET['appOS']) : null;
-
     // Get the os_id based on _GET; fall back  _SERVER (UA string).
-    $os_id = get_os_id($reqTargetOS);
+    $os_id = get_os_id();
 
 
 
@@ -314,50 +311,30 @@ if ($_GET['debug'] == true) {
 
 /**
  * Determine the os_id based on passed OS or guess based on UA string.
- * @param string $os optional passed OS
  * @return int|bool $id ID of the OS in the UMO database
  */
-function get_os_id($os=null)
+function get_os_id()
 {
     /* OS from UMO database
     2 	Linux
     3 	MacOSX
     4 	BSD
-    5 	Solaris
-    6 	Windows
+    5 	Windows
+    6 	Solaris
     */
 
-    // If we have $os passed, try to match it
-    if (!empty($os)) {
-        // possible matches
-        $os_get = array(
-            'WINNT'=>6,
-            'Linux'=>2,
-            'Darwin'=>3,
-            'BSD_OS'=>4,
-            'SunOS'=>5
-        );
-
-        // try to match
-        foreach($os_get as $string=>$id) {
-            if ($os == $string) {
-                return $id;
-            }
-        }
-    }
-
-    // Fall back on user agent string if $os is not passed or is invalid
-    $os_ua_string = array(
-        'WIN'=>6,
-        'Linux'=>2,
-        'MAC'=>3,
-        'BSD'=>4,
-        'SOLARIS'=>5
+   // possible matches
+    $os = array(
+        'linux'=>2,
+        'mac'=>3,
+        'bsd'=>4,
+        'win'=>5,
+        'solaris'=>6
     );
 
     // Check UA string for a match
-    foreach ($os_ua_string as $string=>$id) {
-        if (strpos($_SERVER['HTTP_USER_AGENT'],$string) !== false) {
+    foreach ($os as $string=>$id) {
+        if (preg_match("/^.*{$string}.*$/i",$_SERVER['HTTP_USER_AGENT'])) {
             return $id;
         }
     }

@@ -37,14 +37,27 @@
 // ***** END LICENSE BLOCK *****
 
 require_once('../core/config.php');
-$page_title = 'Mozilla Update :: Frequently Asked Questions';
+$page_title = 'Mozilla Update :: News and Updates';
 require_once(HEADER);
 ?>
 
 <hr class="hide">
 <div id="mBody">
 
-<h1>Going Live :: 4/15/2005</h1>
+<h1>Progress! :: 2005/08/01</h1>
+
+<dl>
+<dt>Reviewers</dt>
+<dd>Thanks to our <a href="http://wiki.mozilla.org/Update:Reviewers_Guide">many reviewers</a> we have been able to keep the approval queue moving along for new Addons.  However, there is still a lot of work - you can help get new Addons out quicker by <a href="http://wiki.mozilla.org/Update:Home_Page#Volunteering">becoming a reviewer today!</a></dd>
+
+<dt>v2.0 Progress</dt>
+<dd><a href="http://wiki.mozilla.org/Update:Development:v2.0"><acronym title="addons.mozilla.org">AMO</acronym> v2.0</a> is <a href="http://bonsai.mozilla.org/cvsquery.cgi?treeid=default&amp;module=Webtools&amp;branch=HEAD&amp;branchtype=match&amp;dir=mozilla%2Fwebtools%2Faddons&amp;file=&amp;filetype=match&amp;who=&amp;whotype=match&amp;sortby=Date&amp;hours=2&amp;date=week&amp;mindate=&amp;maxdate=&amp;cvsroot=%2Fcvsroot">well underway</a>.  Our development team is working hard on a new framework that will bring you new features and improvements.  Stay tuned!</dd>
+
+<dt>CSS Issues</dt>
+<dd>You may have noticed some CSS problems with the site.  A solution has been found and the problem should be fixed.  Thanks to all of you who submitted comments regarding this matter.</dd>
+</dl>
+
+<h1>Going Live :: 2005/04/15</h1>
 
 <p>It's time to get the Addons site back on track.  We have spent the last month working
 hard making the Addons site more secure so that users can trust the software they are
@@ -63,7 +76,7 @@ that will make it easy for extension and theme developers to do what they do bes
 innovate.</p>
 
 
-<h1>Status Update :: 3/23/2005</h1>
+<h1>Status Update :: 2005/03/23</h1>
 
         <p>Over the past month, the UMO developers have been working on doing a security audit of the codebase that supports addons.mozilla.org and pfs.mozilla.org.  That audit is complete as well as <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=287159">some</a> <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=278016">patches</a> to ease the development of the application by single developers and solve some performance issues.  These are in the process of being reviewed.</p>
     <p>The <a href="http://wiki.mozilla.org/Update:Development:v1.0">security audit</a> revealed <a href="http://wiki.mozilla.org/Update:Development:v1.0#Audit_Log">several problems</a> with the existing codebase.  Most of these can be remedied but there is a lot of work to be done.  The final word on the security audit is that <a href="http://wiki.mozilla.org/Update:Development:v2.0">v2.0</a> of UMO will most likely need to be re-written from the ground up.</p>
@@ -72,7 +85,7 @@ innovate.</p>
     <p>Now that we have identified <a href="http://wiki.mozilla.org/Update:Development:v1.0#Audit_Log">things</a> we need to get cleaned up, we&#8217;re looking for volunteers to help make it happen.  If you, or someone you know, is interested in working on the UMO project and doing some PHP development we can definitely use the help.  In addition, we are going to be looking for people in the near future to act as moderators, QA and reviewers of user extensions that land on UMO.  Application development is not required there but would be helpful.  If you are interested in being a developer or moderator please contact <a href="http://wiki.mozilla.org/Update:Home_Page#Contact_Information">me</a> or join the development team in #umo on irc.mozilla.org.
 </p>
 
-<h1>Status Update :: 2/3/2005</h1>
+<h1>Status Update :: 2005/02/03</h1>
 
     <p>The Mozilla Update service (a.k.a UMO) has been frozen for close to a month now for various reasons.  We would like to take this opportunity to bring folks up to speed on where it is going and when it will get there.</p>
     <p>Just a few weeks ago, the <a href="http://www.psychoticwolf.net">lead developer</a> stepped down and so the Mozilla Foundation has taken the chance to re-evaluate the project and look at how to best move it forward.  Looking over the existing v1.0 codebase, the remaining developers felt there were security concerns and scalability issues with the site that needed to be addressed.  At this time, the site and CVS for updates to the UMO codebase are frozen.</p>

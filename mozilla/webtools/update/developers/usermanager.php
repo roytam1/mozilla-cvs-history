@@ -121,9 +121,12 @@ if ($_POST["submit"] && $_GET["action"]=="update" && checkFormKey()) {
     //Process Post Data, Make Changes to User Table.
     //Begin General Updating
      $maxuserid=intval($_POST['maxuserid']);
-     $sql="select UserID from userprofiles where UserID<='$maxuserid'";
+     $minuserid=intval($_POST['minuserid']);
+     $sql = "SELECT UserID FROM `userprofiles` ORDER BY `UserMode`, `UserName` ASC LIMIT $minuserid, $maxuserid";
      $sql_result_uids = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
+    $count = 0;
     while($row=mysql_fetch_row($sql_result_uids)) {
+        $count++;
       $i=$row[0]; // UserID
       $admin = escape_string($_POST["admin$i"]);
       $editor = escape_string($_POST["editor$i"]);
@@ -239,7 +242,7 @@ if ($_POST["submit"] && $_GET["action"]=="update" && checkFormKey()) {
 <?writeFormKey();?>
 <?php
  $maxuserid=-1;
- $sql = "SELECT * FROM `userprofiles` ORDER BY `UserMode`, `UserName` ASC LIMIT $startLimit, $endLimit";
+ $sql = "SELECT * FROM `userprofiles` ORDER BY `UserMode`, `UserName` ASC LIMIT $startLimit, 100";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $i = $startLimit;
    while ($row = mysql_fetch_array($sql_result)) {
@@ -269,8 +272,9 @@ if ($usermode=="A") {$a="TRUE"; $e="TRUE";
   $maxuserid=max($userid,$maxuserid);
   unset($a,$e,$t);
 }
-
-echo "<INPUT NAME=\"maxuserid\" TYPE=\"HIDDEN\" VALUE=\"$maxuserid\">";
+$minuserid = $startLimit+1;
+echo '<INPUT NAME="minuserid" TYPE="HIDDEN" VALUE="'. $minuserid.'">';
+echo "<INPUT NAME=\"maxuserid\" TYPE=\"HIDDEN\" VALUE=\"$endLimit\">";
 ?>
 <TR><TD COLSPAN=3 ALIGN=CENTER>
 <INPUT NAME="submit" TYPE="SUBMIT" VALUE="Disable Selected" ONCLICK="return confirm('Disabling this account will hide all their extensions and themes from view and prevent them from logging in. Do you want to procede and disable this account?');">
