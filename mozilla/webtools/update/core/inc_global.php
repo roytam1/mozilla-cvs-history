@@ -272,7 +272,7 @@ function update_rating($id)
     // Added as part of Bug 296541 which changed the database schema
 
     $sql = "SELECT AVG(CommentVote) AS CommentVote FROM `feedback` " .
-           "WHERE ID = $id GROUP BY ID;";
+           "WHERE ID = $id AND `CommentTitle` <> '<i>Removed by Admin</i>'";
     $sql_result = mysql_query($sql, $connection) or
         trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 

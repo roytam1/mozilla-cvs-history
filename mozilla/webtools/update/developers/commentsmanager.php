@@ -125,12 +125,6 @@ echo"<BR>\n";
 ?>
 
 <TABLE BORDER=0 CELLPADDING=1 CELLSPACING=1 ALIGN=CENTER STYLE="border: 0px; width: 100%">
-<TR style="font-weight: bold">
-<TH>Name/E-Mail</TH>
-<TH>Date</TH>
-<TH>Rating</TH>
-<TH>Select</TH>
-</TR>
 <FORM NAME="updateusers" METHOD="POST" ACTION="?id=<?php echo"$id&pageid=$pageid&numpg=$items_per_page"; ?>&action=update">
 <?writeFormKey();?>
 <?php
@@ -352,17 +346,11 @@ unset($i);
 <h1>Comments Flagged for Editor Review</h1>
 <TABLE BORDER=0 CELLPADDING=1 CELLSPACING=1 ALIGN=CENTER STYLE="border: 0px; width: 100%">
 <?php
- $sql = "SELECT `CommentID`,`CommentName`,`email`,`CommentTitle`,`CommentNote`,`CommentDate`,`CommentVote`,`commentip`, TM.Name FROM `feedback` INNER JOIN `main` TM ON feedback.ID=TM.ID WHERE `flag`='YES' ORDER BY `CommentDate`DESC";
+ $sql = "SELECT `CommentID`,`CommentName`,`email`,`CommentTitle`,`CommentNote`,`CommentDate`,`CommentVote`,`commentip`, TM.Name, TM.ID, TM.Type FROM `feedback` INNER JOIN `main` TM ON feedback.ID=TM.ID WHERE `flag`='YES' ORDER BY `CommentDate`DESC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     $num_results = mysql_num_rows($sql_result);
     if ($num_results>"0") {
 ?>
-<TR style="font-weight: bold">
-<TH>Name/E-Mail</TH>
-<TH>Date</TH>
-<TH>Rating</TH>
-<TH>Select</TH>
-</TR>
 <FORM NAME="updateusers" METHOD="POST" ACTION="?function=flaggedcomments&action=update">
 <?writeFormKey();?>
 
@@ -376,6 +364,8 @@ $i=0;
         $email = $row["email"];
         $title = $row["CommentTitle"];
         $notes = $row["CommentNote"];
+        $type = $row["Type"];
+        $theid = $row["ID"];
         $date = date("l, F j Y g:i:sa", strtotime($row["CommentDate"]));
         $rating = $row["CommentVote"];
         $commentip = $row["commentip"];
@@ -386,7 +376,9 @@ $i=0;
    
    
    $i++;
-    echo"<TR><TD COLSPAN=4><h2>$i.&nbsp;&nbsp;$itemname :: $title</h2></TD></TR>\n";
+    echo"<TR><TD COLSPAN=4><h2><a href=\"../";
+    echo ($type=="E")?"extensions":"themes";
+    echo "/moreinfo.php?id=$theid\">$i.&nbsp;&nbsp;$itemname :: $title</a></h2></TD></TR>\n";
     echo"<TR>\n";
     echo"<TD COLSPAN=4>$notes";
     if ($commentip) {echo"<BR>(Posted from IP: $commentip)"; }
