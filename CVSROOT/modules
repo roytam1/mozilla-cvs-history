@@ -830,3 +830,11 @@ PhoenixTinderbox -a \
 	CoreTinderboxAll \
 	mozilla/browser \
 	mozilla/chrome
+
+# For special trees like Mozilla 1.8 --chase
+AviarySuiteBranchTinderbox -a \
+	CoreBranchTinderboxAll \
+	mozilla/browser \
+	mozilla/chrome \
+	mozilla/mail \
+	mozilla/suite
