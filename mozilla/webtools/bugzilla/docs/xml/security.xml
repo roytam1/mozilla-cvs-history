@@ -207,14 +207,6 @@ skip-networking
               </simplelist>
               </para>
             </listitem>
-            <listitem>
-              <para>But allow:
-              <simplelist type="inline">
-                <member><filename>localconfig.js</filename></member>
-                <member><filename>localconfig.rdf</filename></member>
-              </simplelist>
-              </para>
-            </listitem>
           </itemizedlist>
         </listitem>
 
