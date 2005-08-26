@@ -164,13 +164,15 @@ sub storeAttachments( $$ )
 
 
         # Make SQL-String
-        my $sql = "insert into attachments (bug_id, creation_ts, description, mimetype, ispatch, filename, thedata, submitter_id) values (";
+        my $sql = "insert into attachments (bug_id, creation_ts, description, mimetype, ispatch, filename, submitter_id) values (";
         $sql .= "$bugid, now(), " . SqlQuote( $description ) . ", ";
         $sql .= SqlQuote( $mime ) . ", ";
         $sql .= "0, ";
         $sql .= SqlQuote( $decoded_file ) . ", ";
-        $sql .= SqlQuote( $data ) . ", ";
         $sql .= "$submitter_id );";
+        SendSQL( $sql ) unless( $test );
+        $sql = "insert into attach_data (id, thedata) values (LAST_INSERT_ID(), ";
+        $sql .= SqlQuote( $data ) . ")";
         SendSQL( $sql ) unless( $test );
     }
     
