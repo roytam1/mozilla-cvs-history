@@ -4,7 +4,7 @@ require_once('./core/sessionconfig.php');
 
 $function = $_GET["function"];
 //Kill access to flagged comments for users.
-if ($_SESSION["level"] !=="admin") {
+if ($_SESSION["level"] !=="admin" and $_SESSION["level"] !=="editor") {
     if ($function=="flaggedcomments") {
         unset($function);
     }
@@ -40,7 +40,7 @@ if ($_POST["submit"]=="Flag Selected" or $_POST["submit"]=="Delete Selected") {
       }
 
         //Admins/Editors can delete from here. Regular Users Can't.
-        if ($_SESSION["level"] !=="admin") {
+        if ($_SESSION["level"] !=="admin" and $_SESSION["level"] !=="editor") {
             if ($_POST["submit"]=="Delete Selected") {
                 $_POST["submit"]="Flag Selected";
             }
@@ -58,7 +58,7 @@ if ($_POST["submit"]=="Flag Selected" or $_POST["submit"]=="Delete Selected") {
             $id = mysql_result($sql_result, 0);
 
             //$sql = "DELETE FROM `feedback` WHERE `CommentID`='$selected'";
-            $sql = "UPDATE `feedback` SET `CommentTitle` = '<i>Removed by Admin</i>', `CommentNote` = 'Deleted because: $note', `flag`='' WHERE `CommentID='$selected'";
+            $sql = "UPDATE `feedback` SET `CommentTitle` = '<i>Removed by Staff</i>', `CommentNote` = 'Deleted because: $note', `flag`='', `CommentVote` = NULL WHERE `CommentID='$selected'";
             $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
 
             if ($sql_result) {
@@ -103,7 +103,7 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
 <h1>Manage Comments for <?php echo"$name :: Page $pageid of $num_pages"; ?></h1>
 <?php
 //Flagged Comments Queue Link for Admins/Editors
-if ($_SESSION["level"] =="admin") {
+if ($_SESSION["level"] =="admin" or $_SESSION["level"]=="editor") {
     echo"<a href=\"?function=flaggedcomments\">View Flagged Comments Queue</a> | \n";
 }
 
@@ -183,7 +183,7 @@ Found a duplicate or inappropriate comment? To Flag comments for review by Mozil
 </TR>
 <TR><TD COLSPAN=4 ALIGN=RIGHT>
 <?php
-if ($_SESSION["level"] =="admin") {
+if ($_SESSION["level"] =="admin" or $_SESSION["level"]=="editor") {
 //This user is an Admin or Editor, show the delete button.
 ?>
 <INPUT NAME="submit" TYPE="SUBMIT" VALUE="Delete Selected" ONCLICK="return confirm('Are you sure you want to delete all selected comments?');">
@@ -321,7 +321,7 @@ echo"<h2>Processing Changes to the Flagged Comments List, please wait...</h2>\n"
             $id = mysql_result($sql_result, 0);
 
             //$sql = "DELETE FROM `feedback` WHERE `CommentID`='$commentid'";
-            $sql = "UPDATE `feedback` SET `CommentTitle` = '<i>Removed by Admin</i>', `CommentNote` = 'Deleted because: $note', `flag`='' WHERE `CommentID`='$commentid'";
+            $sql = "UPDATE `feedback` SET `CommentTitle` = '<i>Removed by Staff</i>', `CommentNote` = 'Deleted because: $note', `flag`='', `CommentVote` = NULL WHERE `CommentID`='$commentid'";
             $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
             if ($sql_result) {
                 echo"Comment $commentid removed.<br>\n";
