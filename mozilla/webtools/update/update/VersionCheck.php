@@ -71,8 +71,18 @@ $required_vars = array('reqVersion',
                        'appID',
                        'appVersion');
 
+// Debug flag.
+$debug = (isset($_GET['debug']) && $_GET['debug'] == 'true') ? true : false;
+
 // Array to hold errors for debugging.
 $errors = array();
+
+// String for output to client.
+$output = <<<XMLHEADER
+<?xml version="1.0"?>
+<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+XMLHEADER;
 
 // Check for existence of required variables.
 foreach ($required_vars as $var) {
@@ -84,13 +94,13 @@ foreach ($required_vars as $var) {
 // If we have all of our data, clean it up for our queries.
 if (empty($errors)) {
 
-    // Config, connect to DB, select DB.
+    // Config, connect to the SHADOW_DB host, select the SHADOW_DB.
     require_once("../core/config.php");
 
-    $connection = @mysql_connect(DB_HOST,DB_USER,DB_PASS);
+    $connection = @mysql_connect(SHADOW_DB_HOST,SHADOW_DB_USER,SHADOW_DB_PASS);
     if (!is_resource($connection)) {
         $errors[] = 'MySQL connection failed.';
-    } elseif (!@mysql_select_db(DB_NAME, $connection)) {
+    } elseif (!@mysql_select_db(SHADOW_DB_NAME, $connection)) {
         $errors[] = 'Could not select MySQL database.';
     }
 
@@ -193,10 +203,7 @@ if (empty($errors)) {
             case '1':
             default:
                 // Build RDF output.
-                $output = <<<OUT
-<?xml version="1.0"?>
-<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
-
+                $output .= <<<XMLCONTENT
 <RDF:Description about="urn:mozilla:{$update['exttype']}:{$reqItemGuid}">
  <em:updates><RDF:Seq>
   <RDF:li resource="urn:mozilla:{$update['exttype']}:{$reqItemGuid}:{$update['extversion']}"/>
@@ -214,29 +221,39 @@ if (empty($errors)) {
   </RDF:Description>
  </em:targetApplication>
 </RDF:Description>
-
-</RDF:RDF>
-OUT;
+XMLCONTENT;
                 break;
         }
 
 
-
-        /*
-         *  ECHO OUTPUT
-         *
-         *  If we have valid RDF output set, now stream it to the client.
-         */
-
-
-
-        if (!empty($output) && $_GET['debug']!=true) {
-            header("Content-type: text/xml");
-            echo $output;
-            exit;
-        }
     }
 } 
+
+
+
+
+/*
+ *  ECHO OUTPUT
+ *
+ *  If we have valid RDF output set, now stream it to the client.
+ *  If we do not have a full RDF, send them the default, which is a blank RDF
+ *      that is properly formatted.
+ */
+
+
+
+if ($debug!=true) {
+    header("Content-type: text/xml");
+    
+    // Close off XML.
+    $output .= <<<XMLFOOTER
+
+</RDF:RDF>
+XMLFOOTER;
+    echo $output;
+    exit;
+}
+
 
 
 
@@ -256,7 +273,7 @@ OUT;
 
 
 // If we have the debug flag set and errors exist, show them.
-if ($_GET['debug'] == true) {
+if ($debug == true) {
     echo '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">';
     echo '<html lang="en">';
 

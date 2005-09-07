@@ -62,8 +62,16 @@ define('HEADER',FILE_PATH.'/core/inc_header.php');
 define('FOOTER',FILE_PATH.'/core/inc_footer.php');
 
 // DB config.
+// This is accessed for general read/write requests.
 define('DB_HOST',''); // MySQL host
 define('DB_USER',''); // MySQL username
 define('DB_PASS',''); // MySQL password
 define('DB_NAME',''); // MySQL database
+
+// Shadow DB config.
+// This is accessed by high-load read-only requests.
+define('SHADOW_DB_HOST',''); // Shadow MySQL host
+define('SHADOW_DB_USER',''); // Shadow MySQL username
+define('SHADOW_DB_PASS',''); // Shadow MySQL password
+define('SHADOW_DB_NAME',''); // Shadow MySQL database
 ?>
