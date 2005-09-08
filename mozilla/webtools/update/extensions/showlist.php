@@ -37,6 +37,9 @@
 // ***** END LICENSE BLOCK *****
 ?>
 <?php
+// Set this page to read from the SHADOW_DB.
+define('USE_SHADOW_DB',true);
+
 require_once('../core/init.php');
 
 //----------------------------

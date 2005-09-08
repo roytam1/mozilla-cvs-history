@@ -57,9 +57,17 @@ require_once('config.php');
 // For completely static pages, do not require init.php, require only config.php.
 // This prevents unnecessary database connections.
 //
-// DB_HOST, DB_USER, DB_PASS, DB_NAME are set in ./config.php
-$connection = mysql_connect(DB_HOST,DB_USER,DB_PASS) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
-$db = mysql_select_db(DB_NAME, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
+
+// If we have the SHADOW_DB flag set, use the SHADOW_DB - otherwise use the regular db.
+if (defined('USE_SHADOW_DB')) {
+    // SHADOW_DB_HOST, SHADOW_DB_USER, SHADOW_DB_PASS, SHADOW_DB_NAME are set in ./config.php
+    $connection = mysql_connect(SHADOW_DB_HOST,SHADOW_DB_USER,SHADOW_DB_PASS) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
+    $db = mysql_select_db(SHADOW_DB_NAME, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
+} else { 
+    // DB_HOST, DB_USER, DB_PASS, DB_NAME are set in ./config.php
+    $connection = mysql_connect(DB_HOST,DB_USER,DB_PASS) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
+    $db = mysql_select_db(DB_NAME, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
+}
 
 // Includes.
 require_once('inc_guids.php'); // GUID --> AppName Handler
