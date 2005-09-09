@@ -174,14 +174,12 @@ if (($mimetype == 'application/x-shockwave-flash' ||
   $version = '7.0';
 
   if (preg_match('/^Win/', $clientOS)) {
-    #$guid = '{8eff8fa7-9214-499f-8ad2-9fe4082ae0b1}';
-    #$XPILocation = getUniqueDownloadUrl('flash-7.0.19.0-win32.xpi');
     $guid = '{4cfaef8a-a6c9-41a0-8e6f-967eb8f49143}';
-    $XPILocation = 'http://fpdownload.macromedia.com/get/shockwave/flash/mozilla/flash-7.0.19.0-win32.xpi';
+    $XPILocation = 'http://fpdownload.macromedia.com/get/flashplayer/xpi/current/flashplayer-win.xpi';
     $installerShowsUI = 'false';
   } else if (preg_match('/^Linux/', $clientOS)) {
     $guid = '{7a646d7b-0202-4491-9151-cf66fa0722b2}';
-    $XPILocation = getUniqueDownloadUrl('flash-7.0.25.0-linux-x86.xpi');
+    $XPILocation = 'http://fpdownload.macromedia.com/get/flashplayer/xpi/current/flashplayer-linux.xpi';
     $installerShowsUI = 'false';
   } else if (preg_match('/^PPC Mac OS X/', $clientOS)) {
     $guid = '{89977581-9028-4be0-b151-7c4f9bcd3211}';
