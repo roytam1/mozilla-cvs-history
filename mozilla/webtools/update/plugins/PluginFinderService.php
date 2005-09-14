@@ -171,7 +171,6 @@ if (($mimetype == 'application/x-shockwave-flash' ||
   // Don't use a https URL for the license here, per request from
   // Macromedia.
   $licenseURL = 'http://www.macromedia.com/shockwave/download/license/desktop/ssi/eula_ssi.html';
-  $version = '7.0';
 
   if (preg_match('/^Win/', $clientOS)) {
     $guid = '{4cfaef8a-a6c9-41a0-8e6f-967eb8f49143}';
