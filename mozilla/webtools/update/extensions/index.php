@@ -59,7 +59,7 @@ require_once(HEADER);
 button to a completely new feature. They allow the application to be customized
 to fit the personal needs of each user if they need additional features<?php if
 ($application !=="mozilla") { ?>, while keeping <?php
-print(ucwords($application)); ?> small to download <?php } ?>.</p>
+print(ucwords($application)); ?> small to download<?php } ?>.</p>
 
     <?php
     //Get Current Version for Detected Application
