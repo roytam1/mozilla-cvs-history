@@ -142,7 +142,7 @@ $names = $manifestdata["name"];
 $descriptions = $manifestdata["description"];
 //TODO: support multiple locale names/descriptions
 // right now we just use en-US or the first one
-$name = default_l10n($names);
+$name = trim(default_l10n($names));
 $description = default_l10n($descriptions);
 
 //Check GUID for validity/existance, if it exists, check the logged in author for permission
