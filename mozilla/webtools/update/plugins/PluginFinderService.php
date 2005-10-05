@@ -344,7 +344,7 @@ if (($mimetype == 'application/x-shockwave-flash' ||
   $manualInstallationURL = 'http://www.microsoft.com/windows/windowsmedia/software/Macintosh/osx/default.aspx';
   $needsRestart = 'true';
 } else if ($mimetype == 'application/x-xstandard' &&
-	   preg_match('/^Win/', $clientOS)) {
+	   preg_match('/^(Win|PPC Mac OS X)/', $clientOS)) {
   $name = 'XStandard XHTML WYSIWYG Editor';
   $guid = '{3563d917-2f44-4e05-8769-47e655e92361}';
   $iconUrl = 'http://xstandard.com/images/xicon32x32.gif';
