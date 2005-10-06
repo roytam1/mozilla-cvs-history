@@ -36,6 +36,9 @@
 //
 // ***** END LICENSE BLOCK *****
 
+// Set this page to read from the SHADOW_DB.
+define('USE_SHADOW_DB',true);
+
 require_once('../core/config.php');
 $page_title = 'Mozilla Update :: News and Updates';
 require_once(HEADER);

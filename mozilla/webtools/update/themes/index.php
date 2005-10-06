@@ -36,6 +36,9 @@
 //
 // ***** END LICENSE BLOCK *****
 
+// Set this page to read from the SHADOW_DB.
+define('USE_SHADOW_DB',true);
+
 require_once('../core/init.php');
 $page_title = 'Mozilla Update :: Themes - Add Features to Mozilla Software';
 $page_headers = '<link rel="alternate" type="application/rss+xml"

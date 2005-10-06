@@ -38,6 +38,10 @@
 // the terms of any one of the MPL, the GPL or the LGPL.
 //
 // ***** END LICENSE BLOCK *****
+
+// Set this page to read from the SHADOW_DB.
+define('USE_SHADOW_DB',true);
+
 require_once('./core/init.php');
 
 // Prints which items are being displayed and what page is being displayed

@@ -152,12 +152,13 @@ CREATE TABLE `categoryxref` (
 CREATE TABLE `downloads` (
   `dID` int(11) NOT NULL auto_increment,
   `ID` varchar(5) NOT NULL default '',
-  `date` varchar(14) default NULL,
+  `date` datetime default NULL,
   `downloadcount` int(15) NOT NULL default '0',
   `vID` varchar(5) NOT NULL default '',
   `user_ip` varchar(15) NOT NULL default '',
   `user_agent` text NOT NULL,
   `type` enum('count','download') NOT NULL default 'download',
+  `counted` int(1) unsigned NOT NULL default '0',
   PRIMARY KEY  (`dID`),
   KEY `type` (`type`),
   KEY `date` (`date`)

@@ -20,7 +20,8 @@
 // the Initial Developer. All Rights Reserved.
 //
 // Contributor(s):
-//   Chris "Wolf" Crews <psychoticwolf@carolina.rr.com>
+//      Chris "Wolf" Crews <psychoticwolf@carolina.rr.com>
+//      Mike Morgan <morgamic@gmail.com>
 //
 // Alternatively, the contents of this file may be used under the terms of
 // either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,78 +44,41 @@ require_once('../core/init.php');
 $uri = escape_string(str_replace(" ","+",$_GET["uri"]));
 $sql = "SELECT `vID`, TM.ID, `URI` FROM `version` TV INNER JOIN `main` TM ON TM.ID=TV.ID WHERE `URI`='$uri' LIMIT 1";
 $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-    if (mysql_num_rows($sql_result)=="0") {
-        exit("Invalid URI cannot Continue");
-    }
 
+if (mysql_num_rows($sql_result)=="0") {
+    exit("Invalid URI cannot Continue");
+} else {
+
+    // Get our info.
     $row = mysql_fetch_array($sql_result);
     $uri=$row["URI"]; 
     $id = $row["ID"];
     $vid = $row["vID"];
-
-// New DownloadCount management Code..
-//Check for user, to see if they recently accessed this file (filters duplicate/triplicate+ requests in a short period).
-$maxlife = date("YmdHis", mktime(date("H"), date("i")-10, date("s"), date("m"), date("d"), date("Y")));
+}
 
 //Are we behind a proxy and given the IP via an alternate enviroment variable? If so, use it.
-    if ($_SERVER["HTTP_X_FORWARDED_FOR"]) {
-        $remote_addr = $_SERVER["HTTP_X_FORWARDED_FOR"];
-    } else {
-        $remote_addr = $_SERVER["REMOTE_ADDR"];
-    }
+if ($_SERVER["HTTP_X_FORWARDED_FOR"]) {
+    $remote_addr = $_SERVER["HTTP_X_FORWARDED_FOR"];
+} else {
+    $remote_addr = $_SERVER["REMOTE_ADDR"];
+}
+
+// Rate limit set to 10 minutes.  $maxlife represents how much time must pass
+// before another download is counted for a particular combination of IP, UA,
+// ID, vID.
+$maxlife = date("YmdHis", mktime(date("H"), date("i")-10, date("s"), date("m"), date("d"), date("Y")));
 
 $sql = "SELECT `dID` FROM `downloads` WHERE `ID`='$id' AND `vID`='$vid' AND `user_ip`='$remote_addr' AND `user_agent` = '$_SERVER[HTTP_USER_AGENT]' AND `date`>'$maxlife' AND `type`='download' LIMIT 1";
 $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-    if (mysql_num_rows($sql_result)=="0") {
-        //Insert a record of this download for the next 10 minutes anyway. :-)
-        $today=date("YmdHis");
 
-        $sql = "INSERT INTO `downloads` (`ID`,`date`,`vID`, `user_ip`, `user_agent`, `type`) VALUES ('$id','$today','$vid', '$remote_addr', '$_SERVER[HTTP_USER_AGENT]', 'download');";
-        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+if (mysql_num_rows($sql_result)==0) {
+    $today=date("YmdHis");
 
-        //Cleanup the Individual Downloads part of the table for old records
-        $sql = "DELETE FROM `downloads` WHERE `date`<'$maxlife' AND `type`='download'";
-        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+    $sql = "INSERT INTO `downloads` (`ID`,`date`,`vID`, `user_ip`, `user_agent`, `type`) VALUES ('$id','$today','$vid', '$remote_addr', '$_SERVER[HTTP_USER_AGENT]', 'download');";
+    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+}
 
-        $today=date("Ymd")."000000";
-
-        //Per day download tracking -- Record hits for this day in the record (if it doesn't exist create it)
-        $sql = "SELECT `dID` FROM `downloads` WHERE `ID`='$id' AND `date`='$today' AND `type`='count' LIMIT 1";
-        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-        if (mysql_num_rows($sql_result)=="0") {
-            $sql = "INSERT INTO `downloads` (`ID`,`date`,`downloadcount`,`type`) VALUES ('$id','$today','1','count');";
-        } else {
-            $row = mysql_fetch_array($sql_result);
-            $sql = "UPDATE `downloads` SET `downloadcount`=downloadcount+1 WHERE `dID`='$row[dID]' LIMIT 1";
-        }
-
-        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-
-
-        //Download Statistic Management Code -- Maintain the last 7 days record count
-        $mindate = date("Ymd", mktime(0, 0, 0, date("m"), date("d")-7, date("Y")))."000000";
-        $downloadcount="0";
-        $sql = "SELECT `downloadcount` FROM `downloads` WHERE `ID`='$id' AND `date`>='$mindate' AND `type`='count'  ORDER BY `date` DESC";
-        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-        while ($row = mysql_fetch_array($sql_result)) {
-            $downloadcount = $downloadcount+$row["downloadcount"];
-        }
-
-        //Update the 7 day count in the main record.
-        $sql = "UPDATE `main` SET `downloadcount`='$downloadcount' WHERE `ID`='$id' LIMIT 1";
-        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-
-        //Update the total downloadcount in the main record.
-        $sql = "UPDATE `main` SET `TotalDownloads`=TotalDownloads+1 WHERE `ID`='$id' LIMIT 1";
-        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-
-        //Clean up the Counts per day for >8 days.
-        $sql = "DELETE FROM `downloads` WHERE `ID`='$id' AND `date`<'$mindate' AND `type`='count'";
-        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-   
-    }
-
-//Send User on their way to the file, if requested...
+// Send User on their way to the file, if requested...
 if ($_GET["passthrough"]=="yes") {
     header("Location: $uri");
 }

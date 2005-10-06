@@ -76,7 +76,7 @@ function browser_detection( $which_test ) {
     $moz_release = '';
 
     //make navigator user agent string lower case to make sure all versions get caught
-    $browser_user_agent = strtolower( $_SERVER['HTTP_USER_AGENT'] );
+    $browser_user_agent = (isset($_SERVER['HTTP_USER_AGENT'])) ?  strtolower($_SERVER['HTTP_USER_AGENT']) : null;
     
     $a_os_data = which_os( $browser_user_agent );// get os/number array
     $os = $a_os_data[0];// os name, abbreviated

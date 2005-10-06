@@ -15,12 +15,13 @@
 // The Original Code is Mozilla Update.
 //
 // The Initial Developer of the Original Code is
-// Chris "Wolf" Crews.
+//      morgamic
+//
 // Portions created by the Initial Developer are Copyright (C) 2004
 // the Initial Developer. All Rights Reserved.
 //
 // Contributor(s):
-//   Chris "Wolf" Crews <psychoticwolf@carolina.rr.com>
+//      Mike Morgan <morgamic@gmail.com>
 //
 // Alternatively, the contents of this file may be used under the terms of
 // either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,24 +37,39 @@
 //
 // ***** END LICENSE BLOCK *****
 ?>
-<?php
+<?php 
+/**
+ * Garbage collection script for addons.mozilla.org.
+ *
+ * The purpose of this document is to perform garbage collection that should not be
+ * done everytime a download occurs in install.php.  This should reduce
+ * unnecessary DELETE and UPDATE queries and lighten the load on the database
+ * backend.
+ *
+ * This script should not ever be accessed over HTTP.
+ *
+ * @package umo
+ * @subpackage core
+ */
 
-// Set this page to read from the SHADOW_DB.
-define('USE_SHADOW_DB',true);
 
-require_once('../../core/init.php');
-$page_title = 'Mozilla Update :: Terms of Use';
-require_once(HEADER);
-?>
+// Before doing anything, test to see if we are calling this from the command
+// line.  If this is being called from the web, HTTP environment variables will
+// be automatically set by Apache.  If these are found, exit immediately.
+if (isset($_SERVER['HTTP_HOST'])) {
+    exit;
+}
 
-<div id="mBody">
+// If we get here, CRON is calling this so we can continue.
+require_once('../core/init.php');
 
-<h1>Mozilla Update - Terms of Use</h1>
-This section has not yet been completed. This page serves as a placeholder for content that is coming soon.
-
-
-</div>
-
-<?php
-require_once(FOOTER);
+$gc_sql = "
+    DELETE FROM
+        `downloads`
+    WHERE
+        `counted`=1
+";
+$gc_result = mysql_query($gc_sql, $connection) 
+    or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 
+                     E_USER_NOTICE);
 ?>
