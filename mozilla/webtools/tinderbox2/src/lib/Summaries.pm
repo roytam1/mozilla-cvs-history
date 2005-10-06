@@ -479,7 +479,7 @@ sub jspanel {
   $temp =~ s/\"/\'/g;
   $body .= $temp."\n";
 
-  $body .= "\t<TABLE BPRDER=0 CELLPADDING=1 CELLSPACING=1>\n";
+  $body .= "\t<TABLE BORDER=0 CELLPADDING=1 CELLSPACING=1>\n";
   for ($i=0; $i <= $#BUILD_NAMES; $i++) {
     my ($buildname) = $BUILD_NAMES[$i];
     my ($color) = $HTML_COLORS[$i];
