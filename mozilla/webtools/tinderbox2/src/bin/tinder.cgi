@@ -32,7 +32,7 @@
 # complete rewrite by Ken Estes for contact info see the
 #     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
-
+#     
 
 
 # Standard perl libraries
@@ -347,7 +347,7 @@ sub HTML_status_page {
                    ).
   "<br><p>\n\n".
   HTMLPopUp::Link(
-                  "linktxt"=>"Regnerate HTML Pages",
+                  "linktxt"=>"Regenerate HTML Pages",
                   "href"=>("$FileStructure::URLS{'regenerate'}".
                            "\?".
                            "tree=$tree"),
