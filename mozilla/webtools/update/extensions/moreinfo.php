@@ -156,7 +156,6 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
     }
 
     $sql .= "\nORDER  BY  `Name` , `Version` DESC LIMIT 1";
-    echo $sql;
 
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     $row = mysql_fetch_array($sql_result);
