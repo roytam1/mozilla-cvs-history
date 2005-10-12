@@ -92,8 +92,7 @@ foreach ($addons as $id) {
             `ID`='{$id}' AND
             `counted`=0 AND
             `type`='download' AND
-            `date` >= CURDATE() AND
-            `date` < DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+            `date` > DATE_SUB(NOW(), INTERVAL 24 HOUR)
     ";
     $today_hits_result = mysql_query($today_hits_sql, $connection) 
         or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 
