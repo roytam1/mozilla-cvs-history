@@ -50,6 +50,24 @@ require_once(HEADER);
 
 <h1>Frequently Asked Questions</h1>
 
+<h2>How do I get involved?</h2>
+<p class="first">We are looking for volunteers to help us with UMO. We are in need of PHP
+developers to help with redesigning the site, and people to review extensions
+and themes that get submitted to UMO. We especially need Mac and Thunderbird
+users. If you are interested in being a part of this exciting project, please
+join us in <kbd>#umo</kbd> on <kbd>irc.mozilla.org</kbd> to start getting a feeling for what's up or for a more informal chat.
+</p>
+
+<h2>What is Mozilla Update?</h2>
+<p>Mozilla Update is the place to get updates and extras for
+your <a href="http://www.mozilla.org/">Mozilla</a> products.  This service
+has undergone <a href="./about/update.php">several changes</a> that we hope
+will make the site better.  We have re-enabled access to the developers area
+and look forward to serving the extension and theme developer community in the
+future!  We will be posting frequent 
+<a href="./about/update.php">status updates</a> as to our progress with the 
+UMO service.  The best is yet to come!</p>
+
 <?php
 $sql = "SELECT `title`, `text` FROM  `faq` WHERE `active` = 'YES' ORDER  BY  `index` ASC, `title` ASC";
 $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
@@ -59,7 +77,7 @@ while ($row = mysql_fetch_array($sql_result)) {
     $text = nl2br($row['text']);
 
     echo "<h2>$title</h2>\n";
-    echo "$text\n";
+    echo "<p>$text</p>\n";
 }
 ?>
 </div>

@@ -90,7 +90,6 @@ foreach ($addons as $id) {
             `downloads`
         WHERE
             `ID`='{$id}' AND
-            `counted`=0 AND
             `type`='download' AND
             `date` > DATE_SUB(NOW(), INTERVAL 24 HOUR)
     ";

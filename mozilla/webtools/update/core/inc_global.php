@@ -183,7 +183,7 @@ function installtrigger($functionname) {
 
             try {
                 var p = new XMLHttpRequest();
-                p.open("GET", "'.$sitehostname.WEB_PATH.'/core/install.php?uri="+aEvent.target.href, true);
+                p.open("GET", "'.WEB_PATH.'/core/install.php?uri="+aEvent.target.href, true);
                 p.send(null);
             } catch(e) { }
             return false;

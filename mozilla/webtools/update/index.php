@@ -126,31 +126,15 @@ vulputate sapien et leo. Nullam euismod tortor id wisi.
 <!-- close security update -->
 <?php } ?>
 
-<div class="key-point"><p><strong>Want to get involved?</strong><br>
-We are looking for volunteers to help us with UMO. We are in need of PHP developers to help with redesigning the site, and people to review extensions and themes that get submitted to UMO. We especially need Mac and Thunderbird users. If you are interested in being a part of this exciting project, please send information such as your full name, timezone and experience to <a href="mailto:umo-reviewer@mozilla.org?subject=Review%20Application%20for%20[Name Here]">umo-reviewer@mozilla.org</a>. Also, please join us in #umo on irc.mozilla.org to start getting a feeling for what's up or for a more informal chat.
-</p>
-</div>
-
 <div id="mBody">
 	<div id="mainContent" class="right">
-
-	<h2>What is Mozilla Update?</h2>
-
-    <p class="first">Mozilla Update is the place to get updates and extras for
-    your <a href="http://www.mozilla.org/">Mozilla</a> products.  This service
-    has undergone <a href="./about/update.php">several changes</a> that we hope
-    will make the site better.  We have re-enabled access to the developers area
-    and look forward to serving the extension and theme developer community in the
-    future!  We will be posting frequent 
-    <a href="./about/update.php">status updates</a> as to our progress with the 
-    UMO service.  The best is yet to come!</p>
 
 	<h2>What can I find here?</h2>
 	<dl>
     <dt>Extensions</dt>
-    <dd>Extensions are small add-ons that add new functionality to your
-    Mozilla program. They can add anything from a toolbar button to a
-    completely new feature. Browse extensions for: 
+    <dd>Extensions are small add-ons that add new functionality to your Firefox
+    web browser or Thunderbird email client.  They can add anything from
+    toolbars to completely new features.  Browse extensions for:
     <a href="./extensions/?application=firefox">Firefox</a>, 
     <a href="./extensions/?application=thunderbird">Thunderbird</a>,
     <a href="./extensions/?application=mozilla">Mozilla Suite</a>
@@ -165,10 +149,11 @@ We are looking for volunteers to help us with UMO. We are in need of PHP develop
     </dd>
 
     <dt>Plugins</dt>
-    <dd>Plugins are programs that allow websites to provide content to
-    you and have it appear in your browser. Examples of Plugins are Flash,
-    RealPlayer, and Java. Browse plug-ins for: 
-    <a href="./plugins/">Mozilla Suite &amp; Firefox</a>
+    <dd>Plugins are programs that also add funtionality to your browser to
+    deliver specific content like videos, games, and music.  Examples of Plugins
+    are Macromedia Flash Player, Adobe Acrobat, and Sun Microsystem's Java
+    Software.  Browse plug-ins for:
+    <a href="./plugins/">Firefox &amp; Mozilla Suite</a>
     </dd>
 
     <?php /*
@@ -258,30 +243,8 @@ We are looking for volunteers to help us with UMO. We are in need of PHP develop
 	</ol>
 	</div>
 </div>
-
 <!-- closes #mBody-->
 
-<!-- custom front-page footer -->
-<hr class="hide">
-	<div id="footer">
-
-<div id="xramp" style="float:left;height:100px;">
-<script type="text/javascript" src="https://seal.XRamp.com/seal.asp?type=H"></script>
-</div>
-
-		<ul id="bn">
-		<li><a href="<?php echo WEB_PATH; ?>/about/policies/">Terms of Use</a></li>
-		<li><a href="<?php echo WEB_PATH; ?>/about/contact/">Contact Us</a></li>
-		<li><a href="http://www.mozilla.org/foundation/donate.html">Donate to
-            Mozilla</a></li>
-		</ul>
-		<p>Copyright &copy; 2004-2005 The Mozilla Organization</p>
-        <p>256-bit SSL Encryption provided by <a href="http://www.xramp.com/">XRamp</a></p>
-	</div>
-  <!-- closes #footer-->
-
-</div>
-<!-- closes #container -->
-
-</body>
-</html>
+<?php
+require_once(FOOTER);
+?>
