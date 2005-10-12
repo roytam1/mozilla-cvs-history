@@ -129,7 +129,7 @@ if ($category=="Editors Pick"
 }
 
 
-if ($category) {
+if (!empty($category)) {
   $sql .=" INNER JOIN categoryxref TCX ON TM.ID = TCX.ID
            INNER JOIN categories TC ON TCX.CategoryID = TC.CategoryID ";
 }
@@ -154,7 +154,7 @@ if (isset($_GET["vid"])) {
     $sql .="AND TR.Pick = 'YES' ";
   }
 
-  if ($category) {
+  if (!empty($category)) {
     $sql .="AND CatName LIKE '$category' ";
   }
 

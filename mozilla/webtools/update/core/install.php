@@ -57,24 +57,31 @@ if (mysql_num_rows($sql_result)=="0") {
 }
 
 //Are we behind a proxy and given the IP via an alternate enviroment variable? If so, use it.
-if ($_SERVER["HTTP_X_FORWARDED_FOR"]) {
+if (!empty($_SERVER["HTTP_X_FORWARDED_FOR"])) {
     $remote_addr = $_SERVER["HTTP_X_FORWARDED_FOR"];
 } else {
     $remote_addr = $_SERVER["REMOTE_ADDR"];
 }
 
-// Rate limit set to 10 minutes.  $maxlife represents how much time must pass
-// before another download is counted for a particular combination of IP, UA,
-// ID, vID.
-$maxlife = date("YmdHis", mktime(date("H"), date("i")-10, date("s"), date("m"), date("d"), date("Y")));
-
-$sql = "SELECT `dID` FROM `downloads` WHERE `ID`='$id' AND `vID`='$vid' AND `user_ip`='$remote_addr' AND `user_agent` = '$_SERVER[HTTP_USER_AGENT]' AND `date`>'$maxlife' AND `type`='download' LIMIT 1";
+// Rate limit set to 10 minutes.
+$sql = "
+    SELECT
+        `dID`
+    FROM
+        `downloads`
+    WHERE
+        `ID`='$id' AND
+        `vID`='$vid' AND
+        `user_ip`='$remote_addr' AND
+        `user_agent`='$_SERVER[HTTP_USER_AGENT]' AND
+        `date`>DATE_SUB(NOW(), INTERVAL 10 MINUTE)
+    LIMIT 
+        1
+";
 $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 
 if (mysql_num_rows($sql_result)==0) {
-    $today=date("YmdHis");
-
-    $sql = "INSERT INTO `downloads` (`ID`,`date`,`vID`, `user_ip`, `user_agent`, `type`) VALUES ('$id','$today','$vid', '$remote_addr', '$_SERVER[HTTP_USER_AGENT]', 'download');";
+    $sql = "INSERT INTO `downloads` (`ID`,`date`,`vID`, `user_ip`, `user_agent`) VALUES ('$id',NOW(),'$vid', '$remote_addr', '$_SERVER[HTTP_USER_AGENT]');";
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 }
 

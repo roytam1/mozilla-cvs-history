@@ -82,53 +82,15 @@ while ($addon = mysql_fetch_array($addons_result)) {
 // For each addon, update the weekly, daily and total download counts.
 foreach ($addons as $id) {
 
-    // Get today's uncounted hits from the download table.
-    $today_hits_sql = "
-        SELECT
-            COUNT(*) as count
-        FROM
-            `downloads`
-        WHERE
-            `ID`='{$id}' AND
-            `type`='download' AND
-            `date` > DATE_SUB(NOW(), INTERVAL 24 HOUR)
-    ";
-    $today_hits_result = mysql_query($today_hits_sql, $connection) 
-        or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 
-                         E_USER_NOTICE);
-    if (mysql_num_rows($today_hits_result) > 0) {
-        $row = mysql_fetch_array($today_hits_result);
-        $today_hits = ($row['count'] > 0) ? $row['count'] : 0;
-        unset($row);
-    } else {
-        $today_hits = 0;
-    }
-
-
-    // Update today's count.  Create a record if one doesn't exist yet.
-    $today_check_sql = "SELECT `dID` FROM `downloads` WHERE `ID`='{$id}' AND `date`=CURDATE() AND `type`='count' LIMIT 1";
-    $today_check_sql_result = mysql_query($today_check_sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-
-    if (mysql_num_rows($today_check_sql_result)=="0" && $today_hits > 0) {
-        $update_today_sql = "INSERT INTO `downloads` (`ID`,`date`,`downloadcount`,`type`) VALUES ('{$id}',CURDATE(),'{$today_hits}','count');";
-    } else {
-        $row = mysql_fetch_array($today_check_sql_result);
-        $update_today_sql = "UPDATE `downloads` SET `downloadcount`=downloadcount+{$today_hits} WHERE `dID`='{$row['dID']}' LIMIT 1";
-    }
-
-    $update_today_sql_result = mysql_query($update_today_sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-
-
     // Get our 7 day counts from the download table.
     $seven_day_count_sql = "
         SELECT
-            SUM(`downloadcount`) as seven_day_count
+            COUNT(*) as seven_day_count
         FROM
             `downloads`
         WHERE
             `ID`='{$id}' AND
-            `date`>= DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND
-            `type`='count'
+            `date` >= DATE_SUB(NOW(), INTERVAL 7 DAY)
     ";
     $seven_day_count_result = mysql_query($seven_day_count_sql, $connection) 
         or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 
@@ -149,8 +111,6 @@ foreach ($addons as $id) {
             `downloadcount`='{$seven_day_count}'
         WHERE
             `ID`='{$id}'
-        LIMIT
-            1
     ";
     $seven_day_count_update_result = mysql_query($seven_day_count_update_sql, 
                                                  $connection) 
@@ -165,8 +125,7 @@ foreach ($addons as $id) {
             `downloads`
         WHERE
             `ID`='{$id}' AND
-            `counted`=0 AND
-            `type`='download'
+            `counted`=0
     ";
     $uncounted_hits_result = mysql_query($uncounted_hits_sql, $connection) 
         or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 
@@ -192,8 +151,6 @@ foreach ($addons as $id) {
     $uncounted_update_result = mysql_query($uncounted_update_sql, $connection) 
         or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 
                          E_USER_NOTICE);
-
-
 }
 
 // If we get here, we've counted everything and we can mark stuff for
@@ -202,14 +159,14 @@ foreach ($addons as $id) {
 // Mark the downloads we just counted as counted if:
 //      a) it is a day count that is more than 8 days old
 //      b) it is a download log that has not been counted
+//
+// We may lose a couple counts, theoretically, but it's negligible - we're not
+// NASA (yes, THE NASA).
 $counted_update_sql = "
     UPDATE
         `downloads`
     SET
         `counted`=1
-    WHERE
-        ((`date` < DATE_SUB(CURDATE(), INTERVAL 8 DAY) AND `type`='count') OR
-        (`counted`=0 AND `type`='download'))
 ";
 $counted_update_result = mysql_query($counted_update_sql, $connection) 
     or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 

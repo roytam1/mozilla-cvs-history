@@ -67,8 +67,7 @@ $gc_sql = "
     DELETE FROM
         `downloads`
     WHERE
-        `counted`=1 AND
-        `date` < DATE_SUB(NOW(), INTERVAL 36 HOUR)
+        `date` < DATE_SUB(NOW(), INTERVAL 8 DAY)
 ";
 $gc_result = mysql_query($gc_sql, $connection) 
     or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 

@@ -47,7 +47,7 @@
 
     $catname = "Newest";
     $catdesc = "Most recent ".ucwords($typename);
-    echo"<li"; if (strtolower($category) == strtolower($catname)) { echo" class=\"selected\""; }  echo"><a href=\"showlist.php?".uriparams()."&amp;category=$catname\" title=\"$catdesc\"><strong>$catname</strong></a></li>\n";
+    echo"<li"; if (!empty($category) && strtolower($category) == strtolower($catname)) { echo" class=\"selected\""; }  echo"><a href=\"showlist.php?".uriparams()."&amp;category=$catname\" title=\"$catdesc\"><strong>$catname</strong></a></li>\n";
 
     $catname = "Popular";
     $catdesc = ucwords($typename)." downloaded the most over the last week.";
