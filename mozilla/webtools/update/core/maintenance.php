@@ -81,10 +81,6 @@ switch ($action) {
                 COUNT(downloads.ID) as seven_day_count
             FROM
                 `downloads`
-            INNER JOIN
-                main
-            ON
-                main.ID = downloads.ID
             WHERE
                 `date` >= DATE_SUB(NOW(), INTERVAL 7 DAY)
             GROUP BY
@@ -97,31 +93,27 @@ switch ($action) {
         $seven_day_count_result = mysql_query($seven_day_count_sql, $connection) 
             or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 
                              E_USER_NOTICE);
-        if (mysql_num_rows($seven_day_count_result) > 0 ) {
 
+        $affected_rows = mysql_num_rows($seven_day_count_result);
+    
+        if ($affected_rows > 0 ) {
             $seven_day_counts = array();
-
             while ($row = mysql_fetch_array($seven_day_count_result)) {
                 $seven_day_counts[$row['ID']] = ($row['seven_day_count']>0) ? $row['seven_day_count'] : 0;
             }
-        }
 
-        // Generate the sql for updating the 7 day counts in the main record.
-        if (is_array($seven_day_counts)) {
-            $seven_day_count_udpate_sql = '';
+            echo 'Updating seven day counts in `main` ...'."\n";
+
             foreach ($seven_day_counts as $id=>$seven_day_count) {
-                $seven_day_count_update_sql .= "
-                    UPDATE `main` SET `downloadcount`='{$seven_day_count}' WHERE `id`='{$id}';
+                $seven_day_count_update_sql = "
+                    UPDATE `main` SET `downloadcount`='{$seven_day_count}' WHERE `id`='{$id}'
                 ";
+
+                $seven_day_count_update_result = mysql_query($seven_day_count_update_sql, $connection) 
+                    or trigger_error('mysql error '.mysql_errno().': '.mysql_error()."", 
+                                     E_USER_NOTICE);
             }
         }
-
-        // Execute updates as a batch.
-        echo 'Updating seven day counts in `main` ...'."\n";
-        $seven_day_count_update_result = mysql_query($seven_day_count_update_sql, 
-                                                     $connection) 
-            or trigger_error('mysql error '.mysql_errno().': '.mysql_error()."", 
-                             E_USER_NOTICE);
     break;
 
 
@@ -130,7 +122,6 @@ switch ($action) {
      * Update all total download counts.
      */
     case 'total':
-    
         // Get uncounted hits from the download table.
         $uncounted_hits_sql = "
             SELECT
@@ -138,10 +129,6 @@ switch ($action) {
                 COUNT(downloads.ID) as count
             FROM
                 downloads
-            INNER JOIN
-                main
-            ON
-                main.ID = downloads.ID
             WHERE
                 `counted`=0
             GROUP BY
@@ -149,50 +136,51 @@ switch ($action) {
             ORDER BY
                 downloads.ID
         ";
+
+        echo 'Retrieving uncounted downloads ...'."\n";
+
         $uncounted_hits_result = mysql_query($uncounted_hits_sql, $connection) 
             or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 
                              E_USER_NOTICE);
+        $affected_rows = mysql_num_rows($uncounted_hits_result);
 
-        $uncounted_hits = array();
-
-        if (mysql_num_rows($uncounted_hits_result) > 0) {
-            $row = mysql_fetch_array($uncounted_hits_result);
-            $uncounted_hits[$row['ID']] = ($row['count'] > 0) ? $row['count'] : 0;
-        }
-
-        // Generate total downloadcount sql.
-        if (is_array($uncounted_hits)) {
-            $uncounted_update_sql = '';
-            foreach ($uncounted_hits as $id=>$hits) {
-                $uncounted_update_sql .= "
-                    UPDATE `main` SET `TotalDownloads`=`TotalDownloads`+{$hits} WHERE `ID`='{$id}';
-                ";
+        if ($affected_rows > 0) {
+            $uncounted_hits = array();
+            while ($row = mysql_fetch_array($uncounted_hits_result)) {
+                $uncounted_hits[$row['ID']] = ($row['count'] > 0) ? $row['count'] : 0;
             }
-        }
-        
-        // Update total downloadcounts as a batch.
-        $uncounted_update_result = mysql_query($uncounted_update_sql, $connection) 
-            or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 
-                             E_USER_NOTICE);
 
-        // If we get here, we've counted everything and we can mark stuff for
-        // deletion.
-        //
-        // Mark the downloads we just counted as counted if:
-        //      a) it is a day count that is more than 8 days old
-        //      b) it is a download log that has not been counted
-        //
-        // We may lose a couple counts, theoretically, but it's negligible - we're not
-        // NASA (yes, THE NASA).
-        $counted_update_sql = "
-            UPDATE
-                `downloads`
-            SET
-                `counted`=1
-        ";
-        $counted_update_result = mysql_query($counted_update_sql, $connection) 
-            or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 
-                             E_USER_NOTICE);
+            echo 'Updating download totals ...'."\n";
+
+            foreach ($uncounted_hits as $id=>$hits) {
+                $uncounted_update_sql = "
+                    UPDATE `main` SET `TotalDownloads`=`TotalDownloads`+{$hits} WHERE `ID`='{$id}'
+                ";
+                $uncounted_update_result = mysql_query($uncounted_update_sql, $connection) 
+                    or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 
+                                     E_USER_NOTICE);
+            }
+
+
+            // If we get here, we've counted everything and we can mark stuff for
+            // deletion.
+            //
+            // Mark the downloads we just counted as counted if:
+            //      a) it is a day count that is more than 8 days old
+            //      b) it is a download log that has not been counted
+            //
+            // We may lose a couple counts, theoretically, but it's negligible - we're not
+            // NASA (yes, THE NASA).
+            $counted_update_sql = "
+                UPDATE
+                    `downloads`
+                SET
+                    `counted`=1
+            ";
+            $counted_update_result = mysql_query($counted_update_sql, $connection) 
+                or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 
+                                 E_USER_NOTICE);
+        }
     break;
 
 
@@ -211,6 +199,9 @@ switch ($action) {
         $gc_result = mysql_query($gc_sql, $connection) 
             or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 
                              E_USER_NOTICE);
+
+        // This is unreliable, but it's not a big deal.
+        $affected_rows = mysql_affected_rows();
     break;
 
 
@@ -225,10 +216,15 @@ switch ($action) {
 }
 // End switch.
 
+
+
+// How long did it take to run?
 $exectime = getmicrotime() - $start;
 
+
+
 // Display script output.
-echo 'Affected rows: '.mysql_affected_rows().'    ';
+echo 'Affected rows: '.$affected_rows.'    ';
 echo 'Time: '.$exectime."\n";
 echo 'Exiting ...'."\n";
 
