@@ -48,8 +48,6 @@
  * @package umo
  * @subpackage core
  * @TODO list this in v2 requirements
- * @TODO consider creating DB wrappers for v1 updates...
- * @TODO explore using hashes to reduce DB load
  */
 
 
@@ -60,115 +58,181 @@ if (isset($_SERVER['HTTP_HOST'])) {
     exit;
 }
 
-// If we get here, CRON is calling this so we can continue.
+// If we get here, we're on the command line, which means we can continue.
 require_once('../core/init.php');
 
-/**
- * Update addon counts and statistics.
- */
+// Start our timer.
+$start = getmicrotime();
 
-// Get our addon IDs.
-$addons_sql = 'SELECT ID FROM main';
-$addons_result = mysql_query($addons_sql, $connection) 
-    or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 
-                     E_USER_NOTICE);
+// Get our action.
+$action = isset($_SERVER['argv'][1]) ? $_SERVER['argv'][1] : '';
 
-// Store our addon IDs in an array.
-$addons = array();
-while ($addon = mysql_fetch_array($addons_result)) {
-    $addons[] = $addon['ID'];
+// Perform specified task.  If a task is not properly defined, exit.
+switch ($action) {
+
+    /**
+     * Update weekly addon counts.
+     */
+    case 'weekly':
+        // Get 7 day counts from the download table.
+        $seven_day_count_sql = "
+            SELECT
+                downloads.ID as ID,
+                COUNT(downloads.ID) as seven_day_count
+            FROM
+                `downloads`
+            INNER JOIN
+                main
+            ON
+                main.ID = downloads.ID
+            WHERE
+                `date` >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+            GROUP BY
+                downloads.ID
+            ORDER BY
+                downloads.ID
+        ";
+
+        echo 'Retrieving seven-day counts from `downloads` ...'."\n";
+        $seven_day_count_result = mysql_query($seven_day_count_sql, $connection) 
+            or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 
+                             E_USER_NOTICE);
+        if (mysql_num_rows($seven_day_count_result) > 0 ) {
+
+            $seven_day_counts = array();
+
+            while ($row = mysql_fetch_array($seven_day_count_result)) {
+                $seven_day_counts[$row['ID']] = ($row['seven_day_count']>0) ? $row['seven_day_count'] : 0;
+            }
+        }
+
+        // Generate the sql for updating the 7 day counts in the main record.
+        if (is_array($seven_day_counts)) {
+            $seven_day_count_udpate_sql = '';
+            foreach ($seven_day_counts as $id=>$seven_day_count) {
+                $seven_day_count_update_sql .= "
+                    UPDATE `main` SET `downloadcount`='{$seven_day_count}' WHERE `id`='{$id}';
+                ";
+            }
+        }
+
+        // Execute updates as a batch.
+        echo 'Updating seven day counts in `main` ...'."\n";
+        $seven_day_count_update_result = mysql_query($seven_day_count_update_sql, 
+                                                     $connection) 
+            or trigger_error('mysql error '.mysql_errno().': '.mysql_error()."", 
+                             E_USER_NOTICE);
+    break;
+
+
+
+    /**
+     * Update all total download counts.
+     */
+    case 'total':
+    
+        // Get uncounted hits from the download table.
+        $uncounted_hits_sql = "
+            SELECT
+                downloads.ID as ID,
+                COUNT(downloads.ID) as count
+            FROM
+                downloads
+            INNER JOIN
+                main
+            ON
+                main.ID = downloads.ID
+            WHERE
+                `counted`=0
+            GROUP BY
+                downloads.ID
+            ORDER BY
+                downloads.ID
+        ";
+        $uncounted_hits_result = mysql_query($uncounted_hits_sql, $connection) 
+            or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 
+                             E_USER_NOTICE);
+
+        $uncounted_hits = array();
+
+        if (mysql_num_rows($uncounted_hits_result) > 0) {
+            $row = mysql_fetch_array($uncounted_hits_result);
+            $uncounted_hits[$row['ID']] = ($row['count'] > 0) ? $row['count'] : 0;
+        }
+
+        // Generate total downloadcount sql.
+        if (is_array($uncounted_hits)) {
+            $uncounted_update_sql = '';
+            foreach ($uncounted_hits as $id=>$hits) {
+                $uncounted_update_sql .= "
+                    UPDATE `main` SET `TotalDownloads`=`TotalDownloads`+{$hits} WHERE `ID`='{$id}';
+                ";
+            }
+        }
+        
+        // Update total downloadcounts as a batch.
+        $uncounted_update_result = mysql_query($uncounted_update_sql, $connection) 
+            or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 
+                             E_USER_NOTICE);
+
+        // If we get here, we've counted everything and we can mark stuff for
+        // deletion.
+        //
+        // Mark the downloads we just counted as counted if:
+        //      a) it is a day count that is more than 8 days old
+        //      b) it is a download log that has not been counted
+        //
+        // We may lose a couple counts, theoretically, but it's negligible - we're not
+        // NASA (yes, THE NASA).
+        $counted_update_sql = "
+            UPDATE
+                `downloads`
+            SET
+                `counted`=1
+        ";
+        $counted_update_result = mysql_query($counted_update_sql, $connection) 
+            or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 
+                             E_USER_NOTICE);
+    break;
+
+
+
+    /**
+     * Garbage collection for all records that are older than 8 days.
+     */
+    case 'gc':
+        echo 'Starting garbage collection ...'."\n";
+        $gc_sql = "
+            DELETE FROM
+                `downloads`
+            WHERE
+                `date` < DATE_SUB(NOW(), INTERVAL 8 DAY)
+        ";
+        $gc_result = mysql_query($gc_sql, $connection) 
+            or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 
+                             E_USER_NOTICE);
+    break;
+
+
+
+    /**
+     * Unknown command.
+     */
+    default:
+        echo 'Command not found. Exiting ...'."\n";
+        exit;
+    break;
 }
+// End switch.
 
-// For each addon, update the weekly, daily and total download counts.
-foreach ($addons as $id) {
+$exectime = getmicrotime() - $start;
 
-    // Get our 7 day counts from the download table.
-    $seven_day_count_sql = "
-        SELECT
-            COUNT(*) as seven_day_count
-        FROM
-            `downloads`
-        WHERE
-            `ID`='{$id}' AND
-            `date` >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-    ";
-    $seven_day_count_result = mysql_query($seven_day_count_sql, $connection) 
-        or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 
-                         E_USER_NOTICE);
-    if (mysql_num_rows($seven_day_count_result) > 0 ) {
-        $row = mysql_fetch_array($seven_day_count_result);
-        $seven_day_count = ($row['seven_day_count']>0) ? $row['seven_day_count'] : 0;
-        unset($row);
-    } else {
-        $seven_day_count = 0; 
-    }
+// Display script output.
+echo 'Affected rows: '.mysql_affected_rows().'    ';
+echo 'Time: '.$exectime."\n";
+echo 'Exiting ...'."\n";
 
-    // Update the 7 day count in the main record.
-    $seven_day_count_update_sql = "
-        UPDATE
-            `main`
-        SET
-            `downloadcount`='{$seven_day_count}'
-        WHERE
-            `ID`='{$id}'
-    ";
-    $seven_day_count_update_result = mysql_query($seven_day_count_update_sql, 
-                                                 $connection) 
-        or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 
-                         E_USER_NOTICE);
 
-    // Get all uncounted hits from the download table.
-    $uncounted_hits_sql = "
-        SELECT
-            COUNT(*) as count
-        FROM
-            `downloads`
-        WHERE
-            `ID`='{$id}' AND
-            `counted`=0
-    ";
-    $uncounted_hits_result = mysql_query($uncounted_hits_sql, $connection) 
-        or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 
-                         E_USER_NOTICE);
-    if (mysql_num_rows($uncounted_hits_result) > 0) {
-        $row = mysql_fetch_array($uncounted_hits_result);
-        $uncounted_hits = ($row['count'] > 0) ? $row['count'] : 0;
-        unset($row);
-    } else {
-        $uncounted_hits = 0;
-    }
 
-    // Update the total downloadcount in the main record based on the uncounted
-    // records.
-    $uncounted_update_sql = "
-        UPDATE
-            `main`
-        SET
-            `TotalDownloads`=`TotalDownloads`+{$uncounted_hits}
-        WHERE
-            `ID`='{$id}'
-    ";
-    $uncounted_update_result = mysql_query($uncounted_update_sql, $connection) 
-        or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 
-                         E_USER_NOTICE);
-}
-
-// If we get here, we've counted everything and we can mark stuff for
-// deletion.
-//
-// Mark the downloads we just counted as counted if:
-//      a) it is a day count that is more than 8 days old
-//      b) it is a download log that has not been counted
-//
-// We may lose a couple counts, theoretically, but it's negligible - we're not
-// NASA (yes, THE NASA).
-$counted_update_sql = "
-    UPDATE
-        `downloads`
-    SET
-        `counted`=1
-";
-$counted_update_result = mysql_query($counted_update_sql, $connection) 
-    or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 
-                     E_USER_NOTICE);
+exit;
 ?>
