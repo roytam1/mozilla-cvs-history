@@ -143,20 +143,16 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
 
     } else {
 
-        $sql .=" AND Type = '$type' AND AppName = '$application' AND `approved` = 'YES' ";
+        $sql .=" AND Type = '$type' AND AppName = '$application' AND   `approved` = 'YES' ";
         if (isset($editorpick) && $editorpick=="true") {
             $sql .="AND TR.Pick = 'YES' ";
         }
         if ($category) {
             $sql .="AND CatName LIKE '$category' ";
-        }
-        if ($OS) {
-            $sql .=" AND (TOS.OSName = '$OS' OR TOS.OSName = 'All') ";
-        }
+        }  
     }
 
-    $sql .= "\nORDER  BY  `Name` , `Version` DESC LIMIT 1";
-
+    $sql .= "\nORDER  BY  `Name` , `Version` DESC LIMIT 1";           
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     $row = mysql_fetch_array($sql_result);
 
