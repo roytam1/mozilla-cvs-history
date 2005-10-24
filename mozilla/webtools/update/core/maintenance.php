@@ -59,7 +59,7 @@ if (isset($_SERVER['HTTP_HOST'])) {
 }
 
 // If we get here, we're on the command line, which means we can continue.
-require_once('../core/init.php');
+require_once('init.php');
 
 // Start our timer.
 $start = getmicrotime();
