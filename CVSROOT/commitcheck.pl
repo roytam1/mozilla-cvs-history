@@ -410,7 +410,7 @@ if (m:^js/src/*\.tbl$:) {return '70';}
 if (m:^js/src/*akefile.*$:) {return '70';}
 if (m:^mozilla/gfx/src/beos$:) {return '172';}
 if (m:^mozilla/widget/src/beos$:) {return '172';}
-if (m:^mozilla/extensions/jsd/.*$:) {return '71';}
+if (m:^mozilla/extensions/venkman/.*$:) {return '71';}
 if (m:^mozilla/js/jsd/.*$:) {return '71';}
 if (m:^mozilla/extensions/help$:) {return '174';}
 if (m:^js/src/liveconnect/.*$:) {return '72';}
