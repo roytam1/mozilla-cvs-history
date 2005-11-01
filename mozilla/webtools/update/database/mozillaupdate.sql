@@ -61,14 +61,13 @@ CREATE TABLE `applications` (
   `major` int(3) NOT NULL default '0',
   `minor` int(3) NOT NULL default '0',
   `release` int(3) NOT NULL default '0',
-  `build` int(14) NOT NULL default '0',
-  `SubVer` varchar(5) NOT NULL default 'final',
+  `SubVer` varchar(15) NOT NULL default 'final',
   `GUID` varchar(50) NOT NULL default '',
   `int_version` varchar(5) default NULL,
   `public_ver` enum('YES','NO') NOT NULL default 'YES',
   `shortname` char(2) NOT NULL default '',
   PRIMARY KEY  (`AppID`),
-  KEY `AppName` (`AppName`)
+  KEY `additem_index` (`AppName`,`major`,`minor`,`release`,`SubVer`)
 ) TYPE=InnoDB PACK_KEYS=0;
 
 -- --------------------------------------------------------

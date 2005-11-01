@@ -6,6 +6,7 @@ $page_title = 'Mozilla Update :: Developer Control Panel :: Add Item';
 require_once(HEADER);
 require_once('./inc_sidebar.php');
 require_once('./parse_install_manifest.php');
+require_once('../core/inc_version_comparison.php');
 /**
    check_filename() function
    checks a file name and die if it is "evil"
@@ -175,44 +176,108 @@ if ($_POST["legacy"]=="TRUE") {
 //  echo"This is a new extension...<br>\n";
   }
 
-//Verify MinAppVer and MaxAppVer per app for validity, if they're invalid, reject the file.
+/**
+ * For each targetApplication, verify that the min/max app versions are
+ * correctly formatted.
+ * @TODO Rewrite this entire page one weekend instead of hacking on it.
+ * @TODO Fix references to non-existent variables and array indeces.
+ * @TODO Rethink how we're storing versions, and clean up new versions as they come in.
+ */
 if ($_POST["legacy"]=="TRUE" AND !$manifestdata["targetApplication"]) {$manifestdata["targetApplication"]=array(); }
+
+$versioncheck = array();
+
+// For each of our specified targetApplications, we iterate to find a matching
+// result.  Once we find a matching result, we set the flag to true.  Once we
+// have to successful matches (one for maxVersion, one for minVersion), we break
+// the loop and move on.
 foreach ($manifestdata["targetApplication"] as $key=>$val) {
-$esckey = escape_string($key);
-$i=0;
-  $sql = "SELECT `AppName`, `major`, `minor`, `release`, `SubVer` FROM `applications` WHERE `GUID`='$esckey' ORDER BY `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC";
-   $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-    while ($row = mysql_fetch_array($sql_result)) {
-    $i++;
-    $appname = $row["AppName"];
-    $subver = $row["SubVer"];
-    $release = $row["major"] . "." . $row["minor"];
-    if ($row["release"]) {$release = "$release." . $row["release"];}
-    if ($subver !=="final") {$release="$release$subver";}
-      if ($release == $val["minVersion"]) { $versioncheck[$key]["minVersion_valid"] = "true"; }
-      if ($release == $val["maxVersion"]) { $versioncheck[$key]["maxVersion_valid"] = "true"; }
+    $esckey = escape_string($key);
 
+    $versioncheck[$key]['minVersion_valid'] = false;
+    $versioncheck[$key]['maxVersion_valid'] = false;
+
+    $sql = "
+        SELECT 
+            `AppName`,
+            `major`,
+            `minor`,
+            `release`,
+            `SubVer`
+        FROM
+            `applications`
+        WHERE
+            `GUID`='$esckey' AND
+            `public_ver`='YES'
+        ORDER BY
+            `major` DESC,
+            `minor` DESC,
+            `release` DESC,
+            `SubVer` DESC
+    ";
+
+    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+
+    while ($row = mysql_fetch_array($sql_result, MYSQL_ASSOC)) {
+
+        // Set up our variables.
+        $appname = $row['AppName'];  // Name of the application.
+        $release = $row['major'].'.'.$row['minor'];  // Major/minor release.
+        $subver = $row['SubVer'];  // Subversion.
+
+        // If we have a release and it's not a final version, add the release.
+        if (isset($row['release']) && !empty($subver) && $subver != 'final' && $subver != '+') {
+            $release = $release.".".$row['release'];
+        }
+
+        // If we have a subversion, append it depending on its type.
+        if ($subver != 'final') {
+            if (is_numeric($subver)||$subver=='*') {
+                $release = $release.'.'.$subver;
+            } else {
+                $release = $release.$subver;
+            }
+        }
+
+        // If we have a match, set our valid minVersion flag to true.
+        if ($release == $val["minVersion"]) {
+            $versioncheck[$key]['minVersion_valid'] = true;
+        }
+
+        // If we have a match, set our valid maxVersion flag to true.
+        if ($release == $val["maxVersion"]) {
+            $versioncheck[$key]['maxVersion_valid'] = true; 
+        }
+
+        // If we have valid matches for both max/minVersions, we don't need to
+        // keep checking.  Break this loop and continue to the next application.
+        if ($versioncheck[$key]['minVersion_valid'] == true && $versioncheck[$key]['maxVersion_valid'] == true) {
+            break;
+        }
     }
-  if (!$versioncheck[$key]["minVersion_valid"]) {
-    $versioncheck[$key]["minVersion_valid"]="false";
-    echo"Error! The MinAppVer for $appname of " . $val["minVersion"] . " in install.rdf is invalid.<br>\n";
-    $versioncheck["errors"]="true";
-  }
-  if (!$versioncheck[$key]["maxVersion_valid"]) {
-    $versioncheck[$key]["maxVersion_valid"]="false";
-    echo"Error! The MaxAppVer for $appname of ". $val["maxVersion"] . " in install.rdf is invalid.<br>\n";
-    $versioncheck["errors"]="true";
-  }
+
+    // If we never found a valid minVersion, report the error.
+    if ($versioncheck[$key]['minVersion_valid'] == false) {
+        echo "Error! The MinAppVer for $appname of " . $val['minVersion'] . " in install.rdf is invalid.<br>\n";
+        $versioncheck['errors'] = true;
+    }
+
+    // If we never found a valid maxVersion, report the error.
+    if ($versioncheck[$key]['maxVersion_valid'] == false) {
+        echo "Error! The MaxAppVer for $appname of ". $val['maxVersion'] . " in install.rdf is invalid.<br>\n";
+        $versioncheck['errors'] = true;
+    }
 }
 
-if ($versioncheck["errors"]=="true") {
-  echo"Errors were encountered during install.rdf checking...<br>\n";
-  die("Aborting...");
-} else { 
-//  echo"install.rdf minAppVer and maxAppVer valid...<br>\n";
+if ($versioncheck['errors'] == true) {
+  echo "Errors were encountered during install.rdf checking...<br>\n";
+  die('Aborting...');
 }
 
 
+// If we have no install.rdf, we're doing something legacy...
+// I guess this was put in for backwards compatibility with the old system.
+// @TODO Strip out legacy code, as it it no longer needed.
 } else {
 
 echo"<h1>Add Step 1b: Legacy Item Data Entry: ($filename)</h1>\n";

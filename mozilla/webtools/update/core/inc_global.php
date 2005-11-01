@@ -240,11 +240,11 @@ function mozupd_buildDownloadURL($uri, $name, $version,
   ) {
     $filename=$uri_parts[1].$uri_parts[2];
   } else { // fall back if $uri has not a recognized extension
-    $filename=preg_replace('/\W/','_',"$name $version").$ext;
+    $filename=ereg_replace('/\W/','_',"$name $version").$ext;
   }
  
   return htmlspecialchars( // if we don't escape '&' and friends validator cries
-    "/core/install.php/$filename?passthrough=yes&uri=$uri");
+    "/core/install.php/$filename?passthrough=yes&uri=".urlencode($uri));
 }
 
 /**
