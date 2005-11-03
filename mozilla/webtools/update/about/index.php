@@ -61,11 +61,11 @@ join us in <kbd>#umo</kbd> on <kbd>irc.mozilla.org</kbd> to start getting a feel
 <h2>What is Mozilla Update?</h2>
 <p>Mozilla Update is the place to get updates and extras for
 your <a href="http://www.mozilla.org/">Mozilla</a> products.  This service
-has undergone <a href="./about/update.php">several changes</a> that we hope
+has undergone <a href="./update.php">several changes</a> that we hope
 will make the site better.  We have re-enabled access to the developers area
 and look forward to serving the extension and theme developer community in the
 future!  We will be posting frequent 
-<a href="./about/update.php">status updates</a> as to our progress with the 
+<a href="./update.php">status updates</a> as to our progress with the 
 UMO service.  The best is yet to come!</p>
 
 <?php
