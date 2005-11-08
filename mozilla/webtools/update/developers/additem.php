@@ -222,32 +222,62 @@ foreach ($manifestdata["targetApplication"] as $key=>$val) {
 
         // Set up our variables.
         $appname = $row['AppName'];  // Name of the application.
-        $release = $row['major'].'.'.$row['minor'];  // Major/minor release.
+        $major = $row['major'];  // Major version.
+        $minor = $row['minor'];  // Minor version.
+        $release = $row['release'];  // Release version.
         $subver = $row['SubVer'];  // Subversion.
 
+        // This is our final version string.
+        //
+        // By default, we cat major and minor versions, because we assume they
+        // exist and are always numeric.  And they typically are, for now... :\
+        $version = $major.'.'.$minor;
+
         // If we have a release and it's not a final version, add the release.
-        if (isset($row['release']) && !empty($subver) && $subver != 'final' && $subver != '+') {
-            $release = $release.".".$row['release'];
+        if (isset($release) && (empty($subver) || isset($subver) && $subver != 'final' && $subver != '+')) {
+
+            // Only add the '.' if it's numeric.
+            if (preg_match('/^\*|[0-9][0-9]*$/',$release)) {
+                $version = $version.'.'.$release;
+            } else {
+                $version = $version.$release;
+            }
         }
 
-        // If we have a subversion, append it depending on its type.
-        if ($subver != 'final') {
-            if (is_numeric($subver)||$subver=='*') {
-                $release = $release.'.'.$subver;
+        // If we have a subversion and it's not 'final', append it depending on its type.
+        if (!empty($subver) && $subver != 'final') {
+            if (preg_match('/^[\*]|[0-9][0-9]*$/',$subver)) {
+                $version  = $version.'.'.$subver;
             } else {
-                $release = $release.$subver;
+                $version  = $version.$subver;
             }
         }
 
         // If we have a match, set our valid minVersion flag to true.
-        if ($release == $val["minVersion"]) {
+        if ($version == $val['minVersion']) {
             $versioncheck[$key]['minVersion_valid'] = true;
         }
 
         // If we have a match, set our valid maxVersion flag to true.
-        if ($release == $val["maxVersion"]) {
+        if ($version == $val['maxVersion']) {
             $versioncheck[$key]['maxVersion_valid'] = true; 
         }
+
+
+        /**
+         * Debugerrific code, because I got tired of thinking everything was
+         * okay then having to retype this.
+         *
+         * Use this to debug app versions.
+        echo '<pre>';
+        echo 'App: '.$appname."\n";
+        echo 'Release from DB: '.$major.' '.$minor.' '.$release.' '.$subver."\n";
+        echo 'Version we put together: '.$version."\n";
+        echo 'MinVersion from RDF (match): '.$val['minVersion'].' ('.$versioncheck[$key]['minVersion_valid'].') '."\n";
+        echo 'MaxVersion from RDF (match): '.$val['maxVersion'].' ('.$versioncheck[$key]['maxVersion_valid'].') '."\n\n";
+        print_r($versioncheck);
+        echo '</pre>';
+         */
 
         // If we have valid matches for both max/minVersions, we don't need to
         // keep checking.  Break this loop and continue to the next application.

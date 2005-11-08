@@ -99,10 +99,21 @@ Major:  <input name="Major" type="text" size="5" maxlength="3" value="" title="M
 Minor:  <input name="Minor" type="text" size="5" maxlength="3" value="" title="Minor Version #. (Ex. 0 if 1.0)">
 Release:  <input name="Release" type="text" size="5" maxlength="3" value="" title="Release Version. (Ex. 2 if 1.0.2)">
 SubVer: <input name="SubVer" size="5" maxlength="5" title="SubVersion Value (Ex. a4 if 1.8a4 or + if 0.10+)">
-<BR>
-<div style="margin-top: 10px; font-size: 8pt">Should this version be exposed to end-users of the website, or just allowed for extension authors' install.rdf files? In general only release milestones should be exposed.</DIV>
-Public Version: Yes: <input name="public_ver" type="radio" value="YES" checked> No: <input name="public_ver" type="radio" value="NO"><BR>
-<BR>
+
+<br><br>
+Public Version: Yes: <input name="public_ver" type="radio" value="YES" checked> No: <input name="public_ver" type="radio" value="NO"><br>
+
+<p>Please note that a 'final' SubVer causes the version comparison in additem.php to ignore the release value:</p>
+<ul>
+<li>1 0 4 final --> 1.0</li>
+<li>1 0 0 final --> 1.0</li>
+</ul>
+<p>In all other cases, release will be counted!</p>
+<ul>
+<li>1 0 4 0 --> 1.0.4.0</li>
+<li>1 0 0 + --> 1.0.0+</li>
+<li>1 0 0 a1+ --> 1.0.0.a1+</li>
+</ul>
 <input name="submit" type="submit" value="Add Version">&nbsp;<input name="reset" type="reset" value="Reset Form">
 </form>
 
