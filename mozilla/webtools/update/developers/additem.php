@@ -237,7 +237,7 @@ foreach ($manifestdata["targetApplication"] as $key=>$val) {
         if (isset($release) && (empty($subver) || isset($subver) && $subver != 'final' && $subver != '+')) {
 
             // Only add the '.' if it's numeric.
-            if (preg_match('/^\*|[0-9][0-9]*$/',$release)) {
+            if (preg_match('/^\*|\w+$/',$release)) {
                 $version = $version.'.'.$release;
             } else {
                 $version = $version.$release;
@@ -246,7 +246,7 @@ foreach ($manifestdata["targetApplication"] as $key=>$val) {
 
         // If we have a subversion and it's not 'final', append it depending on its type.
         if (!empty($subver) && $subver != 'final') {
-            if (preg_match('/^[\*]|[0-9][0-9]*$/',$subver)) {
+            if (preg_match('/^\*|\w+$/',$subver)) {
                 $version  = $version.'.'.$subver;
             } else {
                 $version  = $version.$subver;
