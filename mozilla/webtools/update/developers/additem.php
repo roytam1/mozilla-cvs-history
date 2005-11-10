@@ -222,44 +222,17 @@ foreach ($manifestdata["targetApplication"] as $key=>$val) {
 
         // Set up our variables.
         $appname = $row['AppName'];  // Name of the application.
-        $major = $row['major'];  // Major version.
-        $minor = $row['minor'];  // Minor version.
-        $release = $row['release'];  // Release version.
-        $subver = $row['SubVer'];  // Subversion.
 
-        // This is our final version string.
-        //
-        // By default, we cat major and minor versions, because we assume they
-        // exist and are always numeric.  And they typically are, for now... :\
-        $version = $major.'.'.$minor;
-
-        // If we have a release and it's not a final version, add the release.
-        if (isset($release) && (empty($subver) || isset($subver) && $subver != 'final' && $subver != '+')) {
-
-            // Only add the '.' if it's numeric.
-            if (preg_match('/^\*|\w+$/',$release)) {
-                $version = $version.'.'.$release;
-            } else {
-                $version = $version.$release;
-            }
-        }
-
-        // If we have a subversion and it's not 'final', append it depending on its type.
-        if (!empty($subver) && $subver != 'final') {
-            if (preg_match('/^\*|\w+$/',$subver)) {
-                $version  = $version.'.'.$subver;
-            } else {
-                $version  = $version.$subver;
-            }
-        }
+        // Build our app version string.
+        $appVersion = buildAppVersion($row['major'],$row['minor'],$row['release'],$row['SubVer']);
 
         // If we have a match, set our valid minVersion flag to true.
-        if ($version == $val['minVersion']) {
+        if ($appVersion == $val['minVersion']) {
             $versioncheck[$key]['minVersion_valid'] = true;
         }
 
         // If we have a match, set our valid maxVersion flag to true.
-        if ($version == $val['maxVersion']) {
+        if ($appVersion == $val['maxVersion']) {
             $versioncheck[$key]['maxVersion_valid'] = true; 
         }
 
@@ -272,7 +245,7 @@ foreach ($manifestdata["targetApplication"] as $key=>$val) {
         echo '<pre>';
         echo 'App: '.$appname."\n";
         echo 'Release from DB: '.$major.' '.$minor.' '.$release.' '.$subver."\n";
-        echo 'Version we put together: '.$version."\n";
+        echo 'Version we put together: '.$appVersion."\n";
         echo 'MinVersion from RDF (match): '.$val['minVersion'].' ('.$versioncheck[$key]['minVersion_valid'].') '."\n";
         echo 'MaxVersion from RDF (match): '.$val['maxVersion'].' ('.$versioncheck[$key]['maxVersion_valid'].') '."\n\n";
         print_r($versioncheck);
