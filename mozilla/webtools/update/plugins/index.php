@@ -75,9 +75,9 @@ require_once(HEADER);
     <p class="first">Macromedia Flash Player is the universal rich client for delivering effective Macromedia Flash experiences across desktops and devices.</p>
     <h3><IMG SRC="../images/install.png" HEIGHT=24 WIDTH=24 ALT="">&nbsp;Download</h3>
     <DIV style="margin-top: 5px; height: 38px">
-        <DIV class="iconbar"><IMG SRC="../images/windows_icon.png" HEIGHT=34 WIDTH=34 ALT="">&nbsp;For Windows:<BR>&nbsp;&nbsp;<a href="http://www.macromedia.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash&amp;P2_Platform=Win32&amp;P3_Browser_Version=NetscapePre4">Version 7.0</a></DIV>
-        <DIV class="iconbar"><IMG SRC="../images/linux_icon.png" HEIGHT=34 WIDTH=34 ALT="">&nbsp;For Linux:<BR>&nbsp;&nbsp;<a href="http://www.macromedia.com/shockwave/download/download.cgi?P1_Prod_Version=ShockwaveFlash&amp;P2_Platform=Linux&amp;P3_Browser_Version=Netscape4">Version 7.0</a></DIV>
-        <DIV class="iconbar"><IMG SRC="../images/macosx_icon.png" HEIGHT=34 WIDTH=34 ALT="">&nbsp;For MacOSX:<BR>&nbsp;&nbsp;<a href="http://www.macromedia.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash&amp;P2_Platform=MacOSX">Version 7.0</a></DIV>
+        <DIV class="iconbar"><IMG SRC="../images/windows_icon.png" HEIGHT=34 WIDTH=34 ALT="">&nbsp;For Windows:<BR>&nbsp;&nbsp;<a href="http://www.macromedia.com/go/getflashplayer">Version 8</a></DIV>
+        <DIV class="iconbar"><IMG SRC="../images/linux_icon.png" HEIGHT=34 WIDTH=34 ALT="">&nbsp;For Linux:<BR>&nbsp;&nbsp;<a href="http://www.macromedia.com/go/getflashplayer">Version 7</a></DIV>
+        <DIV class="iconbar"><IMG SRC="../images/macosx_icon.png" HEIGHT=34 WIDTH=34 ALT="">&nbsp;For MacOSX:<BR>&nbsp;&nbsp;<a href="http://www.macromedia.com/go/getflashplayer">Version 8</a></DIV>
     </DIV>
     <DIV class="baseline"><img src="../images/faq_small.png" style="float: left;" height=16 width=16 alt="">&nbsp;Support Documentation: <a href="http://plugindoc.mozdev.org/windows.html#Flash">Windows</a>, <a href="http://plugindoc.mozdev.org/linux.html#Flash">Linux</a>, <a href="http://plugindoc.mozdev.org/OSX.html#Flash">MacOSX</a> | <a href="http://plugindoc.mozdev.org/faqs/flash.html">Flash Player FAQ</a></DIV>
 </DIV>
@@ -102,9 +102,9 @@ require_once(HEADER);
     <p class="first">QuickTime Player is an easy-to-use application for playing, interacting with or viewing video, audio, VR or graphics files.</p>
     <h3><IMG SRC="/images/install.png" HEIGHT=24 WIDTH=24 ALT="">&nbsp;Download</h3>
     <DIV style="margin-top: 5px; height: 38px">
-        <DIV class="iconbar"><IMG SRC="../images/windows_icon.png" HEIGHT=34 WIDTH=34 ALT="">&nbsp;For Windows:<BR>&nbsp;&nbsp;<a href="http://www.apple.com/quicktime/download/">Version 6.5.2</a></DIV>
+        <DIV class="iconbar"><IMG SRC="../images/windows_icon.png" HEIGHT=34 WIDTH=34 ALT="">&nbsp;For Windows:<BR>&nbsp;&nbsp;<a href="http://www.apple.com/quicktime/download/">Version 7</a></DIV>
         <DIV class="iconbar"><IMG SRC="../images/linux_icon.png" HEIGHT=34 WIDTH=34 ALT="">&nbsp;For Linux:<BR>&nbsp;&nbsp;Unavailable</DIV>
-        <DIV class="iconbar"><IMG SRC="../images/macosx_icon.png" HEIGHT=34 WIDTH=34 ALT="">&nbsp;For MacOSX:<BR>&nbsp;&nbsp;<a href="http://www.apple.com/quicktime/download/">Version 6.5.2</a></DIV>
+        <DIV class="iconbar"><IMG SRC="../images/macosx_icon.png" HEIGHT=34 WIDTH=34 ALT="">&nbsp;For MacOSX:<BR>&nbsp;&nbsp;<a href="http://www.apple.com/quicktime/download/">Version 7</a></DIV>
     </DIV>
     <DIV class="baseline"><img src="../images/faq_small.png" style="float: left;" height=16 width=16 alt="">&nbsp;Support Documentation: <a href="http://plugindoc.mozdev.org/windows.html#Quicktime">Windows</a>, <a href="http://plugindoc.mozdev.org/OSX.html#Quicktime">MacOSX</a></DIV>
 </DIV>
