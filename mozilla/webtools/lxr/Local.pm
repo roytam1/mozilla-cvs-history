@@ -241,7 +241,8 @@ sub descexpand {
     }
 
     $desc = ""; 
-    if (open(FILE, $Path->{'real'}. $filename."README")) {
+    if (open(FILE, $Path->{'real'}. $filename."README") ||
+        open(FILE, $Path->{'real'}. $filename."ReadMe")) {
 	$path = $Path->{'virt'}.$filename;
 	$path =~ s#/(.+)/#$1#;
         while(<FILE>){
@@ -288,7 +289,8 @@ sub descexpand {
 sub dirdesc {
     my ($path) = @_;
 
-    if (-f $Path->{'real'}."/README") {
+    if (-f $Path->{'real'}."/README" ||
+        -f $Path->{'real'}."/ReadMe") {
 	    descreadme($path);
     } elsif (-f $Path->{'real'}."/README.html") {
 	    descreadmehtml($path);
@@ -343,7 +345,8 @@ sub descreadme {
     my $minlines = 5;   # Too small. Go back and add another paragraph.
     my $chopto = 10;    # Truncate long READMEs to this length
 
-    if (!(open(DESC, $Path->{'real'}."/README"))) {
+    if (!(open(DESC, $Path->{'real'}."/README") ||
+          open(DESC, $Path->{'real'}."/ReadMe"))) {
 	return;
         }
 
