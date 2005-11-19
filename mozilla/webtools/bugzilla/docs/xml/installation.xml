@@ -1614,7 +1614,7 @@ C:\perl&gt; <command>ppm install &lt;module name&gt;</command>
 
         <para>
           To enable Bugzilla to send email on Windows, the server running the
-          Bugzilla code must be able to connect to, or act as,  an SMTP server.
+          Bugzilla code must be able to connect to, or act as, an SMTP server.
         </para>
         
       </section>
