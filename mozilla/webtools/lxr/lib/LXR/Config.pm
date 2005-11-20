@@ -61,6 +61,12 @@ sub treeify {
         #append tree name to dbdir
         $self->{'dbdir'} =  $self->{'dbdir'} . "/" . $self->{'treename'} ;
 
+        #find the cvsroot to sed in proper bonsai url
+        my $path = $self->{'sourceroot'};
+        my @pathdirs = split(/\//, $path);
+        my $pathnum = @pathdirs;
+        $self->{'bonsaicvsroot'} = $pathdirs[$pathnum - 1]; 
+
     }
     return($self);
 }
