@@ -421,11 +421,11 @@ $P4DB_URL =  "http://public.perforce.com/cgi-bin/p4db";
 $P4PORT = 'perforce.yourcompany.com:1666';
 
 # If we are using PVCS we need to specify the user who will extract
-# the data from the Oracle database and a data seperator which will
+# the data from the Oracle database and a data separator which will
 # not appear in any dataset.
 
 $VC_PVCS_USER = 'tinderbox/tinderbox';
-$VC_PVCS_SEPERATOR = '___///___';
+$VC_PVCS_SEPARATOR = '___///___';
 
 # If you your using BT_Generic we need to know how to make HTML
 # to point to the bug tracking CGI programs.

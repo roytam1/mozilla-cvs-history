@@ -87,11 +87,11 @@
 
 
 # $DATABASE{$tree}{$buildname}{'recent_success'}
-#    If the build is broken it is the first sucessful build following
+#    If the build is broken it is the first successful build following
 #    the minumum of all earliest_failures.
 
 # $DATABASE{$tree}{$buildname}{'average_buildtime'}
-#     the average time a sucessful build takes(in seconds).
+#     the average time a successful build takes(in seconds).
 
 # $DATABASE{$tree}{$buildname}{'average_deadtime'}
 #     the average deadtime (in seconds).

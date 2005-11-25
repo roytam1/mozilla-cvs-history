@@ -42,7 +42,7 @@ use Time::Local;
 
 
 $SQL_USER = $TinderConfig::VC_PVCS_USER || 'tinderbox/tinderbox';
-$SEP = $TinderConfig::VC_PVCS_SEPERATOR || '___///___';
+$SEP = $TinderConfig::VC_PVCS_SEPARATOR || '___///___';
 
 sub time2pvcsFormat {
   # convert time() format to the format which appears in perforce output

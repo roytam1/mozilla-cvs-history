@@ -347,7 +347,7 @@ sub status_table_row {
 
     foreach $status (keys %{ $DATABASE{$tree}{$time} }) {
 
-      # do not display bugs whos status_progres is null, these have
+      # do not display bugs whose status_progress is null, these have
       # been deemed uninteresting.
 
       ($ReqData::STATUS_PROGRESS{$status}) ||

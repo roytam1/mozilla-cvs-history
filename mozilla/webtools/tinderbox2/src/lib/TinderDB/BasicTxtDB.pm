@@ -127,7 +127,7 @@ sub readdir_file_prefix {
 
 # return the list of all files in $dir which begin with the prefix
 # $prefix in sorted (ascii' betically) order.  This is important since
-# we often deal with files whos suffix is time().$pid.
+# we often deal with files whose suffix is time().$pid.
 
   my ($self, $dir, $prefix) = @_;
 
