@@ -38,8 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-require_once('uniqueUrl.php');
-
 // error handling
 function bail ($errstr) {
     die("Error: " . $errstr);
@@ -182,7 +180,7 @@ if (($mimetype == 'application/x-shockwave-flash' ||
     $installerShowsUI = 'false';
   } else if (preg_match('/^PPC Mac OS X/', $clientOS)) {
     $guid = '{89977581-9028-4be0-b151-7c4f9bcd3211}';
-    $XPILocation = getUniqueDownloadUrl('flash-7.0.24.0-mac.xpi');
+    $XPILocation = 'http://fpdownload.macromedia.com/get/flashplayer/xpi/current/flashplayer-mac.xpi';
   }
 } else if ($mimetype == 'application/x-director' &&
            preg_match('/^(Win|PPC Mac OS X)/', $clientOS)) {
