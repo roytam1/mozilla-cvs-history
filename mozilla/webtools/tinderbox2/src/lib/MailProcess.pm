@@ -120,7 +120,7 @@ sub parse_mail_header {
 # 1) build machines should not lie in the buildname line about their
 #    hostname
 
-# 2) check the time the mail was sent with the time we recieved it
+# 2) check the time the mail was sent with the time we received it
 
   my (%mail_header) =();
 

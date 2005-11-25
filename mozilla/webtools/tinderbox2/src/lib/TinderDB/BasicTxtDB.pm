@@ -55,7 +55,7 @@ $VERSION = ( qw $Revision$ )[1];
 # problem we save the database to a different file name then change
 # the name of the file to the database file name.  This allows us to
 # recover from a program crash during the save operation since we
-# always have at least one copy of the data arround.
+# always have at least one copy of the data around.
 
 sub new {
 
@@ -70,7 +70,7 @@ sub new {
   # calling sequences. Also now the TinderDB object is quite complex
   # it needs to be indexed by: module, tree, value.  The build module
   # uses the fact that STATUS can be peeked at when the TinderDB
-  # object is not arround.
+  # object is not around.
 
   my $type = shift;
   my %params = @_;

@@ -189,7 +189,7 @@ sub gmtimeHTML {
 
 # primative parsing of CGI arguments into a hash.
 
-# These argments are desgined to be pased to the cgi script via the
+# These arguments are designed to be passed to the cgi script via the
 # webserver.  The can also be passed via command line interface
 # ('name=value') for testing.
 

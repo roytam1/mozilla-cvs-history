@@ -367,7 +367,7 @@ sub get_all_cvs_data {
   return $out;
 }
 
-# Return the most recent times that we recieved treestate and checkin
+# Return the most recent times that we received treestate and checkin
 # data.
 
 sub find_last_data {

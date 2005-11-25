@@ -86,7 +86,7 @@ Informational Arguments
 
 CGI Mode Arguments
 
-(These argments are desgined to be pased to the cgi script via the webserver.  
+(These arguments are designed to be passed to the cgi script via the webserver.  
  The command line interface is provided for testing.)
 
 

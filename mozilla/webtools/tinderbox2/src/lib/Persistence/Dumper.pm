@@ -1,6 +1,6 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
-# Persistence::Dumper.pm - A implementation of the Persistance API
+# Persistence::Dumper.pm - A implementation of the Persistence API
 # using Data::Dumper.  I suggest using this while debugging Tinderbox
 # as the data structures can be viewed in a text editor or even
 # modified by hand if need be. However, most of my cpu time during
@@ -59,7 +59,7 @@ use Data::Dumper;
 
 #    $data: is a scalar (often a list of references to the data) which
 #    contains the data we will save. We can only save scalars to be
-#    consistant with the storable interface.
+#    consistent with the storable interface.
 
 #    $data_file: The file where the data will be stored.
 

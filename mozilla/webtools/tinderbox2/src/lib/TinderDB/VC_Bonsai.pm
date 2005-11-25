@@ -244,7 +244,7 @@ sub get_all_bonsai_data {
 }
 
 
-# Return the most recent times that we recieved treestate and checkin
+# Return the most recent times that we received treestate and checkin
 # data.
 
 sub find_last_data {

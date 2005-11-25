@@ -1,6 +1,6 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
-# TinderHeader.pm - the persistant storage for tinterbox
+# TinderHeader.pm - the persistent storage for tinderbox
 # administrative settings.  This package allows the adminstrator to
 # set their values and retrieves the values for the status pages.
 

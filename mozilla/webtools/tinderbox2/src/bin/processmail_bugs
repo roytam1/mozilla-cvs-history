@@ -78,7 +78,7 @@ use TinderDB::BT_Generic;
 # notice that mail is a diff either -u or -c format
 
 # There are other format that mail can be sent: "prettyasciimail",
-# "newemailtech". I have not recieved any mail in these formats so I
+# "newemailtech". I have not received any mail in these formats so I
 # have not written a parser yet.
 
 # The first example comes from redhat.com the second from bugzilla.org
