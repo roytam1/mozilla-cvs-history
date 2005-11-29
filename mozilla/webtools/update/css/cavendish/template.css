@@ -139,12 +139,12 @@ body {
 /* End Site Header */
 
 /* Front Feature */
-
 .split-feature {
-	background: url("../../images/feature-back.png") 0 100% no-repeat;
-	overflow: auto;
-	padding-bottom: 10px;
-} * html .split-feature { overflow: visible; height: 1px; }
+    background: url("../../images/feature-back.png") 0 100% no-repeat;
+    overflow: auto;
+    padding-bottom: 10px;
+    margin-right: -2px;
+} * html .split-feature { overflow: visible; height: 1px; } 
 
 .split-feature-one, .split-feature-two {
 	padding: 15px 15px 0 15px;
