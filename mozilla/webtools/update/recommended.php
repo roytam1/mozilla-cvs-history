@@ -106,12 +106,16 @@ of new items, access to your saved items, and integration with the  Firefox sear
 <h3><a href="http://releases.mozilla.org/pub/mozilla.org/extensions/stumbleupon/stumbleupon-2.2-fx+fl+mz+ns.xpi" onclick="return install(event,'stumbleupon 2.2', '<?=WEB_PATH?>/images/default.png');" title="Install stumbleupon 2.2 (Right-Click to Download)"><strong>Install Extension</strong> (103 KB)</a></h3>
 </div>
 
+<?php
+/*
 <h2 class="clear-both"><a href="./extensions/moreinfo.php?id=1035">Weather Channel</a></h2>
 <img class="recommended-img" alt="" src="./images/recommended/1clickweather.png"/>
 <p>1-ClickWeather enables you to quickly view current weather conditions  and up to 5 days of forecast information, plus instant access to detailed and  customized weather content from weather.com.</p>
 <div class="recommended-download">
 <h3><a href="http://releases.mozilla.org/pub/mozilla.org/extensions/1-clickweather/1-clickweather-1.1.0-fx.xpi" onclick="return install(event,'1-clickweather 1.1.0', '<?=WEB_PATH?>/images/default.png');" title="Install 1-clickweather 1.1.0 (Right-Click to Download)"><strong>Install Extension</strong> (606 KB)</a></h3>
 </div>
+*/
+?>
 
 <br class="clear-both"/>
 
