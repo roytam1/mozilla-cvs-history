@@ -59,7 +59,7 @@ installtrigger('extensions');
     <div class="split-feature-one">
         <div class="feature-download">
             <!-- Feature Image must be 200px wide... any height is fine, but around 170-200 is preferred -->
-            <a href="./extensions/moreinfo.php?id=1532"><img src="./images/features/del.icio.us.png" width="200" height="213" alt="del.icio.us Extension"></a>
+            <a href="./extensions/moreinfo.php?id=1532"><img src="./images/feature/del.icio.us.png" width="200" height="213" alt="del.icio.us Extension"></a>
             <h3><a href="http://releases.mozilla.org/pub/mozilla.org/extensions/del.icio.us/del.icio.us-1.0.1-fx.xpi" onclick="return install(event,'del.icio.us 1.0.1', '<?=WEB_PATH?>/images/default.png');" title="Install del.icio.us 1.0.1 (Right-Click to Download)"><strong>Install Extension</strong> (60 KB)</a> </h3>
 
         </div>
