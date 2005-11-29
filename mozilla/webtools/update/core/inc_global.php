@@ -329,6 +329,4 @@ function buildAppVersion ($major,$minor,$release,$subver) {
 
     return $version;
 }
-
-
 ?>

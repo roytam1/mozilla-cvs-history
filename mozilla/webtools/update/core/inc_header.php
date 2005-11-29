@@ -68,21 +68,37 @@ if (!empty($page_headers)) {
 ?>
 </head>
 
-<body id="update-mozilla-org">
+<body>
 <div id="container">
 
 <p class="skipLink"><a href="#firefox-feature" accesskey="2">Skip to main content</a></p>
 
-<div id="mozilla-org"><a href="http://www.mozilla.org/">Visit Mozilla.org</a></div>
+<div id="mozilla-com"><a href="http://mozilla.com/">Visit mozilla.com</a></div>
 <div id="header">
-	
+
+
 	<div id="key-title">
-	<h1><a href="<?php echo WEB_PATH; ?>/" title="Return to home page" accesskey="1">Mozilla Update: Beta</a></h1>
-	<ul>
-		<li><a href="<?php echo WEB_PATH; ?>/" title="Learn More About Mozilla Updates">home</a></li>
-		<li><a href="<?php echo WEB_PATH; ?>/about/" title="Learn More About Mozilla Updates">about</a></li>
-		<li><a href="<?php echo WEB_PATH; ?>/developers/" title="Find Tools and Information for Developers">developers</a></li>
-		<li>
+
+<?php
+// Here we want to show different headers based on which application we are currently viewing.
+// @TODO Consider a common 'branding' instead.
+switch (strtolower($application)) {
+    default:
+    case 'firefox':
+        echo '<h1><a href="'.WEB_PATH.'?application=firefox" title="Return to home page" accesskey="1"><img src="'.WEB_PATH.'/images/title-firefox.gif" width="276" height="54" alt="Firefox Add-ons Beta"></a></h1>';
+    break;
+
+    case 'thunderbird':
+        echo '<h1><a href="'.WEB_PATH.'?application=thunderbird" title="Return to home page" accesskey="1"><img src="'.WEB_PATH.'/images/title-thunderbird.gif" width="355" height="54" alt="Thunderbird Add-ons Beta"></a></h1>';
+    break;
+
+    case 'mozilla':
+        echo '<h1><a href="'.WEB_PATH.'?application=mozilla" title="Return to home page"
+        accesskey="1"><img src="'.WEB_PATH.'/images/title-suite.gif" width="370" height="54" alt="Mozilla Suite Add-ons Beta"></a></h1>';
+    break;
+}
+?>
+	
 		<form id="search" method="get" action="<?php echo WEB_PATH; ?>/quicksearch.php" title="Search Mozilla Update">
 		<div>
 		<label for="q" title="Search Mozilla Update">search:</label>
@@ -91,32 +107,20 @@ if (!empty($page_headers)) {
 		  <option value="A">Entire Site</option>
 		  <option value="E">Extensions</option>
 		  <option value="T">Themes</option>
-		<!--
-		  <option value="P">Plugins</option>
-		  <option value="S">Search Engines</option>
-		-->
 		</select>
 		<input type="submit" id="submit" value="Go">
 		</div>
 		</form>
-		</li>
-	</ul>
 	</div>
 	<div id="key-menu">	
-		<dl id="menu-firefox">
-		<dt>Firefox:</dt>
-		<dd><a href="<?php echo WEB_PATH; ?>/extensions/?application=firefox" title="Get Extensions for the Firefox Browser">Extensions</a>, <a href="<?php echo WEB_PATH; ?>/themes/?application=firefox" title="Get Themes for the Firefox Browser">Themes</a>, <a href="https://pfs.mozilla.org/plugins/" title="Get Plugins for Firefox">Plugins</a><?php /*, <a href="<?php echo WEB_PATH; ?>/searchengines/" title="Get New Search Engines for the Search Box in Firefox">Search Engines</a>--> */ ?></dd>
-		</dl>
-		<dl id="menu-thunderbird">
-		<dt>Thunderbird:</dt>
-		<dd><a href="<?php echo WEB_PATH; ?>/extensions/?application=thunderbird" title="Get Extensions for Thunderbird Email">Extensions</a>, <a href="<?php echo WEB_PATH; ?>/themes/?application=thunderbird" title="Get Themes for Thunderbird Email">Themes</a></dd>
-		</dl>
-		<dl id="menu-mozillasuite">
-		<dt>Mozilla Suite:</dt>
-		<dd><a href="<?php echo WEB_PATH; ?>/extensions/?application=mozilla" title="Get Extensions for the Mozilla Suite">Extensions</a>, <a href="<?php echo WEB_PATH; ?>/themes/?application=mozilla" title="Get Themes for the Mozilla Suite">Themes</a>, <a href="https://pfs.mozilla.org/plugins/" title="Get Plugins for Mozilla Suite">Plugins</a></dd>
-		</dl>
-		<div class="ie-clear-menu">&nbsp;</div>
-	</div>
+        <ul id="menu-firefox">
+            <li<?=(isset($currentTab)&&$currentTab=='home')?' class="current"':''?>><a href="<?=WEB_PATH?>/?application=<?=$application?>">Home</a></li>
+            <li<?=(isset($currentTab)&&$currentTab=='extensions')?' class="current"':''?>><a href="<?=WEB_PATH?>/extensions/?application=<?=$application?>">Extensions</a></li>
+            <li<?=(isset($currentTab)&&$currentTab=='pfs')?' class="current"':''?>><a href="https://pfs.mozilla.org/plugins/?application=<?=$application?>">Plugins</a></li>
+            <li<?=(isset($currentTab)&&$currentTab=='search-engines')?' class="current"':''?>><a href="<?=WEB_PATH?>/search-engines.php?application=<?=$application?>">Search Engines</a></li>
+            <li<?=(isset($currentTab)&&$currentTab=='themes')?' class="current"':''?>><a href="<?=WEB_PATH?>/themes/?application=<?=$application?>">Themes</a></li>
+        </ul>
+    </div>
 </div>
 <!-- closes #header-->
 

@@ -99,7 +99,7 @@ switch ($list) {
      break;
 }
 
-$sql = $select . " " . $from . " WHERE " . $where . " ORDER BY " . $orderby . " LIMIT 0, 10";
+$sql = $select . " " . $from . " WHERE " . $where . " GROUP BY main.ID ORDER BY " . $orderby . " LIMIT 0, 10";
 
 require_once('inc_rssfeed.php');
 ?>

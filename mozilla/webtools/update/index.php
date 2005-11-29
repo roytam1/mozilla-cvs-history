@@ -35,47 +35,7 @@
 // the terms of any one of the MPL, the GPL or the LGPL.
 //
 // ***** END LICENSE BLOCK *****
-?>
-<?php
-function renderPopularList($typename) {
-  global $titleCaseApp, $application, $uriparams, $connection, $OS;
-  $titleCaseType=ucwords($typename);
-  $type=$titleCaseType{0};
-  echo <<<EOS
-    
-	<h2><a href="./rss/?application={$application}&amp;type={$type}&amp;list=popular"><img src="./images/rss.png" width="16" height="16" class="rss" alt="Most Popular Additions in RSS"></a><a href="./{$typename}/showlist.php?application={$application}&amp;category=Popular">Most Popular $titleCaseApp $titleCaseType</a></h2>
-	<ol class="popularlist">
-EOS;
-  // Took out the compatibility stuff to avoid a blank front page.
-  // `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND 
- $sql = "SELECT DISTINCT TM.ID id, TM.Name name, TM.downloadcount dc
-         FROM  main TM
-         INNER  JOIN version TV ON TM.ID = TV.ID
-         INNER  JOIN applications TA ON TV.AppID = TA.AppID
-         INNER  JOIN os TOS ON TV.OSID = TOS.OSID
-         WHERE  Type  = '$type' AND AppName = '$application' 
-         AND (`OSName` = '$OS' OR OSName = 'ALL')
-         AND downloadcount > '0' AND approved = 'YES' 
-         ORDER BY downloadcount DESC LIMIT 5";
- $sql_result = mysql_query($sql, $connection) 
-   or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error(), 
-        E_USER_NOTICE);
- if (mysql_num_rows($sql_result)=="0") {
-   echo "        <li>No Popular $titleCaseType<li>\n";
- }
- else {
- while ($row = mysql_fetch_array($sql_result)) {
-  echo <<<EOS
 
-          <li><a href="{$typename}/moreinfo.php?{$uriparams}&amp;id={$row['id']}"
-              >{$row['name']}</a><span class="downloads"> ({$row['dc']} downloads)</span></li>
-EOS;
-            }
-  }
-  echo "
-        </ol>\n";
-}
-	
 // Set this page to read from the SHADOW_DB.
 define('USE_SHADOW_DB',true);
 
@@ -90,160 +50,123 @@ $page_headers = "\n".'
           href="./rss/?application='.$application.'&amp;list=newest">
 '."\n";
 
+$currentTab = 'home';
 require_once(HEADER);
-
-//Get Current Version for Detected Application
-$sql = "SELECT `Version`, `major`, `minor`, `release`, `SubVer` FROM `applications` WHERE `AppName` = '$application' AND `public_ver` = 'YES'  ORDER BY `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC LIMIT 1";
-$sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-    $row = mysql_fetch_array($sql_result);
-        $version = $row["Version"];
-        $subver = $row["SubVer"];
-        $release = "$row[major].$row[minor]";
-        if ($row["release"]) {
-            $release = "$release.$row[release]";
-        }
-    $currentver = $release;
-    $currentver_display = $version;
-    unset($version,$subver,$release);
-
-// security update
-$securitywarning=false;
-if ($securitywarning=="true") {
+installtrigger('extensions');
 ?>
 
-<!-- Don't display if no urgent security updates -->
-<div class="key-point">
-<p class="security-update"><strong>Important Firefox
-Security Update:</strong><br>Lorem ipsum dolor sit amet, 
-<a href="#securitydownload">consectetuer adipiscing</a> elit. Curabitur 
-viverra ultrices ante. Aliquam nec lectus. Praesent vitae risus. Aenean 
-vulputate sapien et leo. Nullam euismod tortor id wisi.
-</p>
-</div>
+<div class="split-feature">
+    <div class="split-feature-one">
+        <div class="feature-download">
+            <!-- Feature Image must be 200px wide... any height is fine, but around 170-200 is preferred -->
+            <a href="./extensions/moreinfo.php?id=1532"><img src="./images/features/del.icio.us.png" width="200" height="213" alt="del.icio.us Extension"></a>
+            <h3><a href="http://releases.mozilla.org/pub/mozilla.org/extensions/del.icio.us/del.icio.us-1.0.1-fx.xpi" onclick="return install(event,'del.icio.us 1.0.1', '<?=WEB_PATH?>/images/default.png');" title="Install del.icio.us 1.0.1 (Right-Click to Download)"><strong>Install Extension</strong> (60 KB)</a> </h3>
 
-<hr class="hide">
+        </div>
+        <h2>Featured Extension</h2>
+        <h2><a href="./extensions/moreinfo.php?id=1532">del.icio.us</a></h2>
+        <p class="first">Harness the power of social bookmarking right in your browser with the del.icio.us Firefox extension! The del.icio.us extension for Firefox offers everything you need to seamlessly integrate the del.icio.us service with your Firefox browser. <a href="./extensions/moreinfo.php?id=1532">Learn more...</a></p>
+    </div>
+    <a class="top-feature" href="./recommended.php"><img src="./images/feature-recommend.png" width="213" height="128" style="padding-left: 12px;" alt="We Recommend: See some of our favorite extensions to get you started."></a>
+    <div class="split-feature-two">
+    <h2><img src="images/title-topdownloads.gif" width="150" height="24" alt="Top 10 Downloads"></h2>
 
-<!-- close security update -->
-<?php } ?>
+<?php
+// Get our most popular list.
+$sql = "
+    SELECT DISTINCT
+        TM.ID,
+        TM.Name,
+        TM.Description, 
+        TM.Rating,
+        TM.downloadcount,
+        IF(TM.Type='E', 'extensions', 'themes') as Type
+    FROM
+        `main` TM
+    INNER JOIN 
+        version TV 
+    ON 
+        TM.ID = TV.ID
+    INNER JOIN 
+        applications TA 
+    ON 
+        TV.AppID = TA.AppID
+    INNER JOIN 
+	os TOS 
+    ON TV.OSID = TOS.OSID
+    WHERE
+        `AppName` = '{$application}' AND
+        `approved` = 'YES'
+    ORDER BY
+        `downloadcount` DESC,
+        `Rating` DESC, 
+        `Name` ASC
+    LIMIT 5
+";
 
-<div id="mBody">
-	<div id="mainContent" class="right">
+$sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 
-	<h2>What can I find here?</h2>
-	<dl>
-    <dt>Extensions</dt>
-    <dd>Extensions are small add-ons that add new functionality to your Firefox
-    web browser or Thunderbird email client.  They can add anything from
-    toolbars to completely new features.  Browse extensions for:
-    <a href="./extensions/?application=firefox">Firefox</a>, 
-    <a href="./extensions/?application=thunderbird">Thunderbird</a>,
-    <a href="./extensions/?application=mozilla">Mozilla Suite</a>
-    </dd>
-
-    <dt>Themes</dt>
-    <dd>Themes allow you to change the way your Mozilla program looks. 
-    New graphics and colors. Browse themes for: 
-    <a href="./themes/?application=firefox">Firefox</a>,
-    <a href="./themes/?application=thunderbird">Thunderbird</a>,
-    <a href="./themes/?application=mozilla">Mozilla Suite</a>
-    </dd>
-
-    <dt>Plugins</dt>
-    <dd>Plugins are programs that also add funtionality to your browser to
-    deliver specific content like videos, games, and music.  Examples of Plugins
-    are Macromedia Flash Player, Adobe Acrobat, and Sun Microsystem's Java
-    Software.  Browse plug-ins for:
-    <a href="./plugins/">Firefox &amp; Mozilla Suite</a>
-    </dd>
-
-    <?php /*
-    <dt>Search Engines</dt>
-    <dd>In Firefox, you can add search engines that will be available in 
-    the search in the top of the browser. Browse search engines for: 
-    <a href="/searchengines/">Firefox</a></dd>
-    */ ?>
-
-	</dl>
-
-    <?php
-    $featuredate = date("Ym");
-    $sql = "SELECT TM.ID, TM.Type, TM.Name, TR.Title, TR.Body, TR.ExtendedBody, TP.PreviewURI FROM `main` TM
-            INNER JOIN version TV ON TM.ID = TV.ID
-            INNER JOIN applications TA ON TV.AppID = TA.AppID
-            INNER JOIN os TOS ON TV.OSID = TOS.OSID
-            INNER JOIN `reviews` TR ON TR.ID = TM.ID
-            INNER JOIN `previews` TP ON TP.ID = TM.ID
-            WHERE  `AppName` = '$application' AND `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND (`OSName` = '$OS' OR `OSName` = 'ALL') AND `approved` = 'YES' AND TR.featured = 'YES' AND TR.featuredate = '$featuredate' AND TP.preview='YES' LIMIT 1";
-        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-        while ($row = mysql_fetch_array($sql_result)) {
-        $id = $row["ID"];
-        $type = $row["Type"];
-        if ($type=="E") {$typename = "extensions"; } else if ($type=="T") {$typename="themes"; }
-        $name = $row["Name"];
-        $title = $row["Title"];
-        $body = nl2br($row["Body"]);
-        $extendedbody = $row["ExtendedBody"];
-        $previewuri = $row["PreviewURI"];
-        $attr = getimagesize(FILE_PATH.'/'.$previewuri);
-        $attr = $attr[3];
-
-    ?>
-	<h2>Currently Featuring... <?php echo"$name"; ?></a></h2>
-	<a href="./<?php echo"./$typename/moreinfo.php?$uriparams&amp;id=$id"; ?>"><img src="<?php echo"$previewuri"; ?>" <?php echo"$attr"; ?> alt="<?php echo"$name for $application"; ?>" class="imgright"></a>
-    <p class="first">
-    <strong><a href="./<?php echo"/$typename/moreinfo.php?$uriparams&amp;id=$id"; ?>" style="text-decoration: none"><?php echo"$title"; ?></a></strong><br>
-    <?php
-    echo"$body";  
-    if ($extendedbody) {
-        echo" <a href=\"./$typename/moreinfo.php?$uriparams&amp;id=$id&amp;page=staffreview#more\">More...</a>";
+if (mysql_num_rows($sql_result)) {
+    $top10count = 1;
+    echo '<ol class="top-10">';
+    while ($row = mysql_fetch_array($sql_result)) {
+        echo <<<MP
+        <li class="top-10-{$top10count}"><a href="./{$row['Type']}/moreinfo.php?id={$row['ID']}&amp;application={$application}"><strong>{$row['Name']}</strong> {$row['downloadcount']}</a></li>
+MP;
+        $top10count++;
     }
-    ?></p>
-    <?php } ?>
-	</div>
-	<div id="side" class="right">
-    <?php
-      renderPopularList("extensions");
-      renderPopularList("themes");
-    ?>
-	
-	<h2><a href="./rss/?application=<?php echo $application; ?>&amp;list=newest"><img src="images/rss.png" width="16" height="16" class="rss" alt="News Additions in RSS"></a>New Additions</h2>
-	<ol class="popularlist">
-
-        <?php
-        // Took out the compatibility stuff to avoid a blank front page.
-        // `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND 
-        $sql = "SELECT TM.ID, TM.Type, TM.Name, MAX(TV.Version) Version, MAX(TV.DateAdded) DateAdded
-            FROM  `main` TM
-            INNER  JOIN version TV ON TM.ID = TV.ID
-            INNER  JOIN applications TA ON TV.AppID = TA.AppID
-            INNER  JOIN os TOS ON TV.OSID = TOS.OSID
-            WHERE  `AppName` = '$application' AND 
-            (`OSName` = '$OS' OR `OSName` = 'ALL')
-            AND `approved` = 'YES' 
-            GROUP BY TM.ID
-            ORDER BY DateAdded DESC LIMIT 8";
-        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error());
-        if (mysql_num_rows($sql_result)==0) {
-          echo"        <li>Nothing Recently Added</li>\n";
-        }
-        while ($row = mysql_fetch_array($sql_result)) {
-          $id = $row['ID'];
-          $typename = $row['Type']=='T'?'themes':'extensions';
-          $name = $row['Name'];
-          $version = $row['Version'];
-          $dateadded = gmdate('M d, Y', strtotime($row['DateAdded'])); 
-
-          echo "		<li>";
-          echo "<a href=\"./$typename/moreinfo.php?$uriparams&amp;id=$id\">$name $version</a>";
-          echo "<span class=\"downloads\"> ($dateadded)</span>";
-          echo "</li>\n";
-
-        }
-        ?>
-	</ol>
-	</div>
+    echo '</ol>';
+}
+?>
+    </div>
 </div>
-<!-- closes #mBody-->
+
+<form id="front-search" method="get" action="<?=WEB_PATH?>/quicksearch.php" title="Search Mozilla Update">
+    <div>
+    <label for="q2" title="Search mozilla.org&quot;s sites">search:</label>
+    <input type="hidden" name="cof" value="">
+    <input type="hidden" name="domains" value="mozilla.org">
+    <input type="hidden" name="sitesearch" value="mozilla.org">
+    <input id="q2" type="text" name="q" accesskey="s" size="40">
+    <select name="section">
+          <option value="A">Entire Site</option>
+          <option value="E">Extensions</option>
+          <option value="T">Themes</option>
+    </select>
+    <input type="submit" value="Go">
+    </div>
+</form>
+
+<div class="front-section-left">
+    <h2><img src="images/title-browse.gif" width="168" height="22" alt="Browse By Category"></h2>
+    <ul>
+    <li><a href="#">Most Popular Add-ons</a></li>
+    <li><a href="#">Recently Added</a></li>
+    <li><a href="#">All Categories</a></li>
+    </ul>
+</div>
+
+<?php
+/*
+<div class="front-section">
+    <h2><img src="images/title-recommends.gif" width="181" height="22" alt="Mozilla Recommends"></h2>
+    <ul>
+    <li><a href="./asa.php">Asa's Picks</a></li>
+    <li><a href="./webdeveloper.php">Web Developer Kit</a></li>
+    <li><a href="./newsjunkie.php">News Junkie Kit</a></li>
+    </ul>
+</div>
+*/
+?>
+
+<div class="front-section-right">
+    <h2><img src="images/title-develop.gif" width="152" height="22" alt="Develop Your Own"></h2>
+    <ul>
+    <li><a href="./developers/">Login to Submit</a></li>
+    <li><a href="http://developer.mozilla.org/en/docs/Extensions">Documentation</a></li>
+    <li><a href="http://developer.mozilla.org/en/docs/Building_an_Extension">Develop Your Own</a></li>
+    </ul>
+</div>
 
 <?php
 require_once(FOOTER);

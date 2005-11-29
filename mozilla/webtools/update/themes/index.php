@@ -44,6 +44,8 @@ $page_title = 'Mozilla Update :: Themes - Add Features to Mozilla Software';
 $page_headers = '<link rel="alternate" type="application/rss+xml"
    title="New '.ucwords($application).' Themes Additions"
    href="../rss/?application='.$application.'&amp;type=T&amp;list=newest">';
+
+$currentTab = 'themes';
 require_once(HEADER);
 ?>
 
@@ -132,7 +134,7 @@ TR;
 */
 ?>
 <h2>
-<a href="../rss/?application=<?php echo"$application"; ?>&amp;type=T&amp;list=popular"><img src="../images/rss.png" width="16" height="16" class="rss" alt="Most Popular Additions in RSS"></a>
+<a href="../rss/?application=<?php echo"$application"; ?>&amp;type=T&amp;list=popular"><img src="../images/rss.png" width="28" height="16" class="rss" alt="Most Popular Additions in RSS"></a>
 <?php $catname = "Popular"; echo "<a href=\"./showlist.php?".uriparams()."&amp;category=$catname&amp;numpg=10&amp;pageid=2\" title=\"$catdesc\">"; ?>
 Most Popular <?php print(ucwords($application)); ?> Themes</a></h2>
 <p class="first">The most popular downloads over the last week.</p>
@@ -190,7 +192,7 @@ MP;
 }
 ?>
 <h2>
-<a href="../rss/?application=<?php echo"$application"; ?>&amp;type=T&amp;list=newest"><img src="../images/rss.png" width="16" height="16" class="rss" alt="News Additions in RSS"></a>
+<a href="../rss/?application=<?php echo"$application"; ?>&amp;type=T&amp;list=newest"><img src="../images/rss.png" width="28" height="16" class="rss" alt="News Additions in RSS"></a>
 <?php $catname = "Newest"; echo "<a href=\"showlist.php?".uriparams()."&amp;category=$catname&amp;numpg=10&amp;pageid=2\" title=\"$catdesc\">"; ?>
 Newest <?php print(ucwords($application)); ?> Themes</a></h2>
 <p class="first">New and updated themes. Subscribe to <a href="../rss/?application=<?php echo"$application"; ?>&amp;type=T&amp;list=newest">our RSS feed</a> to be notified when new themes are added.</p>

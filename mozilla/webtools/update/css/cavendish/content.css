@@ -55,7 +55,7 @@
 }
 
 #header form #q {
-	width: 90px;
+	width: 10em;
 	font-size: 100%;
 	font-weight: normal;
 	border:	1px solid #9097A2;
@@ -171,6 +171,50 @@
 }
 .item a:hover {
 	color: #fc5900;
+}
+
+.item h2 {
+    margin-top: 0.2em;
+}
+
+.recommended-download h3 {
+	font: small tahoma, verdana, sans-serif;
+	margin: 5px 0 0 0;
+	background: url("../../images/download.gif") 0 100%;
+    font-size: small;
+	padding-bottom: 5px;
+}
+
+.recommended-download h3 a {
+	display: block;
+	background: url("../../images/download.gif") 0 0;
+    font-size: 70%;
+	width: 165px;
+	padding: 12px 25px 5px 10px;
+	text-decoration: none;
+	color: #5A9A3B;
+}
+
+.recommended-download h3 a:hover {
+	text-decoration: underline;
+	color: #275113;
+}
+
+.recommended-download {
+    clear: left;
+	width: 200px;
+    padding: 5px;
+    float: left;
+}
+
+.recommended-img {
+    border: 2px outset #eee;
+    float: left;
+    margin: 1em 1em 0 0;
+}
+
+.recommended h2 {
+    padding-top: 1em;
 }
 
 .iconbar {

@@ -37,7 +37,8 @@
 // ***** END LICENSE BLOCK *****
 
 require_once('../core/init.php');
-$page_title = 'Mozilla Update :: Plugins';
+$page_title = 'Plugins :: Find Plugins';
+$currentTab = 'pfs';
 require_once(HEADER);
 ?>
 

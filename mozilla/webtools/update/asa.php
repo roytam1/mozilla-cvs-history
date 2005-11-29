@@ -35,17 +35,23 @@
 // the terms of any one of the MPL, the GPL or the LGPL.
 //
 // ***** END LICENSE BLOCK *****
+	
+// Set this page to read from the SHADOW_DB.
+define('USE_SHADOW_DB',true);
+
+require_once('./core/init.php');
+
+$titleCaseApp=ucwords($application); // cache results!
+$uriparams=uriparams(); // cache results!
+$page_title = 'Asa\'s Picks :: Mozilla Update';
+require_once(HEADER);
 ?>
-<hr class="hide">
-	<div id="footer">
-        <p><a href="<?=$_SERVER['PHP_SELF']?>/" class="switch-fx">Firefox Add-ons </a><a href="<?=$_SERVER['PHP_SELF']?>/?application=thunderbird" class="switch-tb">Thunderbird Add-ons </a><a href="<?=$_SERVER['PHP_SELF']?>/?application=mozilla" class="switch-suite">Mozilla Suite Add-ons </a></p>
-        <p><a href="http://www.mozilla.org/privacy-policy.html">Privacy Policy</a> <a href="<?=WEB_PATH?>/faq.php">FAQ</a> <a href="http://www.mozilla.org/foundation/donate.html">Donate to Mozilla</a> <a href="http://mozilla.org/">The Mozilla Organization</a></p>
-        <p><span>Copyright &copy; 2004-2006</span>  <a href="http://www.xramp.com/">256-bit SSL Encryption provided by XRamp</a></p>
-	</div>
-  <!-- closes #footer-->
+
+<div id="mBody">
+<h1>Asa's Picks</h1>
 
 </div>
-<!-- closes #container -->
 
-</body>
-</html>
+<?php
+require_once(FOOTER);
+?>

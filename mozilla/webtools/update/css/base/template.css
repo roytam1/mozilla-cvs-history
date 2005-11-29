@@ -1,16 +1,17 @@
 body {
 	min-width: 700px;
-	margin: 0 30px 2em 30px;
+	margin: 0 0 2em 0;
+	padding: 0;
 }
 
 #container {
-	max-width: 70em;
+	width: 740px;
 	margin: 0 auto;
 }
 
 #mBody {
 	clear: both;
-	padding: 1em 0;
+	padding: .2em 0;
 }
 
 .sidebar_content {
@@ -127,4 +128,12 @@ p.security-update {
 
 #nav ul li span,#nav ul li a {
 	padding: 4px 8px 4px 20px;
+}
+
+.clear-both {
+    clear: both;
+}
+
+.center {
+    text-align: center;
 }

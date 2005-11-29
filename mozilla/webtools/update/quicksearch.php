@@ -101,9 +101,8 @@ if ($didSearch) {
 }
 require_once(HEADER);
 
-?>
-<div id="mBody">
-<?php
+echo '<div id="mBody">';
+
 if ($didSearch) {
   // build our query
   $sql = "FROM `main` TM
@@ -241,8 +240,7 @@ if ($didSearch) {
   }
 }
 
-?>
-</div>
-<?php
+echo '</div>';
+
 require_once(FOOTER);
 ?>
