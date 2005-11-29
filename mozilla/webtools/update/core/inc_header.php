@@ -85,15 +85,15 @@ if (!empty($page_headers)) {
 switch (strtolower($application)) {
     default:
     case 'firefox':
-        echo '<h1><a href="'.WEB_PATH.'?application=firefox" title="Return to home page" accesskey="1"><img src="'.WEB_PATH.'/images/title-firefox.gif" width="276" height="54" alt="Firefox Add-ons Beta"></a></h1>';
+        echo '<h1><a href="'.WEB_PATH.'/?application=firefox" title="Return to home page" accesskey="1"><img src="'.WEB_PATH.'/images/title-firefox.gif" width="276" height="54" alt="Firefox Add-ons Beta"></a></h1>';
     break;
 
     case 'thunderbird':
-        echo '<h1><a href="'.WEB_PATH.'?application=thunderbird" title="Return to home page" accesskey="1"><img src="'.WEB_PATH.'/images/title-thunderbird.gif" width="355" height="54" alt="Thunderbird Add-ons Beta"></a></h1>';
+        echo '<h1><a href="'.WEB_PATH.'/?application=thunderbird" title="Return to home page" accesskey="1"><img src="'.WEB_PATH.'/images/title-thunderbird.gif" width="355" height="54" alt="Thunderbird Add-ons Beta"></a></h1>';
     break;
 
     case 'mozilla':
-        echo '<h1><a href="'.WEB_PATH.'?application=mozilla" title="Return to home page"
+        echo '<h1><a href="'.WEB_PATH.'/?application=mozilla" title="Return to home page"
         accesskey="1"><img src="'.WEB_PATH.'/images/title-suite.gif" width="370" height="54" alt="Mozilla Suite Add-ons Beta"></a></h1>';
     break;
 }

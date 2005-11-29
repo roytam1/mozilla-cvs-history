@@ -140,9 +140,9 @@ MP;
 <div class="front-section-left">
     <h2><img src="images/title-browse.gif" width="168" height="22" alt="Browse By Category"></h2>
     <ul>
-    <li><a href="#">Most Popular Add-ons</a></li>
-    <li><a href="#">Recently Added</a></li>
-    <li><a href="#">All Categories</a></li>
+    <li><a href="./extensions/showlist.php?application=<?=$application?>&amp;category=Popular">Most Popular Add-ons</a></li>
+    <li><a href="./extensions/showlist.php?application=<?=$application?>&amp;category=Newest">Recently Added</a></li>
+    <li><a href="./extensions/showlist.php?application=<?=$application?>&amp;category=All">All Categories</a></li>
     </ul>
 </div>
 
