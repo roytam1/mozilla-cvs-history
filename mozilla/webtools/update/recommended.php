@@ -66,7 +66,7 @@ installtrigger('extensions');
 <p>Everything you need to seamlessly integrate del.icio.us with your  browser! Easy posting
 of new items, access to your saved items, and integration with the  Firefox search box.</p>
 <div class="recommended-download">
-<h3><a href="http://releases.mozilla.org/pub/mozilla.org/extensions/del.icio.us/del.icio.us-1.0.1-fx.xpi" onclick="return install(event,'del.icio.us 1.0.1', '<?=WEB_PATH?>/images/default.png');" title="Install del.icio.us 1.0.1 (Right-Click to Download)"><strong>Install Extension</strong> (60 KB)</a> </h3>
+<h3><a href="http://releases.mozilla.org/pub/mozilla.org/extensions/del.icio.us/del.icio.us-1.0.2-fx.xpi" onclick="return install(event,'del.icio.us 1.0.2', '<?=WEB_PATH?>/images/default.png');" title="Install del.icio.us 1.0.2 (Right-Click to Download)"><strong>Install Extension</strong> (62 KB)</a> </h3>
 </div>
 
 
