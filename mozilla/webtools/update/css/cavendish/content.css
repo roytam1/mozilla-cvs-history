@@ -188,7 +188,8 @@
 .recommended-download h3 a {
 	display: block;
 	background: url("../../images/download.gif") 0 0;
-    font-size: 70%;
+    font-size: 65%;
+    font-weight: bold;
 	width: 165px;
 	padding: 12px 25px 5px 10px;
 	text-decoration: none;
