@@ -85,7 +85,7 @@ of new items, access to your saved items, and integration with the  Firefox sear
 <h3><a href="http://releases.mozilla.org/pub/mozilla.org/extensions/linkedin_companion_for_firefox/linkedin_companion_for_firefox-1.1-fx+mz.xpi" onclick="return install(event,'LinkedIn 1.1', '<?=WEB_PATH?>/images/default.png');" title="Install LinkedIn 1.1 (Right-Click to Download)">Install Extension (82 KB)</a></h3>
 </div>
 
-<h2 class="clear-both"><a href="./extensions/moreinfo.php?id=1538">Paypal</a></h2>
+<h2 class="clear-both"><a href="./extensions/moreinfo.php?id=1538">PayPal</a></h2>
 <img class="recommended-img" alt="" src="./images/recommended/paypal1.png"/>
 <p>PayPal's Send Money extension provides a quick way to send money to  anyone with an email address. Enter the payment information and  you'll be brought to your PayPal login page to sign in and complete the payment.</p>
 <div class="recommended-download">
