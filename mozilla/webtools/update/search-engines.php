@@ -78,22 +78,18 @@ function errorMsg(name,ext,cat)
   }
 
 }
+
 function addEngine(name,ext,cat,type)
 {
-  if ((typeof window.sidebar == "object") && (typeof window.sidebar.addSearchEngine == "function")) {
-    if (type!="0") {
-      window.sidebar.addSearchEngine(
-        "http://mycroft.mozdev.org/nowrapper/submit-install.php/v/" + type + "/" + name + ".src",
-        "http://mycroft.mozdev.org/nowrapper/submit-install.php/i/" + type + "/" + name + "."+ ext, name, cat );
-    } else {
-      window.sidebar.addSearchEngine(
-        "http://mycroft.mozdev.org/plugins/"+name+".src",
-        "http://mycroft.mozdev.org/plugins/"+name+"."+ext, name, cat );
-    }
-  } else {
-    errorMsg(name,ext,cat);
-  }
+ if ((typeof window.sidebar == "object") && (typeof window.sidebar.addSearchEngine == "function")) { 
+     window.sidebar.addSearchEngine(
+       "http://addons.mozilla.org/search-engines-static/"+name+".src",
+       "http://addons.mozilla.org/search-engines-static/"+name+"."+ext, name, cat );
+ } else {
+   errorMsg(name,ext,cat);
+ } 
 }
+
 </script>
 SEARCHJS;
 $currentTab = 'search-engines';
