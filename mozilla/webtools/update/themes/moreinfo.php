@@ -360,9 +360,9 @@ if (isset($_GET["vid"])) {
 		<p class="first">
 
         <?php
-        echo"$description"; 
+        echo nl2br($description); 
         if ($notes) {
-            echo"<br><br>$notes\n";
+            echo"<br><br>".nl2br($notes)."\n";
         }
         ?>
         </p>

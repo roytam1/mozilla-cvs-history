@@ -343,9 +343,9 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
 		<p class="first">
 
         <?php
-        echo"$description"; 
+        echo nl2br($description); 
         if ($notes) {
-            echo"<br><br>$notes\n";
+            echo"<br><br>".nl2br($notes)."\n";
         }
         ?>
         </p>

@@ -169,7 +169,7 @@ LIMIT $items_per_page OFFSET $startpoint";
 
         echo "<div class=\"item\">\n";
         $typedir = $typedirs[$itemtype];
-        echo "<h2 class=\"first\"><a href=\"$typedir/moreinfo.php?id=$id\">";
+        echo "<h2 class=\"first\"><a href=\"$typedir/moreinfo.php?id=$id&amp;application=$application\">";
         echo $name;
         echo "</a></h2>";
 

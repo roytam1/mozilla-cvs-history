@@ -108,6 +108,7 @@ switch (strtolower($application)) {
 		  <option value="E">Extensions</option>
 		  <option value="T">Themes</option>
 		</select>
+        <input type="hidden" name="application" value="<?=$application?>">
 		<input type="submit" id="submit" value="Go">
 		</div>
 		</form>

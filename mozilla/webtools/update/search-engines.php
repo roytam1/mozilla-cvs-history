@@ -40,14 +40,6 @@ require_once('./core/init.php');
 $page_title = 'Search Engines :: Mozilla Update';
 $page_headers = <<<SEARCHJS
 <script type="text/javascript">
-function judgePopUp(id,type) {
-    var popwin;
-    leftval=(screen.width)?(screen.width-650)/2:100;
-    topval=(screen.height)?(screen.height-350)/2:100;
-    popwin=window.open("http://mycroft.mozdev.org/judge.php?id=" + id + "&table=" + type, "Judge a plugin", "width=650,height=300,top=" + topval + ",left=" + leftval + ",toolbar=0,scrollbars=1,directories=no,location=0,statusbar=0,menubar=0,resizable=0");
-    popwin.focus();
-}
-
 function errorMsg(name,ext,cat)
 {
   // alert("Netscape 6 or Mozilla is needed to install a sherlock plugin");
@@ -103,8 +95,8 @@ require_once(HEADER);
 
 <div class="front-section">
 <dl>
-<dt><img src="./images/search-engines/a9.png" alt=""/> <a href="javascript:addEngine('a9','png','General','0')">A9 Search</a></dt><dd>Search the web with the A9 search engine.</dd>
-<dt><img src="./images/search-engines/aol.png" alt=""/> <a href="javascript:addEngine('aol','png','General','2759')">AOL Search</a></dt><dd>Search the web with the AOL Search engine.</dd>
+<dt><img src="./images/search-engines/a9.png" alt=""/> <a href="javascript:addEngine('a9','png','General','0')">A9</a></dt><dd>Amazon's A9 search engine.</dd>
+<dt><img src="./images/search-engines/aol.png" alt=""/> <a href="javascript:addEngine('aol','png','General','2759')">AOL</a></dt><dd>AOL search engine.</dd>
 <dt><img src="./images/search-engines/jeeves.gif" alt=""/> <a href="javascript:addEngine('jeeves','gif','General','0')">Ask Jeeves</a></dt><dd>Better search results with keywords or questions.</dd>
 <dt><img src="./images/search-engines/bbcnews.png" alt=""/> <a href="javascript:addEngine('bbcnews','png','News','0')">BBC News</a></dt><dd>Search for the latest news on BBC.</dd>
 <dt><img src="./images/search-engines/bittorrent.png" alt=""/> <a href="javascript:addEngine('bittorrent','png','File Sharing','0')">BitTorrent</a></dt><dd>Find Torrent files</dd>
@@ -128,7 +120,7 @@ require_once(HEADER);
 
 <div class="front-section">
 <dl>
-<dt><img src="./images/search-engines/msn.png" alt=""/> <a href="javascript:addEngine('MSN','png','General','3796')">MSN</a></dt><dd>Search the web with the MSN Search engine.</dd>
+<dt><img src="./images/search-engines/msn.png" alt=""/> <a href="javascript:addEngine('MSN','png','General','3796')">MSN</a></dt><dd>MSN search engine.</dd>
 <dt><img src="./images/search-engines/odeo.png" alt=""/> <a href="javascript:addEngine('odeo','png','Music','2069')">Odeo</a></dt><dd>Explore the world of podcasting.</dd>
 <dt><img src="./images/search-engines/technorati.gif" alt=""/> <a href="javascript:addEngine('technorati-new','gif','Weblogs','2662')">Technorati</a></dt><dd>A real-time search engine that keeps track of what is going on in the blogosphere</dd>
 <dt><img src="./images/search-engines/WebMD.png" alt=""/> <a href="javascript:addEngine('WebMD','png','Health','0')">WebMD</a></dt><dd>WebMD provides health information and tools for managing your health.</dd>
@@ -138,7 +130,13 @@ require_once(HEADER);
 </dl>
 </div>
 
-<p class="clear-both center"><strong><a href="http://mycroft.mozdev.org/">Browse through more search engines ...</a></strong></p>
+<h2 class="clear-both">Additional Resources</h2>
+<ul>
+<li><a href="http://mycroft.mozdev.org/">Browse through more search engines at mycroft.mozdev.org.</a></li>
+<li><a href="https://addons.mozilla.org/extensions/moreinfo.php?id=1563">Use the SearchPluginHacks extension to remove a Search Engine.</a></li>
+</ul>
+
+<p>Special thanks to the Mycroft Project for their work on Firefox Search Engines.</p>
 
 </div>
 

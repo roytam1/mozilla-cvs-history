@@ -227,7 +227,7 @@ foreach ($manifestdata["targetApplication"] as $key=>$val) {
         $appVersion = buildAppVersion($row['major'],$row['minor'],$row['release'],$row['SubVer']);
 
         // If we have a match, set our valid minVersion flag to true.
-        if ($appVersion == $val['minVersion']) {
+        if ($appVersion == $val['minVersion'] && preg_match('/^[\d\.]*$/',$val['minVersion'])) {
             $versioncheck[$key]['minVersion_valid'] = true;
         }
 
@@ -274,6 +274,12 @@ foreach ($manifestdata["targetApplication"] as $key=>$val) {
 
 if ($versioncheck['errors'] == true) {
   echo "Errors were encountered during install.rdf checking...<br>\n";
+  echo "<p>How to fix this:</p>";
+  echo "<ul>";
+  echo "<li><a href=\"".WEB_PATH."/faq.php\">See the list of valid version numbers</a></li>";
+  echo "<li>minVersion (MinAppVer) values may only contain values 0-9 and '.' because they have to be an absolute version.  minVersions like 1.0+ or 1.5.0.* are not allowed.</li>";
+  echo "<li>Your version has not been found in the addons database but it should be.  See #umo@mozilla.org in IRC if you think this is in error.</li>";
+  echo "</ul>";
   die('Aborting...');
 }
 
