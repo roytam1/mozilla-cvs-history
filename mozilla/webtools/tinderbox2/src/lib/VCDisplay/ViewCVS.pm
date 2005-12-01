@@ -53,13 +53,7 @@ package VCDisplay::ViewCVS;
 
 # Load Tinderbox libraries
 
-use lib '/home2/tbox/local_conf',
-   '/home2/tbox/default_conf',
-   '/home2/tbox/lib',
-   '/root/mozilla/webtools/tinderbox2/./build/local_conf',
-   '/root/mozilla/webtools/tinderbox2/./build/default_conf',
-   '/root/mozilla/webtools/tinderbox2/./build/lib';
-
+use lib '#tinder_libdir#';
 use HTMLPopUp;
 use TreeData;
 
