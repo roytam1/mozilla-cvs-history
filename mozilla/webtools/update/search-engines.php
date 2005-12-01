@@ -133,7 +133,7 @@ require_once(HEADER);
 <h2 class="clear-both">Additional Resources</h2>
 <ul>
 <li><a href="http://mycroft.mozdev.org/">Browse through more search engines at mycroft.mozdev.org.</a></li>
-<li><a href="https://addons.mozilla.org/extensions/moreinfo.php?id=1563">Use the SearchPluginHacks extension to remove a Search Engine.</a></li>
+<li><a href="./extensions/moreinfo.php?id=1563">Use the SearchPluginHacks extension to remove a Search Engine.</a></li>
 </ul>
 
 <p>Special thanks to the Mycroft Project for their work on Firefox Search Engines.</p>
