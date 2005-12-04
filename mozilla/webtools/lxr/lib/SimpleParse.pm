@@ -77,7 +77,7 @@ sub nextfrag {
 
 	last if $#frags < 0;
 	
-	unless ($frags[0]) {
+	unless (length $frags[0]) {
 	    shift(@frags);
 
 	} elsif (defined($frag)) {
