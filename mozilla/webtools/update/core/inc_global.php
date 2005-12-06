@@ -81,7 +81,7 @@ foreach ($_POST as $key => $val) {
 // Bug 250596 Fixes for incoming $_GET variables.
 if (isset($_GET["application"]) && $_GET["application"]) {
 $_GET["application"] = escape_string(strtolower($_GET["application"]));
-$sql = "SELECT AppID FROM  `applications` WHERE `AppName` = '".ucwords(strtolower($_GET["application"]))."' LIMIT 1";
+$sql = "SELECT AppID FROM  `applications` WHERE `AppName` = '".ucwords(strtolower($_GET["application"]))."' AND public_ver = 'YES' LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
    if (mysql_num_rows($sql_result)===0) {unset($_GET["application"]);}
 }
