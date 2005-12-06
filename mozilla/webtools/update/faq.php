@@ -109,7 +109,7 @@ while ($row = mysql_fetch_array($sql_result)) {
 
 <table class="appversions">
 <tr>
-    <th>Application Name</th>
+    <th>Application Name {GUID}</th>
     <th>Display Version</th>
     <th>install.rdf Version</th>
 </tr>
@@ -118,10 +118,12 @@ while ($row = mysql_fetch_array($sql_result)) {
 // Let's display our valid app versions to make the lives of our appliation
 // developers a lot easier.
 $appVersions = array();
+$guids = array();
 
 $sql = "
     SELECT 
         `AppName`,
+        `GUID`,
         `Version`,
         `major`,
         `minor`,
@@ -142,12 +144,13 @@ while ($row = mysql_fetch_array($sql_result)) {
         'displayVersion' => $row['Version'],
         'versionNumber' => buildAppVersion($row['major'],$row['minor'],$row['release'],$row['SubVer'])
     );
+    $guids[$row['AppName']] = $row['GUID'];
 }
 
 if (is_array($appVersions)) {
     foreach ($appVersions as $app=>$versions) {
         echo <<<ROWHEADER
-            <tr><td colspan="3"><h3>{$app}</h3></td></tr>
+            <tr><td colspan="3"><h3>{$app} {$guids[$app]}</h3></td></tr>
 
 ROWHEADER;
         if (is_array($versions)) { 
