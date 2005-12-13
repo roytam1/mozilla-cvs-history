@@ -329,4 +329,35 @@ function buildAppVersion ($major,$minor,$release,$subver) {
 
     return $version;
 }
+
+/**
+ * check_filename() function
+ * checks a file name and die if it is "evil"
+ * @param string $filename the file to be checked
+ * @return the checked file
+ */
+function check_filename($filename) {
+    if(strlen($filename) && (preg_match('/[\/\\\\]/',$filename) || !preg_match('/\.(xpi|jar)$/',$filename))) {
+        die('Error: bad file name "'.htmlentities($filename).'"');
+    }
+    return $filename;
+}
+
+/**
+ * This is a temp function.
+ * It is a placeholder until multiple locales are supported.
+ * Morgamic did not write this.
+ * @param array $array
+ * @return mixed values
+ */
+function default_l10n($array)
+{
+    if ($array["en-US"]) {
+        return $array["en-US"];
+    } else {
+        foreach ($array as $val) {
+            return $val;
+        }
+    }
+}
 ?>

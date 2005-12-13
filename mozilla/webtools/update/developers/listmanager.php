@@ -339,7 +339,7 @@ if (!$categories) {$categories = array(); }
 
     echo"<OPTION value=\"$catname\"";
     foreach ($categories as $validcat) {
-    if ($validcat==$catid) { echo" SELECTED"; }
+    if ($validcat==$catid) { echo" selected=\"selected\" "; }
     }
     echo">$catname</OPTION>\n";
   }
@@ -422,12 +422,9 @@ $sql = "SELECT `int_version`, `major`, `minor`, `release`, `SubVer` FROM `applic
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
   $i++;
-  $int_version = $row["int_version"];
-  $subver = $row["SubVer"];
-  $release = "$row[major].$row[minor]";
-  if ($row["release"]) {$release = "$release.$row[release]";}
-  if ($subver !=="final") {$release="$release$subver";}
-    $app_internal_array[$release] = $int_version;
+
+    $completelyUnnecessary = buildAppVersion($row['major'],$row['minor'],$row['release'],$row['SubVer']);
+    $app_internal_array[$completelyUnnecessary] = $completelyUnnecessary;
   }
 
 //print_r($app_internal_array);
@@ -555,15 +552,12 @@ $sql = "SELECT `AppName`, `Version`, `major`, `minor`, `release`, `SubVer` FROM 
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
   $i++;
-  $application = strtolower($row["AppName"]);
-  $display_version = $row["Version"];
-  $subver = $row["SubVer"];
-  $release = "$row[major].$row[minor]";
-  if ($row["release"]) {$release = "$release.$row[release]";}
-  if ($subver !=="final") {$release="$release$subver";}
-    $app_ver_array[$application][] = $release;
-    $app_display_array[$application][$release] = $display_version;
+    $AppName = strtolower($row['AppName']);
+    $builtAppVersion = buildAppVersion($row['major'],$row['minor'],$row['release'],$row['SubVer']);
+    $app_ver_array[$AppName][] = $builtAppVersion;
+    $app_display_array[$AppName][$builtAppVersion] = $row['Version'];
   }
+
   
 $i=0;
 echo"<TR><TD COLSPAN=2><SPAN class=\"file\">Target Application(s):</SPAN></TD></TR>\n";
@@ -581,7 +575,7 @@ echo"<TR><TD COLSPAN=2><SPAN class=\"file\">Target Application(s):</SPAN></TD></
     echo"<SELECT name=\"minappver_$i\" TITLE=\"Minimum Version* (Required)\">\n";
 foreach ($app_ver_array[strtolower($appname)] as $app_version) {
     $display_version = $app_display_array[strtolower($appname)][$app_version];
-    echo"<OPTION value=\"$app_version\""; if ($app_version==$minappver) {echo" SELECTED";} echo">$display_version</OPTION>\n";
+    echo"<OPTION value=\"$app_version\""; if ($app_version==$minappver) {echo" selected=\"selected\" ";} echo">$display_version</OPTION>\n";
 }
     echo"</SELECT>\n";
     echo"&nbsp;-&nbsp;";
@@ -589,7 +583,7 @@ foreach ($app_ver_array[strtolower($appname)] as $app_version) {
     echo"<SELECT name=\"maxappver_$i\" TITLE=\"Maximum Version* (Required)\">\n";
 foreach ($app_ver_array[strtolower($appname)] as $app_version) {
     $display_version = $app_display_array[strtolower($appname)][$app_version];
-    echo"<OPTION value=\"$app_version\""; if ($app_version==$maxappver) {echo" SELECTED";} echo">$display_version</OPTION>\n";
+    echo"<OPTION value=\"$app_version\""; if ($app_version==$maxappver) {echo" selected=\"selected\" ";} echo">$display_version</OPTION>\n";
 }
     echo"</SELECT>\n";
     echo"</TD></TR>\n";
@@ -604,7 +598,7 @@ $sql = "SELECT * FROM `os` ORDER BY `OSName` ASC";
   while ($row = mysql_fetch_array($sql_result)) {
     $osname = $row["OSName"];
     $osid = $row["OSID"];
-    echo"<OPTION value=\"$osid\""; if ($osid == $os) {echo" SELECTED"; } echo">$osname</OPTION>\n";
+    echo"<OPTION value=\"$osid\""; if ($osid == $os) {echo" selected=\"selected\" "; } echo">$osname</OPTION>\n";
   }
     echo"</SELECT>\n";
     echo"</TD></TR>\n";

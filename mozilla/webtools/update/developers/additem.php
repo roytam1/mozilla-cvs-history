@@ -7,28 +7,15 @@ require_once(HEADER);
 require_once('./inc_sidebar.php');
 require_once('./parse_install_manifest.php');
 require_once('../core/inc_version_comparison.php');
-/**
-   check_filename() function
-   checks a file name and die if it is "evil"
-   @param string $filename the file to be checked
-   @return the checked file
-*/
-function check_filename($filename) {
-  if(strlen($filename) && 
-    (preg_match('/[\/\\\\]/',$filename) // check for path traversal
-    || !preg_match('/\.(xpi|jar)$/',$filename) // check file extension
-    )
-  ) {
-    die('Error: bad file name "'.htmlentities($filename).'"');
-  }
-  return $filename;
-}
 
 if (!$function or $function=="additem") {
-if (!$_GET["type"]) {$_GET["type"] = "E"; }
-$typearray = array("E"=>"Extension","T"=>"Theme");
-$typename = $typearray[$_GET["type"]];
+    if (!$_GET["type"]) {
+        $_GET["type"] = "E"; 
+    }
+    $typearray = array("E"=>"Extension","T"=>"Theme");
+    $typename = $typearray[$_GET["type"]];
 ?>
+
 <h1>Add New <?php echo"$typename"; ?></h1>
 <TABLE BORDER=0 CELLPADDING=2 CELLSPACING=2 ALIGN=CENTER STYLE="border: solid 0px #000000; width: 100%">
 <FORM NAME="additem" METHOD="POST" ACTION="?function=additem2" enctype="multipart/form-data">
@@ -44,65 +31,63 @@ Your <?php echo"$typename"?> File:<BR>
 
 <?php
 } else if ($function=="additem2") {
+    $filename=check_filename($_FILES['file']['name']);
+    $filetype=$_FILES['file']['type'];
+    $filesize=$_FILES['file']['size'];
+    $uploadedfile=$_FILES['file']['tmp_name'];
+    $status=$_FILES['file']['error'];
 
-$filename=check_filename($_FILES['file']['name']);
-$filetype=$_FILES['file']['type'];
-$filesize=$_FILES['file']['size'];
-$uploadedfile=$_FILES['file']['tmp_name'];
-$status=$_FILES['file']['error'];
+    //Convert File-Size to Kilobytes
+    $filesize = round($filesize/1024, 1);
 
-//Convert File-Size to Kilobytes
-$filesize = round($filesize/1024, 1);
+    //Status
+    // TODO: refactor this nonsense code to make some use of messages
+    // (and perhaps die early)
 
-//Status
-// TODO: refactor this nonsense code to make some use of messages
-// (and perhaps die early)
-if ($status==0) {$statusresult="Success!";
-} else if ($status==1) {$statusresult="Error: File Exceeds upload_max_filesize (PHP)";
-} else if ($status==2) {$statusresult="Error: File Exceeds max_file_size (HTML)";
-} else if ($status==3) {$statusresult="Error: File Incomplete, Partial File Received";
-} else if ($status==4) {$statusresult="Error: No File Was Uploaded";
-}
-$manifest_exists = "FALSE";
-$destination = REPO_PATH."/temp/$filename";
-if (move_uploaded_file($uploadedfile, $destination)) {
-$uploadedfile = $destination;
-$chmod_result = chmod("$uploadedfile", 0644); //Make the file world readable. prevent nasty permissions issues.
-}
+    if ($status==0) {$statusresult="Success!";
+    } else if ($status==1) {$statusresult="Error: File Exceeds upload_max_filesize (PHP)";
+    } else if ($status==2) {$statusresult="Error: File Exceeds max_file_size (HTML)";
+    } else if ($status==3) {$statusresult="Error: File Incomplete, Partial File Received";
+    } else if ($status==4) {$statusresult="Error: No File Was Uploaded";
+    }
 
-//If this was legacy mode, we're coming back from step1b so the file wasn't just submitted and we need to just pick it up again.
-if ($_POST["legacy"]=="TRUE") {
-$filename = check_filename(escape_string($_POST['filename']));
-$filesize = escape_string($_POST["filesize"]);
-$uploadedfile = REPO_PATH."/temp/$filename";
-}
-$zip = @zip_open("$uploadedfile");
-if ($zip) {
+    $manifest_exists = "FALSE";
+    $destination = REPO_PATH."/temp/$filename";
 
-   while ($zip_entry = zip_read($zip)) {
-     if (zip_entry_name($zip_entry)=="install.rdf") {
-     $manifest_exists = "TRUE";
-      // echo "Name:              " . zip_entry_name($zip_entry) . "\n";
-      // echo "Actual Filesize:    " . zip_entry_filesize($zip_entry) . "\n";
-      // echo "Compressed Size:    " . zip_entry_compressedsize($zip_entry) . "\n";
-      // echo "Compression Method: " . zip_entry_compressionmethod($zip_entry) . "\n";
+    if (move_uploaded_file($uploadedfile, $destination)) {
+        $uploadedfile = $destination;
+        $chmod_result = chmod("$uploadedfile", 0644); //Make the file world readable. prevent nasty permissions issues.
+    }
 
-       if (zip_entry_open($zip, $zip_entry, "r")) {
-       //    echo "File Contents:\n";
-           $buf = zip_entry_read($zip_entry, zip_entry_filesize($zip_entry));
-          // echo "$buf\n";
+    $zip = @zip_open("$uploadedfile");
 
-           zip_entry_close($zip_entry);
-       }
-       echo "\n";
-   }
-   }
+    if ($zip) {
+
+        while ($zip_entry = zip_read($zip)) {
+            if (zip_entry_name($zip_entry)=="install.rdf") {
+                $manifest_exists = "TRUE";
+                // echo "Name:              " . zip_entry_name($zip_entry) . "\n";
+                // echo "Actual Filesize:    " . zip_entry_filesize($zip_entry) . "\n";
+                // echo "Compressed Size:    " . zip_entry_compressedsize($zip_entry) . "\n";
+                // echo "Compression Method: " . zip_entry_compressionmethod($zip_entry) . "\n";
+
+                if (zip_entry_open($zip, $zip_entry, "r")) {
+                    //    echo "File Contents:\n";
+                    $buf = zip_entry_read($zip_entry, zip_entry_filesize($zip_entry));
+                    // echo "$buf\n";
+
+                    zip_entry_close($zip_entry);
+                }
+                echo "\n";
+            }
+        }
 
    zip_close($zip);
+   
+   }
 
 }
-if ($manifest_exists=="TRUE" or $_POST["legacy"]=="TRUE") {
-//echo"install.rdf is present, use standard mode...<BR>\n";
+if ($manifest_exists=='TRUE') {
 
 //------------------
 //  Construct $manifestdata[] array from install.rdf info.
@@ -112,23 +97,6 @@ $manifestdata = parse_install_manifest($buf);
 if(is_null($manifestdata)) {
   echo"Errors were encountered during install.rdf parsing...<br>\n";
   die("Aborting...");
-}
-
-// this is a temporary function
-// until we support multiple locales for
-// name / description
-function default_l10n($array)
-{
-  if($array["en-US"]) {
-    return $array["en-US"];
-  }
-  else {
-    foreach($array as $val) {
-      return $val;
-    }
-  }
-
-  return "";
 }
 
 //echo"<h1>Adding Extension... Checking file...</h1>\n";
@@ -154,13 +122,6 @@ $sql = "SELECT ID, GUID from `main` WHERE `GUID` = '".escape_string($manifestdat
     $mode = "update";
     $row = mysql_fetch_array($sql_result);
     $item_id = $row["ID"];
-if ($_POST["legacy"]=="TRUE") {
-    if ($_POST["mode"]=="update") {
-        $item_id = escape_string($_POST["existingitems"]);
-    } else {
-        $item_id="";
-    }
-}
 
     $sql = "SELECT `UserID` from `authorxref` WHERE `ID`='$item_id' AND `UserID` = '$_SESSION[uid]' LIMIT 1";
       $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
@@ -183,7 +144,11 @@ if ($_POST["legacy"]=="TRUE") {
  * @TODO Fix references to non-existent variables and array indeces.
  * @TODO Rethink how we're storing versions, and clean up new versions as they come in.
  */
-if ($_POST["legacy"]=="TRUE" AND !$manifestdata["targetApplication"]) {$manifestdata["targetApplication"]=array(); }
+
+// We need a marker to say whether or not we have a valid GUID at all.
+// We are looking for at least one valid Mozilla application.
+// If it has none, it will error out, as it is a conflict of interest.
+$oneValidGuidFound = false;
 
 $versioncheck = array();
 
@@ -191,13 +156,11 @@ $versioncheck = array();
 // result.  Once we find a matching result, we set the flag to true.  Once we
 // have to successful matches (one for maxVersion, one for minVersion), we break
 // the loop and move on.
-foreach ($manifestdata["targetApplication"] as $key=>$val) {
+foreach ($manifestdata['targetApplication'] as $key=>$val) {
     $esckey = escape_string($key);
 
-    $versioncheck[$key]['minVersion_valid'] = false;
-    $versioncheck[$key]['maxVersion_valid'] = false;
-
-    $sql = "
+    // Query to attempt to grab valid application records.
+    $app_sql = "
         SELECT 
             `AppName`,
             `major`,
@@ -216,119 +179,89 @@ foreach ($manifestdata["targetApplication"] as $key=>$val) {
             `SubVer` DESC
     ";
 
-    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+    $app_sql_result = mysql_query($app_sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 
-    while ($row = mysql_fetch_array($sql_result, MYSQL_ASSOC)) {
+    // If we have results, set our min/max versions to false by default so we can check them later.
+    if (mysql_num_rows($app_sql_result) == 0) {
+        continue;
+    } else {
+        // If we get here, we found at least one valid GUID.
+        // This doesn't mean, however, that the min/max verion values for that GUID are valid.
+        // This will still be tested.
+        $oneValidGuidFound = true;
 
-        // Set up our variables.
-        $appname = $row['AppName'];  // Name of the application.
+        $versioncheck[$key]['minVersion_valid'] = false;
+        $versioncheck[$key]['maxVersion_valid'] = false;
 
-        // Build our app version string.
-        $appVersion = buildAppVersion($row['major'],$row['minor'],$row['release'],$row['SubVer']);
+        while ($row = mysql_fetch_array($app_sql_result, MYSQL_ASSOC)) {
 
-        // If we have a match, set our valid minVersion flag to true.
-        if ($appVersion == $val['minVersion'] && preg_match('/^[\d\.]*$/',$val['minVersion'])) {
-            $versioncheck[$key]['minVersion_valid'] = true;
+            // Set up our variables.
+            $appname = $row['AppName'];  // Name of the application.
+
+            // Build our app version string.
+            $appVersion = buildAppVersion($row['major'],$row['minor'],$row['release'],$row['SubVer']);
+
+            // If we have a match, set our valid minVersion flag to true.
+            if ($appVersion == $val['minVersion'] && preg_match('/^[\d\.+]*$/',$val['minVersion'])) {
+                $versioncheck[$key]['minVersion_valid'] = true;
+            }
+
+            // If we have a match, set our valid maxVersion flag to true.
+            if ($appVersion == $val['maxVersion']) {
+                $versioncheck[$key]['maxVersion_valid'] = true; 
+            }
+
+            /**
+             * Use this to debug app versions.
+            echo '<pre>';
+            echo 'App: '.$appname."\n";
+            echo 'Release from DB: '.$row['major'].' '.$row['minor'].' '.$row['release'].' '.$row['subver']."\n";
+            echo 'Version we put together: '.$appVersion."\n";
+            echo 'MinVersion from RDF (match): '.$val['minVersion'].' ('.$versioncheck[$key]['minVersion_valid'].') '."\n";
+            echo 'MaxVersion from RDF (match): '.$val['maxVersion'].' ('.$versioncheck[$key]['maxVersion_valid'].') '."\n\n";
+            print_r($versioncheck);
+            echo "\n\n\n";
+            echo '</pre>';
+             */
+
+            // If we have valid matches for both max/minVersions, we don't need to
+            // keep checking.  Break this loop and continue to the next application.
+            if ($versioncheck[$key]['minVersion_valid'] == true && $versioncheck[$key]['maxVersion_valid'] == true) {
+                break;
+            }
         }
 
-        // If we have a match, set our valid maxVersion flag to true.
-        if ($appVersion == $val['maxVersion']) {
-            $versioncheck[$key]['maxVersion_valid'] = true; 
+        // If we never found a valid minVersion, report the error.
+        if ($versioncheck[$key]['minVersion_valid'] == false) {
+            echo "Error! The MinAppVer for $appname of " . $val['minVersion'] . " in install.rdf is invalid.<br>\n";
+            $versioncheck['errors'] = true;
         }
 
-
-        /**
-         * Debugerrific code, because I got tired of thinking everything was
-         * okay then having to retype this.
-         *
-         * Use this to debug app versions.
-        echo '<pre>';
-        echo 'App: '.$appname."\n";
-        echo 'Release from DB: '.$major.' '.$minor.' '.$release.' '.$subver."\n";
-        echo 'Version we put together: '.$appVersion."\n";
-        echo 'MinVersion from RDF (match): '.$val['minVersion'].' ('.$versioncheck[$key]['minVersion_valid'].') '."\n";
-        echo 'MaxVersion from RDF (match): '.$val['maxVersion'].' ('.$versioncheck[$key]['maxVersion_valid'].') '."\n\n";
-        print_r($versioncheck);
-        echo '</pre>';
-         */
-
-        // If we have valid matches for both max/minVersions, we don't need to
-        // keep checking.  Break this loop and continue to the next application.
-        if ($versioncheck[$key]['minVersion_valid'] == true && $versioncheck[$key]['maxVersion_valid'] == true) {
-            break;
+        // If we never found a valid maxVersion, report the error.
+        if ($versioncheck[$key]['maxVersion_valid'] == false) {
+            echo "Error! The MaxAppVer for $appname of ". $val['maxVersion'] . " in install.rdf is invalid.<br>\n";
+            $versioncheck['errors'] = true;
         }
-    }
-
-    // If we never found a valid minVersion, report the error.
-    if ($versioncheck[$key]['minVersion_valid'] == false) {
-        echo "Error! The MinAppVer for $appname of " . $val['minVersion'] . " in install.rdf is invalid.<br>\n";
-        $versioncheck['errors'] = true;
-    }
-
-    // If we never found a valid maxVersion, report the error.
-    if ($versioncheck[$key]['maxVersion_valid'] == false) {
-        echo "Error! The MaxAppVer for $appname of ". $val['maxVersion'] . " in install.rdf is invalid.<br>\n";
-        $versioncheck['errors'] = true;
     }
 }
 
-if ($versioncheck['errors'] == true) {
-  echo "Errors were encountered during install.rdf checking...<br>\n";
-  echo "<p>How to fix this:</p>";
-  echo "<ul>";
-  echo "<li><a href=\"".WEB_PATH."/faq.php\">See the list of valid version numbers</a></li>";
-  echo "<li>minVersion (MinAppVer) values may only contain values 0-9 and '.' because they have to be an absolute version.  minVersions like 1.0+ or 1.5.0.* are not allowed.</li>";
-  echo "<li>Your version has not been found in the addons database but it should be.  See #umo@mozilla.org in IRC if you think this is in error.</li>";
-  echo "</ul>";
-  die('Aborting...');
+// If they don't have at least one valid GUID, tell them that is not allowed.
+if ($oneValidGuidFound == false) {
+    echo "Sorry, your add-on must have at least one valid Mozilla application to use this site.<br>";
+    die('Aborting...');
+
+// Even if we have a valid GUID, it still has to have valid min/max version values.
+// If these don't exist, we need to error out and say why.
+} elseif (!empty($versioncheck['errors']) && $versioncheck['errors'] == true) {
+    echo "Errors were encountered during install.rdf checking...<br>\n";
+    echo "<p>How to fix this:</p>";
+    echo "<ul>";
+    echo "<li><a href=\"".WEB_PATH."/faq.php\">See the list of valid version numbers</a></li>";
+    echo "<li>minVersion (MinAppVer) values may only contain values 0-9 and '.' because they have to be an absolute version.  minVersions like 1.0+ or 1.5.0.* are not allowed.</li>";
+    echo "<li>Your version has not been found in the addons database but it should be.  See #umo@mozilla.org in IRC if you think this is in error.</li>";
+    echo "</ul>";
+    die('Aborting...');
 }
-
-
-// If we have no install.rdf, we're doing something legacy...
-// I guess this was put in for backwards compatibility with the old system.
-// @TODO Strip out legacy code, as it it no longer needed.
-} else {
-
-echo"<h1>Add Step 1b: Legacy Item Data Entry: ($filename)</h1>\n";
-?>
-<TABLE BORDER=0 CELLPADDING=2 CELLSPACING=2 ALIGN=CENTER STYLE="border: solid 0px #000000; width: 100%">
-<FORM NAME="additem" METHOD="POST" ACTION="?function=additem2" enctype="multipart/form-data">
-<INPUT NAME="type" TYPE="hidden" VALUE="<?php echo"$_POST[type]"; ?>">
-<TR><TD style="padding-left: 20px">
-  <INPUT NAME="legacy" TYPE="HIDDEN" VALUE="TRUE">
-  <INPUT NAME="mode" TYPE="RADIO" VALUE="new"<?php if ($_GET["mode"] != "update") {echo" CHECKED"; }?>> New <?php echo"$typename"; ?><br>
-  <INPUT NAME="mode" TYPE="RADIO" VALUE="update"<?php if ($_GET["mode"] == "update") {echo" CHECKED"; } ?>> Update to:
-<SELECT NAME="existingitems">
-<?php
-$type = escape_string($_POST["type"]);
-$sql = "SELECT  TM.ID, TM.Name FROM  `main`  TM 
-LEFT JOIN authorxref TAX ON TM.ID = TAX.ID
-INNER JOIN userprofiles TU ON TAX.UserID = TU.UserID
-WHERE TM.Type = '$type'";
-if ($_SESSION["level"] =="editor" OR $_SESSION["level"] =="admin") {} else { $sql .= "AND TU.UserEmail = '$_SESSION[email]'"; }
-$sql .="GROUP BY `name` ORDER  BY  `Name`  ASC ";
- $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-   while ($row = mysql_fetch_array($sql_result)) {
-    $id = $row["ID"];
-    $name = $row["Name"];
-	echo"<OPTION value=\"$id\""; if ($_GET[id]==$id) {echo" SELECTED"; } echo">$name</OPTION>\n";
-  }
-?>
-</SELECT><BR>
-Your file: <?php echo"$filename"; ?> <INPUT name="filename" TYPE=HIDDEN VALUE="<?php echo"$filename"; ?>"> <INPUT name="filesize" TYPE=HIDDEN VALUE="<?php echo"$filesize"; ?>">
-<BR>
-<INPUT NAME="button" TYPE="BUTTON" VALUE="&#171;&nbsp;Back" onclick="javascript:history.back()"> <INPUT NAME="submit" TYPE="SUBMIT" VALUE="Next &#187;"> 
-</TD></TR>
-</FORM>
-</TABLE>
-
-
-
-
-<?php
-exit;
-}
-
 
 $typearray = array("E"=>"Extension","T"=>"Theme");
 $type = escape_string($_POST["type"]);
