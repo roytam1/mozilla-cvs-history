@@ -114,12 +114,13 @@ require_once(HEADER);
 <dt><img src="./images/search-engines/IMDB.png" alt=""/> <a href="javascript:addEngine('IMDB','png','Arts','0')">IMDB</a></dt><dd>The Internet Movie Database.</dd>
 <dt><img src="./images/search-engines/lonelyplanet.png" alt=""/> <a href="javascript:addEngine('lonelyplanet','png','Travel','0')">Lonely Planet Online</a></dt><dd>Search through Lonely Planet's travel guides.</dd>
 <dt><img src="./images/search-engines/marketwatch.gif" alt=""/> <a href="javascript:addEngine('marketwatch','gif','Business and Economy','4897')">MarketWatch</a></dt><dd>Stock quote look-up and financial information.</dd>
-<dt><img src="./images/search-engines/webster.gif" alt=""/> <a href="javascript:addEngine('webster','gif','Language dictionary','0')">Merriam-Webster</a></dt><dd>English dictionary search.</dd>
+<dt><img src="./images/search-engines/linkedin.png" alt=""/> <a href="javascript:addEngine('linkedin','png','Web Services','0')">LinkedIn</a></dt><dd>Search your LinkedIn network for the people you need when you are on any Web site.</dd>
 </dl>
 </div>
 
 <div class="front-section">
 <dl>
+<dt><img src="./images/search-engines/webster.gif" alt=""/> <a href="javascript:addEngine('webster','gif','Language dictionary','0')">Merriam-Webster</a></dt><dd>English dictionary search.</dd>
 <dt><img src="./images/search-engines/msn.png" alt=""/> <a href="javascript:addEngine('MSN','png','General','3796')">MSN</a></dt><dd>MSN search engine.</dd>
 <dt><img src="./images/search-engines/odeo.png" alt=""/> <a href="javascript:addEngine('odeo','png','Music','2069')">Odeo</a></dt><dd>Explore the world of podcasting.</dd>
 <dt><img src="./images/search-engines/technorati.gif" alt=""/> <a href="javascript:addEngine('technorati-new','gif','Weblogs','2662')">Technorati</a></dt><dd>A real-time search engine that keeps track of what is going on in the blogosphere</dd>
