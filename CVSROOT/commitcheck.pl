@@ -321,6 +321,10 @@ if ($b eq 'BUGZILLA-2_20-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '191';}
 }
 if ($b eq 'HEAD') {
+if (m:^CVSROOT/commitcheck\.pl$:) {return '3';}
+if (m:^CVSROOT/passwd$:) {return '3';}
+if (m:^xpcom/remote$:) {return '143';}
+if (m:^embedding/browser/gtk$:) {return '144';}
 if (m:^mozilla/security/coreconf/.*$:) {return '145';}
 if (m:^mozilla/security/dbm/.*$:) {return '145';}
 if (m:^mozilla/security/jss/.*$:) {return '145';}
@@ -475,10 +479,6 @@ if (m:^mozilla/java/webclient/.*$:) {return '127';}
 if (m:^mozilla/java/dom/.*$:) {return '130';}
 if (m:^mozilla/java/util/.*$:) {return '133';}
 if (m:^mozilla/extensions/xmlterm/.*$:) {return '141';}
-if (m:^CVSROOT/commitcheck\.pl$:) {return '3';}
-if (m:^CVSROOT/passwd$:) {return '3';}
-if (m:^xpcom/remote$:) {return '143';}
-if (m:^embedding/browser/gtk$:) {return '144';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
