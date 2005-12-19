@@ -80,7 +80,7 @@ of new items, access to your saved items, and integration with the  Firefox sear
 
 <h2 class="clear-both"><a href="./extensions/moreinfo.php?id=1577">Kaboodle</a></h2>
 <img class="recommended-img" alt="" src="./images/recommended/kaboodle.jpg"/>
-<p>Kaboodle is an easy way to collect, compare, share and discover things you find anywhere on the web.  The Kaboodle extension for Firefox has everything you need to use Kaboodle with your Firefox browser.</p>
+<p>Collect and share information you find on the web using Kaboodle. One click extracts the web page's location, title, description (and even prices of items featured on that page) and adds it to a list you can share with others.</p>
 <div class="recommended-download">
 <h3><a href="http://releases.mozilla.org/pub/mozilla.org/extensions/kaboodle/kaboodle-0.1-fx.xpi" onclick="return install(event,'Kaboodle Toolbar 0.1', '<?=WEB_PATH?>/images/default.png');" title="Install Kaboodle Toolbar 0.1 (Right-Click to Download)">Install Extension (11 KB)</a></h3>
 </div>
