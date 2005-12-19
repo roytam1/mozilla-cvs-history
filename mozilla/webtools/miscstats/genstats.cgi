@@ -49,7 +49,7 @@ use Date::Format;
 	["New checkers-in (source)",
 						# statistic title
 	 "mozusers",				# database
-	 "changes.when",			# timestamp field
+	 "changes.changed_when",		# timestamp field
 	 "changes.email",			# email addr field
 	 "select distinct id from changes,users where changes.field=" .
 		"'cvs_group' and changes.email=users.email ".
@@ -59,7 +59,7 @@ use Date::Format;
 	["New checkers-in (docs)",
 						# statistic title
 	 "mozusers",				# database
-	 "changes.when",			# timestamp field
+	 "changes.changed_when",		# timestamp field
 	 "changes.email",			# email addr field
 	 "select distinct id from changes,users where changes.field=" .
 		"'gila_group' and changes.email=users.email ".
