@@ -138,7 +138,7 @@ class Smarty
      *
      * @var boolean
      */
-    var $compile_check   =  true;
+    var $compile_check   =  false;
 
     /**
      * This forces templates to compile every time. Useful for development
@@ -157,7 +157,7 @@ class Smarty
      * </ul>
      * @var integer
      */
-    var $caching         =  0;
+    var $caching         = 2;
 
     /**
      * The name of the directory for cache files.
