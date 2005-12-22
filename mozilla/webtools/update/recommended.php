@@ -49,74 +49,88 @@ installtrigger('extensions');
 ?>
 
 <div id="mBody">
-<h1>We Recommend</h1>
+<h1>Getting Started with Extensions</h1>
 <p>With over 300 extensions available for Firefox, there's something for everyone. To get you started, here's a list of some of our  recommended extensions that make use of popular online services.</p>
 
 <div class="recommended">
-
-<h2 class="clear-both"><a href="./extensions/moreinfo.php?id=735">Answers.com</a></h2>
 <img class="recommended-img" alt="" src="./images/recommended/answers.com.png"/>
-<p>Hold down Alt (or Option on a Mac) and click on any word to get a quick definition, an up-to-the-minute reference and more. You don't even need to highlight the word!</p>
+<h2><a href="./extensions/moreinfo.php?id=735">Answers.com</a></h2>
 <div class="recommended-download">
 <h3><a href="http://releases.mozilla.org/pub/mozilla.org/extensions/answers/answers-1.24-fx+fl.xpi" onclick="return install(event,'answers 1.24', '<?=WEB_PATH?>/images/default.png');" title="Install answers 1.24 (Right-Click to Download)">Install Extension (60 KB)</a></h3>
 </div>
+<p>Hold down Alt (or Option on a Mac) and click on any word to get a quick definition, an up-to-the-minute reference and more. You don't even need to highlight the word!</p>
+</div>
 
-<h2 class="clear-both"><a href="./extensions/moreinfo.php?id=1532">del.icio.us</a></h2>
+<div class="recommended">
 <img class="recommended-img" alt="" src="./images/recommended/del.icio.us.png"/>
-<p>Everything you need to seamlessly integrate del.icio.us with your  browser! Easy posting
-of new items, access to your saved items, and integration with the  Firefox search box.</p>
+<h2><a href="./extensions/moreinfo.php?id=1532">del.icio.us</a></h2>
 <div class="recommended-download">
 <h3><a href="http://releases.mozilla.org/pub/mozilla.org/extensions/del.icio.us/del.icio.us-1.0.2-fx.xpi" onclick="return install(event,'del.icio.us 1.0.2', '<?=WEB_PATH?>/images/default.png');" title="Install del.icio.us 1.0.2 (Right-Click to Download)">Install Extension (62 KB)</a> </h3>
 </div>
+<p>Everything you need to seamlessly integrate del.icio.us with your  browser! Easy posting
+of new items, access to your saved items, and integration with the  Firefox search box.</p>
+</div>
 
 
-<h2 class="clear-both"><a href="./extensions/moreinfo.php?id=219">FoxyTunes</a></h2>
+<div class="recommended">
 <img class="recommended-img" alt="" src="./images/recommended/foxytunes.jpg"/>
-<p>Do you listen to music while surfing the Web? Now you can control your favorite media player without ever leaving Firefox.</p>
+<h2><a href="./extensions/moreinfo.php?id=219">FoxyTunes</a></h2>
 <div class="recommended-download">
 <h3><a href="http://releases.mozilla.org/pub/mozilla.org/extensions/foxytunes/foxytunes-1.1.5.4-fx+mz+tb.xpi" onclick="return install(event,'FoxyTunes 1.1.5.4', '<?=WEB_PATH?>/images/default.png');" title="Install FoxyTunes 1.1.5.4 (Right-Click to Download)">Install Extension (200 KB)</a></h3>
 </div>
+<p>Do you listen to music while surfing the Web? Now you can control your favorite media player without ever leaving Firefox.</p>
+</div>
 
 
-<h2 class="clear-both"><a href="./extensions/moreinfo.php?id=1577">Kaboodle</a></h2>
+<div class="recommended">
 <img class="recommended-img" alt="" src="./images/recommended/kaboodle.jpg"/>
-<p>Collect and share information you find on the web using Kaboodle. One click extracts the web page's location, title, description (and even prices of items featured on that page) and adds it to a list you can share with others.</p>
+<h2><a href="./extensions/moreinfo.php?id=1577">Kaboodle</a></h2>
 <div class="recommended-download">
 <h3><a href="http://releases.mozilla.org/pub/mozilla.org/extensions/kaboodle/kaboodle-0.1-fx.xpi" onclick="return install(event,'Kaboodle Toolbar 0.1', '<?=WEB_PATH?>/images/default.png');" title="Install Kaboodle Toolbar 0.1 (Right-Click to Download)">Install Extension (11 KB)</a></h3>
 </div>
+<p>Collect and share information you find on the web using Kaboodle. One click extracts the web page's location, title, description (and even prices of items featured on that page) and adds it to a list you can share with others.</p>
+</div>
 
 
-<h2 class="clear-both"><a href="./extensions/moreinfo.php?id=1512">LinkedIn</a></h2>
+<div class="recommended">
 <img class="recommended-img" alt="" src="./images/recommended/linkedin.png"/>
-<p>Take advantage of the LinkedIn Companion for Firefox to easily search  for professionals or jobs. LinkedIn is an online network of more than  4 million experienced professionals from around the world.</p>
+<h2><a href="./extensions/moreinfo.php?id=1512">LinkedIn</a></h2>
 <div class="recommended-download">
 <h3><a href="http://releases.mozilla.org/pub/mozilla.org/extensions/linkedin_companion_for_firefox/linkedin_companion_for_firefox-1.1-fx+mz.xpi" onclick="return install(event,'LinkedIn 1.1', '<?=WEB_PATH?>/images/default.png');" title="Install LinkedIn 1.1 (Right-Click to Download)">Install Extension (82 KB)</a></h3>
 </div>
+<p>Take advantage of the LinkedIn Companion for Firefox to easily search  for professionals or jobs. LinkedIn is an online network of more than  4 million experienced professionals from around the world.</p>
+</div>
 
-<h2 class="clear-both"><a href="./extensions/moreinfo.php?id=1538">PayPal</a></h2>
+<div class="recommended">
 <img class="recommended-img" alt="" src="./images/recommended/paypal1.png"/>
-<p>PayPal's Send Money extension provides a quick way to send money to  anyone with an email address. Enter the payment information and  you'll be brought to your PayPal login page to sign in and complete the payment.</p>
+<h2><a href="./extensions/moreinfo.php?id=1538">PayPal</a></h2>
 <div class="recommended-download">
 <h3><a href="http://releases.mozilla.org/pub/mozilla.org/extensions/paypal_send_money/paypal_send_money-1.0.1-fx.xpi" onclick="return install(event,'PayPal 1.0.1', '<?=WEB_PATH?>/images/default.png');" title="Install PayPal 1.0.1 (Right-Click to Download)">Install Extension (52 KB)</a></h3>
 </div>
+<p>PayPal's Send Money extension provides a quick way to send money to  anyone with an email address. Enter the payment information and  you'll be brought to your PayPal login page to sign in and complete the payment.</p>
+</div>
 
-<h2 class="clear-both"><a href="./extensions/moreinfo.php?id=77">Sage</a></h2>
+<div class="recommended">
 <img class="recommended-img" alt="" src="./images/recommended/sage.png"/>
-<p>Sage is a lightweight Web feed reader for Mozilla Firefox. It's got a  lot of what you need and not much of what you don't. Supports RSS,  Atom, automatic feed discovery, and full integration with Firefox's Live Bookmarks.</p>
+<h2><a href="./extensions/moreinfo.php?id=77">Sage</a></h2>
 <div class="recommended-download">
 <h3><a href="http://releases.mozilla.org/pub/mozilla.org/extensions/sage/sage-1.3.6-fx+mz.xpi" onclick="return install(event,'sage 1.3.6', '<?=WEB_PATH?>/images/default.png');" title="Install Sage 1.3.6 (Right-Click to Download)">Install Extension (132 KB)</a></h3>
 </div>
+<p>Sage is a lightweight Web feed reader for Mozilla Firefox. It's got a  lot of what you need and not much of what you don't. Supports RSS,  Atom, automatic feed discovery, and full integration with Firefox's Live Bookmarks.</p>
+</div>
 
-<h2 class="clear-both"><a href="./extensions/moreinfo.php?id=138">StumbleUpon</a></h2>
+<div class="recommended">
 <img class="recommended-img" alt="" src="./images/recommended/stumble3.png"/>
-<p>Break out of your web routine with this extension. StumbleUpon helps you find great new peer-reviewed sites through a collaborative site sharing and review system.</p>
+<h2><a href="./extensions/moreinfo.php?id=138">StumbleUpon</a></h2>
 <div class="recommended-download">
 <h3><a href="http://releases.mozilla.org/pub/mozilla.org/extensions/stumbleupon/stumbleupon-2.2-fx+fl+mz+ns.xpi" onclick="return install(event,'stumbleupon 2.2', '<?=WEB_PATH?>/images/default.png');" title="Install stumbleupon 2.2 (Right-Click to Download)">Install Extension (103 KB)</a></h3>
+</div>
+<p>Break out of your web routine with this extension. StumbleUpon helps you find great new peer-reviewed sites through a collaborative site sharing and review system.</p>
 </div>
 
 <?php
 /*
-<h2 class="clear-both"><a href="./extensions/moreinfo.php?id=1035">Weather Channel</a></h2>
+<h2><a href="./extensions/moreinfo.php?id=1035">Weather Channel</a></h2>
 <img class="recommended-img" alt="" src="./images/recommended/1clickweather.png"/>
 <p>1-ClickWeather enables you to quickly view current weather conditions  and up to 5 days of forecast information, plus instant access to detailed and  customized weather content from weather.com.</p>
 <div class="recommended-download">
