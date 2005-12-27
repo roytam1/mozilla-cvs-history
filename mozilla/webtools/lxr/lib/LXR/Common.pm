@@ -569,6 +569,10 @@ sub bannerexpand {
     }
 }
 
+sub pathname {
+    return $Path->{'virtf'};
+}
+
 sub cvsentriesexpand {
     my ($entryrev, $entrybranch);
     local $,=" | ";
@@ -617,12 +621,6 @@ sub cvsbranchexpand {
        return cvstagexpand();
     }
     return('');
-}
-
-sub pathname {
-    my $prefix = '';
-    $prefix = '/' . $Conf->prefix if defined $Conf->prefix;
-    return (url_quote ($prefix . $Path->{'virtf'}));
 }
 
 sub treename {
