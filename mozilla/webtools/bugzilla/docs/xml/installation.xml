@@ -1198,6 +1198,19 @@ c:\perl\bin\perl.exe -xc:\bugzilla -wT "%s" %s
         the Reports page.
       </para>
 
+      <para>
+        When upgrading Bugzilla, this format may change.
+        To create new status data, (re)move old data and run the following 
+        commands:
+      </para>
+
+      <screen>
+        <prompt>bash$</prompt>
+        <command>cd &lt;your-bugzilla-directory&gt;</command>
+        <prompt>bash$</prompt>
+        <command>./collectstats.pl --regenerate</command>
+      </screen>
+
       <note>
         <para>
           Windows does not have 'cron', but it does have the Task
