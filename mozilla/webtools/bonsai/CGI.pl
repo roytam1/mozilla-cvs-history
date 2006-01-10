@@ -21,7 +21,6 @@
 
 # Contains some global routines used throughout the CGI scripts of Bugzilla.
 
-use diagnostics;
 use strict;
 
 use CGI::Carp qw(fatalsToBrowser);
@@ -43,13 +42,15 @@ sub url_decode {
 # Quotify a string, suitable for putting into a URL.
 sub url_quote {
     my($toencode) = (@_);
-    $toencode=~s/([^a-zA-Z0-9_\-.])/uc sprintf("%%%02x",ord($1))/eg;
+    $toencode =~ s/([^a-zA-Z0-9_\-\/.])/uc sprintf("%%%02x",ord($1))/eg;
     return $toencode;
 }
 
 # Quotify a string, suitable for output as form values
 sub value_quote {
     my ($var) = (@_);
+
+    return "" if (!defined($var));
     $var =~ s/\&/\&amp;/g;
     $var =~ s/</\&lt;/g;
     $var =~ s/>/\&gt;/g;
@@ -75,17 +76,6 @@ sub url_encode2 {
     $s =~ s/\+/\%2b/g;
     return $s;
 }
-
-sub url_encode3 {
-    my ($s) = @_;
-
-    $s =~ s/\n/\%0a/g;
-    $s =~ s/\r//g;
-    $s =~ s/\"/\%22/g;
-    $s =~ s/\+/\%2b/g;
-    return $s;
-}
-
 
 ##
 ##  Routines to generate html as part of Bonsai
@@ -116,7 +106,7 @@ sub PutsHeader {
 	$h2 = "";
     }
 
-    print "<HTML><HEAD>\n<TITLE>$title</TITLE>\n";
+    print "<HTML><HEAD>\n<TITLE>" . &html_quote($title) . "</TITLE>\n";
     print $::Setup_String if (defined($::Setup_String) && $::Setup_String);
     print Param("headerhtml") . "\n</HEAD>\n";
     print "<BODY   BGCOLOR=\"#FFFFFF\" TEXT=\"#000000\"\n";
@@ -145,21 +135,13 @@ sub PutsHeader {
 # Create a generic page trailer for bonsai pages
 sub PutsTrailer {
      my $args = BatchIdPart('?');
-     my $maintainer = Param('maintainer');
-     my $email = '';
-
-
-     if ($maintainer) {
-          $email = "<br>" . ConstructMailTo($maintainer, "Bonsai Comments");
-          $email .= " with comments/questions about this page.\n";
-     }
 
      print "
 <br clear=all>
 <hr>
-<a href=\"toplevel.cgi$args\" target=_top>
-    Back to the top of Bonsai</a>
-$email
+<a href=\"toplevel.cgi$args\" target=_top>Back to the top of Bonsai</a><br>
+Found a bug or have a feature request?
+<a href=\"http://bugzilla.mozilla.org/enter_bug.cgi?product=Webtools&component=Bonsai\">File a bug report</a> about it.
 </html>
 ";
 }
@@ -228,24 +210,10 @@ sub make_popup {
     return $popup;
 }
 
-sub make_cgi_args {
-    my ($k,$v);
-    my $ret = "";
-
-    for $k (sort keys %::FORM){
-        $ret .= ($ret eq "" ? '?' : '&');
-        $v = $::FORM{$k};
-        $ret .= &url_encode2($k);
-        $ret .= '=';
-        $ret .= &url_encode2($v);
-    }
-    return $ret;
-}
-
 sub cvsmenu {
      my ($extra) = @_;
      my ($pass, $i, $page, $title);
-     my ($desc, $branch, $root, $module, $maintainer);
+     my ($desc, $branch, $root, $module);
 
      LoadTreeConfig();
 
@@ -288,12 +256,10 @@ sub cvsmenu {
           close EXTRA;
      }
 
-     $maintainer = Param('maintainer');
      print "</dl>
 <p></tr><tr><td>
-   <font size=-1> Questions, Comments, Feature requests? 
-      mail <a href=\"mailto:$maintainer\">$maintainer</a>
-   </font>
+  Found a bug or have a feature request?
+  <a href=\"http://bugzilla.mozilla.org/enter_bug.cgi?product=Webtools&component=Bonsai\">File a bug report</a> about it.</td>
 </tr></table>
 ";
      
@@ -477,14 +443,15 @@ if (defined $::FORM{'treeid'} && $::FORM{'treeid'} ne "") {
 }
 
 if (defined $::FORM{'batchid'}) {
-     LoadBatchID();
-     if ($::BatchID != $::FORM{'batchid'}) {
-          $::BatchID = $::FORM{'batchid'};
+    my $bid = &ExpectDigit("batchid", $::FORM{'batchid'});
+    LoadBatchID();
+    if ($::BatchID != $bid) {
+        $::BatchID = $bid;
 
-          # load parameters first to prevent overwriting
-          Param('readonly'); 
-          $::param{'readonly'} = 1;
-     }
+        # load parameters first to prevent overwriting
+        Param('readonly'); 
+        $::param{'readonly'} = 1;
+    }
 }
 
 # Layers are supported only by Netscape 4.
@@ -495,7 +462,7 @@ $::use_dom = 0;
 # MSIE chokes on |type="application/x-javascript"| so if we detect MSIE, we
 # we should send |type="text/javascript"|.  While we're at it, we should send
 # |language="JavaScript"| for any browser that is "Mozilla/4" or older.
-$::script_type = '"language="JavaScript""';
+$::script_type = 'language="JavaScript"';
 if (defined $ENV{HTTP_USER_AGENT}) {
     my $user_agent = $ENV{HTTP_USER_AGENT};
     if ($user_agent =~ m@^Mozilla/4.@ && $user_agent !~ /MSIE/) {

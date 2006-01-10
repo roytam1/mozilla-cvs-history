@@ -25,14 +25,16 @@
 # Multi file diff cgi
 #
 
-use diagnostics;
 use strict;
+use CGI::Carp qw(fatalsToBrowser);
 
 require 'globals.pl';
 
 $|=1;
 
 my %form;
+
+&validateReferer('cvsquery.cgi','showcheckins.cgi');
 
 print "Content-type: text/html
 
@@ -58,6 +60,7 @@ if( $form{"cvsroot"} ){
 else {
     $cvsroot = pickDefaultRepository();
 }
+&validateRepository($cvsroot);
 
 if( $form{"allchanges"} ){
     @revs = split(/,/, $form{"allchanges"} );
@@ -76,14 +79,15 @@ for my $k (@revs) {
     if ($rev eq "") {
         next;
     }
+    $rev = &SanitizeRevision($rev);
     my $prevrev = &PrevRev($rev);
-    
-    # this doesn't handle files in the attic
     my $fullname = "$cvsroot/$dir/$file,v";
-    if (IsHidden($fullname)) {
+    $fullname = "$cvsroot/$dir/Attic/$file,v" if (! -r $fullname);
+    if (! -r $fullname || IsHidden($fullname)) {
         next;
     }
-    open( DIFF, "$rcsdiffcommand -u -r$prevrev -r$rev $fullname 2>&1|" );
+    &ChrootFilename($cvsroot, $fullname);
+    open( DIFF, "$rcsdiffcommand -r$prevrev -r$rev -u " . shell_escape($fullname) ." 2>&1|" ) || die "rcsdiff failed\n";
     while(<DIFF>){
 		if (($_ =~ /RCS file/) || ($_ =~ /rcsdiff/)) { 
 			$_ =~ s/(^.*)(.*\/)(.*)/$1 $3/;

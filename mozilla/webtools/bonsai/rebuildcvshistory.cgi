@@ -19,7 +19,6 @@
 #
 # Contributor(s): 
 
-use diagnostics;
 use strict;
 
 # Shut up misguided -w warnings about "used only once".  "use vars" just
@@ -28,7 +27,6 @@ use strict;
 sub sillyness {
     my $zz;
     $zz = $::RepositoryID;
-    $zz = $::StartingDir;
 }
 
 use File::Basename;
@@ -37,7 +35,7 @@ require "CGI.pl";
 
 sub ProcessOneFile {
      my ($filename) = @_;
-     my $rlog = Param('rlogcommand') . " $filename |";
+     my $rlog = Param('rlogcommand') . " " . shell_escape($filename) . " |";
      my $doingtags = 0;
      my $filehead = dirname($filename);
      my (%branchname, $filerealname, $filetail, $line, $trimmed);
@@ -240,7 +238,6 @@ ConnectToDatabase();
 $::Repository    = $::TreeInfo{$::TreeID}{'repository'};
 $::Description   = $::TreeInfo{$::TreeID}{'description'};
 $::RepositoryID  = GetId('repositories', 'repository', $::Repository);
-$::StartingDir   = 0;
 
 print "
 Rebuilding entire checkin history in $::Description, (`$::TreeID' tree) ...
@@ -251,9 +248,9 @@ Log("Rebuilding cvs history in $::Description, (`$::TreeID' tree)...");
 LoadDirList();
 my @Dirs = grep(!/\*$/, @::LegalDirs);
 @Dirs = split(/,\s*/, $::Modules) if $::Modules;
-my $StartingDir;
-($StartingDir = "$::Repository/$::SubDir") =~ s!/.?$!! if $::SubDir;
-
+if ($::SubDir) {
+  @Dirs = ($::SubDir);
+}
 
 print "Doing directories: @Dirs ...\n";
 foreach my $Dir (@Dirs) {

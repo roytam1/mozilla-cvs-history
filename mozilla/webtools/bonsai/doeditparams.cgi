@@ -20,7 +20,6 @@
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 
-use diagnostics;
 use strict;
 
 require "CGI.pl";
@@ -34,6 +33,7 @@ use vars %::param,
 
 print "Content-type: text/html\n\n";
 
+&validateReferer('editparams.cgi');
 CheckPassword(FormData('password'));
 
 PutsHeader("Saving new parameters");

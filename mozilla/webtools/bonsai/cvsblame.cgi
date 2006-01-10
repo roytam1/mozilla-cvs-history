@@ -39,7 +39,6 @@
 #    mark - highlight a line
 #
 
-use diagnostics;
 use strict;
 
 # Shut up misguided -w warnings about "used only once".  "use vars" just
@@ -54,8 +53,6 @@ sub sillyness {
 
 require 'CGI.pl';
 require 'cvsblame.pl';
-require 'lloydcgi.pl';
-use SourceChecker;
 
 # Cope with the cookie and print the header, first thing.  That way, if
 # any errors result, they will show up for the user.
@@ -63,8 +60,9 @@ use SourceChecker;
 print "Content-Type:text/html\n";
 if ($ENV{REQUEST_METHOD} eq 'POST' and defined $::FORM{set_line}) {
     # Expire the cookie 5 months from now
-    print "Set-Cookie: line_nums=$::FORM{set_line}; expires="
-        . toGMTString(time + 86400 * 152) . "; path=/\n";
+    print "Set-Cookie: line_nums="
+	. &ExpectOnOff("set_line", $::FORM{set_line}) . "; expires="
+        . &toGMTString(time + 86400 * 152) . "; path=/\n";
 }
 
 # Some Globals
@@ -73,15 +71,6 @@ my $Head = 'CVS Blame';
 my $SubHead = '';
 
 my @src_roots = getRepositoryList();
-
-# Init sanitiazation source checker
-#
-my $sanitization_dictionary = $::FORM{sanitize};
-my $opt_sanitize = defined $sanitization_dictionary;
-if ( $opt_sanitize )
-{
-    dbmopen %SourceChecker::token_dictionary, "$sanitization_dictionary", 0664;
-}
 
 # Init byrd's 'feature' to allow html in comments
 #
@@ -97,17 +86,18 @@ if ($filename eq '')
     print "\n";
     &print_usage;
     exit;
-} elsif ($filename =~ /CVSROOT/) {
-    print "\nFiles in the CVSROOT dir cannot be viewed.\n";
-    exit;
 }
 
 my ($file_head, $file_tail) = $filename =~ m@(.*/)?(.+)@;
+$file_head = '' if !defined($file_head);
+my $url_filename = url_quote($filename);
+my $url_file_tail = url_quote($file_tail);
 
 # Handle the "rev" argument
 #
 $::opt_rev = '';
-$::opt_rev = $::FORM{rev} if defined $::FORM{rev} and $::FORM{rev} ne 'HEAD';
+$::opt_rev = &SanitizeRevision($::FORM{rev}) if 
+    defined $::FORM{rev} and $::FORM{rev} ne 'HEAD';
 my $revstr = '';
 $revstr = "&rev=$::opt_rev" unless $::opt_rev eq '';
 my $browse_revtag = 'HEAD';
@@ -125,7 +115,8 @@ if (defined $root and $root ne '') {
     } else {
         print "\n";
         &print_top;
-        print "Error:  Root, $root, is not a directory.<BR><BR>\n";
+        print "Error:  Root, " . &html_quote($root) . 
+	    ", is not a directory.<BR><BR>\n";
         print "</BODY></HTML>\n";
         &print_bottom;
         exit;
@@ -150,16 +141,17 @@ unless ($found_rcs_file) {
   print "\n";
   &print_top;
   my $escaped_filename = html_quote($filename);
-  print "Rcs file, $escaped_filename, does not exist.<pre>rcs_filename => '$rcs_filename'\nroot => '$root'</pre><BR><BR>\n";
-print "</BODY></HTML>\n";
+  my $shell_filename = shell_escape($filename);
+  print STDERR "cvsblame.cgi: Rcs file, $shell_filename, does not exist.\n";
+  print "Invalid filename: $escaped_filename.\n";
   &print_bottom;
   exit;
 }
 
+&ChrootFilename($root, $rcs_filename);
+
 my $rcs_path;
 ($rcs_path) = $rcs_filename =~ m@$root/(.*)/.+?,v@;
-
-CheckHidden($rcs_filename);
 
 # Parse the rcs file ($::opt_rev is passed as a global)
 #
@@ -180,6 +172,7 @@ if (defined $::FORM{data}) {
 }
 
 print "Last-Modified: ".time2str("%a, %d %b %Y %T %Z", str2time($::revision_ctime{$::opt_rev}), "GMT")."\n";
+print "Expires: ".time2str("%a, %d %b %Y %T %Z", time+1200, "GMT")."\n";
 print "\n"; 
 #ENDHEADERS!!
 
@@ -187,6 +180,7 @@ print "\n";
 #
 my $opt_line_nums = 1;
 if (defined $::COOKIE{line_nums}) {
+    $opt_line_nums = 0 if $::COOKIE{line_nums} eq 'off';
     $opt_line_nums = 1 if $::COOKIE{line_nums} eq 'on';
 }
 if (defined $::FORM{line_nums}) {
@@ -207,10 +201,12 @@ $use_html = 1 if defined $::FORM{use_html} and $::FORM{use_html} eq '1';
 #
 my %mark_line;
 my $mark_arg = '';
-$mark_arg = $::FORM{mark} if defined $::FORM{mark};
+$mark_arg = &SanitizeMark($::FORM{mark}) if defined $::FORM{mark};
 foreach my $mark (split ',', $mark_arg) {
     my ($begin, $end);
-    if (($begin, $end) = $mark =~ /(\d*)\-(\d*)/) {
+    if ($mark =~ m/^(\d*)-(\d*)$/) {
+        $begin = $1;
+        $end = $2;
         $begin = 1 if $begin eq '';
         $end = $#text + 1 if $end eq '' or $end > $#text + 1;
         next if $begin >= $end;
@@ -252,11 +248,11 @@ print "<A HREF='$lxr_path'>$file_tail</a> ";
 my $graph_cell = Param('cvsgraph') ? <<"--endquote--" : "";
        </TR><TR>
         <TD NOWRAP>
-         <A HREF="cvsgraph.cgi?file=$filename">Revision Graph</A>
+         <A HREF="cvsgraph.cgi?file=$url_filename">Revision Graph</A>
         </TD>
 --endquote--
 
-print " (<A HREF='cvsblame.cgi?file=$filename&rev=$revision&root=$root'";
+print " (<A HREF='cvsblame.cgi?file=$url_filename&rev=$revision&root=$root'";
 print " onmouseover='return log(event,\"$::prev_revision{$revision}\",\"$revision\");'" if $::use_layers;
 print " onmouseover=\"showMessage('$revision','top')\" id=\"line_top\"" if $::use_dom;
 print ">";
@@ -278,7 +274,7 @@ print qq(
         </TD>
        </TR><TR>
         <TD NOWRAP>
-         <A HREF="cvslog.cgi?file=$filename$revstr">Full Change Log</A>
+         <A HREF="cvslog.cgi?file=$url_filename$revstr">Full Change Log</A>
         </TD>
 $graph_cell
        </TR>
@@ -298,7 +294,7 @@ print "$open_table_tag<TR><TD colspan=3><PRE>";
 # Print each line of the revision, preceded by its annotation.
 #
 my $count = $#::revision_map;
-if ($count == 0) {
+if ($count <= 0) {
     $count = 1;
 }
 my $line_num_width = int(log($count)/log(10)) + 1;
@@ -321,9 +317,6 @@ foreach $revision (@::revision_map)
     if ($opt_html_comments) {
         # Don't escape HTML in C/C++ comments
         $text = &leave_html_comments($text);
-    } elsif ( $opt_sanitize ){
-        # Mark filty words and Escape HTML meta-characters
-        $text = markup_line($text);
     } else {
         $text =~ s/&/&amp;/g;
         $text =~ s/</&lt;/g;
@@ -369,9 +362,9 @@ foreach $revision (@::revision_map)
         $revision_width = max($revision_width,length($revision));
 
 	if ($::prev_revision{$revision}) {
-	  $output .= "<A HREF=\"cvsview2.cgi?diff_mode=context&whitespace_mode=show&root=$root&subdir=$rcs_path&command=DIFF_FRAMESET&file=$file_tail&rev2=$revision&rev1=$::prev_revision{$revision}\"";
+	  $output .= "<A HREF=\"cvsview2.cgi?diff_mode=context&whitespace_mode=show&root=$root&subdir=$rcs_path&command=DIFF_FRAMESET&file=$url_file_tail&rev2=$revision&rev1=$::prev_revision{$revision}\"";
 	} else {
-	  $output .= "<A HREF=\"cvsblame.cgi?file=$filename&rev=$revision&root=$root\"";
+	  $output .= "<A HREF=\"cvsblame.cgi?file=$url_filename&rev=$revision&root=$root\"";
 	}
 	$output .= " onmouseover='return log(event,\"$::prev_revision{$revision}\",\"$revision\");'" if $::use_layers;
         $output .= " onmouseover=\"showMessage('$revision','$line')\" id=\"line_$line\"" if $::use_dom;
@@ -437,11 +430,6 @@ if ($::use_layers || $::use_dom) {
 
 &print_bottom;
 
-if ( $opt_sanitize )
-{
-    dbmclose %SourceChecker::token_dictionary;
-}
-
 ## END of main script
 
 sub max {
@@ -450,7 +438,7 @@ sub max {
 }
 
 sub print_top {
-    my ($title_text) = "for $file_tail (";
+    my ($title_text) = "for " . &html_quote($file_tail) . " (";
     $title_text .= "$browse_revtag:" unless $browse_revtag eq 'HEAD';
     $title_text .= $revision if $revision;
     $title_text .= ")";
@@ -540,6 +528,8 @@ function showMessage(rev,line) {
         r.style.display='none'
     }
     r = document.getElementById('rev_'+rev)
+    if (!r)
+        return
     var l = document.getElementById('line_'+line)
     var t = l.offsetTop
     var p = l.offsetParent
@@ -584,7 +574,12 @@ a:active {
     padding: 5;
     position: absolute;
 }
+
+pre {
+    margin: 0;
+}
 </style>
+</head>
 <body onclick="hideMessage()">
 __TOP__
   print '<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000EE" VLINK="#551A8B" ALINK="#F0A000">' if not ($::use_layers || $::use_dom);
@@ -598,13 +593,15 @@ sub print_usage {
     if ($ENV{REQUEST_METHOD} eq 'POST' and defined $::FORM{set_line}) {
   
         # Expire the cookie 5 months from now
-        my $set_cookie = "Set-Cookie: line_nums=$::FORM{set_line}; expires="
+        my $set_cookie = "Set-Cookie: line_nums="
+	    . &ExpectOnOff("set_line", $::FORM{set_line}) . "; expires="
             .&toGMTString(time + 86400 * 152)."; path=/";
 	# XXX Hey, nothing is done with this handy cookie string! ### XXX
     }
     if ( not defined $::COOKIE{line_nums} and not defined $::FORM{set_line}) {
         $new_linenum = 'on';
-    } elsif ($::COOKIE{line_nums} eq 'off' or $::FORM{set_line} eq 'off') {
+    } elsif ((defined($::COOKIE{line_nums}) && $::COOKIE{line_nums} eq 'off')
+	     or (defined($::FORM{line_nums}) && $::FORM{set_line} eq 'off')) {
         $linenum_message = 'Line numbers are currently <b>off</b>.';
         $new_linenum = 'on';
     } else {
@@ -713,6 +710,7 @@ sub print_raw_data {
   my %revs_seen = ();
   my $prev_rev = $::revision_map[0];
   my $count = 0;
+  print "<PRE>\n";
   for my $rev (@::revision_map) {
     if ($prev_rev eq $rev) {
       $count++;
@@ -728,6 +726,7 @@ sub print_raw_data {
   for my $rev (sort keys %revs_seen) {
     print "$rev|$::revision_ctime{$rev}|$::revision_author{$rev}|$::revision_log{$rev}.\n";
   }
+  print "</PRE>\n";
 }
 
 sub link_includes {
@@ -798,7 +797,7 @@ sub leave_html_comments {
 
     # Now fix the breakage of <username> stuff on xfe. -byrd
     if ($text =~ /(.*)<(.*@.*)>(.*\n)/) {
-        $text = $1 . "<A HREF=mailto:$2?subject=$filename>$2</A>" . $3;
+        $text = $1 . "<A HREF=mailto:$2?subject=$url_filename>$2</A>" . $3;
     }
 
     return $text;

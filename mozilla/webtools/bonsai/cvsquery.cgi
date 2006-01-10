@@ -20,7 +20,6 @@
 #
 # Contributor(s): 
 
-use diagnostics;
 use strict;
 
 # Shut up misguided -w warnings about "used only once".  "use vars" just
@@ -40,23 +39,29 @@ sub sillyness {
     $zz = $::query_filetype;
     $zz = $::query_logexpr;
     $zz = $::query_whotype;
+    $zz = $::script_type;
 }
 
 
 
 require 'CGI.pl';
 
-$::CVS_ROOT = $::FORM{'cvsroot'};
-$::CVS_ROOT = pickDefaultRepository() unless $::CVS_ROOT;
-$::TreeID = $::FORM{'module'} 
-     if (!exists($::FORM{'treeid'}) && 
-         exists($::FORM{'module'}) &&
-         exists($::TreeInfo{$::FORM{'module'}}{'repository'}));
-$::TreeID = 'default'
-     if (!exists($::TreeInfo{$::TreeID}{'repository'}) ||
-         exists($::TreeInfo{$::TreeID}{'nobonsai'}));
+$::query_debug = (defined($::FORM{'debug'}) ? 1 : 0);
+$::query_module = &SanitizeModule($::FORM{'module'});
 
-LoadTreeConfig();
+$::CVS_ROOT = $::FORM{'cvsroot'};
+$::CVS_ROOT = &pickDefaultRepository() unless $::CVS_ROOT;
+&validateRepository($::CVS_ROOT);
+
+$::TreeID = $::query_module
+    if (!exists($::FORM{'treeid'}) && 
+        defined($::query_module) &&
+        exists($::TreeInfo{$::query_module}{'repository'}));
+$::TreeID = 'default'
+    if (!exists($::TreeInfo{$::TreeID}{'repository'}) ||
+    exists($::TreeInfo{$::TreeID}{'nobonsai'}));
+
+&LoadTreeConfig();
 
 require 'cvsquery.pl';
 
@@ -99,7 +104,6 @@ Log("Query [$ENV{'REMOTE_ADDR'}]: $ENV{'QUERY_STRING'}");
 #
 # build a module map
 #
-$::query_module = $::FORM{'module'};
 
 #
 # allow ?file=/a/b/c/foo.c to be synonymous with ?dir=/a/b/c&file=foo.c
@@ -118,18 +122,20 @@ unless ($::FORM{'dir'}) {
 #
 # build a directory map
 #
-@::query_dirs = split(/[;, \t]+/, $::FORM{'dir'});
+@::query_dirs = split(/[;, \t\000]+/, $::FORM{'dir'});
 
 $::query_file = $::FORM{'file'};
-$::query_filetype = $::FORM{'filetype'};
+$::query_filetype = &ExpectMatchtype($::FORM{'filetype'});
 $::query_logexpr = $::FORM{'logexpr'};
 
 #
 # date
 #
-$::query_date_type = $::FORM{'date'};
+$::query_date_type = $::FORM{'date'} || 'nothing';
+my $query_hours;
 if( $::query_date_type eq 'hours' ){
-    $::query_date_min = time - $::FORM{'hours'}*60*60;
+    $query_hours = &ExpectDigit('hours', $::FORM{'hours'});
+    $::query_date_min = time - $query_hours*60*60;
 }
 elsif( $::query_date_type eq 'day' ){
     $::query_date_min = time - 24*60*60;
@@ -159,8 +165,8 @@ else {
 #
 # who
 #
-$::query_who = $::FORM{'who'};
-$::query_whotype = $::FORM{'whotype'};
+$::query_who = &SanitizeUsernames($::FORM{'who'});
+$::query_whotype = &ExpectMatchtype($::FORM{'whotype'});
 
 
 my $show_raw = 0;
@@ -172,17 +178,19 @@ if ($::FORM{'raw'}) {
 # branch
 #
 $::query_branch = $::FORM{'branch'};
-if (!defined $::query_branch) {
-    $::query_branch = 'HEAD';
-}
-$::query_branchtype = $::FORM{'branchtype'};
+$::query_branch = 'HEAD' if !defined($::query_branch);
+$::query_branch = &SanitizeRevision($::query_branch);
+$::query_branchtype = &ExpectMatchtype($::FORM{'branchtype'});
 
+if ($::query_branch eq 'HEAD' && $::query_branchtype ne 'notregexp') {
+    $::query_branch_head = 1 ;
+}
 
 #
 # tags
 #
-$::query_begin_tag = $::FORM{'begin_tag'};
-$::query_end_tag = $::FORM{'end_tag'};
+$::query_begin_tag = &SanitizeRevision($::FORM{'begin_tag'});
+$::query_end_tag = &SanitizeRevision($::FORM{'end_tag'});
 
 
 #
@@ -191,8 +199,6 @@ $::query_end_tag = $::FORM{'end_tag'};
 my ($t, $e);
 $t = $e = &query_to_english;
 $t =~ s/<[^>]*>//g;
-
-$::query_debug = $::FORM{'debug'};
 
 my %mod_map = ();
 my $result= &query_checkins( %mod_map );
@@ -223,9 +229,11 @@ my $menu = "
 <a href=cvsqueryform.cgi?$ENV{QUERY_STRING}>Modify Query</a>
 ";
 if ($pCount) {
+    my $persons = "people";
+    $persons = "person" if ($pCount == 1);
     $menu .= "
 <br><a href=mailto:$s>Mail everyone on this page</a>
-<NOBR>($pCount people)</NOBR>
+<NOBR>($pCount $persons)</NOBR>
 <br><a href=cvsquery.cgi?$ENV{QUERY_STRING}&generateBackoutCVSCommands=1>Show commands which could be used to back out these changes</a>
 ";
 }
@@ -320,7 +328,7 @@ if( !$show_raw ) {
 }
 else {
     print "<pre>";
-    for my $ci (@$result) {
+    for my $ci (reverse @$result) {
         $ci->[$::CI_LOG] = '';
         $s = join("|",@$ci);
         print "$s\n";
@@ -385,19 +393,24 @@ sub print_ci {
     my ($ci, $span) = @_;
 
     my ($sec,$minute,$hour,$mday,$mon,$year) = localtime( $ci->[$::CI_DATE] );
-    my $t = sprintf("%02d/%02d/%04d&nbsp;%02d:%02d",$mon+1,$mday,$year+1900,$hour,$minute);
+    my $t = sprintf("%04d-%02d-%02d&nbsp;%02d:%02d",$year+1900,$mon+1,$mday,$hour,$minute);
 
     my $log = &html_log($ci->[$::CI_LOG]);
     my $rev = $ci->[$::CI_REV];
-    my $url_who = url_quote($ci->[$::CI_WHO]);
+    my $url_who = &url_quote($ci->[$::CI_WHO]);
+    my $url_dir = &url_quote($ci->[$::CI_DIR]);
+    my $url_file = &url_quote($ci->[$::CI_FILE]);
 
     print "<tr>\n";
     print "<TD width=2%>${sm_font_tag}$t</font>";
     print "<TD width=2%><a href='$registryurl/who.cgi?email=$url_who'"
           . " onClick=\"return js_who_menu('$url_who','',event);\" >"
           . "$ci->[$::CI_WHO]</a>\n";
-    print "<TD width=45%><a href='cvsview2.cgi?subdir=$ci->[$::CI_DIR]&files=$ci->[$::CI_FILE]\&command=DIRECTORY&branch=$::query_branch&root=$::CVS_ROOT'\n"
-          . " onclick=\"return js_file_menu('$::CVS_ROOT', '$ci->[$::CI_DIR]','$ci->[$::CI_FILE]','$ci->[$::CI_REV]','$::query_branch',event)\">\n";
+    print "<TD width=45%><a href='cvsview2.cgi?subdir=$url_dir" .
+        "&files=$url_file\&command=DIRECTORY&branch=$::query_branch" .
+        "&root=" . $ci->[$::CI_REPOSITORY] . "'\n" .
+        " onclick=\"return js_file_menu($ci->[$::CI_REPOSITORY], '$url_dir'," .
+        "'$url_file','$ci->[$::CI_REV]','$::query_branch',event)\">\n";
 #     if( (length $ci->[$::CI_FILE]) + (length $ci->[$::CI_DIR])  > 30 ){
 #         $d = $ci->[$::CI_DIR];
 #         if( (length $ci->[$::CI_DIR]) > 30 ){
@@ -414,16 +427,16 @@ sub print_ci {
     if (defined $::query_module && $::query_module eq 'allrepositories') {
         $d = "$ci->[$::CI_REPOSITORY]/$d";
     }
-    $d =~ s:/:/ :g;             # Insert a whitespace after any slash, so that
-                                # we'll break long names at a reasonable place.
+    $d =~ s:/:/<wbr>:g;         # Insert a <wbr> tag after each slash, so that
+                                # we'll break long paths at a reasonable place.
     print "$d\n";
 
     if( $rev ne '' ){
         my $prevrev = &PrevRev( $rev );
         print "<TD width=2%>${sm_font_tag}<a href='cvsview2.cgi?diff_mode=".
-              "context\&whitespace_mode=show\&subdir=".
-              $ci->[$::CI_DIR] . "\&command=DIFF_FRAMESET\&file=" .
-              $ci->[$::CI_FILE] . "\&rev1=$prevrev&rev2=$rev&root=$::CVS_ROOT'>$rev</a></font>\n";
+              "context\&whitespace_mode=show\&subdir=$url_dir" .
+              "\&command=DIFF_FRAMESET\&file=$url_file" .
+              "\&rev1=$prevrev&rev2=$rev&root=" .  $ci->[$::CI_REPOSITORY] . "'>$rev</a></font>\n";
     }
     else {
         print "<TD width=2%>\&nbsp;\n";
@@ -494,6 +507,7 @@ sub html_log {
     my ( $log ) = @_;
     $log =~ s/&/&amp;/g;
     $log =~ s/</&lt;/g;
+    $log =~ s/>/&gt;/g;
     return $log;
 }
 
@@ -521,14 +535,7 @@ sub PrevRev {
 
 sub parse_date {
     my($d) = @_;
-
-    my($result) = str2time($d);
-    if (defined $result) {
-        return $result;
-    } elsif ($d  > 7000000) {
-        return $d;
-    }
-    return 0;
+    return &ExpectDate($d);
 }
 
 
@@ -618,25 +625,49 @@ sub query_to_english {
         if ($english ne 'Checkins ') {
             $english .= "and ";
         }
-        $english .= "to file " . html_quote($::query_file) . " ";
+        if (defined($::query_filetype) && $::query_filetype eq 'regexp') {
+            $english .= "to a file like ";
+        } elsif (defined($::query_filetype) && $::query_filetype eq 'notregexp') {
+            $english .= "to a file not like ";
+        } else {
+            $english .= "to file ";
+        }
+        $english .= "<i>" . &html_quote($::query_file) . "</i> ";
     }
 
-    if( ! ($::query_branch =~ /^[ ]*HEAD[ ]*$/i) ){
-        if($::query_branch eq '' ){
+    if (!$::query_branch_head) {
+        if ($::query_branch eq '') {
             $english .= "on all branches ";
-        }
-        else {
-            $english .= "on branch <i>" . html_quote($::query_branch) . "</i> ";
+        } else {
+            if ($::query_branchtype eq 'notregexp') {
+                if ($::query_branch eq 'HEAD') {
+                    $english .= "not on ";
+                } else {
+                    $english .= "not like ";
+                }
+            } elsif ($::query_branchtype eq 'regexp') {
+                $english .= "like ";
+            } else {
+                $english .= "on ";
+            }
+            $english .= "branch <i>" . html_quote($::query_branch) . "</i> ";
         }
     }
 
     if( $::query_who) {
-        $english .= "by " . html_quote($::query_who) . " ";
+        if (defined($::query_whotype) && $::query_whotype eq 'regexp') {
+                $english .= "by someone like ";
+        } elsif (defined($::query_whotype) && $::query_whotype eq 'notregexp') {
+                $english .= "by someone not like ";
+        } else {
+                $english .= "by ";
+        } 
+        $english .= "<i>" . &html_quote($::query_who) . "</i> ";
     }
 
-    $::query_date_type = $::FORM{'date'};
+    $::query_date_type = $::FORM{'date'} || 'nothing';
     if( $::query_date_type eq 'hours' ){
-        $english .="in the last " . html_quote($::FORM{hours}) . " hours";
+        $english .="in the last $query_hours hours";
     }
     elsif( $::query_date_type eq 'day' ){
         $english .="in the last day";
@@ -664,14 +695,14 @@ sub query_to_english {
         if( $::FORM{'mindate'}){
             my $dd = &parse_date($::FORM{'mindate'});
             my ($sec,$minute,$hour,$mday,$mon,$year) = localtime( $dd );
-            my $t = sprintf("%02d/%02d/%04d&nbsp;%02d:%02d",$mon+1,$mday,$year+1900,$hour,$minute);
+            my $t = sprintf("%04d-%02d-%02d&nbsp;%02d:%02d",$year+1900,$mon+1,$mday,$hour,$minute);
             $english .= "$w1 <i>$t</i> ";
         }
 
         if( $::FORM{'maxdate'}){
             my $dd = &parse_date($::FORM{'maxdate'});
             my ($sec,$minute,$hour,$mday,$mon,$year) = localtime( $dd );
-            my $t = sprintf("%02d/%02d/%04d&nbsp;%02d:%02d",$mon+1,$mday,$year+1900,$hour,$minute);
+            my $t = sprintf("%04d-%02d-%02d&nbsp;%02d:%02d",$year+1900,$mon+1,$mday,$hour,$minute);
             $english .= "$w2 <i>$t</i> ";
         }
     }

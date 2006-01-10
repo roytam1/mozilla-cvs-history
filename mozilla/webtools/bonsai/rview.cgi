@@ -33,6 +33,7 @@ use strict;
 sub sillyness {
     my $zz;
     $zz = $::Setup_String;
+    $zz = $::script_type;
 }
 
 require 'CGI.pl';
@@ -41,30 +42,33 @@ $|=1;
 
 my $CVS_ROOT = $::FORM{"cvsroot"};
 $CVS_ROOT = pickDefaultRepository() unless $CVS_ROOT;
+&validateRepository($CVS_ROOT);
 
-LoadTreeConfig();
-$::TreeID = $::FORM{'module'} 
-     if (!exists($::FORM{'treeid'}) &&
-         exists($::FORM{'module'}) &&
-         exists($::TreeInfo{$::FORM{'module'}}{'repository'}));
-$::TreeID = 'default'
-     if (!exists($::TreeInfo{$::TreeID}{'repository'}) ||
-         exists($::TreeInfo{$::TreeID}{'nobonsai'}));
+&LoadTreeConfig();
+my $intreeid = &SanitizeModule($::FORM{'treeid'});
+my $inmod = &SanitizeModule($::FORM{'module'});
+  
+if ($intreeid && exists($::TreeInfo{$intreeid}{'repository'}) &&
+    !exists($::TreeInfo{$intreeid}{'nobonsai'})) {
+    $::TreeID = $intreeid;
+} elsif ($inmod && exists($::TreeInfo{$inmod}{'repository'}) &&
+         !exists($::TreeInfo{$inmod}{'nobonsai'})) {
+    $::TreeID = $inmod;
+} else {
+    $::TreeID = 'default';
+}
 
 
 # get dir, remove leading and trailing slashes
 
-my $dir = $::FORM{"dir"};
-$dir = "" unless defined $dir;
-$dir = "" if ($dir =~ /^\.\.\/$/);
-$dir =~ s/^\/([^:]*)/$1/;
-$dir =~ s/([^:]*)\/$/$1/;
+my $dir = $::FORM{"dir"} || "";
+$dir =~ s/^[\/]+([^:]*)/$1/;
+$dir =~ s/([^:]*)[\/]+$/$1/;
+my $path = "$CVS_ROOT/$dir";
+$path = &ChrootFilename($CVS_ROOT, $path);
+die "Invalid directory: " . &shell_escape($dir) . ".\n" if (! -d $path);
 
-my $rev = $::FORM{"rev"};
-
-if(!defined($rev)) {
-    $rev='';
-}
+my $rev = &SanitizeRevision($::FORM{"rev"});
 
 print "Content-type: text/html\n\n";
 
@@ -77,31 +81,22 @@ my $script_str;
 &setup_script;
 $::Setup_String = $script_str;
 
-
-if( $CVS_ROOT eq ""  ){
-    $CVS_ROOT = pickDefaultRepository();
-}
-
-validateRepository($CVS_ROOT);
-
 my $s = "";
 
 if ($rev) {
     $s = "for branch <i>$rev</i>";
 }
 
-CheckHidden("$CVS_ROOT/$dir");
-
 my $revstr = '';
 $revstr = "&rev=$rev" unless $rev eq '';
 my $rootstr = '';
-$rootstr .= "&cvsroot=$::FORM{'cvsroot'}" if defined $::FORM{'cvsroot'};
+$rootstr .= "&cvsroot=$CVS_ROOT";
 $rootstr .= "&module=$::TreeID";
 my $module = $::TreeInfo{$::TreeID}{'module'};
 
 my $toplevel = Param('toplevel');
 
-PutsHeader("Repository Directory $toplevel/$dir $s", "");
+&PutsHeader("Repository Directory $toplevel/" . &html_quote($dir) . " $s", "");
 
 my $output = "<DIV ALIGN=LEFT>";
 $output .= "<A HREF='toplevel.cgi" . BatchIdPart('?') . "'>$toplevel</a>/ ";
@@ -112,15 +107,16 @@ $dir_tail = "" unless defined $dir_tail;
 my $link_path = "";
 foreach my $path (split('/',$dir_head)) {
     $link_path .= $path;
-    $output .= "<A HREF='rview.cgi?dir=$link_path$rootstr$revstr'>$path</A>/ ";
+    $output .= "<A HREF='rview.cgi?dir=" . &url_quote($link_path) .
+        "$rootstr$revstr'>$path</A>/ ";
     $link_path .= '/';
 }
 chop ($output);
-$output .= " $dir_tail/ $s ";
+$output .= " " . &html_quote($dir_tail) . "/ $s ";
 $output .= "</DIV>";
 
-print $output;
-print '<table width="100%"><tr><td width="70%">';
+print "$output\n";
+print '<table width="100%"><tr><td width="70%" VALIGN=TOP><HR>';
 
 my $other_dir;
 
@@ -138,23 +134,31 @@ if (-d "$CVS_ROOT/$dir") {
 }
 
 print "
-<TABLE CELLPADDING=0 CELLSPACING=0>
-<FORM action=rview.cgi method=get><TR><TD>
-Goto Directory:
-</TD><TD><INPUT name=dir value='$dir' size=30>
+<TABLE CELLPADDING=0 CELLSPACING=5>
+<TR>
+<TD>Goto Directory:</TD>
+<TD>
+<FORM action=rview.cgi method=get>
+<INPUT name=dir value='$dir' size=30>
 <INPUT name=rev value='$rev' type=hidden>
 <INPUT name=module value='$::TreeID' type=hidden>
 <INPUT name=cvsroot value='$CVS_ROOT' type=hidden>
 <INPUT type=submit value='chdir'>
-</TD></TR></FORM>
-<FORM action=rview.cgi method=get><TR><TD>
-Branch:
-</TD><TD><INPUT name=rev value='$rev' size=30>
+</FORM>
+</TD>
+</TR>
+<TR>
+<TD>Branch:</TD>
+<TD>
+<FORM action=rview.cgi method=get>
+<INPUT name=rev value='$rev' size=30>
 <INPUT name=dir value='$dir' type=hidden>
 <INPUT name=module value='$::TreeID' type=hidden>
 <INPUT name=cvsroot value='$CVS_ROOT' type=hidden>
 <INPUT type=submit value='Set Branch'>
-</TR></FORM>
+</FORM>
+</TD>
+</TR>
 </TABLE>
 
 ";
@@ -163,8 +167,9 @@ my @dirs = ();
 
 
 DIR:
-while( <*> ){
+while( <.* *> ){
     if( -d $_ ){
+        next if $_ =~ /^\.{1,2}$/;  
         push @dirs, $_;
     }
 }
@@ -177,42 +182,40 @@ my $split;
 if( @dirs != 0 ){
     $j = 1;
     $split = int(@dirs/4)+1;
-    print "<P><FONT SIZE=+1><B>Directories:</B></FONT><table><TR VALIGN=TOP><td>";
-
+    print "<P><FONT SIZE=+1><B>Directories:</B></FONT>\n";
+    print "<table>\n<TR VALIGN=TOP>\n<td>\n";
 
     for my $i (@dirs){
-        $::FORM{"dir"} = ($dir ne "" ? "$dir/$i" : $i);
-        my $anchor = &make_cgi_args;
+        my $ldir = ($dir ne "" ? "$dir/$i" : $i);
+        my $anchor = "?dir=$ldir$rootstr";
         print "<dt><a href=rview.cgi${anchor}>$i</a>\n";
         if( $j % $split == 0 ){
             print "\n<td>\n";
         }
         $j++;
     }
-    $::FORM{"dir"} = $dir;
-    print "\n</tr></table>\n";
+    print "\n</tr>\n</table>\n";
 }
 
-
-print "<P><FONT SIZE=+1><B>Files:</B></FONT>";
-print "<table><TR VALIGN=TOP><td>";
-my @files = <*,v>;
+print "<P><FONT SIZE=+1><B>Files:</B></FONT>\n";
+print "<table>\n<TR VALIGN=TOP>\n<td>\n";
+my @files = <.*,v *,v>;
 $j = 1;
 $split = int(@files/4)+1;
 
 for $_ (@files){
     $_ =~ s/\,v//;
     print qq{<dt><a href="$registryurl/file.cgi?cvsroot=$CVS_ROOT&file=$_&dir=$dir$revstr"}
-          . " onclick=\"return js_file_menu('$dir','$_','$rev','$CVS_ROOT',event)\">\n";
+          . " onclick=\"return js_file_menu('$dir','$_','$rev','$CVS_ROOT',event)\">";
     print "$_</a>\n";
     if( $j % $split == 0 ){
-        print "\n</td><td>\n";
+        print "</td>\n<td>\n";
     }
     $j++;
 }
-print "\n</tr></table>\n</td><td>";
+print "</td>\n</tr></table>\n</td>\n<td>\n";
 cvsmenu("");
-print "\n</td></tr></table>\n";
+print "</td>\n</tr></table>\n";
 
 PutsTrailer();
 

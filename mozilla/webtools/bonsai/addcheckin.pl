@@ -24,6 +24,8 @@ require 'globals.pl';
 
 use vars qw($BatchID @TreeList @LegalDirs);
 
+use File::Path;
+
 if (@::CheckInList) {
      die '@::CheckInList is valid ?!?';
 }
@@ -72,6 +74,10 @@ LINE:
                     ($chtype, $date, $name, $repository, $dir, $file,
                      $version, $sticky, $branch, $addlines, $removelines) =
                           split(/\|/, $line);
+                    $addlines = 0 if (!defined($addlines) || 
+                                      $addlines =~ /^\s*$/);
+                    $removelines = 0 if (!defined($removelines) || 
+                                         $removelines =~ /^\s*$/);
                     $key = "$date|$branch|$repository|$dir|$name";
                     $group{$key} .= 
                          "$file|$version|$addlines|$removelines|$sticky\n";
@@ -85,8 +91,7 @@ LINE:
                     
                     Lock();
                     unless (-d "data/taginfo/$mungedname") {
-                         system("mkdir", "-p", "data/taginfo/$mungedname");
-                         system("chmod", "-R", "777", "data/taginfo/$mungedname");
+                        mkpath(["data/taginfo/$mungedname"], 1, 0777);
                     }
                     if (open(TAGFILE, ">> $filename")) {
                          print TAGFILE "$tagtime|" . join('|', @data) .  "\n";
@@ -119,8 +124,7 @@ LINE:
           $mungedname =~ s!^_!!;
           $filename = "data/checkinlog/$mungedname";
           unless (-d "data/checkinlog") {
-               system("mkdir", "-p", "data/checkinlog");
-               system("chmod", "-R", "777", "data/checkinlog");
+              mkpath(["data/checkinlog"], 1, 0777);
           }
           if (open(TID, ">> $filename")) {
                print TID "${appendjunk}LOGCOMMENT\n$plainlog:ENDLOGCOMMENT\n";
@@ -169,7 +173,8 @@ FILE:
                     $full = "$dir/$f";
 LEGALDIR:
                     foreach $d (sort( grep(!/\*$/, @::LegalDirs))) {
-                         if ($full =~ m!^$d\b!) {
+                         $d =~ s@^[\.]/@@;
+                         if ($d eq "\." || $d eq "/" || $full =~ m!^$d\b/!) {
                               $okdir = 1;
                               last LEGALDIR;
                          }

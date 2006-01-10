@@ -20,9 +20,15 @@
 #
 # Contributor(s): 
 
+sub StupidFuncToShutUpWarningsByUsingVarsAgain {
+    my $z;
+    $z = $::BatchID;
+    $z = $::TreeID;
+    $z = $::FORM;
+}
+
 require 'CGI.pl';
 
-use diagnostics;
 use strict;
 
 LoadCheckins();

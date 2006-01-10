@@ -22,13 +22,24 @@
 
 require 'CGI.pl';
 
-use diagnostics;
 use strict;
+
+# Shut up misguided -w warnings about "used only once".  "use vars" just
+# doesn't work for me.
+
+sub sillyness {
+    my $zz;
+    $zz = $::FORM{password};
+    $zz = $::LegalDirs;
+    $zz = $::TreeOpen;
+}
+
 
 print "Content-type: text/html
 
 <HTML>";
 
+&validateReferer('admin.cgi');
 CheckPassword($::FORM{'password'});
 
 my $startfrom = ParseTimeAndCheck(FormData('startfrom'));
@@ -53,16 +64,28 @@ print "<TITLE> Rebooting, please wait...</TITLE>
 <p>
 Searching for first checkin after " . SqlFmtClock($startfrom) . "...<p>\n";
 
-my $branch = $::TreeInfo{$::TreeID}->{'branch'};
-print "<p> $branch <p> \n";
+my $inbranch = $::TreeInfo{$::TreeID}->{'branch'};
+print "<p> $inbranch <p> \n";
 
-my $sqlstring = "select type, UNIX_TIMESTAMP(ci_when), people.who, repositories.repository, dirs.dir, files.file, revision, stickytag, branches.branch, addedlines, removedlines, descs.description from checkins,people,repositories,dirs,files,branches,descs where people.id=whoid and repositories.id=repositoryid and dirs.id=dirid and files.id=fileid and branches.id=branchid and descs.id=descid and branches.branch='$branch' and ci_when>='" . SqlFmtClock($startfrom) . "' order by ci_when;";
-print "<p> $sqlstring <p>\n";
-SendSQL("$sqlstring");
+my $sqlstring = "SELECT type, UNIX_TIMESTAMP(ci_when), people.who, " .
+    "repositories.repository, dirs.dir, files.file, revision, stickytag, " .
+    "branches.branch, addedlines, removedlines, descs.description FROM " .
+    "checkins,people,repositories,dirs,files,branches,descs WHERE " .
+    "people.id=whoid AND repositories.id=repositoryid AND dirs.id=dirid " .
+    "AND files.id=fileid AND branches.id=branchid AND descs.id=descid AND " .
+    "branches.branch=? AND ci_when>=? ORDER BY ci_when;";
+my @bind_values = ($inbranch, &SqlFmtClock($startfrom));
+print "<p> " . &html_quote($sqlstring) . " <br>\n";
+print "With values:<br>\n";
+foreach my $v (@bind_values) {
+    print "\t" . &html_quote($v) . "<br>\n";
+}
+print "<p>\n";
+&SendSQL($sqlstring, @bind_values);
 
 my ($change, $date, $who, $repos, $dir, $file, $rev, $sticky, $branch, $linesa, $linesr, $log);
 my ($lastchange, $lastdate, $lastwho, $lastrepos, $lastdir, $lastrev, $laststicky, $lastbranch, $lastlinesa, $lastlinesr, $lastlog);
-my ($id, $info, $lastdate, @files, @fullinfo);
+my ($id, $info, @files, @fullinfo);
 my ($d, $f, $okdir, $full);
 my ($r);
 $lastdate = "";

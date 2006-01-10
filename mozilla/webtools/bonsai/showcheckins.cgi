@@ -20,7 +20,6 @@
 #
 # Contributor(s): 
 
-use diagnostics;
 use strict;
 
 require 'CGI.pl';
@@ -56,26 +55,28 @@ sub BreakBig {
      return $result . $str;
 }
 
-
-if (exists($::FORM{'person'})) {
-     my $escaped_person = html_quote($::FORM{'person'});
+my $person = &SanitizeUsernames($::FORM{'person'});
+if ($person) {
+     my $escaped_person = &html_quote($person);
      $title = $head = "Checkins for $escaped_person";
 
      foreach $checkin (@::CheckInList) {
           $info = eval("\\\%$checkin");
           push @list, $checkin
-               if ($$info{'person'} eq $::FORM{'person'});
+               if ($$info{'person'} eq $person);
      }
 } elsif (exists($::FORM{'mindate'}) || exists($::FORM{'maxdate'})) {
      my ($min, $max) = (0, 1<<30);
 
      $title = "Checkins";
+     
      if (exists($::FORM{'mindate'})) {
-          $title .= " since " . MyFmtClock($min = $::FORM{'mindate'});
-          $title .= " and" if (exists($::FORM{'maxdate'}));
+         $title .= " since " .
+             &MyFmtClock($min = &ExpectDate($::FORM{'mindate}'}));
+         $title .= " and" if (exists($::FORM{'maxdate'}));
      }
-     $title .= " before" . MyFmtClock($max = $::FORM{'maxdate'})
-          if (exists($::FORM{'maxdate'}));
+     $title .= " before" . &MyFmtClock($max = &ExpectDate($::FORM{'maxdate'}))
+         if (exists($::FORM{'maxdate'}));
      $head = $title;
 
      foreach $checkin (@::CheckInList) {
@@ -104,13 +105,18 @@ day's checkins</a>.<br>";
 
 PutsHeader($title, $head, $subhead);
 
-$::FORM{'sort'} = 'date' unless $::FORM{'sort'};
+my $sort = $::FORM{'sort'} || "";
+if (!$sort) {
+    $sort = 'date';
+} else {
+    die ("Invalid sort string.\n") unless ($sort =~ m/^\w+(,\w+)*$/);
+}
 
 print "
-(Current sort is by <tt>$::FORM{'sort'}</tt>; click on a column header
+(Current sort is by <tt>$sort</tt>; click on a column header
 to sort by that column.)";
 
-my @fields = split(/,/, $::FORM{'sort'});
+my @fields = split(/,/, $sort);
 
 sub Compare {
      my $rval = 0;
@@ -180,7 +186,7 @@ my $otherparams;
 
 sub NewSort {
      my ($key) = @_;
-     my @sort_keys = grep(!/^$key$/, split(/,/, $::FORM{'sort'}));
+     my @sort_keys = grep(!/^$key$/, split(/,/, $sort));
      unshift(@sort_keys, $key);
 
      return $otherparams . "&sort=" . join(',', @sort_keys);
@@ -223,28 +229,32 @@ foreach $checkin (@list) {
      print "<TR>\n";
      print "<TD><INPUT TYPE=CHECKBOX NAME=\"$checkin\"></TD>\n" if $tweak;
      print "<TD><a href=editcheckin.cgi?id=$checkin" . BatchIdPart(). ">\n";
-     print time2str("<font size=-1>%m/%d/%Y %H:%M</font>" , $$info{date}) .
+     print time2str("<font size=-1>%Y-%m-%d %H:%M</font>" , $$info{date}) .
           "</a></TD>\n";
      print "<TD>" . (($$info{treeopen})? "open": "CLOSED") . "\n";
      print "<br>$$info{notes}\n" if $$info{notes};
 
      $peoplearray{$$info{person}} = 1;
+     my @file_list;
+     foreach my $fn (split(/!NeXt!/, $$info{files})) {
+         push @file_list, &url_quote($fn);
+     }
      print "<TD>". GenerateUserLookUp($$info{person}) . "</TD>\n";
      print "<TD><a href=\"cvsview2.cgi?" . 
            "root=$::TreeInfo{$::TreeID}{repository}&" .
-           "subdir=$$info{dir}&" .
-           "files=" . join('+', split(/!NeXt!/, $$info{files})) . "&" .
-           "command=DIRECTORY$branchpart\">" .
-           BreakBig($$info{dir}) .
+           "subdir=" . &url_quote($$info{dir}) .
+           "&files=" . join(':', @file_list) .
+           "&command=DIRECTORY$branchpart\">" .
+           &BreakBig(&html_quote($$info{dir})) .
            "</a></TD>\n";
      print "<TD>\n";
      foreach my $file (split(/!NeXt!/, $$info{files})) {
           print "  <a href=\"cvsview2.cgi?" .
                 "root=$::TreeInfo{$::TreeID}{repository}&" .
-                "subdir=$$info{dir}&" .
-                "files=$file&" .
-                "command=DIRECTORY$branchpart\">" .
-                "$file</a>\n";
+                "subdir=" . &url_quote($$info{dir}) .
+                "&files=" . &url_quote($file) .
+                "&command=DIRECTORY$branchpart\">" .
+                &html_quote($file) . "</a>\n";
      }
      print "</td>\n";
 
@@ -253,7 +263,7 @@ foreach $checkin (@list) {
           my ($file, $version) = split(/\|/, $fullinfo);
           $versioninfo .= "$$info{person}|$$info{dir}|$file|$version,";
      }
-     my $comment = $$info{'log'};
+     my $comment = &html_quote($$info{'log'});
      $comment =~ s/\n/<br>/g;
      print "<TD WIDTH=100%>$comment</td>\n";
      print "</tr>\n\n";

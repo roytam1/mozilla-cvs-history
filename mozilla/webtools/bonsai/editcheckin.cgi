@@ -20,7 +20,6 @@
 #
 # Contributor(s): 
 
-use diagnostics;
 use strict;
 
 # Shut up misguided -w warnings about "used only once".  "use vars" just
@@ -29,13 +28,15 @@ use strict;
 sub sillyness {
     my $zz;
     $zz = $::TreeID;
+    $zz = $::FORM{'id'};
 }
 
 require 'CGI.pl';
 
-LoadCheckins();
+&LoadCheckins();
 
-my $info = eval("\\%" . $::FORM{'id'});
+my $form_id = &ExpectCheckinId($::FORM{'id'});
+my $info = eval("\\%" . $form_id);
 
 print "Content-type: text/html
 
@@ -66,7 +67,7 @@ if (!exists $info->{'notes'}) {
 
 foreach my $i ('person', 'dir', 'files', 'notes') {
     print "<tr><td align=right><B>$i:</B></td>";
-    print "<td><INPUT NAME=$i VALUE=\"" . value_quote($info->{$i}) .
+    print "<td><INPUT NAME=$i VALUE=\"" . &value_quote($info->{$i}) .
     "\"></td></tr>";
 }
 
@@ -81,6 +82,7 @@ sub CheckString {
 
 my $isopen = CheckString($info->{'treeopen'});
 my $isclosed = CheckString(!$info->{'treeopen'});
+my $infolog = $info->{'log'} || "";
 
 print qq{
 <tr><td align=right><b>Tree state:</b></td>
@@ -89,7 +91,7 @@ print qq{
 <td><INPUT TYPE=radio NAME=treeopen VALUE=0 $isclosed>Closed
 </td></tr><tr>
 <td align=right valign=top><B>Log message:</B></td>
-<td><TEXTAREA NAME=log ROWS=10 COLS=80>$info->{'log'}</TEXTAREA></td></tr>
+<td><TEXTAREA NAME=log ROWS=10 COLS=80>$infolog</TEXTAREA></td></tr>
 </table>
 <INPUT TYPE=CHECKBOX NAME=nukeit>Check this box to blow away this checkin entirely.<br>
 
@@ -97,13 +99,13 @@ print qq{
 };
 
 foreach my $i (sort(keys(%$info))) {
-    my $q = value_quote($info->{$i});
+    my $q = &url_quote($info->{$i});
     print qq{<INPUT TYPE=HIDDEN NAME=orig$i VALUE="$q">\n};
 }
 
-print "<INPUT TYPE=HIDDEN NAME=id VALUE=\"$::FORM{'id'}\">";
+print "<INPUT TYPE=HIDDEN NAME=id VALUE=\"$form_id\">";
 
-print "<INPUT TYPE=HIDDEN NAME=treeid VALUE=\"" . value_quote($::TreeID) . "\">";
+print "<INPUT TYPE=HIDDEN NAME=treeid VALUE=\"$::TreeID\">";
 
 
 

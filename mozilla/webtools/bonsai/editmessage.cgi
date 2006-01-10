@@ -20,7 +20,6 @@
 #
 # Contributor(s): 
 
-use diagnostics;
 use strict;
 
 # Shut up misguided -w warnings about "used only once".  "use vars" just
@@ -39,7 +38,13 @@ my $Filename = FormData('msgname');
 my $RealFilename = DataDir() . "/$Filename";
 
 my $Text = '';
-$Text = `cat $RealFilename` if -f $RealFilename;
+if (-f $RealFilename) {
+    open(FILE, $RealFilename);
+    while (<FILE>) {
+        $Text .= $_;
+    }
+    close(FILE);
+}
 
 LoadTreeConfig();
 PutsHeader("Message Editor", "Message Editor",
@@ -85,7 +90,7 @@ print "
 <INPUT TYPE=HIDDEN NAME=treeid VALUE=$::TreeID>
 <B>Password:</B> <INPUT NAME=password TYPE=password> <BR>
 <INPUT TYPE=HIDDEN NAME=msgname VALUE=$Filename>
-<INPUT TYPE=HIDDEN NAME=origtext VALUE=\"" . value_quote($Text) . "\">
+<INPUT TYPE=HIDDEN NAME=origtext VALUE=\"" . &url_quote($Text) . "\">
 <TEXTAREA NAME=text ROWS=40 COLS=80>$Text</TEXTAREA><BR>
 <INPUT TYPE=SUBMIT VALUE=\"Change this message\">
 </FORM>

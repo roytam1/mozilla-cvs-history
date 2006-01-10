@@ -21,7 +21,6 @@
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 
 
-use diagnostics;
 use strict;
 
 require "CGI.pl";
@@ -38,11 +37,11 @@ print "Content-type: text/html\n\n";
 #    
 
 unless ((defined($::FORM{password})) && (CheckPassword($::FORM{password}))) {
-    print "<form method=post action=editparams.cgi><table>\n";
-    print "<H2>Sorry, you must enter a password to see Bonsai paramters.</H2>\n";
-    print "<hr><B>Enter password to access parameters:</B> <INPUT NAME=password TYPE=password> <BR>";
-    print "</form>\n";
+    print "<form method=post action=editparams.cgi>\n";
+    print "<h2>Sorry, you must enter a password to see Bonsai parameters.</h2>\n";
+    print "<hr><b>Enter password to access parameters:</b> <input name=password type=password> <br>";
     print "<input type=submit value=\"Enter Password\">\n";
+    print "</form>\n";
     print "<hr>\n";
     exit;
 }   
@@ -112,8 +111,8 @@ such parameters</td></tr>
 
 print "</table>\n";
 
-print "<hr><B>Enter password to change parameters:</B>
-       <INPUT NAME=password TYPE=password> <BR>";
+print "<hr><b>Enter password to change parameters:</b>
+       <input name=password type=password> <br>";
 print "<input type=reset value=\"Reset form\"><br>\n";
 print "<input type=submit value=\"Submit changes\">\n";
 

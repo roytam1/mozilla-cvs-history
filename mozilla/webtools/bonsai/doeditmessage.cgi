@@ -20,7 +20,6 @@
 #
 # Contributor(s): 
 
-use diagnostics;
 use strict;
 
 # Shut up misguided -w warnings about "used only once".  "use vars" just
@@ -36,15 +35,22 @@ require 'CGI.pl';
 
 print "Content-type: text/html\n\n";
 
+&validateReferer('editmessage.cgi');
 CheckPassword(FormData('password'));
 my $Filename = FormData('msgname');
 my $RealFilename = DataDir() . "/$Filename";
 Lock();
 
 my $Text = '';
-$Text = `cat $RealFilename` if -f $RealFilename;
+if (-f $RealFilename) {
+    open(FILE, $ReadFilename);
+    while (<FILE>) {
+        $Text .= $_;
+    }
+    close(FILE);
+}
 
-unless (FormData('origtext') eq $Text) {
+unless (&url_decode(FormData('origtext')) eq $Text) {
      PutsHeader("Oops!", "Oops!", "Someone else has been here!");
      print "
 It looks like somebody else has changed this message while you were editing it.

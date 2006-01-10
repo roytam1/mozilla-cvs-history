@@ -23,9 +23,11 @@
 
 $::TreeID = "default";
 
-use diagnostics;
+use bytes;
 use strict;
 use DBI;
+use File::Basename;
+use File::Path;
 
 use Date::Format;               # For time2str().
 use Date::Parse;                # For str2time().
@@ -39,7 +41,7 @@ $ENV{'MAILADDRESS'} = Param('maintainer');
 # use Carp;                       # for confess
 
 # Contains the version string for the current running Bonsai
-$::param{'version'} = '1.3';
+$::param{'version'} = '1.3.9';
 
 
 
@@ -124,13 +126,28 @@ sub DisconnectFromDatabase {
 }
 
 sub SendSQL {
-    my ($str) = (@_);
-    my ($rows);
+    my ($str, @bind_values) = (@_);
+    my $status = 0;
 
-    $::currentquery = $::db->prepare($str)
-	|| die "'$str': ". $::db->errstr;
-    $rows = $::currentquery->execute
-        || die "'$str': Can't execute the query: " . $::currentquery->errstr;
+    $::currentquery = $::db->prepare($str) || $status++;
+    if ($status) {
+        print STDERR "SendSQL prepare error: '$str' with values (";
+        foreach my $v (@bind_values) {
+            print STDERR "'" . &shell_escape($v) . "', ";
+        }
+        print STDERR ") :: " . $::db->errstr . "\n";
+        die "Cannot prepare SQL query. Please contact system administrator.\n";
+    }
+
+    $::currentquery->execute(@bind_values) || $status++;
+    if ($status) {
+        print STDERR "SendSQL execute error: '$str' with values (";
+        foreach my $v (@bind_values) {
+            print STDERR "'" . &shell_escape($v) . "', ";
+        }
+        print STDERR ") :: " . $::currentquery->errstr . "\n";
+        die "Cannot execute SQL query. Please contact system administrator.\n";
+    }
 }
 
 sub MoreSQLData {
@@ -149,26 +166,13 @@ sub FetchSQLData {
 	undef @::fetchahead;
 	return @result;
     }
-    return $::currentquery->fetchrow();
+    return $::currentquery->fetchrow_array();
 }
 
 
 sub FetchOneColumn {
     my @row = FetchSQLData();
     return $row[0];
-}
-
-
-# This routine is largely copied from Mysql.pm.
-
-sub SqlQuote {
-    my ($str) = (@_);
-#     if (!defined $str) {
-#         confess("Undefined passed to SqlQuote");
-#     }
-    $str =~ s/([\\\'])/\\$1/g;
-    $str =~ s/\0/\\0/g;
-    return "'$str'";
 }
 
 
@@ -181,10 +185,10 @@ sub SqlQuote {
 sub LearnAboutColumns {
     my ($table) = (@_);
     my %a;
-    SendSQL("show columns from $table");
+    &SendSQL("SHOW columns FROM $table");
     my @list = ();
     my @row;
-    while (@row = FetchSQLData()) {
+    while (@row = &FetchSQLData()) {
         my ($name,$type) = (@row);
         $a{"$name,type"} = $type;
         push @list, $name;
@@ -223,9 +227,9 @@ sub SplitEnumType {
 sub PerlQuote {
     my ($str) = (@_);
 
-    $str = SqlQuote($str);
-
-    return $str;
+    $str =~ s/([\\\'])/\\$1/g;
+    $str =~ s/\0/\\0/g;
+    return "'$str'";
 }
 
 sub GenerateArrayCode {
@@ -315,7 +319,7 @@ sub Log {
     local (*LOGFID);
 
     LockOpen(\*LOGFID, ">>data/log", "Can't write to data/log");
-    print LOGFID time2str("%D %H:%M", time()) . ": $str\n";
+    print LOGFID time2str("%Y-%m-%d %H:%M", time()) . ": $str\n";
     close LOGFID;
     chmod 0666, "data/log";
     Unlock();
@@ -327,20 +331,19 @@ undef %lastidcache;
 
 sub GetId {
      my ($table, $field, $value) = @_;
-     my ($index, $qvalue, $id);
+     my ($index, $id);
 
      $index = "$table|$field|$value";
      return ($lastidcache{$index})
           if (exists $lastidcache{$index});
 
-     $qvalue = SqlQuote($value);
-     SendSQL("select id from $table where $field = $qvalue");
-     ($id) = FetchSQLData();
+     &SendSQL("SELECT id FROM $table WHERE $field = ?", $value);
+     ($id) = &FetchSQLData();
 
      unless ($id) {
-         SendSQL("insert into $table ($field) values ($qvalue)");
-         SendSQL("select LAST_INSERT_ID()");
-         ($id) = FetchSQLData();
+         &SendSQL("INSERT INTO $table ($field) VALUES (?)", $value);
+         &SendSQL("SELECT LAST_INSERT_ID()");
+         ($id) = &FetchSQLData();
      }
 
      return ($lastidcache{$index} = $id);
@@ -349,16 +352,15 @@ sub GetId {
 
 sub GetId_NoCache {
      my ($table, $field, $value) = @_;
-     my ($qvalue, $id);
+     my ($id);
 
-     $qvalue = SqlQuote($value);
-     SendSQL("select id from $table where $field = $qvalue");
-     ($id) = FetchSQLData();
+     &SendSQL("SELECT id FROM $table WHERE $field = ?", $value);
+     ($id) = &FetchSQLData();
 
      unless ($id) {
-         SendSQL("insert into $table ($field) values ($qvalue)");
-         SendSQL("select LAST_INSERT_ID()");
-         ($id) = FetchSQLData();
+         &SendSQL("INSERT INTO $table ($field) values (?)", $value);
+         &SendSQL("SELECT LAST_INSERT_ID()");
+         ($id) = &FetchSQLData();
      }
 
      return $id;
@@ -385,17 +387,18 @@ sub MakeValueHash {
 
 sub GetHashedId {
      my ($table, $field, $value) = @_;
-     my ($qvalue, $id, $hash);
+     my (@bind_values, $id);
 
-     $hash = MakeValueHash($value);
-     $qvalue = SqlQuote($value);
-     SendSQL("select id from $table where hash = $hash and $field = $qvalue");
-     ($id) = FetchSQLData();
+     @bind_values = (&MakeValueHash($value), $value);
+     &SendSQL("SELECT id FROM $table WHERE hash = ? AND $field = ?", 
+              @bind_values);
+     ($id) = &FetchSQLData();
 
      unless ($id) {
-         SendSQL("insert into $table (hash, $field) values ($hash, $qvalue)");
-         SendSQL("select LAST_INSERT_ID()");
-         ($id) = FetchSQLData();
+         &SendSQL("INSERT INTO $table (hash, $field) values (?, ?)",
+                  @bind_values);
+         &SendSQL("SELECT LAST_INSERT_ID()");
+         ($id) = &FetchSQLData();
      }
 
      return $id;
@@ -409,7 +412,7 @@ undef $lastdescription;
 
 sub AddToDatabase {
      my ($lines, $desc) = @_;
-     my ($descid, $basequery, $query, $line, $quoted);
+     my ($descid, $basequery, $query, $line, @bind_values);
      my ($chtype, $date, $name, $repository, $dir);
      my ($file, $version, $sticky, $branch, $addlines, $removelines);
 
@@ -425,12 +428,12 @@ sub AddToDatabase {
      }
 
      # Build the query...
-     $basequery = "replace into
+     $basequery = "REPLACE INTO
                       checkins(
                           type, ci_when, whoid, repositoryid, dirid,
                           fileid, revision, stickytag, branchid, addedlines,
                           removedlines, descid)
-                      values (";
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
      foreach $line (split(/\n/, $lines)) {
           next if ($line =~ /^\s*$/);
@@ -444,16 +447,17 @@ sub AddToDatabase {
           # Clean up a few variables...
           $branch =~ s/^T//;
           $dir =~ s!/$!!;
-          $addlines = 0 if ($addlines =~ /^\s*$/);
-          $removelines = 0 if ($removelines =~ /^\s*$/);
+          $dir =~ s!^\./!!;
+          $addlines = 0 if (!defined($addlines) || $addlines =~ /^\s*$/);
+          $removelines = 0 if (!defined($removelines) || 
+                               $removelines =~ /^\s*$/);
           $removelines = abs($removelines);
           $date = time2str("%Y/%m/%d %H:%M", $date)
                if ($date =~ /^[+-]?\d+$/);
 
           # Find the description id, if it isn't already set
           if (!defined($descid)) {
-               $descid = GetHashedId('descs', 'description', $desc);
-               $quoted = SqlQuote($desc);
+               $descid = &GetHashedId('descs', 'description', $desc);
                $lastdescriptionid = $descid;
                $lastdescription = $desc;
           }
@@ -461,28 +465,27 @@ sub AddToDatabase {
           # Build the final query
           $query = $basequery;
           if ($chtype eq "C") {
-               $query .= "'Change'";
+              $chtype = 'Change';
           } elsif ($chtype eq "A") {
-               $query .= "'Append'";
+              $chtype = 'Append';
           } elsif ($chtype eq "R") {
-               $query .= "'Remove'";
+              $chtype = 'Remove';
           } else {
-               $query .= "NULL";
+              $chtype = "NULL";
           }
-
-          $query .= ", '$date'";
-          $query .= ", " . GetId("people", "who", $name);
-          $query .= ", " . GetId("repositories", "repository", $repository);
-          $query .= ", " . GetId("dirs", "dir", $dir);
-          $query .= ", " . GetId("files", "file", $file);
-          $query .= ", " . SqlQuote($version);
-          $query .= ", " . SqlQuote($sticky);
-          $query .= ", " . GetId("branches", "branch", $branch);
-          $query .= ", $addlines";
-          $query .= ", $removelines";
-          $query .= ", $descid)";
-
-          SendSQL($query);
+          @bind_values = ($chtype,
+                          $date,
+                          &GetId("people", "who", $name),
+                          &GetId("repositories", "repository", $repository),
+                          &GetId("dirs", "dir", $dir),
+                          &GetId("files", "file", $file),
+                          $version,
+                          $sticky,
+                          &GetId("branches", "branch", $branch),
+                          $addlines,
+                          $removelines,
+                          $descid);
+          &SendSQL($query, @bind_values);
      }
 }
 
@@ -515,14 +518,11 @@ sub DataDir {
      }
 
      # Make sure it exists...
-     unless (-d $dir) {
-          system ("rm", "-rf", $dir);
-          system ("mkdir", "-p", $dir);
-          die "Couldn't create '$dir'\n"
-               unless (-d $dir);
-          chmod(0777, $dir);
+     if (! -d $dir) {
+         print STDERR "No data dir for Tree \"" . &shell_escape($::TreeID) . 
+             "\".\n";
+         die "Tree is not configured.\n";
      }
-
      return $dir;
 }
 
@@ -684,14 +684,14 @@ sub ConstructMailTo {
 sub MyFmtClock {
      my ($time) = @_;
 
-     $time = 1 * 365 * 24 * 60 * 60 + 1 if ($time <= 0);
-     return time2str("%m/%d/%Y %T", $time);
+     $time = 1 * 365 * 24 * 60 * 60 + 1 if (!defined($time) || $time <= 0);
+     return time2str("%Y-%m-%d %T", $time);
 }
 
 sub SqlFmtClock {
      my ($time) = @_;
 
-     $time = 1 * 365 * 24 * 60 * 60 + 1 if ($time <= 0);
+     $time = 1 * 365 * 24 * 60 * 60 + 1 if (!defined($time) || $time <= 0);
      return time2str("%Y-%m-%d %T", $time);
 }
 
@@ -776,7 +776,7 @@ sub _to_array {
      return ($thing);
 }
 
-# Get all of the headers for a mail message, returned as a comma seperated
+# Get all of the headers for a mail message, returned as a comma separated
 # string, unless looking for a subject
 sub _GetMailHeaders {
      my ($mail_hdrs, $hdr) = @_;
@@ -1051,10 +1051,26 @@ sub validateRepository {
     }
 
     my $escaped_root = html_quote($root);
+    print "\n";
     print "Invalid repository `$escaped_root' selected.\n";
     print ConstructMailTo(Param('maintainer'), "Invalid Repository '$root'");
     print " if you think this should have worked.\n";
     exit;
+}
+
+# Verify that the current script is being called from a specific other script
+sub validateReferer {
+    my (@scripts) = @_;
+    my $script;
+    my $found = 0;
+    my $script_path = dirname("$ENV{'SERVER_NAME'}$ENV{'SCRIPT_NAME'}");
+    my $referer = $ENV{'HTTP_REFERER'} || "";
+
+    foreach $script (@scripts) {
+        $found++ if
+            ($referer =~ m@^http(s)?://(\w+(:\w+)?\@)?$script_path/$script(\?|$)@i);
+    }
+    die "This script cannot be called directly.\n" if (!$found);
 }
 
 sub formatSqlTime {
@@ -1067,6 +1083,23 @@ sub formatSqlTime {
     return $time;
 }
 
+##
+##  Miscelaneous routines from lloydcgi.pl
+##
+
+my @weekdays = ('Sun','Mon','Tue','Wed','Thu','Fri','Sat');
+my @months = ('Jan','Feb','Mar','Apr','May','Jun',
+           'Jul','Aug','Sep','Oct','Nov','Dec');
+
+sub toGMTString {
+    my ($seconds) = $_[0];
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)
+        = gmtime($seconds);
+    $year += 1900;
+
+    sprintf('%s, %02d-%s-%d %02d:%02d:%02d GMT',
+            $weekdays[$wday],$mday,$months[$mon],$year,$hour,$min,$sec);
+}
 
 # Returns true if the given directory or filename is one of the hidden ones
 # that we don't want to show users.
@@ -1116,6 +1149,8 @@ sub MarkUpText {
      my $bugsrpl = Param('bugsystemexpr');
      my $bugsmatch = Param('bugsmatch');
      my %substs = ();
+
+     return $text if (!$bugsrpl);
 
      $substs{'bug_id'} = '$1';
      $bugsrpl = PerformSubsts($bugsrpl, \%substs);
@@ -1245,6 +1280,169 @@ sub Fix_BonsaiLink {
      $bonsai_path =~ s!^csc/!!;
 
      return $bonsai_path;
+}
+
+# Quotify a string, suitable for invoking a shell process
+sub shell_escape {
+    my ($file) = @_;
+    $file =~ s/\000/_NULL_/g;
+    $file =~ s/([ \"\'\`\~\^\?\$\&\|\!<>\(\)\[\]\;\:])/\\$1/g;
+    return $file;
+}
+
+#
+# Routines to enforce certain input restrictions
+#
+sub ExpectCheckinId {
+    my ($id) = @_;
+    die("Invalid checkin id.\n") unless ($id =~ m/^::checkin_\d+_\d+$/);
+    return $id;
+}
+
+sub ExpectDate {
+    my ($date) = @_;
+    my $res;
+
+    return $date if ($date =~ m/^\d+$/);
+    $res = &str2time($date);
+    return $res if (defined($res));
+    die "Invalid date format.\n";
+}
+
+sub ExpectDigit {
+    my ($var, $str) = @_;
+
+    if (!defined($str) || $str !~ m/^\d+$/) {
+        print STDERR "Expecting digit for $var. Got \"" . 
+            shell_escape($str) . "\" instead.\n";
+        die "Invalid format for $var.\n";
+    }
+    return $str;
+}
+
+# match types: match, regexp or notregexp
+sub ExpectMatchtype {
+    my ($matchtype) = @_;
+
+    return $matchtype if (!defined($matchtype) || $matchtype eq '' || 
+                          $matchtype eq 'match' || $matchtype eq 'regexp' || 
+                          $matchtype eq 'notregexp');
+    die "Invalid matchtype.\n";
+}
+
+sub ExpectOnOff {
+    my ($var, $str) = @_;
+    
+    if (!defined($str) || $str !~ m/^(on|off)/) {
+        print STDERR "Expecting on/off value for $var. Got \"" .
+            shell_escape($str) . "\" instead.\n";
+        die "Invalid format for $var.\n";
+    }
+    return $str;
+}
+
+# The mark argument expects a specific format
+# digit or (d1)-(d2)
+# where digit is the line number to mark
+#    and d1 & d2 are the optional beginning & ending of a range.
+#    If d1 & d2 are omitted, the entire file is marked
+sub SanitizeMark {
+    my ($mark_arg) = @_;
+    my ($newmark) = "";
+
+    return "" if (!defined($mark_arg));
+    foreach my $mark (split ',', $mark_arg) {
+        if ($mark =~ m/^(\d*)-(\d*)$/) {
+            $newmark .= ",$1-$2";
+        } elsif ($mark =~ m/^\d+$/) {
+            $newmark .= ",$mark";
+        } else {
+            # Ignore invalid input
+            next;
+        }
+    }
+    $newmark =~ s/^,//;
+    return $newmark;
+}
+
+# Strip garbage from module name
+# For now, assume: alphanumeric - . +
+sub SanitizeModule {
+    my ($module) = @_;
+
+    return $module if (!defined($module));
+    $module =~ s/\000/_NULL_/g;
+    return "default" if ($module !~ m/^[A-Za-z]+[\w\-\.\+]*/);
+    $module =~ s/([A-Za-z])([\w\-\.\+]*).*/$1$2/;
+    return $module;
+}
+
+# Make sure CVS revisions are in a specific format
+sub SanitizeRevision {
+    my ($rev) = @_;
+
+    return "" if (!defined($rev) || $rev eq "");
+    if ($rev =~ /^[A-Za-z]+/) {
+        $rev =~ s/^([\w-]+).*/$1/;
+    } elsif ($rev =~ /^\d+\.\d+/) {
+        $rev =~ s/^(\d+[\.\d+]+).*/$1/;
+    } else {
+        die "Invalid revision format.\n";
+    }
+    return $rev;
+}
+
+# Allow alphanumeric usernames that start with alphas
+# Also allow: % . - +
+# Use 'nobody' if username doesn't match the modified format
+sub SanitizeUsernames {
+    my ($users) = @_;
+    my $userlist = '';
+
+    return "" if (!defined($users));
+    foreach my $user (split(/,/, $users)) {
+        $user =~ s/\000/_NULL_/;
+        $user =~ s/([A-Za-z])([\w\%\.\-\+]*).*/$1$2/;
+        $userlist .= ",$user";
+    }
+    $userlist =~ s/^,//;
+    return $userlist;
+}
+
+
+#
+# We should use the routine from File::Spec but perl 5.004 doesn't have it
+#
+sub canonpath {
+    my ($path) = @_;
+    my (@list);
+
+    return "" if (!defined($path) || $path eq "");
+    $path =~ s@//+@/@g;
+    foreach my $dir (split('/', $path)) {
+        if ($dir eq '.') {
+            next;
+        } elsif ($dir eq '..') {
+            pop @list;
+        } else {
+            push @list, $dir;
+        }
+    }
+    $path = join("/",@list);
+    return $path;
+}
+
+# Do not allow access to files outside of cvsroot
+sub ChrootFilename {
+    my ($root, $path) = @_;
+    my $cpath = canonpath($path);
+    #print STDERR "ChrootFilename($root, $path, $cpath)\n";
+    CheckHidden($path);
+    die "Browsing outside of cvsroot not allowed.\n" 
+        unless ($cpath =~ m@^$root/@ || $cpath eq $root);
+    die "\nFiles in the CVSROOT are not accessible.\n" if 
+        ($cpath =~ m@$root/CVSROOT@);
+    return $cpath;
 }
 
 1;

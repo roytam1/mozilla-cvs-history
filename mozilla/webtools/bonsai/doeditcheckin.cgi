@@ -20,7 +20,6 @@
 #
 # Contributor(s): 
 
-use diagnostics;
 use strict;
 
 require 'CGI.pl';
@@ -29,6 +28,7 @@ print "Content-type: text/html
 
 <HTML>";
 
+&validateReferer('editcheckin.cgi');
 CheckPassword($::FORM{'password'});
 
 Lock();
@@ -37,18 +37,20 @@ LoadCheckins();
 my $busted = 0;
 
 my $info;
+my $id;
 
 if (!exists $::FORM{'id'}) {
     $busted = 1;
 } else {
-    $info = eval("\\%" . $::FORM{'id'});
+    $id = &ExpectCheckinId($::FORM{'id'});
+    $info = eval("\\%" . $id);
     
     if (!exists $info->{'notes'}) {
         $info->{'notes'} = "";
     }
     
     foreach my $i (sort(keys(%$info))) {
-        if (FormData("orig$i") ne $info->{$i}) {
+        if (&url_decode(FormData("orig$i")) ne $info->{$i}) {
             $busted = 1;
             last;
         }
@@ -83,7 +85,7 @@ foreach my $i ('person', 'dir', 'files', 'notes', 'treeopen', 'log') {
 }
 
 if (exists $::FORM{'nukeit'}) {
-    my $w = lsearch(\@::CheckInList, $::FORM{'id'});
+    my $w = lsearch(\@::CheckInList, $id);
     if ($w >= 0) {
         splice(@::CheckInList, $w, 1);
     }

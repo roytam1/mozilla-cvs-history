@@ -19,7 +19,6 @@
 #
 # Contributor(s): Jacob Steenhagen <jake@acutex.net>
 
-use diagnostics;
 use strict;
 
 use vars qw{ $revision_ctime $revision_author };
@@ -72,6 +71,7 @@ if ($filename eq '') {
 }
 
 my ($file_head, $file_tail) = $filename =~ m@(.*/)?(.+)@;
+my $url_filename = url_quote($filename);
 
 # Handle the "root" argument
 #
@@ -103,12 +103,16 @@ foreach (@src_roots) {
 }
 
 unless ($found_rcs_file) {
+    my $escaped_filename = html_quote($filename);
+    my $shell_filename = shell_escape($filename);
     &print_top;
-    print "Rcs file, $filename, does not exist.\n";
-    print "<pre>rcs_filename => '$rcs_filename'\nroot => '$root'</pre>\n";
+    print STDERR "cvsgraph.cgi: Rcs file, $shell_filename, does not exist.\n";
+    print "Invalid filename: $escaped_filename.\n";
     &print_bottom;
     exit;
 }
+
+&ChrootFilename($root, $rcs_filename);
 
 # Hack these variables up the way that the cvsgraph executable wants them
 my $full_rcs_filename = $rcs_filename;
@@ -135,6 +139,8 @@ function showMessage(rev) {
         r.style.display='none'
     }
     r = document.getElementById('rev_'+rev)
+    if (!r)
+        return false
     var l = document.getElementById('link_'+rev)
     var t = l.offsetTop + 20
     r.style.top = t
@@ -157,8 +163,9 @@ function hideMessage() {
     border-style: solid;
     border-color: #F0A000;
     background-color: #FFFFFF;
+    color: #000000;
     padding: 5;
-    position: absolute;
+    position: fixed;
 }
 </style>
 --endquote--
@@ -175,7 +182,7 @@ function hideMessage() { return false }
 system(@cvsgraph_cmd, $rcs_filename);
 
 if (!defined $::FORM{'image'}) {
-    print qq{<img src="cvsgraph.cgi?file=$::FORM{'file'}&image=1" };
+    print qq{<img src="cvsgraph.cgi?file=$url_filename&image=1" };
     print qq{usemap="#revmap" alt="$filename" border="0" onclick="hideMessage()">\n};
     if ($::use_dom) {
 	require 'cvsblame.pl';

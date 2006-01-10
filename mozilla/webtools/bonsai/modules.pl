@@ -19,7 +19,6 @@
 #
 # Contributor(s): 
 
-use diagnostics;
 use strict;
 
 require 'get_line.pl';
@@ -32,6 +31,7 @@ $::modules = {};
 if( $::CVS_ROOT eq "" ){
     $::CVS_ROOT = pickDefaultRepository();
 }
+&validateRepository($::CVS_ROOT);
 
 my $CVS_MODULES;
 

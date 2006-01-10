@@ -31,7 +31,6 @@
 #
 ##############################################################################
 
-use diagnostics;
 use strict;
 
 # Shut up misguided -w warnings about "used only once".  "use vars" just
@@ -47,8 +46,9 @@ sub cvsblame_pl_sillyness {
     $zz = %::lines_removed;
 };
 
-use Time::Local qw(timegm);         # timestamps
+use Time::Local qw(timegm);   # timestamps
 use Date::Format;             # human-readable dates
+use File::Basename;           # splits up paths into path, filename, suffix
 
 my $debug = 0;
 $::opt_m = 0 unless (defined($::opt_m));
@@ -290,6 +290,8 @@ sub parse_rcs_tree {
     undef %::prev_delta;
     undef %::next_delta;
     undef %::last_revision;
+    # until we use commitid
+    my $commitid;
 
     while (1) {
         $revision = &get_token;
@@ -319,7 +321,7 @@ sub parse_rcs_tree {
 
         # Pretty print the date string
         my @ltime = localtime($::timestamp{$revision});
-        my $formated_date = strftime("%d %b %Y %H:%M", @ltime);
+        my $formated_date = strftime("%Y-%m-%d %H:%M", @ltime);
         $::revision_ctime{$revision} = $formated_date;
 
         # Save age
@@ -361,13 +363,21 @@ sub parse_rcs_tree {
                 $::prev_revision{$next} = $revision;
             }
         }
+        if (($token = &get_token) eq 'commitid') {
+            $commitid = &get_token;
+            &match_token(';');
+        } else {
+            &unget_token($token);
+        }
 
         if ($debug >= 3) {
             print "<pre>revision = $revision\n";
             print "date     = $date\n";
             print "author   = $author\n";
             print "branches = $branches\n";
-            print "next     = $next</pre>\n\n";
+            print "next     = $next\n";
+            print "commitid = $commitid\n" if defined $commitid;
+            print "</pre>\n\n";
         }
     }
 }
@@ -408,7 +418,7 @@ sub parse_rcs_deltatext {
 sub parse_rcs_file {
     my $path = shift;
     if (defined $path) {
-    	open (RCSFILE, "< $path");
+    	open (RCSFILE, $path);
     }	
     print "Reading RCS admin...\n" if ($debug >= 2);
     &parse_rcs_admin();
@@ -544,9 +554,17 @@ sub parse_cvs_file {
     @::revision_map = ();
     CheckHidden($rcs_pathname);
 
-    die "$::progname: error: This file appeared to be under CVS control, " . 
-        "but the RCS file is inaccessible.\n(Couldn't open '$rcs_pathname')\n"
-            if !open (RCSFILE, "< $rcs_pathname");
+    if (!open(RCSFILE, $rcs_pathname)) {
+        my ($name, $path, $suffix) = fileparse($rcs_pathname);
+        my $deleted_pathname = "${path}Attic/$name$suffix";
+        if (!open(RCSFILE, $deleted_pathname)) {
+            print STDERR "$::progname: This file appeared to be " .
+                "under CVS control, but the RCS file is inaccessible.\n";
+            print STDERR "(Couldn't open '" . shell_escape($rcs_pathname) . 
+                "' or '" . shell_escape($deleted_pathname) . "').\n";
+            die "CVS file is inaccessible.\n";
+        }
+    }
     &parse_rcs_file();
     close(RCSFILE);
 
@@ -721,7 +739,7 @@ sub read_cvs_entries
 
     return if (! -d $cvsdir);
 
-    return if !open(ENTRIES, "< $cvsdir/Entries");
+    return if !open(ENTRIES, "$cvsdir/Entries");
     
     while(<ENTRIES>) {
         chop;
@@ -734,7 +752,7 @@ sub read_cvs_entries
     }
     close(ENTRIES);
 
-    return if !open(REPOSITORY, "< $cvsdir/Repository");
+    return if !open(REPOSITORY, "$cvsdir/Repository");
     $repository = <REPOSITORY>;
     chop($repository);
     close(REPOSITORY);

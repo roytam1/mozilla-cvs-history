@@ -70,9 +70,9 @@ you set up.
 
 o How do I set up my administration password?
 
-When you build bonsai, the program "trapdoor" is built and installed
-into the data directory in your Bonsai installation tree.  Change to
-the data directory in your installation and run the command:
+When you build bonsai, the program "trapdoor" is installed into the data
+directory in your Bonsai installation tree.  Change to the data
+directory in your installation and run the command:
 
 trapdoor <your admin password> > passwd
 
@@ -182,7 +182,7 @@ the script that handles the email.  This is what a sample .forward
 file looks like, please note that the script takes one argument which
 is the directory where all of your bonsai data resides:
 
-"|/home/httpd/html/webtools/bonsai/handleCheckinMail.tcl /home/httpd/html/webtools/bonsai"
+"|/home/httpd/html/webtools/bonsai/handleCheckinMail.pl /home/httpd/html/webtools/bonsai"
 
 o You need to set up an alias for "bonsai-checkin-daemon" to the
 account that will process the email.  This is where the mail will be
