@@ -225,9 +225,31 @@ if ($_POST["submit"] && $_GET["action"]=="update" && checkFormKey()) {
    $startLimit = $_GET['start'];
  settype($startLimit, "integer");
  $endLimit = $startLimit+100;
+
+// Clean our query.
+$nameq = isset($_GET['nameq'])&&ctype_alnum($_GET['nameq'])?mysql_real_escape_string($_GET['nameq']):null;
 ?>
+
 <a href="usermanager.php?start=<?=($startLimit-100)>=0?$startLimit-100:0?>">Prev 100</a> <a href="usermanager.php?start=<?=$endLimit?>">Next 100</a>
-<h1>Manage User list</h1>
+<h1>Manage User List</h1>
+
+<br/>
+<form action="./usermanager.php" method="get">
+<div>
+<input type="text" name="nameq" id="nameq" value="<?=isset($nameq)?htmlentities($nameq):null?>"/>
+<input type="submit" name="nameqsubmit" value="Search Users"/>
+</div>
+</form>
+
+<?php
+// Start query.
+$maxuserid=-1;
+$sql = "SELECT * FROM `userprofiles` WHERE username like '%{$nameq}%' OR useremail like '%{$nameq}%' ORDER BY `UserMode`, `UserName` ASC LIMIT $startLimit, 100";
+$sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+$i = $startLimit;
+
+if (!empty($nameq) && mysql_num_rows($sql_result) > 0) {
+?>
 <TABLE BORDER=0 CELLPADDING=1 CELLSPACING=1 ALIGN=CENTER STYLE="border: 0px; width: 100%" class="listing">
 <TR style="font-weight: bold">
 <TH></TH>
@@ -241,10 +263,6 @@ if ($_POST["submit"] && $_GET["action"]=="update" && checkFormKey()) {
 <FORM NAME="updateusers" METHOD="POST" ACTION="?function=&action=update">
 <?writeFormKey();?>
 <?php
- $maxuserid=-1;
- $sql = "SELECT * FROM `userprofiles` ORDER BY `UserMode`, `UserName` ASC LIMIT $startLimit, 100";
- $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-  $i = $startLimit;
    while ($row = mysql_fetch_array($sql_result)) {
     $userid = $row["UserID"];
     $username = $row["UserName"];
@@ -263,10 +281,10 @@ if ($usermode=="A") {$a="TRUE"; $e="TRUE";
     echo"<TD CLASS=\"tablehighlight\" ALIGN=CENTER><B>$i</B></TD>\n";
     echo"<TD CLASS=\"tablehighlight\"><B>&nbsp;&nbsp;<A HREF=\"?function=edituser&userid=$userid\">$username</A></B></TD>\n";
     echo"<TD CLASS=\"tablehighlight\"><B>&nbsp;&nbsp;<A HREF=\"mailto:$useremail\">$useremail</A></B></TD>\n";
-    echo"<TD CLASS=\"tablehighlight\"><INPUT NAME=\"selected$userid\" TYPE=\"CHECKBOX\" VALUE=\"$userid\" TITLE=\"Selected User\""; if (($a=="TRUE" or $e=="TRUE") AND $_SESSION["level"]=="editor") {echo" DISABLED=\"DISABLED\"";} echo"></TD>";
-    echo"<TD CLASS=\"tablehighlight\"><INPUT NAME=\"editor$userid\" TYPE=\"CHECKBOX\" VALUE=\"TRUE\" "; if ($e=="TRUE") {echo"CHECKED=\"CHECKED\""; } if (($a=="TRUE" or $d=="TRUE") or $_SESSION["level"]=="editor") {echo" DISABLED=\"DISABLED\"";} echo" TITLE=\"Editor\"></TD>";
-    echo"<TD CLASS=\"tablehighlight\"><INPUT NAME=\"admin$userid\" TYPE=\"CHECKBOX\" VALUE=\"TRUE\" "; if ($a=="TRUE") {echo"CHECKED=\"CHECKED\""; } if ($d=="TRUE" or $_SESSION["level"]=="editor") {echo" DISABLED=\"DISABLED\"";} echo" TITLE=\"Administrator\"></TD>";
-    echo"<TD CLASS=\"tablehighlight\"><INPUT NAME=\"trusted$userid\" TYPE=\"CHECKBOX\" VALUE=\"TRUE\" "; if ($t=="TRUE") {echo"CHECKED=\"CHECKED\""; } if ($d=="TRUE" or (($a=="TRUE" or $e=="TRUE") AND $_SESSION["level"]=="editor" )) {echo" DISABLED=\"DISABLED\"";}echo" TITLE=\"Trusted User\"></TD>";
+    echo"<TD CLASS=\"tablehighlight\"><INPUT NAME=\"selected$userid\" TYPE=\"CHECKBOX\"  DISABLED=\"DISABLED\ VALUE=\"$userid\" TITLE=\"Selected User\""; if (($a=="TRUE" or $e=="TRUE") AND $_SESSION["level"]=="editor") {echo" DISABLED=\"DISABLED\"";} echo"></TD>";
+    echo"<TD CLASS=\"tablehighlight\"><INPUT NAME=\"editor$userid\" TYPE=\"CHECKBOX\"  DISABLED=\"DISABLED\ VALUE=\"TRUE\" "; if ($e=="TRUE") {echo"CHECKED=\"CHECKED\""; } if (($a=="TRUE" or $d=="TRUE") or $_SESSION["level"]=="editor") {echo" DISABLED=\"DISABLED\"";} echo" TITLE=\"Editor\"></TD>";
+    echo"<TD CLASS=\"tablehighlight\"><INPUT NAME=\"admin$userid\" TYPE=\"CHECKBOX\"  DISABLED=\"DISABLED\ VALUE=\"TRUE\" "; if ($a=="TRUE") {echo"CHECKED=\"CHECKED\""; } if ($d=="TRUE" or $_SESSION["level"]=="editor") {echo" DISABLED=\"DISABLED\"";} echo" TITLE=\"Administrator\"></TD>";
+    echo"<TD CLASS=\"tablehighlight\"><INPUT NAME=\"trusted$userid\" TYPE=\"CHECKBOX\"  DISABLED=\"DISABLED\ VALUE=\"TRUE\" "; if ($t=="TRUE") {echo"CHECKED=\"CHECKED\""; } if ($d=="TRUE" or (($a=="TRUE" or $e=="TRUE") AND $_SESSION["level"]=="editor" )) {echo" DISABLED=\"DISABLED\"";}echo" TITLE=\"Trusted User\"></TD>";
     if ($d=="TRUE") {echo"<INPUT NAME=\"disabled$userid\" TYPE=\"HIDDEN\" VALUE=\"TRUE\">\n"; }
     echo"</TR>\n";
   $maxuserid=max($userid,$maxuserid);
@@ -276,17 +294,19 @@ $minuserid = $startLimit+1;
 echo '<INPUT NAME="minuserid" TYPE="HIDDEN" VALUE="'. $minuserid.'">';
 echo "<INPUT NAME=\"maxuserid\" TYPE=\"HIDDEN\" VALUE=\"$endLimit\">";
 ?>
-<TR><TD COLSPAN=3 ALIGN=CENTER>
-<INPUT NAME="submit" TYPE="SUBMIT" VALUE="Disable Selected" ONCLICK="return confirm('Disabling this account will hide all their extensions and themes from view and prevent them from logging in. Do you want to procede and disable this account?');">
-<INPUT NAME="submit" TYPE="SUBMIT" VALUE="Enable Selected">
-<INPUT NAME="submit" TYPE="SUBMIT" VALUE="Delete Selected" ONCLICK="return confirm('Deleting this account will permanently remove all their extensions and account information from Mozilla Update. This cannot be undone. Do you want to procede and delete this account?');">
-<INPUT NAME="submit" TYPE="SUBMIT" VALUE="Update">
-</TD>
-<TD>
-</TR>
 </FORM>
 </TABLE>
 <a href="usermanager.php?start=<?=($startLimit-100)>=0?$startLimit-100:0?>">Prev 100</a> <a href="usermanager.php?start=<?=$endLimit?>">Next 100</a>
+
+<?php
+} elseif (!empty($nameq)) {
+?>
+
+<p>No users matching your query were found.  Please try again.</p>
+
+<?php
+}
+?>
 <h2><a href="?function=adduser">Add New User</A></h2>
 <div style="width: 580px; border: 0px dotted #AAA; margin-top: 1px; margin-left: 50px; margin-bottom: 5px; font-size: 10pt; font-weight: bold">
 
