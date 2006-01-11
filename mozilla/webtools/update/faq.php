@@ -170,6 +170,9 @@ echo '</table>'
 
 ?>
 
+<h2>I see this error when trying to upload my extension or theme: "The Name for your extension or theme already exists in the Update database."</h2>
+<p>This is typically caused by mismatching GUIDs or a duplicate record.  If there is a duplicate record, chances are you should submit an update instead of trying to create a new extension or theme.  If you cannot see the existing record, then it is owned by another author, and you should consider renaming your extension/theme.</p>
+
 </div>
 
 <?php

@@ -486,29 +486,37 @@ $type = escape_string($_POST["type"]);
 
 //Check to ensure tha the name isn't already taken, if it is, throw an error and halt.
 $sql = "SELECT `Name` from `main` WHERE `Name`='$name' and `GUID` != '$guid'";
- $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-   if (mysql_num_rows($sql_result)=="0") {
+$sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 
-if ($_POST["mode"]=="update") { 
-$sql = "UPDATE `main` SET `Name`='$name', `Homepage`='$homepage', `Description`='$description', `DateUpdated`=NOW(NULL) WHERE `ID`='$item_id' LIMIT 1";
-} else {
-$sql = "INSERT INTO `main` (`GUID`, `Name`, `Type`, `Homepage`,`Description`,`DateAdded`,`DateUpdated`) VALUES ('$guid', '$name', '$type', '$homepage', '$description', NOW(NULL), NOW(NULL));";
-}
- $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-if ($sql_result) {echo"Updating/Adding record for $name...<br>\n";
+if (mysql_num_rows($sql_result)=="0") {
+
+    if ($_POST["mode"]=="update") { 
+        $sql = "UPDATE `main` SET `Name`='$name', `Homepage`='$homepage', `Description`='$description', `DateUpdated`=NOW(NULL) WHERE `ID`='$item_id' LIMIT 1";
     } else {
-    //Handle Error Case and Abort
-    $failure = "true";
-    echo"Failure to successfully add/update main record. Unrecoverable Error, aborting.<br>\n";
-    require_once(FOOTER);
-    exit;
+        $sql = "INSERT INTO `main` (`GUID`, `Name`, `Type`, `Homepage`,`Description`,`DateAdded`,`DateUpdated`) VALUES ('$guid', '$name', '$type', '$homepage', '$description', NOW(NULL), NOW(NULL));";
     }
 
+    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+    if ($sql_result) {
+        echo"Updating/Adding record for $name...<br>\n";
+    } else {
+        //Handle Error Case and Abort
+        $failure = "true";
+        echo"Failure to successfully add/update main record. Unrecoverable Error, aborting.<br>\n";
+        require_once(FOOTER);
+        exit;
+    }
 } else {
-//Name wasn't unique, error time. :-)
+    //Name wasn't unique, error time. :-)
     //Handle Error Case and Abort
     $failure = "true";
-    echo"<strong>Error!</strong> The Name for your extension or theme already exists in the Update database.<br>\nCannot Continue, aborting.<br>\n";
+    echo"<p><strong>Error!</strong> The Name for your extension or theme already exists in the Update database.  Please make sure that:</p>\n";
+    echo <<<OPTIONS
+    <ul>
+        <li>Your GUIDs match -- the most common cause for this error is mismatched GUIDs (please make sure you also have the {}).</li>
+        <li>You do not have a duplicate entry in the database.  If you do, you should update that entry, or delete it and try again.</li>
+    </ul>
+OPTIONS;
     require_once(FOOTER);
     exit;
 }
