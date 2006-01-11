@@ -106,6 +106,14 @@ $id = $manifestdata["id"];
 $version = $manifestdata["version"];
 $homepage = $manifestdata["homepageURL"];
 
+// Do we have an updateURL?  If so, error out.
+if (isset($manifestdata['updateURL'])) {
+    echo '<p>Addons cannot have an external updateURL value.   Please remove this from your install.rdf and try again.</p>';
+    echo '</div>';
+    require_once(FOOTER);
+    exit;
+}
+
 // $names, $descriptions are arrays keyed by locale
 $names = $manifestdata["name"];
 $descriptions = $manifestdata["description"];
