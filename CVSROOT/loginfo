@@ -15,7 +15,7 @@
 # by a single format character, or followed by a set of format
 # characters surrounded by `{' and `}' as separators.  The format
 # characters are:
-# 
+#
 #   s = file name
 #   V = old version number (pre-checkin)
 #   v = new version number (post-checkin)
