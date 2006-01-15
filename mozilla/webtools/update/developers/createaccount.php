@@ -67,6 +67,12 @@ if ($_POST["password"]==$_POST["passwordconfirm"]) {$password = escape_string($_
 if ($_POST["name"]) { $name = escape_string($_POST["name"]); } else { $errors="true"; $namevalid="no"; }
 $website = escape_string($_POST["website"]);
 
+// Before doing an unneccessary query for dupes, check to see that the email has a valid format.
+if (!preg_match('/^[a-z0-9][-_.a-z0-9]*[@][a-z0-9][-_a-z0-9]*(\.[-_a-z0-9]+)*(\.[a-z]{2,6})$/i',$email)) {
+    $errors = 'true';
+    $emailvalid = 'bademail';
+}
+
 //Check e-mail address and see if its already in use.
 if ($emailvalid !="no") {
 $sql = "SELECT `UserEmail` from `userprofiles` WHERE `UserEmail`='$email' LIMIT 1";
@@ -75,10 +81,13 @@ $sql = "SELECT `UserEmail` from `userprofiles` WHERE `UserEmail`='$email' LIMIT 
 }
 
 if ($errors == "true") {
-echo"Errors have been found in your submission, please go back to the previous page and fix the errors and try again.<br>\n";
-if ($emailvalid=="no") {echo"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Your e-mail addresses didn't match, or your e-mail is already in use.<BR>\n"; }
-if ($passwordvalid=="no") {echo"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The passwords you entered did not match.<BR>\n"; }
-if ($namevalid=="no") {echo"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The name field cannot be left blank.<BR>\n"; }
+echo"<p>Errors have been found in your submission:</p>\n";
+echo '<ul>';
+if ($emailvalid=="no") {echo"<li>Your e-mail addresses didn't match, or your e-mail is already in use.</li>\n"; }
+if ($passwordvalid=="no") {echo"<li>The passwords you entered did not match.</li>\n"; }
+if ($namevalid=="no") {echo"<li>The name field cannot be left blank.</li>\n"; }
+if ($emailvalid=='bademail') {echo"<li>The email you entered cannot possibly be a valid email.  Please try again.</li>\n";}
+echo '</ul>';
 
 require_once(FOOTER);
 exit;
