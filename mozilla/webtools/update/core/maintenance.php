@@ -125,6 +125,7 @@ switch ($action) {
         // Get uncounted hits from the download table.
         $uncounted_hits_sql = "
             SELECT
+                MAX(dID) as max_did,
                 downloads.ID as ID,
                 COUNT(downloads.ID) as count
             FROM
@@ -146,8 +147,14 @@ switch ($action) {
 
         if ($affected_rows > 0) {
             $uncounted_hits = array();
+            $max_did = '';  // For knowing which items to mark as counted.
             while ($row = mysql_fetch_array($uncounted_hits_result)) {
                 $uncounted_hits[$row['ID']] = ($row['count'] > 0) ? $row['count'] : 0;
+
+                // If we haven't assigned the max dID yet, do so.
+                if (empty($max_did)) {
+                    $max_did = $row['max_did'];
+                }
             }
 
             echo 'Updating download totals ...'."\n";
@@ -176,6 +183,8 @@ switch ($action) {
                     `downloads`
                 SET
                     `counted`=1
+                WHERE
+                    dID <= {$max_did}
             ";
             $counted_update_result = mysql_query($counted_update_sql, $connection) 
                 or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 
