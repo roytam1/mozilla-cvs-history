@@ -41,6 +41,7 @@ require_once('../core/init.php');
 
 // Minimum number of seconds since the last comment.
 define("COMMENTS_MIN_BREAK", 90);
+define("COMMENTS_MAX_LENGTH", 2000);
 
 /**
  * Check if client has posted recently.
@@ -145,6 +146,12 @@ $comments = nl2br(strip_tags(escape_string($_POST["comments"])));
 $email = escape_string($_POST["email"]);
 
 $name="Anonymous";
+
+if (strlen($comments) > COMMENTS_MAX_LENGTH) {
+    page_error("29912312", "Your comment was longer than the maximum allowed length of ".COMMENTS_MAX_LENGTH." characters.");
+    exit;
+}
+
 if (isset($_POST["name"])) {
     $name = escape_string(strip_tags($_POST["name"]));
 }
