@@ -108,7 +108,16 @@ $homepage = $manifestdata["homepageURL"];
 
 // Do we have an updateURL?  If so, error out.
 if (isset($manifestdata['updateURL'])) {
+    echo '<h2>updateUrl not allowed</h2>';
     echo '<p>Addons cannot have an external updateURL value.   Please remove this from your install.rdf and try again.</p>';
+    echo '</div>';
+    require_once(FOOTER);
+    exit;
+}
+
+if (isset($id) && !preg_match('/^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}|[a-z0-9-\._]*\@[a-z0-9-\._]+)$/i',$id)) {
+    echo '<h2>Invalid id</h2>';
+    echo '<p>Your id is invalid.  Please update your install.rdf and try again.  For more information on valid id\'s, please see <a href="http://developer.mozilla.org/en/docs/Install_Manifests#id">developer.mozilla.org\'s page on id\'s</a>.</p>';
     echo '</div>';
     require_once(FOOTER);
     exit;
