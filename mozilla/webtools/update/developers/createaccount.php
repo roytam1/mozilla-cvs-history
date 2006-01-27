@@ -68,7 +68,8 @@ if ($_POST["name"]) { $name = escape_string($_POST["name"]); } else { $errors="t
 $website = escape_string($_POST["website"]);
 
 // Before doing an unneccessary query for dupes, check to see that the email has a valid format.
-if (!preg_match('/^[a-z0-9][-_.a-z0-9]*[@][a-z0-9][-_a-z0-9]*(\.[-_a-z0-9]+)*(\.[a-z]{2,6})$/i',$email)) {
+// Regex from Gavin Sharp -- thanks Gavin.
+if (!preg_match('/^(([A-Za-z0-9]+_+)|([A-Za-z0-9]+\-+)|([A-Za-z0-9]+\.+)|([A-Za-z0-9]+\++))*[A-Za-z0-9]+@((\w+\-+)|(\w+\.))*\w{1,63}\.[a-zA-Z]{2,6}$/',$email)) {
     $errors = 'true';
     $emailvalid = 'bademail';
 }
