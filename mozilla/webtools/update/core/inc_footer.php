@@ -40,12 +40,17 @@
 	<div id="footer">
         <p><a href="<?=WEB_PATH?>/?application=firefox" class="switch-fx">Firefox Add-ons </a><a href="<?=WEB_PATH?>/?application=thunderbird" class="switch-tb">Thunderbird Add-ons </a><a href="<?=WEB_PATH?>/?application=mozilla" class="switch-suite">Mozilla Suite Add-ons </a></p>
         <p><a href="http://www.mozilla.org/privacy-policy.html">Privacy Policy</a> <a href="<?=WEB_PATH?>/faq.php">FAQ</a> <a href="http://www.mozilla.org/foundation/donate.html">Donate to Mozilla</a> <a href="http://mozilla.org/">The Mozilla Organization</a></p>
+
         <p><span>Copyright &copy; 2004-2006</span>  <a href="http://www.xramp.com/">256-bit SSL Encryption provided by XRamp</a></p>
 	</div>
   <!-- closes #footer-->
 
 </div>
 <!-- closes #container -->
+
+<div class="disclaimer">
+Mozilla is providing links to these applications as a courtesy, and  makes no representations regarding the applications or any information related thereto. Any questions, complaints or claims regarding the applications must be directed to the appropriate software vendor.  You may also contact <a href="mailto:umo-admins@mozilla.org">umo-admins at mozilla dot org</a>.
+</div>
 
 </body>
 </html>
