@@ -49,7 +49,7 @@
 <!-- closes #container -->
 
 <div class="disclaimer">
-Mozilla is providing links to these applications as a courtesy, and makes no representations regarding the applications or any information related thereto. Any questions, complaints or claims regarding the applications must be directed to the appropriate software vendor.  See the <a href="http://mozilla.org/support/">Mozilla Support Page</a> for support information and contacts.
+Mozilla is providing links to these applications as a courtesy, and makes no representations regarding the applications or any information related thereto. Any questions, complaints or claims regarding the applications must be directed to the appropriate software vendor.  See our <a href="<?=WEB_PATH?>/support.php">Support Page</a> for support information and contacts.
 </div>
 
 </body>
