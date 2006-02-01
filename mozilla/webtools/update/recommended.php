@@ -111,6 +111,15 @@ of new items, access to your saved items, and integration with the  Firefox sear
 </div>
 
 <div class="recommended">
+<img class="recommended-img" alt="" src="./images/recommended/performancing-small.png"/>
+<h2><a href="./extensions/moreinfo.php?id=1730">Performancing</a></h2>
+<div class="recommended-download">
+<h3><a href="http://releases.mozilla.org/pub/mozilla.org/extensions/performancing/performancing-1.0.1-fx+fl+mz.xpi" onclick="return install(event,'Performancing 1.0.1', '/~morgamic/tip/images/default.png');" title="Install Performancing 1.0.1 (Right-Click to Download)">Install Extension (146KB)</a></h3>
+</div>
+<p>Performancing for Firefox is a full featured blog editor that sits right in your Firefox browse and lets you post to your blog easiy. You can drag and drop formatted text from the page you happen to be browsing, and take notes as well as post to your blog.</p>
+</div>
+
+<div class="recommended">
 <img class="recommended-img" alt="" src="./images/recommended/sage.png"/>
 <h2><a href="./extensions/moreinfo.php?id=77">Sage</a></h2>
 <div class="recommended-download">
