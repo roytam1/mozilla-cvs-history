@@ -50,7 +50,9 @@ installtrigger('extensions');
 echo <<<pagetop
 <div id="mBody">
 <h1>Extend Firefox Contest Finalists</h1>
-<p>The following extensions were finalists in the recent <a href="http://extendfirefox.com/">Extend Firefox Contest</a>, a contest held to award the best and brightest extension developers in the Firefox community.</p>
+<p>We are happy to announce the finalists in our <a href="http://extendfirefox.com/">Extend Firefox Contest</a>, a contest held to award the best and brightest extension developers in the Firefox community.  The contest asked entrants to create Firefox Extensions that are innovative, useful, and integrate with today's Web services. Many thanks to everyone who entered and everyone who helped spread the word about the contest.</p>
+
+<p>Winners will be announced in mid-February.</p>
 pagetop;
 
 /**
@@ -62,7 +64,7 @@ $guids = array(
 '{B9DAB69C-460E-4085-AE6C-F95B0D858581}',
 '{DDC359D1-844A-42a7-9AA1-88A850A938A8}',
 '{89506680-e3f4-484c-a2c0-ed711d481eda}',
-'{0538E3E3-7E9B-4d49-8831-A227C80A7AD3}',
+'{3CE993BF-A3D9-4fd2-B3B6-768CBBC337F8}',
 '{268ad77e-cff8-42d7-b479-da60a7b93305}',
 '{77b819fa-95ad-4f2c-ac7c-486b356188a9}',
 '{bbc21d30-1cff-11da-8cd6-0800200c9a66}',
@@ -91,7 +93,7 @@ $descriptions = array(
 '{89506680-e3f4-484c-a2c0-ed711d481eda}'=>"View open Tabs and Windows with Showcase.  You can use it in two ways: global mode (F12) or local mode (Shift + F12). In global mode, a new window will be opened with thumbnails of the pages you've opened in all windows. In local mode, only content in tabs of your current window will be shown.
 
 You can also right click in those thumbnails to perform the most usual operations on them. Mouse middle button can be used to zoom a thumbnail, although other actions can be assigned to it.",
-'{0538E3E3-7E9B-4d49-8831-A227C80A7AD3}'=>"Get international weather forecasts and display it in any toolbar or status bar.",
+'{3CE993BF-A3D9-4fd2-B3B6-768CBBC337F8}'=>"Get international weather forecasts and display it in any toolbar or status bar.",
 '{268ad77e-cff8-42d7-b479-da60a7b93305}'=>"Select from several of your favorite toolbars including including Google, Yahoo, Ask Jeeves, Teoma, Amazon, Download.com and others with one toolbar. The entire toolbar reconfigures when you select a different engine and it includes many advanced features found in each engine.
 You can also easily repeat your search on all engines included in toolbar.",
 '{77b819fa-95ad-4f2c-ac7c-486b356188a9}'=>"View pages with in Internet Explorer with IE Tab.  Select the Firefox icon on the bottom right of the browser to switch to using the Internet Explorer engine or Firefox to switch to IE.",
@@ -115,7 +117,7 @@ $screenshots = array(
 '{B9DAB69C-460E-4085-AE6C-F95B0D858581}'=>'deepest-sender-mini.png',
 '{DDC359D1-844A-42a7-9AA1-88A850A938A8}'=>'downthemall-small.png',
 '{89506680-e3f4-484c-a2c0-ed711d481eda}'=>'firefox-showcase.png',
-'{0538E3E3-7E9B-4d49-8831-A227C80A7AD3}'=>'forecastfoxenhanced-small.png',
+'{3CE993BF-A3D9-4fd2-B3B6-768CBBC337F8}'=>'forecastfoxenhanced-small.png',
 '{268ad77e-cff8-42d7-b479-da60a7b93305}'=>'groowe-small.png',
 '{77b819fa-95ad-4f2c-ac7c-486b356188a9}'=>'IE-Tab.png',
 '{bbc21d30-1cff-11da-8cd6-0800200c9a66}'=>'stickies-small.png',
