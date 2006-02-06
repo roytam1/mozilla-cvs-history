@@ -50,7 +50,7 @@ installtrigger('extensions');
 echo <<<pagetop
 <div id="mBody">
 <h1>Extend Firefox Contest Finalists</h1>
-<p>We are happy to announce the finalists in our <a href="http://extendfirefox.com/">Extend Firefox Contest</a>, a contest held to award the best and brightest extension developers in the Firefox community.  The contest asked entrants to create Firefox Extensions that are innovative, useful, and integrate with today's Web services. Many thanks to everyone who entered and everyone who helped spread the word about the contest.</p>
+<p>We are happy to announce the finalists in our <a href="http://extendfirefox.com/">Extend Firefox Contest</a>, a contest held to award the best and brightest extension developers in the Firefox community.  The contest asked entrants to create Firefox Extensions that are innovative, useful, and integrate with today's Web services. Over 200 Extensions were submitted to the contest.  Many thanks to everyone who entered and everyone who helped spread the word about the contest.</p>
 
 <p>Winners will be announced in mid-February.</p>
 pagetop;
@@ -109,8 +109,6 @@ You can also easily repeat your search on all engines included in toolbar.",
 '{D5EDC062-A372-4936-B782-BD611DD18D86}'=>"RSS news reader with integrated with services such as Feedster and weather information.  Includes online help documentation."
 );
 
-
-
 $screenshots = array(
 '{34274bf4-1d97-a289-e984-17e546307e4f}'=>'adblock-mini.png',
 '{097d3191-e6fa-4728-9826-b533d755359d}'=>'all-in-one-mini.png',
@@ -132,7 +130,13 @@ $screenshots = array(
 '{D5EDC062-A372-4936-B782-BD611DD18D86}'=>'wizz-small.png'
 );
 
-
+$authors = array(
+'{34274bf4-1d97-a289-e984-17e546307e4f}'=>'Ben Karel (and the Adblock Crew)',
+'{DDC359D1-844A-42a7-9AA1-88A850A938A8}'=>'Federico Parodi',
+'{a6ca9b3b-5e52-4f47-85d8-cca35bb57596}'=>'Peter Andrews (and the Sage Team)',
+'{53A03D43-5363-4669-8190-99061B2DEBA5}'=>'Taiga Gomibuchi',
+'separe@m4ng0.lilik.it'=>'Massimo Mangoni'
+);
 
 $webpath = WEB_PATH;
 $finalists = array();
@@ -176,10 +180,12 @@ while ($row = mysql_fetch_array($finalists_sql_result,MYSQL_ASSOC)) {
 // Display output.
 foreach ($finalists as $finalist) {
 
+$author = !empty($authors[$finalist['guid']]) ? $authors[$finalist['guid']] : $finalist['username'];
+
 echo <<<finalist
 <div class="recommended">
 <img class="recommended-img" alt="" src="{$webpath}/images/finalists/{$screenshots[$finalist['guid']]}"/>
-<h2><a href="./extensions/moreinfo.php?id={$finalist['id']}">{$finalist['name']}</a> <small>by {$finalist['username']}</small></h2>
+<h2><a href="./extensions/moreinfo.php?id={$finalist['id']}">{$finalist['name']}</a> <small>by {$author}</small></h2>
 <div class="recommended-download">
 <h3><a href="{$finalist['uri']}" onclick="return install(event,'{$finalist['name']} {$finalist['version']}', '{$webpath}/images/default.png');" title="Install {$finalist['name']} {$finalist['version']} (Right-Click to Download)">Install Extension ({$finalist['size']}KB)</a></h3>
 </div>
