@@ -121,6 +121,8 @@ MP;
     </div>
 </div>
 
+<div><a class="finalists-link" href="./finalists.php">Extend Firefox Contest Finalists Announced</a></div>
+
 <form id="front-search" method="get" action="<?=WEB_PATH?>/quicksearch.php" title="Search Mozilla Update">
     <div>
     <label for="q2" title="Search mozilla.org&quot;s sites">search:</label>

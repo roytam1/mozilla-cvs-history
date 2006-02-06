@@ -271,3 +271,19 @@
 .disclaimer a {
     color: #999;
 }
+
+.finalists-link {
+    border: 1px solid #ccc;
+    display: block;
+    text-align: center;
+    font-size: 1.3em;
+    background-color: #eee;
+    margin: 1em 0 .5em 0;
+    padding: .5em;
+    text-decoration: none;
+}
+
+.finalists-link:hover {
+    background-color: #fff;
+    border: 1px inset #ccc;
+}
