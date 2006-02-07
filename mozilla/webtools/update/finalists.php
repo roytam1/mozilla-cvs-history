@@ -87,8 +87,8 @@ $guids_imploded = implode(',',$guids_tmp);
 
 $descriptions = array(
 '{34274bf4-1d97-a289-e984-17e546307e4f}'=>"Block ads including Flash ads from their source.  Right click on an ad and select Adblock to block ads.  Hit the status-element and see what has or hasn't been blocked.",
-'{097d3191-e6fa-4728-9826-b533d755359d}'=>"Manage Extensions, Themes, Downlaods, and more including Web content via Firefox’s sidebar.",
-'{B9DAB69C-460E-4085-AE6C-F95B0D858581}'=>"Blog directly within Firefox to Live Journal, WordPress or Blogger. Select Deepest Sender from the ‘Tools’ menu.",
+'{097d3191-e6fa-4728-9826-b533d755359d}'=>"Manage Extensions, Themes, Downloads, and more including Web content via Firefox’s sidebar.",
+'{B9DAB69C-460E-4085-AE6C-F95B0D858581}'=>"Blog directly within Firefox to LiveJournal, WordPress or Blogger. Select Deepest Sender from the ‘Tools’ menu.",
 '{DDC359D1-844A-42a7-9AA1-88A850A938A8}'=>"DownThemAll lets you filter and download all the links contained in any web-page, and lets you pause and resume downloads from previous Firefox sessions.",
 '{89506680-e3f4-484c-a2c0-ed711d481eda}'=>"View open Tabs and Windows with Showcase.  You can use it in two ways: global mode (F12) or local mode (Shift + F12). In global mode, a new window will be opened with thumbnails of the pages you've opened in all windows. In local mode, only content in tabs of your current window will be shown.
 
@@ -98,9 +98,9 @@ You can also right click in those thumbnails to perform the most usual operation
 You can also easily repeat your search on all engines included in toolbar.",
 '{77b819fa-95ad-4f2c-ac7c-486b356188a9}'=>"View pages with in Internet Explorer with IE Tab.  Select the Firefox icon on the bottom right of the browser to switch to using the Internet Explorer engine or Firefox to switch to IE.",
 '{bbc21d30-1cff-11da-8cd6-0800200c9a66}'=>"Allows sticky notes to be added to any web page, and viewed upon visiting the Web page again.  You can also share sticky notes.  Requires account.",
-'{37E4D8EA-8BDA-4831-8EA1-89053939A250}'=>"PDF Download Extension allows you to choose if you want to view a PDF file inside the browser (as PDF or HTML), if you want to view it outside Firefox with your default or custom PDF reader, or if you want to download i",
+'{37E4D8EA-8BDA-4831-8EA1-89053939A250}'=>"PDF Download Extension allows you to choose if you want to view a PDF file inside the browser (as PDF or HTML), if you want to view it outside Firefox with your default or custom PDF reader, or if you want to download it.",
 '{a089fffd-e0cb-431b-8d3a-ebb8afb26dcf}'=>"Platypus is a Firefox extension which lets you modify a Web page from your browser -- \"What You See Is What You Get\" -- and then save those changes as a GreaseMonkey script so that they'll be repeated the next time you visit the page.",
-'Reveal@sourmilk.net'=>"Reveal allows you to see thumbnails of pages in your history by mousing over the back and forward buttons.  With many tabs open, quickly find the page you want, by pressing F2. Reveal also includes a magnifying glass to help you see everything. Comes  with a quick tour of all the features. ",
+'Reveal@sourmilk.net'=>"Reveal allows you to see thumbnails of pages in your history by mousing over the back and forward buttons.  With many tabs open, quickly find the page you want, by pressing F2. Reveal also has rectangular magnifying glass you can use to zoom in on areas of any web page. Comes  with a quick tour of all the features. ",
 '{a6ca9b3b-5e52-4f47-85d8-cca35bb57596}'=>"A lightweight RSS and Atom feed aggregator.  Alt+S to open Sage in the Sidebar to start reading feed content.",
 '{53A03D43-5363-4669-8190-99061B2DEBA5}'=>"Highlight text, create sticky notes, and more to Web pages and Web sites that are saved to your desktop.  Scrapbook Includes full text search and quick filtering of saved pages.",
 'separe@m4ng0.lilik.it'=>"Manage tabs by creating a tab separator.  Right click on a Tab to add a new Tab separator.  Click on the Tab separator to view thumbnail images of web sites that are to the left and right of the Tab separator.",
@@ -157,15 +157,16 @@ $finalists_sql = "
                 u.username
             FROM
                 main m
-            INNER JOIN version v ON m.ID = v.ID
-            INNER JOIN authorxref ON authorxref.ID = m.ID
-            INNER JOIN userprofiles u ON authorxref.UserID = u.UserID
+            JOIN version v ON m.id = v.id
+            JOIN authorxref a ON m.id = a.id
+            JOIN userprofiles u ON a.userid = u.userid
             WHERE
+                v.vid = (SELECT max(vid) FROM version WHERE id=m.id) AND
                 approved = 'YES' AND
-                Type = 'E' AND
-                guid IN({$guids_imploded})
+                type = 'E' AND
+                m.guid IN({$guids_imploded})
             GROUP BY
-                m.ID
+                v.ID
             ORDER BY
                 LTRIM(m.name)
 ";
