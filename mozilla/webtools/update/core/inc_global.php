@@ -173,20 +173,27 @@ function installtrigger($functionname) {
         <!--
 
         function install( aEvent, extName, iconURL)  {   
-            var params = new Array();
-            params[extName] = {
-                URL: aEvent.target.href,
-                IconURL: iconURL,
-                toString: function () { return this.URL; }
-            };
-            InstallTrigger.install(params);
 
-            try {
-                var p = new XMLHttpRequest();
-                p.open("GET", "'.WEB_PATH.'/core/install.php?uri="+aEvent.target.href, true);
-                p.send(null);
-            } catch(e) { }
-            return false;
+            if (aEvent.target.href.match(/^.+\.xpi$/)) {
+
+                var params = new Array();
+
+                params[extName] = {
+                    URL: aEvent.target.href,
+                    IconURL: iconURL,
+                    toString: function () { return this.URL; }
+                };
+
+                InstallTrigger.install(params);
+
+                try {
+                    var p = new XMLHttpRequest();
+                    p.open("GET", "'.WEB_PATH.'/core/install.php?uri="+aEvent.target.href, true);
+                    p.send(null);
+                } catch(e) { }
+
+                return false;
+            }
         }
 
         -->

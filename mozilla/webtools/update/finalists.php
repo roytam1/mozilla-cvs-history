@@ -154,12 +154,17 @@ $finalists_sql = "
                 v.uri,
                 v.size,
                 v.version,
-                u.username
+                (   
+                    SELECT u.username          
+                    FROM userprofiles u
+                    JOIN authorxref a ON u.userid = a.userid
+                    WHERE a.id = m.id
+                    ORDER BY u.userid DESC
+                    LIMIT 1
+                ) as username
             FROM
                 main m
             JOIN version v ON m.id = v.id
-            JOIN authorxref a ON m.id = a.id
-            JOIN userprofiles u ON a.userid = u.userid
             WHERE
                 v.vid = (SELECT max(vid) FROM version WHERE id=m.id AND approved='YES') AND
                 type = 'E' AND
