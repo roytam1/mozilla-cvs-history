@@ -135,7 +135,8 @@ $authors = array(
 '{DDC359D1-844A-42a7-9AA1-88A850A938A8}'=>'Federico Parodi',
 '{a6ca9b3b-5e52-4f47-85d8-cca35bb57596}'=>'Peter Andrews (and the Sage Team)',
 '{53A03D43-5363-4669-8190-99061B2DEBA5}'=>'Taiga Gomibuchi',
-'separe@m4ng0.lilik.it'=>'Massimo Mangoni'
+'separe@m4ng0.lilik.it'=>'Massimo Mangoni',
+'{77b819fa-95ad-4f2c-ac7c-486b356188a9}'=>'yuoo2k and Hong Jen Yee (PCMan)'
 );
 
 $webpath = WEB_PATH;
