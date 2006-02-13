@@ -409,7 +409,7 @@ if (m:^mozilla/widget/public/.*$:) {return '177';}
 if (m:^mozilla/widget/src/xpwidgets/.*$:) {return '177';}
 if (m:^mozilla/nsprpub/.*$:) {return '78';}
 if (m:^mozilla/gfx/src/mac/.*$:) {return '178';}
-if (m:^mozilla/widget/src/cocoa/$:) {return '178';}
+if (m:^mozilla/widget/src/cocoa/.*$:) {return '178';}
 if (m:^mozilla/widget/src/mac/.*$:) {return '178';}
 if (m:^mozilla/modules/plugin/.*$:) {return '81';}
 if (m:^mozilla/accessibility/.*$:) {return '180';}
