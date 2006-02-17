@@ -472,7 +472,6 @@ if (m:^js/src/perlconnect$:) {return '111';}
 if (m:^mozilla/content/xsl/.*$:) {return '140';}
 if (m:^mozilla/extensions/transformiix/.*$:) {return '140';}
 if (m:^mozilla/calendar/.*$:) {return '183';}
-if (m:^mozilla/other-licenses/libical/.*$:) {return '183';}
 if (m:^gfx/src/photon/.*$:) {return '113';}
 if (m:^widget/src/photon/.*$:) {return '113';}
 if (m:^mozilla/content/xbl/public/.*$:) {return '106';}
