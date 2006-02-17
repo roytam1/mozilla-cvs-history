@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/org.mozilla.xpcom.feature_1.8.0.1.jar" id="org.mozilla.xpcom.feature" version="1.8.0.1">
+      <category name="Mozilla XPCOM for Java"/>
+   </feature>
+   <feature url="features/org.mozilla.javascript.feature_1.6.2.jar" id="org.mozilla.javascript.feature" version="1.6.2">
+      <category name="Mozilla Javascript for Java"/>
+   </feature>
+   <category-def name="Mozilla XPCOM for Java" label="Mozilla"/>
+   <category-def name="Mozilla Javascript for Java" label="Mozilla"/>
+</site>
