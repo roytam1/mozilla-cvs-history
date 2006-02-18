@@ -401,8 +401,8 @@ if (m:^mozilla/js/src/[^/]*$:) {return '70';}
 if (m:^mozilla/js/src/config/.*$:) {return '70';}
 if (m:^mozilla/js/src/editline/.*$:) {return '70';}
 if (m:^mozilla/js/src/fdlibm/.*$:) {return '70';}
-if (m:^mozilla/gfx/src/beos$:) {return '172';}
-if (m:^mozilla/widget/src/beos$:) {return '172';}
+if (m:^mozilla/gfx/src/beos/.*$:) {return '172';}
+if (m:^mozilla/widget/src/beos/.*$:) {return '172';}
 if (m:^mozilla/extensions/venkman/.*$:) {return '71';}
 if (m:^mozilla/js/jsd/.*$:) {return '71';}
 if (m:^mozilla/extensions/help$:) {return '174';}
