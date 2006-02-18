@@ -488,8 +488,8 @@ if (m:^mozilla/js/src/perlconnect/.*$:) {return '111';}
 if (m:^mozilla/content/xsl/.*$:) {return '140';}
 if (m:^mozilla/extensions/transformiix/.*$:) {return '140';}
 if (m:^mozilla/calendar/.*$:) {return '183';}
-if (m:^gfx/src/photon/.*$:) {return '113';}
-if (m:^widget/src/photon/.*$:) {return '113';}
+if (m:^mozilla/gfx/src/photon/.*$:) {return '113';}
+if (m:^mozilla/widget/src/photon/.*$:) {return '113';}
 if (m:^mozilla/content/xbl/public/.*$:) {return '106';}
 if (m:^mozilla/content/xbl/src/.*$:) {return '106';}
 if (m:^mozilla/content/xul/.*$:) {return '106';}
