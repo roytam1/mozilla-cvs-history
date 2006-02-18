@@ -406,7 +406,7 @@ if (m:^mozilla/widget/src/beos$:) {return '172';}
 if (m:^mozilla/extensions/venkman/.*$:) {return '71';}
 if (m:^mozilla/js/jsd/.*$:) {return '71';}
 if (m:^mozilla/extensions/help$:) {return '174';}
-if (m:^js/src/liveconnect/.*$:) {return '72';}
+if (m:^mozilla/js/src/liveconnect/.*$:) {return '72';}
 if (m:^mozilla/gfx/src/windows/.*$:) {return '175';}
 if (m:^mozilla/widget/src/windows/.*$:) {return '175';}
 if (m:^mozilla/netwerk/.*$:) {return '77';}
