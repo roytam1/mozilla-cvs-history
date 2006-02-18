@@ -410,11 +410,13 @@ if (m:^mozilla/js/src/liveconnect/.*$:) {return '72';}
 if (m:^mozilla/gfx/src/windows/.*$:) {return '175';}
 if (m:^mozilla/widget/src/windows/.*$:) {return '175';}
 if (m:^mozilla/netwerk/.*$:) {return '77';}
+if (m:^mozilla/gfx/[^/]*$:) {return '177';}
 if (m:^mozilla/gfx/public/.*$:) {return '177';}
-if (m:^mozilla/gfx/src/*\.cpp$:) {return '177';}
-if (m:^mozilla/gfx/src/*\.h$:) {return '177';}
+if (m:^mozilla/gfx/src/[^/]*$:) {return '177';}
 if (m:^mozilla/gfx/src/shared/.*$:) {return '177';}
+if (m:^mozilla/widget/[^/]*$:) {return '177';}
 if (m:^mozilla/widget/public/.*$:) {return '177';}
+if (m:^mozilla/widget/src/[^/]*$:) {return '177';}
 if (m:^mozilla/widget/src/xpwidgets/.*$:) {return '177';}
 if (m:^mozilla/nsprpub/.*$:) {return '78';}
 if (m:^mozilla/gfx/src/mac/.*$:) {return '178';}
