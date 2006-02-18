@@ -394,6 +394,7 @@ if (m:^mozilla/modules/oji/.*$:) {return '68';}
 if (m:^mozilla/nav-java/.*$:) {return '68';}
 if (m:^mozilla/sun-java/.*$:) {return '68';}
 if (m:^mozilla/mail/.*$:) {return '170';}
+if (m:^mozilla/other-licenses/branding/thunderbird/.*$:) {return '170';}
 if (m:^mozilla/caps/.*$:) {return '69';}
 if (m:^mozilla/extensions/cookie/.*$:) {return '171';}
 if (m:^mozilla/js/src/[^/]*$:) {return '70';}
