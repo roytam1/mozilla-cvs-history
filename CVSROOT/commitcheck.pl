@@ -431,9 +431,8 @@ if (m:^mozilla/extensions/inspector$:) {return '184';}
 if (m:^mozilla/content/xml/.*$:) {return '88';}
 if (m:^mozilla/extensions/xmlextras/.*$:) {return '88';}
 if (m:^mozilla/parser/expat/.*$:) {return '88';}
-if (m:^content/svg/.*$:) {return '187';}
-if (m:^dom/public/idl/svg/.*$:) {return '187';}
-if (m:^layout/svg/.*$:) {return '187';}
+if (m:^mozilla/content/svg/.*$:) {return '187';}
+if (m:^mozilla/layout/svg/.*$:) {return '187';}
 if (m:^mozilla/xpcom/[^/]*$:) {return '89';}
 if (m:^mozilla/xpcom/base/.*$:) {return '89';}
 if (m:^mozilla/xpcom/build/.*$:) {return '89';}
