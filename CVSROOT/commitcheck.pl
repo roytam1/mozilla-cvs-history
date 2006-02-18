@@ -468,7 +468,6 @@ if (m:^mozilla/layout/macbuild/.*$:) {return '98';}
 if (m:^mozilla/layout/printing/.*$:) {return '98';}
 if (m:^mozilla/layout/tables/.*$:) {return '98';}
 if (m:^mozilla/layout/tools/.*$:) {return '98';}
-if (m:^modules/libpr0n/decoders/mng/.*$:) {return '155';}
 if (m:^mozilla/modules/libimg/mng/.*$:) {return '155';}
 if (m:^mozilla/layout/style/.*$:) {return '100';}
 if (m:^mozilla/docshell/.*$:) {return '101';}
