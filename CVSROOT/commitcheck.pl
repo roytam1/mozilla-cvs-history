@@ -376,8 +376,8 @@ if (m:^mozilla/directory/ldapsdk\.mk$:) {return '59';}
 if (m:^mozilla/directory/Makefile$:) {return '59';}
 if (m:^mozilla/gfx/src/qt/.*$:) {return '161';}
 if (m:^mozilla/widget/src/qt/.*$:) {return '161';}
-if (m:^gfx/src/ps/.*$:) {return '62';}
-if (m:^gfx/src/psshared/.*$:) {return '62';}
+if (m:^mozilla/gfx/src/ps/.*$:) {return '62';}
+if (m:^mozilla/gfx/src/psshared/.*$:) {return '62';}
 if (m:^mozilla/modules/libpr0n/.*$:) {return '63';}
 if (m:^mozilla/extensions/p3p/.*$:) {return '162';}
 if (m:^jpeg$:) {return '64';}
