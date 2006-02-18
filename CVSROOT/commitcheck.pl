@@ -380,7 +380,7 @@ if (m:^mozilla/gfx/src/ps/.*$:) {return '62';}
 if (m:^mozilla/gfx/src/psshared/.*$:) {return '62';}
 if (m:^mozilla/modules/libpr0n/.*$:) {return '63';}
 if (m:^mozilla/extensions/p3p/.*$:) {return '162';}
-if (m:^jpeg$:) {return '64';}
+if (m:^mozilla/jpeg/.*$:) {return '64';}
 if (m:^mozilla/layout/mathml/.*$:) {return '165';}
 if (m:^mozilla/modules/libimg/png/.*$:) {return '65';}
 if (m:^mozilla/browser/.*$:) {return '166';}
