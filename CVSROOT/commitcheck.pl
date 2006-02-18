@@ -397,10 +397,10 @@ if (m:^mozilla/sun-java/.*$:) {return '68';}
 if (m:^mozilla/mail/.*$:) {return '170';}
 if (m:^mozilla/caps/.*$:) {return '69';}
 if (m:^mozilla/extensions/cookie$:) {return '171';}
-if (m:^js/src/[^/]*$:) {return '70';}
-if (m:^js/src/config/.*$:) {return '70';}
-if (m:^js/src/editline/.*$:) {return '70';}
-if (m:^js/src/fdlibm/.*$:) {return '70';}
+if (m:^mozilla/js/src/[^/]*$:) {return '70';}
+if (m:^mozilla/js/src/config/.*$:) {return '70';}
+if (m:^mozilla/js/src/editline/.*$:) {return '70';}
+if (m:^mozilla/js/src/fdlibm/.*$:) {return '70';}
 if (m:^mozilla/gfx/src/beos$:) {return '172';}
 if (m:^mozilla/widget/src/beos$:) {return '172';}
 if (m:^mozilla/extensions/venkman/.*$:) {return '71';}
