@@ -322,7 +322,7 @@ if (m:^mozilla/webtools/bugzilla/.*$:) {return '191';}
 }
 if ($b eq 'HEAD') {
 if (m:^mozilla/tools/.*$:) {return '112';}
-if (m:^xpcom/typelib$:) {return '117';}
+if (m:^mozilla/xpcom/typelib/.*$:) {return '117';}
 if (m:^mozilla/js/src/xpconnect/.*$:) {return '118';}
 if (m:^mozilla/mailnews/news/.*$:) {return '122';}
 if (m:^mozilla/mailnews/[^/]*$:) {return '123';}
