@@ -343,7 +343,7 @@ if (m:^mozilla/security/coreconf/.*$:) {return '145';}
 if (m:^mozilla/security/dbm/.*$:) {return '145';}
 if (m:^mozilla/security/jss/.*$:) {return '145';}
 if (m:^mozilla/security/nss/.*$:) {return '145';}
-if (m:^composer$:) {return '173';}
+if (m:^mozilla/composer/.*$:) {return '173';}
 if (m:^mozilla/mstone/.*$:) {return '147';}
 if (m:^mozilla/[^/]*$:) {return '19';}
 if (m:^mozilla/xpinstall/.*$:) {return '150';}
