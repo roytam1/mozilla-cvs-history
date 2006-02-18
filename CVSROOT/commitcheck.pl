@@ -337,7 +337,7 @@ if (m:^mozilla/java/util/.*$:) {return '133';}
 if (m:^mozilla/extensions/xmlterm/.*$:) {return '141';}
 if (m:^CVSROOT/commitcheck\.pl$:) {return '3';}
 if (m:^CVSROOT/passwd$:) {return '3';}
-if (m:^xpcom/remote$:) {return '143';}
+if (m:^mozilla/xpcom/remote/.*$:) {return '143';}
 if (m:^embedding/browser/gtk$:) {return '144';}
 if (m:^mozilla/security/coreconf/.*$:) {return '145';}
 if (m:^mozilla/security/dbm/.*$:) {return '145';}
