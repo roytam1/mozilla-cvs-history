@@ -141,7 +141,7 @@ $mode{'70'} = 'Restricted';
 $branch{'70'} = 'HEAD';
 $fullname{'70'} = 'JavaScript';
 $blessed{'70'} = ['timeless%mozdev.org','cls%seawood.org','bratell%lysator.liu.se','bclary%bclary.com',];
-$super{'70'} = ['mrbkap%gmail.com','shaver%mozilla.org','jband%netscape.com','igor%mir2.org','brendan%mozilla.org',];
+$super{'70'} = ['shaver%mozilla.org','mrbkap%gmail.com','jband%netscape.com','igor%mir2.org','brendan%mozilla.org',];
 $mode{'71'} = 'Open';
 $branch{'71'} = 'HEAD';
 $fullname{'71'} = 'JavaScript Debugger';
@@ -394,12 +394,10 @@ if (m:^mozilla/sun-java/.*$:) {return '68';}
 if (m:^mozilla/mail/.*$:) {return '170';}
 if (m:^mozilla/caps/.*$:) {return '69';}
 if (m:^mozilla/extensions/cookie$:) {return '171';}
-if (m:^js/src/*\.c$:) {return '70';}
-if (m:^js/src/*\.def$:) {return '70';}
-if (m:^js/src/*\.h$:) {return '70';}
-if (m:^js/src/*\.m*k$:) {return '70';}
-if (m:^js/src/*\.tbl$:) {return '70';}
-if (m:^js/src/*akefile.*$:) {return '70';}
+if (m:^js/src/[^/]*$:) {return '70';}
+if (m:^js/src/config/.*$:) {return '70';}
+if (m:^js/src/editline/.*$:) {return '70';}
+if (m:^js/src/fdlibm/.*$:) {return '70';}
 if (m:^mozilla/gfx/src/beos$:) {return '172';}
 if (m:^mozilla/widget/src/beos$:) {return '172';}
 if (m:^mozilla/extensions/venkman/.*$:) {return '71';}
