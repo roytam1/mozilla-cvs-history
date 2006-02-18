@@ -428,7 +428,8 @@ if (m:^mozilla/extensions/typeaheadfind/.*$:) {return '181';}
 if (m:^mozilla/modules/libreg/.*$:) {return '84';}
 if (m:^mozilla/content/xbl/builtin/.*$:) {return '182';}
 if (m:^mozilla/modules/security/.*$:) {return '86';}
-if (m:^mozilla/extensions/inspector$:) {return '184';}
+if (m:^mozilla/extensions/inspector/.*$:) {return '184';}
+if (m:^mozilla/layout/inspector/.*$:) {return '184';}
 if (m:^mozilla/content/xml/.*$:) {return '88';}
 if (m:^mozilla/extensions/xmlextras/.*$:) {return '88';}
 if (m:^mozilla/parser/expat/.*$:) {return '88';}
