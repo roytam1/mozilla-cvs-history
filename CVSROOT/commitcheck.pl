@@ -453,7 +453,7 @@ if (m:^mozilla/xpcom/tools/.*$:) {return '89';}
 if (m:^mozilla/xpcom/windbgdlg/.*$:) {return '89';}
 if (m:^mozilla/suite/.*$:) {return '188';}
 if (m:^mozilla/xpcom/io/.*$:) {return '90';}
-if (m:^grendel$:) {return '189';}
+if (m:^mozilla/grendel/.*$:) {return '189';}
 if (m:^mozilla/modules/zlib/.*$:) {return '93';}
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '190';}
 if (m:^mozilla/gfx/src/xprint/.*$:) {return '179';}
