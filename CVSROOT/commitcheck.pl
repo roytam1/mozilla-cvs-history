@@ -369,6 +369,7 @@ if (m:^mozilla/config/.*$:) {return '55';}
 if (m:^mozilla/l10n/.*$:) {return '55';}
 if (m:^mozilla/editor/.*$:) {return '56';}
 if (m:^mozilla/string/.*$:) {return '160';}
+if (m:^mozilla/xpcom/string/.*$:) {return '160';}
 if (m:^mozilla/directory/buildsdk\.txt$:) {return '59';}
 if (m:^mozilla/directory/c-sdk/.*$:) {return '59';}
 if (m:^mozilla/directory/ldapsdk\.mak$:) {return '59';}
