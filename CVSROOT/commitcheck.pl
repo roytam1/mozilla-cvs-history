@@ -457,6 +457,7 @@ if (m:^mozilla/modules/zlib/.*$:) {return '93';}
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '190';}
 if (m:^gfx/src/xprint$:) {return '179';}
 if (m:^mozilla/view/.*$:) {return '96';}
+if (m:^mozilla/layout/[^/]*$:) {return '98';}
 if (m:^mozilla/layout/base/.*$:) {return '98';}
 if (m:^mozilla/layout/build/.*$:) {return '98';}
 if (m:^mozilla/layout/doc/.*$:) {return '98';}
