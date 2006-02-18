@@ -448,7 +448,7 @@ if (m:^mozilla/xpcom/threads/.*$:) {return '89';}
 if (m:^mozilla/xpcom/tools/.*$:) {return '89';}
 if (m:^mozilla/xpcom/windbgdlg/.*$:) {return '89';}
 if (m:^mozilla/suite/.*$:) {return '188';}
-if (m:^xpcom/io$:) {return '90';}
+if (m:^mozilla/xpcom/io/.*$:) {return '90';}
 if (m:^grendel$:) {return '189';}
 if (m:^mozilla/modules/zlib/.*$:) {return '93';}
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '190';}
