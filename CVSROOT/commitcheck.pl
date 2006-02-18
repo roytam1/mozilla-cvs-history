@@ -485,7 +485,7 @@ if (m:^mozilla/js/rhino/.*$:) {return '138';}
 if (m:^mozilla/xpfe/.*$:) {return '137';}
 if (m:^mozilla/js/tests/.*$:) {return '114';}
 if (m:^mozilla/js/src/perlconnect/.*$:) {return '111';}
-if (m:^mozilla/content/xsl/.*$:) {return '140';}
+if (m:^mozilla/content/xslt/.*$:) {return '140';}
 if (m:^mozilla/extensions/transformiix/.*$:) {return '140';}
 if (m:^mozilla/calendar/.*$:) {return '183';}
 if (m:^mozilla/gfx/src/photon/.*$:) {return '113';}
