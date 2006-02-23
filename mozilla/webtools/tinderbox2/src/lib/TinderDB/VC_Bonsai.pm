@@ -845,7 +845,7 @@ sub status_table_row {
 
   # Track the treestate between calls with a global variable.
 
-  # This initalization may not be correct.  If we are creating a page
+  # This initialization may not be correct.  If we are creating a page
   # for a few days ago, when we start making the page, we do not know
   # the treestate. It is not so easy to find out the right tree state
   # for the first few rows, so fake it with the current state.
