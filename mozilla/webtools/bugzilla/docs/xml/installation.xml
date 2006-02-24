@@ -543,7 +543,7 @@
           file instead of sending them.  However, this is mainly intended 
           for testing, as disabling or diverting email on a production 
           machine would mean that users could miss important events (such 
-          as bug changes or the creation of new accouts).
+          as bug changes or the creation of new accounts).
         </para>
 
         <para>
