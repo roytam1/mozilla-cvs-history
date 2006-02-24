@@ -102,12 +102,13 @@ require_once(HEADER);
 <dt><img src="./images/search-engines/bittorrent.png" alt=""/> <a href="javascript:addEngine('bittorrent','png','File Sharing','0')">BitTorrent</a></dt><dd>Find Torrent files</dd>
 <dt><img src="./images/search-engines/del.icio.us.png" alt=""/> <a href="javascript:addEngine('del.icio.us','png','General','1091')">del.icio.us</a></dt><dd>Search through most bookmarked sites.</dd>
 <dt><img src="./images/search-engines/espn.png" alt=""/> <a href="javascript:addEngine('espn','png','Recreation','0')">ESPN</a></dt><dd>Get the latest sports news, scores, and highlights.</dd>
-<dt><img src="./images/search-engines/freedict.png" alt=""/> <a href="javascript:addEngine('freedict','png','Language dictionary','0')">The Free Dictionary</a></dt><dd>English, Medical, Legal, and Financial Dictionaries, Thesaurus, Encyclopedia and more.</dd>
+<dt><img src="./images/search-engines/expediadotcom.png" alt=""/> <a href="javascript:addEngine('expediadotcom','png','Travel','0')">Expedia</a></dt><dd>Search for hotels by destination with Expedia's Best Price Guarantee.</dd>
 </dl>
 </div>
 
 <div class="front-section">
 <dl>
+<dt><img src="./images/search-engines/freedict.png" alt=""/> <a href="javascript:addEngine('freedict','png','Language dictionary','0')">The Free Dictionary</a></dt><dd>English, Medical, Legal, and Financial Dictionaries, Thesaurus, Encyclopedia and more.</dd>
 <dt><img src="./images/search-engines/flickr-tags.png" alt=""/> <a href="javascript:addEngine('flickr-tags','png','Arts','0')">Flickr Tags</a></dt><dd>Search for photos on Flickr.</dd>
 <dt><img src="./images/search-engines/foodnetwork.png" alt=""/> <a href="javascript:addEngine('foodtv','png','Undefined','4003')">Food Network Recipes</a></dt><dd>Find recipes from your favorite chefs.</dd>
 <dt><img src="./images/search-engines/cddball.png" alt=""/> <a href="javascript:addEngine('cddball','png','CDDB Music Search','0')">gracenote</a></dt><dd>Find album, artist, and song information.</dd>
@@ -133,6 +134,7 @@ require_once(HEADER);
 
 <h2 class="clear-both">Additional Resources</h2>
 <ul>
+<li><img src="./images/search-engines/rollyo.jpg"/> <a href="http://www.rollyo.com/firefox_search.html"><strong>Rollyo: Roll Your Own Firefox Search Engine!</strong><br/>Create a personal search engine that provides relevant results from a hand selected list of sites.</a></li>
 <li><a href="http://mycroft.mozdev.org/">Browse through more search engines at mycroft.mozdev.org.</a></li>
 <li><a href="./extensions/moreinfo.php?id=1563">Use the SearchPluginHacks extension to remove a Search Engine.</a></li>
 </ul>
