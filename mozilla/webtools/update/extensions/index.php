@@ -162,14 +162,12 @@ $sql = "
         applications TA 
     ON 
         TV.AppID = TA.AppID
-    INNER JOIN 
-	os TOS 
-    ON TV.OSID = TOS.OSID
     WHERE
         `Type` = '{$type}' AND
         `AppName` = '{$application}' AND
-        (`OSName` = '$OS' OR `OSName` = 'ALL') AND
         `approved` = 'YES'
+    GROUP BY
+        TM.ID
     ORDER BY
         `downloadcount` DESC,
         `Rating` DESC, 
@@ -220,17 +218,14 @@ $sql = "
         applications TA 
     ON 
         TV.AppID = TA.AppID
-    INNER
-        JOIN os TOS
-    ON
-        TV.OSID = TOS.OSID
     WHERE  
         `Type`='E' AND 
         `AppName` = '$application' AND 
-        (`OSName` = '$OS' OR `OSName` = 'ALL') AND 
         `approved` = 'YES'
+    GROUP BY
+        TM.ID
     ORDER BY
-        DateAdded DESC
+        TM.DateUpdated DESC
     LIMIT 10
 ";
 

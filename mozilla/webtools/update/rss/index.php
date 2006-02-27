@@ -85,7 +85,7 @@ if ($type == 'E' || $type == 'T' || $type == 'P') {
 
 switch ($list) {
    case "Popular":
-     $orderby = "main.DownloadCount DESC";
+     $orderby = "main.DownloadCount DESC, main.Rating DESC, main.Name ASC";
      break;
    case "Updated":
      $orderby = "main.DateUpdated DESC";
@@ -95,7 +95,7 @@ switch ($list) {
      break;
    case "Newest":
    default:
-     $orderby = "main.DateAdded DESC";
+     $orderby = "main.DateUpdated DESC";
      break;
 }
 

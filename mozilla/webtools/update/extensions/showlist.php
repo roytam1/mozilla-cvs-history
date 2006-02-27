@@ -122,11 +122,11 @@ if ($category=="Editors Pick" or $category=="Newest" or $category=="Popular" or 
 if ($category =="Editors Pick") {
 $editorpick="true";
 } else if ($category =="Newest") {
-$orderby = "TV.DateAdded DESC, `Name` ASC";
+$orderby = "TV.DateAdded DESC, LTRIM(`Name`) ASC";
 } else if ($category =="Popular") {
-$orderby = "TM.downloadcount DESC, `Name` ASC";
+$orderby = "TM.downloadcount DESC, LTRIM(`Name`) ASC";
 } else if ($category =="Top Rated") {
-$orderby = "TM.Rating DESC, `Name` ASC";
+$orderby = "TM.Rating DESC, LTRIM(`Name`) ASC";
 }
 $catname = $category;
 $category = "%";
@@ -152,7 +152,7 @@ $sql .="GROUP BY `Name` ";
 if ($orderby) {
 $sql .="ORDER BY $orderby";
 } else {
-$sql .="ORDER  BY  `Name` , `Version` DESC ";
+$sql .="ORDER  BY  LTRIM(`Name`), `Version` DESC ";
 }
 
 $resultsquery = $sql;

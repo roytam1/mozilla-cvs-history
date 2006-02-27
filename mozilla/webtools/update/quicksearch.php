@@ -107,7 +107,8 @@ if ($didSearch) {
   // build our query
   $sql = "FROM `main` TM
           WHERE (TM.name LIKE '%" . preg_replace('/[\s]+/','%',$searchStr) . "%' 
-              OR TM.Description LIKE '%" . preg_replace('/[\s]+/','%',$searchStr) . "%')";
+              OR TM.Description LIKE '%" . preg_replace('/[\s]+/','%',$searchStr) . "%')
+              AND (SELECT version.id FROM version WHERE approved='YES' AND version.id = TM.ID LIMIT 1)";
 
   // search extensions/themes/etc
   if($section !== "A") {
