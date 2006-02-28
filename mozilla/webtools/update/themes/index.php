@@ -160,9 +160,8 @@ $sql = "
     WHERE
         `Type` = 'T' AND
         `AppName` = '{$application}' AND
-        `approved` = 'YES' 
-    GROUP BY
-        TM.ID
+        `approved` = 'YES' AND
+        TV.vID = (SELECT max(vid) FROM version where id = TM.ID)
     ORDER BY
         `downloadcount` DESC,
         `Rating` DESC, 
