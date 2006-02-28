@@ -83,6 +83,8 @@ if ($type == 'E' || $type == 'T' || $type == 'P') {
   $where .= " AND main.Type = '$type'";
 }
 
+$where .= " AND version.vID = (SELECT max(vid) FROM version where id = main.ID) ";
+
 switch ($list) {
    case "Popular":
      $orderby = "main.DownloadCount DESC, main.Rating DESC, main.Name ASC";
