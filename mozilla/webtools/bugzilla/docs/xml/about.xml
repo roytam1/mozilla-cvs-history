@@ -83,11 +83,6 @@
       up-to-date version of the Guide.
     </para>
     <para>
-      The newest version of this guide can always be found at <ulink
-      url="http://www.bugzilla.org">bugzilla.org</ulink>; including
-      documentation for past releases and the current development version.
-    </para>
-    <para>
       The latest version of this guide can always be found at <ulink
       url="http://www.bugzilla.org"/>, or checked out via CVS by
       following the <ulink url="http://www.mozilla.org/cvs.html">Mozilla 
