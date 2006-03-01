@@ -778,6 +778,7 @@ CoreTinderboxAll -a \
         mozilla/modules/libbz2 \
         mozilla/toolkit \
         mozilla/storage \
+        mozilla/db/morkreader \
         mozilla/db/sqlite3
 
 # should this be called SuiteTinderboxAll ?
