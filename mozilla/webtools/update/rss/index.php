@@ -59,49 +59,57 @@ header("Content-Type: text/xml; charset=utf-8");
 
 // Firefox, extensions, by date added
 
-$select = "SELECT DISTINCT 
-main.ID, 
-main.Name AS Title, 
-main.Type,
-main.Description,  
-version.Version, 
-version.vID,
-version.DateUpdated AS DateStamp,
-applications.AppName";
+$select = "
+    SELECT DISTINCT
+        m.ID,
+        m.name as Title,
+        m.Type,
+        m.Description,
+        v.Version,
+        v.vID,
+        v.dateupdated as DateStamp,
+        a.AppName
+";
 
-$from = "FROM  main 
-INNER  JOIN version ON main.ID = version.ID
-INNER  JOIN applications ON version.AppID = applications.AppID";
+$from = "
+    FROM
+        main m
+    INNER JOIN version v ON m.id = v.id
+    INNER JOIN (
+        SELECT v.id, v.appid, v.osid, max(v.vid) as mxvid 
+        FROM version v       
+        WHERE approved = 'YES' group by v.id, v.appid, v.osid) as vv 
+    ON vv.mxvid = v.vid AND vv.id = v.id
+    INNER JOIN applications a ON a.appid = v.appid
+";
 
-$where = "`approved` = 'YES'"; // Always have a WHERE
+$where = "v.approved = 'YES'"; // Always have a WHERE
 
 if ($app == 'firefox' || $app == 'thunderbird' || $app == 'mozilla') {
-  $where .= " AND applications.AppName = '$app'";
+  $where .= " AND a.AppName = '$app'";
 }
 
 if ($type == 'E' || $type == 'T' || $type == 'P') {
-  $where .= " AND main.Type = '$type'";
+  $where .= " AND m.Type = '$type'";
 }
-
-$where .= " AND version.vID = (SELECT max(vid) FROM version where id = main.ID) ";
 
 switch ($list) {
    case "Popular":
-     $orderby = "main.DownloadCount DESC, main.Rating DESC, main.Name ASC";
+     $orderby = "m.downloadcount DESC, m.rating DESC, m.name ASC";
      break;
    case "Updated":
-     $orderby = "main.DateUpdated DESC";
+     $orderby = "m.dateupdated DESC";
      break;
    case "Rated":
-     $orderby = "main.Rating DESC";
+     $orderby = "m.rating DESC";
      break;
    case "Newest":
    default:
-     $orderby = "main.DateUpdated DESC";
+     $orderby = "m.dateupdated DESC";
      break;
 }
 
-$sql = $select . " " . $from . " WHERE " . $where . " GROUP BY main.ID ORDER BY " . $orderby . " LIMIT 0, 10";
+$sql = $select . " " . $from . " WHERE " . $where . " GROUP BY m.id ORDER BY " . $orderby . " LIMIT 0, 10";
 
 require_once('inc_rssfeed.php');
 ?>

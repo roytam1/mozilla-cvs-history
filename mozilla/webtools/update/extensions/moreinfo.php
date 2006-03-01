@@ -352,7 +352,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
 		<p class="requires">Requires: <?php echo ucwords($appname).": $minappver - $maxappver"; ?> <img src="../images/<?php echo strtolower($appname); ?>_icon.png" width="34" height="34" alt="<?php echo ucwords($appname); ?>">
         <?php
         if($osname !=="ALL") {
-            echo"on ".ucwords($osname)." <IMG SRC=\"../images/".strtolower($osname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"<?php echo ucwords($osname); ?>\">";
+            echo"on ".ucwords($osname)." <IMG SRC=\"../images/".strtolower($osname)."_icon.png\" border=0 height=34 width=34 alt=\"".ucwords($osname)."\">";
         }
         ?>
         </p>

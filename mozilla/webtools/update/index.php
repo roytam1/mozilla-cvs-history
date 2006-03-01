@@ -91,9 +91,6 @@ $sql = "
         applications TA 
     ON 
         TV.AppID = TA.AppID
-    INNER JOIN 
-	os TOS 
-    ON TV.OSID = TOS.OSID
     WHERE
         `AppName` = '{$application}' AND
         `approved` = 'YES'

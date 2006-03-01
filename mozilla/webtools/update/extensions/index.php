@@ -147,31 +147,30 @@ Most Popular <?php print(ucwords($application)); ?> Extensions</a></h2>
 
 <?php
 $sql = "
-    SELECT DISTINCT
-        TM.ID,
-        TM.Name,
-        TM.Description, 
-        TM.Rating,
-        TM.downloadcount
+    SELECT
+        m.id,
+        m.name,
+        m.description,
+        m.downloadcount,
+        m.rating
     FROM
-        `main` TM
-    INNER JOIN 
-        version TV 
-    ON 
-        TM.ID = TV.ID
-    INNER JOIN 
-        applications TA 
-    ON 
-        TV.AppID = TA.AppID
+        main m
+    INNER JOIN version v ON m.id = v.id
+    INNER JOIN (
+        SELECT v.id, v.appid, v.osid, max(v.vid) as mxvid 
+        FROM version v       
+        WHERE approved = 'YES' group by v.id, v.appid, v.osid) as vv 
+    ON vv.mxvid = v.vid AND vv.id = v.id
+    INNER JOIN applications a ON a.appid = v.appid
     WHERE
-        `Type` = '{$type}' AND
-        `AppName` = '{$application}' AND
-        `approved` = 'YES' AND
-        TV.vID = (SELECT max(vid) FROM version where id = TM.ID)
+        m.type = '{$type}' AND
+        a.appname = '{$application}'
+    GROUP BY
+        m.id
     ORDER BY
-        `downloadcount` DESC,
-        `Rating` DESC, 
-        `Name` ASC
+        m.downloadcount desc,
+        m.rating desc, 
+        m.name asc
     LIMIT 10
 ";
 
@@ -184,9 +183,9 @@ if (!mysql_num_rows($sql_result)) {
     while ($row = mysql_fetch_array($sql_result)) {
 echo <<<MP
         <li>
-        <a href="./moreinfo.php?id={$row['ID']}&amp;application={$application}"><strong>{$row['Name']}</strong></a>,
-        ({$row['Rating']} stars, {$row['downloadcount']} downloads)<br>
-        {$row['Description']}
+        <a href="./moreinfo.php?id={$row['id']}&amp;application={$application}"><strong>{$row['name']}</strong></a>,
+        ({$row['rating']} stars, {$row['downloadcount']} downloads)<br>
+        {$row['description']}
         </li>
 MP;
     }
@@ -201,30 +200,28 @@ Newest <?php print(ucwords($application)); ?> Extensions</a></h2>
 
 <?php
 $sql = "
-    SELECT DISTINCT
-        TM.ID, 
-        TM.Type, 
-        TM.Description, 
-        TM.Name, 
-        TV.Version, 
-        TV.DateAdded
-    FROM  
-        `main` TM
-    INNER JOIN 
-        version TV 
-    ON 
-        TM.ID = TV.ID
-    INNER JOIN 
-        applications TA 
-    ON 
-        TV.AppID = TA.AppID
-    WHERE  
-        `Type`='E' AND 
-        `AppName` = '$application' AND 
-        `approved` = 'YES' AND
-        TV.vID = (SELECT max(vid) FROM version where id = TM.ID)
+    SELECT
+        m.id,
+        m.name,
+        m.description,
+        m.downloadcount,
+        m.dateupdated
+    FROM
+        main m
+    INNER JOIN version v ON m.id = v.id
+    INNER JOIN (
+        SELECT v.id, v.appid, v.osid, max(v.vid) as mxvid 
+        FROM version v       
+        WHERE approved = 'YES' group by v.id, v.appid, v.osid) as vv 
+    ON vv.mxvid = v.vid AND vv.id = v.id
+    INNER JOIN applications a ON a.appid = v.appid
+    WHERE
+        m.type = '{$type}' AND
+        a.appname = '{$application}'
+    GROUP BY
+        m.id
     ORDER BY
-        TM.DateUpdated DESC
+        v.dateupdated DESC
     LIMIT 10
 ";
 
@@ -235,12 +232,12 @@ if (!mysql_num_rows($sql_result)) {
 } else {
     echo '<ol>';
     while ($row = mysql_fetch_array($sql_result)) {
-        $row['DateAdded'] = gmdate('F d, Y', strtotime($row['DateAdded']));
+        $row['dateupdated'] = gmdate('F d, Y', strtotime($row['dateupdated']));
 echo <<<MP
         <li>
-        <a href="./moreinfo.php?id={$row['ID']}&amp;application={$application}"><strong>{$row['Name']} {$row['Version']}</strong></a>,
-        {$row['DateAdded']}<br>
-        {$row['Description']}
+        <a href="./moreinfo.php?id={$row['id']}&amp;application={$application}"><strong>{$row['name']} {$row['version']}</strong></a>,
+        {$row['dateupdated']}<br>
+        {$row['description']}
         </li>
 MP;
     }
