@@ -828,7 +828,7 @@
       <section id="postgresql">
         <title>PostgreSQL</title>
         <note>
-          <para>Note if you are using PostgreSQL 8.0.1 or higher, then you
+          <para>If you are using PostgreSQL 8.0.1 or higher, then you
           will require to use a version of DBD::Pg which is equal to or
           greater than version 1.41
           </para>
