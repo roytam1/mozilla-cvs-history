@@ -105,7 +105,7 @@ switch ($list) {
      break;
    case "Newest":
    default:
-     $orderby = "m.dateupdated DESC";
+     $orderby = "v.dateupdated DESC";
      break;
 }
 

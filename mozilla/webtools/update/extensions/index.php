@@ -205,7 +205,7 @@ $sql = "
         m.name,
         m.description,
         m.downloadcount,
-        m.dateupdated
+        v.dateupdated
     FROM
         main m
     INNER JOIN version v ON m.id = v.id

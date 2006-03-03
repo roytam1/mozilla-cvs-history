@@ -55,6 +55,8 @@ require_once(HEADER);
 installtrigger('extensions');
 ?>
 
+<div><a class="finalists-link" href="http://extendfirefox.com/">Extend Firefox Contest Winners Announced</a></div>
+
 <div class="split-feature">
     <div class="split-feature-one">
         <div class="feature-download">
@@ -74,30 +76,30 @@ installtrigger('extensions');
 <?php
 // Get our most popular list.
 $sql = "
-    SELECT DISTINCT
-        TM.ID,
-        TM.Name,
-        TM.Description, 
-        TM.Rating,
-        TM.downloadcount,
-        IF(TM.Type='E', 'extensions', 'themes') as Type
+    SELECT
+        m.id,
+        m.name,
+        m.description,
+        m.downloadcount,
+        m.rating,
+        IF(m.type='E', 'extensions', 'themes') as type
     FROM
-        `main` TM
-    INNER JOIN 
-        version TV 
-    ON 
-        TM.ID = TV.ID
-    INNER JOIN 
-        applications TA 
-    ON 
-        TV.AppID = TA.AppID
+        main m
+    INNER JOIN version v ON m.id = v.id
+    INNER JOIN (
+        SELECT v.id, v.appid, v.osid, max(v.vid) as mxvid 
+        FROM version v       
+        WHERE approved = 'YES' group by v.id, v.appid, v.osid) as vv 
+    ON vv.mxvid = v.vid AND vv.id = v.id
+    INNER JOIN applications a ON a.appid = v.appid
     WHERE
-        `AppName` = '{$application}' AND
-        `approved` = 'YES'
+        a.appname = '{$application}'
+    GROUP BY
+        m.id
     ORDER BY
-        `downloadcount` DESC,
-        `Rating` DESC, 
-        `Name` ASC
+        m.downloadcount desc,
+        m.rating desc, 
+        m.name asc
     LIMIT 5
 ";
 
@@ -108,7 +110,7 @@ if (mysql_num_rows($sql_result)) {
     echo '<ol class="top-10">';
     while ($row = mysql_fetch_array($sql_result)) {
         echo <<<MP
-        <li class="top-10-{$top10count}"><a href="./{$row['Type']}/moreinfo.php?id={$row['ID']}&amp;application={$application}"><strong>{$row['Name']}</strong> {$row['downloadcount']}</a></li>
+        <li class="top-10-{$top10count}"><a href="./{$row['type']}/moreinfo.php?id={$row['id']}&amp;application={$application}"><strong>{$row['name']}</strong> {$row['downloadcount']}</a></li>
 MP;
         $top10count++;
     }
@@ -117,8 +119,6 @@ MP;
 ?>
     </div>
 </div>
-
-<div><a class="finalists-link" href="./finalists.php">Extend Firefox Contest Finalists Announced</a></div>
 
 <form id="front-search" method="get" action="<?=WEB_PATH?>/quicksearch.php" title="Search Mozilla Update">
     <div>

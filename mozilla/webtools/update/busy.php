@@ -35,57 +35,19 @@
 // the terms of any one of the MPL, the GPL or the LGPL.
 //
 // ***** END LICENSE BLOCK *****
+	
+require_once('./core/config.php');
 
-/**
- * Mozilla Update Initialization Script
- * 
- * Configuration, libraries and includes are processed here.
- *
- * @package umo
- * @subpackage core
- * @author Mike Morgan
- */
+$page_title = 'Site Temporarily Unavailable :: Mozilla Update';
+require_once(HEADER);
+?>
 
-// Process configuration file.
-require_once('config.php');
+<div id="mBody">
+<h1>Site Temporarily Unavailable</h1>
+<p>We're sorry, but due to high traffic, we were unable to process your request.  Please wait a few moments and try again.</p>
 
-// Connect to DB.
-//
-// The core includes depend on this, so taking this out for use in static pages
-// is not possible.
-//
-// For completely static pages, do not require init.php, require only config.php.
-// This prevents unnecessary database connections.
-//
+</div>
 
-// If we have the SHADOW_DB flag set, use the SHADOW_DB - otherwise use the regular db.
-if (defined('USE_SHADOW_DB')) {
-    // SHADOW_DB_HOST, SHADOW_DB_USER, SHADOW_DB_PASS, SHADOW_DB_NAME are set in ./config.php
-    $connection = @mysql_connect(SHADOW_DB_HOST,SHADOW_DB_USER,SHADOW_DB_PASS);
-    if (is_resource($connection)) {
-        $db = @mysql_select_db(SHADOW_DB_NAME, $connection);
-    } else {
-        error_log('MySQL Error -- '.mysql_errno().': '.mysql_error(),0);
-        header('Location: '.WEB_PATH.'/busy.php');
-        exit;
-    }
-} else { 
-    // DB_HOST, DB_USER, DB_PASS, DB_NAME are set in ./config.php
-    $connection = @mysql_connect(DB_HOST,DB_USER,DB_PASS);
-    if (is_resource($connection)) {
-        $db = @mysql_select_db(DB_NAME, $connection);
-    } else {
-        error_log('MySQL Error -- '.mysql_errno().': '.mysql_error(),0);
-        header('Location: '.WEB_PATH.'/busy.php');
-        exit;
-    }
-}
-
-// Includes.
-require_once('inc_guids.php'); // GUID --> AppName Handler
-require_once('inc_global.php'); // Global Functions - Variable Cleanup
-require_once('inc_browserdetection.php'); // Browser Detection - App Variable Handling
-
-// Start timer.
-$time_start = getmicrotime();
+<?php
+require_once(FOOTER);
 ?>

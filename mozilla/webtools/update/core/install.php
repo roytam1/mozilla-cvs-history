@@ -58,10 +58,13 @@ if (mysql_num_rows($sql_result)=="0") {
 
 //Are we behind a proxy and given the IP via an alternate enviroment variable? If so, use it.
 if (!empty($_SERVER["HTTP_X_FORWARDED_FOR"])) {
-    $remote_addr = $_SERVER["HTTP_X_FORWARDED_FOR"];
+    $remote_addr = mysql_real_escape_string($_SERVER["HTTP_X_FORWARDED_FOR"]);
 } else {
-    $remote_addr = $_SERVER["REMOTE_ADDR"];
+    $remote_addr = mysql_real_escape_string($_SERVER["REMOTE_ADDR"]);
 }
+
+// Clean the user agent string.
+$http_user_agent = mysql_real_escape_string($_SERVER['HTTP_USER_AGENT']);
 
 // Rate limit set to 10 minutes.
 $sql = "
@@ -73,7 +76,7 @@ $sql = "
         `ID`='$id' AND
         `vID`='$vid' AND
         `user_ip`='$remote_addr' AND
-        `user_agent`='$_SERVER[HTTP_USER_AGENT]' AND
+        `user_agent`='$http_user_agent' AND
         `date`>DATE_SUB(NOW(), INTERVAL 10 MINUTE)
     LIMIT 
         1
@@ -81,7 +84,7 @@ $sql = "
 $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 
 if (mysql_num_rows($sql_result)==0) {
-    $sql = "INSERT INTO `downloads` (`ID`,`date`,`vID`, `user_ip`, `user_agent`) VALUES ('$id',NOW(),'$vid', '$remote_addr', '$_SERVER[HTTP_USER_AGENT]');";
+    $sql = "INSERT INTO `downloads` (`ID`,`date`,`vID`, `user_ip`, `user_agent`) VALUES ('$id',NOW(),'$vid', '$remote_addr', '$http_user_agent');";
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 }
 

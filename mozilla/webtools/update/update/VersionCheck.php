@@ -172,7 +172,7 @@ if (empty($errors)) {
         LIMIT 1       
     ";
 
-    $result = mysql_query($query);
+    $result = @mysql_query($query);
 
     // Did our query execute?  Did we get any information?
     if (!is_resource($result)) {
@@ -289,10 +289,12 @@ if ($debug == true) {
     print_r($_GET);
     echo '</pre>';
 
-    echo '<h1>Query</h1>';
-    echo '<pre>';
-    echo $query;
-    echo '</pre>';
+    if (!empty($query)) {
+        echo '<h1>Query</h1>';
+        echo '<pre>';
+        echo $query;
+        echo '</pre>';
+    }
 
     if (!empty($update)) {
         echo '<h1>Result</h1>';
