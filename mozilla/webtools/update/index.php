@@ -55,19 +55,19 @@ require_once(HEADER);
 installtrigger('extensions');
 ?>
 
-<div><a class="finalists-link" href="http://extendfirefox.com/">Extend Firefox Contest Winners Announced</a></div>
+<div><a class="finalists-link" href="./winners.php">Extend Firefox Contest Winners Announced</a></div>
 
 <div class="split-feature">
     <div class="split-feature-one">
         <div class="feature-download">
             <!-- Feature Image must be 200px wide... any height is fine, but around 170-200 is preferred -->
-            <a href="./extensions/moreinfo.php?id=1532"><img src="./images/feature/del.icio.us.png" width="200" height="213" alt="del.icio.us Extension"></a>
-            <h3><a href="http://releases.mozilla.org/pub/mozilla.org/extensions/del.icio.us/del.icio.us-1.0.2-fx.xpi" onclick="return install(event,'del.icio.us 1.0.2', '<?=WEB_PATH?>/images/default.png');" title="Install del.icio.us 1.0.2 (Right-Click to Download)">Install Extension (62 KB)</a> </h3>
+            <a href="./extensions/moreinfo.php?id=1577"><img src="./images/previews/kaboodle_toolbar-3.jpg" width="200" height="150" alt="Kaboodle Toolbar Extension"></a>
+            <h3><a href="http://releases.mozilla.org/pub/mozilla.org/extensions/kaboodle/kaboodle-0.1-fx.xpi" onclick="return install(event,'Kaboodle Toolbar 0.1', '<?=WEB_PATH?>/images/default.png');" title="Install Kaboodle 0.1 (Right-Click to Download)">Install Kaboodle (11 KB)</a> </h3>
 
         </div>
         <h2>Featured Extension</h2>
-        <h2><a href="./extensions/moreinfo.php?id=1532">del.icio.us</a></h2>
-        <p class="first">Harness the power of social bookmarking right in your browser with the del.icio.us Firefox extension! The del.icio.us extension for Firefox offers everything you need to seamlessly integrate the del.icio.us service with your Firefox browser. <a href="./extensions/moreinfo.php?id=1532">Learn more...</a></p>
+        <h2><a href="./extensions/moreinfo.php?id=1577">Kaboodle Toolbar</a></h2>
+        <p class="first">The Kaboodle extension for Firefox has everything you need to use Kaboodle with your Firefox browser. Kaboodle is the best way to collect, compare, share and discover things you find anywhere on the web. Things that you are looking for, things that you wish for, things that you have or things that you just find interesting! <br/><a href="./extensions/moreinfo.php?id=1577">Learn more...</a></p>
     </div>
     <a class="top-feature" href="./recommended.php"><img src="./images/feature-recommend.png" width="213" height="128" style="padding-left: 12px;" alt="We Recommend: See some of our favorite extensions to get you started."></a>
     <div class="split-feature-two">

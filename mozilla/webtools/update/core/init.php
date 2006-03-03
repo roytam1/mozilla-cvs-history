@@ -66,7 +66,7 @@ if (defined('USE_SHADOW_DB')) {
         $db = @mysql_select_db(SHADOW_DB_NAME, $connection);
     } else {
         error_log('MySQL Error -- '.mysql_errno().': '.mysql_error(),0);
-        header('Location: '.WEB_PATH.'/busy.php');
+        require_once(FILE_PATH.'/busy.php');
         exit;
     }
 } else { 
@@ -76,7 +76,7 @@ if (defined('USE_SHADOW_DB')) {
         $db = @mysql_select_db(DB_NAME, $connection);
     } else {
         error_log('MySQL Error -- '.mysql_errno().': '.mysql_error(),0);
-        header('Location: '.WEB_PATH.'/busy.php');
+        require_once(FILE_PATH.'/busy.php');
         exit;
     }
 }

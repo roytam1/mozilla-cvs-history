@@ -132,21 +132,10 @@ of new items, access to your saved items, and integration with the  Firefox sear
 <img class="recommended-img" alt="" src="./images/recommended/stumble3.png"/>
 <h2><a href="./extensions/moreinfo.php?id=138">StumbleUpon</a></h2>
 <div class="recommended-download">
-<h3><a href="http://releases.mozilla.org/pub/mozilla.org/extensions/stumbleupon/stumbleupon-2.2-fx+fl+mz+ns.xpi" onclick="return install(event,'stumbleupon 2.2', '<?=WEB_PATH?>/images/default.png');" title="Install stumbleupon 2.2 (Right-Click to Download)">Install Extension (103 KB)</a></h3>
+<h3><a href="http://releases.mozilla.org/pub/mozilla.org/extensions/stumbleupon/stumbleupon-2.4-fx+fl+mz+ns.xpi" onclick="return install(event,'stumbleupon 2.2', '<?=WEB_PATH?>/images/default.png');" title="Install stumbleupon 2.2 (Right-Click to Download)">Install Extension (103 KB)</a></h3>
 </div>
 <p>Break out of your web routine with this extension. StumbleUpon helps you find great new peer-reviewed sites through a collaborative site sharing and review system.</p>
 </div>
-
-<?php
-/*
-<h2><a href="./extensions/moreinfo.php?id=1035">Weather Channel</a></h2>
-<img class="recommended-img" alt="" src="./images/recommended/1clickweather.png"/>
-<p>1-ClickWeather enables you to quickly view current weather conditions  and up to 5 days of forecast information, plus instant access to detailed and  customized weather content from weather.com.</p>
-<div class="recommended-download">
-<h3><a href="http://releases.mozilla.org/pub/mozilla.org/extensions/1-clickweather/1-clickweather-1.1.0-fx.xpi" onclick="return install(event,'1-clickweather 1.1.0', '<?=WEB_PATH?>/images/default.png');" title="Install 1-clickweather 1.1.0 (Right-Click to Download)">Install Extension (606 KB)</a></h3>
-</div>
-*/
-?>
 
 <br class="clear-both"/>
 

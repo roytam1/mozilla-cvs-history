@@ -156,6 +156,10 @@ body {
 	background: url("../../images/feature-back.png") 0 0 no-repeat;
 }
 
+.split-feature-one p {
+    margin-left: 220px;
+}
+
 .split-feature-two {
 	width: 185px;
 	padding-left: 25px;
