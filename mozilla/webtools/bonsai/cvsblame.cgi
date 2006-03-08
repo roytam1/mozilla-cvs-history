@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bonsaitools/bin/perl -w
 #  cvsblame.cgi -- cvsblame with logs as popups and allowing html in comments.
 
 # -*- Mode: perl; indent-tabs-mode: nil -*-

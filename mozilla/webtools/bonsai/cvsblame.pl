@@ -1,4 +1,4 @@
-#!/usr/bin/perl --
+#!/usr/bonsaitools/bin/perl --
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public
@@ -290,8 +290,6 @@ sub parse_rcs_tree {
     undef %::prev_delta;
     undef %::next_delta;
     undef %::last_revision;
-    # until we use commitid
-    my $commitid;
 
     while (1) {
         $revision = &get_token;
@@ -363,21 +361,13 @@ sub parse_rcs_tree {
                 $::prev_revision{$next} = $revision;
             }
         }
-        if (($token = &get_token) eq 'commitid') {
-            $commitid = &get_token;
-            &match_token(';');
-        } else {
-            &unget_token($token);
-        }
 
         if ($debug >= 3) {
             print "<pre>revision = $revision\n";
             print "date     = $date\n";
             print "author   = $author\n";
             print "branches = $branches\n";
-            print "next     = $next\n";
-            print "commitid = $commitid\n" if defined $commitid;
-            print "</pre>\n\n";
+            print "next     = $next</pre>\n\n";
         }
     }
 }

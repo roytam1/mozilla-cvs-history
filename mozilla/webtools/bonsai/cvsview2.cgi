@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bonsaitools/bin/perl -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 # cvsview.cgi - fake up some HTML based on RCS logs and diffs
 #
@@ -758,8 +758,7 @@ sub print_cell {
     if (length($newline) <= 80) {
         $newline = sprintf("%-80.80s", $newline);
     } else {
-        # Wrap to 80 chars. Leave the newline at the end
-        $newline =~ s/(.{80})\r?\n?/$1\n/g;
+        $newline =~ s/([^\n\r]{80})([^\n\r]*)/$1\n$2/g;
     }
     $newline =~ s/&/&amp;/g;
     $newline =~ s/</&lt;/g;

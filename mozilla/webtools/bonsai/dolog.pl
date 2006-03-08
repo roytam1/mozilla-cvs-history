@@ -1,4 +1,4 @@
-#! /usr/bin/perl
+#! /tools/ns/bin/perl5
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public
@@ -26,7 +26,7 @@
 # CVSROOT/checkoutlist, and check it in. Then, add a line to your
 # CVSROOT/loginfo file that says something like:
 #
-#      ALL      $CVSROOT/CVSROOT/dolog.pl [-u ${USER}] -r /cvsroot bonsai-checkin-daemon@my.bonsai.machine
+#      ALL      $CVSROOT/CVSROOT/dolog.pl -r /cvsroot bonsai-checkin-daemon@my.bonsai.machine
 #
 # or if you do not want to use SMTP at all, add:
 #
@@ -108,8 +108,6 @@ sub process_args {
             print STDERR "Debug turned on...\n";
         } elsif ($arg eq '-r') {
             $cvsroot = shift @ARGV;
-        } elsif ($arg eq '-u') {
-            $username = shift @ARGV;
         } elsif ($arg eq '-t') {
             $flag_tagcmd = 1;
             last;              # Keep the rest in ARGV; they're handled later.

@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bonsaitools/bin/perl -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public
@@ -22,7 +22,6 @@
 
 
 use strict;
-use Cwd;
 
 if (($#ARGV >= 0) && (-d $ARGV[0])) {
      chdir($ARGV[0]);
@@ -38,7 +37,7 @@ if (($#ARGV >= 0) && (-d $ARGV[0])) {
 my $filename = "data/admin.$$";
 unlink($filename);
 
-die "Cannot Open data file (cwd: ". cwd() . "; $filename): $!\n"
+die "Cannot Open data file: $!\n"
      unless (open(FILE, "> $filename"));
 
 while (<STDIN>) {

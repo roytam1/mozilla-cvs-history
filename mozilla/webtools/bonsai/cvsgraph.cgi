@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bonsaitools/bin/perl -w
 #  cvsgraph.cgi -- a graph of all branchs, tags, etc.
 
 # -*- Mode: perl; indent-tabs-mode: nil -*-

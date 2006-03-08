@@ -776,7 +776,7 @@ sub _to_array {
      return ($thing);
 }
 
-# Get all of the headers for a mail message, returned as a comma separated
+# Get all of the headers for a mail message, returned as a comma seperated
 # string, unless looking for a subject
 sub _GetMailHeaders {
      my ($mail_hdrs, $hdr) = @_;
@@ -1156,7 +1156,7 @@ sub MarkUpText {
      $bugsrpl = PerformSubsts($bugsrpl, \%substs);
 
      $text =~ s{((ftp|http)://\S*[^\s.])}{<a href=\"$1\">$1</a>}g;
-     $text =~ s/(&lt;(\S+@\S+)&gt;)/<a href=\"mailto:$2\">$1<\/a>/g;
+     $text =~ s/(&lt;(.*@.*)&gt;)/<a href=\"mailto:$2\">$1<\/a>/g;
 
      $bugsmatch = 2
           unless ($bugsmatch =~ /^\+?\d+$/);
@@ -1372,7 +1372,6 @@ sub SanitizeModule {
 
     return $module if (!defined($module));
     $module =~ s/\000/_NULL_/g;
-    return "default" if ($module !~ m/^[A-Za-z]+[\w\-\.\+]*/);
     $module =~ s/([A-Za-z])([\w\-\.\+]*).*/$1$2/;
     return $module;
 }
