@@ -61,8 +61,8 @@ installtrigger('extensions');
     <div class="split-feature-one">
         <div class="feature-download">
             <!-- Feature Image must be 200px wide... any height is fine, but around 170-200 is preferred -->
-            <a href="./extensions/moreinfo.php?id=1577"><img src="./images/previews/kaboodle_toolbar-3.jpg" width="200" height="150" alt="Kaboodle Toolbar Extension"></a>
-            <h3><a href="http://releases.mozilla.org/pub/mozilla.org/extensions/kaboodle/kaboodle-0.1-fx.xpi" onclick="return install(event,'Kaboodle Toolbar 0.1', '<?=WEB_PATH?>/images/default.png');" title="Install Kaboodle 0.1 (Right-Click to Download)">Install Kaboodle (11 KB)</a> </h3>
+            <a href="./extensions/moreinfo.php?id=1577"><img src="./images/previews/kaboodle-4.jpg" width="200" height="150" alt="Kaboodle Extension"></a>
+            <h3><a href="http://releases.mozilla.org/pub/mozilla.org/extensions/kaboodle/kaboodle-0.2.0.0-fx.xpi" onclick="return install(event,'Kaboodle 0.2', '<?=WEB_PATH?>/images/default.png');" title="Install Kaboodle 0.2 (Right-Click to Download)">Install Kaboodle (20 KB)</a> </h3>
 
         </div>
         <h2>Featured Extension</h2>
