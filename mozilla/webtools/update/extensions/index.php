@@ -205,6 +205,7 @@ $sql = "
         m.name,
         m.description,
         m.downloadcount,
+        v.version,
         v.dateupdated
     FROM
         main m
