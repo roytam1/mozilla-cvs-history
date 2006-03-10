@@ -83,10 +83,10 @@ of new items, access to your saved items, and integration with the  Firefox sear
 
 
 <div class="recommended">
-<img class="recommended-img" alt="" src="./images/recommended/kaboodle.jpg"/>
+<img class="recommended-img" alt="" src="./images/previews/kaboodle-4.jpg"/>
 <h2><a href="./extensions/moreinfo.php?id=1577">Kaboodle</a></h2>
 <div class="recommended-download">
-<h3><a href="http://releases.mozilla.org/pub/mozilla.org/extensions/kaboodle/kaboodle-0.1-fx.xpi" onclick="return install(event,'Kaboodle Toolbar 0.1', '<?=WEB_PATH?>/images/default.png');" title="Install Kaboodle Toolbar 0.1 (Right-Click to Download)">Install Extension (11 KB)</a></h3>
+<h3><a href="http://releases.mozilla.org/pub/mozilla.org/extensions/kaboodle/kaboodle-0.2.0.0-fx.xpi" onclick="return install(event,'Kaboodle 0.2', '<?=WEB_PATH?>/images/default.png');" title="Install Kaboodle 0.2 (Right-Click to Download)">Install Kaboodle (20 KB)</a> </h3>
 </div>
 <p>Collect and share information you find on the web using Kaboodle. One click extracts the web page's location, title, description (and even prices of items featured on that page) and adds it to a list you can share with others.</p>
 </div>

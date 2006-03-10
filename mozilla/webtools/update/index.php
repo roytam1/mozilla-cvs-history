@@ -66,7 +66,7 @@ installtrigger('extensions');
 
         </div>
         <h2>Featured Extension</h2>
-        <h2><a href="./extensions/moreinfo.php?id=1577">Kaboodle Toolbar</a></h2>
+        <h2><a href="./extensions/moreinfo.php?id=1577">Kaboodle</a></h2>
         <p class="first">The Kaboodle extension for Firefox has everything you need to use Kaboodle with your Firefox browser. Kaboodle is the best way to collect, compare, share and discover things you find anywhere on the web. Things that you are looking for, things that you wish for, things that you have or things that you just find interesting! <br/><a href="./extensions/moreinfo.php?id=1577">Learn more...</a></p>
     </div>
     <a class="top-feature" href="./recommended.php"><img src="./images/feature-recommend.png" width="213" height="128" style="padding-left: 12px;" alt="We Recommend: See some of our favorite extensions to get you started."></a>

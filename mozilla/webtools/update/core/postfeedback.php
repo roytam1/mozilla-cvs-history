@@ -190,7 +190,7 @@ if ($os !=="ALL") {
     $versiontagline .=" on $os";
 }
 
-$remote_addr = get_client_ip();
+$remote_addr = escape_string(get_client_ip());
 
 $form_key = "";
 if (!valid_form_key($_POST['formkey'])) {
