@@ -353,6 +353,9 @@ if (m:^mozilla/java/plugins/.*$:) {return '129';}
 if (m:^mozilla/java/webclient/.*$:) {return '127';}
 if (m:^mozilla/java/dom/.*$:) {return '130';}
 if (m:^mozilla/java/util/.*$:) {return '133';}
+if (m:^mozilla/content/xbl/[^/]*$:) {return '199';}
+if (m:^mozilla/content/xbl/public/.*$:) {return '199';}
+if (m:^mozilla/content/xbl/src/.*$:) {return '199';}
 if (m:^mozilla/extensions/xmlterm/.*$:) {return '141';}
 if (m:^mozilla/xpcom/remote/.*$:) {return '143';}
 if (m:^CVSROOT/commitcheck\.pl$:) {return '3';}
