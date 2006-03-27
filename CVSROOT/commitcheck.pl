@@ -327,7 +327,7 @@ if (m:^mozilla/webtools/bugzilla/.*$:) {return '191';}
 if ($b eq 'HEAD') {
 if (m:^mozilla/mailnews/[^/]*$:) {return '123';}
 if (m:^mozilla/mailnews/mime/[^/]*$:) {return '124';}
-if (m:^mozilla/java/xpcom/.*$:) {return '128';}
+if (m:^mozilla/extensions/java$:) {return '128';}
 if (m:^mozilla/java/plugins/.*$:) {return '129';}
 if (m:^mozilla/java/webclient/.*$:) {return '127';}
 if (m:^mozilla/java/dom/.*$:) {return '130';}
