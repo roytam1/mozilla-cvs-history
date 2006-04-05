@@ -6,7 +6,7 @@ require_once(HEADER);
 require_once('./inc_sidebar.php');
 
 //Kill access to items this user doesn't own...
-if ($_SESSION["level"] !=="admin" and $_SESSION["level"] !=="editor") {
+if ($_SESSION["level"] !=="admin") {
 
     $id = escape_string($_GET["id"]);
     if (!$id) {$id = escape_string($_POST["id"]); }
