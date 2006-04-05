@@ -63,6 +63,7 @@ if (!$function or $function=="step1") {
 echo"<h1>Processing New Account Request, Please Wait...</h1>\n";
 //Gather and Filter Data from the Submission Form
 if ($_POST["email"]==$_POST["emailconfirm"]) {$email = escape_string($_POST["email"]);} else { $errors="true"; $emailvalid="no";}
+if (empty($_POST["password"])) {$errors="true"; $passwordempty="yes"; }
 if ($_POST["password"]==$_POST["passwordconfirm"]) {$password = escape_string($_POST["password"]);} else { $errors="true"; $passwordvalid="no"; }
 if ($_POST["name"]) { $name = escape_string($_POST["name"]); } else { $errors="true"; $namevalid="no"; }
 $website = escape_string($_POST["website"]);
@@ -85,6 +86,7 @@ if ($errors == "true") {
 echo"<p>Errors have been found in your submission:</p>\n";
 echo '<ul>';
 if ($emailvalid=="no") {echo"<li>Your e-mail addresses didn't match, or your e-mail is already in use.</li>\n"; }
+if ($passwordempty=="yes") {echo"<li>A password is required.</li>\n"; }
 if ($passwordvalid=="no") {echo"<li>The passwords you entered did not match.</li>\n"; }
 if ($namevalid=="no") {echo"<li>The name field cannot be left blank.</li>\n"; }
 if ($emailvalid=='bademail') {echo"<li>The email you entered cannot possibly be a valid email.  Please try again.</li>\n";}
