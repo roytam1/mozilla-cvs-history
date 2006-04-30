@@ -1398,12 +1398,12 @@ c:\perl\bin\perl.exe -xc:\bugzilla -wT "%s" %s
         201069</ulink>.
         </para>
       </caution>
-      
+
       <para>Parameters required to use LDAP Authentication:</para>
 
       <variablelist>
-        <varlistentry id="param-loginmethod">
-          <term>loginmethod</term>
+        <varlistentry id="param-user_verify_class">
+          <term>user_verify_class</term>
           <listitem>
             <para>This parameter should be set to <quote>LDAP</quote>
             <emphasis>only</emphasis> if you will be using an LDAP directory
@@ -1411,7 +1411,7 @@ c:\perl\bin\perl.exe -xc:\bugzilla -wT "%s" %s
             fail to set up the other parameters listed below you will not be
             able to log back in to Bugzilla one you log out. If this happens
             to you, you will need to manually edit
-            <filename>data/params</filename> and set loginmethod to
+            <filename>data/params</filename> and set user_verify_class to
             <quote>DB</quote>.
             </para>
           </listitem>
