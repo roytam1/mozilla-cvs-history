@@ -17,8 +17,11 @@
 use lib qw(.);
 
 require "globals.pl";
+use Bugzilla;
 use Bugzilla::BugMail;
 use Bugzilla::User;
+
+my $dbh = Bugzilla->dbh;
 
 sub usage {
     print STDERR "Usage: $0 bug_id user_email\n";
@@ -41,9 +44,10 @@ if (!($bugnum =~ /^(\d+)$/)) {
 
 detaint_natural($bugnum);
 
-SendSQL("SELECT bug_id FROM bugs WHERE bug_id = $bugnum");
+my ($id) = $dbh->selectrow_array("SELECT bug_id FROM bugs WHERE bug_id = ?", 
+                                 undef, $bugnum);
 
-if (!FetchOneColumn()) {
+if (!$id) {
   print STDERR "Bug number $bugnum does not exist.\n";
   usage();
 }
