@@ -319,13 +319,6 @@ if ($b eq 'BUGZILLA-2_20-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '191';}
 }
 if ($b eq 'HEAD') {
-if (m:^mozilla/modules/security/.*$:) {return '86';}
-if (m:^mozilla/content/svg/.*$:) {return '187';}
-if (m:^mozilla/layout/svg/.*$:) {return '187';}
-if (m:^mozilla/content/xml/.*$:) {return '88';}
-if (m:^mozilla/extensions/xmlextras/.*$:) {return '88';}
-if (m:^mozilla/parser/expat/.*$:) {return '88';}
-if (m:^mozilla/suite/.*$:) {return '188';}
 if (m:^mozilla/xpcom/[^/]*$:) {return '89';}
 if (m:^mozilla/xpcom/base/.*$:) {return '89';}
 if (m:^mozilla/xpcom/build/.*$:) {return '89';}
@@ -497,6 +490,13 @@ if (m:^mozilla/content/xbl/builtin/.*$:) {return '182';}
 if (m:^mozilla/modules/libreg/.*$:) {return '84';}
 if (m:^mozilla/extensions/inspector/.*$:) {return '184';}
 if (m:^mozilla/layout/inspector/.*$:) {return '184';}
+if (m:^mozilla/modules/security/.*$:) {return '86';}
+if (m:^mozilla/content/svg/.*$:) {return '187';}
+if (m:^mozilla/layout/svg/.*$:) {return '187';}
+if (m:^mozilla/content/xml/.*$:) {return '88';}
+if (m:^mozilla/extensions/xmlextras/.*$:) {return '88';}
+if (m:^mozilla/parser/expat/.*$:) {return '88';}
+if (m:^mozilla/suite/.*$:) {return '188';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
