@@ -123,6 +123,14 @@ if (isset($id) && !preg_match('/^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]
     exit;
 }
 
+if (isset($version) && strpos(' ',$version)!=false) {
+    echo '<h2>Invalid extension version</h2>';
+    echo '<p>Your version is invalid.  Versions cannot contain a space.</p>';
+    echo '</div>';
+    require_once(FOOTER);
+    exit;
+}
+
 // $names, $descriptions are arrays keyed by locale
 $names = $manifestdata["name"];
 $descriptions = $manifestdata["description"];
