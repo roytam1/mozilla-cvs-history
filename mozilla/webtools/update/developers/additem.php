@@ -123,7 +123,7 @@ if (isset($id) && !preg_match('/^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]
     exit;
 }
 
-if (isset($version) && strpos(' ',$version)!=false) {
+if (isset($version) && preg_match('/.*\s.*/',$version)) {
     echo '<h2>Invalid extension version</h2>';
     echo '<p>Your version is invalid.  Versions cannot contain a space.</p>';
     echo '</div>';
