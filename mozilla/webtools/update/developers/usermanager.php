@@ -346,6 +346,52 @@ if ($_POST["submit"]=="Update") {
   if ($_SESSION["level"] !=="admin" && $_SESSION["uid"] !== $_POST["userid"]) {$_POST["userid"]=$_SESSION["uid"];}
   $userid = escape_string($_POST["userid"]);
   if (checkFormKey()) {
+
+    /**
+     * Check to make sure the user does not have any existing add-ons.
+     *
+     * This is made to prevent users from erasing their user account and leaving
+     * add-ons with no owner.
+     *
+     * In the error text, we will give them the ability to assign the add-on to
+     * a default owner account: nobody@mozilla.org (in honor of the great Bugzilla handle).
+     */
+
+    /**
+     * First, check to see if there is an add-on attached to this user.
+     */
+    $ownershipCheck = mysql_query("SELECT `main`.`ID`,`main`.`Name` FROM authorxref JOIN main on authorxref.ID=main.ID WHERE `UserID` = {$userid}", $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
+
+    /**
+     * If there is at least one, display information on how to delete.
+     */
+    if (mysql_num_rows($ownershipCheck) > 0) {
+
+        $addonsOwned = '';
+        while ($buf = mysql_fetch_array($ownershipCheck, MYSQL_ASSOC)) {
+            $addonsOwned .= '<li><a href="'.WEB_PATH.'/developers/listmanager.php?function=editmain&id='.$buf['ID'].'">'.htmlentities($buf['Name']).'</a></li>';
+        }
+    
+        echo <<<OWNERSHIPCHECK
+        <h1>You own at least one add-on</h1>
+        <p>Sorry, you cannot delete your user account because you are still an author for the following add-on(s):</p>
+        <ul>
+            {$addonsOwned}         
+        </ul>
+        <p>To delete your user account, you must complete one of the following:</p>
+        <ul>
+            <li>Transfer ownership to someone in your add-on community who would like to continue your work (or remove your email if there are multiple authors).</li>
+            <li>Transfer ownership to the default owner (nobody@mozilla.org) so someone else may pick up where you left off.</li>
+            <li>Delete your add-on(s).</li>
+        </ul>
+        <p>You may transfer ownership by entering the appropriate email in the <em>Author(s):</em> field on your add-on's edit page.  Use <em>nobody@mozilla.org</em> if you wish to assign to the default owner.</p>
+        <p>You can edit your add-on(s) by clicking on links above.  Each link will take you to your add-on's edit page.</p>
+        </div>
+OWNERSHIPCHECK;
+        require_once(FOOTER);
+        exit;
+    }
+
     $sql = "DELETE FROM `userprofiles` WHERE `UserID`='$userid'";
     $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
     if ($sql_result) {
