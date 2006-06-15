@@ -250,8 +250,8 @@ TD { font-size: 8pt }
 <h1>Approval History Log</h2>
 <span style="font-size: 8pt;">Incomplete Basic UI for the Approval History Log. <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=255305">Bug 255305</a>.</span>
 <table border=0 cellpadding=2 cellspacing=0 align="Center">
-<tr>
-<td></td>
+<tr style="background-color:#ccc;font-weight:bold;">
+<td>&nbsp;</td>
 <td style="font-size: 8pt">ID</td>
 <td style="font-size: 8pt">vID</td>
 <td style="font-size: 8pt">uID</td>
