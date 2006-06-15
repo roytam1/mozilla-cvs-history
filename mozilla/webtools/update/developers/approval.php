@@ -332,7 +332,9 @@ echo '
     $testos = $row["TestOS"];
     $comments = $row["comments"];
 
-    echo"<tr>
+    $class = ($i % 2) ? 'rowa' : 'rowb';
+
+    echo"<tr class=\"{$class}\">
     <td>$i.</td>
     <td>$id</td>
     <td>$vid</td>
