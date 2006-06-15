@@ -270,7 +270,46 @@ TD { font-size: 8pt }
 <td style="font-size: 7pt">Comments:</td>
 </tr>
 <?php
-$sql ="SELECT * FROM `approvallog` ORDER BY `date` DESC";
+
+$_start_date = mysql_real_escape_string($_GET['start']);
+$_end_date = mysql_real_escape_string($_GET['end']);
+
+$sql ="SELECT * FROM `approvallog` WHERE 1=1";
+
+if (!empty($_start_date)) {
+    $sql .= " AND date >= '{$_start_date}'";
+} else {
+    // If we don't have a start date, throw in the beginning of the current month
+    $_start_date = date('Y-m-01');
+    $sql .= " AND date >= '{$_start_date}'";
+}
+if (!empty($_end_date)) {
+    $sql .= " AND date <= '{$_end_date}'";
+} else {
+    $_end_date = date('Y-m-t');
+    $sql .= " AND date <= '{$_end_date}'";
+}
+$sql .= " ORDER BY `date` DESC";
+
+$_start_date = htmlentities($_start_date);
+$_end_date = htmlentities($_end_date);
+
+echo "<p>Showing results between {$_start_date} and {$_end_date}</p>";
+
+// Basically, we're grabbing the start and end dates
+// they gave us, and adding or subtracting a week to exaggerate the month they are
+// in.  This means they land into the previous or next month for us, and we just have
+// to make the start the first, and then figure out the length of the month.  I
+// assure you this is temporary and this whole thing is getting rewritten.
+echo '
+<p>
+<a href="?function=approvalhistory&start='.date('Y-m-01',strtotime($_start_date)-604800).'&end='.date('Y-m-t',strtotime($_start_date)-604800).'">&laquo; Prev Month</a> 
+<a href="?function=approvalhistory&start='.date('Y-m-01',strtotime($_end_date)+604800).'&end='.date('Y-m-t',strtotime($_end_date)+604800).'">Next Month &raquo;</a>
+</p>
+';
+
+
+
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
  $num_results = mysql_num_rows($sql_result);
   while ($row = mysql_fetch_array($sql_result)) {
