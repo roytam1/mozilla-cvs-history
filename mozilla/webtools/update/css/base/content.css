@@ -113,3 +113,11 @@ img.rss {
 .appversions .row1 {
     background-color: #eee;
 }
+
+tr.rowa {
+    background-color: #eee;
+}
+
+tr.rowb {
+    background-color: #ddd;
+}
