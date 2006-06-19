@@ -1081,7 +1081,7 @@ END
         
         $val = $Control{ $field };
       
-        $val = DBID_to_name( $val ) if( $field =~ /reporter|assigned_to|qa_contact/ );
+        $val = user_id_to_login( $val ) if( $field =~ /reporter|assigned_to|qa_contact/ );
       
         $tmp_reply .= sprintf( "     \@%-15s = %-15s\n", $field, $val );
 
