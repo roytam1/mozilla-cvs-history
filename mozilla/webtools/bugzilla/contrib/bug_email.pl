@@ -1198,7 +1198,7 @@ END
     Bugzilla::BugMail::Send($id) if( ! $test);
     
 } else {
-    # There were critical errors in the mail - the bug couldnt be inserted. !
+    # There were critical errors in the mail - the bug couldn't be inserted. !
 my $errreply = <<END
   
   +---------------------------------------------------------------------------+
