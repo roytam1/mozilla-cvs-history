@@ -234,7 +234,7 @@ $mode{'145'} = 'Restricted';
 $branch{'145'} = 'HEAD';
 $fullname{'145'} = 'security';
 $blessed{'145'} = ['nkwan%redhat.com','jgmyers%speakeasy.net','gerv%gerv.net','cls%seawood.org','bryner%brianryner.com',];
-$super{'145'} = ['tfox%netscape.com','sandeep.konchady%sun.com','neil.williams%sun.com','kaie%kuix.de','hanfei.yu%sun.com','glen.beasley%sun.com','christophe.ravel.bugs%sun.com','alexei.volkov.bugs%sun.com','wtchang%redhat.com','rrelyea%redhat.com','nelson%bolyard.com','julien.pierre.bugs%sun.com',];
+$super{'145'} = ['tfox%netscape.com','neil.williams%sun.com','kaie%kuix.de','glen.beasley%sun.com','christophe.ravel.bugs%sun.com','alexei.volkov.bugs%sun.com','wtchang%redhat.com','rrelyea%redhat.com','nelson%bolyard.com','julien.pierre.bugs%sun.com',];
 $mode{'151'} = 'Open';
 $branch{'151'} = 'HEAD';
 $fullname{'151'} = 'Security - Mozilla PSM Glue';
@@ -319,6 +319,12 @@ if ($b eq 'BUGZILLA-2_20-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '191';}
 }
 if ($b eq 'HEAD') {
+if (m:^mozilla/tools/.*$:) {return '112';}
+if (m:^mozilla/xpcom/typelib/.*$:) {return '117';}
+if (m:^mozilla/js/src/xpconnect/.*$:) {return '118';}
+if (m:^mozilla/xpcom/libxpt/.*$:) {return '118';}
+if (m:^mozilla/xpcom/reflect/.*$:) {return '118';}
+if (m:^mozilla/mailnews/news/.*$:) {return '122';}
 if (m:^mozilla/mailnews/[^/]*$:) {return '123';}
 if (m:^mozilla/mailnews/mime/[^/]*$:) {return '124';}
 if (m:^mozilla/extensions/java$:) {return '128';}
@@ -452,10 +458,10 @@ if (m:^mozilla/xpcom/windbgdlg/.*$:) {return '89';}
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '190';}
 if (m:^mozilla/xpcom/io/.*$:) {return '90';}
 if (m:^mozilla/modules/zlib/.*$:) {return '93';}
-if (m:^mozilla/gfx/src/xprint/.*$:) {return '179';}
 if (m:^mozilla/gfx/cairo/.*$:) {return '201';}
 if (m:^mozilla/gfx/src/thebes/.*$:) {return '201';}
 if (m:^mozilla/gfx/thebes/.*$:) {return '201';}
+if (m:^mozilla/gfx/src/xprint/.*$:) {return '179';}
 if (m:^mozilla/view/.*$:) {return '96';}
 if (m:^mozilla/layout/[^/]*$:) {return '98';}
 if (m:^mozilla/layout/base/.*$:) {return '98';}
@@ -491,12 +497,6 @@ if (m:^mozilla/widget/src/photon/.*$:) {return '113';}
 if (m:^mozilla/content/xul/.*$:) {return '106';}
 if (m:^mozilla/layout/xul/.*$:) {return '106';}
 if (m:^mozilla/profile/.*$:) {return '120';}
-if (m:^mozilla/tools/.*$:) {return '112';}
-if (m:^mozilla/xpcom/typelib/.*$:) {return '117';}
-if (m:^mozilla/js/src/xpconnect/.*$:) {return '118';}
-if (m:^mozilla/xpcom/libxpt/.*$:) {return '118';}
-if (m:^mozilla/xpcom/reflect/.*$:) {return '118';}
-if (m:^mozilla/mailnews/news/.*$:) {return '122';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
