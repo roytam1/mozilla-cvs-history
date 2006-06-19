@@ -196,10 +196,10 @@ $fullname{'78'} = 'NSPR';
 $blessed{'78'} = ['smfr%smfr.org','julien.pierre.bugs%sun.com','gerv%gerv.net','christophe.ravel.bugs%sun.com','mkaply%us.ibm.com',];
 $super{'78'} = ['cls%seawood.org','bryner%brianryner.com','wtchang%redhat.com','darin%meer.net',];
 $mode{'163'} = 'Restricted';
-$branch{'163'} = 'NSS_3_10_BRANCH';
+$branch{'163'} = 'NSS_3_11_BRANCH';
 $fullname{'163'} = 'NSS Stable Release Branch';
 $blessed{'163'} = [];
-$super{'163'} = ['tfox%netscape.com','sandeep.konchady%sun.com','neil.williams%sun.com','kaie%kuix.de','hanfei.yu%sun.com','glen.beasley%sun.com','christophe.ravel.bugs%sun.com','alexei.volkov.bugs%sun.com','wtchang%redhat.com','rrelyea%redhat.com','nelson%bolyard.com','julien.pierre.bugs%sun.com',];
+$super{'163'} = ['tfox%netscape.com','neil.williams%sun.com','kaie%kuix.de','glen.beasley%sun.com','christophe.ravel.bugs%sun.com','alexei.volkov.bugs%sun.com','wtchang%redhat.com','rrelyea%redhat.com','nelson%bolyard.com','julien.pierre.bugs%sun.com',];
 $mode{'159'} = 'Open';
 $branch{'159'} = 'HEAD';
 $fullname{'159'} = 'NSS Trunk';
@@ -501,7 +501,7 @@ if (m:^mozilla/profile/.*$:) {return '120';}
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
 }
-if ($b eq 'NSS_3_10_BRANCH') {
+if ($b eq 'NSS_3_11_BRANCH') {
 if (m:^mozilla/security/coreconf/.*$:) {return '163';}
 if (m:^mozilla/security/nss/.*$:) {return '163';}
 }
