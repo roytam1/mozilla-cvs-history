@@ -502,7 +502,9 @@ if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
 }
 if ($b eq 'NSS_3_11_BRANCH') {
+if (m:^mozilla/nosuch/.*$:) {return '163';}
 if (m:^mozilla/security/coreconf/.*$:) {return '163';}
+if (m:^mozilla/security/dbm/.*$:) {return '163';}
 if (m:^mozilla/security/nss/.*$:) {return '163';}
 }
 return '';
