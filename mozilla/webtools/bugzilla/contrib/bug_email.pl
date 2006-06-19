@@ -288,7 +288,7 @@ sub Reply( $$$$ ) {
 ###############################################################
 # getEnumList
 # Queries the Database for the table description and figures the
-# enum-settings out - usefull for checking fields for enums like
+# enum-settings out - useful for checking fields for enums like
 # prios 
 sub getEnumList( $ )
 {
