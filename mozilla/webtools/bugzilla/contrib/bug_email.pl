@@ -966,7 +966,7 @@ $Control{'version'} = $Version;
 # GroupsSet: Protections for Bug info. This parameter controls the visibility of the 
 # given bug. An Error in the given Buggroup is not a blocker, a default is taken.
 #
-# The GroupSet is accepted only as literals linked with whitespaces, plus-signs or kommas
+# The GroupSet is accepted only as literals linked with whitespaces, plus-signs or commas
 #
 my $GroupSet = "";
 my %GroupArr = ();
