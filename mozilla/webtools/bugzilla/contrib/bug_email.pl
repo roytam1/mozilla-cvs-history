@@ -527,7 +527,7 @@ END
 ###############################################################
 # generateTemplate
 # 
-# This functiuon generates a mail-Template with the 
+# This function generates a mail-Template with the 
 sub generateTemplate()
 {
     my $w;
