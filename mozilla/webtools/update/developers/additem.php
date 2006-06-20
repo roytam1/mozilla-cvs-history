@@ -386,54 +386,20 @@ echo"<TR><TD COLSPAN=2><SPAN class=\"file\">Target Application(s):</SPAN></TD></
   while ($row2 = mysql_fetch_array($sql_result2)) {
    $appname = $row2["AppName"];
    $guid = $row2["GUID"];
-   if ($appname == "Mozilla") { $mozguid = $guid; }
    $minappver = $manifestdata["targetApplication"]["$guid"]["minVersion"];
    $maxappver = $manifestdata["targetApplication"]["$guid"]["maxVersion"];
     echo"<TR><TD></TD><TD>$appname ";
 
-if (($mode=="new" or $mode=="update") and (strtolower($appname) !="mozilla" or $manifestdata["targetApplication"]["$mozguid"])) {
+if ($mode=="new" or $mode=="update") {
  //Based on Extension Manifest (New Mode)
-    if ($minappver and $maxappver) {
+    if (!empty($minappver) and !empty($maxappver)) {
       echo"$minappver - $maxappver\n";
       echo"<INPUT name=\"$appname-minappver\" TYPE=\"HIDDEN\" VALUE=\"$minappver\">\n";
       echo"<INPUT name=\"$appname-maxappver\" TYPE=\"HIDDEN\" VALUE=\"$maxappver\">\n";
     } else {
       echo"N/A";
     }
-} else {
- //Legacy Mode Code...
-    if ($appname =="Firefox" or $appname == "Thunderbird") { 
-    echo"<br><SPAN style=\"font-size: 8pt; font-weight: bold\">Incompatable with Legacy Extensions (Requires install.rdf)</SPAN>";
-    } else {
-
-$sql = "SELECT `version`,`major`,`minor`,`release`,`SubVer` FROM `applications` WHERE `AppName` = '$appname' ORDER BY `major` ASC, `minor` ASC, `release` ASC, `SubVer` ASC";
- $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-echo"<SELECT name=\"$appname-minappver\" TITLE=\"Minimum Version* (Required)\">";
-echo"<OPTION value\"\"> - </OPTION>\n";
-  while ($row = mysql_fetch_array($sql_result)) {
-  $release = "$row[major].$row[minor]";
-  if ($row["release"]) {$release = "$release.$row[release]";}
-    $subver = $row["SubVer"];
-    if ($subver !=="final") {$release="$release$subver";}
-    echo"<OPTION value=\"$release\">$release</OPTION>\n";
-  }
-echo"</select>\n";
-
-   echo"&nbsp;-&nbsp;";
-
-$sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-echo"<SELECT name=\"$appname-maxappver\" TITLE=\"Maximum Version* (Required)\">";
-echo"<OPTION value\"\"> - </OPTION>\n";
-  while ($row = mysql_fetch_array($sql_result)) {
-  $release = "$row[major].$row[minor]";
-  if ($row["release"]) {$release = "$release.$row[release]";}
-    $subver = $row["SubVer"];
-    if ($subver !=="final") {$release="$release$subver";}
-    echo"<OPTION value=\"$release\">$release</OPTION>\n";
-  }
-echo"</select>\n";
-    echo"</TD></TR>\n";
- }   }
+}
 }
 ?>
 
