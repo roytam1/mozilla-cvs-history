@@ -168,7 +168,12 @@ if (($mimetype == 'application/x-shockwave-flash' ||
   $manualInstallationURL = 'http://www.macromedia.com/go/getflashplayer';
   // Don't use a https URL for the license here, per request from
   // Macromedia.
-  $licenseURL = 'http://www.macromedia.com/shockwave/download/license/desktop/ssi/eula_ssi.html';
+
+  if ($chromeLocale != 'ja-JP') {
+    $licenseURL = 'http://www.adobe.com/go/eula_flashplayer';
+  } else {
+    $licenseURL = 'http://www.adobe.com/go/eula_flashplayer_jp';
+  }
 
   if (preg_match('/^Win/', $clientOS)) {
     $guid = '{4cfaef8a-a6c9-41a0-8e6f-967eb8f49143}';
@@ -190,11 +195,16 @@ if (($mimetype == 'application/x-shockwave-flash' ||
   $version = '10.1';
   $needsRestart = 'true';
 
+  // Even though the shockwave installer is not a silent installer, we
+  // need to show its EULA here since we've got a slimmed down
+  // installer that doesn't do that itself.
+  if ($chromeLocale != 'ja-JP') {
+    $licenseURL = 'http://www.adobe.com/go/eula_shockwaveplayer';
+  } else {
+    $licenseURL = 'http://www.adobe.com/go/eula_shockwaveplayer_jp';
+  }
+
   if (preg_match('/^Win/', $clientOS)) {
-    // Even though the shockwave installer is not a silent installer,
-    // we need to show its EULA here since we've got a slimmed down
-    // installer that doesn't do that itself.
-    $licenseURL = 'http://www.macromedia.com/shockwave/download/license/desktop/ssi/eula_ssi.html';
     $guid = '{45f2a22c-4029-4209-8b3d-1421b989633f}';
     $manualInstallationURL = 'http://sdc.shockwave.com/shockwave/download/';
 
@@ -204,10 +214,6 @@ if (($mimetype == 'application/x-shockwave-flash' ||
       $XPILocation = 'https://www.macromedia.com/go/xpi_shockwaveplayer_win';
     }
   } else if (preg_match('/^PPC Mac OS X/', $clientOS)) {
-    // Even though the shockwave installer is not a silent installer,
-    // we need to show its EULA here since we've got a slimmed down
-    // installer that doesn't do that itself.
-    $licenseURL = 'http://www.macromedia.com/shockwave/download/license/desktop/ssi/eula_ssi.html';
     $guid = '{49141640-b629-4d57-a539-b521c4a99eff}';
     $manualInstallationURL = 'http://sdc.shockwave.com/shockwave/download/';
 
