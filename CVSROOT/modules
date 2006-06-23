@@ -713,6 +713,8 @@ LXR -a \
 	mozilla/webtools/lxr
 Tinderbox -a \
 	mozilla/webtools/tinderbox
+Testopia -a \
+        mozilla/webtools/testopia
 Webtools -a \
 	Bugzilla \
 	Bonsai \
