@@ -99,7 +99,7 @@ switch (strtolower($application)) {
 }
 ?>
 	
-		<form id="search" method="get" action="<?php echo WEB_PATH; ?>/quicksearch.php" title="Search Mozilla Update">
+		<form id="search" method="get" action="<?php echo WEB_PATH; ?>/search.php" title="Search Mozilla Update">
 		<div>
 		<label for="q" title="Search Mozilla Update">search:</label>
 		<input type="text" id="q" name="q" accesskey="s" size="10">
@@ -108,7 +108,7 @@ switch (strtolower($application)) {
 		  <option value="E">Extensions</option>
 		  <option value="T">Themes</option>
 		</select>
-        <input type="hidden" name="application" value="<?=$application?>">
+        <input type="hidden" name="app" value="<?=$application?>">
 		<input type="submit" id="submit" value="Go">
 		</div>
 		</form>
