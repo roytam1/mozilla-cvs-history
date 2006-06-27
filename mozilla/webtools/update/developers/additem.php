@@ -275,17 +275,50 @@ if ($oneValidGuidFound == false) {
     echo "Sorry, your add-on must have at least one valid Mozilla application to use this site.<br>";
     die('Aborting...');
 
-// Even if we have a valid GUID, it still has to have valid min/max version values.
-// If these don't exist, we need to error out and say why.
+/**
+ * Even if we have a valid GUID, it still has to have valid min/max version values.
+ * If these don't exist, we need to error out and say why.
+ */
 } elseif (!empty($versioncheck['errors']) && $versioncheck['errors'] == true) {
     echo "Errors were encountered during install.rdf checking...<br>\n";
     echo "<p>How to fix this:</p>";
     echo "<ul>";
     echo "<li><a href=\"".WEB_PATH."/faq.php\">See the list of valid version numbers</a></li>";
     echo "<li>minVersion (MinAppVer) values may only contain values 0-9 and '.' because they have to be an absolute version.  minVersions like 1.0+ or 1.5.0.* are not allowed.</li>";
-    echo "<li>Your version has not been found in the addons database but it should be.  See #umo@mozilla.org in IRC if you think this is in error.</li>";
+    echo "<li>Your version has not been found in the addons database but it should be.  See #amo@mozilla.org in IRC if you think this is in error.</li>";
     echo "</ul>";
     die('Aborting...');
+}
+
+/**
+ * We want to check to see if an identical version for this add-on exists.  If one does, we abort.
+ *
+ * Previously, we would overwrite existing versions which is bad practice and defeats
+ * the purpose of add-on versioning.
+ */
+$versionCheckSql = "
+    SELECT
+        `vID`
+    FROM 
+        `version` v
+    INNER JOIN main m ON m.id = v.id
+    WHERE
+        v.Version='{$version}' AND
+        m.guid = '{$id}'
+
+";
+
+$versionCheckResult = mysql_query($versionCheckSql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+
+/**
+ * If a version is found, abort the add-on upload and explain why it was aborted.
+ */
+if (mysql_num_rows($versionCheckResult,$connection) > 0) {  
+    echo '<h2>Identical Add-on Version</h2>';
+    echo "<p><strong>Error:</strong> An identical version (".htmlentities($version).") already exists for this add-on.  Duplicate versions are not allowed.</p>"; 
+    echo '</div>';
+    require_once(FOOTER);
+    exit;   
 }
 
 $typearray = array("E"=>"Extension","T"=>"Theme");
@@ -621,15 +654,6 @@ $osid = escape_string($_POST["osid"]);
 $filesize = escape_string($_POST["filesize"]);
 $uri = ""; //we don't have all the parts to set a uri, leave blank and fix when we do.
 $notes = escape_string($_POST["notes"]);
-
-//If a record for this item's exact version, OS, and app already exists, find it and delete it, before inserting
-  $sql3 = "SELECT `vID` from `version` TV INNER JOIN `applications` TA ON TA.AppID=TV.AppID WHERE TV.ID = '$id' AND `OSID`='$osid' AND `AppName` = '$appname' AND TV.Version='$version' ORDER BY `vID` ASC";
-    $sql_result3 = mysql_query($sql3, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-      while ($row = mysql_fetch_array($sql_result3)) {
-        $sql = "DELETE FROM `version` WHERE `vID`='$row[vID]' LIMIT 1";
-        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-          if ($sql_result) { echo"<strong>Warning!</strong> A version Record already exists for this item's Application/OS/Version combination. Deleting.<br>\n"; }
-    }
 
 $sql = "INSERT INTO `version` (`ID`, `Version`, `OSID`, `AppID`, `MinAppVer`, `MinAppVer_int`, `MaxAppVer`, `MaxAppVer_int`, `Size`, `URI`, `Notes`, `DateAdded`, `DateUpdated`) VALUES ('$id', '$version', '$osid', '$appid', '$minappver', '$minappver_int', '$maxappver', '$maxappver_int', '$filesize', '$uri', '$notes', NOW(NULL), NOW(NULL));";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
