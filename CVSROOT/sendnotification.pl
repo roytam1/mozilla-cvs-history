@@ -42,7 +42,7 @@ chop(my $hostname = `/bin/hostname`);
 
 my ($remote,$port, $iaddr, $paddr, $proto, $line);
 
-$remote  = $mailhost;
+$remote  = "localhost";
 $port    = 25;
 if ($port =~ /\D/) { $port = getservbyname($port, 'tcp') }
 die "No port" unless $port;
