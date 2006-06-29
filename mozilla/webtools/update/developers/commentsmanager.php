@@ -8,6 +8,17 @@ if ($_SESSION["level"] !=="admin" and $_SESSION["level"] !=="editor") {
     if ($function=="flaggedcomments") {
         unset($function);
     }
+
+    $id = escape_string($_GET["id"]);
+    if (!$id) {$id = escape_string($_POST["id"]); }
+    $sql = "SELECT `UserID` from `authorxref` TAX WHERE `ID` = '$id' AND `UserID` = '$_SESSION[uid]' LIMIT 1";
+    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+    if (mysql_num_rows($sql_result)=="0") {
+        echo"<h1>Access Denied</h1>\n";
+        echo"You do not have access to this item.";
+        require_once(FOOTER);
+        exit;
+    }
 }
 
 $page_title = 'Mozilla Update :: Developer Control Panel :: Comments Manager';
