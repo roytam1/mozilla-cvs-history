@@ -40,12 +40,12 @@ $Route->connect ('/', array('controller'=>'results', 'action'=>'', ''));
 /**
  * ...and connect the rest of 'Pages' controller's urls.
  */
-$Route->connect ('/pages/*', array('controller'=>'pages', 'action'=>'display'));
+//$Route->connect ('/pages/*', array('controller'=>'pages', 'action'=>'display'));
 
 /**
  * Then we connect url '/test' to our test controller. This is helpfull in
  * developement.
  */
-$Route->connect ('/tests', array('controller'=>'tests', 'action'=>'index'));
+//$Route->connect ('/tests', array('controller'=>'tests', 'action'=>'index'));
 
 ?>
