@@ -25,14 +25,10 @@ if (!$function) {
      $guid = escape_string($_POST["guid"]);
      $shortname = escape_string($_POST["shortname"]);
      $version = escape_string($_POST["version"]);
-     $major = escape_string($_POST["Major"]);
-     $minor = escape_string($_POST["Minor"]);
-     $release = escape_string($_POST["Release"]);
-     $subver = escape_string($_POST["SubVer"]);
      $public_ver = escape_string($_POST["public_ver"]);
 
      if (checkFormKey()) {
-       $sql = "INSERT INTO `applications` (`AppName`, `GUID`, `shortname`, `Version`, `major`, `minor`, `release`,`SubVer`,`public_ver`) VALUES ('$appname','$guid','$shortname','$version', '$major','$minor','$release','$subver','$public_ver')";
+       $sql = "INSERT INTO `applications` (`AppName`, `GUID`, `shortname`, `Version`, `public_ver`) VALUES ('$appname','$guid','$shortname','$version','$public_ver')";
        $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
        if ($sql_result) {
            echo"The application $appname $version has been successfully added.";
@@ -63,7 +59,7 @@ $sql = "SELECT `AppName` from `applications` GROUP BY `AppName` ORDER BY `AppNam
 
 <?php
   $i=0;
-  $sql = "SELECT * FROM `applications` WHERE `AppName`='$application' ORDER BY `AppName` ASC, `major` ASC, `minor` ASC, `release` ASC, `SubVer` ASC";
+  $sql = "SELECT * FROM `applications` WHERE `AppName`='$application' ORDER BY `AppName` ASC, `Version` DESC";
   $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
       
@@ -93,27 +89,11 @@ $sql = "SELECT `AppName` from `applications` GROUP BY `AppName` ORDER BY `AppNam
 <input name="guid" type="hidden" value="<?php echo"$guid"; ?>">
 <input name="shortname" type="hidden" value="<?php echo"$shortname"; ?>">
 
-Display Version (e.g. 1.0PR): <input name="version" size=8 maxlength=15 title="User Friendly Version (Ex. 1.0PR instead of 0.10)"><BR>
-
-Major:  <input name="Major" type="text" size="5" maxlength="3" value="" title="Major Version #. (Ex. 1 if 1.0)">
-Minor:  <input name="Minor" type="text" size="5" maxlength="3" value="" title="Minor Version #. (Ex. 0 if 1.0)">
-Release:  <input name="Release" type="text" size="5" maxlength="3" value="" title="Release Version. (Ex. 2 if 1.0.2)">
-SubVer: <input name="SubVer" size="5" maxlength="5" title="SubVersion Value (Ex. a4 if 1.8a4 or + if 0.10+)">
+Version (e.g. 1.0PR): <input name="version" size=8 maxlength=15 title="User Friendly Version (Ex. 1.0PR instead of 0.10)"><BR>
 
 <br><br>
 Public Version: Yes: <input name="public_ver" type="radio" value="YES" checked> No: <input name="public_ver" type="radio" value="NO"><br>
 
-<p>Please note that a 'final' SubVer causes the version comparison in additem.php to ignore the release value:</p>
-<ul>
-<li>1 0 4 final --> 1.0</li>
-<li>1 0 0 final --> 1.0</li>
-</ul>
-<p>In all other cases, release will be counted!</p>
-<ul>
-<li>1 0 4 0 --> 1.0.4.0</li>
-<li>1 0 0 + --> 1.0.0+</li>
-<li>1 0 0 a1+ --> 1.0.0.a1+</li>
-</ul>
 <input name="submit" type="submit" value="Add Version">&nbsp;<input name="reset" type="reset" value="Reset Form">
 </form>
 
@@ -126,17 +106,13 @@ Public Version: Yes: <input name="public_ver" type="radio" value="YES" checked> 
 
      $appname = escape_string($_POST["AppName"]);
      $version = escape_string($_POST["version"]);
-     $major = escape_string($_POST["Major"]);
-     $minor = escape_string($_POST["Minor"]);
-     $release = escape_string($_POST["Release"]);
-     $subver = escape_string($_POST["SubVer"]);
-     $public_ver = escape_string($_POST["public_ver"]);
      $appid= escape_string($_POST["appid"]);
+     $public_ver = escape_string($_POST['public_ver']);
 
     if (checkFormKey()) {
       echo"<h2>Processing update request, please wait...</h2>\n";
 
-      $sql = "UPDATE `applications` SET `AppName`='$appname', `major`='$major', `minor`='$minor', `release`='$release', `SubVer`='$subver',`Version`='$version', `public_ver`='$public_ver' WHERE `appid`='$appid'";
+      $sql = "UPDATE `applications` SET `AppName`='$appname', `Version`='$version', `public_ver`='$public_ver' WHERE `appid`='$appid'";
       $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
       if ($sql_result) {
           echo"Your update to $appname $version has been successful.<br>";
@@ -170,11 +146,7 @@ if (!$appid) { $appid = escape_string($_POST["appid"]); }
 <?writeFormKey();?>
 <?php
   echo"Name:  <input name=\"AppName\" type=\"text\" size=\"30\" maxlength=\"30\" value=\"".$row["AppName"]."\"><br>\n";
-  echo"Display Version: <input name=\"version\" type=\"text\" size=\"10\" maxlength=\"15\" value=\"$row[Version]\" title=\"User Friendly Version (Ex. 1.0PR instead of 0.10)\"><br>\n";
-  echo"Major:  <input name=\"Major\" type=\"text\" size=\"5\" maxlength=\"3\" value=\"".$row["major"]."\" title=\"Major Version #. (Ex. 1 if 1.0)\">";
-  echo"Minor:  <input name=\"Minor\" type=\"text\" size=\"5\" maxlength=\"3\" value=\"".$row["minor"]."\" title=\"Minor Version #. (Ex. 0 if 1.0)\">";
-  echo"Release:  <input name=\"Release\" type=\"text\" size=\"5\" maxlength=\"3\" value=\"".$row["release"]."\" title=\"Release Version. (Ex. 2 if 1.0.2)\">";
-  echo"SubVer:  <input name=\"SubVer\" type=\"text\" size=\"8\" maxlength=\"5\" value=\"$row[SubVer]\" title=\"SubVersion Value (Ex. a4 if 1.8a4 or + if 0.10+)\"><br>\n";
+  echo"Version: <input name=\"version\" type=\"text\" size=\"10\" maxlength=\"15\" value=\"$row[Version]\" title=\"User Friendly Version (Ex. 1.0PR instead of 0.10)\"><br>\n";
 
 ?>
 <div style="margin-top: 10px; font-size: 8pt">Should this version be exposed to end-users of the website, or just allowed for extension authors' install.rdf files? In general only release milestones should be exposed.</DIV>
@@ -183,7 +155,7 @@ $public_ver = $row["public_ver"];
  echo"Public Version: ";
  if ($public_ver=="YES") {
    echo"Yes: <input name=\"public_ver\" type=\"radio\" value=\"YES\" checked> No: <input name=\"public_ver\" type=\"radio\" value=\"NO\">\n";
-   } else if ($public_ver=="NO") {
+   } else if ($public_ver=="NO" || empty($public_ver)) {
    echo"Yes: <input name=\"public_ver\" type=\"radio\" value=\"YES\"> No: <input name=\"public_ver\" type=\"radio\" value=\"NO\" checked>\n";
    }
 
@@ -210,12 +182,8 @@ Application Name: <input name="appname" type="text" title="Name of Application (
 GUID of App: <input name="guid" type="text" size=35 title="Application Identifier"><BR>
 Shortname: <input name="shortname" type="text" size="5" maxlength=2 title="two char abbrieviation of appname. (Eg fx for Firefox, or tb for Thunderbird)"><BR>
 <BR>
-Display Version (e.g. 1.0PR): <input name="version" size=8 maxlength=15 title="User Friendly Version (Ex. 1.0PR instead of 0.10)"><BR>
+Version (e.g. 1.0PR): <input name="version" size=8 maxlength=15 title="User Friendly Version (Ex. 1.0PR instead of 0.10)"><BR>
 
-Major:  <input name="Major" type="text" size="5" maxlength="3" value="" title="Major Version #. (Ex. 1 if 1.0)">
-Minor:  <input name="Minor" type="text" size="5" maxlength="3" value="" title="Minor Version #. (Ex. 0 if 1.0)">
-Release:  <input name="Release" type="text" size="5" maxlength="3" value="" title="Release Version. (Ex. 2 if 1.0.2)">
-SubVer: <input name="SubVer" size="5" maxlength="5" title="SubVersion Value (Ex. a4 if 1.8a4 or + if 0.10+)">
 <BR>
 <input name="public_ver" type="hidden" value="YES">
 <BR>

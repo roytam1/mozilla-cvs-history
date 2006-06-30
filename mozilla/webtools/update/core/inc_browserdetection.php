@@ -144,41 +144,11 @@ if (!isset($application) || !$application) { $application="firefox"; } //Default
 //App_Version
 //Get Max Version for Application Specified
 if (!isset($app_version) || !$app_version) {
-    $sql = "SELECT `major`,`minor`,`release`,`SubVer` FROM `applications` WHERE `AppName` = '$application' ORDER BY `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC LIMIT 1";
+    $sql = "SELECT `Version` FROM `applications` WHERE `AppName` = '$application' ORDER BY `Version` DESC LIMIT 1";
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     $row = mysql_fetch_array($sql_result);
-        $release = "$row[major].$row[minor]";
-        if ($row["release"]) {
-            $release .= ".$row[release]";
-        }
-        $subver = $row["SubVer"];
-        if ($subver !=="final") {
-            $release .="$subver";
-       }
-         $app_version = $release;
-       unset($release, $subver);
+         $app_version = $row['Version'];
 }
-
-
-//Check for Internal Versioning for the $app_version
-  $sql = "SELECT `int_version`,`major`,`minor`,`release`,`SubVer` FROM `applications` WHERE `AppName`='$application' AND `int_version` IS NOT NULL ORDER BY `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC";
-  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-    while ($row = mysql_fetch_array($sql_result)) {
-        $release = "$row[major].$row[minor]";
-        if ($row["release"]) {
-            $release .= ".$row[release]";
-        }
-        $subver = $row["SubVer"];
-        if ($subver !=="final") {
-            $release .="$subver";
-       }
-       //echo"$release = $app_version ($row[int_version])<br>\n"; //Debug int-version replace
-       if (strtolower($release)==strtolower($app_version) and $row["int_version"]) {
-           $app_version=$row["int_version"];
-           break;
-       }
-
-    }
 
 //So, at this point we gracefully leave, feeling happy and sending 3 variables on.
 //$application

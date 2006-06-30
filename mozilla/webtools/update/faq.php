@@ -110,8 +110,7 @@ while ($row = mysql_fetch_array($sql_result)) {
 <table class="appversions">
 <tr>
     <th>Application Name {GUID}</th>
-    <th>Display Version</th>
-    <th>install.rdf Version</th>
+    <th>Version</th>
 </tr>
 
 <?php
@@ -124,11 +123,7 @@ $sql = "
     SELECT 
         `AppName`,
         `GUID`,
-        `Version`,
-        `major`,
-        `minor`,
-        `release`,
-        `SubVer`
+        `Version`
     FROM
         `applications`
     WHERE
@@ -141,8 +136,7 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
 
 while ($row = mysql_fetch_array($sql_result)) {
     $appVersions[$row['AppName']][] = array(
-        'displayVersion' => $row['Version'],
-        'versionNumber' => buildAppVersion($row['major'],$row['minor'],$row['release'],$row['SubVer'])
+        'displayVersion' => $row['Version']
     );
     $guids[$row['AppName']] = $row['GUID'];
 }
@@ -158,7 +152,7 @@ ROWHEADER;
             foreach ($versions as $row) {
                 $rowClass = $class%2;
                 echo <<<ROW
-                <tr class="row{$rowClass}"><td></td><td>{$row['displayVersion']}</td><td>{$row['versionNumber']}</td></tr>
+                <tr class="row{$rowClass}"><td></td><td>{$row['displayVersion']}</td></tr>
 
 ROW;
                 $class++;

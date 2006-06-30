@@ -188,20 +188,14 @@ foreach ($manifestdata['targetApplication'] as $key=>$val) {
     $app_sql = "
         SELECT 
             `AppName`,
-            `major`,
-            `minor`,
-            `release`,
-            `SubVer`
+            `Version`
         FROM
             `applications`
         WHERE
             `GUID`='$esckey' AND
             `public_ver`='YES'
         ORDER BY
-            `major` DESC,
-            `minor` DESC,
-            `release` DESC,
-            `SubVer` DESC
+            `Version` DESC
     ";
 
     $app_sql_result = mysql_query($app_sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
@@ -224,10 +218,10 @@ foreach ($manifestdata['targetApplication'] as $key=>$val) {
             $appname = $row['AppName'];  // Name of the application.
 
             // Build our app version string.
-            $appVersion = buildAppVersion($row['major'],$row['minor'],$row['release'],$row['SubVer']);
+            $appVersion = $row['Version'];
 
             // If we have a match, set our valid minVersion flag to true.
-            if ($appVersion == $val['minVersion'] && preg_match('/^[\d\.+]*$/',$val['minVersion'])) {
+            if ($appVersion == $val['minVersion']) {
                 $versioncheck[$key]['minVersion_valid'] = true;
             }
 
@@ -240,14 +234,14 @@ foreach ($manifestdata['targetApplication'] as $key=>$val) {
              * Use this to debug app versions.
             echo '<pre>';
             echo 'App: '.$appname."\n";
-            echo 'Release from DB: '.$row['major'].' '.$row['minor'].' '.$row['release'].' '.$row['subver']."\n";
+            echo 'Release from DB: '.$row['Version']."\n";
             echo 'Version we put together: '.$appVersion."\n";
             echo 'MinVersion from RDF (match): '.$val['minVersion'].' ('.$versioncheck[$key]['minVersion_valid'].') '."\n";
             echo 'MaxVersion from RDF (match): '.$val['maxVersion'].' ('.$versioncheck[$key]['maxVersion_valid'].') '."\n\n";
             print_r($versioncheck);
             echo "\n\n\n";
             echo '</pre>';
-             */
+            */
 
             // If we have valid matches for both max/minVersions, we don't need to
             // keep checking.  Break this loop and continue to the next application.
@@ -618,24 +612,17 @@ if (!$_POST["categories"]) {
 
 //Construct Internal App_Version Arrays
 $i=0;
-$sql = "SELECT `AppName`, `int_version`, `major`, `minor`, `release`, `SubVer`, `shortname` FROM `applications` ORDER BY `AppName`, `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC";
+$sql = "SELECT `AppName`, `Version`, `shortname` FROM `applications` ORDER BY `AppName`, `Version` DESC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
-  $i++;
-  $appname = $row["AppName"];
-  $int_version = $row["int_version"];
-  $subver = $row["SubVer"];
-  $release = "$row[major].$row[minor]";
-  if ($row["release"]) {$release = "$release.$row[release]";}
-  if ($subver !=="final") {$release="$release$subver";}
-    $app_internal_array[$release] = $int_version;
+    $i++;
+    $appname = $row["AppName"];
     $app_shortname[strtolower($appname)] = $row["shortname"];
   }
 
  $sql2 = "SELECT `AppName`,`AppID` FROM `applications` GROUP BY `AppName` ORDER BY `AppName` ASC";
  $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row2 = mysql_fetch_array($sql_result2)) {
-   unset($minappver_int,$maxappver_int);
    $appname = $row2["AppName"];
    $appid = $row2["AppID"];
    $minappver = $_POST["$appname-minappver"];
@@ -643,19 +630,20 @@ $sql = "SELECT `AppName`, `int_version`, `major`, `minor`, `release`, `SubVer`, 
 
 if ($minappver and $maxappver) {
 
-if ($app_internal_array["$minappver"]) {$minappver_int = $app_internal_array["$minappver"]; }
-if ($app_internal_array["$maxappver"]) {$maxappver_int = $app_internal_array["$maxappver"]; }
-if (!$minappver_int) {$minappver_int = $minappver;}
-if (!$maxappver_int) {$maxappver_int = $maxappver;}
-
-
 $version = escape_string($_POST["version"]);
 $osid = escape_string($_POST["osid"]);
 $filesize = escape_string($_POST["filesize"]);
 $uri = ""; //we don't have all the parts to set a uri, leave blank and fix when we do.
 $notes = escape_string($_POST["notes"]);
 
-$sql = "INSERT INTO `version` (`ID`, `Version`, `OSID`, `AppID`, `MinAppVer`, `MinAppVer_int`, `MaxAppVer`, `MaxAppVer_int`, `Size`, `URI`, `Notes`, `DateAdded`, `DateUpdated`) VALUES ('$id', '$version', '$osid', '$appid', '$minappver', '$minappver_int', '$maxappver', '$maxappver_int', '$filesize', '$uri', '$notes', NOW(NULL), NOW(NULL));";
+//Construct the New Filename
+$filename = check_filename($_POST['filename']);
+$filesum = 'sha1:'.sha1_file(REPO_PATH.'/temp/'.$filename); // Right now we are limited to sha1.  Will move to another hash type in the future.
+$filename_array = explode(".",$filename);
+$filename_count = count($filename_array)-1;
+$fileext = $filename_array[$filename_count];
+
+$sql = "INSERT INTO `version` (`ID`, `Version`, `OSID`, `AppID`, `MinAppVer`, `MaxAppVer`, `Size`, `URI`, `Notes`, `DateAdded`, `DateUpdated`, `hash`) VALUES ('$id', '$version', '$osid', '$appid', '$minappver', '$maxappver', '$filesize', '$uri', '$notes', NOW(NULL), NOW(NULL), '{$filesum}');";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
  if ($sql_result) {echo"Added $name version $version for $appname<br>\n"; $apps_array[]=$app_shortname[strtolower($appname)];}
 
@@ -670,13 +658,6 @@ $sql = "SELECT `OSName` FROM `os` WHERE `OSID`='$osid' LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
    $row = mysql_fetch_array($sql_result);
    $osname = $row["OSName"];
-
-
-//Construct the New Filename
-$filename = check_filename($_POST['filename']);
-$filename_array = explode(".",$filename);
-$filename_count = count($filename_array)-1;
-$fileext = $filename_array[$filename_count];
 
 $itemname = preg_replace('/(^\.+|[^\w\-\.]+)/','_',$name); // if you modify this, update inc_approval.php as well
 $j=0; $app="";

@@ -67,6 +67,19 @@ echo"Categories: $categories<br>\n";
 
 ?>
 
+<h2>Add New Version of <?php echo"$name"; ?></h2>
+<TABLE BORDER=0 CELLPADDING=2 CELLSPACING=2 ALIGN=CENTER STYLE="border: solid 0px #000000; width: 100%">
+<FORM NAME="additem" METHOD="POST" ACTION="additem.php?function=additem2" enctype="multipart/form-data">
+<INPUT NAME="type" TYPE="hidden" VALUE="<?php echo"$type"; ?>">
+<TR><TD style="padding-left: 20px">
+Your <?php echo"$typename"?> File:<BR>
+<INPUT NAME="file" SIZE=40 TYPE="FILE"><BR>
+<BR>
+<INPUT NAME="button" TYPE="BUTTON" VALUE="Cancel" onclick="javascript:history.back()"> <INPUT NAME="submit" TYPE="SUBMIT" VALUE="Next &#187;"> 
+</TD></TR>
+</FORM>
+</TABLE>
+
 <h2>Listed Versions</h2>
 <?php
 $approved_array = array("?"=>"Pending Approval", "YES"=>"Approved", "NO"=>"Denied", "DISABLED"=>"Disabled");
@@ -83,44 +96,11 @@ WHERE `ID`='$id' GROUP BY `URI` ORDER BY `Version` DESC";
     $approved = $row["approved"];
     $approved = $approved_array["$approved"];
 
-echo"<h4><a href=\"listmanager.php?function=editversion&id=$id&vid=$vid\">Version $version</a> - $approved</h4>\n";
-echo"$filename";
+echo"<h4><a href=\"listmanager.php?function=editversion&id=$id&vid=$vid\">Version $version</a> - $approved (<small>$filename</small>)</h4>\n";
+
 if ($os !="ALL") {echo" - for $os"; }
-echo"<br>\n";
-
-
-$sql2 = "SELECT TV.Version, AppName, MinAppVer, MaxAppVer FROM `version` TV
-    INNER JOIN applications TA ON TA.AppID = TV.AppID
-    WHERE `ID`='$id' AND `URI`='".escape_string($uri)."' ORDER BY TV.Version, TA.AppName";
-    $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-    while($row2 = mysql_fetch_array($sql_result2)) {
-
-    $app = $row2["AppName"];
-    $minappver = $row2["MinAppVer"];
-    $maxappver = $row2["MaxAppVer"];
-
-
-    echo"For $app:&nbsp;&nbsp;$minappver - $maxappver<BR>\n";
-
-
-    }
-
  }
 ?>
-
-<h2>Add New Version of <?php echo"$name"; ?></h2>
-<TABLE BORDER=0 CELLPADDING=2 CELLSPACING=2 ALIGN=CENTER STYLE="border: solid 0px #000000; width: 100%">
-<FORM NAME="additem" METHOD="POST" ACTION="additem.php?function=additem2" enctype="multipart/form-data">
-<INPUT NAME="type" TYPE="hidden" VALUE="<?php echo"$type"; ?>">
-<TR><TD style="padding-left: 20px">
-Your <?php echo"$typename"?> File:<BR>
-<INPUT NAME="file" SIZE=40 TYPE="FILE"><BR>
-<BR>
-<INPUT NAME="button" TYPE="BUTTON" VALUE="Cancel" onclick="javascript:history.back()"> <INPUT NAME="submit" TYPE="SUBMIT" VALUE="Next &#187;"> 
-</TD></TR>
-</FORM>
-</TABLE>
-
 
 
 	</div>

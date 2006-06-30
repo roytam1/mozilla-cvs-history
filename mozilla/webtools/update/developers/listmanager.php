@@ -418,13 +418,12 @@ $osid = escape_string($_POST["osid"]);
 
 //Construct Internal App_Version Arrays
 $i=0;
-$sql = "SELECT `int_version`, `major`, `minor`, `release`, `SubVer` FROM `applications` ORDER BY `AppName`, `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC";
+$sql = "SELECT `Version` FROM `applications` ORDER BY `AppName`, `Version` DESC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
   $i++;
 
-    $completelyUnnecessary = buildAppVersion($row['major'],$row['minor'],$row['release'],$row['SubVer']);
-    $app_internal_array[$completelyUnnecessary] = $completelyUnnecessary;
+    $app_internal_array[$row['Version']] = $row['Version'];
   }
 
 //print_r($app_internal_array);
@@ -434,14 +433,10 @@ unset($minappver_int,$maxappver_int);
 $minappver = escape_string($_POST["minappver_$i"]);
 $maxappver = escape_string($_POST["maxappver_$i"]);
 $vid = escape_string($_POST["appvid_$i"]);
-if ($app_internal_array["$minappver"]) {$minappver_int = $app_internal_array["$minappver"]; }
-if ($app_internal_array["$maxappver"]) {$maxappver_int = $app_internal_array["$maxappver"]; }
-if (!$minappver_int) {$minappver_int = $minappver;}
-if (!$maxappver_int) {$maxappver_int = $maxappver;}
 
 if ($minappver && $maxappver) {
  if (checkFormKey()) {
-  $sql = "UPDATE `version` SET `MinAppVer`='$minappver', `MinAppVer_int`='$minappver_int', `MaxAppVer`='$maxappver', `MaxAppVer_int`='$maxappver_int' WHERE `vID`='$vid'";
+  $sql = "UPDATE `version` SET `MinAppVer`='$minappver', `MaxAppVer`='$maxappver' WHERE `vID`='$vid'";
   //echo"$sql<br>\n";
   $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
     echo"Updated Target Application Values for Application $i...<br>\n";
@@ -548,12 +543,12 @@ if (!$vid) {$vid = escape_string($_POST["vid"]); }
 
 //Construct App_Versions Arrays
 $i=0;
-$sql = "SELECT `AppName`, `Version`, `major`, `minor`, `release`, `SubVer` FROM `applications` ORDER BY `AppName`, `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC";
+$sql = "SELECT `AppName`, `Version` FROM `applications` ORDER BY `AppName`, `Version` DESC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
   $i++;
     $AppName = strtolower($row['AppName']);
-    $builtAppVersion = buildAppVersion($row['major'],$row['minor'],$row['release'],$row['SubVer']);
+    $builtAppVersion = $row['Version'];
     $app_ver_array[$AppName][] = $builtAppVersion;
     $app_display_array[$AppName][$builtAppVersion] = $row['Version'];
   }

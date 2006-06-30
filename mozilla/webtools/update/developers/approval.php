@@ -52,18 +52,20 @@ if ($_POST["allelementsthemed_$i"]) { $allelementsthemed = escape_string($_POST[
 
 if ($approval !="noaction") {
 
+$name = escape_string($_POST["name_$i"]);
+$version = escape_string($_POST["version_$i"]);
 if ($type=="T") {
     if ($approval=="YES") {
         if ($installation=="YES" and $uninstallation=="YES" and $appworks=="YES" and $cleanprofile=="YES" and $visualerrors=="YES" and $allelementsthemed=="YES" and $testos and $testbuild) {
             $approval_result = process_approval($type, $file, "approve");
         } else {
-            echo"Error: Approval cannot be processed because of missing data. Fill in the required fields and try again.<br>\n";
+            echo"Error: Approval of $name $version cannot be processed because of missing data. Fill in the required fields and try again.<br>\n";
         }
     } else {
-        if ($testos and $testbuild and $comments) {
+        if ($comments) {
             $approval_result = process_approval($type, $file, "deny");
         } else {
-            echo"Error: Denial cannot be processed because of missing data. Fill in the required fields and try again.<br>\n";
+            echo"Error: Denial of $name $version cannot be processed because of missing data. Fill in the required fields and try again.<br>\n";
         }
 
     }
@@ -73,20 +75,18 @@ if ($type=="T") {
         if ($installation=="YES" and $uninstallation=="YES" and $appworks=="YES" and $cleanprofile=="YES" and $newchrome=="YES" and $worksasdescribed=="YES" and $testos and $testbuild) {
             $approval_result = process_approval($type, $file, "approve");
         } else {
-            echo"Error: Approval cannot be processed because of missing data. Fill in the required fields and try again.<br>\n";
+            echo"Error: Approval of $name $version cannot be processed because of missing data. Fill in the required fields and try again.<br>\n";
         }
     } else {
-        if ($testos and $testbuild and $comments) {
+        if ($comments) {
             $approval_result = process_approval($type, $file, "deny");    
         } else {
-            echo"Error: Denial cannot be processed because of missing data. Fill in the required fields and try again.<br>\n";
+            echo"Error: Denial of $name $version cannot be processed because of missing data. Fill in the required fields and try again.<br>\n";
         }
     }
 }
 
 //Approval for this file was successful, print the output message.
-$name = escape_string($_POST["name_$i"]);
-$version = escape_string($_POST["version_$i"]);
 if ($approval_result) {
    if ($approval=="YES") {
        echo"$name $version was granted approval<br>\n";

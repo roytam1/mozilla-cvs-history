@@ -41,6 +41,8 @@ if ($_POST["submit"]=="Flag Selected" or $_POST["submit"]=="Delete Selected") {
 <h1>Updating comments list, please wait...</h1>
 <?php
 
+    $errors = false;
+
     //Process Post Data, Make Changes to Feedback Table.
     //Begin General Updating
     for ($i=1; $i<=$_POST[maxid]; $i++) {
@@ -76,20 +78,29 @@ if ($_POST["submit"]=="Flag Selected" or $_POST["submit"]=="Delete Selected") {
                 echo"Comment $selected removed.<br>\n";
                 // Update the rating for this item, since it has potentially changed
                 update_rating($id);
+            } else {
+                $errors = true;
             }
         } else if ($_POST["submit"]=="Flag Selected") {
             $sql = "UPDATE `feedback` SET `flag`= 'YES' WHERE `CommentID`='$selected'";
             $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
             if ($sql_result) {
                 echo"Comment $selected flagged for editor review.<br>\n";
+            } else {
+                $errors = true;
             }
+
         }
      }
 
     }
 
   unset($i);
+  if ($errors==true) {
   echo"Your changes to the comment list have been succesfully completed<BR>\n";
+  } else {
+  echo "There were some errors processing your request.\n";
+  }
 
  }
 ?>
@@ -140,7 +151,7 @@ echo"<BR>\n";
 <?writeFormKey();?>
 <?php
 
- $sql = "SELECT * FROM `feedback` WHERE `ID`='$id' ORDER BY `CommentDate`DESC LIMIT $startpoint,$items_per_page";
+ $sql = "SELECT * FROM `feedback` WHERE `ID`='$id' AND CommentVote IS NOT NULL ORDER BY `CommentDate`DESC LIMIT $startpoint,$items_per_page";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     while ($row = mysql_fetch_array($sql_result)) {
         $commentid = $row["CommentID"];
