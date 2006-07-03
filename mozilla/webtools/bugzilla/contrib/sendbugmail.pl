@@ -17,7 +17,6 @@
 use lib qw(.);
 
 use Bugzilla;
-use Bugzilla::Config qw(:DEFAULT);
 use Bugzilla::Util;
 use Bugzilla::BugMail;
 use Bugzilla::User;

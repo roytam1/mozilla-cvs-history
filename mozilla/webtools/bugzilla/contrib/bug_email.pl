@@ -91,7 +91,6 @@ use lib "../";
 
 use Bugzilla;
 use BugzillaEmail;
-use Bugzilla::Config qw(:DEFAULT);
 use Bugzilla::Constants;
 use Bugzilla::Util;
 use Bugzilla::BugMail;
