@@ -54,7 +54,7 @@ if (!$id) {
 }
 
 # Validate the changer address.
-my $match = Param('emailregexp');
+my $match = Bugzilla->params->{'emailregexp'};
 if ($changer !~ /$match/) {
     print STDERR "Changer \"$changer\" doesn't match email regular expression.\n";
     usage();
