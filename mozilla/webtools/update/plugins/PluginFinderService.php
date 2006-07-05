@@ -164,7 +164,7 @@ if (($mimetype == 'application/x-shockwave-flash' ||
   // present those to the user, and for Mac users, tell them where
   // they can go to get the installer.
 
-  $name = 'Macromedia Flash Player';
+  $name = 'Adobe Flash Player';
   $manualInstallationURL = 'http://www.macromedia.com/go/getflashplayer';
   // Don't use a https URL for the license here, per request from
   // Macromedia.
