@@ -42,6 +42,9 @@ use bytes;
 use File::Basename;
 use Mail::Mailer;
 
+# Set use_sendmail = 0 to send mail via $mailhost using SMTP
+$use_sendmail = 0;
+
 $username = $ENV{"CVS_USER"} || getlogin || (getpwuid($<))[0] || "nobody";
 $envcvsroot = $ENV{'CVSROOT'};
 $cvsroot = $envcvsroot;
@@ -138,14 +141,6 @@ sub process_args {
     }
     $repository =~ s:^$cvsroot/::;
     $repository =~ s:^$envcvsroot/::;
-
-    if (!$flag_tagcmd) {
-        if (open(REP, "<CVS/Tag")) {
-            $repository_tag = <REP>;
-            chop($repository_tag);
-            close(REP);
-        }
-    }
 }
 
 sub get_loginfo {
@@ -175,6 +170,8 @@ sub get_loginfo {
 
         s/^[ \t\n]+//;         # delete leading whitespace
         s/[ \t\n]+$//;         # delete trailing whitespace
+
+        if ($state != $STATE_LOG && /^Tag:/) { ($repository_tag = $_) =~ s/^Tag:\s*(\S+).*/$1/; }
 
         if ($state == $STATE_CHANGED && !(/^Tag:/)) { push(@changed_files, split); }
         if ($state == $STATE_ADDED && !(/^Tag:/))   { push(@added_files,   split); }
@@ -267,7 +264,7 @@ sub get_filename {
     my $FILE_CHECKED = 0;
     my $file;
     my $partial_file;
-    my $path;
+    my $path, $apath;
     if ($flag_debug) {
         print STDERR "\n-- get_filename ------------------------\n";
     }
@@ -279,16 +276,16 @@ sub get_filename {
         }
         if ($state eq "I") {
             $path = "$envcvsroot/$file";
-        } elsif ($state eq "R") {
-            $path = "$envcvsroot/$repository/Attic/$file";
-        } else {
+            $apath = "$envcvsroot/Attic/$file";
+        } else { 
             $path = "$envcvsroot/$repository/$file";
+            $apath = "$envcvsroot/$repository/Attic/$file";
         }
         if ($flag_debug) {
             print STDERR "changed file: $file\n";
             print STDERR "path: $path\n";
         }
-        if (-r "$path,v") {
+        if (-r "$path,v" || -r "$apath,v") {
             push(@fixed_files, $file);
             $FILE_EXISTS = 1;
             $FILE_CHECKED = 1;
@@ -469,8 +466,13 @@ sub do_commitinfo {
 
 sub mail_notification {
     chop(my $hostname = `hostname`);
-    my $mailer = Mail::Mailer->new("smtp", Server => $mailhost) ||
-        die("Failed to send mail notification\n");
+    my $mailer;
+    if ($use_sendmail) {
+        $mailer = Mail::Mailer->new("sendmail");
+    } else {
+        $mailer = Mail::Mailer->new("smtp", Server => $mailhost);
+    }
+    die("Failed to send mail notification\n") if !defined($mailer);
     my %headers;
 
     $headers{'From'} = "bonsai-daemon\@$hostname";
