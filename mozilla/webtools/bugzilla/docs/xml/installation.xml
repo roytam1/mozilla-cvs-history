@@ -410,8 +410,8 @@
 
         <listitem>
           <para>
-            <link linkend="install-modules-xml-parser">XML::Parser</link>
-            (&min-xml-parser-ver;) for the XML interface
+            <link linkend="install-modules-xml-twig">XML::Twig</link>
+            (&min-xml-twig-ver;) for the XML interface
           </para>
         </listitem>
 
@@ -508,15 +508,13 @@
         </para>
       </section>
 
-      <section id="install-modules-xml-parser">
-        <title>XML::Parser (&min-xml-parser-ver;)</title>
+      <section id="install-modules-xml-twig">
+        <title>XML::Twig (&min-xml-twig-ver;)</title>
 
-        <para>The XML::Parser module is only required if you want to import
+        <para>The XML::Twig module is only required if you want to import
         XML bugs using the <filename>importxml.pl</filename>
         script. This is required to use Bugzilla's "move bugs" feature;
         you may also want to use it for migrating from another bug database.
-        XML::Parser requires that the
-        <classname>expat</classname> library is already installed on your machine.
         </para>
       </section>
 
