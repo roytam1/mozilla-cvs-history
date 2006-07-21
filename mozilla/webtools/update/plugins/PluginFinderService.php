@@ -190,7 +190,7 @@ if (($mimetype == 'application/x-shockwave-flash' ||
 } else if ($mimetype == 'application/x-director' &&
            preg_match('/^(Win|PPC Mac OS X)/', $clientOS)) {
   $name = 'Macromedia Shockwave Player';
-  $manualInstallationURL = 'http://sdc.shockwave.com/shockwave/download/';
+  $manualInstallationURL = 'http://www.adobe.com/go/getshockwave/';
   $XPILocation = getUriForNoXPI();
   $version = '10.1';
   $needsRestart = 'true';
@@ -206,7 +206,6 @@ if (($mimetype == 'application/x-shockwave-flash' ||
 
   if (preg_match('/^Win/', $clientOS)) {
     $guid = '{45f2a22c-4029-4209-8b3d-1421b989633f}';
-    $manualInstallationURL = 'http://sdc.shockwave.com/shockwave/download/';
 
     if ($chromeLocale == 'ja-JP') {
       $XPILocation = 'https://www.macromedia.com/go/xpi_shockwaveplayerj_win';
@@ -215,7 +214,6 @@ if (($mimetype == 'application/x-shockwave-flash' ||
     }
   } else if (preg_match('/^PPC Mac OS X/', $clientOS)) {
     $guid = '{49141640-b629-4d57-a539-b521c4a99eff}';
-    $manualInstallationURL = 'http://sdc.shockwave.com/shockwave/download/';
 
     if ($chromeLocale == 'ja-JP') {
       $XPILocation = 'https://www.macromedia.com/go/xpi_shockwaveplayerj_macosx';
