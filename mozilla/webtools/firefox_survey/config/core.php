@@ -83,12 +83,12 @@ define('CAKE_SESSION_SAVE', 'php');
  * Set a random string of used in session.
  *
  */
-define('CAKE_SESSION_STRING', 'DYhG93b0qyJfIxfs2guVoUubWwvniR2G0FgaC9mi');
+define('CAKE_SESSION_STRING', 'DYhGjsi3834g1bKJAHGFI9348i18AHGA22knaAAi');
 /**
  * Set the name of session cookie
  *
  */
-define('CAKE_SESSION_COOKIE', 'CAKEPHP');
+define('CAKE_SESSION_COOKIE', 'moz_userpanel');
 
 /**
  * Set level of Cake security.
