@@ -83,8 +83,7 @@ sub getCurrentUser {
 # from Bugzilla.pm:
 sub request_cache {
     if ($ENV{MOD_PERL}) {
-        require Apache2::RequestUtil;
-        my $request = Apache2::RequestUtil->request;
+        my $request = Apache->request();
         my $cache = $request->pnotes();
         # Sometimes mod_perl doesn't properly call DESTROY on all
         # the objects in pnotes(), so we register a cleanup handler
