@@ -4,7 +4,7 @@
 # for each tree, are stored on the filesystem.  Local system
 # administrator may need to put different trees onto different disk
 # partitions and this will require making directory structure in
-# get_filename() less regular then we have defined it here.
+# get_filename() less regular than we have defined it here.
 
 # $Revision$ 
 # $Date$ 
@@ -112,7 +112,7 @@ $DEFAULT_HTML_PAGE = $TinderConfig::DEFAULT_HTML_PAGE || 'index.html';
 # The lookup for where different file/directories are stored on the
 # filesystem.  Local system administrator may need to put different
 # trees onto different disk partitions and this will require making
-# get_filename() less regular then we have defined it here.
+# get_filename() less regular than we have defined it here.
 
 sub get_filename {
   my ($tree, $file,) = @_;

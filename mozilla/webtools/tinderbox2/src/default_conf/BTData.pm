@@ -224,7 +224,7 @@ $STATUS_FIELD_NAME = 'Status';
 # ignored so it is fine to return a tree for every ticket parsed even
 # if some tickets do not map to tinderbox trees.
 # It is cleaner to ignore trees we do not know about in the mail processor 
-# then to make the BTData module depend on the TreeData module.
+# than to make the BTData module depend on the TreeData module.
 
 sub update2tree {
   my ($tinderbox_ref) = @_;
@@ -277,7 +277,7 @@ sub bug_id2bug_url {
 
 
 # Given a bug record  return a URL ('href') to the bug. 
-# this might work for a larger collection of trackers then the above.
+# this might work for a larger collection of trackers than the above.
 
 sub rec2bug_url {
   my ($tinderbox_ref) = @_;

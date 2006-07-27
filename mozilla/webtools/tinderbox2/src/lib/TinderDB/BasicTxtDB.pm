@@ -251,7 +251,7 @@ sub savetree_db {
 
 
 
-# remove all records from the database which are older then last_time.
+# remove all records from the database which are older than last_time.
 
 sub trim_db_history {
   my ($self, $tree,) = (@_);

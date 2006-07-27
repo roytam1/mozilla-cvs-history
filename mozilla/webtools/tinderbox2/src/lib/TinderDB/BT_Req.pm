@@ -89,7 +89,7 @@ $VERSION = ( qw $Revision$ )[1];
 $REQ_NAME = $TinderConfig::REQ_NAME || "Req";
 
 # Return the oldest time we have data for.
-# This should not be older then the time we would keep if we 
+# This should not be older than the time we would keep if we 
 # were to trim the database now.
 
 sub find_last_data {
@@ -309,7 +309,7 @@ sub status_table_start {
   @DB_TIMES = sort {$b <=> $a} keys %{ $DATABASE{$tree} };
 
   # adjust the $NEXT_DB to skip data which came after the first cell
-  # at the top of the page.  We make the first cell bigger then the
+  # at the top of the page.  We make the first cell bigger than the
   # rest to allow for some overlap between pages.
 
   my ($first_cell_seconds) = 2*($row_times->[0] - $row_times->[1]);

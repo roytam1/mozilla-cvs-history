@@ -174,8 +174,8 @@ sub prepare_perforce_args {
     ($args{'mindate'} && $args{'maxdate'}) && 
     ($args{'mindate'} > $args{'maxdate'}) && 
         (die (
-              "Perforce mindate is GREATER then maxdate.\n".
-              "Perforce requires that mindate be an earlier time then maxdate.\n".
+              "Perforce mindate is GREATER than maxdate.\n".
+              "Perforce requires that mindate be an earlier time than maxdate.\n".
               "mindate: $args{'mindate'}: ".time2p4db($args{'mindate'})."\n".
               "maxdate: $args{'maxdate'}: ".time2p4db($args{'maxdate'})."\n".
               ""));

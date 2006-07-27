@@ -149,7 +149,7 @@ sub build_scripts {
                      $args{'tree_name'}.
                      "");
     
-    # pick a time earlier then the current time. Check out the sources
+    # pick a time earlier than the current time. Check out the sources
     # as of that time and use that time as the name of the tar
     # file. Now anyone who wants to recreate the sources of the binary
     # tar can use the tarfile name to checkout the sources as if we had

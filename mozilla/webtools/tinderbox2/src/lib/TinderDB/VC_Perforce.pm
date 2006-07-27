@@ -764,7 +764,7 @@ sub status_table_start {
   @DB_TIMES = sort {$b <=> $a} keys %{ $DATABASE{$tree} };
 
   # adjust the $NEXT_DB to skip data which came after the first cell
-  # at the top of the page.  We make the first cell bigger then the
+  # at the top of the page.  We make the first cell bigger than the
   # rest to allow for some overlap between pages.
 
   my ($first_cell_seconds) = 2*($row_times->[0] - $row_times->[1]);
@@ -943,7 +943,7 @@ sub apply_db_updates {
   # duplicates.
 
   # If we have three data points in a row, and all of them have the
-  # same state and the oldest is less then an hour old, then we can
+  # same state and the oldest is less than an hour old, then we can
   # delete the middle state.  While writing this code I kept trying to
   # make do with only one older state being remembered.  The problem
   # is that if you keep deleting the oldest member you always have
@@ -980,7 +980,7 @@ sub apply_db_updates {
 
   my $change_num = $METADATA{$tree}{'next_change_num'};
 
-  # We can put more then one change number in a
+  # We can put more than one change number in a
   # request and they will all be answered.  Send multiple
   # requests per call to save the cost of creating a new
   # process.

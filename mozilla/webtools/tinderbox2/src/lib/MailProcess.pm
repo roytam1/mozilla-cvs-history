@@ -1,6 +1,6 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
-# MailProcess.pm - all the functions which are used by more then one
+# MailProcess.pm - all the functions which are used by more than one
 # mailprocessing program.
 
 

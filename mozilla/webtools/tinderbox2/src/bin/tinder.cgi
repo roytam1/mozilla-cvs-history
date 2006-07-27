@@ -95,7 +95,7 @@ CGI Mode Arguments
 		time is assumed.
 
 --end-time	The time which the table should end at, in time() format.
-		The start-time is always earlier then then end-time.
+		The start-time is always earlier than the end-time.
 
 --display-hours The number of hours which the table should show starting
 		at time --start-time.  If --end-time and --display-hours 
@@ -229,7 +229,7 @@ sub parse_args {
     my ($display_hours) = int (($start_time - $end_time) / ($main::SECONDS_PER_HOUR));
 
     ($display_hours > 0) ||
-      die("start_time must be greater then end_time.".
+      die("start_time must be greater than end_time.".
           " start_time: $start_time, end_time: $end_time. \n");
     
     ($display_hours <= $MAX_DISPLAY_HOURS) ||

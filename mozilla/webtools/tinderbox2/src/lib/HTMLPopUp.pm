@@ -2,7 +2,7 @@
 
 # HTML.pm - a lightweight replacement for cgi.pm and general html/cgi
 # processing.  This provides popup windows and a more highly
-# structured interface for linking then CGI.pm does.  The popup window
+# structured interface for linking than CGI.pm does.  The popup window
 # code is easily changed to use different technology if needed.  The
 # parts of tinderbox which need user input via forms all use the
 # standard perl library CGI.pm.

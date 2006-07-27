@@ -101,7 +101,7 @@ sub set_static_vars {
   $SMALLEST_VALID_TIME = (2000 * 1000 * 400);
 
   # It is easier to understand algorithms if you use named constants,
-  # rather then some mysterious constants hard coded into the code.
+  # rather than some mysterious constants hard coded into the code.
 
   $SECONDS_PER_MINUTE = (60);
   $SECONDS_PER_HOUR = (60*$SECONDS_PER_MINUTE);

@@ -205,7 +205,7 @@ sub get_tree_state {
 # We must set global variables to call query_checkins();
 
 # This function is used to prevent other modules from using this
-# global data, which would cause the code to become more nonlocal then
+# global data, which would cause the code to become more nonlocal than
 # it already is.
 
 sub undef_query_vars {

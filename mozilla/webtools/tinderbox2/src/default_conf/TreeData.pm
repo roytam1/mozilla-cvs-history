@@ -211,7 +211,7 @@ $VERSION = '#tinder_version#';
                    # I assume that the branch is the prefix of the
                    # filespex and the module is the suffix of the
                    # filespec.  The funtion Tree2Filespec is more
-                   # important then the way you store the tree data.
+                   # important than the way you store the tree data.
 
                    # In these Perforce examples I assume that the
                    # filespec will be $branch.$module

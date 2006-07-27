@@ -191,7 +191,7 @@ sub apply_db_updates {
 
 
 
-# remove all records from the database which are older then last_time.
+# remove all records from the database which are older than last_time.
 
 sub trim_db_history {
   my ($self, $tree, ) = (@_);
@@ -225,7 +225,7 @@ sub status_table_start {
   # not want the first row to have all of todays data in it.
 
   # Adjust the $NEXT_DB to skip data which came after the first cell
-  # at the top of the page.  We make the first cell bigger then the
+  # at the top of the page.  We make the first cell bigger than the
   # rest to allow for some overlap between pages which start and stop
   # on the same time.
 

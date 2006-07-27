@@ -56,7 +56,7 @@ use lib '#tinder_libdir#';
 
 
 # The calling structure looks like the call for Storable because the
-# arguments for that module are more strict then Data::Dumper.
+# arguments for that module are more strict than Data::Dumper.
 
 #    $data: is a scalar (often a list of references to the data) which
 #    contains the data we will save. We can only save scalars to be

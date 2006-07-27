@@ -410,7 +410,7 @@ out the error messages of various build tools.  There are different
 name spaces for each build type and a set of parsing programs in each
 namespace.  Currently build types are the major OS (Unix, Mac,
 Windows).  It may be possible in the future to have a single universal
-parsing program or alternatly to have build types specify a list of
+parsing program or alternatively to have build types specify a list of
 parsing programs for each tool (compler, make language, script) which
 is used in the build process then a build would also need to specify a
 list of tools that are used.  This may be necessary as people run unix
@@ -425,7 +425,7 @@ compilers on NT and vice versa.
 
 returns a string describing if the line has any errors or warnings.
 The list of types may grow in the future as some warnings become more
-important then others.  The possible return codes are:
+important than others.  The possible return codes are:
 
 	'error'
 	'warning'

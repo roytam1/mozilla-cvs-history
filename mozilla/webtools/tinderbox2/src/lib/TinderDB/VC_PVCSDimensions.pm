@@ -401,7 +401,7 @@ sub apply_db_updates {
   # duplicates.
 
   # If we have three data points in a row, and all of them have the
-  # same state and the oldest is less then an hour old, then we can
+  # same state and the oldest is less than an hour old, then we can
   # delete the middle state.  While writing this code I kept trying to
   # make do with only one older state being remembered.  The problem
   # is that if you keep deleting the oldest member you always have
@@ -899,7 +899,7 @@ sub status_table_start {
 
 
   # adjust the $NEXT_DB to skip data which came after the first cell
-  # at the top of the page.  We make the first cell bigger then the
+  # at the top of the page.  We make the first cell bigger than the
   # rest to allow for some overlap between pages.
 
   my ($first_cell_seconds) = 2*($row_times->[0] - $row_times->[1]);
