@@ -80,6 +80,10 @@ sub getCurrentUser {
 	return Litmus::Auth::getCurrentUser();
 }
 
+# cache of global variables for a single request only
+# use me like: Litmus->request_cache->{'var'} = 'foo';
+# entries here are guarenteed to get flushed when the request ends, 
+# even when running under mod_perl
 # from Bugzilla.pm:
 sub request_cache {
     if ($ENV{MOD_PERL}) {
