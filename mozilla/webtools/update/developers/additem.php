@@ -51,6 +51,15 @@ Your <?php echo"$typename"?> File:<BR>
     } else if ($status==4) {$statusresult="Error: No File Was Uploaded";
     }
 
+    if ($status != 0) {
+        echo '<h2>Error</h2>';
+        echo "<p>There was an error uploading your file. ({$status})</p>";
+        echo "<p><b>{$statusresult}</b></p>";
+        echo '</div>';
+        require_once(FOOTER);
+        exit;
+    }
+
     $manifest_exists = "FALSE";
     $destination = REPO_PATH."/temp/$filename";
 
