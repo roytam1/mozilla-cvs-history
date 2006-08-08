@@ -306,6 +306,8 @@ echo"<h2>Submitting Comment, please wait...</h2>\n";
 }
 ?>
 
+<?php /* This Section commented out until bug 333335 is fixed - https://bugzilla.mozilla.org/show_bug.cgi?id=333335
+
 <h2>Add Comment with No Rating</h2>
 Need to make a reply comment or answer a question somebody left who didn't provide an e-mail address? Use the form below. No rating is supplied and it will not affect your item's overall rating.
 
@@ -319,8 +321,10 @@ Need to make a reply comment or answer a question somebody left who didn't provi
   <textarea name="notes" rows=5 cols=50></textarea><br>
 <input name="submit" type="submit" value="Add Comment"></SPAN>
 </form>
-</div>
 
+*/ ?>
+
+</div>
 
 <?php
 } else if ($function=="flaggedcomments") {
