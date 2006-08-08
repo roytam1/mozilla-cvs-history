@@ -42,18 +42,16 @@ $v++;
     $totaldownloads = $row["TotalDownloads"];
     $rating = $row["Rating"];
 
-$i=""; $categories="";
+$categories="";
 $sql = "SELECT  TC.CatName FROM  `categoryxref`  TCX 
 INNER JOIN categories TC ON TCX.CategoryID = TC.CategoryID
-WHERE TCX.ID = '$id'";
+WHERE TCX.ID = '$id' GROUP BY TC.CatName";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-  $numresults = mysql_num_rows($sql_result);
   while ($row = mysql_fetch_array($sql_result)) {
-    $i++;
-    $catname = $row["CatName"];
-    $categories .="$catname";
-    if ($i<$numresults) {$categories .=", ";}
-
+    if($categories == "")
+   $categories = $row["CatName"];
+    else
+   $categories .= ", ".$row["CatName"];
   }
 ?>
 <div id="mainContent" class="right">

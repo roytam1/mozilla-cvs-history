@@ -130,7 +130,7 @@ WHERE `approved` = '?' GROUP BY TV.URI ORDER BY TV.DateUpdated ASC";
       $authors .="$row2[UserName]"; if (mysql_num_rows($sql_result2) > $j) { $authors .=", "; } 
      }
    $categories = ""; $j="";
-   $sql2 = "SELECT `CatName` from `categoryxref` TCX INNER JOIN `categories` TC ON TCX.CategoryID = TC.CategoryID WHERE TCX.ID='$row[ID]' ORDER BY `CatName` ASC";
+   $sql2 = "SELECT `CatName` from `categoryxref` TCX INNER JOIN `categories` TC ON TCX.CategoryID = TC.CategoryID WHERE TCX.ID='$row[ID]' GROUP BY `CatName` ORDER BY `CatName` ASC";
      $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
      if (mysql_num_rows($sql_result2)=="1") {$categories = "Category: "; } else { $categories = "Categories: "; }
      while ($row2 = mysql_fetch_array($sql_result2)) { $j++;
