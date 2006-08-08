@@ -293,37 +293,6 @@ if ($oneValidGuidFound == false) {
     die('Aborting...');
 }
 
-/**
- * We want to check to see if an identical version for this add-on exists.  If one does, we abort.
- *
- * Previously, we would overwrite existing versions which is bad practice and defeats
- * the purpose of add-on versioning.
- */
-$versionCheckSql = "
-    SELECT
-        `vID`
-    FROM 
-        `version` v
-    INNER JOIN main m ON m.id = v.id
-    WHERE
-        v.Version='{$version}' AND
-        m.guid = '{$id}'
-
-";
-
-$versionCheckResult = mysql_query($versionCheckSql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-
-/**
- * If a version is found, abort the add-on upload and explain why it was aborted.
- */
-if (mysql_num_rows($versionCheckResult,$connection) > 0) {  
-    echo '<h2>Identical Add-on Version</h2>';
-    echo "<p><strong>Error:</strong> An identical version (".htmlentities($version).") already exists for this add-on.  Duplicate versions are not allowed.</p>"; 
-    echo '</div>';
-    require_once(FOOTER);
-    exit;   
-}
-
 $typearray = array("E"=>"Extension","T"=>"Theme");
 $type = escape_string($_POST["type"]);
 $typename = $typearray[$type];
@@ -510,6 +479,8 @@ $description = escape_string($_POST["description"]);
 $item_id = escape_string($_POST["item_id"]);
 $guid = escape_string($_POST["guid"]);
 $type = escape_string($_POST["type"]);
+$osid = escape_string($_POST["osid"]);
+$version = escape_string($_POST["version"]);
 
 //Check to ensure tha the name isn't already taken, if it is, throw an error and halt.
 $sql = "SELECT `Name` from `main` WHERE `Name`='$name' and `GUID` != '$guid'";
@@ -518,6 +489,39 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
 if (mysql_num_rows($sql_result)=="0") {
 
     if ($_POST["mode"]=="update") { 
+
+        /**
+         * We want to check to see if an identical version for this add-on exists.  If one does, we abort.
+         *
+         * Previously, we would overwrite existing versions which is bad practice and defeats
+         * the purpose of add-on versioning.
+         */
+        $versionCheckSql = "
+            SELECT
+                `vID`
+            FROM 
+                `version` v
+            INNER JOIN main m ON m.id = v.id
+            WHERE
+                v.Version='{$version}' AND
+                m.guid = '{$guid}' AND
+                v.OSID = '{$osid}'
+
+        ";
+
+        $versionCheckResult = mysql_query($versionCheckSql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+
+        /**
+         * If a version is found, abort the add-on upload and explain why it was aborted.
+         */
+        if (mysql_num_rows($versionCheckResult) > 0) {  
+            echo '<h2>Identical Add-on Version</h2>';
+            echo "<p><strong>Error:</strong> An identical version (".htmlentities($version).") already exists for this add-on and platform.</p>"; 
+            echo '</div>';
+            require_once(FOOTER);
+            exit;   
+        }
+
         $sql = "UPDATE `main` SET `Name`='$name', `Homepage`='$homepage', `Description`='$description', `DateUpdated`=NOW(NULL) WHERE `ID`='$item_id' LIMIT 1";
     } else {
         $sql = "INSERT INTO `main` (`GUID`, `Name`, `Type`, `Homepage`,`Description`,`DateAdded`,`DateUpdated`) VALUES ('$guid', '$name', '$type', '$homepage', '$description', NOW(NULL), NOW(NULL));";
@@ -639,8 +643,6 @@ $sql = "SELECT `AppName`, `Version`, `shortname` FROM `applications` ORDER BY `A
 
 if ($minappver and $maxappver) {
 
-$version = escape_string($_POST["version"]);
-$osid = escape_string($_POST["osid"]);
 $filesize = escape_string($_POST["filesize"]);
 $uri = ""; //we don't have all the parts to set a uri, leave blank and fix when we do.
 $notes = escape_string($_POST["notes"]);
