@@ -406,11 +406,12 @@ unset($sql_result);
 echo"<SPAN style=\"font-size 10pt;\">";
 //Phase One-Part 1 -- Version (per-file record update)
 $notes = escape_string($_POST["notes"]);
+$reviewnotes = escape_string($_POST["reviewnotes"]);
 $id = escape_string($_POST["id"]);
 $uri = escape_string($_POST["uri"]);
 $osid = escape_string($_POST["osid"]);
  if (checkFormKey()) {
-  $sql = "UPDATE `version` SET `OSID`='$osid', `Notes`='$notes', `DateUpdated`=NOW(NULL) WHERE `ID`='$id' AND `URI`='$uri'";
+  $sql = "UPDATE `version` SET `OSID`='$osid', `Notes`='$notes', `ReviewNotes`='$reviewnotes', `DateUpdated`=NOW(NULL) WHERE `ID`='$id' AND `URI`='$uri'";
   $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
    echo"Version Notes and OS for $_POST[name] $_POST[version] updated...<br>\n";
  }
@@ -514,7 +515,7 @@ $vid = escape_string($_GET["vid"]);
 if (!$vid) {$vid = escape_string($_POST["vid"]); }
 //Get Data for Form Population
 //INNER JOIN main TM ON TV.ID = TM.ID 
- $sql = "SELECT `Version`, TV.OSID, `OSName`,`URI`,`Notes`,`Size`,`DateAdded`, `DateUpdated` FROM `version` TV INNER JOIN `os` TOS ON TOS.OSID=TV.OSID WHERE `vID` = '$vid' ORDER BY `Version` ASC LIMIT 1";
+ $sql = "SELECT `Version`, TV.OSID, `OSName`, `URI`, `Notes`, `ReviewNotes`, `Size`,`DateAdded`, `DateUpdated` FROM `version` TV INNER JOIN `os` TOS ON TOS.OSID=TV.OSID WHERE `vID` = '$vid' ORDER BY `Version` ASC LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $row = mysql_fetch_array($sql_result);
     $v++;
@@ -526,6 +527,7 @@ if (!$vid) {$vid = escape_string($_POST["vid"]); }
     $uri=$row["URI"];
     $filename=basename($row["URI"]);
     $notes=$row["Notes"];
+    $reviewnotes=$row["ReviewNotes"];
     $size=$row["Size"];
 
 ?>
@@ -597,8 +599,9 @@ $sql = "SELECT * FROM `os` ORDER BY `OSName` ASC";
   }
     echo"</SELECT>\n";
     echo"</TD></TR>\n";
-    echo"<TR><TD style=\"vertical-align: top\"><SPAN class=\"file\">Version Notes:</SPAN></TD><TD COLSPAN=2><TEXTAREA NAME=\"notes\" ROWS=4 COLS=55>$notes</TEXTAREA></TD></TR>\n";
 ?>
+<TR><TD style="vertical-align: top;"><SPAN class="global">Version Notes:</SPAN></TD><TD COLSPAN=2><TEXTAREA NAME="notes" ROWS=4 COLS=55><?=$notes?></TEXTAREA></TD></TR>
+<TR><TD style="vertical-align: top;"><SPAN class="global">Notes to Reviewer:</SPAN></TD><TD COLSPAN=2><TEXTAREA NAME="reviewnotes" ROWS=3 COLS=55><?=$reviewnotes?></TEXTAREA></TD></TR>
 
 
 <TR><TD COLSPAN="3" ALIGN="CENTER"><INPUT NAME="submit" TYPE="SUBMIT" VALUE="Update">&nbsp;&nbsp;<INPUT NAME="reset" TYPE="RESET" VALUE="Reset Form">&nbsp;&nbsp;<INPUT NAME="submit" TYPE="SUBMIT" VALUE="Delete" ONCLICK="return confirm('Are you sure you want to delete <?php echo"$name $version"; ?>?');"></TD></TR>

@@ -110,7 +110,7 @@ if ($approval_result) {
 <form name="approvalqueue" method="post" action="?">
 <?php
 $i=0;
-$sql ="SELECT TM.ID, `Type`, `vID`, `Name`, `Description`, TV.Version, `OSName`, `URI` FROM `main` TM
+$sql ="SELECT TM.ID, `Type`, `vID`, `Name`, `Description`, `ReviewNotes`, TV.Version, `OSName`, `URI` FROM `main` TM
 INNER JOIN `version` TV ON TM.ID = TV.ID
 INNER JOIN `os` TOS ON TV.OSID=TOS.OSID
 WHERE `approved` = '?' GROUP BY TV.URI ORDER BY TV.DateUpdated ASC";
@@ -121,6 +121,7 @@ WHERE `approved` = '?' GROUP BY TV.URI ORDER BY TV.DateUpdated ASC";
    $id = $row["ID"];
    $type = $row["Type"];
    $uri = $row["URI"];
+   $reviewnotes = $row["ReviewNotes"];
    $authors = ""; $j="";
    $authid = array();
    $sql2 = "SELECT `UserName`, TAX.`UserID` from `authorxref` TAX INNER JOIN `userprofiles` TU ON TAX.UserID = TU.UserID WHERE TAX.ID='$row[ID]' ORDER BY `UserName` ASC";
@@ -179,7 +180,8 @@ WHERE `approved` = '?' GROUP BY TV.URI ORDER BY TV.DateUpdated ASC";
     }
 
     // Show a download now link.
-    echo '<span>(<a href="' . $row['URI'] . '">Download Now</a>)</span>'."\n";
+    echo "<span>(<a href=\"".$row['URI']."\">Download Now</a>)</span>";
+    echo "<span>(<a href=\"itemhistory.php?id=$id\">Item History</a>)</span>";
 
   echo"</TD>\n";
   echo"</TR>\n";
@@ -194,6 +196,10 @@ WHERE `approved` = '?' GROUP BY TV.URI ORDER BY TV.DateUpdated ASC";
   }
   echo"</TR>\n";
   
+  if($reviewnotes != "") {
+    echo"<TR><TD COLSPAN=2 style=\"font-size: 8pt;\"><strong>Notes to Reviewer:</strong> ".nl2br($reviewnotes)."</TD></TR>\n";
+  }
+
   // Author can not approve their own work unless they are an admin
   $disabled = (in_array($_SESSION['uid'], $authid) && $_SESSION["level"]!="admin") ? ' disabled="disabled"' : '';
 //Approval Form for this Extension Item

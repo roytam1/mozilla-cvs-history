@@ -410,9 +410,8 @@ if ($mode=="new" or $mode=="update") {
 
 <TR><TD><SPAN class="global">Homepage</SPAN></TD> <TD COLSPAN=2><INPUT NAME="homepage" TYPE="TEXT" VALUE="<?php echo"$homepage"; ?>" SIZE=60 MAXLENGTH=200></TD></TR>
 <TR><TD><SPAN class="global">Description*</SPAN></TD> <TD COLSPAN=2><TEXTAREA NAME="description" ROWS=3 COLS=55><?php echo"$description"; ?></TEXTAREA></TD></TR>
-<?php
-    echo"<TR><TD><SPAN class=\"file\">Version Notes:</SPAN></TD><TD COLSPAN=2><TEXTAREA NAME=\"notes\" ROWS=4 COLS=55>$notes</TEXTAREA></TD></TR>\n";
-?>
+<TR><TD><SPAN class="global">Version Notes:</SPAN></TD><TD COLSPAN=2><TEXTAREA NAME="notes" ROWS=4 COLS=55><?=$notes?></TEXTAREA></TD></TR>
+<TR><TD><SPAN class="global">Notes to Reviewers:</SPAN></TD><TD COLSPAN=2><TEXTAREA NAME="reviewnotes" ROWS=3 COLS=55><?=$reviewnotes?></TEXTAREA></TD></TR>
 <TR><TD COLSPAN="3" ALIGN="CENTER"><INPUT NAME="submit" TYPE="SUBMIT" VALUE="Next &#187;">&nbsp;&nbsp;<INPUT NAME="reset" TYPE="RESET" VALUE="Reset Form"></TD></TR>
 </FORM>
 
@@ -646,6 +645,7 @@ if ($minappver and $maxappver) {
 $filesize = escape_string($_POST["filesize"]);
 $uri = ""; //we don't have all the parts to set a uri, leave blank and fix when we do.
 $notes = escape_string($_POST["notes"]);
+$reviewnotes = escape_string($_POST["reviewnotes"]);
 
 //Construct the New Filename
 $filename = check_filename($_POST['filename']);
@@ -654,7 +654,7 @@ $filename_array = explode(".",$filename);
 $filename_count = count($filename_array)-1;
 $fileext = $filename_array[$filename_count];
 
-$sql = "INSERT INTO `version` (`ID`, `Version`, `OSID`, `AppID`, `MinAppVer`, `MaxAppVer`, `Size`, `URI`, `Notes`, `DateAdded`, `DateUpdated`, `hash`) VALUES ('$id', '$version', '$osid', '$appid', '$minappver', '$maxappver', '$filesize', '$uri', '$notes', NOW(NULL), NOW(NULL), '{$filesum}');";
+$sql = "INSERT INTO `version` (`ID`, `Version`, `OSID`, `AppID`, `MinAppVer`, `MaxAppVer`, `Size`, `URI`, `Notes`, `ReviewNotes`, `DateAdded`, `DateUpdated`, `hash`) VALUES ('$id', '$version', '$osid', '$appid', '$minappver', '$maxappver', '$filesize', '$uri', '$notes', '$reviewnotes',  NOW(NULL), NOW(NULL), '{$filesum}');";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
  if ($sql_result) {echo"Added $name version $version for $appname<br>\n"; $apps_array[]=$app_shortname[strtolower($appname)];}
 
