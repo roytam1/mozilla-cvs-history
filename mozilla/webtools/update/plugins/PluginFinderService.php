@@ -154,7 +154,7 @@ $needsRestart = 'false';
 
 if (($mimetype == 'application/x-shockwave-flash' ||
      $mimetype == 'application/futuresplash') &&
-    preg_match('/^(Win|PPC Mac OS X|Linux.+i\d86)/', $clientOS)) {
+    preg_match('/^(Win|(PPC|Intel) Mac OS X|Linux.+i\d86)/', $clientOS)) {
   // We really want the regexp for Linux to be /Linux(?! x86_64)/ but
   // for now we can't tell 32-bit linux appart from 64-bit linux, so
   // feed all x86_64 users the flash player, even if it's a 32-bit
