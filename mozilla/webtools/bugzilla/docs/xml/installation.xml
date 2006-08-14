@@ -939,7 +939,9 @@
         the Bugzilla Team recommends Apache.) Regardless of which webserver
         you are using, however, ensure that sensitive information is
         not remotely available by properly applying the access controls in
-        <xref linkend="security-webserver-access"/>.
+        <xref linkend="security-webserver-access"/>. You can run
+        <filename>testserver.pl</filename> to check if your web server serves
+        Bugzilla files as expected.
       </para>
 
       <section id="http-apache">
