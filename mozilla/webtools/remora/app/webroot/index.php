@@ -45,7 +45,7 @@
 	}
 	if (!defined('APP_DIR')) {
 		 //define('APP_DIR', 'DIRECTORY NAME OF APPLICATION';
-		 define('APP_DIR', 'remora');
+		 define('APP_DIR', 'app');
 	}
 /**
  * This only needs to be changed if the cake installed libs are located
