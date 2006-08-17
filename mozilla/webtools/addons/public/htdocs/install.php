@@ -4,6 +4,12 @@
  * @package amo
  * @subpackage docs
  */
+
+// If we don't have our required URI, terminate the request immediately.
+if (empty($_GET['uri'])) {
+    exit;
+}
+
 require_once('includes.php');
 
 $uri = mysql_real_escape_string(str_replace(" ","+",$_GET["uri"]));
@@ -21,7 +27,6 @@ $db->query("
 ", SQL_INIT, SQL_ASSOC);
 
 if (empty($db->record)) {
-    echo 'nope';
     exit;
 } else {
     $row=$db->record;
@@ -40,6 +45,7 @@ if (!empty($_SERVER["HTTP_X_FORWARDED_FOR"])) {
 // Clean the user agent string.
 $http_user_agent = mysql_real_escape_string($_SERVER['HTTP_USER_AGENT']);
 
+/*
 // Rate limit set to 10 minutes.
 $sql = "
     SELECT
@@ -58,14 +64,17 @@ $sql = "
 $db->query($sql,SQL_INIT,SQL_ASSOC);
 
 if (empty($db->record)) {
+*/
     $db->query("
         INSERT INTO 
             downloads (ID, date, vID, user_ip, user_agent) 
         VALUES
             ('${id}',NOW(),'{$vid}', '{$remote_addr}', '{$http_user_agent}')
     ",SQL_NONE);
-}
+//}
 
+// Set a no-cache header to make sure this page is never cached.
+header('Cache-Control: no-cache');
 header('Location: '.$uri);
 exit;
 ?>
