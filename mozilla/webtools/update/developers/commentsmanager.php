@@ -200,7 +200,7 @@ echo"<INPUT NAME=\"maxid\" TYPE=\"HIDDEN\" VALUE=\"$i\">\n";
 <TR>
 <TD COLSPAN=4>
 <h3></h3>
-Found a duplicate or inappropriate comment? To Flag comments for review by Mozilla Update Staff for review, select the comment and choose "Flag Selected".<BR>
+Found a duplicate or inappropriate comment? To flag comments for review by Mozilla Update Staff, select the comment and choose "Flag Selected".<BR>
 </TD>
 </TR>
 <TR><TD COLSPAN=4 ALIGN=RIGHT>
