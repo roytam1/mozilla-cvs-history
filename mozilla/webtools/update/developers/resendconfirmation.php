@@ -40,7 +40,7 @@ if ($_POST['submit']=='Request New Confirmation Email') {
 }
 ?>
 <h2>Resend Confirmation</h2>
-<P>If you have deleted the confirmaiton email, then you can have a new one sent to you by filling in the form below. Just put your e-mail address in the form below,
+<P>If you have deleted the confirmation email, then you can have a new one sent to you by filling in the form below. Just put your e-mail address in the form below,
 and a new password and confirmation code will be e-mailed to the e-mail address you have on file.</P>
 
 <form name="resetpassword" method="post" action="?post=getconfirmation">
