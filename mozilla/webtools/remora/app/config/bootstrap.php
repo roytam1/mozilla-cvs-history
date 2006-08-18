@@ -47,11 +47,5 @@
 define('REPO_PATH', WWW_ROOT.'/files'); // XPI/JAR repository path
 define('FTP_URL', 'http://ftp.mozilla.org/pub/mozilla.org'); // FTP
 
-//Addontype ids
-define('ADDON_EXTENSION', '1');
-define('ADDON_THEME', '2');
-define('ADDON_DICTIONARY', '3');
-define('ADDON_SEARCH', '4');
-
 //EOF
 ?>
