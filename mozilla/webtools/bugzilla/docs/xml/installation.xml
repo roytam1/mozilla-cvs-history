@@ -495,7 +495,7 @@
         </para>
       </section>
 
-      <section id="install-modules-soap">
+      <section id="install-modules-soap-lite">
         <title>SOAP::Lite (&min-soap-lite-ver;)</title>
         <para>Installing SOAP::Lite enables your Bugzilla installation to be
         accessible at a standardized Web Service interface (SOAP/XML-RPC)
