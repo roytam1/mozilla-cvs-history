@@ -157,14 +157,16 @@ $sql = "SELECT ID, GUID from `main` WHERE `GUID` = '".escape_string($manifestdat
     $row = mysql_fetch_array($sql_result);
     $item_id = $row["ID"];
 
-    $sql = "SELECT `UserID` from `authorxref` WHERE `ID`='$item_id' AND `UserID` = '$_SESSION[uid]' LIMIT 1";
-      $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-      if (mysql_num_rows($sql_result)=="1" or ($_SESSION["level"]=="admin" or $_SESSION["level"]=="editor")) {
-//        echo"This extension belongs to the author logged in<br>\n";
-      } else {
-        echo"ERROR!! This extension does NOT belong to the author logged in.<br>\n";
-        die("Terminating...");
-      }
+    $sql = "SELECT `UserID` from `authorxref` WHERE `ID`='{$item_id}' AND `UserID` = '{$_SESSION['uid']}' LIMIT 1";
+    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+    if (mysql_num_rows($sql_result)=="1" or $_SESSION["level"]=="admin") {
+    } else {
+        echo '<h2>Permission Denied</h2>';
+        echo '<p>You do not have permissions to edit this add-on.</p>';
+        echo '</div>';
+        require_once(FOOTER);
+        exit;
+    }
 
   } else {
   $mode = "new";
@@ -420,8 +422,25 @@ if ($mode=="new" or $mode=="update") {
 
 <?php
 } else if ($function=="additem3") {
-//print_r($_POST);
-//exit;
+
+// Set the ID, which will be used throughout this phase.
+$item_id = !empty($_POST['item_id']) && is_numeric($_POST['item_id']) ? escape_string($_POST['item_id']) : null;
+
+// If our item_id is passed at all, we are looking at an update, and need to do _some_ checking of the current user's permissions.
+if (!empty($item_id)) {
+
+    // Test to see if the currently logged in user is an author for this add-on, or is an admin.
+    $permissions_sql = "SELECT `UserID` from `authorxref` WHERE `ID`='{$item_id}' AND `UserID` = '{$_SESSION['uid']}' LIMIT 1";
+    $permissions_sql_result = mysql_query($permissions_sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+    if (mysql_num_rows($permissions_sql_result)<1 && $_SESSION['level']!='admin') {
+        echo '<h2>Permission Denied</h2>';
+        echo '<p>You do not have permissions to edit this add-on.</p>';
+        echo '</div>';
+        require_once(FOOTER);
+        exit;
+    }
+}
+
 
 //Verify that there's at least one min/max app value pair...
  $sql = "SELECT `AppName`,`AppID` FROM `applications` GROUP BY `AppName` ORDER BY `AppName` ASC";
@@ -475,7 +494,6 @@ if ($_POST["name"] AND $_POST["type"] AND $_POST["authors"] AND $updateauthors !
 $name = escape_string($_POST["name"]);
 $homepage = escape_string($_POST["homepage"]);
 $description = escape_string($_POST["description"]);
-$item_id = escape_string($_POST["item_id"]);
 $guid = escape_string($_POST["guid"]);
 $type = escape_string($_POST["type"]);
 $osid = escape_string($_POST["osid"]);
@@ -487,6 +505,10 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
 
 if (mysql_num_rows($sql_result)=="0") {
 
+    /**
+     * This should probably not be compared to $_POST -- someone could fake an update this way.
+     * @TODO do not realy on "mode" POST data.
+     */
     if ($_POST["mode"]=="update") { 
 
         /**
@@ -504,8 +526,8 @@ if (mysql_num_rows($sql_result)=="0") {
             WHERE
                 v.Version='{$version}' AND
                 m.guid = '{$guid}' AND
-                v.OSID = '{$osid}'
-
+                v.OSID = '{$osid}' AND
+                v.ID = '{$item_id}'
         ";
 
         $versionCheckResult = mysql_query($versionCheckSql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
