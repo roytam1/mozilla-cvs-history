@@ -42,6 +42,7 @@ if ($action=="approve") {
         $dirpath = REPO_PATH.'/ftp/'.$path;
         if (!file_exists($dirpath)) {
             mkdir($dirpath,0755);
+            chmod($dirpath,0755);
         }
         if (!file_exists("$destination")) {
         //No File Exists, its safe to rename.
