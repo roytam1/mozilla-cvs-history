@@ -44,7 +44,7 @@ unset($i);
 <?php
 $type = escape_string($_GET["type"]);
 
-$sql = "SELECT  TM.ID, TM.Name, TR.Body as Description, TR.DateAdded  FROM  `main` TM LEFT JOIN `reviews` TR ON TR.ID=TM.ID WHERE TM.Type = '$type' ORDER  BY  `Type` , `Name`  ASC ";
+$sql = "SELECT  TM.ID, TM.Name, TR.Body as Description, TR.DateAdded  FROM  `main` TM LEFT JOIN `reviews` TR ON TR.ID=TM.ID WHERE TM.Type = '$type' ORDER  BY  `Type` , ltrim(`Name`)  ASC ";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
    $numresults = mysql_num_rows($sql_result);
    while ($row = mysql_fetch_array($sql_result)) {

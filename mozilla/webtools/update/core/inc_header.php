@@ -62,6 +62,11 @@
 	
 	<link rel="home" title="Home" href="http://update.mozilla.org/">
 <?php
+    // Display the approval javascript page only on approval.php
+    if(strpos($_SERVER["PHP_SELF"], "approval.php") !== false) {
+        echo "<script language=\"JavaScript\" type=\"text/javascript\" src=\"".WEB_PATH."/developers/approval.js\"></script>\n";
+    }
+
 if (!empty($page_headers)) {
     echo $page_headers;
 }

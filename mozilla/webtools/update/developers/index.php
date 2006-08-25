@@ -4,7 +4,7 @@ require_once('./core/sessionconfig.php');
 
 //If already logged in, we don't need to show the prompt... redirect the user in.
 if ($_SESSION["logoncheck"]=="YES") {
-header('Location: https://'.HOST_NAME.WEB_PATH.'/developers/main.php');
+header('Location: http://'.HOST_NAME.WEB_PATH.'/developers/main.php');
 exit;
 }
 $page_title = 'Mozilla Update :: Developer Control Panel';

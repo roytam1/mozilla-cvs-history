@@ -2,8 +2,7 @@
 require_once('../core/init.php');
 require_once('./core/sessionconfig.php');
 $function = $_GET['function'];
-$page_title = 'Mozilla Update :: Developer Control Panel :: Manage Approval
-Queue';
+$page_title = 'Mozilla Update :: Developer Control Panel :: Manage Approval Queue';
 require_once(HEADER);
 $skipqueue='true';
 require_once('./inc_sidebar.php');
@@ -16,239 +15,358 @@ if ($_SESSION["level"]=="admin" or $_SESSION["level"]=="editor") {
     require_once(FOOTER);
     exit;
 }
-?>
 
-<?php
-if (!$function or $function=="approvalqueue") {
+if (!$function || $function == "approvalqueue") {
 //Overview page for admins/editors to see all the waiting approval queue items...
-?>
-<?php
-if ($_POST["submit"]=="Submit") {
-include"inc_approval.php"; //Get the resuable process_approval() function.
 
-echo"<h2>Processing changes to approval queue, please wait...</h2>\n";
-//echo"<pre>"; print_r($_POST); echo"</pre>\n";
+  if ($_POST["submit"] == "Submit") {
+    include "inc_approval.php"; //Get the resuable process_approval() function.
 
-for ($i=1; $_POST["maxvid"]>=$i; $i++) {
-$type = escape_string($_POST["type_$i"]);
-$testos = escape_string($_POST["testos_$i"]);
-$testbuild = escape_string($_POST["testbuild_$i"]);
-$comments = escape_string($_POST["comments_$i"]);
-$approval = escape_string($_POST["approval_$i"]);
-$file = escape_string($_POST["file_$i"]);
+    echo "<h2>Processing changes to approval queue, please wait...</h2>\n";
+    //echo"<pre>"; print_r($_POST); echo"</pre>\n";
 
-if ($_POST["installation_$i"]) { $installation = escape_string($_POST["installation_$i"]); } else { $installation = "NO";}
-if ($_POST["uninstallation_$i"]) { $uninstallation = escape_string($_POST["uninstallation_$i"]); } else { $uninstallation = "NO";}
-if ($_POST["appworks_$i"]) { $appworks = escape_string($_POST["appworks_$i"]); } else { $appworks = "NO";}
-if ($_POST["cleanprofile_$i"]) { $cleanprofile = escape_string($_POST["cleanprofile_$i"]); } else { $cleanprofile = "NO";}
+    for ($i = 1; $_POST["maxvid"] >= $i; $i++) {
+      $type = escape_string($_POST["type_$i"]);
+      $comments = escape_string($_POST["comments_$i"]);
+      $approval = escape_string($_POST["approval_$i"]);
+      $file = escape_string($_POST["file_$i"]);
+      $testos = escape_string($_POST["testos_$i"]);
+      $testbuild = escape_string($_POST["testbuild_$i"]);
 
-if ($type=="E") {
-if ($_POST["newchrome_$i"]) { $newchrome = escape_string($_POST["newchrome_$i"]); } else { $newchrome = "NO";}
-if ($_POST["worksasdescribed_$i"]) { $worksasdescribed = escape_string($_POST["worksasdescribed_$i"]); } else { $worksasdescribed = "NO";}
-} else if ($type=="T") {
-if ($_POST["visualerrors_$i"]) { $visualerrors = escape_string($_POST["visualerrors_$i"]); } else { $visualerrors = "NO";}
-if ($_POST["allelementsthemed_$i"]) { $allelementsthemed = escape_string($_POST["allelementsthemed_$i"]); } else { $allelementsthemed = "NO";}
-}
+      $installation = $_POST["installation_$i"] ? escape_string($_POST["installation_$i"]) : "NO";
+      $uninstallation = $_POST["uninstallation_$i"] ? escape_string($_POST["uninstallation_$i"]) : "NO";
+      $appworks = $_POST["appworks_$i"] ? escape_string($_POST["appworks_$i"]) : "NO";
+      $cleanprofile = $_POST["cleanprofile_$i"] ? escape_string($_POST["cleanprofile_$i"]) : "NO";
 
-if ($approval !="noaction") {
+      if ($type == "E") {
+        $newchrome = $_POST["newchrome_$i"] ? escape_string($_POST["newchrome_$i"]) : "NO";
+        $worksasdescribed = $_POST["worksasdescribed_$i"] ? escape_string($_POST["worksasdescribed_$i"]) : "NO";
+      } elseif ($type == "T") {
+        $visualerrors = $_POST["visualerrors_$i"] ? escape_string($_POST["visualerrors_$i"]) : "NO";
+        $allelementsthemed = $_POST["allelementsthemed_$i"] ? escape_string($_POST["allelementsthemed_$i"]) : "NO";
+      }
 
-$name = escape_string($_POST["name_$i"]);
-$version = escape_string($_POST["version_$i"]);
-if ($type=="T") {
-    if ($approval=="YES") {
-        if ($installation=="YES" and $uninstallation=="YES" and $appworks=="YES" and $cleanprofile=="YES" and $visualerrors=="YES" and $allelementsthemed=="YES" and $testos and $testbuild) {
-            $approval_result = process_approval($type, $file, "approve");
-        } else {
-            echo"Error: Approval of $name $version cannot be processed because of missing data. Fill in the required fields and try again.<br>\n";
-        }
-    } else {
-        if ($comments) {
+      if ($approval != "noaction") {
+        $name = escape_string($_POST["name_$i"]);
+        $version = escape_string($_POST["version_$i"]);
+        if ($type == "T") {
+          if ($approval == "YES") {
+            if ($installation == "YES" && $uninstallation == "YES" && $appworks == "YES" && $cleanprofile == "YES" && $visualerrors == "YES" && $allelementsthemed == "YES" && $testos && $testbuild) {
+              $approval_result = process_approval($type, $file, "approve");
+            } else {
+              echo "Error: Approval of $name $version cannot be processed because of missing data. Fill in the required fields and try again.<br>\n";
+            }
+          } elseif ($comments) {
             $approval_result = process_approval($type, $file, "deny");
-        } else {
+          } else {
             echo"Error: Denial of $name $version cannot be processed because of missing data. Fill in the required fields and try again.<br>\n";
-        }
-
-    }
-
-} else if ($type=="E") {
-    if ($approval=="YES") {
-        if ($installation=="YES" and $uninstallation=="YES" and $appworks=="YES" and $cleanprofile=="YES" and $newchrome=="YES" and $worksasdescribed=="YES" and $testos and $testbuild) {
-            $approval_result = process_approval($type, $file, "approve");
-        } else {
-            echo"Error: Approval of $name $version cannot be processed because of missing data. Fill in the required fields and try again.<br>\n";
-        }
-    } else {
-        if ($comments) {
+          }
+        } else if ($type == "E") {
+          if ($approval == "YES") {
+            if ($installation == "YES" && $uninstallation == "YES" && $appworks == "YES" && $cleanprofile == "YES" && $newchrome == "YES" && $worksasdescribed == "YES" && $testos && $testbuild) {
+              $approval_result = process_approval($type, $file, "approve");
+            } else {
+              echo "Error: Approval of $name $version cannot be processed because of missing data. Fill in the required fields and try again.<br>\n";
+            }
+          } elseif ($comments) {
             $approval_result = process_approval($type, $file, "deny");    
-        } else {
+          } else {
             echo"Error: Denial of $name $version cannot be processed because of missing data. Fill in the required fields and try again.<br>\n";
+          }
         }
-    }
-}
+      }
 
-//Approval for this file was successful, print the output message.
-if ($approval_result) {
-   if ($approval=="YES") {
-       echo"$name $version was granted approval<br>\n";
-   } else if ($approval=="NO") {
-       echo"$name $version was denied approval<br>\n";
-   }    
+      //Approval for this file was successful, print the output message.
+      if ($approval_result) {
+        if ($approval == "YES") {
+          echo "$name $version was granted approval<br>\n";
+        } elseif ($approval == "NO") {
+          echo "$name $version was denied approval<br>\n";
+        }    
+      }
+    }  
+  }
 
-}
-
-
-}
-
-}
-
-}
 ?>
 
 <h1>Extensions/Themes Awaiting Approval</h1>
-<div style="margin-left: 20px; font-size: 8pt;"><a href="?function=approvalhistory">Approval Log History</a></div>
-<TABLE BORDER=0 CELLPADDING=1 CELLSPACING=1 ALIGN=CENTER STYLE="border: 0px; width: 100%;">
+<div style="margin-left: 20px; font-size: 8pt;">
+    <a href="?function=approvalhistory">Approval Log History</a>
+    <?=($_SESSION["level"] == "admin") ? " | <a href=\"responsemanager.php\">Canned Response Manager</a>" : ""?>
+</div>
 <form name="approvalqueue" method="post" action="?">
 <?php
-$i=0;
-$sql ="SELECT TM.ID, `Type`, `vID`, `Name`, `Description`, `ReviewNotes`, TV.Version, `OSName`, `URI` FROM `main` TM
+// Get canned responses available for all addons
+$sql = "SELECT `CannedAction`, `CannedName`, `CannedResponse` FROM `canned_responses` ORDER BY `CannedAction`, `CannedName`";
+$sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+while($row = mysql_fetch_array($sql_result)) {
+     $cannedResponses[] = $row;
+}
+
+$i = 0;
+// Get main info about extensions pending approval
+$sql = "SELECT TM.ID, `Type`, `vID`, `Name`, `Description`, `ReviewNotes`, `Homepage`, TV.Version, `OSName`, `URI` FROM `main` TM
 INNER JOIN `version` TV ON TM.ID = TV.ID
 INNER JOIN `os` TOS ON TV.OSID=TOS.OSID
 WHERE `approved` = '?' GROUP BY TV.URI ORDER BY TV.DateUpdated ASC";
- $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
- $num_results = mysql_num_rows($sql_result);
-  while ($row = mysql_fetch_array($sql_result)) {
-   $i++;
-   $id = $row["ID"];
-   $type = $row["Type"];
-   $uri = $row["URI"];
-   $reviewnotes = $row["ReviewNotes"];
-   $authors = ""; $j="";
-   $authid = array();
-   $sql2 = "SELECT `UserName`, TAX.`UserID` from `authorxref` TAX INNER JOIN `userprofiles` TU ON TAX.UserID = TU.UserID WHERE TAX.ID='$row[ID]' ORDER BY `UserName` ASC";
-     $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-     while ($row2 = mysql_fetch_array($sql_result2)) { $j++;
-      $authid[] = $row2['UserID'];
-      $authors .="$row2[UserName]"; if (mysql_num_rows($sql_result2) > $j) { $authors .=", "; } 
-     }
-   $categories = ""; $j="";
-   $sql2 = "SELECT `CatName` from `categoryxref` TCX INNER JOIN `categories` TC ON TCX.CategoryID = TC.CategoryID WHERE TCX.ID='$row[ID]' GROUP BY `CatName` ORDER BY `CatName` ASC";
-     $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-     if (mysql_num_rows($sql_result2)=="1") {$categories = "Category: "; } else { $categories = "Categories: "; }
-     while ($row2 = mysql_fetch_array($sql_result2)) { $j++;
-      $categories .="$row2[CatName]"; if (mysql_num_rows($sql_result2) > $j) { $categories .=", "; } 
-     }
-
-    $sql2 = "SELECT `PreviewID` FROM `previews` WHERE `ID`='$id' AND `preview`='YES' LIMIT 1";
-     $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-     if (mysql_num_rows($sql_result2)=="1") {
-        $listpreview="(<span class=\"tooltip\" TITLE=\"Item has a preview for the List Page\"><a href=\"previews.php?id=$id\">View Previews</a></span>)";
-     } else {
-        $listpreview="(<span class=\"tooltip\" TITLE=\"Previews/Screenshots are required for Themes, recommended for Extensions.\">No Previews</span>)";
-     }
-
-   $sql2 = "SELECT `UserName`,`UserEmail`,`date` FROM `approvallog` TA INNER JOIN `userprofiles` TU ON TA.UserID = TU.UserID WHERE `ID`='$row[ID]' AND `vID`='$row[vID]' and `action`='Approval?' ORDER BY `date` DESC LIMIT 1";
+$sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+$num_results = mysql_num_rows($sql_result);
+while ($row = mysql_fetch_array($sql_result)) {
+    $i++;
+    $id = $row["ID"];
+    $type = $row["Type"];
+    $uri = $row["URI"];
+    $reviewnotes = $row["ReviewNotes"];
+    
+    // Get author information
+    $authors = ""; $j = ""; $authorWebsites = "";
+    $authid = array();
+    $sql2 = "SELECT `UserName`, `UserWebsite`, TAX.`UserID` from `authorxref` TAX INNER JOIN `userprofiles` TU ON TAX.UserID = TU.UserID WHERE TAX.ID='$row[ID]' ORDER BY `UserName` ASC";
     $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-      $row2 = mysql_fetch_array($sql_result2);
-        if ($row2[date]) {$date = $row2[date]; } else { $date = $row[DateUpdated]; } 
-        $date = date("l, F d, Y, g:i:sa", strtotime("$date"));
-  echo"<TR><TD COLSPAN=4><h2><a href=\"listmanager.php?function=editversion&id=$row[ID]&vid=$row[vID]\">$row[Name] $row[Version]</a> by $authors</h2></TD></TR>\n";
+    $num_results2 = mysql_num_rows($sql_result2);
+    while ($row2 = mysql_fetch_array($sql_result2)) {
+        $j++;
+        $authid[] = $row2["UserID"];
+        $authors .= $row2["UserName"];
+        if ($num_results2 > $j) { $authors .= ", "; }
+        if($row2["UserWebsite"] != "") {
+            $authorWebsite = $row2["UserWebsite"];
+            if(strpos($authorWebsite, "://") === false) { $authorWebsite = "http://".$authorWebsite; }
+            if($num_results2 == 1) {
+                $authorWebsites = " | <a href=\"$authorWebsite\">Author Homepage</a>";
+            } else {
+                $authorWebsites .= " | <a href=\"$authorWebsite\">".$row2["UserName"]." Homepage</a>";
+            }
+        }
+    }
 
-  echo"<TR>";
-  echo"<TD style=\"font-size: 8pt;\"><strong>Works with: </strong>";
-  $sql3 = "SELECT `shortname`, `MinAppVer`, `MaxAppVer` FROM `version` TV INNER JOIN `applications` TA ON TV.AppID = TA.AppID WHERE `URI`='" . escape_string($row['URI']) . "' ORDER BY `AppName` ASC";
-  $sql_result3 = mysql_query($sql3, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+    // Get category information
+    $categories = ""; $j = "";
+    $sql2 = "SELECT `CatName` from `categoryxref` TCX INNER JOIN `categories` TC ON TCX.CategoryID = TC.CategoryID WHERE TCX.ID='$row[ID]' GROUP BY `CatName` ORDER BY `CatName` ASC";
+    $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+    if (mysql_num_rows($sql_result2) == 1) {$categories = "<strong>Category:</strong> "; } else { $categories = "<strong>Categories:</strong> "; }
+    while ($row2 = mysql_fetch_array($sql_result2)) {
+        $j++;
+        $categories .= $row2["CatName"];
+        if (mysql_num_rows($sql_result2) > $j) { $categories .= ", "; } 
+    }
+
+    // Get preview information
+    $sql2 = "SELECT `PreviewID` FROM `previews` WHERE `ID`='$id' AND `preview`='YES' LIMIT 1";
+    $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+    if (mysql_num_rows($sql_result2) == 1) {
+        $listpreview = " | <a href=\"previews.php?id=$id\">View Previews</a>";
+    } else {
+        $listpreview = " | <span class=\"tooltip\" title=\"Previews are REQUIRED for Themes and recommended for Extensions\">No Previews</span>";
+    }
+
+    // Get requester information
+    $sql2 = "SELECT `UserName`,`UserEmail`,`date` FROM `approvallog` TA INNER JOIN `userprofiles` TU ON TA.UserID = TU.UserID WHERE `ID`='$row[ID]' AND `vID`='$row[vID]' and `action`='Approval?' ORDER BY `date` DESC LIMIT 1";
+    $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+    $row2 = mysql_fetch_array($sql_result2);
+    if ($row2["date"]) { $date = $row2["date"]; } else { $date = $row["DateUpdated"]; } 
+    $date = date("l, F d, Y, g:i:sa", strtotime($date));
+
+    // Previous versions?
+    $sql3 = "SELECT `ID` FROM `version` WHERE `ID`='{$id}' AND `URI`!='" . escape_string($row['URI']) . "'";
+    $sql_result3 = mysql_query($sql3, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+    if(mysql_num_rows($sql_result3) > 0) {
+        $updatingAddon = true;
+    } else {
+        $updatingAddon = false;
+    }
+
+    // Start of extension listing  
+    echo "<TABLE BORDER=0 CELLPADDING=1 CELLSPACING=0 ALIGN=CENTER STYLE=\"border: 0px; width: 100%;\">\n";
+
+    echo "<TR><TD><h2><a href=\"../addon.php?id=$id\">$row[Name] $row[Version]</a> by $authors&nbsp;\n";
+
+    // Icons
+    echo "&nbsp;&nbsp;";
+    if($type == "E") {
+        echo "<img src=\"../images/icons/extension.png\" title=\"This is an Extension\" style=\"vertical-align: middle;\">\n";
+    } elseif($type == "T") {
+        echo "<img src=\"../images/icons/theme.png\" title=\"This is a Theme\" style=\"vertical-align: middle;\">\n";
+    }
+
+    if($updatingAddon == true) {
+        echo "<img src=\"../images/icons/update.png\" title=\"This is an update for an existing add-on\" style=\"vertical-align: middle;\">\n";
+    } else {
+        echo "<img src=\"../images/icons/new.png\" title=\"This is a new add-on\" style=\"vertical-align: middle;\">\n";
+    }
+
+    // Get OS information
+    $sql3 = "SELECT `AppName`, `shortname`, `MinAppVer`, `MaxAppVer` FROM `version` TV INNER JOIN `applications` TA ON TV.AppID = TA.AppID WHERE `URI`='" . escape_string($row['URI']) . "' ORDER BY `AppName` ASC";
+    $sql_result3 = mysql_query($sql3, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 
     // Array of applications this item is associated with.
-    $apps = array();
+    $apps = array(); $compatability = ""; $j = 0;
 
-  while ($row3 = mysql_fetch_array($sql_result3)) {
-    echo ucwords($row3['shortname']) . " {$row3['MinAppVer']}-{$row3['MaxAppVer']} \n";
+    while ($row3 = mysql_fetch_array($sql_result3)) {
+        // Built compatability string with version numbers for use later
+        $appstring = "<span class=\"tooltip\" title=\"{$row3['AppName']}\">".ucwords(strtolower($row3['shortname']))."</span> {$row3['MinAppVer']}-{$row3['MaxAppVer']} \n";
 
-    // Throw application compatibility into array.
-    $apps[] = strtolower($row3['shortname']);
-  }
+        // Output application's icon
+        if(strpos($compatability, $row3["AppName"]) === false) {
+            echo "<img src=\"../images/icons/".strtolower($row3["AppName"]).".png\" title=\"This add-on works with ".$row3["AppName"]."\" style=\"vertical-align: middle;\">\n";
+        }
 
-  if($row[OSName] != "ALL") { echo" ($row[OSName])"; }
+        // Throw application compatibility into array.
+        $apps[$j]["display"] = $appstring;
+        $apps[$j]["value"] = $row3["AppName"]." ".$row3["MinAppVer"]."-".$row3["MaxAppVer"];
+        $compatability .= $appstring;
+        $j++;
+    }
+    
+    echo "</h2></TD><TR>\n";
 
-    // Escape each instance of name/uri for javascript.
-    if ($type=="T") {
+
+    // Links TR
+    echo "<TR><TD>";
+    echo "<span style=\"font-size: 8pt;\">";
+
+     // Escape each instance of name/uri for javascript.
+    if ($type == "T") {
         // Show Themes install link.
-        echo " <span>(<a href=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'".addslashes($row['URI'])."','".addslashes($row['Name']." ".$row['Version'])."'))\">Install Now</a>)</span>\n";
+        echo "<a href=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'".addslashes($row['URI'])."','".addslashes($row['Name']." ".$row['Version'])."'))\">Install Now</a>\n";
     } else {
         // Show extensions install link.
-        echo " <span>(<a href=\"javascript:void(InstallTrigger.install({'".addslashes($row['Name'].$row['Version'])."':'".addslashes($row['URI'])."'}))\">Install Now</a>)</span>";
+        echo "<a href=\"javascript:void(InstallTrigger.install({'".addslashes($row['Name'].$row['Version'])."':'".addslashes($row['URI'])."'}))\">Install Now</a>\n";
     }
 
     // Show a download now link.
-    echo "<span>(<a href=\"".$row['URI']."\">Download Now</a>)</span>";
-    echo "<span>(<a href=\"itemhistory.php?id=$id\">Item History</a>)</span>";
+    echo " | <a href=\"".$row['URI']."\">Download Now</a>";
 
-  echo"</TD>\n";
-  echo"</TR>\n";
+    // Show previews link
+    echo $listpreview;
 
-  echo"<TR><TD style=\"font-size: 8pt;\">".nl2br($row[Description])." ($categories) $listpreview</TD></TR>\n";
+    // Only admins can edit versions
+    if($_SESSION["level"] == "admin") {
+        echo " | <a href=\"listmanager.php?function=editversion&id=$id&vid={$row[vID]}\">Edit Version</a>";
+    }
 
-  echo"<TR>\n";
-  if ($row2[UserName]) {
-    echo"<TD COLSPAN=2 style=\"font-size: 8pt;\"><strong>Requested by:</strong> <a href=\"mailto:$row2[UserEmail]\">$row2[UserName]</a> on $date</TD>\n";
-  } else {
-    echo"<TD COLSPAN=2></TD>\n";
-  }
-  echo"</TR>\n";
+    // Show these links only if the addon has other versions
+    if($updatingAddon == true) {
+        echo " | <a href=\"itemhistory.php?id=$id\">Item History</a>";
+    }
+    echo "<br>\n";
+    if($updatingAddon == true) {
+        echo "<a href=\"../addon.php?id=$id\">Item Overview</a> | ";
+    }
+
+    if($row["Homepage"] != "") {
+        echo "<a href=\"".$row["Homepage"]."\">Item Homepage</a>";
+    }
+    echo $authorWebsites;
+
+    echo "</span>\n";
+    echo "</TD></TR>\n";
+
+    echo "<TR><TD style=\"font-size: 8pt;\"><strong>Works with:</strong> $compatability";
+
+    if($row["OSName"] != "ALL") { echo " (<strong>".$row["OSName"]."</strong>)"; }
   
-  if($reviewnotes != "") {
-    echo"<TR><TD COLSPAN=2 style=\"font-size: 8pt;\"><strong>Notes to Reviewer:</strong> ".nl2br($reviewnotes)."</TD></TR>\n";
-  }
+    echo "</TD></TR>";
 
-  // Author can not approve their own work unless they are an admin
-  $disabled = (in_array($_SESSION['uid'], $authid) && $_SESSION["level"]!="admin") ? ' disabled="disabled"' : '';
-//Approval Form for this Extension Item
-  echo"<TR><TD COLSPAN=4><h3 style=\"margin-top: 0px\">Tested On:</h3></TD></TR>\n";
+    echo "<TR><TD style=\"font-size: 8pt;\">".nl2br($row[Description])."</TD></TR>\n";
 
-  echo"<TR><TD COLSPAN=4 style=\"font-size: 8pt\">\n";
-  echo"<input name=\"type_$i\" type=\"hidden\" value=\"$type\">\n";
-  echo"<input name=\"file_$i\" type=\"hidden\" value=\"$uri\">\n";
-  echo"<input name=\"name_$i\" type=\"hidden\" value=\"$row[Name]\">\n";
-  echo"<input name=\"version_$i\" type=\"hidden\" value=\"$row[Version]\">\n";
-  echo"<span class=\"tooltip\" title=\"What OS(es) did you test in? Windows, Linux, MacOSX, etc\">OSes:</span> <input name=\"testos_$i\" type=\"text\" size=\"10\"$disabled>\n";
-  echo"<span class=\"tooltip\" title=\"What app(s) version(s)/build(s)? (Ex. Firefox 1.0RC1 or 0.10+ 20041010)\">Apps:</span> <input name=\"testbuild_$i\" type=\"text\" size=\"10\"$disabled>\n";
-  echo"<span class=\"tooltip\" title=\"Comments to Author (Will Be E-Mailed w/ Notice of your Action)\">Comments (to author):</span> <input name=\"comments_$i\" type=\"text\" size=\"35\"$disabled>"; 
-  echo"</TD></TR>\n";
-  echo"<TR><TD COLSPAN=4 style=\"font-size: 8pt\">\n";
-  echo"<input name=\"installation_$i\" type=\"checkbox\" value=\"YES\"$disabled><span class=\"tooltip\" TITLE=\"Installs OK?\">Install?</span>\n";
-  echo"<input name=\"uninstallation_$i\" type=\"checkbox\" value=\"YES\"$disabled><span class=\"tooltip\" TITLE=\"Uninstalls OK?\">Uninstall?</span>\n";
-  echo"<input name=\"appworks_$i\" type=\"checkbox\" value=\"YES\"$disabled><span class=\"tooltip\" TITLE=\"App Works OK? (Loading pages/messages, Tabs, Back/Forward)\">App Works? </span>\n";
-  echo"<input name=\"cleanprofile_$i\" type=\"checkbox\" value=\"YES\"$disabled><span class=\"tooltip\" TITLE=\"Using a Clean Profile? (I.E. Works with No Major Extensions Installed, like TBE)\">Clean Profile?</span>\n";
-if ($type=="E") {
-  echo"<input name=\"newchrome_$i\" type=\"checkbox\" value=\"YES\"$disabled><span class=\"tooltip\" TITLE=\"Extension Added Chrome to the UI?\">New Chrome?</span>\n";
-  echo"<input name=\"worksasdescribed_$i\" type=\"checkbox\" value=\"YES\"$disabled><span class=\"tooltip\" TITLE=\"Item Works as Author Describes\">Works?</span>\n";
-} else if ($type=="T") {
-  echo"<input name=\"visualerrors_$i\" type=\"checkbox\" value=\"YES\"$disabled><span class=\"tooltip\" TITLE=\"No Visual Errors / Rendering Problems\">Visual Errors?</span>\n";
-  echo"<input name=\"allelementsthemed_$i\" type=\"checkbox\" value=\"YES\"$disabled><span class=\"tooltip\" TITLE=\"All Components Themed? (Including No Missing Icons?)\">Theme Complete?</span>\n";
+    echo "<TR><TD style=\"font-size: 8pt;\">$categories</TD></TR>\n";
+
+    echo "<TR>";
+    if ($row2[UserName]) {
+        echo "<TD COLSPAN=2 style=\"font-size: 8pt;\"><strong>Requested by:</strong> <a href=\"mailto:$row2[UserEmail]\">$row2[UserName]</a> on $date</TD>";
+    } else {
+        echo "<TD COLSPAN=2></TD>";
+    }
+    echo "</TR>\n";
+  
+    if($reviewnotes != "") {
+        echo "<TR><TD COLSPAN=2 style=\"font-size: 8pt;\"><strong>Notes to Reviewer:</strong> ".nl2br($reviewnotes)."</TD></TR>\n";
+    }
+
+    // Author can not approve their own work unless they are an admin
+    $disabled = (in_array($_SESSION['uid'], $authid) && $_SESSION["level"]!="admin") ? ' disabled="disabled"' : '';
+
+    // Approval Form for this item
+    echo "<TR id=\"showform_$i\"><TD><a href=\"javascript:void(0);\" onClick=\"showForm('$i');\">Show Approval Form &raquo;</a></TD></TR>";
+    echo "</TABLE>";
+
+    echo "<TABLE BORDER=0 CELLPADDING=1 CELLSPACING=0 id=\"form_$i\" ALIGN=CENTER STYLE=\"display: none; border: 1px solid #CCC; width: 100%;\">";
+
+    echo "<TR BGCOLOR=\"#DDDDFF\"><TD WIDTH=\"75%\" style=\"border-bottom: 1px solid #CCC;\">Add-on Review Information:</TD><TD style=\"border-bottom: 1px solid #CCC; text-align: right; font-size: 8pt;\"><a href=\"#submitjump\">Jump to Submit</a></TD></TR>\n";
+
+    echo "<input name=\"type_$i\" type=\"hidden\" value=\"$type\">\n";
+    echo "<input name=\"file_$i\" type=\"hidden\" value=\"$uri\">\n";
+    echo "<input name=\"name_$i\" type=\"hidden\" value=\"{$row['Name']}\">\n";
+    echo "<input name=\"version_$i\" type=\"hidden\" value=\"{$row['Version']}\">\n";
+
+    // Action
+    echo "<TR><TD COLSPAN=4 style=\"font-size: 8pt\"><strong>Action:</strong> \n";
+    echo "<input name=\"approval_$i\" type=\"radio\" value=\"YES\"$disabled>Approve&nbsp;&nbsp;";
+    echo "<input name=\"approval_$i\" type=\"radio\" value=\"NO\"$disabled>Deny&nbsp;&nbsp;";
+    echo "<input name=\"approval_$i\" type=\"radio\" checked=\"checked\" VALUE=\"noaction\"$disabled>No Action\n";
+    echo "</TD></TR>\n";
+
+    // Comments
+    echo "<TR><TD COLSPAN=2 style=\"font-size: 8pt;\">";
+    echo "<strong>Comments:</strong> <textarea name=\"comments_$i\" id=\"comments_$i\" rows=3 cols=50 style=\"vertical-align: top;\"$disabled></textarea>"; 
+    echo "</TD></TR>\n";
+
+    echo "<TR><TD COLSPAN=2 style=\"font-size: 8pt;\">";
+    echo "or select a canned response: ";
+    echo "<select onchange=\"document.getElementById('comments_$i').value=this.value;\"$disabled>";
+    echo "<option value=\"\"></option>";
+    for($j = 0; $j < count($cannedResponses); $j++) {
+        echo "<option value=\"".$cannedResponses[$j]["CannedResponse"]."\">[".(($cannedResponses[$j]["CannedAction"] == "+") ? "APPROVE" : "DENY")."] ".$cannedResponses[$j]["CannedName"]."</option>";
+    }
+    echo "</select>";
+    echo "</TD></TR>";
+
+    echo "<TR><TD COLSPAN=2 style=\"font-size: 8pt;\">";
+    echo "<strong>Add-on Testing: </strong>&nbsp;&nbsp;<a href=\"javascript:void(0);\" id=\"checkall_$i\" onClick=\"checkAll('$i');\">Check All</a>";
+    echo "</TD></TR>";
+
+    echo "<TR><TD COLSPAN=2 style=\"font-size: 8pt\">\n";
+    echo "<label for=\"installation_$i\"><input name=\"installation_$i\" id=\"installation_$i\" type=\"checkbox\" value=\"YES\" style=\"vertical-align: middle;\"$disabled><span class=\"tooltip\" TITLE=\"Installs OK?\">Install?</span></label>\n";
+    echo "<label for=\"uninstallation_$i\"><input name=\"uninstallation_$i\" id=\"uninstallation_$i\" type=\"checkbox\" value=\"YES\" style=\"vertical-align: middle;\"$disabled><span class=\"tooltip\" TITLE=\"Uninstalls OK?\">Uninstall?</span></label>\n";
+    echo "<label for=\"appworks_$i\"><input name=\"appworks_$i\" id=\"appworks_$i\" type=\"checkbox\" value=\"YES\" style=\"vertical-align: middle;\"$disabled><span class=\"tooltip\" TITLE=\"App works OK? (Loading pages/messages, Tabs, Back/Forward)\">App Works?</span></label>\n";
+    echo "<label for=\"cleanprofile_$i\"><input name=\"cleanprofile_$i\" id=\"cleanprofile_$i\" type=\"checkbox\" value=\"YES\" style=\"vertical-align: middle;\"$disabled><span class=\"tooltip\" TITLE=\"Using a clean profile? (I.E. Works with no major extensions installed, like TBE)\">Clean Profile?</span></label>\n";
+    if ($type == "E") {
+        echo "<label for=\"newchrome_$i\"><input name=\"newchrome_$i\" id=\"newchrome_$i\" type=\"checkbox\" value=\"YES\" style=\"vertical-align: middle;\"$disabled><span class=\"tooltip\" TITLE=\"Extension added chrome to the UI?\">New Chrome?</span></label>\n";
+        echo "<label for=\"worksasdescribed_$i\"><input name=\"worksasdescribed_$i\" id=\"worksasdescribed_$i\" type=\"checkbox\" value=\"YES\" style=\"vertical-align: middle;\"$disabled><span class=\"tooltip\" TITLE=\"Item works as author describes\">Works?</span></label>\n";
+    } elseif ($type == "T") {
+        echo "<label for=\"visualerrors_$i\"><input name=\"visualerrors_$i\" id=\"visualerrors_$i\" type=\"checkbox\" value=\"YES\" style=\"vertical-align: middle;\"$disabled><span class=\"tooltip\" TITLE=\"No visual errors/rendering problems\">Visual Errors?</span></label>\n";
+        echo "<label for=\"allelementsthemed_$i\"><input name=\"allelementsthemed_$i\" id=\"allelementsthemed_$i\" type=\"checkbox\" value=\"YES\" style=\"vertical-align: middle;\"$disabled><span class=\"tooltip\" TITLE=\"All components themed? (Including no missing icons?)\">Theme Complete?</span></label>\n";
+    }
+    echo "</TD></TR>\n";
+
+    // Operating Systems
+    echo "<TR><TD COLSPAN=2 style=\"font-size: 8pt;\">\n";
+    echo "<strong>Operating Systems:</strong> <input type=\"text\" name=\"testos_$i\" size=\"40\"$disabled></TD></TR>\n";
+
+    // Applications
+    echo "<TR><TD COLSPAN=2 style=\"font-size: 8pt;\">";
+    echo "<strong>Applications:</strong> <input type=\"text\" name=\"testbuild_$i\" size=\"40\"$disabled></TD></TR>\n";
+
+    echo "</TABLE>";
 }
-  echo"</TD></TR>\n";
 
-  echo"<TR><TD COLSPAN=4 style=\"font-size: 8pt\"><strong>Action:</strong> \n";
-  echo"<input name=\"approval_$i\" type=\"radio\" value=\"YES\"$disabled>Approve&nbsp;&nbsp;";
-  echo"<input name=\"approval_$i\" type=\"radio\" value=\"NO\"$disabled>Deny&nbsp;&nbsp;";
-  echo"<input name=\"approval_$i\" type=\"radio\" checked=\"checked\" VALUE=\"noaction\"$disabled>No Action\n";
-  echo"</TD></TR>\n";
- }
+echo "<input name=\"maxvid\" id=\"maxvid\" type=\"hidden\" value=\"$i\">\n";
 
-echo"<input name=\"maxvid\" type=\"hidden\" value=\"$i\">\n";
+
+echo "<TABLE>";
+if ($num_results > 0) {
+    echo "<TR><TD COLSPAN=4 style=\"height: 8px\"></td></tr>";
+    echo "<TR><TD COLSPAN=4><img src=\"../images/faq_small.png\" border=0 height=16 width=16 alt=\"\"> Before pressing submit, please make sure all the information you entered above is complete and correct. For themes, a preview screenshot is required for approval. A preview image is recommended for extensions.</TD></TR>";
+    echo "<TR><TD COLSPAN=4 ALIGN=\"center\"><a name=\"submitjump\"><input name=\"submit\" type=\"submit\" value=\"Submit\">&nbsp;&nbsp;<input name=\"reset\" type=\"reset\" value=\"Reset\"></a></TD></TR>";
+} else {
+    echo "<TR><TD COLSPAN=4 ALIGN=\"center\">No items are pending approval at this time</TD></TR>";
+}
 ?>
-<?php if ($num_results > "0") { ?>
-<TR><TD COLSPAN=4 style="height: 8px"></td></tr>
-<TR><TD COLSPAN=4><img src="../images/faq_small.png" border=0 height=16 width=16 alt=""> Before pressing submit, please make sure all the information you entered above is complete and correct. For themes, a preview screenshot is required for approval. A preview image is recommended for extensions.</TD></TR>
-<TR><TD COLSPAN=4 ALIGN=CENTER><input name="submit" type="submit" value="Submit">&nbsp;&nbsp;<input name="reset" type="reset" value="Reset"></TD></TR>
-<?php } else { ?>
-<TR><TD COLSPAN=4 ALIGN=CENTER>No items are pending approval at this time</TD></TR>
-<?php } ?>
-</form>
 </TABLE>
-
+</form>
 <?php 
-} else if ($function=="approvalhistory") {
+} elseif ($function == "approvalhistory") {
 ?>
 <style type="text/css">
 TD { font-size: 8pt }
@@ -362,13 +480,9 @@ echo '
   }
 ?>
 </table>
-
-
 <?php
-} else {}
+}
 ?>
-
-
 <!-- close #mBody-->
 </div>
 

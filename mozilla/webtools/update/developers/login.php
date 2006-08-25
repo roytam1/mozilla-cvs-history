@@ -14,7 +14,7 @@ $row = mysql_fetch_array($sql_result);
 if ($row['UserMode'] == 'D')
 {
 	$return_path ="";
-	header('Location: https://'.HOST_NAME.WEB_PATH.'/developers/index.php?login=unconfirmed');
+	header('Location: http://'.HOST_NAME.WEB_PATH.'/developers/index.php?login=unconfirmed');
 	exit;
 }
 $userid=$row["UserID"];
@@ -41,13 +41,13 @@ $_SESSION["level"] = "$usermode";
 $_SESSION["trusted"] = "$usertrusted";
 $_SESSION["logoncheck"] = "$logoncheck";
 
-header('Location: https://'.HOST_NAME.WEB_PATH.'/developers/main.php');
+header('Location: http://'.HOST_NAME.WEB_PATH.'/developers/main.php');
 exit;
 
 
 } else {
 $return_path ="";
-header('Location: https://'.HOST_NAME.WEB_PATH.'/developers/index.php?login=failed');
+header('Location: http://'.HOST_NAME.WEB_PATH.'/developers/index.php?login=failed');
 exit;
 }
 ?>
