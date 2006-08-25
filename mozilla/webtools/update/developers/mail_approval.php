@@ -38,7 +38,7 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
     $message .= "Your item was tested by " . $_SESSION['name'] ;
     $message .= " using $testbuild on $testos.\n";
     if ($comments != "") {
-      $message .= "Editor's Comments:\n $comments\n";
+      $message .= "Editor's Comments:\n ".stripslashes(html_entity_decode($comments))."\n";
     }
     $message .= "----\n";
     $message .= 'Mozilla Update: https://'.HOST_NAME.WEB_PATH.'/'."\n";
