@@ -47,5 +47,20 @@
 define('REPO_PATH', WWW_ROOT.'/files'); // XPI/JAR repository path
 define('FTP_URL', 'http://ftp.mozilla.org/pub/mozilla.org'); // FTP
 
+
+// Required for translating data from the database
+require_once 'Translation2.php';
+
+// Required for translating the templates (using gettext)
+require_once 'language.php';
+
+// Set's up all the gettext functions for our language (passed in $_GET).  
+$language_config = new LANGUAGE_CONFIG(true);
+
+// For other functions/classes
+define('LANG', $language_config->getCurrentLanguage());
+
+unset($language_config);
+
 //EOF
 ?>
