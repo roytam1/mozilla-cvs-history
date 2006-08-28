@@ -297,7 +297,7 @@ sub get_all_svn_data {
 }
 
 sub find_last_data {
-  # Return the most recent times that we recieved treestate and checkin data.
+  # Return the most recent times that we received treestate and checkin data.
 
   my ($tree) = @_;
 
