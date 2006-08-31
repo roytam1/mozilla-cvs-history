@@ -46,7 +46,7 @@ if (!$function || $function == "approvalqueue") {
         $allelementsthemed = $_POST["allelementsthemed_$i"] ? escape_string($_POST["allelementsthemed_$i"]) : "NO";
       }
 
-      if ($approval != "noaction") {
+      if ($approval == "YES" || $approval == "NO") {
         $name = escape_string($_POST["name_$i"]);
         $version = escape_string($_POST["version_$i"]);
         if ($type == "T") {
@@ -284,71 +284,72 @@ while ($row = mysql_fetch_array($sql_result)) {
         echo "<TR><TD COLSPAN=2 style=\"font-size: 8pt;\"><strong>Notes to Reviewer:</strong> ".nl2br($reviewnotes)."</TD></TR>\n";
     }
 
-    // Author can not approve their own work unless they are an admin
-    $disabled = (in_array($_SESSION['uid'], $authid) && $_SESSION["level"]!="admin") ? ' disabled="disabled"' : '';
+    // Author cannot approve their own work unless they are an admin
+    if (!in_array($_SESSION['uid'], $authid) || $_SESSION["level"] == "admin") {
 
-    // Approval Form for this item
-    echo "<TR id=\"showform_$i\"><TD><a href=\"javascript:void(0);\" onClick=\"showForm('$i');\">Show Approval Form &raquo;</a></TD></TR>";
-    echo "</TABLE>";
+        // Approval Form for this item
+        echo "<TR id=\"showform_$i\"><TD><a href=\"javascript:void(0);\" onClick=\"showForm('$i');\">Show Approval Form &raquo;</a></TD></TR>";
+        echo "</TABLE>";
 
-    echo "<TABLE BORDER=0 CELLPADDING=1 CELLSPACING=0 id=\"form_$i\" ALIGN=CENTER STYLE=\"display: none; border: 1px solid #CCC; width: 100%;\">";
+        echo "<TABLE BORDER=0 CELLPADDING=1 CELLSPACING=0 id=\"form_$i\" ALIGN=CENTER STYLE=\"display: none; border: 1px solid #CCC; width: 100%;\">";
 
-    echo "<TR BGCOLOR=\"#DDDDFF\"><TD WIDTH=\"75%\" style=\"border-bottom: 1px solid #CCC;\">Add-on Review Information:</TD><TD style=\"border-bottom: 1px solid #CCC; text-align: right; font-size: 8pt;\"><a href=\"#submitjump\">Jump to Submit</a></TD></TR>\n";
+        echo "<TR BGCOLOR=\"#DDDDFF\"><TD WIDTH=\"75%\" style=\"border-bottom: 1px solid #CCC;\">Add-on Review Information:</TD><TD style=\"border-bottom: 1px solid #CCC; text-align: right; font-size: 8pt;\"><a href=\"#submitjump\">Jump to Submit</a></TD></TR>\n";
 
-    echo "<input name=\"type_$i\" type=\"hidden\" value=\"$type\">\n";
-    echo "<input name=\"file_$i\" type=\"hidden\" value=\"$uri\">\n";
-    echo "<input name=\"name_$i\" type=\"hidden\" value=\"{$row['Name']}\">\n";
-    echo "<input name=\"version_$i\" type=\"hidden\" value=\"{$row['Version']}\">\n";
+        echo "<input name=\"type_$i\" type=\"hidden\" value=\"$type\">\n";
+        echo "<input name=\"file_$i\" type=\"hidden\" value=\"$uri\">\n";
+        echo "<input name=\"name_$i\" type=\"hidden\" value=\"{$row['Name']}\">\n";
+        echo "<input name=\"version_$i\" type=\"hidden\" value=\"{$row['Version']}\">\n";
 
-    // Action
-    echo "<TR><TD COLSPAN=4 style=\"font-size: 8pt\"><strong>Action:</strong> \n";
-    echo "<input name=\"approval_$i\" type=\"radio\" value=\"YES\"$disabled>Approve&nbsp;&nbsp;";
-    echo "<input name=\"approval_$i\" type=\"radio\" value=\"NO\"$disabled>Deny&nbsp;&nbsp;";
-    echo "<input name=\"approval_$i\" type=\"radio\" checked=\"checked\" VALUE=\"noaction\"$disabled>No Action\n";
-    echo "</TD></TR>\n";
+        // Action
+        echo "<TR><TD COLSPAN=4 style=\"font-size: 8pt\"><strong>Action:</strong> \n";
+        echo "<input name=\"approval_$i\" type=\"radio\" value=\"YES\">Approve&nbsp;&nbsp;";
+        echo "<input name=\"approval_$i\" type=\"radio\" value=\"NO\">Deny&nbsp;&nbsp;";
+        echo "<input name=\"approval_$i\" type=\"radio\" checked=\"checked\" VALUE=\"noaction\">No Action\n";
+        echo "</TD></TR>\n";
 
-    // Comments
-    echo "<TR><TD COLSPAN=2 style=\"font-size: 8pt;\">";
-    echo "<strong>Comments:</strong> <textarea name=\"comments_$i\" id=\"comments_$i\" rows=3 cols=50 style=\"vertical-align: top;\"$disabled></textarea>"; 
-    echo "</TD></TR>\n";
+        // Comments
+        echo "<TR><TD COLSPAN=2 style=\"font-size: 8pt;\">";
+        echo "<strong>Comments:</strong> <textarea name=\"comments_$i\" id=\"comments_$i\" rows=3 cols=50 style=\"vertical-align: top;\"></textarea>"; 
+        echo "</TD></TR>\n";
 
-    echo "<TR><TD COLSPAN=2 style=\"font-size: 8pt;\">";
-    echo "or select a canned response: ";
-    echo "<select onchange=\"document.getElementById('comments_$i').value=this.value;\"$disabled>";
-    echo "<option value=\"\"></option>";
-    for($j = 0; $j < count($cannedResponses); $j++) {
-        echo "<option value=\"".$cannedResponses[$j]["CannedResponse"]."\">[".(($cannedResponses[$j]["CannedAction"] == "+") ? "APPROVE" : "DENY")."] ".$cannedResponses[$j]["CannedName"]."</option>";
+        echo "<TR><TD COLSPAN=2 style=\"font-size: 8pt;\">";
+        echo "or select a canned response: ";
+        echo "<select onchange=\"document.getElementById('comments_$i').value=this.value;\">";
+        echo "<option value=\"\"></option>";
+        for($j = 0; $j < count($cannedResponses); $j++) {
+            echo "<option value=\"".$cannedResponses[$j]["CannedResponse"]."\">[".(($cannedResponses[$j]["CannedAction"] == "+") ? "APPROVE" : "DENY")."] ".$cannedResponses[$j]["CannedName"]."</option>";
+        }
+        echo "</select>";
+        echo "</TD></TR>";
+
+        echo "<TR><TD COLSPAN=2 style=\"font-size: 8pt;\">";
+        echo "<strong>Add-on Testing: </strong>&nbsp;&nbsp;<a href=\"javascript:void(0);\" id=\"checkall_$i\" onClick=\"checkAll('$i');\">Check All</a>";
+        echo "</TD></TR>";
+
+        echo "<TR><TD COLSPAN=2 style=\"font-size: 8pt\">\n";
+        echo "<label for=\"installation_$i\"><input name=\"installation_$i\" id=\"installation_$i\" type=\"checkbox\" value=\"YES\" style=\"vertical-align: middle;\"><span class=\"tooltip\" TITLE=\"Installs OK?\">Install?</span></label>\n";
+        echo "<label for=\"uninstallation_$i\"><input name=\"uninstallation_$i\" id=\"uninstallation_$i\" type=\"checkbox\" value=\"YES\" style=\"vertical-align: middle;\"><span class=\"tooltip\" TITLE=\"Uninstalls OK?\">Uninstall?</span></label>\n";
+        echo "<label for=\"appworks_$i\"><input name=\"appworks_$i\" id=\"appworks_$i\" type=\"checkbox\" value=\"YES\" style=\"vertical-align: middle;\"><span class=\"tooltip\" TITLE=\"App works OK? (Loading pages/messages, Tabs, Back/Forward)\">App Works?</span></label>\n";
+        echo "<label for=\"cleanprofile_$i\"><input name=\"cleanprofile_$i\" id=\"cleanprofile_$i\" type=\"checkbox\" value=\"YES\" style=\"vertical-align: middle;\"><span class=\"tooltip\" TITLE=\"Using a clean profile? (I.E. Works with no major extensions installed, like TBE)\">Clean Profile?</span></label>\n";
+        if ($type == "E") {
+            echo "<label for=\"newchrome_$i\"><input name=\"newchrome_$i\" id=\"newchrome_$i\" type=\"checkbox\" value=\"YES\" style=\"vertical-align: middle;\"><span class=\"tooltip\" TITLE=\"Extension added chrome to the UI?\">New Chrome?</span></label>\n";
+            echo "<label for=\"worksasdescribed_$i\"><input name=\"worksasdescribed_$i\" id=\"worksasdescribed_$i\" type=\"checkbox\" value=\"YES\" style=\"vertical-align: middle;\"><span class=\"tooltip\" TITLE=\"Item works as author describes\">Works?</span></label>\n";
+        } elseif ($type == "T") {
+            echo "<label for=\"visualerrors_$i\"><input name=\"visualerrors_$i\" id=\"visualerrors_$i\" type=\"checkbox\" value=\"YES\" style=\"vertical-align: middle;\"><span class=\"tooltip\" TITLE=\"No visual errors/rendering problems\">Visual Errors?</span></label>\n";
+            echo "<label for=\"allelementsthemed_$i\"><input name=\"allelementsthemed_$i\" id=\"allelementsthemed_$i\" type=\"checkbox\" value=\"YES\" style=\"vertical-align: middle;\"><span class=\"tooltip\" TITLE=\"All components themed? (Including no missing icons?)\">Theme Complete?</span></label>\n";
+        }
+        echo "</TD></TR>\n";
+
+        // Operating Systems
+        echo "<TR><TD COLSPAN=2 style=\"font-size: 8pt;\">\n";
+        echo "<strong>Operating Systems:</strong> <input type=\"text\" name=\"testos_$i\" size=\"40\"></TD></TR>\n";
+
+        // Applications
+        echo "<TR><TD COLSPAN=2 style=\"font-size: 8pt;\">";
+        echo "<strong>Applications:</strong> <input type=\"text\" name=\"testbuild_$i\" size=\"40\"></TD></TR>\n";
+
+        echo "</TABLE>";
     }
-    echo "</select>";
-    echo "</TD></TR>";
-
-    echo "<TR><TD COLSPAN=2 style=\"font-size: 8pt;\">";
-    echo "<strong>Add-on Testing: </strong>&nbsp;&nbsp;<a href=\"javascript:void(0);\" id=\"checkall_$i\" onClick=\"checkAll('$i');\">Check All</a>";
-    echo "</TD></TR>";
-
-    echo "<TR><TD COLSPAN=2 style=\"font-size: 8pt\">\n";
-    echo "<label for=\"installation_$i\"><input name=\"installation_$i\" id=\"installation_$i\" type=\"checkbox\" value=\"YES\" style=\"vertical-align: middle;\"$disabled><span class=\"tooltip\" TITLE=\"Installs OK?\">Install?</span></label>\n";
-    echo "<label for=\"uninstallation_$i\"><input name=\"uninstallation_$i\" id=\"uninstallation_$i\" type=\"checkbox\" value=\"YES\" style=\"vertical-align: middle;\"$disabled><span class=\"tooltip\" TITLE=\"Uninstalls OK?\">Uninstall?</span></label>\n";
-    echo "<label for=\"appworks_$i\"><input name=\"appworks_$i\" id=\"appworks_$i\" type=\"checkbox\" value=\"YES\" style=\"vertical-align: middle;\"$disabled><span class=\"tooltip\" TITLE=\"App works OK? (Loading pages/messages, Tabs, Back/Forward)\">App Works?</span></label>\n";
-    echo "<label for=\"cleanprofile_$i\"><input name=\"cleanprofile_$i\" id=\"cleanprofile_$i\" type=\"checkbox\" value=\"YES\" style=\"vertical-align: middle;\"$disabled><span class=\"tooltip\" TITLE=\"Using a clean profile? (I.E. Works with no major extensions installed, like TBE)\">Clean Profile?</span></label>\n";
-    if ($type == "E") {
-        echo "<label for=\"newchrome_$i\"><input name=\"newchrome_$i\" id=\"newchrome_$i\" type=\"checkbox\" value=\"YES\" style=\"vertical-align: middle;\"$disabled><span class=\"tooltip\" TITLE=\"Extension added chrome to the UI?\">New Chrome?</span></label>\n";
-        echo "<label for=\"worksasdescribed_$i\"><input name=\"worksasdescribed_$i\" id=\"worksasdescribed_$i\" type=\"checkbox\" value=\"YES\" style=\"vertical-align: middle;\"$disabled><span class=\"tooltip\" TITLE=\"Item works as author describes\">Works?</span></label>\n";
-    } elseif ($type == "T") {
-        echo "<label for=\"visualerrors_$i\"><input name=\"visualerrors_$i\" id=\"visualerrors_$i\" type=\"checkbox\" value=\"YES\" style=\"vertical-align: middle;\"$disabled><span class=\"tooltip\" TITLE=\"No visual errors/rendering problems\">Visual Errors?</span></label>\n";
-        echo "<label for=\"allelementsthemed_$i\"><input name=\"allelementsthemed_$i\" id=\"allelementsthemed_$i\" type=\"checkbox\" value=\"YES\" style=\"vertical-align: middle;\"$disabled><span class=\"tooltip\" TITLE=\"All components themed? (Including no missing icons?)\">Theme Complete?</span></label>\n";
-    }
-    echo "</TD></TR>\n";
-
-    // Operating Systems
-    echo "<TR><TD COLSPAN=2 style=\"font-size: 8pt;\">\n";
-    echo "<strong>Operating Systems:</strong> <input type=\"text\" name=\"testos_$i\" size=\"40\"$disabled></TD></TR>\n";
-
-    // Applications
-    echo "<TR><TD COLSPAN=2 style=\"font-size: 8pt;\">";
-    echo "<strong>Applications:</strong> <input type=\"text\" name=\"testbuild_$i\" size=\"40\"$disabled></TD></TR>\n";
-
-    echo "</TABLE>";
 }
 
 echo "<input name=\"maxvid\" id=\"maxvid\" type=\"hidden\" value=\"$i\">\n";
@@ -408,10 +409,10 @@ if (!empty($_start_date)) {
     $sql .= " AND date >= '{$_start_date}'";
 }
 if (!empty($_end_date)) {
-    $sql .= " AND date <= '{$_end_date}'";
+    $sql .= " AND date <= '{$_end_date} 23:59:59'";
 } else {
     $_end_date = date('Y-m-t');
-    $sql .= " AND date <= '{$_end_date}'";
+    $sql .= " AND date <= '{$_end_date} 23:59:59'";
 }
 $sql .= " ORDER BY `date` DESC";
 
