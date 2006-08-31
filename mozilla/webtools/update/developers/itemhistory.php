@@ -6,14 +6,19 @@ $page_title = 'Mozilla Update :: Developer Control Panel :: Item History';
 require_once(HEADER);
 require_once('./inc_sidebar.php');
 
-if ($_SESSION["level"]=="admin" or $_SESSION["level"]=="editor") {
-    //Do Nothing, they're good. :-)
-} else {
-    echo"<h1>Access Denied</h1>\n";
-    echo"You do not have access to the Item History.";
-    require_once(FOOTER);
-    exit;
+//Kill access to items this user doesn't own...
+if ($_SESSION["level"] !== "admin" && $_SESSION["level"] !== "editor") {
+    $id = escape_string($_GET["id"] != "" ? $_GET["id"] : $_POST["id"]);
+    $sql = "SELECT `UserID` from `authorxref` TAX WHERE `ID` = '$id' AND `UserID` = '$_SESSION[uid]' LIMIT 1";
+    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+    if (mysql_num_rows($sql_result) == 0) {
+        echo "<h1>Access Denied</h1>\n";
+        echo "You do not have access to this item.";
+        require_once(FOOTER);
+        exit;
+    }
 }
+
 
 $sql = "SELECT `Name` FROM `main` WHERE `ID`={$item}";
 $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
@@ -52,7 +57,13 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
     <td><?=$i?></td>
     <td><?=$row["Version"]?></td>
     <td><?=$row["date"]?></td>
-    <td><a href="mailto:<?=$row["UserEmail"]?>"><?=$row["UserName"]?></a></td>
+<?
+    if($_SESSION["level"] == "admin" || $_SESSION["level"] == "editor") {
+        echo "<td><a href=\"mailto:".$row["UserEmail"]."\">".$row["UserName"]."</a></td>";
+    } else {
+        echo "<td>".$row["UserName"]."</td>";
+    }
+?>
     <td><?=(($row["action"] == "Approval+") ? "Approved" : "Denied")?></td>
     <td><?=$row["comments"]?></td>
 </tr>

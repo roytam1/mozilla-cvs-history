@@ -79,11 +79,12 @@ Your <?php echo"$typename"?> File:<BR>
 </TABLE>
 
 <h2>Listed Versions</h2>
+<a href="itemhistory.php?id=<?=$id?>">View Item History</a>
 <?php
 $approved_array = array("?"=>"Pending Approval", "YES"=>"Approved", "NO"=>"Denied", "DISABLED"=>"Disabled");
 $sql = "SELECT vID, TV.Version, URI, OSName, approved FROM `version` TV
 INNER JOIN os TOS ON TOS.OSID = TV.OSID
-WHERE `ID`='$id' GROUP BY `URI` ORDER BY `Version` DESC";
+WHERE `ID`='$id' GROUP BY `OSName`, `Version` ORDER BY `Version` DESC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while($row = mysql_fetch_array($sql_result)) {
     $vid = $row["vID"];
@@ -94,9 +95,14 @@ WHERE `ID`='$id' GROUP BY `URI` ORDER BY `Version` DESC";
     $approved = $row["approved"];
     $approved = $approved_array["$approved"];
 
-echo"<h4><a href=\"listmanager.php?function=editversion&id=$id&vid=$vid\">Version $version</a> - $approved (<small>$filename</small>)</h4>\n";
+    echo "<h4><a href=\"listmanager.php?function=editversion&id=$id&vid=$vid\">Version $version</a> - $approved";
+    // Denied add-ons have their URI removed, so we shouldn't show it.
+    if($approved != 'Denied') {
+        echo " (<small>$filename</small>)";
+    }
+    echo "</h4>\n";
 
-if ($os !="ALL") {echo" - for $os"; }
+    if ($os != "ALL") { echo " - for $os"; }
  }
 ?>
 
