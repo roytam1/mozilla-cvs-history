@@ -411,7 +411,7 @@ $id = escape_string($_POST["id"]);
 $uri = escape_string($_POST["uri"]);
 $osid = escape_string($_POST["osid"]);
  if (checkFormKey()) {
-  $sql = "UPDATE `version` SET `OSID`='$osid', `Notes`='$notes', `ReviewNotes`='$reviewnotes', `DateUpdated`=NOW(NULL) WHERE `ID`='$id' AND `URI`='$uri'";
+  $sql = "UPDATE `version` SET `OSID`='$osid', `Notes`='$notes', `ReviewNotes`='$reviewnotes' WHERE `ID`='$id' AND `URI`='$uri'";
   $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
    echo"Version Notes and OS for $_POST[name] $_POST[version] updated...<br>\n";
  }
