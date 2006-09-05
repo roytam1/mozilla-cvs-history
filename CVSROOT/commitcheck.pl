@@ -57,11 +57,9 @@ $branch{'3'} = 'HEAD';
 $fullname{'3'} = 'despotaccess';
 $blessed{'3'} = [];
 $super{'3'} = ['myk%mozilla.org','leaf%mozilla.org','despotdaemon',];
-$mode{'59'} = 'Restricted';
+$mode{'59'} = 'Open';
 $branch{'59'} = 'HEAD';
 $fullname{'59'} = 'Directory SDK';
-$blessed{'59'} = ['richm%stanfordalumni.org','cls%seawood.org',];
-$super{'59'} = ['leif%ogre.com','dmose%mozilla.org','mcs%pearlcrescent.com',];
 $mode{'103'} = 'Open';
 $branch{'103'} = 'HEAD';
 $fullname{'103'} = 'Document Object Model';
@@ -452,11 +450,7 @@ if (m:^mozilla/config/.*$:) {return '55';}
 if (m:^mozilla/editor/.*$:) {return '56';}
 if (m:^mozilla/string/.*$:) {return '160';}
 if (m:^mozilla/xpcom/string/.*$:) {return '160';}
-if (m:^mozilla/directory/buildsdk\.txt$:) {return '59';}
-if (m:^mozilla/directory/c-sdk/.*$:) {return '59';}
-if (m:^mozilla/directory/ldapsdk\.mak$:) {return '59';}
-if (m:^mozilla/directory/ldapsdk\.mk$:) {return '59';}
-if (m:^mozilla/directory/Makefile$:) {return '59';}
+if (m:^mozilla/directory/.*$:) {return '59';}
 if (m:^mozilla/gfx/src/qt/.*$:) {return '161';}
 if (m:^mozilla/widget/src/qt/.*$:) {return '161';}
 if (m:^mozilla/gfx/src/ps/.*$:) {return '62';}
