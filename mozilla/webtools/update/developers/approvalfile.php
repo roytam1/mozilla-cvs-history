@@ -12,13 +12,13 @@ if ($_SESSION["level"]=="admin" or $_SESSION["level"]=="editor") {
     exit;
 }
 
-$filename = stripslashes($_GET['file']);
+$filename = str_replace(' ', '+', stripslashes(basename($_GET['file'])));
 $file = REPO_PATH . "/approval/$filename";
 if (file_exists($file)) {
     header('Content-Description: File Transfer');
     header('Content-Type: application/octet-stream');
     header('Content-Length: ' . filesize($file));
-    header('Content-Disposition: attachment; filename=' . basename($file));
+    header('Content-Disposition: attachment; filename=' . $filename);
     readfile($file);
 } else {
     require_once(HEADER);
