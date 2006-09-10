@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl
+#!/usr/bin/perl
 # $Id$
 
 # ident --	Look up identifiers
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-use lib 'lib/';
+use lib 'lib';
 use LXR::Common;
 use LXR::Config;
 use DB_File;
@@ -43,11 +43,23 @@ use DB_File;
 sub ident {
 
     print("<P ALIGN=CENTER>\n",
-	  "Type the full name of an identifier to summarize",
-	  "<BR>(a function name, variable name, typedef, etc.)\n",
-	  "<BR>Matches are case-sensitive.\n");
+	  "Type the full name of an identifier ",
+	  "(a function name, variable name, typedef, etc.)\n",
+	  "<BR>to summarize. Matches are <u>case-sensitive</u>.\n");
+print (qq#
+<script>
+function changetarget() {
+ if (document.getElementById) {
+  var form = document.getElementById('ident');
+  var target = document.getElementById('tree');
+  form.action='../'+target.value+'/ident';
+ }
+}
+</script>
+#);
 
-    print("<form method=get action=\"ident\">\n");
+    print('<form id=ident name=ident method=get action="ident">
+');
 
     foreach ($Conf->allvariables) {
 	if ($Conf->variable($_) ne $Conf->vardefault($_)) {
@@ -58,26 +70,86 @@ sub ident {
     
     print("<B>Identifier: </B><input type=text name=\"i\" ",
 	  "value=\"",$identifier,"\" size=50>\n",
-	  "<input type=submit value=\"Find\">\n",
-	  "</form>\n");
+	  "<input type=submit value=\"Find\">\n");
+    print(qq{
+using tree:
+<select name=tree id=tree onchange='changetarget()'>
+});
+my @treelist = @{$Conf->{'trees'}};
+foreach my $othertree (@treelist) {
+my $default=$othertree eq $Conf->{'treename'} ? ' selected=1' : '';
+print "<option$default value='$othertree'>$othertree</option>
+";
+}
+print (qq{</select>});
 
+
+    my $value = $filter;
+    $value =~ s/&/&amp;/g;
+    $value =~ s/"/&quot;/g;
+    $value =~ s/</&lt;/g;
+    $value =~ s/>/&gt;/g;
+    print('<br>Limit output to pattern: <input type=text name="filter" value="'.
+            $value.'" size=30>');
+
+    print('<br><input type=checkbox value="1" ');
+    print('checked="checked" ') if $scriptidly;
+    print('name=scriptidly>Match C++, JS, and IDL variants');
+
+    print("</form>\n");
     
     if ($identifier) {
 	tie(%xref, "DB_File", $Conf->dbdir."/xref", 
 	    O_RDONLY, undef, $DB_HASH) || 
-		&fatal("Could not open \"".$Conf->dbdir."/xref\"");
+		&fatal('No cross reference database is available for "'.$Conf->{'treename'}.'" please complain to the webmaster [cite: xref]');
 
 	@refs = split(/\t/,$xref{$identifier});
-
+        if ($scriptidly) {
+            my $genident = $identifier;
+            my $ufirst, $lfirst;
+            if ($genident =~ s/^[GSgs]et([A-Z])//) {
+                $ufirst = $1;
+                $lfirst = lc $ufirst;
+            } else {
+                $genident =~ s/^([a-z])//i;
+                $ufirst = uc $1;
+                $lfirst = lc $ufirst;
+            }
+            my @flavors = (
+                "get$ufirst$genident",
+                "set$ufirst$genident",
+                "Get$ufirst$genident",
+                "Set$ufirst$genident",
+                "$ufirst$genident",
+                "$lfirst$genident",
+            );
+            @refs = ();
+            foreach my $flavor (@flavors) {
+                push @refs, split(/\t/,$xref{$flavor});
+            }
+       }
 	print("<h1>$identifier</h1>\n");
+        print("<p><i>If you can't find what you're looking for, you can always <a href='search?string=$identifier&find=$filter&filter=\\b$identifier\\b'>search</a> for it.</i></p>");
 
+        my %f = ();
 	if (@refs) {
 	    tie(%fileidx, "DB_File", $Conf->dbdir."/fileidx", 
 		O_RDONLY, undef, $DB_HASH) || 
-		    &fatal("Could not open \"".$Conf->dbdir."/fileidx\"");
+		    &fatal('Cross reference database is missing its file list for "'.$Conf->{'treename'}.'" please complain to the webmaster [cite: fileidx]');
 	    
-	    foreach (@refs) {
-		$f{$1} .= "$2\t" if /^(.)(.*)/;
+            my @normal_refs = (), %fancy_refs = ();
+	    foreach my $ref (@refs) {
+		if ($ref =~ /^(.)(.*):(.*)/) {
+my ($refkind, $reffnum, $refline) = ($1, $2, $3);
+                    next if defined $filter && $fileidx{$reffnum} !~ /$filter/;
+                    my $miniref = "$reffnum:$refline";
+                    if ($ty{$refkind}) {
+                        $fancy_refs{$miniref} = $refkind;
+                        $f{$refkind} .= "$miniref\t";
+                    } else {
+                        push @normal_refs, $miniref unless defined $fancy_refs{$miniref};
+                    }
+                }
 	    }
 
 	    foreach $t (keys(%ty)) {
@@ -88,10 +160,26 @@ sub ident {
 		    unshift(@_);
 		    foreach (@_) {
 			($fnum, $line, @clss) = split(/:/, $_);
+                        my $fnam = $fileidx{$fnum};
 			
 			print("<li>",
-			      &fileref("$fileidx{$fnum}, line $line",
+			      &fileref("$fileidx{$fnum}",
+				       "/$fileidx{$fnum}", $line)
+				.", line ".
+			      &fileref($line,
 				       "/$fileidx{$fnum}", $line));
+                            print(
+"\n(View "
+."<a href=\"" . $Conf->bonsaihome ."/cvslog.cgi?file=/mozilla/"
+.$fnam
+."&amp;root=/cvsroot\">change log</a> or "
+."<a href=\"" . $Conf->bonsaihome . "/cvsblame.cgi?&amp;file=/mozilla/"
+.$fnam
+."&amp;mark=".@fpos
+."&amp;root=/cvsroot\">"
+."blame annotations</a>"
+.")\n"
+);
 
 			if (@clss) { 
 			    if ($t eq 'F' || $t eq 'f') {
@@ -102,13 +190,19 @@ sub ident {
 				    print("class $clss[0]");
 				}
 			    } elsif ($t eq 'C') {
+ 				local $,;
 				print(", inheriting <ul>\n");
 				foreach (@clss) {
+ 				    if ($,) {
+					print $,;
+ 				    } else {
+					$,=',';
+ 				    }
 				    print("<li>");
 				    if ($xref{$_}) {
-					print(&idref("class $_", $clss[0]));
+					print("class ".&idref($_, $_));
 				    } else {
-					print("class $_");
+					print("class <A TITLE='unindexed fixme'>$_</A>");
 				    }
 				}
 				print("</ul>");
@@ -120,28 +214,31 @@ sub ident {
 		}
 	    }
 
-	    print("Referenced (in ",int(grep(/^R/, @refs))," files total) in:\n",
+	    print("Referenced (in ",scalar(@normal_refs)," files total) in:\n",
 		  "<ul>\n");
 	    $concise = 0;
-	    foreach (@refs) {
-		if (/^R(.+):([\d,]+)/) {
+	    foreach (@normal_refs) {
+		if (/^(.+):([\d,]+)/) {
 		    $fnam = $fileidx{$1};
-		    @fpos = split(/,/, $2);
+		    my $pos = $2;
+		    next unless !defined $filter || $fnam =~ /$filter/;
+		    @fpos = split(/,/, $pos);
 			if ($concise) {
 			    print("<li>", &fileref("$fnam", "/$fnam"),
 				  ", ",$#fpos+1," times\n");
 			} else {
-			    print("<li>$fnam:\n<ul>\n");
+			    print("<li>$fnam\n(");
 			    print(
 "View "
 ."<a href=\"" . $Conf->bonsaihome ."/cvslog.cgi?file=/mozilla/"
 .$fnam
-."&root=/cvsroot\">change log</a> or Blame "
-."<a href=\"" . $Conf->bonsaihome . "/cvsblame.cgi?&file=/mozilla/"
+."&amp;root=/cvsroot\">change log</a> or "
+."<a href=\"" . $Conf->bonsaihome . "/cvsblame.cgi?&amp;file=/mozilla/"
 .$fnam
-."&root=/cvsroot\">"
-."annotations</a>"
-."\n"
+."&amp;mark=".@fpos
+."&amp;root=/cvsroot\">"
+."blame annotations</a>"
+.")\n<ul>"
 			    );
 
 			    foreach (@fpos) {
@@ -163,8 +260,22 @@ sub ident {
     }
 }
 
-($Conf, $HTTP, $Path) = &init;
+($Conf, $HTTP, $Path, $head) = &init;
+
 $identifier = $HTTP->{'param'}->{'i'};
+$filter = $HTTP->{'param'}->{'filter'};
+if ($identifier && !$filter && $identifier =~ /^(.*)::(.*)$/) {
+    ($filter, $identifier) = ($1, $2);
+}
+$scriptidly = $HTTP->{'param'}->{'scriptidly'};
+$scriptidly = $scriptidly =~ /1|yes/ ? 1 : 0;
+my $tree = $HTTP->{'param'}->{'tree'};
+if ($tree && ($tree ne $Conf->{'treename'})) {
+$head .= "Refresh: 0; url=../$tree/ident?i=$identifier&filter=$filter&scriptidly=$scriptidly
+";
+}
+print "$head
+";
 
 &makeheader('ident');
 &ident;

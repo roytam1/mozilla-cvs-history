@@ -29,7 +29,8 @@ sub treeify {
     #each definition is a tree,directory pair.
 
     #remove the extra space that i stupidly added when parsing lxr.conf
-    $self->{'sourceroot'} =~ s/^\s+//;;
+    $self->{'sourceroot'} =~ s/^\s+//;
+    $self->{'sourceprefix'} =~ s/^\s+//;
 
     if ($self->{'sourceroot'} =~ /\S\s+\S/) {
         $self->{'oldroot'} = $self->{'sourceroot'};
@@ -43,8 +44,10 @@ sub treeify {
         #component from the script name which will be of the form: 
         # /seamonkey/source
         $self->{'treename'} = $ENV{'SCRIPT_NAME'};
-        $self->{'treename'} =~ s/.*\/([^\/]+)\/[\w]*/$1/;
+        $self->{'treename'} =~ s|.*/([^/]+)/[^/]*|$1|;
 
+        my @treelist = sort keys %treehash;
+        $self->{'trees'} = \@treelist;
         #Match the tree name against our list of trees and extract the proper
         #directory. Set "sourceroot" to this directory.
         $self->{'sourceroot'} = $treehash{$self->{'treename'}};
@@ -66,6 +69,11 @@ sub treeify {
         my @pathdirs = split(/\//, $path);
         my $pathnum = @pathdirs;
         $self->{'bonsaicvsroot'} = $pathdirs[$pathnum - 1]; 
+
+        %treehash = split(/\s+/, $self->{'sourceprefix'});
+        $self->{'sourceprefix'} = defined $treehash{$self->{'treename'}}
+                                ? $treehash{$self->{'treename'}}
+                                : undef;
 
     }
     return($self);
@@ -129,6 +137,7 @@ sub _initialize {
     unless (open(CONFIG, $conf)) {
 	&fatal("Couldn't open configuration file \"$conf\".");
     }
+
     while (<CONFIG>) {
 	s/\#.*//;
 	next if /^\s*$/;
@@ -146,6 +155,7 @@ sub _initialize {
 			$self->{vdefault}->{$args[0]};
 		}
 	    } elsif ($dir eq 'sourceroot' ||
+                     $dir eq 'sourceprefix' ||
 		     $dir eq 'srcrootname' ||
                      $dir eq 'virtroot' ||
 		     $dir eq 'baseurl' ||
@@ -167,7 +177,8 @@ sub _initialize {
 		     $dir eq 'searchtail' ||
 		     $dir eq 'htmldir') {
 		if ($arg =~ /([^\n]+)/) {
-	            if ($dir eq 'sourceroot') {
+	            if ($dir eq 'sourceroot' ||
+                        $dir eq 'sourceprefix') {
 		        $self->{$dir} = $self->{$dir} . " " . $1;
                     }else{
 		    $self->{$dir} = $1;
@@ -237,10 +248,15 @@ sub sourceroot {
     return($self->varexpand($self->{'sourceroot'}));
 }
 
+sub prefix {
+    my $self = shift;
+    my $prefix = $self->{'sourceprefix'};
+    return $prefix;
+}
 
 sub sourcerootname {
     my $self = shift;
-    return($self->varexpand($self->{'srcrootname'}));
+    return($self->varexpand(defined $self->{'sourceprefix'} ? $self->{'sourceprefix'} : $self->{'srcrootname'}));
 }
 
 sub virtroot{

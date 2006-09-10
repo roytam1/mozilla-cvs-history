@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl
+#!/usr/bin/perl
 # $Id$
 
 # search --	Freetext search
@@ -23,66 +23,165 @@
 
 ######################################################################
 
-use lib 'lib/';
+use lib 'lib';
 use LXR::Common;
 use LXR::Config;
 
 $maxhits = 1000;
 
 sub search {
-    print("<P ALIGN=CENTER>\n",
-	  "Free-text search through the source code, including comments.\n",
-          "<BR>By default, this form treats all characters as literals. \n",
-          "<BR>Search strings can have a maximum of 29 characters.\n",
-	  "<BR>Read the <A HREF=\"search-help.html\">documentation</A>",
-	  " for help with glimpse's regular expression syntax,\n");
+    print(qq{<P ALIGN=CENTER>
+Free-text search through the source code, including comments.
+<BR>By default, this form treats all characters as literals.
+<BR>Search strings can have a maximum of 29 characters.
+<BR>Read the <A HREF="search-help.html">documentation</A>
+ for help with glimpse's regular expression syntax,
+});
+print (qq#
+<script>
+function changetarget() {
+ if (document.getElementById) {
+  var form = document.getElementById('search');
+  var target = document.getElementById('tree');
+  form.action='../'+target.value+'/search';
+ }
+}
 
-    print("<TABLE><TR><TD>");
-    print("<form method=get action=\"search\">\n");
+function changefindpreset() {
+ if (document.getElementById) {
+  var find = document.getElementById('find');
+  var findi = document.getElementById('findi');
+  if (findi.selectedIndex > 0)
+   find.value = findi.value; 
+ }
+}
+</script>
+#);
+
+    print('<form name=search id=search method=get action="search">
+<TABLE><TR><TD>');
 
     foreach ($Conf->allvariables) {
 	if ($Conf->variable($_) ne $Conf->vardefault($_)) {
-	    print("<input type=hidden name=\"",$_, "\" ",
-		  "value=\"", $Conf->variable($_), "\">\n");
+	    print('<input type=hidden name="',$_, '" ',
+		  'value="', $Conf->variable($_), '">
+');
 	}
     }
 
     $s = $searchtext;
     $s =~ s/"/\&quot;/g;
-    print("<B>Search for: </B></TD><TD><input type=text name=\"string\" ",
-	  "value=\"",$s,"\" maxlength=29 size=30>\n",
-	  "<input type=submit value=\"search\"><BR>\n",
-          "</TD></TR><TR><TD></TD><TD>\n",
-	  "<input type=\"checkbox\" name=\"regexp\"");
-          if ($Conf->{'regexp'} eq 'on') {
-              print (" CHECKED");
-              print (" value=\"on\">Regular Expression Search\n");
-          } else {
-              print (">Regular Expression Search\n");
+    print('<B>Search for: </B></TD><TD><input type=text name="string" ',
+	  'value="',$s,'" maxlength=29 size=30>
+',
+	  '<input type=submit value="search"><BR>
+',
+          '</TD></TR><TR><TD></TD><TD>
+',
+	  '<input type="checkbox" name="regexp"');
+          if ($regexp eq 'on' || ($Conf->{'regexp'} eq 'on' && (!$regexp))) {
+              print (' CHECKED');
+              print (' value="on"');
           }
-          print ("</TD></TR>\n</form>\n </TABLE>\n");
+          print (">Regular Expression Search\n");
+          print '</td><tr><td><td><input type="checkbox" name="case"';
+          if ($search_sensitive) {
+              print (' CHECKED');
+              print (' value="on"');
+          }
+          print '>Case sensitive
+';
+          if (1 || $find) {
+my $value = $find;
+$value =~ s/&/&amp;/g;
+$value =~ s/"/&quot;/g;
+$value =~ s/</&lt;/g;
+$value =~ s/>/&gt;/g;
+              print('</td><tr><td>in files matching:</td><td><input type=text id="find" name="find" value="'.
+                $value.'" size=30>');
+          }
+          if (1) {
+if ($find_warning) {
+              print ' a suggestion was made by your browser, but it was ignored in favor of the provided string, if you empty the string and search again, it will be honored.';
+}
+
+print ' Suggestions from our users: ';
+              print('<select id="findi" name="findi" onchange="changefindpreset()">
+<option value="">none of these</option>');
+@find_options = qw(
+\.xul$
+\.dtd$
+\.c
+\.h$
+\.x.l
+\.idl$
+);
+              foreach my $find_opt (@find_options) {
+$findi = cleanFind($findi);
+print "<!-- $find $findi $find_opt -->";
+my $find_default = ($find_opt eq $findi) ? ' selected="selected"' : '';
+                  print "<option$selected value='$find_opt'>$find_opt</option>
+";
+              }
+              print '</select>
+';
+          }
+          if (1 || $filter) {
+my $value = $filter;
+$value =~ s/&/&amp;/g;
+$value =~ s/"/&quot;/g;
+$value =~ s/</&lt;/g;
+$value =~ s/>/&gt;/g;
+              print('</td><tr><td>Limit output to pattern:</td><td><input type=text name="filter" value="'.
+                $value.'" size=30>');
+          }
+    print(qq{</TD></TR><TR><TD>
+using tree:</TD><TD>
+<select name=tree id=tree onchange='changetarget()'>
+});
+my @treelist = @{$Conf->{'trees'}};
+foreach my $othertree (@treelist) {
+my $default=$othertree eq $Conf->{'treename'} ? ' selected=1' : '';
+print "<option$default value='$othertree'>$othertree</option>
+";
+}
+print (qq{</select>});
+          print ("</TD></TR></TABLE>\n</form>\n\n");
     
     $| = 1; print('');
-   
+
     if ($searchtext ne "") {
 	print("<hr>\n");
+        print("<p><i><a href='find?string=$find'>These files</a> were searched.</i></p>") if $find;
 	unless (open(GLIMPSE, "-|")) {
 	    open(STDERR, ">&STDOUT");
 	    $!='';
-            if ($Conf->{'regexp'} eq 'off') {
+            if (!$regexp || $regexp eq 'off') {
                 $searchtext =~ s/([;,#><\-\$.^*[^|()\!])/\\$1/g;
             }
-	    exec($Conf->glimpsebin,"-i","-H".$Conf->dbdir,'-y','-n','-e',$searchtext);
+	    @execparams = ($Conf->glimpsebin,"-i","-H",$Conf->dbdir,'-y','-n');
+	    push @execparams, ('-F', $find) if $find;
+	    push @execparams, ('-e', $searchtext);
+	    exec(@execparams);
 	    print("Glimpse subprocess died unexpectedly: $!\n");
 	    exit;
 	}
 
 	$numlines = 0;
+        my $search_case = undef;
+        if ($search_sensitive) {
+            $search_case = $searchtext;
+            if (!$regexp || $regexp eq 'off') {
+                $search_case =~ s/([\$.\^|\(\){}+*?])/\\$1/g;
+                $search_case = "\\Q$search_case\\E";
+            }
+        }
 	while (<GLIMPSE>) {
-	    $numlines++;
-	    push(@glimpselines,$_);
-	    if ($numlines > $maxhits) {
-		last;
+	    next if $_ =~ m|using working-directory '.*' to locate dictionaries|;
+            next if $search_sensitive && $_ !~ /$search_case/;
+	    if (!$filter || $_=~/$filter/){
+		$numlines++;
+		push(@glimpselines,$_);
 	    }
 	}
 
@@ -102,13 +201,22 @@ sub search {
 	    } else {
 		if ($numlines > $maxhits) {
 		    print("<b> Too many hits, displaying first $maxhits</b><br>\n");
-		}
+		} else {
+                    if ($numlines == 1) {
+                        print("<b>Found one matching line</b><br>\n");
+                    } else {
+                        print("<b> Found $numlines matching lines</b><br>\n");
+                    }
+                }
+
                 $searchtext =~ s/&/&amp;/g;
                 $searchtext =~ s/</&lt;/g;
                 $searchtext =~ s/>/&gt;/g;
 
 		print("<h1>$searchtext</h1>\n");
 		$sourceroot = $Conf->sourceroot;
+my $lastfilepath;
+my $openlist;
 		foreach $glimpseline (@glimpselines) {
 		    
 		    $glimpseline =~ s/$sourceroot//;
@@ -117,30 +225,122 @@ sub search {
 		    $text =~ s/&/&amp;/g;
 		    $text =~ s/</&lt;/g;
 		    $text =~ s/>/&gt;/g;
-
-		    print(&fileref("$file, line $line", "$file", $line),
+		    my $filepath='';
+		    my $filename;
+my $skip = $lastfilepath eq $file;
+#$skip = 0;
+$lastfilepath = $file;
+if ($openlist && !$skip) {
+$openlist = 0;
+print ('</ul>');
+}
+		    ($file,$filename)=split m|/(?!.*/)|, $file;
+		    foreach my $filepart ($file =~ m{^/?$} ? ('') : split m|/|, $file) {
+			$filepath .= "$filepart/";
+unless ($skip) {
+			print(&fileref($filepart ? $filepart : '/', "$filepath"),
+			      $filepart && '/');
+}
+		    }
+		    $filepath = $filepath ? $filepath . $filename : "/$filename";
+unless ($skip) {
+		    print(&fileref("$filename", "$filepath"),
+			  ", ");
+}
+unless ($skip) {
+print ('<ul>');
+$openlist = 1;
+}
+print ('<li>');
+		    print(&fileref("line $line", "$filepath", $line),
 			  " -- $text<br>\n");
 		}
+print ('</ul>') if $openlist;
 	    }
 	} elsif ($retval == 1) {
 	    $glimpsebin = $Conf->glimpsebin;
 	    $glimpseresponse = join("<br>",@glimpselines);
 	    $glimpseresponse =~ s/$glimpsebin/Reason/;
 	    $glimpseresponse =~ s/glimpse: error in searching index//;
-	    print("<b>Search failed</b><br>\n$glimpseresponse");
+	    print("<b>No results found</b><br>\n$glimpseresponse");
+{
+	    if (!$regexp || $regexp eq 'off') {
+		$searchtext =~ s/([;,#><\-\$.^*[^|()\!])/\\$1/g;
+	    }
+	    @execparams = ($Conf->glimpsebin,"-i","-H",$Conf->dbdir,'-y','-n');
+	    push @execparams, ('-F', $find) if $find;
+	    push @execparams, ('-e', $searchtext);
+	    print("<p><textarea rows=10 cols=80>@execparams</textarea>");
+}
 	} else {
-	    print("Unexpected returnvalue $retval from Glimpse\n");
+	    print("Unexpected return value $retval from Glimpse\n");
 	}
     }
 }
 
-($Conf, $HTTP, $Path) = &glimpse_init;
+($Conf, $HTTP, $Path, $head) = &glimpse_init;
 $searchtext = $HTTP->{'param'}->{'string'};
 $regexp = $HTTP->{'param'}->{'regexp'};
+$regexp = $Conf->{'regexp'};
+$find = $HTTP->{'param'}->{'find'};
+$findi = $HTTP->{'param'}->{'findi'};
+$search_sensitive = defined $HTTP->{'param'}->{'case'} ? defined $HTTP->{'param'}->{'case'} =~ /1|on|yes/ : 0;
+$filter = $HTTP->{'param'}->{'filter'};
+sub cleanFilter
+{
+  my $filter = shift;
+$filter =~ s|\+| |g;
+$filter =~ s|%5B|[|gi;
+$filter =~ s|%5D|]|gi;
+$filter =~ s|%5E|^|gi;
+$filter =~ s|%2B|+|gi;
+$filter =~ s|%2A|*|gi;
+$filter =~ s|%21|!|g;
+$filter =~ s|%28|(|g;
+$filter =~ s|%29|)|g;
+$filter =~ s|%3F|?|gi;
+$filter =~ s{%24}{\$}g;
+$filter =~ s|%40|\\@|g;
+$filter =~ s/%7C/|/gi;
+  return $filter;
+}
+$filter = cleanFilter($filter);
+$filter = $HTTP->{'param'}->{'filter'};
+$filter =~ tr/+/ /;
+$filter =~ s/%(\w\w)/chr(hex $1)/ge;
+$filter =~ s/`//g;
+
+$find_warning = 0;
+if (defined $findi && $findi ne '') {
+  if (defined $find && $find ne '') {
+   $find_warning = $find ne $findi;
+  } else {
+   #$find = $findi;
+  }
+}
+sub cleanFind {
+my $find = shift;
+$find =~ s/["`'<>|()-]+//g;
+$find =~ s|%2f|/|gi;
+$find =~ s|%24|\$|g;
+$find =~ s|%5c|\\|gi;
+$find =~ s|%2a|*|gi;
+return $find;
+}
+$find = cleanFind($find);
 $searchtext =~ tr/+/ /;
 $searchtext =~ s/%(\w\w)/chr(hex $1)/ge;
 
+my $tree = $HTTP->{'param'}->{'tree'};
+if ($tree && ($tree ne $Conf->{'treename'})) {
+$head .= "Refresh: 0; url=../$tree/search?string=$searchtext&find=$find&filter=$filter
+";
+}
+
+print "$head
+";
 
 &makeheader('search');
 &search;
 &makefooter('search');
+

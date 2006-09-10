@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl
+#!/usr/bin/perl
 # $Id$
 
 # genxref.pl --	Finds identifiers in a set of C files using an
@@ -26,7 +26,7 @@
 
 ######################################################################
 
-use lib 'lib/';
+use lib 'lib';
 use integer;
 use DB_File;
 use strict;
@@ -279,10 +279,12 @@ sub c_clean {
     }
     $contents =~ s/[\01\02\03\04\05]//gs;
 
+=pod
     # Remove all but outermost blocks.  (No local variables.)
     while ($contents =~ s/\{([^\{\}]*)\}/
 	   "\05".&wash($1)/ges) {}
     $contents =~ s/\05/\{\}/gs;
+=cut
 
     # This operator-stuff messes things up. (C++)
     $contents =~ s/operator[\<\>\=\!\+\-\*\%\/]{1,2}/operator/g;

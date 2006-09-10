@@ -1,7 +1,22 @@
-<Files ~ (find|search|source|ident|diff)$>
-SetHandler cgi-script
-order allow,deny
+<Files ~ .$>
+order deny,allow
 allow from all
+allow from localhost
+allow from 127.0.0.1
+allow from landfill.mozilla.org
+allow from landfill.bugzilla.org
+allow from landfill
+</Files>
+<Files ~ (find|search|source|ident|diff|test.pl)$>
+SetHandler cgi-script
+order deny,allow
+allow from all
+#allow from 10.251.0.10
+#allow from 66.227.241.236
+allow from localhost
 deny from agni.nut.roche.com
 deny from user198.anilam.com
+#deny from all
 </Files>
+DirectoryIndex index.cgi
+Options +ExecCGI +FollowSymlinks

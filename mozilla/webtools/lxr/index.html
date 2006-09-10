@@ -1,5 +1,13 @@
 <HEAD>
  <TITLE>Mozilla Cross-Reference</TITLE>
+ <style type="text/css">
+<!--
+div {
+text-align: right;
+white-space: nowrap; 
+}
+-->
+</style>
 </HEAD>
 <BODY   BGCOLOR="#FFFFFF" TEXT="#000000"
 	LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
@@ -11,107 +19,51 @@
 
 <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=6 WIDTH="100%">
  <TR>
-  <TH ALIGN=CENTER COLSPAN=3>
-   <BR>
-   <FONT SIZE="+3">Mozilla Cross-Reference</FONT>
-   <BR><BR>
-  </TH>
- </TR>
- <TR>
   <TD VALIGN=TOP ALIGN=LEFT>
    <TABLE BORDER CELLPADDING=10 CELLSPACING=0 WIDTH="100%" BGCOLOR="#EEEEEE">
     <TR>
      <TD>
 
       <BR>
-      <P ALIGN=CENTER><FONT SIZE="+1"><B>Starting Points:</B></FONT>
-      <P>
+      <H2 ALIGN=CENTER>Starting Points:</H2>
 
-      <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=2 WIDTH="100%">
-       <TR>
-        <TD>
-         <FONT SIZE="+1"><A HREF="source/"><B>/mozilla</B></A></FONT>
-        </TD>
-        <TD>
+         <FONT SIZE="+1"><A HREF="source/"><B>$rootname</B></A></FONT>
+<BR>
          <FONT SIZE="-1">
-          Click here to start<BR>
-          browsing at the root<BR>
+          Browse from the root
           of the directory tree.
          </FONT>
-        </TD>
-       </TD>
-      </TABLE>
-
-      <P>
-
-      <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
-       <TR>
-	<TD ALIGN=RIGHT VALIGN=TOP NOWRAP>
-
-	 <FORM METHOD=GET ACTION="search">
-	  <TABLE BORDER=0 CELLPADDING=2 CELLSPACING=0>
-	   <TR>
-	    <TD ALIGN=RIGHT VALIGN=CENTER>
-	     <A HREF="search"><B>Text <BR>Search:</A></B>
-	    </TD>
-	    <TD>
-	     <INPUT TYPE=TEXT NAME="string" VALUE="" SIZE=8>
+<P>
+<FORM METHOD=GET ACTION="search">
+<div align="right"><nobr>
+	     <B><A HREF="search">Text Search</A>:</B>
+	     <INPUT TYPE=TEXT NAME="string" VALUE="" SIZE=11>
 	     <INPUT TYPE=SUBMIT VALUE="Find">
-	    </TD>
-	   </TR>
-	   <TR>
-	    <TD></TD>
-	    <TD><FONT SIZE="-1">
-	     Use this field to search<BR>through all the text.</FONT>
-	    </TD>
-	   </TR>
-	  </TABLE>
-	 </FORM>
-
-	 <FORM METHOD=GET ACTION="find">
-	  <TABLE BORDER=0 CELLPADDING=2 CELLSPACING=0>
-	   <TR>
-	    <TD ALIGN=RIGHT VALIGN=CENTER>
-	     <A HREF="find"><B>File Name <BR>Search:</B></A>
-	    </TD>
-	    <TD>
-	      <INPUT TYPE=TEXT NAME="string" maxlength="29" VALUE="" SIZE=8>
+</nobr></div>
+<FONT SIZE="-1">
+	     Use this field to search through all the text.</FONT>
+</FORM>
+<P>
+<FORM METHOD=GET ACTION="find">
+<div align="right"><nobr>
+	     <B><A HREF="find">File Name Search</A>:</B>
+	      <INPUT TYPE=TEXT NAME="string" maxlength="29" VALUE="" SIZE=11>
 	      <INPUT TYPE=SUBMIT VALUE="Find">
-	    </TD>
-	   </TR>
-	   <TR>
-	    <TD></TD>
-	    <TD><FONT SIZE="-1">
-	     Use this field to search<BR>for files by name.</FONT>
-	    </TD>
-	   </TR>
-	  </TABLE>
-	 </FORM>
-
-	 <FORM METHOD=GET ACTION="ident">
-	  <TABLE BORDER=0 CELLPADDING=2 CELLSPACING=0>
-	   <TR>
-	    <TD ALIGN=RIGHT VALIGN=CENTER>
-	     <A HREF="ident"><B>Identifier <BR>Search:</B></A>
-	    </TD>
-	    <TD>
-	     <INPUT TYPE=TEXT NAME="i" VALUE="" SIZE=8>
+</nobr></div>
+<FONT SIZE="-1">
+	     Use this field to search for files by name.</FONT>
+</FORM>
+</P>
+<FORM METHOD=GET ACTION="ident">
+<div align="right"><nobr>
+	     <B><A HREF="ident">Identifier Search</A>:</B>
+	     <INPUT TYPE=TEXT NAME="i" VALUE="" SIZE=11>
 	     <INPUT TYPE=SUBMIT VALUE="Find">
-	    </TD>
-	   </TR>
-	   <TR>
-	    <TD></TD>
-	    <TD><FONT SIZE="-1">
-	     Use this field to find<BR>a particular function,<BR>variable, etc.</FONT>
-	    </TD>
-	   </TR>
-	  </TABLE>
-	 </FORM>
-
-	</TD>
-       </TR>
-      </TABLE>
-
+</nobr></div>
+<FONT SIZE="-1">
+	     Use this field to find a particular function, variable, etc.</FONT>
+</FORM>
+</p>
      </TD>
     </TR>
    </TABLE>
@@ -120,6 +72,8 @@
   <TD WIDTH=8></TD>
   <TD ALIGN=LEFT VALIGN=TOP>
 
+   <H1>Mozilla Cross-Reference</H1>
+
 <P>This is a cross referenced display of the 
 <A HREF="http://www.mozilla.org/">Mozilla</A> source code.
 The sources displayed are those that are currently checked 
@@ -127,6 +81,12 @@ in to the mainline of the mozilla.org
 <A HREF="http://www.mozilla.org/cvs.html">CVS server</A>;
 these pages are updated many times a day, so they should
 be pretty close to the latest-<WBR>and-<WBR>greatest.
+
+<P>Well, some of the roots are actually from other cvs repositories,
+If the name of the root doesn't resemble something that sounds like
+a thing from cvs.mozilla.org, then it probably isn't, :). You can
+read <a href="source/CVS/Root">CVS/Root</a> to find out if this
+Root is really from cvs.mozilla.org or something else.
 
 <P>It's possible to search through the entire Mozilla source text;
 or to search for files whose name matches a pattern; or to search
@@ -158,6 +118,22 @@ for ``Linux Cross Reference.'')  Check out the
  <A HREF="mailto:lxr@linux.no">Per Kristian Gjermshus</A>, the
  authors of the LXR tool, for writing it and making it available
  to the world.
+
+<p>
+Complaints about this MXR should be directed elsewhere as none of
+the people listed on this page know or care about this MXR.
+
+<p>
+There are two MXRs running on <a
+href="http://landfill.mozilla.org">landfill.mozilla.org</a>:
+<ul>
+<li><a href="../../mxr/$treename/">MXR for $treename</a> - pure <a
+href="../webtools/source/lxr">MXR from cvs</a>
+<li><a href="../../mxr-test/$treename/">MXR-test for $treename</a> - MXR from <a
+href="../webtools/source/lxr">MXR from cvs</a> with <a
+href="../../mxr-test/patches">patches</a> applied (see <a
+href="../../mxr-test/patches/README">README</a>)
+</ul>
 
   </TD>
  </TR>

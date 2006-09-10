@@ -3,22 +3,22 @@
 <head>
 <META NAME="GENERATOR" CONTENT="lxr-1998-06-10: http://lxr.linux.no">
 <title>$title</title>
-</head>
+$stylesheets</head>
 
 <BODY   BGCOLOR="#FFFFFF" TEXT="#000000"
 	LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
 
-<TABLE BGCOLOR="#000000" WIDTH="100%" BORDER=0 CELLPADDING=0 CELLSPACING=0>
+<TABLE class=banner BGCOLOR="#000000" WIDTH="100%" BORDER=0 CELLPADDING=0 CELLSPACING=0>
 <TR><TD><A HREF="http://www.mozilla.org/"><IMG
  SRC="http://www.mozilla.org/images/mozilla-banner.gif" ALT=""
  BORDER=0 WIDTH=600 HEIGHT=58></A></TD></TR></TABLE>
 
-<TABLE BORDER=0 CELLPADDING=12 CELLSPACING=0 WIDTH="100%">
+<TABLE class=header BORDER=0 CELLPADDING=12 CELLSPACING=0 WIDTH="100%">
  <TR>
-  <TD ALIGN=LEFT VALIGN=CENTER>
-   <NOBR><FONT SIZE="+2"><B>
-    <A HREF="$baseurl">Mozilla Cross Reference:</A>
-   </B></FONT></NOBR><I>$treename</I>
+  <TD ALIGN=LEFT VALIGN=MIDDLE>
+   <nobr><font size="+2"><b><a href="$dotdoturl">Mozilla Cross Reference</a></b>
+</nobr><i><a href="$baseurl">$treename</a></i>
+</font>
    <BR><B>$banner</B>
   </TD>
 
@@ -26,9 +26,9 @@
    <TABLE BORDER CELLPADDING=12 CELLSPACING=0>
     <TR>
      <TD NOWRAP BGCOLOR="#FAFAFA">
-      <A HREF="http://bonsai.mozilla.org/cvslog.cgi?file=mozilla$pathname&rev=$cvsbranch&mark=$cvsversion">CVS Log</A><BR>
-      <A HREF="http://bonsai.mozilla.org/cvsblame.cgi?file=mozilla$pathname&rev=$cvsversion">CVS Blame</A><BR>
-      <A HREF="?raw=1">Raw output</A>
+      <A HREF="http://bonsai.mozilla.org/cvslog.cgi?file=$pathname&amp;rev=$cvsbranch&amp;mark=$cvsversion">CVS Log</A><BR>
+      <A HREF="http://bonsai.mozilla.org/cvsblame.cgi?file=$pathname&amp;rev=$cvsversion">CVS Blame</A><BR>
+      <A HREF="$thisurl?raw=1">Raw file</A><BR>
      </TD>
     </TR>
    </TABLE>
@@ -44,9 +44,9 @@
          changes to<BR>this file in<BR>the last:
         </TD>
         <TD NOWRAP>
-         <A HREF="http://bonsai.mozilla.org/cvsquery.cgi?branch=$cvsbranch&file=mozilla$pathname&date=day">day</A><BR>
-         <A HREF="http://bonsai.mozilla.org/cvsquery.cgi?branch=$cvsbranch&file=mozilla$pathname&date=week">week</A><BR>
-         <A HREF="http://bonsai.mozilla.org/cvsquery.cgi?branch=$cvsbranch&file=mozilla$pathname&date=month">month</A><BR>
+         <A HREF="http://bonsai.mozilla.org/cvsquery.cgi?branch=$cvsbranch&amp;file=$pathname&amp;date=day">day</A><BR>
+         <A HREF="http://bonsai.mozilla.org/cvsquery.cgi?branch=$cvsbranch&amp;file=$pathname&amp;date=week">week</A><BR>
+         <A HREF="http://bonsai.mozilla.org/cvsquery.cgi?branch=$cvsbranch&amp;file=$pathname&amp;date=month">month</A><BR>
         </TD>
        </TR>
       </TABLE>

@@ -63,8 +63,17 @@ case "$1" in
 'classic')
     time cvs -Q -d $CVSROOT checkout -P -rMozillaSourceClassic_19981026_BRANCH MozillaSource
     ;;
+'security')
+    time cvs -Q -d $CVSROOT checkout -P mozilla/security
+    time cvs -Q -d $CVSROOT checkout -P mozilla/nsprpub
+    ;;
 'ef')
     time cvs -Q -d $CVSROOT checkout -P mozilla/ef
+    time cvs -Q -d $CVSROOT checkout -P mozilla/nsprpub
+    ;;
+'js')
+    time cvs -Q -d $CVSROOT checkout -P mozilla/js
+    time cvs -Q -d $CVSROOT checkout -P mozilla/js2
     time cvs -Q -d $CVSROOT checkout -P mozilla/nsprpub
     ;;
 'grendel')
@@ -76,11 +85,32 @@ case "$1" in
 'mozilla')
     time cvs -Q -d $CVSROOT checkout -P mozilla
     ;;
+'webtools')
+    time cvs -Q -d $CVSROOT checkout -P mozilla/webtools
+    ;;
 'nspr')
     time cvs -Q -d $CVSROOT checkout -P NSPR
     ;;
 'seamonkey')
-    time cvs -Q -d $CVSROOT checkout -P SeaMonkeyAll
+    time make -f mozilla/client.mk pull_all MOZ_CO_PROJECT=all
+    ;;
+'aviarybranch')
+    time make -f mozilla/client.mk pull_all MOZ_CO_PROJECT=all
+    ;;
+'mozilla1.0')
+    time make -f mozilla/client.mk pull_all MOZ_CO_PROJECT=all
+    ;;
+'mozilla1.0.x')
+    time make -f mozilla/client.mk pull_all MOZ_CO_PROJECT=all
+    ;;
+'mozilla1.4.x')
+    time make -f mozilla/client.mk pull_all MOZ_CO_PROJECT=all
+    ;;
+'mozilla1.7.x')
+    time make -f mozilla/client.mk pull_all MOZ_CO_PROJECT=all
+    ;;
+'mozilla1.8.x')
+    time make -f mozilla/client.mk pull_all MOZ_CO_PROJECT=all
     ;;
 'gnome')
     CVSROOT=:pserver:anonymous@cvs-mirror.mozilla.org:/cvs/gnome

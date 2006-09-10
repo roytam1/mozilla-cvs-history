@@ -98,6 +98,17 @@ Multiple Trees
         Alias /seamonkey /opt/webtools/lxr.mozilla.org
  </VirtualHost>
 
+<<<timeless
+You can also use symlinks (mxr on landfill uses them)
+ln -s . ef
+ln -s . nspr
+ln -s . js
+ln -s . webtools
+
+Currently root/index.html is not automatically generated,
+it could and should be.
+===
+>>>
 
 The lxr.conf file:
 
@@ -148,6 +159,9 @@ The lxr.conf file:
 
  sourcerootname 
   The name of the root (more....)
+
+ sourceprefix
+  The prefix between the global prefix and the starting point for the root.
 
  incprefix 
   Where to find source specific include files.

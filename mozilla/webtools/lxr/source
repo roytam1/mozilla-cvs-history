@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl
+#!/usr/bin/perl
 # $Id$
 # source --	Present sourcecode as html, complete with references
 #
@@ -23,7 +23,7 @@
 ######################################################################
 
 use Local;
-use lib 'lib/';
+use lib 'lib';
 use SimpleParse;
 use LXR::Common;
 use LXR::Config;
@@ -35,8 +35,14 @@ sub diricon {
 	$img = "/icons/back.gif";
 	$link = $parentdir;
     } else {
-#	$img = "/icons/folder.gif";
-	$img = "internal-gopher-menu";
+	my $dir =  $Path->{'real'}.$filename;
+	$dir =~ s#/$##;
+	if (-l $dir) {
+	    $img = "/icons/forward.gif";
+        } else {
+	    $img = "/icons/folder.gif";
+#	    $img = "internal-gopher-menu";
+	}
 	$link = $Path->{'virt'}.$filename;
     }
     return(&fileref("<IMG ALIGN=ABSBOTTOM BORDER=0 SRC=\"$img\">", $link));
@@ -55,15 +61,15 @@ sub fileicon {
     my $img;
 
     if ($filename =~ /^.*\.[ch]$/) {
-#	$img = "/icons/c.gif";
-	$img = "internal-gopher-text";
+	$img = "/icons/c.gif";
+#	$img = "internal-gopher-text";
     } elsif ($filename =~ /^.*\.(idl|cpp?|cc|java)$/) {
 	# TODO: Find a nice icon for c++ files (KDE?)
-#	$img = "/icons/c.gif";
-	$img = "internal-gopher-text";
+	$img = "/icons/c.gif";
+#	$img = "internal-gopher-text";
     } else {		
-#	$img = "/icons/text.gif";
-	$img = "internal-gopher-unknown";
+	$img = "/icons/text.gif";
+#	$img = "internal-gopher-unknown";
     }
 
     return(&fileref("<IMG ALIGN=ABSBOTTOM BORDER=0 SRC=\"$img\">",
@@ -72,7 +78,12 @@ sub fileicon {
 
 
 sub filename {
-    return(&fileref($filename, $Path->{'virt'}.$filename));
+    my $string =
+        &fileref($filename, $Path->{'virt'}.$filename);
+    if (isHTML($filename) || isCSS($filename)) {
+        $string =~ s/(a href=".*)(")/$1?force=1$2/g;
+    }
+    return $string;
 }
 
 
@@ -173,7 +184,18 @@ sub printdir {
     local @files;
     local $parentdir;
 
-
+{
+my $q;
+print "<!--
+";
+foreach $q (keys %ENV) {
+print "export $q='$ENV{$q}'
+";
+}
+print "
+-->
+";
+}
     $template = "<ul>\n\$files{\n<li>\$iconlink \$namelink\n}</ul>\n";
     if ($Conf->htmldir) {
 	unless (open(TEMPL, $Conf->htmldir)) {
@@ -189,6 +211,8 @@ sub printdir {
     if (opendir(DIR, $Path->{'real'})) {
 	foreach $f (sort(grep/^[^\.]/,readdir(DIR))) {
 	    if ($f eq "CVS") {
+		# skip it
+	    } elsif ($f eq ".svn") {
 		# skip it
 	    } elsif (-d $Path->{'real'}.$f) {
 		push(@dirs,"$f/");
@@ -230,6 +254,30 @@ sub printdir {
 			  ('files',	\&direxpand)));
 }
 
+sub isHTML {
+my $file = shift;
+    return ($file =~ /\.html?$/);
+}
+
+sub isCSS {
+my $file = shift;
+    return ($file =~ /stylesheet\.(css)$/) ||
+          (($file =~ /\.(css)$/) && $ENV{HTTP_ACCEPT} !~ 'text/html');
+}
+
+sub isImage {
+my $file = shift;
+    return 
+          (($file =~ /\.([jmp][pnm]e?g|gif)$/) && $ENV{HTTP_ACCEPT} !~ 'text/html');
+}
+
+sub noWrap {
+my $file = shift;
+    return isHTML($file) ||
+           isImage($file) ||
+           isCSS($file);
+}
+
 sub printfile {
     my $string;
 
@@ -237,8 +285,25 @@ sub printfile {
 	&printdir;
     } else {
 	if (open(SRCFILE, $Path->{'realf'})) {
-	    if (($Path->{'file'} =~ /\.(html)$/)) {
+	    if (isHTML($Path->{'file'})) {
+                local $/ = undef;
 		print <SRCFILE>;
+	    } elsif (isCSS($Path->{'file'})) {
+$head = "Content-Type: text/css\r\n\r\n";
+                print $head;
+                local $/ = undef;
+my $body = <SRCFILE>;
+                print $body;
+            } elsif (isImage($Path->{'file'})) {
+                my $kind = 'x-unknown';
+                $kind = 'jpeg' if $Path->{'file'} =~ /\.jpe?g$/;
+                $kind = 'gif' if $Path->{'file'} =~ /\.gif$/; 
+                $kind = 'png' if $Path->{'file'} =~ /\.[jp]ng$/;
+                print 
+$head = "Content-Type: image/$kind\r\n\r\n";
+                local $/ = undef;
+my $body = <SRCFILE>;
+                print $body;
 	    } elsif ($Path->{'file'} =~ /README$/i) {
 		print("<pre lang='en'>");
 		while(<SRCFILE>) {
@@ -250,23 +315,23 @@ sub printfile {
 	        if (($Path->{'file'} =~ /nsI\w*\.idl$/)) {
 	          my $base = basename($Path->{'file'}, ".idl"); 
                   my $dir = $Path->{'virt'};
-                  $dir =~ s#([^/]+)(.*)#$1#;
+                  $dir =~ s#^/([^/]+)(.*)#$1#;
                   my $doxRoot = "http://unstable.elemental.com/mozilla/build/latest/mozilla/" . $dir . "/dox/";
-                  print("<P>Inheritance diagram for " . $base . ":</P>\n");
-                  print("<P ALIGN=\"CENTER\">\n");
-                  print("<IMG SRC=\"" . $doxRoot . "interface" . $base . "__inherit__graph.gif\"");
-		  print(" ALIGN=\"CENTER\" BORDER=\"0\" ALT=\"Inheritance graph\">\n");
-                  print("</P>\n");
-                  print("<P>Collaboration diagram for " . $base . ":</P>\n");
-                  print("<P ALIGN=\"CENTER\">\n");
-                  print("<IMG SRC=\"" . $doxRoot . "interface" . $base . "__coll__graph.gif\"");
-		  print(" ALIGN=\"CENTER\" BORDER=\"0\" ALT=\"Collaboration graph\">\n");
-                  print("</P>\n");
-                  print("<P ALIGN=\"CENTER\">\n");
-                  print("[ <A HREF=\"" .$doxRoot . "interface" . $base . ".html\">\n");
-                  print("<I>" . $base . "</I> Interface Reference</A> |");
-                  print(" <a href=\"" . $doxRoot . "graph_legend.html\">Graph Legend</a> ]\n");
-                  print("</P>\n");
+                  print("<p>Inheritance diagram for " . $base . ":</P>\n");
+                  print("<p align=\"center\">\n");
+                  print("<img src=\"" . $doxRoot . "interface" . $base . "__inherit__graph.gif\"");
+		  print(" align=\"center\" border=\"0\" alt=\"Inheritance graph\">\n");
+                  print("</p>\n");
+                  print("<p>Collaboration diagram for " . $base . ":</p>\n");
+                  print("<p align=\"center\">\n");
+                  print("<Iimg src=\"" . $doxRoot . "interface" . $base . "__coll__graph.gif\"");
+		  print(" align=\"center\" border=\"0\" alt=\"Collaboration graph\">\n");
+                  print("</p>\n");
+                  print("<p align=\"center\">\n");
+                  print("[ <a href=\"" .$doxRoot . "interface" . $base . ".html\">\n");
+                  print("<i>" . $base . "</i> Interface Reference</a> |");
+                  print(" <a href=\"" . $doxRoot . "graph_legend.htm l\">Graph Legend</a> ]\n");
+                  print("</p>\n");
                 }
 		print("<pre lang='en'>");
 		&markupfile(\*SRCFILE, $Path->{'virt'}, $Path->{'file'},
@@ -275,7 +340,9 @@ sub printfile {
 	    }
 	    close(SRCFILE);
 	} else {
+
 	    print("<p align=center>\n<i>This file does not exist.</i>\n");
+            print("<p>Maybe you can <a href='".$Conf->baseurl."/find?string=".$Path->{'file'}."'>find it elsewhere</a>.\n");
 	    if (-f $Path->{'real'}.$Path->{'file'}) {
 		&warning("Unable to open ".$Path->{'realf'});
 	    }
@@ -283,11 +350,46 @@ sub printfile {
     }
 }
 
-($Conf, $HTTP, $Path) = &init($0);
+($Conf, $HTTP, $Path, $head) = &init($0);
+my $exit = 0;
+
+#only allow access to registered roots
+#for anything else redirect to the directory containing source
+unless (defined $Path->{'root'}) {
+    #if we're accessed as source/ then we need to be a bit more directed.
+    my $path = $ENV{'PATH_INFO'};
+    $path =~ s|[^/]+||g;
+    $path =~ s{/}{../}g;
+    my $prefix = $path || './';
+    my $refresh = "Refresh: 0; url=$prefix
+";
+    $head .= "$refresh
+";
+    $exit = 1;
+}
 
 #if the file is html then don't print a header because the file
 #has its own -dme
-if (!($Path->{'file'} =~ /\.(html)$/)) {
+if (($ENV{'PATH_INFO'} !~ m|/$|) && (-d $Path->{'realf'})) {
+ my @dirs = split m|/|, $Path->{'realf'};
+ my $entryname = $dirs[$#dirs];
+ my $refresh = "Refresh: 0; url=$entryname/
+";
+    $head .= "$refresh
+";
+
+ $exit = 1;
+} 
+
+my $strange_inexplicable_check = (-f $Path->{'real'}.$Path->{'file'});
+my $skip_wrap = $Path->{'file'} && noWrap($Path->{'file'});
+print "$head
+" if (!$Path->{'file'} || isHTML($Path->{'file'}) || !$skip_wrap);
+exit if $exit;
+
+if (
+    !$skip_wrap
+   ) {
     if ($Path->{'file'}) {
 	&makeheader('source');
     } else {
@@ -297,7 +399,9 @@ if (!($Path->{'file'} =~ /\.(html)$/)) {
 
 &printfile;
 
-if (!($Path->{'file'} =~ /\.(html)$/)) {
+if (
+    !$skip_wrap
+   ) {
     if ($Path->{'file'}) {
 	&makefooter('source');
     } else {

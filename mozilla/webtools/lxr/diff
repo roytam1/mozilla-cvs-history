@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl
+#!/usr/bin/perl
 # $Id$
 
 # diff --	Display diff output with markup.
@@ -23,7 +23,7 @@
 
 ######################################################################
 
-use lib 'lib/';
+use lib 'lib';
 use SimpleParse;
 use LXR::Common;
 use LXR::Config;

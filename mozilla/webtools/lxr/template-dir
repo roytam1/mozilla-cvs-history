@@ -1,19 +1,19 @@
-<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=2 WIDTH="100%">
-  <TR BGCOLOR="#F38C00">
-    <TH WIDTH="1%">&nbsp;</TH>
-    <TH WIDTH="1%" NOWRAP ALIGN=LEFT>Name</TH>
-    <TH WIDTH="1%" NOWRAP ALIGN=RIGHT>Size</TH>
-    <TH WIDTH="1%" NOWRAP ALIGN=LEFT>Date (GMT)</TH>
-    <TH WIDTH="96%" NOWRAP ALIGN=LEFT>Description</TH>
-  </TR>
+<table border=0 cellspacing=0 cellpadding=2 width="100%">
+  <tr bgcolor="#F38C00">
+    <th width="1%">&nbsp;</th>
+    <th width="1%" nowrap align=left>Name</th>
+    <th width="1%" nowrap align=right>Size</th>
+    <th width="1%" nowrap align=left>Date (GMT)</th>
+    <th width="96%" nowrap align=left>Description</th>
+  </tr>
   $files{
-  <TR BGCOLOR="$bgcolor" VALIGN=TOP>
-    <TD NOWRAP VALIGN=TOP ALIGN=RIGHT>$iconlink</TD>
-    <TD NOWRAP VALIGN=TOP ALIGN=LEFT>$namelink </TD>
-    <TD NOWRAP VALIGN=TOP ALIGN=RIGHT>$filesize{$kbytes} </TD>
-    <TD NOWRAP VALIGN=TOP ALIGN=RIGHT><FONT SIZE="-1">$modtime</FONT> </TD>
-    <TD VALIGN=TOP ALIGN=LEFT>$description{<i>$desctext</i>} 
-    </TD>
-  </TR>
+  <tr bgcolor="$bgcolor" valign=top>
+    <td nowrap valign=top align=right>$iconlink</td>
+    <td nowrap valign=top align=left>$namelink </td>
+    <td nowrap valign=top align=right>$filesize{$kbytes} </td>
+    <td nowrap valign=top align=right><font size="-1">$modtime</font> </td>
+    <td valign=top align=left>$description{<i>$desctext</i>} 
+    </td>
+  </tr>
   }
-</TABLE>
+</table>

@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl
+#!/usr/bin/perl
 # $Id$
 
 # find   --	Find files
@@ -23,17 +23,29 @@
 
 ######################################################################
 
-use lib 'lib/';
+use lib 'lib';
 use LXR::Common;
 use LXR::Config;
 
 sub find {
-    print("<P ALIGN=CENTER>\n",
-	  "Search for files (by name) using regular expressions.\n",
-	  "<BR>(Need some <A HREF=\"search-help.html\">Hints</A> ",
-	  "on performing searches?)</P>\n");
+    print(qq{
+<p align=center>
+Search for files (by name) using <a href="search-help.html">regular expressions</a>.
+</p>
+});
+print (qq#
+<script>
+function changetarget() {
+ if (document.getElementById) {
+  var form = document.getElementById('find');
+  var target = document.getElementById('tree');
+  form.action='../'+target.value+'/find';
+ }
+}
+</script>
+#);
 
-    print ("<form method=get action=\"find\">\n");
+    print ("<form name=find id=find method=get action=\"find\">\n");
 
     foreach ($Conf->allvariables) {
 	if ($Conf->variable($_) ne $Conf->vardefault($_)) {
@@ -44,11 +56,30 @@ sub find {
     
     $searchtext =~ s/\+/ /g;
     $searchtext =~ s/%2b/+/ig;
-    print("<B>Find file: </B><input type=text name=\"string\" ",
-	  "value=\"",$searchtext,"\" size=50>\n",
-	  "<input type=submit value=\"search\">\n",
-	  "</form>\n");
-
+    print(qq{
+<b>Find file: </b><input type=text name="string"
+value="$searchtext" size=50>
+in <select name=tree id=tree onchange='changetarget()'>
+});
+my @treelist = @{$Conf->{'trees'}};
+print "<!-- ".$Conf->{'treename'}." -->";
+foreach my $othertree (@treelist) {
+my $default=$othertree eq $Conf->{'treename'} ? ' selected=1' : '';
+print "<option$default value='$othertree'>$othertree</option>
+";
+}
+print (qq{</select>
+<input type=submit value="search">
+</form>
+});
+if (0) {
+print "Research using ";
+foreach my $othertree (@treelist) {
+print "<a href='../$othertree/find?string=$searchtext'>$othertree</a> ";
+}
+print "<br>";
+}
+    $searchtext =~ s/\+/\\+/g;
 
     if ($searchtext ne "") {
 	my $filename = $Conf->dbdir."/.glimpse_filenames";
@@ -57,19 +88,47 @@ sub find {
 	    return;
 	}
 	print("<P><hr>\n");
+        print("<p><i>If you can't find what you're looking for, you can always <a href='search?string=$searchtext&regexp=on'>search</a> for it.</i></p>"); 
 	$sourceroot = $Conf->sourceroot;
+	$file = <FILELLISTING>;
+	if ($file !~ /^\d+$/) {
+	    &warning("glimpse file format doesn't match expectations.");
+	    return;
+	}
 	while($file = <FILELLISTING>) {
 	    $file =~ s/^$sourceroot//;
 	    if($file =~ /$searchtext/i) {
-		print(&fileref("$file", "$file"),"<br>\n");
+		my $filepath='';
+		my $filename;
+		($file,$filename)=split m|/(?!.*/)|, $file;
+                if (length $file) {
+		    foreach my $filepart (split m|/|, $file) {
+			$filepath .= "$filepart/";
+			print(&fileref($filepart ? $filepart : '/', "$filepath"),
+				$filepart && '/');
+		    }
+                } else {
+		    $filepath = '/';
+		    print(&fileref('/', "/"));
+		}
+		$filepath.=$filename;
+		print(&fileref("$filename", "$filepath"),
+		      "<br>\n");
 	    }
 	}
     }
 }
 
 
-($Conf, $HTTP, $Path) = &init;
+($Conf, $HTTP, $Path, $head) = &init;
 $searchtext = $HTTP->{'param'}->{'string'};
+my $tree = $HTTP->{'param'}->{'tree'};
+if ($tree && ($tree ne $Conf->{'treename'})) {
+$head .= "Refresh: 0; url=../$tree/find?string=$searchtext
+";
+}
+print "$head
+";
 
 &makeheader('find');
 &find;
