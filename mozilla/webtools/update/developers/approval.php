@@ -116,7 +116,7 @@ while ($row = mysql_fetch_array($sql_result)) {
     $id = $row["ID"];
     $type = $row["Type"];
     $uri = $row["URI"];
-    $approvalUri = basename($row['URI']);
+    $approvalFileName = basename($uri);
     $reviewnotes = $row["ReviewNotes"];
     
     // Get author information
@@ -229,14 +229,14 @@ while ($row = mysql_fetch_array($sql_result)) {
      // Escape each instance of name/uri for javascript.
     if ($type == "T") {
         // Show Themes install link.
-        echo "<a href=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'./approvalfile.php?file=".addslashes($approvalUri)."','".addslashes($row['Name']." ".$row['Version'])."'))\">Install Now</a>\n";
+        echo "<a href=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'./approvalfile.php/".addslashes($approvalFileName)."','".addslashes($row['Name']." ".$row['Version'])."'))\">Install Now</a>\n";
     } else {
         // Show extensions install link.
-        echo "<a href=\"javascript:void(InstallTrigger.install({'".addslashes($row['Name']." ".$row['Version'])."':'./approvalfile.php?file=".addslashes($approvalUri)."'}))\">Install Now</a>\n";
+        echo "<a href=\"javascript:void(InstallTrigger.install({'".addslashes($row['Name'].$row['Version'])."':'./approvalfile.php/".addslashes($approvalFileName)."'}))\">Install Now</a>\n";
     }
 
     // Show a download now link.
-    echo " | <a href=\"./approvalfile.php?file=".$approvalUri."\">Download Now</a>";
+    echo " | <a href=\"./approvalfile.php/".$approvalFileName."\">Download Now</a>";
 
     // Show previews link
     echo $listpreview;

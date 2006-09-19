@@ -2,29 +2,19 @@
 require_once('../core/init.php');
 require_once('./core/sessionconfig.php');
 
-if ($_SESSION["level"]=="admin" or $_SESSION["level"]=="editor") {
-    //Do Nothing, they're good. :-)
-} else {
+if ($_SESSION["level"]!="admin" && $_SESSION["level"]!="editor") {
     require_once(HEADER);
-    echo"<h1>Access Denied</h1>\n";
-    echo"You do not have access to the Approval Queue.";
+    echo '<h1>Access Denied</h1>';
+    echo '<p>You do not have access to the Approval Queue.</p>';
     require_once(FOOTER);
     exit;
 }
 
-$filename = str_replace(' ', '+', stripslashes(basename($_GET['file'])));
+$filename = basename($_SERVER['PATH_INFO']);
 $file = REPO_PATH . "/approval/$filename";
-if (file_exists($file)) {
-    header('Content-Description: File Transfer');
-    header('Content-Type: application/octet-stream');
-    header('Content-Length: ' . filesize($file));
-    header('Content-Disposition: attachment; filename=' . $filename);
-    readfile($file);
-} else {
-    require_once(HEADER);
-    echo"<h1>File Not Found</h1>\n";
-    echo"The file you requested could not be found.";
-    require_once(FOOTER);
-    exit;
-}
+header('Content-Description: File Transfer');
+header('Content-Type: application/octet-stream');
+header('Content-Length: ' . filesize($file));
+header('Content-Disposition: attachment; filename=' . $filename);
+readfile($file);
 ?>
