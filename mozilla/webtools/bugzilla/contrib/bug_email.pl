@@ -1173,7 +1173,7 @@ END
     # Send the 'you did it'-reply
     Reply( $SenderShort, $Message_ID,"Bugzilla success (ID $id)", $reply );
 
-    Bugzilla::BugMail::Send($id) if( ! $test);
+    Bugzilla::BugMail::Send($id, {'changer' => $reporter}) if (!$test);
     
 } else {
     # There were critical errors in the mail - the bug couldn't be inserted. !
