@@ -36,8 +36,6 @@
 //
 // ***** END LICENSE BLOCK *****
 	
-require_once('./core/config.php');
-
 $page_title = 'Site Temporarily Unavailable :: Mozilla Update';
 require_once(HEADER);
 ?>
