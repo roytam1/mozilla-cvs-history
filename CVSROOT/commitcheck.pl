@@ -25,6 +25,11 @@ $fullname{'166'} = 'Browser';
 $mode{'190'} = 'Open';
 $branch{'190'} = 'HEAD';
 $fullname{'190'} = 'Bugzilla';
+$mode{'204'} = 'Closed';
+$branch{'204'} = 'BUGZILLA-2_18-BRANCH';
+$fullname{'204'} = 'Bugzilla2.18';
+$blessed{'204'} = [];
+$super{'204'} = ['justdave%bugzilla.org','lpsolit%gmail.com','mkanat%bugzilla.org','myk%mozilla.org',];
 $mode{'191'} = 'Restricted';
 $branch{'191'} = 'BUGZILLA-2_20-BRANCH';
 $fullname{'191'} = 'Bugzilla2.20';
@@ -323,6 +328,9 @@ $branch{'93'} = 'HEAD';
 $fullname{'93'} = 'Zlib';
 sub GetT {
 ($b,$_) = (@_);
+if ($b eq 'BUGZILLA-2_18-BRANCH') {
+if (m:^mozilla/webtools/bugzilla/.*$:) {return '204';}
+}
 if ($b eq 'BUGZILLA-2_20-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '191';}
 }
