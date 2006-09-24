@@ -30,6 +30,11 @@ $branch{'191'} = 'BUGZILLA-2_20-BRANCH';
 $fullname{'191'} = 'Bugzilla2.20';
 $blessed{'191'} = [];
 $super{'191'} = ['myk%mozilla.org','mkanat%bugzilla.org','lpsolit%gmail.com','justdave%bugzilla.org',];
+$mode{'203'} = 'Closed';
+$branch{'203'} = 'BUGZILLA-2_22-BRANCH';
+$fullname{'203'} = 'Bugzilla2.22';
+$blessed{'203'} = [];
+$super{'203'} = ['justdave%bugzilla.org','lpsolit%gmail.com','mkanat%bugzilla.org','myk%mozilla.org',];
 $mode{'55'} = 'Open';
 $branch{'55'} = 'HEAD';
 $fullname{'55'} = 'Build Config';
@@ -320,6 +325,9 @@ sub GetT {
 ($b,$_) = (@_);
 if ($b eq 'BUGZILLA-2_20-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '191';}
+}
+if ($b eq 'BUGZILLA-2_22-BRANCH') {
+if (m:^mozilla/webtools/bugzilla/.*$:) {return '203';}
 }
 if ($b eq 'HEAD') {
 if (m:^mozilla/gfx/src/mac/.*$:) {return '178';}
