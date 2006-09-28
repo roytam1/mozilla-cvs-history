@@ -43,4 +43,6 @@
  * developement.
  */
 	$Route->connect('/tests', array('controller' => 'tests', 'action' => 'index'));
+  
+  $Route->connect('/privacy-policy', array('controller' => 'pages', 'action' => 'privacy'));
 ?>
