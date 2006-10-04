@@ -27,12 +27,12 @@ ALL			$CVSROOT/CVSROOT/cvsmailfilter.pl -a -u http://bonsai.mozilla.org -r /cvsr
 
 # crypto checkins deserve more attention
 mozilla/security	$CVSROOT/CVSROOT/cvsmailfilter.pl -c -u http://bonsai.mozilla.org -r /cvsroot -s %s dev-tech-crypto-checkins@lists.mozilla.org
-mozilla/extensions/psm-glue	$CVSROOT/CVSROOT/cvsmailfilter.pl -c -u http://bonsai.mozilla.org -r /cvsroot -s %s dev-tech-crypto-checkins@mozilla.org
-mozilla/netwerk/security	$CVSROOT/CVSROOT/cvsmailfilter.pl -c -u http://bonsai.mozilla.org -r /cvsroot -s %s dev-tech-crypto-checkins@mozilla.org
-mozilla/netwerk/protocol/http/src	$CVSROOT/CVSROOT/cvsmailfilter.pl -c -u http://bonsai.mozilla.org -r /cvsroot -s %s dev-tech-crypto-checkins@mozilla.org
-mozilla/netwerk/socket/ssl	$CVSROOT/CVSROOT/cvsmailfilter.pl -c -u http://bonsai.mozilla.org -r /cvsroot -s %s dev-tech-crypto-checkins@mozilla.org
-mozilla/netwerk/socket/tests	$CVSROOT/CVSROOT/cvsmailfilter.pl -c -u http://bonsai.mozilla.org -r /cvsroot -s %s dev-tech-crypto-checkins@mozilla.org
-mozilla/dbm	$CVSROOT/CVSROOT/cvsmailfilter.pl -c -u http://bonsai.mozilla.org -r /cvsroot -s %s dev-tech-crypto-checkins@mozilla.org
+mozilla/extensions/psm-glue	$CVSROOT/CVSROOT/cvsmailfilter.pl -c -u http://bonsai.mozilla.org -r /cvsroot -s %s dev-tech-crypto-checkins@lists.mozilla.org
+mozilla/netwerk/security	$CVSROOT/CVSROOT/cvsmailfilter.pl -c -u http://bonsai.mozilla.org -r /cvsroot -s %s dev-tech-crypto-checkins@lists.mozilla.org
+mozilla/netwerk/protocol/http/src	$CVSROOT/CVSROOT/cvsmailfilter.pl -c -u http://bonsai.mozilla.org -r /cvsroot -s %s dev-tech-crypto-checkins@lists.mozilla.org
+mozilla/netwerk/socket/ssl	$CVSROOT/CVSROOT/cvsmailfilter.pl -c -u http://bonsai.mozilla.org -r /cvsroot -s %s dev-tech-crypto-checkins@lists.mozilla.org
+mozilla/netwerk/socket/tests	$CVSROOT/CVSROOT/cvsmailfilter.pl -c -u http://bonsai.mozilla.org -r /cvsroot -s %s dev-tech-crypto-checkins@lists.mozilla.org
+mozilla/dbm	$CVSROOT/CVSROOT/cvsmailfilter.pl -c -u http://bonsai.mozilla.org -r /cvsroot -s %s dev-tech-crypto-checkins@lists.mozilla.org
 
 # misc modules 
 mozilla/webtools/bugzilla   $CVSROOT/CVSROOT/cvsmailfilter.pl -c -u http://bonsai.mozilla.org -r /cvsroot -s %s cvs-checkins@bugzilla.org
