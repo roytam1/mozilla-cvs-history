@@ -1,4 +1,6 @@
 <?php
+require_once('inc_tshirt.php');
+
 if (($_SESSION["level"] == "admin" or $_SESSION["level"] == "editor")) {
     $sql ="SELECT TM.ID FROM `main` TM INNER JOIN `version` TV ON TM.ID = TV.ID  WHERE `approved` = '?' GROUP BY `URI`";
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
@@ -21,7 +23,15 @@ if ($_SESSION['level'] == 'user') {
 <li><A HREF="<?=WEB_PATH?>/developers/usermanager.php">Your Profile</A></li>
 
 <?php
-} 
+}
+
+if (tshirtEligible()) {
+?>
+
+<li><A HREF="<?=WEB_PATH?>/developers/tshirt.php">T-Shirt Request</A></li>
+
+<?php
+}
 
 if ($_SESSION['level'] == 'editor') {
 ?>
