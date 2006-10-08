@@ -75,19 +75,19 @@
  *
  *
  */
-	define('CAKE_SESSION_SAVE', 'php');
+	define('CAKE_SESSION_SAVE', 'database');
 /**
  * If using you own table name for storing sessions
  * set the table name here.
  * DO NOT INCLUDE PREFIX IF YOU HAVE SET ONE IN database.php
  *
  */
-	define('CAKE_SESSION_TABLE', 'cake_sessions');
+	define('CAKE_SESSION_TABLE', 'sessions');
 /**
  * Set a random string of used in session.
  *
  */
-	define('CAKE_SESSION_STRING', 'h874dPHn8i19CI43vZ0n30L3SHtS4mze06TkBuA91P7x2FyzXC');
+	define('CAKE_SESSION_STRING', 'DYhG93b0qyJfIxfs2guVoUubWwvniR2G0FgaC9mi');
 /**
  * Set the name of session cookie
  *
