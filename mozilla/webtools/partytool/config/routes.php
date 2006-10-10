@@ -37,6 +37,7 @@
 /**
  * ...and connect the rest of 'Pages' controller's urls.
  */
+  $Route->connect('/pages/edit', array('controller' => 'pages', 'action' => 'edit'));
   $Route->connect('/pages/*', array('controller' => 'pages', 'action' => 'display'));
   $Route->connect('/privacy-policy', array('controller' => 'pages', 'action' => 'privacy'));
 ?>
