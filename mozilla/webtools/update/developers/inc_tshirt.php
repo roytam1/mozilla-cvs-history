@@ -34,7 +34,7 @@ function tshirtEligible($showDetails = false) {
         }
     }
 
-/*    $addons = mysql_query("SELECT * FROM `main` LEFT JOIN `authorxref` ON `main`.`ID`=`authorxref`.`ID` WHERE `authorxref`.`UserID`='{$userid}'");
+    $addons = mysql_query("SELECT * FROM `main` LEFT JOIN `authorxref` ON `main`.`ID`=`authorxref`.`ID` WHERE `authorxref`.`UserID`='{$userid}'");
     while($row = mysql_fetch_array($addons)) {
         $latestversionqry = mysql_query("SELECT * FROM version WHERE ID='".$row['ID']."' AND AppID=1 AND DateAdded<'2006-10-01 00:00:00' AND MaxAppVer!='' ORDER BY DateAdded DESC LIMIT 1");
         $latestversion = mysql_fetch_array($latestversionqry);
@@ -47,7 +47,7 @@ function tshirtEligible($showDetails = false) {
                 $details[] = $row['Name'].' ('.$latestversion['MaxAppVer'].' - '.$latestversion['DateAdded'].')';
             }
         }
-    }*/
+    }
     
     if ($showDetails == true) {
         return $details;
