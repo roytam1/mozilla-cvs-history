@@ -336,6 +336,9 @@ if ($b eq 'BUGZILLA-2_22-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '203';}
 }
 if ($b eq 'HEAD') {
+if (m:^mozilla/modules/zlib/.*$:) {return '93';}
+if (m:^mozilla/webtools/bugzilla/.*$:) {return '190';}
+if (m:^mozilla/gfx/src/xprint/.*$:) {return '179';}
 if (m:^mozilla/view/.*$:) {return '96';}
 if (m:^mozilla/gfx/cairo/.*$:) {return '201';}
 if (m:^mozilla/gfx/src/thebes/.*$:) {return '201';}
@@ -508,9 +511,6 @@ if (m:^mozilla/xpcom/windbgdlg/.*$:) {return '89';}
 if (m:^mozilla/suite/.*$:) {return '188';}
 if (m:^mozilla/xpcom/io/.*$:) {return '90';}
 if (m:^mozilla/grendel/.*$:) {return '189';}
-if (m:^mozilla/modules/zlib/.*$:) {return '93';}
-if (m:^mozilla/webtools/bugzilla/.*$:) {return '190';}
-if (m:^mozilla/gfx/src/xprint/.*$:) {return '179';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
