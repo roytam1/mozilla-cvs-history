@@ -77,10 +77,15 @@ $user = mysql_fetch_array($userqry);
         <td>
             <select name="size">
                 <option></option>
-                <option value="S"<?=($user['UserTShirtSize'] == 'S') ? ' selected' : ''?>>Small</option>
-                <option value="M"<?=($user['UserTShirtSize'] == 'M') ? ' selected' : ''?>>Medium</option>
-                <option value="L"<?=($user['UserTShirtSize'] == 'L') ? ' selected' : ''?>>Large</option>
-                <option value="2X"<?=($user['UserTShirtSize'] == '2X') ? ' selected' : ''?>>Extra Large</option>
+                <option value="Men-S"<?=($user['UserTShirtSize'] == 'Men-S') ? ' selected' : ''?>>Men - Small</option>
+                <option value="Men-M"<?=($user['UserTShirtSize'] == 'Men-M') ? ' selected' : ''?>>Men - Medium</option>
+                <option value="Men-L"<?=($user['UserTShirtSize'] == 'Men-L') ? ' selected' : ''?>>Men - Large</option>
+                <option value="Men-XL"<?=($user['UserTShirtSize'] == 'Men-XL') ? ' selected' : ''?>>Men - XL</option>
+                <option value="Men-2XL"<?=($user['UserTShirtSize'] == 'Men-2XL') ? ' selected' : ''?>>Men - 2XL</option>
+                <option value="Women-S"<?=($user['UserTShirtSize'] == 'Women-S') ? ' selected' : ''?>>Women - Small</option>
+                <option value="Women-M"<?=($user['UserTShirtSize'] == 'Women-M') ? ' selected' : ''?>>Women - Medium</option>
+                <option value="Women-L"<?=($user['UserTShirtSize'] == 'Women-L') ? ' selected' : ''?>>Women - Large</option>
+                <option value="Women-XL"<?=($user['UserTShirtSize'] == 'Women-XL') ? ' selected' : ''?>>Women - XL</option>
             </select>
         </td>
     </tr>
