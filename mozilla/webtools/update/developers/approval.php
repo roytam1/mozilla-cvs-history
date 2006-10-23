@@ -6,6 +6,7 @@ $page_title = 'Mozilla Update :: Developer Control Panel :: Manage Approval Queu
 require_once(HEADER);
 $skipqueue='true';
 require_once('./inc_sidebar.php');
+require_once('../core/inc_version_comparison.php');
 
 if ($_SESSION["level"]=="admin" or $_SESSION["level"]=="editor") {
     //Do Nothing, they're good. :-)
@@ -177,6 +178,17 @@ while ($row = mysql_fetch_array($sql_result)) {
         $updatingAddon = false;
     }
 
+    //Updates that give previously non-existant Firefox 2 compatability should be high priority
+    $latestversionQry = mysql_query("SELECT * FROM `version` WHERE `ID`='{$id}' AND `AppID`='1' AND `approved`='YES' AND `MaxAppVer`!='' ORDER BY `DateAdded` DESC LIMIT 1");
+    $latestversion = mysql_fetch_array($latestversionQry);
+ 
+    if (mysql_num_rows($latestversionQry) > 0 && NS_CompareVersions($latestversion['MaxAppVer'], '2.0.0.*') == -1 && $updatingAddon == true) {
+        $priority = 1;
+    }
+    else {
+        $priority = 0;
+    }
+
     // Start of extension listing  
     echo "<TABLE BORDER=0 CELLPADDING=1 CELLSPACING=0 ALIGN=CENTER STYLE=\"border: 0px; width: 100%;\">\n";
 
@@ -216,9 +228,15 @@ while ($row = mysql_fetch_array($sql_result)) {
         $apps[$j]["display"] = $appstring;
         $apps[$j]["value"] = $row3["AppName"]." ".$row3["MinAppVer"]."-".$row3["MaxAppVer"];
         $compatability .= $appstring;
+
+        //If this update does not include Firefox 2 compatability, it cannot be high priority
+        if ($row3['AppName'] == 'Firefox' && NS_CompareVersions($row3['MaxAppVer'], '2.0.0.*') == 1) {
+            $priority = 0;
+        }
+
         $j++;
     }
-    
+
     echo "</h2></TD><TR>\n";
 
 
@@ -283,6 +301,10 @@ while ($row = mysql_fetch_array($sql_result)) {
   
     if($reviewnotes != "") {
         echo "<TR><TD COLSPAN=2 style=\"font-size: 8pt;\"><strong>Notes to Reviewer:</strong> ".nl2br($reviewnotes)."</TD></TR>\n";
+    }
+
+    if ($priority == 1) {
+        echo "<TR><TD COLSPAN=2 style=\"font-size: 8pt; font-weight: bold;\">Priority: <span style=\"color: red;\">HIGH</span></TD></TR>";
     }
 
     // Author cannot approve their own work unless they are an admin
