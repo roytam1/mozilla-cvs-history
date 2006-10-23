@@ -58,6 +58,15 @@ require_once('config.php');
 // This prevents unnecessary database connections.
 //
 
+function logAndDie()
+{
+    error_log('MySQL Error -- ' . mysql_errno().': ' . mysql_error(), 0);
+    // No caching error pages, please!
+    header("Cache-Control: no-store, no-cache");
+    require_once(FILE_PATH.'/busy.php');
+    exit;
+}
+
 // If we have the SHADOW_DB flag set, use the SHADOW_DB - otherwise use the regular db.
 if (defined('USE_SHADOW_DB')) {
     // SHADOW_DB_HOST, SHADOW_DB_USER, SHADOW_DB_PASS, SHADOW_DB_NAME are set in ./config.php
@@ -65,9 +74,7 @@ if (defined('USE_SHADOW_DB')) {
     if (is_resource($connection)) {
         $db = @mysql_select_db(SHADOW_DB_NAME, $connection);
     } else {
-        error_log('MySQL Error -- '.mysql_errno().': '.mysql_error(),0);
-        require_once(FILE_PATH.'/busy.php');
-        exit;
+        logAndDie();
     }
 } else { 
     // DB_HOST, DB_USER, DB_PASS, DB_NAME are set in ./config.php
@@ -75,9 +82,7 @@ if (defined('USE_SHADOW_DB')) {
     if (is_resource($connection)) {
         $db = @mysql_select_db(DB_NAME, $connection);
     } else {
-        error_log('MySQL Error -- '.mysql_errno().': '.mysql_error(),0);
-        require_once(FILE_PATH.'/busy.php');
-        exit;
+        logAndDie();
     }
 }
 
