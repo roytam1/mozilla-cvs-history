@@ -206,60 +206,74 @@ $type = $srcimagehw[2];
 if (!$width) {$width=$src_width;}
 if (!$height) {$height=$src_height;}
 
-if ($type=="2" or $type=="3") {
+if ($type == "2" && $src_height <= 150 && $src_width <= 200) {
+     // It's all OK, don't screw with it!
+     copy($sourcepath, FILE_PATH . "/" . $previewpath);
+     //Lets attempt to add the record to the DB.
+     if (checkFormKey()) {
+         $sql = "INSERT INTO `previews` (`PreviewURI`,`ID`,`caption`,`preview`) VALUES ('/$previewpath','$id','$caption','$preview');";
+         $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 
-//Destination Properties for the Display Image
-//Output Image Dimensions
+         if ($sql_result=="1") {
+             echo"Your File $filename ($filesize bytes) has been successfully uploaded and added to the database. <a href=\"?id=$id\">Click here</a> to refresh this page to show the added entry for editing.<BR><BR>";
+         }
+     }
 
-//Limit Max.
-if ($width > $preview_width_max) {$width=$preview_width_max;}
-if ($height > $preview_height_max) {$height=$preview_height_max;}
-
-$dest_width="$width"; // Destination Width /$tn_size_width
-$dest_height_fixed="$height"; // Destination Height / $tn_size_height (Fixed)
-$dest_height= ($src_height * $dest_width) / $src_width; // (Aspect Ratio Variable Height
-if ($dest_height>$dest_height_fixed) {
-$dest_height = $dest_height_fixed;
-$dest_width = ($src_width * $dest_height) / $src_height;
-}
-$quality="80"; // JPEG Image Quality
-$outputpath=FILE_PATH.'/'.$previewpath; //path of output image ;-)
-
-if ($type=="2") {
-$src_img = imagecreatefromjpeg("$sourcepath");
-} else if ($type=="3") {
-$src_img = imagecreatefrompng("$sourcepath");
-$quality="95";
-}
-$dst_img = imagecreatetruecolor($dest_width,$dest_height);
-imagecopyresampled($dst_img, $src_img, 0, 0, 0, 0, $dest_width, $dest_height, $src_width, $src_height);
-imageinterlace($dst_img, 1);
-$white = ImageColorAllocate($dst_img, 255, 255, 255);
-//Make a couple of size corrections for the auto-border feature..
-$dest_width = $dest_width-1;
-$dest_height = $dest_height-1;
-imagerectangle ($dst_img, 0, 0, $dest_width, $dest_height, $white);
-$status = imagejpeg($dst_img, "$outputpath", $quality);
-imagedestroy($src_img);
-imagedestroy($dst_img);
-
-if ($status=="1") {
-//Lets attempt to add the record to the DB.
- if (checkFormKey()) {
-  $sql = "INSERT INTO `previews` (`PreviewURI`,`ID`,`caption`,`preview`) VALUES ('/$previewpath','$id','$caption','$preview');";
-  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-
-  if ($sql_result=="1") {
-   echo"Your File $filename ($filesize bytes) has been successfully uploaded and added to the database. <a href=\"?id=$id\">Click here</a> to refresh this page to show the added entry for editing.<BR><BR>";
- }
-}
-
-}
 } else {
-echo"<span class=error>The image you uploaded has errors and could not be processed successfully. The image may be corrupt or not in the correct format. This tool only supports jpeg and png images. Please try your operation again.</span><br><br>\n";
+    if ($type=="2" or $type=="3") {
 
-}
+        //Destination Properties for the Display Image
+        //Output Image Dimensions
 
+        //Limit Max.
+        if ($width > $preview_width_max) {$width=$preview_width_max;}
+        if ($height > $preview_height_max) {$height=$preview_height_max;}
+
+        $dest_width="$width"; // Destination Width /$tn_size_width
+        $dest_height_fixed="$height"; // Destination Height / $tn_size_height (Fixed)
+        $dest_height= ($src_height * $dest_width) / $src_width; // (Aspect Ratio Variable Height
+            if ($dest_height>$dest_height_fixed) {
+                $dest_height = $dest_height_fixed;
+                $dest_width = ($src_width * $dest_height) / $src_height;
+            }
+            $quality="80"; // JPEG Image Quality
+            $outputpath=FILE_PATH.'/'.$previewpath; //path of output image ;-)
+
+            if ($type=="2") {
+                $src_img = imagecreatefromjpeg("$sourcepath");
+                } else if ($type=="3") {
+                    $src_img = imagecreatefrompng("$sourcepath");
+                    $quality="95";
+                }
+                $dst_img = imagecreatetruecolor($dest_width,$dest_height);
+                imagecopyresampled($dst_img, $src_img, 0, 0, 0, 0, $dest_width, $dest_height, $src_width, $src_height);
+                imageinterlace($dst_img, 1);
+                $white = ImageColorAllocate($dst_img, 255, 255, 255);
+                //Make a couple of size corrections for the auto-border feature..
+                $dest_width = $dest_width-1;
+                $dest_height = $dest_height-1;
+                imagerectangle ($dst_img, 0, 0, $dest_width, $dest_height, $white);
+                $status = imagejpeg($dst_img, "$outputpath", $quality);
+                imagedestroy($src_img);
+                imagedestroy($dst_img);
+
+                if ($status=="1") {
+                //Lets attempt to add the record to the DB.
+                if (checkFormKey()) {
+                    $sql = "INSERT INTO `previews` (`PreviewURI`,`ID`,`caption`,`preview`) VALUES ('/$previewpath','$id','$caption','$preview');";
+                    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+
+                    if ($sql_result=="1") {
+                        echo"Your File $filename ($filesize bytes) has been successfully uploaded and added to the database. <a href=\"?id=$id\">Click here</a> to refresh this page to show the added entry for editing.<BR><BR>";
+                    }
+                }
+                }
+            } else {
+                echo"<span class=error>The image you uploaded has errors and could not be processed successfully. The image may be corrupt or not in the correct format. This tool only supports jpeg and png images. Please try your operation again.</span><br><br>\n";
+
+            }
+
+        }
 }
 
 ?>
