@@ -6,7 +6,7 @@ $page_title = 'Mozilla Update :: Developer Control Panel :: Reviews Manager';
 require_once(HEADER);
 require_once('./inc_sidebar.php');
 
-if ($_SESSION["level"] !=="admin" and $_SESSION["level"] !=="editor") {
+if ($_SESSION["level"] !=="admin") {
     echo"<h1>Access Denied</h1>\n";
     echo"You do not have access to the Editor Reviews Manager";
     require_once(FOOTER);
