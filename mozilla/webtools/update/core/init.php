@@ -62,8 +62,8 @@ function logAndDie()
 {
     error_log('MySQL Error -- ' . mysql_errno().': ' . mysql_error(), 0);
     // No caching error pages, please!
-    header('Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0, private');
-    header('Pragma: no-cache');
+    header('Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0, private',true);
+    header('Pragma: no-cache',true);
     require_once(FILE_PATH.'/busy.php');
     exit;
 }
