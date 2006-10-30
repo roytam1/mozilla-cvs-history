@@ -471,7 +471,6 @@ class AMO_Object
                 r.title,
                 v.size,
                 v.version,
-                v.hash,
                 p.previewuri,
                 u.username
             FROM
