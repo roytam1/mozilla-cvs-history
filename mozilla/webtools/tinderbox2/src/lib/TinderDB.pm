@@ -117,7 +117,7 @@ $VERSION = '#tinder_version#';
 
 $DEBUG = 1;
 
-  # What border should the status legends use?  new browers allow us to
+  # What border should the status legends use?  new browsers allow us to
   # frame the parts of the legend without putting a border arround the
   # individual cells.
 

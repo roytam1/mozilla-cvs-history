@@ -750,7 +750,7 @@ bug reports, please provide the version of CGI.pm, the version of
 Perl, the name and version of your Web server, and the name and
 version of the operating system you are using.  If the problem is even
 remotely browser dependent, please provide information about the
-affected browers as well.
+affected browsers as well.
 
 =head1 SEE ALSO
 

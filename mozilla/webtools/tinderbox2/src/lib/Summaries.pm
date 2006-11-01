@@ -383,7 +383,7 @@ EOF
 
 
   $body .= "\t<TABLE BORDER=1 CELLPADDING=1 CELLSPACING=1>\n";
-  $body .= "\t\t<TR><TH ALIGH=LEFT COLSPAN=$colspan>";
+  $body .= "\t\t<TR><TH ALIGN=LEFT COLSPAN=$colspan>";
   
   $body .= HTMLPopUp::Link(
                            "linktxt"=> ("$TREE is $TREE_STATE".
