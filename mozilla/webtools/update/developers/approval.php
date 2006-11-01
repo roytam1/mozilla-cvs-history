@@ -183,10 +183,16 @@ while ($row = mysql_fetch_array($sql_result)) {
     $latestversion = mysql_fetch_array($latestversionQry);
  
     if (mysql_num_rows($latestversionQry) > 0 && NS_CompareVersions($latestversion['MaxAppVer'], '2.0.0.*') == -1 && $updatingAddon == true) {
-        $priority = 1;
+        $priority = 'HIGH (Firefox 2 Compatibility)';
     }
     else {
-        $priority = 0;
+        $priority = '';
+    }
+
+    //Featured add-ons also get high priority
+    $featured = mysql_query("SELECT `rID` FROM `reviews` WHERE `ID`='{$id}' AND `featured`='YES'");
+    if (mysql_num_rows($featured) > 0) {
+        $priority = 'HIGH (Featured Add-on)';
     }
 
     // Start of extension listing  
@@ -231,7 +237,7 @@ while ($row = mysql_fetch_array($sql_result)) {
 
         //If this update does not include Firefox 2 compatability, it cannot be high priority
         if ($row3['AppName'] == 'Firefox' && NS_CompareVersions($row3['MaxAppVer'], '2.0.0.*') == 1) {
-            $priority = 0;
+            $priority = '';
         }
 
         $j++;
@@ -303,8 +309,8 @@ while ($row = mysql_fetch_array($sql_result)) {
         echo "<TR><TD COLSPAN=2 style=\"font-size: 8pt;\"><strong>Notes to Reviewer:</strong> ".nl2br($reviewnotes)."</TD></TR>\n";
     }
 
-    if ($priority == 1) {
-        echo "<TR><TD COLSPAN=2 style=\"font-size: 8pt; font-weight: bold;\">Priority: <span style=\"color: red;\">HIGH</span></TD></TR>";
+    if (!empty($priority)) {
+        echo "<TR><TD COLSPAN=2 style=\"font-size: 8pt; font-weight: bold;\">Priority: <span style=\"color: red;\">{$priority}</span></TD></TR>";
     }
 
     // Author cannot approve their own work unless they are an admin
