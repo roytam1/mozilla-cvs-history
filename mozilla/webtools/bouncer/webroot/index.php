@@ -40,7 +40,7 @@
  */
 	if (!defined('ROOT')) {
 		 //define('ROOT', 'FULL PATH TO DIRECTORY WHERE APP DIRECTORY IS LOCATED DO NOT ADD A TRAILING DIRECTORY SEPARATOR';
-		 //You should also use the DS define to seperate your directories
+		 //You should also use the DS define to separate your directories
 		 define('ROOT', DS.'home'.DS.'morgamic'.DS.'public_html');
 	}
 	if (!defined('APP_DIR')) {
@@ -53,7 +53,7 @@
  */
 	if (!defined('CAKE_CORE_INCLUDE_PATH')) {
 		 //define ('CAKE_CORE_INCLUDE_PATH', FULL PATH TO DIRECTORY WHERE CAKE CORE IS INSTALLED DO NOT ADD A TRAILING DIRECTORY SEPARATOR';
-		 //You should also use the DS define to seperate your directories
+		 //You should also use the DS define to separate your directories
 		 define('CAKE_CORE_INCLUDE_PATH',  DS.'usr'.DS.'local'.DS.'lib'.DS.'php'.DS.'cake');
 	}
 ///////////////////////////////
