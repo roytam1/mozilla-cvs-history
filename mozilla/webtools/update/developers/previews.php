@@ -210,7 +210,7 @@ $height = $_POST["height"];
 $preview = escape_string($_POST["preview"]);
 $caption = escape_string($_POST["caption"]);
 
-$name = str_replace(" ","_",$name);
+$name = preg_replace('/\W/','_',$name);
 $previewpath = strtolower("images/previews/$name-$i.jpg");
 
 if ($preview=="YES") {
