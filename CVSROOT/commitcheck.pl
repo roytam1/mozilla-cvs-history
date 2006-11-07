@@ -436,8 +436,6 @@ if (m:^mozilla/profile/.*$:) {return '120';}
 if (m:^mozilla/tools/.*$:) {return '112';}
 if (m:^mozilla/xpcom/typelib/.*$:) {return '117';}
 if (m:^mozilla/js/src/xpconnect/.*$:) {return '118';}
-if (m:^mozilla/xpcom/libxpt/.*$:) {return '118';}
-if (m:^mozilla/xpcom/reflect/.*$:) {return '118';}
 if (m:^mozilla/mailnews/news/.*$:) {return '122';}
 if (m:^mozilla/mailnews/[^/]*$:) {return '123';}
 if (m:^mozilla/mailnews/mime/[^/]*$:) {return '124';}
