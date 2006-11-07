@@ -45,6 +45,9 @@ require_once('../core/inc_version_comparison.php');
  * @param boolean $showDetails
  */
 function tshirtEligible($showDetails = false) {
+
+    return false;
+
     $userid = mysql_real_escape_string($_SESSION['uid']);
     $details = array();
 
