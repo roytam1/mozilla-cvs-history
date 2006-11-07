@@ -261,6 +261,9 @@ $fullname{'160'} = 'String';
 $mode{'187'} = 'Open';
 $branch{'187'} = 'HEAD';
 $fullname{'187'} = 'SVG';
+$mode{'205'} = 'Open';
+$branch{'205'} = 'HEAD';
+$fullname{'205'} = 'Tamarin';
 $mode{'202'} = 'Open';
 $branch{'202'} = 'HEAD';
 $fullname{'202'} = 'Testing Infrastructure';
@@ -404,6 +407,7 @@ if (m:^mozilla/layout/printing/.*$:) {return '98';}
 if (m:^mozilla/layout/tables/.*$:) {return '98';}
 if (m:^mozilla/layout/tools/.*$:) {return '98';}
 if (m:^mozilla/modules/libimg/mng/.*$:) {return '155';}
+if (m:^mozilla/js/tamarin/.*$:) {return '205';}
 if (m:^mozilla/layout/style/.*$:) {return '100';}
 if (m:^mozilla/docshell/.*$:) {return '101';}
 if (m:^mozilla/embedding/.*$:) {return '101';}
