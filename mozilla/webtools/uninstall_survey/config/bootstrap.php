@@ -55,7 +55,7 @@
   */
  define('DEFAULT_APP_NAME','Mozilla Firefox');
 
- define('DEFAULT_APP_VERSION','1.5');
+ define('DEFAULT_APP_VERSION','2.0');
 
  /**
   * We are adding applications dynamically based on the URL.  If a version of firefox
