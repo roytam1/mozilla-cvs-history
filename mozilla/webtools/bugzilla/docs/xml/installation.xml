@@ -608,8 +608,8 @@
         </para>
 
         <para>
-          For more information, see the "maildeliverymethod" parameter in 
-          <xref linkend="parameters" />.
+          For more information, see the <quote>mail_delivery_method</quote> parameter
+          in <xref linkend="parameters" />.
         </para>
       </note>
     
