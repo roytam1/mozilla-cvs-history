@@ -425,7 +425,13 @@ $authors = $_POST["authors"];
 <TR><TD><SPAN class="global">Author(s):*</SPAN></TD><TD><INPUT NAME="authors" TYPE="TEXT" VALUE="<?php echo"$authors"; ?>" SIZE=50></TD></TR>
 <TR><TD><SPAN class="global">Homepage</SPAN></TD> <TD><INPUT NAME="homepage" TYPE="TEXT" VALUE="<?php echo"$homepage"; ?>" SIZE=50 MAXLENGTH=200></TD></TR>
 <TR><TD><SPAN class="global">Description*</SPAN></TD> <TD><TEXTAREA NAME="description" ROWS=4 COLS=45><?php echo"$description"; ?></TEXTAREA></TD></TR>
-<TR><TD COLSPAN="2" ALIGN="CENTER"><INPUT NAME="submit" TYPE="SUBMIT" VALUE="Update">&nbsp;&nbsp;<INPUT NAME="reset" TYPE="RESET" VALUE="Reset Form">&nbsp;&nbsp;<INPUT NAME="submit" TYPE="SUBMIT" VALUE="Delete" ONCLICK="return confirm('Warning! Are you sure you want to delete <?php echo"$name"; ?>? This action is not reversable and will remove all files and listed versions.');"></TD></TR>
+<TR><TD COLSPAN="2" ALIGN="CENTER"><INPUT NAME="submit" TYPE="SUBMIT" VALUE="Update">&nbsp;&nbsp;<INPUT NAME="reset" TYPE="RESET" VALUE="Reset Form">&nbsp;&nbsp;<INPUT NAME="submit" TYPE="SUBMIT" VALUE="Delete" ONCLICK="return confirm('Warning! Are you sure you want to delete <?php echo"$name"; ?>? This action is not reversable and will remove all files and listed versions.');">
+<?
+if ($_SESSION['level'] == 'admin') {
+    echo '&nbsp;&nbsp;<input type="button" value="Disable" onClick="window.location=\'disable.php?id='.$id.'\';">';
+}
+?>
+</TD></TR>
 </FORM>
 </TABLE>
 &nbsp;&nbsp;&nbsp;<a href="itemoverview.php?id=<?php echo"$id"; ?>">&#171;&#171; Back to Item Overview</a>
