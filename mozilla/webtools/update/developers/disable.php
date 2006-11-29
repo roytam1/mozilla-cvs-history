@@ -59,7 +59,7 @@ $version_qry = mysql_query("SELECT version.*, os.* FROM version LEFT JOIN os ON 
 $author_qry = mysql_query("SELECT userprofiles.UserName, userprofiles.UserEmail, userprofiles.UserID FROM authorxref LEFT JOIN userprofiles ON authorxref.UserID = userprofiles.UserID WHERE authorxref.ID='{$addon_id}'");
 
 if (isset($_POST['submit'])) {
-    $email = mysql_real_escape_string($_POST['email']);
+    $email = $_POST['email'];
     
     echo '<h1>Disable '.$addon['Name'].'</h1>';
     
