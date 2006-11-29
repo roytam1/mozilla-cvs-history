@@ -141,7 +141,7 @@ if ($_POST["name"] && $_POST["authors"] && $_POST["categories"] && $_POST["descr
 
 //Phase One, update main values...
 if (checkFormKey()) {
-  $sql = "UPDATE `main` SET `Name`= '".escape_string($_POST[name])."', `Homepage`='".escape_string($_POST[homepage])."', `Description`='".escape_string($_POST[description])."', `DateUpdated`=NOW(NULL) WHERE `ID`='".escape_string($_POST[id])."' LIMIT 1";
+  $sql = "UPDATE `main` SET `Name`= '".escape_string($_POST[name])."', `Homepage`='".escape_string($_POST[homepage])."', `Description`='".escape_string($_POST[description])."' WHERE `ID`='".escape_string($_POST[id])."' LIMIT 1";
    //echo"$sql<br>\n"; //Debug
    $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
 if ($sql_result) {
