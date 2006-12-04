@@ -341,12 +341,6 @@ if ($b eq 'BUGZILLA-2_22-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '203';}
 }
 if ($b eq 'HEAD') {
-if (m:^mozilla/[^/]*$:) {return '19';}
-if (m:^mozilla/xpinstall/.*$:) {return '150';}
-if (m:^mozilla/gfx/src/xlib/.*$:) {return '121';}
-if (m:^mozilla/widget/src/xlib/.*$:) {return '121';}
-if (m:^mozilla/widget/src/xlibxtbin/.*$:) {return '121';}
-if (m:^mozilla/security/manager/.*$:) {return '151';}
 if (m:^mozilla/ef/.*$:) {return '46';}
 if (m:^mozilla/webtools/addons/.*$:) {return '185';}
 if (m:^mozilla/webtools/update/.*$:) {return '185';}
@@ -445,7 +439,7 @@ if (m:^mozilla/xpcom/threads/.*$:) {return '89';}
 if (m:^mozilla/xpcom/tools/.*$:) {return '89';}
 if (m:^mozilla/xpcom/windbgdlg/.*$:) {return '89';}
 if (m:^mozilla/suite/.*$:) {return '188';}
-if (m:^xpcom/reflect/xptcall/.*$:) {return '206';}
+if (m:^mozilla/xpcom/reflect/xptcall/.*$:) {return '206';}
 if (m:^mozilla/grendel/.*$:) {return '189';}
 if (m:^mozilla/modules/zlib/.*$:) {return '93';}
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '190';}
@@ -515,6 +509,12 @@ if (m:^mozilla/security/jss/.*$:) {return '145';}
 if (m:^mozilla/security/nss/.*$:) {return '145';}
 if (m:^mozilla/composer/.*$:) {return '173';}
 if (m:^mozilla/mstone/.*$:) {return '147';}
+if (m:^mozilla/[^/]*$:) {return '19';}
+if (m:^mozilla/xpinstall/.*$:) {return '150';}
+if (m:^mozilla/gfx/src/xlib/.*$:) {return '121';}
+if (m:^mozilla/widget/src/xlib/.*$:) {return '121';}
+if (m:^mozilla/widget/src/xlibxtbin/.*$:) {return '121';}
+if (m:^mozilla/security/manager/.*$:) {return '151';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
