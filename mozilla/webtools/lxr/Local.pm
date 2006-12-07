@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl
+#!/usr/bin/perl
 # $Id$
 # Local.pm -- Subroutines that need to be customized for each installation
 #
