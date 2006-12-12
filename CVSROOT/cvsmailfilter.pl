@@ -154,15 +154,16 @@ select(S); $| = 1; select(STDOUT);
 get_response_code(220);
 print S "EHLO $hostname\n";
 get_response_code(250);
-print S "MAIL FROM: cvsmailfilter\@$hostname\n";
+print S "MAIL FROM:<cvsmailfilter\@$hostname>\n";
 get_response_code(250);
 foreach $i (@mailto) {
-    print S "RCPT TO: $i\n";
+    print S "RCPT TO:<$i>\n";
     get_response_code(250);
 }
 print S "DATA\n";
 get_response_code(354);
-print S "Subject:  $cvsargs\n";
+print S "From: \"$username\" <cvsmailfilter\@$hostname>\n";
+print S "Subject: $cvsargs\n";
 print S "\n";
 
 print S $message . "\n";
