@@ -109,6 +109,9 @@ $fullname{'144'} = 'GTK Embedding Widget';
 $mode{'174'} = 'Open';
 $branch{'174'} = 'HEAD';
 $fullname{'174'} = 'Help System';
+$mode{'102'} = 'Open';
+$branch{'102'} = 'HEAD';
+$fullname{'102'} = 'HTML Parser';
 $mode{'62'} = 'Open';
 $branch{'62'} = 'HEAD';
 $fullname{'62'} = 'HTML to Text/PostScript Translation';
@@ -186,9 +189,6 @@ $fullname{'147'} = 'Mstone';
 $mode{'77'} = 'Open';
 $branch{'77'} = 'HEAD';
 $fullname{'77'} = 'NetLib';
-$mode{'102'} = 'Open';
-$branch{'102'} = 'HEAD';
-$fullname{'102'} = 'New HTML Parser';
 $mode{'100'} = 'Open';
 $branch{'100'} = 'HEAD';
 $fullname{'100'} = 'New HTML Style System';
@@ -341,20 +341,6 @@ if ($b eq 'BUGZILLA-2_22-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '203';}
 }
 if ($b eq 'HEAD') {
-if (m:^mozilla/rdf/.*$:) {return '52';}
-if (m:^mozilla/mailnews/movemail/.*$:) {return '157';}
-if (m:^mozilla/dbm/.*$:) {return '53';}
-if (m:^mozilla/uriloader/.*$:) {return '158';}
-if (m:^mozilla/build/.*$:) {return '55';}
-if (m:^mozilla/config/.*$:) {return '55';}
-if (m:^mozilla/editor/.*$:) {return '56';}
-if (m:^mozilla/string/.*$:) {return '160';}
-if (m:^mozilla/xpcom/string/.*$:) {return '160';}
-if (m:^mozilla/gfx/src/qt/.*$:) {return '161';}
-if (m:^mozilla/widget/src/qt/.*$:) {return '161';}
-if (m:^mozilla/directory/.*$:) {return '59';}
-if (m:^mozilla/gfx/src/ps/.*$:) {return '62';}
-if (m:^mozilla/gfx/src/psshared/.*$:) {return '62';}
 if (m:^mozilla/extensions/p3p/.*$:) {return '162';}
 if (m:^mozilla/modules/libpr0n/.*$:) {return '63';}
 if (m:^mozilla/layout/mathml/.*$:) {return '165';}
@@ -515,6 +501,20 @@ if (m:^mozilla/widget/src/gtk2/.*$:) {return '49';}
 if (m:^mozilla/widget/src/gtksuperwin/.*$:) {return '49';}
 if (m:^mozilla/widget/src/gtkxtbin/.*$:) {return '49';}
 if (m:^mozilla/extensions/vixen/.*$:) {return '156';}
+if (m:^mozilla/rdf/.*$:) {return '52';}
+if (m:^mozilla/mailnews/movemail/.*$:) {return '157';}
+if (m:^mozilla/uriloader/.*$:) {return '158';}
+if (m:^mozilla/dbm/.*$:) {return '53';}
+if (m:^mozilla/build/.*$:) {return '55';}
+if (m:^mozilla/config/.*$:) {return '55';}
+if (m:^mozilla/string/.*$:) {return '160';}
+if (m:^mozilla/xpcom/string/.*$:) {return '160';}
+if (m:^mozilla/editor/.*$:) {return '56';}
+if (m:^mozilla/gfx/src/qt/.*$:) {return '161';}
+if (m:^mozilla/widget/src/qt/.*$:) {return '161';}
+if (m:^mozilla/directory/.*$:) {return '59';}
+if (m:^mozilla/gfx/src/ps/.*$:) {return '62';}
+if (m:^mozilla/gfx/src/psshared/.*$:) {return '62';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
