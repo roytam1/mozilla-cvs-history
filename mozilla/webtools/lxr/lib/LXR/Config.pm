@@ -46,7 +46,7 @@ sub treeify {
             $self->{'treename'} = $1;
         }
         else {
-            die "Invalid treename in URL";
+            &fatal("Invalid treename in URL");
         }
 
         #Match the tree name against our list of trees and extract the proper
