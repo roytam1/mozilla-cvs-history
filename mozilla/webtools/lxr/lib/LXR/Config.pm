@@ -42,8 +42,12 @@ sub treeify {
         #To compute which tree we're looking at, grab the second to last
         #component from the script name which will be of the form: 
         # /seamonkey/source
-        $self->{'treename'} = $ENV{'SCRIPT_NAME'};
-        $self->{'treename'} =~ s/.*\/([^\/]+)\/[\w]*/$1/;
+        if ($ENV{'SCRIPT_NAME'} =~ /.*\/([^\/]+)\/[\w]*$/) {
+            $self->{'treename'} = $1;
+        }
+        else {
+            die "Invalid treename in URL";
+        }
 
         #Match the tree name against our list of trees and extract the proper
         #directory. Set "sourceroot" to this directory.
