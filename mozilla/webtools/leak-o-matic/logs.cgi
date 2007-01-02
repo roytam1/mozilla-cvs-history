@@ -28,13 +28,15 @@
 # available for perusal
 #
 
-use 5.004;
+use 5.006;
 use strict;
 use CGI;
 use POSIX;
 
 $::query = new CGI();
-$::logdir = $::query->param('logdir');
+# If you want to support specifying a different directory
+# you will need to change this code:
+#$::logdir = $::query->param('logdir');
 $::logdir = 'data' unless $::logdir; # default is 'data' subdir
 
 print $::query->header;

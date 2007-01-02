@@ -38,7 +38,7 @@
 # in a special directory; e.g., /etc/smrsh on a vanilla RH6.0 system.
 #
 
-use 5.004;
+use 5.006;
 use strict;
 use Getopt::Long;
 use File::Copy;
@@ -71,3 +71,4 @@ close(OUT);
 
 # Move to the data directory, if there is one.
 move($::file, $::opt_datadir) if $::opt_datadir;
+# $::opt_datadir does not seem to be set in current CVS.

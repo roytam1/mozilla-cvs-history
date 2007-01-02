@@ -30,12 +30,12 @@
 
 package Zip;
 
-require 5.000;
+require 5.006;
 
 use strict;
 
 use Carp;
-use IO;
+use IO qw(Handle);
 use Symbol;
 use Time::Local;
 

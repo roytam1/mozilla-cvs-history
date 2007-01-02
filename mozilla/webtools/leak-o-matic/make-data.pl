@@ -38,7 +38,7 @@
 # server-side mail handler.
 #
 
-use 5.004;
+use 5.006;
 use strict;
 use Getopt::Long;
 use POSIX "sys_wait_h";
@@ -54,8 +54,8 @@ sub ForkAndWait($$$) {
     my $pid = fork;
 
     if ($pid == 0) {
-        open(STDOUT, ">/dev/null");
-        open(STDERR, ">/dev/null");
+        open(STDOUT, '>', '/dev/null');
+        open(STDERR, '>', '/dev/null');
         chdir($::opt_dir);
         exec("$app");
         # bye!
@@ -98,7 +98,7 @@ ForkAndWait($::opt_dir, $::opt_app, 0);
 my @leakyclasses;
 
 {
-    open(BLOATLOG, $MasterBloatLog);
+    open(BLOATLOG, '<', $MasterBloatLog);
 
     LINE: while (<BLOATLOG>) {
         s/^ +//;
@@ -144,6 +144,7 @@ foreach $class (@leakyclasses) {
         chomp;
         $leakedobjects[++$#leakedobjects] = $_;
     }
+    close(BLOATLOG);
 
     # ...and for each object that leaked, generate reference count
     # stack traces.
@@ -167,7 +168,7 @@ foreach $class (@leakyclasses) {
 {
     # Now zip up all of the datafiles into YYYYMMDD.zip
     my $zipfile = POSIX::strftime("%Y%m%d.zip", localtime(time));
-    system("zip -m $zipfile *.log");
+    system('zip', '-m', $zipfile, '*.log');
 
     # ...and mail it off to the server
     system("cat $zipfile | uuencode $zipfile | mail $::opt_email")
