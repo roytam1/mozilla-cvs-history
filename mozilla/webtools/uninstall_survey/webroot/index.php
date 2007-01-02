@@ -45,14 +45,15 @@ if (!defined('DS'))
 if (!defined('ROOT'))
 {
 //define('ROOT', 'FULL PATH TO DIRECTORY WHERE APP DIRECTORY IS LOCATED DO NOT ADD A TRAILING DIRECTORY SEPARATOR';
-//You should also use the DS define to separate your directories
+//You should also use the DS define to seperate your directories
     define('ROOT', dirname(dirname(dirname(__FILE__))));
 }
 
 if (!defined('APP_DIR'))
 {
 //define('APP_DIR', 'DIRECTORY NAME OF APPLICATION';
-    define ('APP_DIR', basename(dirname(dirname(__FILE__))));
+    //define ('APP_DIR', basename(dirname(dirname(__FILE__))));
+    define ('APP_DIR', 'uninstall_survey');
 }
 
 /**
@@ -62,8 +63,9 @@ if (!defined('APP_DIR'))
 if (!defined('CAKE_CORE_INCLUDE_PATH'))
 {
 //define ('CAKE_CORE_INCLUDE_PATH', FULL PATH TO DIRECTORY WHERE CAKE CORE IS INSTALLED DO NOT ADD A TRAILING DIRECTORY SEPARATOR';
-//You should also use the DS define to separate your directories
-    define('CAKE_CORE_INCLUDE_PATH', ROOT);
+//You should also use the DS define to seperate your directories
+    define('CAKE_CORE_INCLUDE_PATH', DS.'usr'.DS.'local'.DS.'lib'.DS.'php'.DS.'cake');
+    //define('CAKE_CORE_INCLUDE_PATH', ROOT);
 }
 
 
