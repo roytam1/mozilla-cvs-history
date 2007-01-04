@@ -343,17 +343,6 @@ if ($b eq 'BUGZILLA-2_22-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '203';}
 }
 if ($b eq 'HEAD') {
-if (m:^mozilla/content/xul/.*$:) {return '106';}
-if (m:^mozilla/layout/xul/.*$:) {return '106';}
-if (m:^mozilla/testing/.*$:) {return '202';}
-if (m:^mozilla/profile/.*$:) {return '120';}
-if (m:^mozilla/tools/.*$:) {return '112';}
-if (m:^mozilla/xpcom/typelib/.*$:) {return '117';}
-if (m:^mozilla/js/src/xpconnect/.*$:) {return '118';}
-if (m:^mozilla/mailnews/news/.*$:) {return '122';}
-if (m:^mozilla/mailnews/[^/]*$:) {return '123';}
-if (m:^mozilla/mailnews/mime/[^/]*$:) {return '124';}
-if (m:^mozilla/extensions/java$:) {return '128';}
 if (m:^mozilla/java/plugins/.*$:) {return '129';}
 if (m:^mozilla/java/webclient/.*$:) {return '127';}
 if (m:^mozilla/java/dom/.*$:) {return '130';}
@@ -517,6 +506,17 @@ if (m:^mozilla/extensions/transformiix/.*$:) {return '140';}
 if (m:^mozilla/calendar/.*$:) {return '183';}
 if (m:^mozilla/gfx/src/photon/.*$:) {return '113';}
 if (m:^mozilla/widget/src/photon/.*$:) {return '113';}
+if (m:^mozilla/content/xul/.*$:) {return '106';}
+if (m:^mozilla/layout/xul/.*$:) {return '106';}
+if (m:^mozilla/testing/.*$:) {return '202';}
+if (m:^mozilla/profile/.*$:) {return '120';}
+if (m:^mozilla/tools/.*$:) {return '112';}
+if (m:^mozilla/xpcom/typelib/.*$:) {return '117';}
+if (m:^mozilla/js/src/xpconnect/.*$:) {return '118';}
+if (m:^mozilla/mailnews/news/.*$:) {return '122';}
+if (m:^mozilla/mailnews/[^/]*$:) {return '123';}
+if (m:^mozilla/mailnews/mime/[^/]*$:) {return '124';}
+if (m:^mozilla/extensions/java$:) {return '128';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
