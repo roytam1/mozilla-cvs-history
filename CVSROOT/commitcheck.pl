@@ -153,8 +153,8 @@ $fullname{'129'} = 'Java-Implemented Plugins';
 $mode{'70'} = 'Restricted';
 $branch{'70'} = 'HEAD';
 $fullname{'70'} = 'JavaScript';
-$blessed{'70'} = ['vladimir%pobox.com','timeless%mozdev.org','sayrer%gmail.com','jst%mozilla.org','jruderman%hmc.edu','gerv%gerv.net','gavin%gavinsharp.com','dbaron%dbaron.org','daumling%adobe.com','cls%seawood.org','bzbarsky%mit.edu','bryner%brianryner.com','bratell%lysator.liu.se','benjamin%smedbergs.us','bclary%bclary.com',];
-$super{'70'} = ['jwalden%mit.edu','crowder%fiverocks.com','shaver%mozilla.org','mrbkap%gmail.com','igor.bukanov%gmail.com','brendan%mozilla.org',];
+$blessed{'70'} = ['vladimir%pobox.com','graydon%mozilla.com','timeless%mozdev.org','sayrer%gmail.com','jst%mozilla.org','jruderman%hmc.edu','gerv%gerv.net','gavin%gavinsharp.com','dbaron%dbaron.org','daumling%adobe.com','cls%seawood.org','bzbarsky%mit.edu','bryner%brianryner.com','bratell%lysator.liu.se','benjamin%smedbergs.us','bclary%bclary.com',];
+$super{'70'} = ['shaver%mozilla.org','mrbkap%gmail.com','jwalden%mit.edu','igor.bukanov%gmail.com','crowder%fiverocks.com','brendan%mozilla.org',];
 $mode{'71'} = 'Open';
 $branch{'71'} = 'HEAD';
 $fullname{'71'} = 'JavaScript Debugger';
@@ -343,6 +343,41 @@ if ($b eq 'BUGZILLA-2_22-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '203';}
 }
 if ($b eq 'HEAD') {
+if (m:^mozilla/ef/.*$:) {return '46';}
+if (m:^mozilla/webtools/addons/.*$:) {return '185';}
+if (m:^mozilla/webtools/update/.*$:) {return '185';}
+if (m:^mozilla/gfx/src/gtk/.*$:) {return '49';}
+if (m:^mozilla/widget/src/gtk/.*$:) {return '49';}
+if (m:^mozilla/widget/src/gtk2/.*$:) {return '49';}
+if (m:^mozilla/widget/src/gtksuperwin/.*$:) {return '49';}
+if (m:^mozilla/widget/src/gtkxtbin/.*$:) {return '49';}
+if (m:^mozilla/extensions/vixen/.*$:) {return '156';}
+if (m:^mozilla/rdf/.*$:) {return '52';}
+if (m:^mozilla/mailnews/movemail/.*$:) {return '157';}
+if (m:^mozilla/uriloader/.*$:) {return '158';}
+if (m:^mozilla/dbm/.*$:) {return '53';}
+if (m:^mozilla/build/.*$:) {return '55';}
+if (m:^mozilla/config/.*$:) {return '55';}
+if (m:^mozilla/string/.*$:) {return '160';}
+if (m:^mozilla/xpcom/string/.*$:) {return '160';}
+if (m:^mozilla/editor/.*$:) {return '56';}
+if (m:^mozilla/gfx/src/qt/.*$:) {return '161';}
+if (m:^mozilla/widget/src/qt/.*$:) {return '161';}
+if (m:^mozilla/directory/.*$:) {return '59';}
+if (m:^mozilla/gfx/src/ps/.*$:) {return '62';}
+if (m:^mozilla/gfx/src/psshared/.*$:) {return '62';}
+if (m:^mozilla/extensions/p3p/.*$:) {return '162';}
+if (m:^mozilla/modules/libpr0n/.*$:) {return '63';}
+if (m:^mozilla/layout/mathml/.*$:) {return '165';}
+if (m:^mozilla/jpeg/.*$:) {return '64';}
+if (m:^mozilla/browser/.*$:) {return '166';}
+if (m:^mozilla/other-licenses/branding/firefox/.*$:) {return '166';}
+if (m:^mozilla/modules/libimg/png/.*$:) {return '65';}
+if (m:^mozilla/chrome/.*$:) {return '169';}
+if (m:^mozilla/storage/.*$:) {return '169';}
+if (m:^mozilla/toolkit/.*$:) {return '169';}
+if (m:^mozilla/xulrunner/.*$:) {return '169';}
+if (m:^mozilla/intl/.*$:) {return '67';}
 if (m:^mozilla/mail/.*$:) {return '170';}
 if (m:^mozilla/other-licenses/branding/thunderbird/.*$:) {return '170';}
 if (m:^mozilla/modules/oji/.*$:) {return '68';}
@@ -467,56 +502,21 @@ if (m:^mozilla/content/xbl/public/.*$:) {return '199';}
 if (m:^mozilla/content/xbl/src/.*$:) {return '199';}
 if (m:^mozilla/content/xtf/.*$:) {return '200';}
 if (m:^mozilla/layout/xtf/.*$:) {return '200';}
-if (m:^mozilla/extensions/xmlterm/.*$:) {return '141';}
 if (m:^CVSROOT/commitcheck\.pl$:) {return '3';}
 if (m:^CVSROOT/passwd$:) {return '3';}
+if (m:^mozilla/extensions/xmlterm/.*$:) {return '141';}
 if (m:^mozilla/security/coreconf/.*$:) {return '145';}
 if (m:^mozilla/security/dbm/.*$:) {return '145';}
 if (m:^mozilla/security/jss/.*$:) {return '145';}
 if (m:^mozilla/security/nss/.*$:) {return '145';}
-if (m:^mozilla/mstone/.*$:) {return '147';}
 if (m:^mozilla/composer/.*$:) {return '173';}
-if (m:^mozilla/xpinstall/.*$:) {return '150';}
+if (m:^mozilla/mstone/.*$:) {return '147';}
 if (m:^mozilla/[^/]*$:) {return '19';}
-if (m:^mozilla/security/manager/.*$:) {return '151';}
+if (m:^mozilla/xpinstall/.*$:) {return '150';}
 if (m:^mozilla/gfx/src/xlib/.*$:) {return '121';}
 if (m:^mozilla/widget/src/xlib/.*$:) {return '121';}
 if (m:^mozilla/widget/src/xlibxtbin/.*$:) {return '121';}
-if (m:^mozilla/webtools/addons/.*$:) {return '185';}
-if (m:^mozilla/webtools/update/.*$:) {return '185';}
-if (m:^mozilla/ef/.*$:) {return '46';}
-if (m:^mozilla/extensions/vixen/.*$:) {return '156';}
-if (m:^mozilla/gfx/src/gtk/.*$:) {return '49';}
-if (m:^mozilla/widget/src/gtk/.*$:) {return '49';}
-if (m:^mozilla/widget/src/gtk2/.*$:) {return '49';}
-if (m:^mozilla/widget/src/gtksuperwin/.*$:) {return '49';}
-if (m:^mozilla/widget/src/gtkxtbin/.*$:) {return '49';}
-if (m:^mozilla/mailnews/movemail/.*$:) {return '157';}
-if (m:^mozilla/rdf/.*$:) {return '52';}
-if (m:^mozilla/uriloader/.*$:) {return '158';}
-if (m:^mozilla/dbm/.*$:) {return '53';}
-if (m:^mozilla/build/.*$:) {return '55';}
-if (m:^mozilla/config/.*$:) {return '55';}
-if (m:^mozilla/string/.*$:) {return '160';}
-if (m:^mozilla/xpcom/string/.*$:) {return '160';}
-if (m:^mozilla/editor/.*$:) {return '56';}
-if (m:^mozilla/gfx/src/qt/.*$:) {return '161';}
-if (m:^mozilla/widget/src/qt/.*$:) {return '161';}
-if (m:^mozilla/directory/.*$:) {return '59';}
-if (m:^mozilla/gfx/src/ps/.*$:) {return '62';}
-if (m:^mozilla/gfx/src/psshared/.*$:) {return '62';}
-if (m:^mozilla/extensions/p3p/.*$:) {return '162';}
-if (m:^mozilla/modules/libpr0n/.*$:) {return '63';}
-if (m:^mozilla/layout/mathml/.*$:) {return '165';}
-if (m:^mozilla/jpeg/.*$:) {return '64';}
-if (m:^mozilla/browser/.*$:) {return '166';}
-if (m:^mozilla/other-licenses/branding/firefox/.*$:) {return '166';}
-if (m:^mozilla/modules/libimg/png/.*$:) {return '65';}
-if (m:^mozilla/chrome/.*$:) {return '169';}
-if (m:^mozilla/storage/.*$:) {return '169';}
-if (m:^mozilla/toolkit/.*$:) {return '169';}
-if (m:^mozilla/xulrunner/.*$:) {return '169';}
-if (m:^mozilla/intl/.*$:) {return '67';}
+if (m:^mozilla/security/manager/.*$:) {return '151';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
