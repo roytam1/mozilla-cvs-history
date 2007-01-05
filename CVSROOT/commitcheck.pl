@@ -204,9 +204,6 @@ $branch{'163'} = 'NSS_3_11_BRANCH';
 $fullname{'163'} = 'NSS Stable Release Branch';
 $blessed{'163'} = ['douglas%stebila.ca',];
 $super{'163'} = ['tfox%netscape.com','neil.williams%sun.com','kaie%kuix.de','glen.beasley%sun.com','christophe.ravel.bugs%sun.com','alexei.volkov.bugs%sun.com','wtchang%redhat.com','rrelyea%redhat.com','nelson%bolyard.com','julien.pierre.bugs%sun.com',];
-$mode{'159'} = 'Open';
-$branch{'159'} = 'HEAD';
-$fullname{'159'} = 'NSS Trunk';
 $mode{'162'} = 'Open';
 $branch{'162'} = 'HEAD';
 $fullname{'162'} = 'P3P';
@@ -343,6 +340,26 @@ if ($b eq 'BUGZILLA-2_22-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '203';}
 }
 if ($b eq 'HEAD') {
+if (m:^mozilla/content/xbl/[^/]*$:) {return '199';}
+if (m:^mozilla/content/xbl/public/.*$:) {return '199';}
+if (m:^mozilla/content/xbl/src/.*$:) {return '199';}
+if (m:^mozilla/content/xtf/.*$:) {return '200';}
+if (m:^mozilla/layout/xtf/.*$:) {return '200';}
+if (m:^CVSROOT/commitcheck\.pl$:) {return '3';}
+if (m:^CVSROOT/passwd$:) {return '3';}
+if (m:^mozilla/extensions/xmlterm/.*$:) {return '141';}
+if (m:^mozilla/security/coreconf/.*$:) {return '145';}
+if (m:^mozilla/security/dbm/.*$:) {return '145';}
+if (m:^mozilla/security/jss/.*$:) {return '145';}
+if (m:^mozilla/security/nss/.*$:) {return '145';}
+if (m:^mozilla/composer/.*$:) {return '173';}
+if (m:^mozilla/mstone/.*$:) {return '147';}
+if (m:^mozilla/[^/]*$:) {return '19';}
+if (m:^mozilla/xpinstall/.*$:) {return '150';}
+if (m:^mozilla/gfx/src/xlib/.*$:) {return '121';}
+if (m:^mozilla/widget/src/xlib/.*$:) {return '121';}
+if (m:^mozilla/widget/src/xlibxtbin/.*$:) {return '121';}
+if (m:^mozilla/security/manager/.*$:) {return '151';}
 if (m:^mozilla/ef/.*$:) {return '46';}
 if (m:^mozilla/webtools/addons/.*$:) {return '185';}
 if (m:^mozilla/webtools/update/.*$:) {return '185';}
@@ -354,8 +371,8 @@ if (m:^mozilla/widget/src/gtkxtbin/.*$:) {return '49';}
 if (m:^mozilla/extensions/vixen/.*$:) {return '156';}
 if (m:^mozilla/rdf/.*$:) {return '52';}
 if (m:^mozilla/mailnews/movemail/.*$:) {return '157';}
-if (m:^mozilla/uriloader/.*$:) {return '158';}
 if (m:^mozilla/dbm/.*$:) {return '53';}
+if (m:^mozilla/uriloader/.*$:) {return '158';}
 if (m:^mozilla/build/.*$:) {return '55';}
 if (m:^mozilla/config/.*$:) {return '55';}
 if (m:^mozilla/string/.*$:) {return '160';}
@@ -497,26 +514,6 @@ if (m:^mozilla/java/plugins/.*$:) {return '129';}
 if (m:^mozilla/java/webclient/.*$:) {return '127';}
 if (m:^mozilla/java/dom/.*$:) {return '130';}
 if (m:^mozilla/java/util/.*$:) {return '133';}
-if (m:^mozilla/content/xbl/[^/]*$:) {return '199';}
-if (m:^mozilla/content/xbl/public/.*$:) {return '199';}
-if (m:^mozilla/content/xbl/src/.*$:) {return '199';}
-if (m:^mozilla/content/xtf/.*$:) {return '200';}
-if (m:^mozilla/layout/xtf/.*$:) {return '200';}
-if (m:^CVSROOT/commitcheck\.pl$:) {return '3';}
-if (m:^CVSROOT/passwd$:) {return '3';}
-if (m:^mozilla/extensions/xmlterm/.*$:) {return '141';}
-if (m:^mozilla/security/coreconf/.*$:) {return '145';}
-if (m:^mozilla/security/dbm/.*$:) {return '145';}
-if (m:^mozilla/security/jss/.*$:) {return '145';}
-if (m:^mozilla/security/nss/.*$:) {return '145';}
-if (m:^mozilla/composer/.*$:) {return '173';}
-if (m:^mozilla/mstone/.*$:) {return '147';}
-if (m:^mozilla/[^/]*$:) {return '19';}
-if (m:^mozilla/xpinstall/.*$:) {return '150';}
-if (m:^mozilla/gfx/src/xlib/.*$:) {return '121';}
-if (m:^mozilla/widget/src/xlib/.*$:) {return '121';}
-if (m:^mozilla/widget/src/xlibxtbin/.*$:) {return '121';}
-if (m:^mozilla/security/manager/.*$:) {return '151';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
