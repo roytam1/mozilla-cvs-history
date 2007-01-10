@@ -470,6 +470,7 @@ if (m:^mozilla/widget/src/windows/.*$:) {return '175';}
 if (m:^mozilla/jpeg/.*$:) {return '63';}
 if (m:^mozilla/modules/libimg/png/.*$:) {return '63';}
 if (m:^mozilla/modules/libpr0n/.*$:) {return '63';}
+if (m:^mozilla/modules/zlib/.*$:) {return '63';}
 if (m:^mozilla/gfx/[^/]*$:) {return '177';}
 if (m:^mozilla/gfx/public/.*$:) {return '177';}
 if (m:^mozilla/gfx/src/[^/]*$:) {return '177';}
