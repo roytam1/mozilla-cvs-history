@@ -347,6 +347,7 @@ if (m:^mozilla/profile/.*$:) {return '120';}
 if (m:^mozilla/tools/.*$:) {return '112';}
 if (m:^mozilla/xpcom/typelib/.*$:) {return '117';}
 if (m:^mozilla/js/src/xpconnect/.*$:) {return '118';}
+if (m:^mozilla/js/jsd/.*$:) {return '207';}
 if (m:^mozilla/mailnews/[^/]*$:) {return '123';}
 if (m:^mozilla/mailnews/mime/[^/]*$:) {return '124';}
 if (m:^mozilla/extensions/java$:) {return '128';}
