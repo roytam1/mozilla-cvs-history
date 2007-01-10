@@ -105,9 +105,6 @@ $fullname{'49'} = 'GTK';
 $mode{'144'} = 'Open';
 $branch{'144'} = 'HEAD';
 $fullname{'144'} = 'GTK Embedding Widget';
-$mode{'174'} = 'Open';
-$branch{'174'} = 'HEAD';
-$fullname{'174'} = 'Help System';
 $mode{'102'} = 'Open';
 $branch{'102'} = 'HEAD';
 $fullname{'102'} = 'HTML Parser';
@@ -319,29 +316,34 @@ if ($b eq 'BUGZILLA-2_22-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '203';}
 }
 if ($b eq 'HEAD') {
+if (m:^mozilla/accessibility/.*$:) {return '180';}
+if (m:^mozilla/modules/oji/.*$:) {return '68';}
+if (m:^mozilla/nav-java/.*$:) {return '68';}
+if (m:^mozilla/sun-java/.*$:) {return '68';}
 if (m:^mozilla/extensions/typeaheadfind/.*$:) {return '181';}
+if (m:^mozilla/caps/.*$:) {return '69';}
+if (m:^mozilla/content/xbl/builtin/.*$:) {return '182';}
 if (m:^mozilla/js/src/[^/]*$:) {return '70';}
 if (m:^mozilla/js/src/config/.*$:) {return '70';}
 if (m:^mozilla/js/src/editline/.*$:) {return '70';}
 if (m:^mozilla/js/src/fdlibm/.*$:) {return '70';}
-if (m:^mozilla/content/xbl/builtin/.*$:) {return '182';}
-if (m:^mozilla/extensions/venkman/.*$:) {return '71';}
 if (m:^mozilla/extensions/inspector/.*$:) {return '184';}
 if (m:^mozilla/layout/inspector/.*$:) {return '184';}
-if (m:^mozilla/js/src/liveconnect/.*$:) {return '72';}
+if (m:^mozilla/extensions/venkman/.*$:) {return '71';}
 if (m:^mozilla/content/svg/.*$:) {return '187';}
 if (m:^mozilla/layout/svg/.*$:) {return '187';}
-if (m:^mozilla/netwerk/.*$:) {return '77';}
+if (m:^mozilla/js/src/liveconnect/.*$:) {return '72';}
 if (m:^mozilla/suite/.*$:) {return '188';}
-if (m:^mozilla/nsprpub/.*$:) {return '78';}
+if (m:^mozilla/netwerk/.*$:) {return '77';}
 if (m:^mozilla/grendel/.*$:) {return '189';}
-if (m:^mozilla/modules/plugin/.*$:) {return '81';}
+if (m:^mozilla/nsprpub/.*$:) {return '78';}
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '190';}
+if (m:^mozilla/modules/plugin/.*$:) {return '81';}
 if (m:^mozilla/modules/libpref/.*$:) {return '82';}
-if (m:^mozilla/modules/libreg/.*$:) {return '84';}
 if (m:^mozilla/gfx/cairo/.*$:) {return '201';}
 if (m:^mozilla/gfx/src/thebes/.*$:) {return '201';}
 if (m:^mozilla/gfx/thebes/.*$:) {return '201';}
+if (m:^mozilla/modules/libreg/.*$:) {return '84';}
 if (m:^mozilla/content/xml/.*$:) {return '88';}
 if (m:^mozilla/extensions/xmlextras/.*$:) {return '88';}
 if (m:^mozilla/parser/expat/.*$:) {return '88';}
@@ -462,15 +464,10 @@ if (m:^mozilla/editor/.*$:) {return '56';}
 if (m:^mozilla/gfx/src/beos/.*$:) {return '172';}
 if (m:^mozilla/widget/src/beos/.*$:) {return '172';}
 if (m:^mozilla/directory/.*$:) {return '59';}
-if (m:^mozilla/extensions/help/.*$:) {return '174';}
-if (m:^mozilla/gfx/src/ps/.*$:) {return '62';}
-if (m:^mozilla/gfx/src/psshared/.*$:) {return '62';}
 if (m:^mozilla/gfx/src/windows/.*$:) {return '175';}
 if (m:^mozilla/widget/src/windows/.*$:) {return '175';}
-if (m:^mozilla/jpeg/.*$:) {return '63';}
-if (m:^mozilla/modules/libimg/png/.*$:) {return '63';}
-if (m:^mozilla/modules/libpr0n/.*$:) {return '63';}
-if (m:^mozilla/modules/zlib/.*$:) {return '63';}
+if (m:^mozilla/gfx/src/ps/.*$:) {return '62';}
+if (m:^mozilla/gfx/src/psshared/.*$:) {return '62';}
 if (m:^mozilla/gfx/[^/]*$:) {return '177';}
 if (m:^mozilla/gfx/public/.*$:) {return '177';}
 if (m:^mozilla/gfx/src/[^/]*$:) {return '177';}
@@ -479,15 +476,14 @@ if (m:^mozilla/widget/[^/]*$:) {return '177';}
 if (m:^mozilla/widget/public/.*$:) {return '177';}
 if (m:^mozilla/widget/src/[^/]*$:) {return '177';}
 if (m:^mozilla/widget/src/xpwidgets/.*$:) {return '177';}
-if (m:^mozilla/intl/.*$:) {return '67';}
+if (m:^mozilla/jpeg/.*$:) {return '63';}
+if (m:^mozilla/modules/libimg/png/.*$:) {return '63';}
+if (m:^mozilla/modules/libpr0n/.*$:) {return '63';}
+if (m:^mozilla/modules/zlib/.*$:) {return '63';}
 if (m:^mozilla/gfx/src/mac/.*$:) {return '178';}
 if (m:^mozilla/widget/src/cocoa/.*$:) {return '178';}
 if (m:^mozilla/widget/src/mac/.*$:) {return '178';}
-if (m:^mozilla/modules/oji/.*$:) {return '68';}
-if (m:^mozilla/nav-java/.*$:) {return '68';}
-if (m:^mozilla/sun-java/.*$:) {return '68';}
-if (m:^mozilla/accessibility/.*$:) {return '180';}
-if (m:^mozilla/caps/.*$:) {return '69';}
+if (m:^mozilla/intl/.*$:) {return '67';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
