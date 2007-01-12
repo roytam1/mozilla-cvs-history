@@ -316,31 +316,6 @@ if ($b eq 'BUGZILLA-2_22-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '203';}
 }
 if ($b eq 'HEAD') {
-if (m:^mozilla/xpcom/reflect/xptcall/.*$:) {return '206';}
-if (m:^mozilla/js/tamarin/.*$:) {return '205';}
-if (m:^mozilla/gfx/src/xprint/.*$:) {return '179';}
-if (m:^mozilla/view/.*$:) {return '96';}
-if (m:^mozilla/layout/[^/]*$:) {return '98';}
-if (m:^mozilla/layout/base/.*$:) {return '98';}
-if (m:^mozilla/layout/build/.*$:) {return '98';}
-if (m:^mozilla/layout/doc/.*$:) {return '98';}
-if (m:^mozilla/layout/forms/.*$:) {return '98';}
-if (m:^mozilla/layout/generic/.*$:) {return '98';}
-if (m:^mozilla/layout/html/.*$:) {return '98';}
-if (m:^mozilla/layout/macbuild/.*$:) {return '98';}
-if (m:^mozilla/layout/printing/.*$:) {return '98';}
-if (m:^mozilla/layout/tables/.*$:) {return '98';}
-if (m:^mozilla/layout/tools/.*$:) {return '98';}
-if (m:^mozilla/layout/style/.*$:) {return '100';}
-if (m:^mozilla/docshell/.*$:) {return '101';}
-if (m:^mozilla/uriloader/.*$:) {return '101';}
-if (m:^mozilla/webshell/.*$:) {return '101';}
-if (m:^mozilla/parser/htmlparser$:) {return '102';}
-if (m:^mozilla/content/base/.*$:) {return '103';}
-if (m:^mozilla/content/events/.*$:) {return '103';}
-if (m:^mozilla/content/html/content/.*$:) {return '103';}
-if (m:^mozilla/content/html/document/.*$:) {return '103';}
-if (m:^mozilla/dom/.*$:) {return '103';}
 if (m:^mozilla/js/rhino/.*$:) {return '138';}
 if (m:^mozilla/xpfe/.*$:) {return '137';}
 if (m:^mozilla/js/tests/.*$:) {return '114';}
@@ -485,6 +460,31 @@ if (m:^mozilla/xpcom/tests/.*$:) {return '89';}
 if (m:^mozilla/xpcom/threads/.*$:) {return '89';}
 if (m:^mozilla/xpcom/tools/.*$:) {return '89';}
 if (m:^mozilla/xpcom/windbgdlg/.*$:) {return '89';}
+if (m:^mozilla/xpcom/reflect/xptcall/.*$:) {return '206';}
+if (m:^mozilla/js/tamarin/.*$:) {return '205';}
+if (m:^mozilla/gfx/src/xprint/.*$:) {return '179';}
+if (m:^mozilla/view/.*$:) {return '96';}
+if (m:^mozilla/layout/[^/]*$:) {return '98';}
+if (m:^mozilla/layout/base/.*$:) {return '98';}
+if (m:^mozilla/layout/build/.*$:) {return '98';}
+if (m:^mozilla/layout/doc/.*$:) {return '98';}
+if (m:^mozilla/layout/forms/.*$:) {return '98';}
+if (m:^mozilla/layout/generic/.*$:) {return '98';}
+if (m:^mozilla/layout/html/.*$:) {return '98';}
+if (m:^mozilla/layout/macbuild/.*$:) {return '98';}
+if (m:^mozilla/layout/printing/.*$:) {return '98';}
+if (m:^mozilla/layout/tables/.*$:) {return '98';}
+if (m:^mozilla/layout/tools/.*$:) {return '98';}
+if (m:^mozilla/layout/style/.*$:) {return '100';}
+if (m:^mozilla/docshell/.*$:) {return '101';}
+if (m:^mozilla/uriloader/.*$:) {return '101';}
+if (m:^mozilla/webshell/.*$:) {return '101';}
+if (m:^mozilla/parser/htmlparser$:) {return '102';}
+if (m:^mozilla/content/base/.*$:) {return '103';}
+if (m:^mozilla/content/events/.*$:) {return '103';}
+if (m:^mozilla/content/html/content/.*$:) {return '103';}
+if (m:^mozilla/content/html/document/.*$:) {return '103';}
+if (m:^mozilla/dom/.*$:) {return '103';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
