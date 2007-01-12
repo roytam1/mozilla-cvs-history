@@ -1,7 +1,0 @@
-This directory contains the source files for nsinstall.exe,
-which is used to build the Mozilla client on Win32.
-
-To build nsinstall.exe, issue the command:
-    nmake /f nsinstall.mak
-The output is Release\nsinstall.exe.  Copy it to a directory
-on your Path.
