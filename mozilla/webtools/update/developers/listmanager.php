@@ -248,6 +248,17 @@ echo"</SPAN></DIV>";
 
 
 } else if ($_POST["submit"]=="Delete") {
+    //Temporary fix for bug 366854 - only admins can delete add-ons
+    if ($_SESSION['level'] != 'admin') {
+
+        echo '<h1>Error</h1>';
+        echo '<p>Add-on deletion is temporarily disabled.</p>';
+        echo '<p>If you would like for your add-on to be removed from this site, please go to the <a href="itemoverview.php?id='.$_POST['id'].'">Item Overview</a> page and delete each version individually and it will no longer appear to users. We are sorry for this inconvenience.</p>';
+
+        require_once(FOOTER);
+        exit;
+    }
+
 $name = escape_string($_POST["name"]);
 $id = escape_string($_POST["id"]);
 
