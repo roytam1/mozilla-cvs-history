@@ -81,9 +81,6 @@ $fullname{'181'} = 'Find As You Type';
 $mode{'166'} = 'Open';
 $branch{'166'} = 'HEAD';
 $fullname{'166'} = 'Firefox';
-$mode{'178'} = 'Open';
-$branch{'178'} = 'HEAD';
-$fullname{'178'} = 'GFX and Widget - Mac';
 $mode{'182'} = 'Open';
 $branch{'182'} = 'HEAD';
 $fullname{'182'} = 'Global Key Bindings';
@@ -256,6 +253,9 @@ $fullname{'96'} = 'View System';
 $mode{'177'} = 'Open';
 $branch{'177'} = 'HEAD';
 $fullname{'177'} = 'Widget';
+$mode{'178'} = 'Open';
+$branch{'178'} = 'HEAD';
+$fullname{'178'} = 'Widget - Mac';
 $mode{'175'} = 'Open';
 $branch{'175'} = 'HEAD';
 $fullname{'175'} = 'Win32-Based GFX and Widget';
@@ -322,7 +322,6 @@ if (m:^mozilla/widget/src/[^/]*$:) {return '177';}
 if (m:^mozilla/widget/src/xpwidgets/.*$:) {return '177';}
 if (m:^mozilla/gfx/src/ps/.*$:) {return '62';}
 if (m:^mozilla/gfx/src/psshared/.*$:) {return '62';}
-if (m:^mozilla/gfx/src/mac/.*$:) {return '178';}
 if (m:^mozilla/widget/src/cocoa/.*$:) {return '178';}
 if (m:^mozilla/widget/src/mac/.*$:) {return '178';}
 if (m:^mozilla/jpeg/.*$:) {return '63';}
