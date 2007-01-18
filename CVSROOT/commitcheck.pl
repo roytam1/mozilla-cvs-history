@@ -258,7 +258,7 @@ $branch{'178'} = 'HEAD';
 $fullname{'178'} = 'Widget - Mac';
 $mode{'175'} = 'Open';
 $branch{'175'} = 'HEAD';
-$fullname{'175'} = 'Win32-Based GFX and Widget';
+$fullname{'175'} = 'Widget - Windows';
 $mode{'199'} = 'Open';
 $branch{'199'} = 'HEAD';
 $fullname{'199'} = 'XBL';
@@ -313,7 +313,6 @@ if ($b eq 'HEAD') {
 if (m:^mozilla/gfx/src/beos/.*$:) {return '172';}
 if (m:^mozilla/widget/src/beos/.*$:) {return '172';}
 if (m:^mozilla/editor/.*$:) {return '56';}
-if (m:^mozilla/gfx/src/windows/.*$:) {return '175';}
 if (m:^mozilla/widget/src/windows/.*$:) {return '175';}
 if (m:^mozilla/directory/.*$:) {return '59';}
 if (m:^mozilla/widget/[^/]*$:) {return '177';}
