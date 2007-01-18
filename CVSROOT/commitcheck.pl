@@ -81,9 +81,6 @@ $fullname{'181'} = 'Find As You Type';
 $mode{'166'} = 'Open';
 $branch{'166'} = 'HEAD';
 $fullname{'166'} = 'Firefox';
-$mode{'177'} = 'Open';
-$branch{'177'} = 'HEAD';
-$fullname{'177'} = 'GFX and Widget - General';
 $mode{'178'} = 'Open';
 $branch{'178'} = 'HEAD';
 $fullname{'178'} = 'GFX and Widget - Mac';
@@ -256,6 +253,9 @@ $fullname{'71'} = 'Venkman';
 $mode{'96'} = 'Open';
 $branch{'96'} = 'HEAD';
 $fullname{'96'} = 'View System';
+$mode{'177'} = 'Open';
+$branch{'177'} = 'HEAD';
+$fullname{'177'} = 'Widget';
 $mode{'175'} = 'Open';
 $branch{'175'} = 'HEAD';
 $fullname{'175'} = 'Win32-Based GFX and Widget';
@@ -316,10 +316,6 @@ if (m:^mozilla/editor/.*$:) {return '56';}
 if (m:^mozilla/gfx/src/windows/.*$:) {return '175';}
 if (m:^mozilla/widget/src/windows/.*$:) {return '175';}
 if (m:^mozilla/directory/.*$:) {return '59';}
-if (m:^mozilla/gfx/[^/]*$:) {return '177';}
-if (m:^mozilla/gfx/public/.*$:) {return '177';}
-if (m:^mozilla/gfx/src/[^/]*$:) {return '177';}
-if (m:^mozilla/gfx/src/shared/.*$:) {return '177';}
 if (m:^mozilla/widget/[^/]*$:) {return '177';}
 if (m:^mozilla/widget/public/.*$:) {return '177';}
 if (m:^mozilla/widget/src/[^/]*$:) {return '177';}
