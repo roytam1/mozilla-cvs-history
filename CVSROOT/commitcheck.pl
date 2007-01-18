@@ -90,9 +90,6 @@ $fullname{'201'} = 'Graphics - Cairo and Thebes';
 $mode{'189'} = 'Open';
 $branch{'189'} = 'HEAD';
 $fullname{'189'} = 'Grendel';
-$mode{'49'} = 'Open';
-$branch{'49'} = 'HEAD';
-$fullname{'49'} = 'GTK';
 $mode{'144'} = 'Open';
 $branch{'144'} = 'HEAD';
 $fullname{'144'} = 'GTK Embedding Widget';
@@ -253,6 +250,9 @@ $fullname{'96'} = 'View System';
 $mode{'177'} = 'Open';
 $branch{'177'} = 'HEAD';
 $fullname{'177'} = 'Widget';
+$mode{'49'} = 'Open';
+$branch{'49'} = 'HEAD';
+$fullname{'49'} = 'Widget - GTK';
 $mode{'178'} = 'Open';
 $branch{'178'} = 'HEAD';
 $fullname{'178'} = 'Widget - Mac';
@@ -456,7 +456,6 @@ if (m:^mozilla/widget/src/xlib/.*$:) {return '121';}
 if (m:^mozilla/widget/src/xlibxtbin/.*$:) {return '121';}
 if (m:^mozilla/browser/.*$:) {return '166';}
 if (m:^mozilla/other-licenses/branding/firefox/.*$:) {return '166';}
-if (m:^mozilla/gfx/src/gtk/.*$:) {return '49';}
 if (m:^mozilla/widget/src/gtk/.*$:) {return '49';}
 if (m:^mozilla/widget/src/gtk2/.*$:) {return '49';}
 if (m:^mozilla/widget/src/gtksuperwin/.*$:) {return '49';}
