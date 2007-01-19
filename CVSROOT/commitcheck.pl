@@ -238,9 +238,11 @@ $fullname{'170'} = 'Thunderbird';
 $mode{'169'} = 'Open';
 $branch{'169'} = 'HEAD';
 $fullname{'169'} = 'toolkit';
-$mode{'185'} = 'Open';
+$mode{'185'} = 'Restricted';
 $branch{'185'} = 'HEAD';
 $fullname{'185'} = 'Update Service';
+$blessed{'185'} = [];
+$super{'185'} = ['mozilla%colinogilvie.co.uk','cst%yecc.com','shaver%mozilla.org','mike.morgan%oregonstate.edu','fligtar%gmail.com',];
 $mode{'71'} = 'Open';
 $branch{'71'} = 'HEAD';
 $fullname{'71'} = 'Venkman';
@@ -313,6 +315,7 @@ if ($b eq 'HEAD') {
 if (m:^mozilla/xpinstall/.*$:) {return '150';}
 if (m:^mozilla/security/manager/.*$:) {return '151';}
 if (m:^mozilla/webtools/addons/.*$:) {return '185';}
+if (m:^mozilla/webtools/aus/.*$:) {return '185';}
 if (m:^mozilla/webtools/update/.*$:) {return '185';}
 if (m:^mozilla/mailnews/movemail/.*$:) {return '157';}
 if (m:^CVSROOT/commitcheck\.pl$:) {return '3';}
