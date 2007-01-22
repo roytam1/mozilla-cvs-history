@@ -307,12 +307,15 @@ if ($b eq 'BUGZILLA-2_22-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '203';}
 }
 if ($b eq 'HEAD') {
+if (m:^mozilla/mailnews/movemail/.*$:) {return '157';}
+if (m:^mozilla/embedding/.*$:) {return '208';}
 if (m:^CVSROOT/commitcheck\.pl$:) {return '3';}
 if (m:^CVSROOT/passwd$:) {return '3';}
 if (m:^mozilla/string/.*$:) {return '160';}
 if (m:^mozilla/xpcom/string/.*$:) {return '160';}
 if (m:^mozilla/gfx/src/qt/.*$:) {return '161';}
 if (m:^mozilla/widget/src/qt/.*$:) {return '161';}
+if (m:^mozilla/dbm/.*$:) {return '145';}
 if (m:^mozilla/security/coreconf/.*$:) {return '145';}
 if (m:^mozilla/security/dbm/.*$:) {return '145';}
 if (m:^mozilla/security/jss/.*$:) {return '145';}
@@ -472,8 +475,6 @@ if (m:^mozilla/security/manager/.*$:) {return '151';}
 if (m:^mozilla/webtools/addons/.*$:) {return '185';}
 if (m:^mozilla/webtools/aus/.*$:) {return '185';}
 if (m:^mozilla/webtools/update/.*$:) {return '185';}
-if (m:^mozilla/mailnews/movemail/.*$:) {return '157';}
-if (m:^mozilla/embedding/.*$:) {return '208';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
