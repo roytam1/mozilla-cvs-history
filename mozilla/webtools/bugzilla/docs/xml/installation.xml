@@ -331,18 +331,6 @@
 
         <listitem>
           <para>
-            MIME::Base64 (&min-mime-base64-ver;)
-          </para>
-        </listitem>
-
-        <listitem>
-          <para>
-            MIME::Parser (&min-mime-parser-ver;)
-          </para>
-        </listitem>
-
-        <listitem>
-          <para>
             Email::Send (&min-email-send-ver;)
           </para>
         </listitem>
@@ -394,7 +382,13 @@
         <listitem>
           <para>
             <link linkend="install-modules-xml-twig">XML::Twig</link>
-            (&min-xml-twig-ver;) for the XML interface
+            (&min-xml-twig-ver;) for bug import/export
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>
+            MIME::Parser (&min-mime-parser-ver;) for bug import/export
           </para>
         </listitem>
 
