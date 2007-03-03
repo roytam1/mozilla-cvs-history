@@ -391,7 +391,7 @@ if (m:^mozilla/build/.*$:) {return '55';}
 if (m:^mozilla/config/.*$:) {return '55';}
 if (m:^mozilla/widget/src/windows/.*$:) {return '175';}
 if (m:^mozilla/editor/.*$:) {return '56';}
-if (m:^camino/.*$:) {return '210';}
+if (m:^mozilla/camino/.*$:) {return '210';}
 if (m:^mozilla/directory/.*$:) {return '59';}
 if (m:^mozilla/widget/[^/]*$:) {return '177';}
 if (m:^mozilla/widget/public/.*$:) {return '177';}
