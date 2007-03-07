@@ -51,7 +51,7 @@ if ($num == 1) {
 
 $row = mysql_fetch_array($sql_result);
 
-if ($row['UserMode'] != 'A' && $row['UserMode'] != 'E')
+if ($row['UserMode'] != 'A')
 {
    $return_path ="";
    header('Location: https://'.HOST_NAME.WEB_PATH.'/developers/index.php');

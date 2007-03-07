@@ -52,6 +52,8 @@ require_once(HEADER);
 
 <hr class="hide">
 <div id="mBody">
+
+<?php if (isset($_GET['login'])) { ?>
 <div id="mainContent" class="right">
 
 <h2>Developer Control Panel Locked</h2>
@@ -99,7 +101,16 @@ require_once(HEADER);
 </div>
 
 </div>
+<?php } else { ?>
+<h2>Developer Control Panel Closed</h2>
+The Mozilla Add-ons database has been migrated to the <a href="http://preview.addons.mozilla.org">preview version</a> of our new site. Until the launch of our new site, the Developer Control Panel will be inaccessible. If you would like to modify your add-on in our new site, please follow the link below. If you have an issue that requires urgent attention on this site, please <a href="https://bugzilla.mozilla.org/enter_bug.cgi?product=addons.mozilla.org;version=3.0;component=Administration;bug_severity=normal;rep_platform=All;priority=--;op_sys=All;target_milestone=---;;short_desc=%5BPost-migration%20request%5D%20Your_addon_name_here;">file a bug</a>. You can find more information on <a href="http://blog.mozilla.com/webdev/category/amo">our blog</a>.
+
+<div style="border: 1px solid gray; background-color: #eeeeee; margin: 20px 25%; font-weight: bold; text-align: center; padding: 10px;">
+<a href="http://preview.addons.mozilla.org/developers">Proceed to new Developer Control Panel</a>
+</div>
 
 <?php
+}
+
 require_once(FOOTER);
 ?>
