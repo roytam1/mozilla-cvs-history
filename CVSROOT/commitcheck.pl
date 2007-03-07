@@ -448,11 +448,11 @@ if (m:^mozilla/extensions/cookie/.*$:) {return '171';}
 if (m:^mozilla/editor/.*$:) {return '56';}
 if (m:^mozilla/gfx/src/beos/.*$:) {return '172';}
 if (m:^mozilla/widget/src/beos/.*$:) {return '172';}
-if (m:^mozilla/directory/.*$:) {return '59';}
 if (m:^mozilla/widget/src/windows/.*$:) {return '175';}
+if (m:^mozilla/directory/.*$:) {return '59';}
+if (m:^mozilla/camino/.*$:) {return '210';}
 if (m:^mozilla/gfx/src/ps/.*$:) {return '62';}
 if (m:^mozilla/gfx/src/psshared/.*$:) {return '62';}
-if (m:^mozilla/camino/.*$:) {return '210';}
 if (m:^mozilla/widget/[^/]*$:) {return '177';}
 if (m:^mozilla/widget/public/.*$:) {return '177';}
 if (m:^mozilla/widget/src/[^/]*$:) {return '177';}
