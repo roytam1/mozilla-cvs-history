@@ -1138,7 +1138,7 @@
                 <listitem>
                 <para>
                     mod_perl support in Bugzilla can take up a HUGE amount of RAM. You could be
-                    lookng at 30MB per httpd child, easily. Basically, you just need a lot of RAM.
+                    looking at 30MB per httpd child, easily. Basically, you just need a lot of RAM.
                     The more RAM you can get, the better. mod_perl is basically trading RAM for
                     speed. At least 2GB total system RAM is recommended for running Bugzilla under
                     mod_perl.
