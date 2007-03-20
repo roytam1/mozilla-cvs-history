@@ -133,7 +133,7 @@ $mode{'70'} = 'Restricted';
 $branch{'70'} = 'HEAD';
 $fullname{'70'} = 'JavaScript';
 $blessed{'70'} = ['vladimir%pobox.com','timeless%mozdev.org','sayrer%gmail.com','jst%mozilla.org','jruderman%hmc.edu','peterv%propagandism.org','graydon%mozilla.com','gerv%gerv.net','gavin%gavinsharp.com','dbaron%dbaron.org','daumling%adobe.com','cls%seawood.org','bzbarsky%mit.edu','bryner%brianryner.com','bratell%lysator.liu.se','benjamin%smedbergs.us','bclary%bclary.com',];
-$super{'70'} = ['shaver%mozilla.org','mrbkap%gmail.com','jwalden%mit.edu','igor.bukanov%gmail.com','crowder%fiverocks.com','brendan%mozilla.org',];
+$super{'70'} = ['shaver%mozilla.org','mrbkap%gmail.com','jwalden%mit.edu','igor%mir2.org','crowder%fiverocks.com','brendan%mozilla.org',];
 $mode{'207'} = 'Open';
 $branch{'207'} = 'HEAD';
 $fullname{'207'} = 'JavaScript Debugger Backend';
@@ -234,7 +234,7 @@ $mode{'205'} = 'Restricted';
 $branch{'205'} = 'HEAD';
 $fullname{'205'} = 'Tamarin';
 $blessed{'205'} = ['ssubrama%adobe.com','gerv%gerv.net','dschaffe%adobe.com','cpeyer%adobe.com','benjamin%smedbergs.us',];
-$super{'205'} = ['wsharp%adobe.com','tierney%adobe.com','stejohns%adobe.com','shaver%mozilla.org','jodyer%adobe.com','igor.bukanov%gmail.com','edwsmith%adobe.com','brendan%mozilla.org','dansmith%adobe.com',];
+$super{'205'} = ['wsharp%adobe.com','tierney%adobe.com','stejohns%adobe.com','shaver%mozilla.org','jodyer%adobe.com','igor%mir2.org','edwsmith%adobe.com','brendan%mozilla.org','dansmith%adobe.com',];
 $mode{'202'} = 'Open';
 $branch{'202'} = 'HEAD';
 $fullname{'202'} = 'Testing Infrastructure';
@@ -319,6 +319,17 @@ if ($b eq 'BUGZILLA-3_0-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '212';}
 }
 if ($b eq 'HEAD') {
+if (m:^mozilla/java/util/.*$:) {return '133';}
+if (m:^mozilla/content/xbl/[^/]*$:) {return '199';}
+if (m:^mozilla/content/xbl/public/.*$:) {return '199';}
+if (m:^mozilla/content/xbl/src/.*$:) {return '199';}
+if (m:^mozilla/content/xtf/.*$:) {return '200';}
+if (m:^mozilla/layout/xtf/.*$:) {return '200';}
+if (m:^mozilla/xpinstall/.*$:) {return '150';}
+if (m:^mozilla/security/manager/.*$:) {return '151';}
+if (m:^mozilla/webtools/addons/.*$:) {return '185';}
+if (m:^mozilla/webtools/aus/.*$:) {return '185';}
+if (m:^mozilla/webtools/update/.*$:) {return '185';}
 if (m:^CVSROOT/commitcheck\.pl$:) {return '3';}
 if (m:^CVSROOT/passwd$:) {return '3';}
 if (m:^mozilla/mailnews/movemail/.*$:) {return '157';}
@@ -478,17 +489,6 @@ if (m:^mozilla/extensions/java$:) {return '128';}
 if (m:^mozilla/java/plugins/.*$:) {return '129';}
 if (m:^mozilla/java/webclient/.*$:) {return '127';}
 if (m:^mozilla/java/dom/.*$:) {return '130';}
-if (m:^mozilla/java/util/.*$:) {return '133';}
-if (m:^mozilla/content/xbl/[^/]*$:) {return '199';}
-if (m:^mozilla/content/xbl/public/.*$:) {return '199';}
-if (m:^mozilla/content/xbl/src/.*$:) {return '199';}
-if (m:^mozilla/content/xtf/.*$:) {return '200';}
-if (m:^mozilla/layout/xtf/.*$:) {return '200';}
-if (m:^mozilla/xpinstall/.*$:) {return '150';}
-if (m:^mozilla/security/manager/.*$:) {return '151';}
-if (m:^mozilla/webtools/addons/.*$:) {return '185';}
-if (m:^mozilla/webtools/aus/.*$:) {return '185';}
-if (m:^mozilla/webtools/update/.*$:) {return '185';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
