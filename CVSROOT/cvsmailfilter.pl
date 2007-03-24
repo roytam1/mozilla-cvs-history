@@ -15,39 +15,15 @@
 #
 # The remaining args are email addresses of people who should get notified.
 
-use Socket;
-
-sub get_response_code {
-    my ($expecting) = @_;
-#     if ($flag_debug) {
-# 	print STDERR "SMTP: Waiting for code $expecting\n";
-#     }
-    while (1) {
-	my $line = <S>;
-# 	if ($flag_debug) {
-# 	    print STDERR "SMTP: $line";
-# 	}
-	if ($line =~ /^[0-9]*-/) {
-	    next;
-	}
-	if ($line =~ /(^[0-9]*) /) {
-	    my $code = $1;
-	    if ($code == $expecting) {
-# 		if ($flag_debug) {
-# 		    print STDERR "SMTP: got it.\n";
-# 		}
-		return;
-	    }
-	    die "Bad response from SMTP -- $line";
-	}
-    }
-}
-
-
+use strict;
+use Mail::Mailer;
 
 my $debug = 0;
 my $addsonly = 0;
 my $showcommitter = 0;
+
+# Set use_sendmail = 0 to send mail via $mailhost using SMTP
+my $use_sendmail = 0;
 
 my $mailhost = "127.0.0.1";
 my $urlbase = "";
@@ -135,39 +111,19 @@ if ($url ne "") {
                 
 
 
-chop(my $hostname = `/bin/hostname`);
-
-my ($remote,$port, $iaddr, $paddr, $proto, $line);
-
-$remote = $mailhost;
-$port    = 25;
-if ($port =~ /\D/) { $port = getservbyname($port, 'tcp') }
-die "No port" unless $port;
-$iaddr   = inet_aton($remote)               || die "no host: $remote";
-$paddr   = sockaddr_in($port, $iaddr);
-
-$proto   = getprotobyname('tcp');
-socket(S, PF_INET, SOCK_STREAM, $proto)  || die "socket: $!";
-connect(S, $paddr)    || die "connect: $!";
-select(S); $| = 1; select(STDOUT);
-
-get_response_code(220);
-print S "EHLO $hostname\n";
-get_response_code(250);
-print S "MAIL FROM:<cvsmailfilter\@$hostname>\n";
-get_response_code(250);
-foreach $i (@mailto) {
-    print S "RCPT TO:<$i>\n";
-    get_response_code(250);
+chop(my $hostname = `hostname`);
+my $mailer;
+if ($use_sendmail) {
+    $mailer = Mail::Mailer->new("sendmail");
+} else {
+    $mailer = Mail::Mailer->new("smtp", Server => $mailhost);
 }
-print S "DATA\n";
-get_response_code(354);
-print S "From: \"$username\" <cvsmailfilter\@$hostname>\n";
-print S "Subject: $cvsargs\n";
-print S "\n";
+die("Failed to send mail notification\n") if !defined($mailer);
+my %headers;
 
-print S $message . "\n";
-print S ".\n";
-get_response_code(250);
-print S "QUIT\n";
-close(S);
+$headers{'From'} = "$username <cvsmailfilter\@$hostname>";
+$headers{'To'} = \@mailto;
+$headers{'Subject'} = $cvsargs;
+$mailer->open(\%headers);
+print $mailer $message;
+$mailer->close;
