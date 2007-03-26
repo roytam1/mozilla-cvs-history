@@ -29,11 +29,9 @@ $branch{'203'} = 'BUGZILLA-2_22-BRANCH';
 $fullname{'203'} = 'Bugzilla2.22';
 $blessed{'203'} = ['vladd%bugzilla.org','olav%bkor.dhs.org','ghendricks%novell.com',];
 $super{'203'} = ['myk%mozilla.org','mkanat%bugzilla.org','lpsolit%gmail.com','justdave%bugzilla.org',];
-$mode{'212'} = 'Restricted';
+$mode{'212'} = 'Open';
 $branch{'212'} = 'BUGZILLA-3_0-BRANCH';
 $fullname{'212'} = 'Bugzilla3.0';
-$blessed{'212'} = ['vladd%bugzilla.org','olav%bkor.dhs.org','ghendricks%novell.com',];
-$super{'212'} = ['mkanat%bugzilla.org','lpsolit%gmail.com','justdave%bugzilla.org','myk%mozilla.org',];
 $mode{'55'} = 'Open';
 $branch{'55'} = 'HEAD';
 $fullname{'55'} = 'Build Config';
@@ -438,8 +436,8 @@ if (m:^mozilla/xpcom/threads/.*$:) {return '89';}
 if (m:^mozilla/xpcom/tools/.*$:) {return '89';}
 if (m:^mozilla/xpcom/windbgdlg/.*$:) {return '89';}
 if (m:^mozilla/xpcom/reflect/xptcall/.*$:) {return '206';}
-if (m:^mozilla/gfx/src/xprint/.*$:) {return '179';}
 if (m:^mozilla/js/tamarin/.*$:) {return '205';}
+if (m:^mozilla/gfx/src/xprint/.*$:) {return '179';}
 if (m:^mozilla/view/.*$:) {return '96';}
 if (m:^mozilla/layout/[^/]*$:) {return '98';}
 if (m:^mozilla/layout/base/.*$:) {return '98';}
