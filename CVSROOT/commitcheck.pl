@@ -8,9 +8,6 @@ $fullname{'180'} = 'accessibility';
 $mode{'188'} = 'Open';
 $branch{'188'} = 'HEAD';
 $fullname{'188'} = 'Application Suite';
-$mode{'172'} = 'Open';
-$branch{'172'} = 'HEAD';
-$fullname{'172'} = 'BeOS-based gfx and widget';
 $mode{'190'} = 'Open';
 $branch{'190'} = 'HEAD';
 $fullname{'190'} = 'Bugzilla';
@@ -253,6 +250,9 @@ $fullname{'96'} = 'View System';
 $mode{'177'} = 'Open';
 $branch{'177'} = 'HEAD';
 $fullname{'177'} = 'Widget';
+$mode{'172'} = 'Open';
+$branch{'172'} = 'HEAD';
+$fullname{'172'} = 'Widget - BeOS';
 $mode{'49'} = 'Open';
 $branch{'49'} = 'HEAD';
 $fullname{'49'} = 'Widget - GTK';
@@ -359,7 +359,6 @@ if (m:^mozilla/build/.*$:) {return '55';}
 if (m:^mozilla/config/.*$:) {return '55';}
 if (m:^mozilla/extensions/cookie/.*$:) {return '171';}
 if (m:^mozilla/editor/.*$:) {return '56';}
-if (m:^mozilla/gfx/src/beos/.*$:) {return '172';}
 if (m:^mozilla/widget/src/beos/.*$:) {return '172';}
 if (m:^mozilla/directory/.*$:) {return '59';}
 if (m:^mozilla/widget/src/windows/.*$:) {return '175';}
