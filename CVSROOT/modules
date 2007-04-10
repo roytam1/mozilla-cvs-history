@@ -755,13 +755,23 @@ Webclient    -a \
 
 #############################################################
 #
-# Module for iPlanet Network Security Services
+# Modules for Network Security Services
+#             Java Security Services
 #
 #############################################################
 NSS -a \
+	mozilla/dbm \
+	mozilla/security/dbm \
 	mozilla/security/nss \
 	mozilla/security/coreconf
 
+JSS -a \
+	mozilla/security/jss
+
+SecurityServices -a \
+	NSPR \
+	NSS \
+	JSS
 
 #############################################################
 #
