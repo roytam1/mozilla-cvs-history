@@ -313,17 +313,6 @@ if ($b eq 'BUGZILLA-3_0-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '212';}
 }
 if ($b eq 'HEAD') {
-if (m:^mozilla/content/xbl/[^/]*$:) {return '199';}
-if (m:^mozilla/content/xbl/public/.*$:) {return '199';}
-if (m:^mozilla/content/xbl/src/.*$:) {return '199';}
-if (m:^mozilla/content/xtf/.*$:) {return '200';}
-if (m:^mozilla/layout/xtf/.*$:) {return '200';}
-if (m:^mozilla/xpinstall/.*$:) {return '150';}
-if (m:^mozilla/security/manager/.*$:) {return '151';}
-if (m:^mozilla/webtools/addons/.*$:) {return '185';}
-if (m:^mozilla/webtools/aus/.*$:) {return '185';}
-if (m:^mozilla/webtools/update/.*$:) {return '185';}
-if (m:^mozilla/mailnews/movemail/.*$:) {return '157';}
 if (m:^CVSROOT/commitcheck\.pl$:) {return '3';}
 if (m:^CVSROOT/passwd$:) {return '3';}
 if (m:^mozilla/embedding/.*$:) {return '208';}
@@ -479,6 +468,17 @@ if (m:^mozilla/java/plugins/.*$:) {return '129';}
 if (m:^mozilla/java/webclient/.*$:) {return '127';}
 if (m:^mozilla/java/dom/.*$:) {return '130';}
 if (m:^mozilla/java/util/.*$:) {return '133';}
+if (m:^mozilla/content/xbl/[^/]*$:) {return '199';}
+if (m:^mozilla/content/xbl/public/.*$:) {return '199';}
+if (m:^mozilla/content/xbl/src/.*$:) {return '199';}
+if (m:^mozilla/content/xtf/.*$:) {return '200';}
+if (m:^mozilla/layout/xtf/.*$:) {return '200';}
+if (m:^mozilla/xpinstall/.*$:) {return '150';}
+if (m:^mozilla/security/manager/.*$:) {return '151';}
+if (m:^mozilla/webtools/addons/.*$:) {return '185';}
+if (m:^mozilla/webtools/aus/.*$:) {return '185';}
+if (m:^mozilla/webtools/update/.*$:) {return '185';}
+if (m:^mozilla/mailnews/movemail/.*$:) {return '157';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
