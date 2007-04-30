@@ -494,6 +494,7 @@ if (m:^mozilla/other-licenses/branding/thunderbird/.*$:) {return '170';}
 if (m:^mozilla/build/.*$:) {return '55';}
 if (m:^mozilla/config/.*$:) {return '55';}
 if (m:^mozilla/extensions/cookie/.*$:) {return '171';}
+if (m:^mozilla/netwerk/cookie/.*$:) {return '171';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
