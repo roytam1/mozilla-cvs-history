@@ -344,15 +344,13 @@ if (m:^mozilla/content/xbl/builtin/.*$:) {return '182';}
 if (m:^mozilla/js/src/liveconnect/.*$:) {return '72';}
 if (m:^mozilla/extensions/inspector/.*$:) {return '184';}
 if (m:^mozilla/layout/inspector/.*$:) {return '184';}
+if (m:^mozilla/netwerk/[^/]*$:) {return '77';}
 if (m:^mozilla/netwerk/base/.*$:) {return '77';}
-if (m:^mozilla/netwerk/build\.mk$:) {return '77';}
 if (m:^mozilla/netwerk/build/.*$:) {return '77';}
 if (m:^mozilla/netwerk/cache/.*$:) {return '77';}
 if (m:^mozilla/netwerk/dns/.*$:) {return '77';}
 if (m:^mozilla/netwerk/locales/.*$:) {return '77';}
-if (m:^mozilla/netwerk/Makefile\.in$:) {return '77';}
 if (m:^mozilla/netwerk/mime/.*$:) {return '77';}
-if (m:^mozilla/netwerk/necko-config\.h\.in$:) {return '77';}
 if (m:^mozilla/netwerk/protocol/.*$:) {return '77';}
 if (m:^mozilla/netwerk/resources/.*$:) {return '77';}
 if (m:^mozilla/netwerk/socket/.*$:) {return '77';}
