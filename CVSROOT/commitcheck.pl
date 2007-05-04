@@ -313,6 +313,13 @@ if ($b eq 'BUGZILLA-3_0-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '212';}
 }
 if ($b eq 'HEAD') {
+if (m:^mozilla/rdf/.*$:) {return '52';}
+if (m:^mozilla/mail/.*$:) {return '170';}
+if (m:^mozilla/other-licenses/branding/thunderbird/.*$:) {return '170';}
+if (m:^mozilla/build/.*$:) {return '55';}
+if (m:^mozilla/config/.*$:) {return '55';}
+if (m:^mozilla/extensions/cookie/.*$:) {return '171';}
+if (m:^mozilla/netwerk/cookie/.*$:) {return '171';}
 if (m:^mozilla/editor/.*$:) {return '56';}
 if (m:^mozilla/widget/src/beos/.*$:) {return '172';}
 if (m:^mozilla/directory/.*$:) {return '59';}
@@ -486,13 +493,6 @@ if (m:^mozilla/chrome/.*$:) {return '169';}
 if (m:^mozilla/storage/.*$:) {return '169';}
 if (m:^mozilla/toolkit/.*$:) {return '169';}
 if (m:^mozilla/xulrunner/.*$:) {return '169';}
-if (m:^mozilla/rdf/.*$:) {return '52';}
-if (m:^mozilla/mail/.*$:) {return '170';}
-if (m:^mozilla/other-licenses/branding/thunderbird/.*$:) {return '170';}
-if (m:^mozilla/build/.*$:) {return '55';}
-if (m:^mozilla/config/.*$:) {return '55';}
-if (m:^mozilla/extensions/cookie/.*$:) {return '171';}
-if (m:^mozilla/netwerk/cookie/.*$:) {return '171';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
