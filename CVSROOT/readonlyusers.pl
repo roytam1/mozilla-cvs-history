@@ -32,7 +32,7 @@ my %read_only_users = (
                        'xrbld'     => 1
                       );
 
-my $username = $ENV{"CVS_USER"} || getlogin || (getpwuid($<))[0] || "nobody";
+my $username = $ENV{'CVS_USER'} || getlogin || (getpwuid($<))[0] || 'nobody';
 
 if (exists $read_only_users{$username}) {
     print STDERR "The $username account is not permitted to check-in to this CVS repository.\n";
