@@ -18,3 +18,4 @@ dolog.pl
 FilesToNotExport
 cvsmailfilter.pl
 sendnotification.pl
+readonlyusers.pl
