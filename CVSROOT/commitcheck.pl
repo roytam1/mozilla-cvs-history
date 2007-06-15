@@ -311,6 +311,17 @@ if ($b eq 'BUGZILLA-3_0-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '212';}
 }
 if ($b eq 'HEAD') {
+if (m:^mozilla/webtools/partytool/.*$:) {return '209';}
+if (m:^mozilla/browser/.*$:) {return '166';}
+if (m:^mozilla/other-licenses/branding/firefox/.*$:) {return '166';}
+if (m:^mozilla/widget/src/gtk/.*$:) {return '49';}
+if (m:^mozilla/widget/src/gtk2/.*$:) {return '49';}
+if (m:^mozilla/widget/src/gtksuperwin/.*$:) {return '49';}
+if (m:^mozilla/widget/src/gtkxtbin/.*$:) {return '49';}
+if (m:^mozilla/chrome/.*$:) {return '169';}
+if (m:^mozilla/storage/.*$:) {return '169';}
+if (m:^mozilla/toolkit/.*$:) {return '169';}
+if (m:^mozilla/xulrunner/.*$:) {return '169';}
 if (m:^mozilla/rdf/.*$:) {return '52';}
 if (m:^mozilla/mail/.*$:) {return '170';}
 if (m:^mozilla/other-licenses/branding/thunderbird/.*$:) {return '170';}
@@ -480,17 +491,6 @@ if (m:^mozilla/gfx/src/xlib/.*$:) {return '121';}
 if (m:^mozilla/widget/src/xlib/.*$:) {return '121';}
 if (m:^mozilla/widget/src/xlibxtbin/.*$:) {return '121';}
 if (m:^mozilla/layout/mathml/.*$:) {return '165';}
-if (m:^mozilla/webtools/partytool/.*$:) {return '209';}
-if (m:^mozilla/browser/.*$:) {return '166';}
-if (m:^mozilla/other-licenses/branding/firefox/.*$:) {return '166';}
-if (m:^mozilla/widget/src/gtk/.*$:) {return '49';}
-if (m:^mozilla/widget/src/gtk2/.*$:) {return '49';}
-if (m:^mozilla/widget/src/gtksuperwin/.*$:) {return '49';}
-if (m:^mozilla/widget/src/gtkxtbin/.*$:) {return '49';}
-if (m:^mozilla/chrome/.*$:) {return '169';}
-if (m:^mozilla/storage/.*$:) {return '169';}
-if (m:^mozilla/toolkit/.*$:) {return '169';}
-if (m:^mozilla/xulrunner/.*$:) {return '169';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
