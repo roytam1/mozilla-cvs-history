@@ -796,7 +796,8 @@ CoreTinderboxAll -a \
 # should this be called SuiteTinderboxAll ?
 MozillaTinderboxAll -a \
 	CoreTinderboxAll \
-        mozilla/suite
+        mozilla/suite \
+        mozilla/xulrunner
 
 # mozilla uses mozilla/security/manager from 
 # the tip, not the nss branch
