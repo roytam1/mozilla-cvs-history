@@ -797,7 +797,8 @@ CoreTinderboxAll -a \
 MozillaTinderboxAll -a \
 	CoreTinderboxAll \
         mozilla/suite \
-        mozilla/xulrunner
+        mozilla/xulrunner \
+  TestHarness 
 
 # mozilla uses mozilla/security/manager from 
 # the tip, not the nss branch
@@ -852,3 +853,9 @@ AviarySuiteBranchTinderbox -a \
 	mozilla/chrome \
 	mozilla/mail \
 	mozilla/suite
+
+# Test Harness code
+TestHarness -a \
+  mozilla/tools/test-harness/xpcshell-simple \
+  mozilla/testing/mochitest
+
