@@ -785,6 +785,7 @@ CoreTinderboxAll -a \
         mozilla/ipc/ipcd \
         mozilla/security/manager \
         mozilla/tools/trace-malloc \
+        mozilla/modules/lcms \
         mozilla/modules/libpr0n \
         mozilla/modules/libmar \
         mozilla/modules/libbz2 \
