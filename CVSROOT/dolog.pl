@@ -52,7 +52,7 @@ $flag_debug = 0;
 $flag_tagcmd = 0;
 $repository = '';
 $repository_tag = '';
-$mailhost = 'localhost';
+$mailhost = 'smtp.mozilla.org';
 $rlogcommand = '/usr/bin/rlog';
 $output2mail = 1;
 
