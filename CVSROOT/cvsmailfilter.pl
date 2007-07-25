@@ -25,7 +25,7 @@ my $showcommitter = 0;
 # Set use_sendmail = 0 to send mail via $mailhost using SMTP
 my $use_sendmail = 0;
 
-my $mailhost = "127.0.0.1";
+my $mailhost = "smtp.mozilla.org";
 my $urlbase = "";
 my $cvsargs = "";
 my $cvsroot = "";
