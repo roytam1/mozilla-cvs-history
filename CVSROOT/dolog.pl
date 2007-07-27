@@ -465,7 +465,7 @@ sub do_commitinfo {
 }
 
 sub mail_notification {
-    chop(my $hostname = `hostname`);
+    chop(my $hostname = `hostname --fqdn`);
     my $mailer;
     if ($use_sendmail) {
         $mailer = Mail::Mailer->new("sendmail");
