@@ -111,7 +111,7 @@ if ($url ne "") {
                 
 
 
-chop(my $hostname = `hostname`);
+chop(my $hostname = `hostname --fqdn`);
 my $mailer;
 if ($use_sendmail) {
     $mailer = Mail::Mailer->new("sendmail");
