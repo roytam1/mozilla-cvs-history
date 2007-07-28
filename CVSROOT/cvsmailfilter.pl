@@ -124,6 +124,11 @@ my %headers;
 $headers{'From'} = "$username <cvsmailfilter\@$hostname>";
 $headers{'To'} = \@mailto;
 $headers{'Subject'} = $cvsargs;
+$headers{'MIME-Version'} = '1.0';
+$headers{'Content-Type'} = 'text/plain; charset=UTF-8'; # assume everything is UTF-8
+$headers{'Content-Transfer-Encoding'} = '8bit';
+$headers{'Content-Disposition'} = 'inline';
+
 $mailer->open(\%headers);
 print $mailer $message;
 $mailer->close;
