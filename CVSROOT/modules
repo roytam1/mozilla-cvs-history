@@ -780,26 +780,26 @@ SecurityServices -a \
 #############################################################
 CoreTinderboxAll -a \
 	SeaMonkeyAll \
-        mozilla/security/psm \
-        mozilla/accessible \
-        mozilla/ipc/ipcd \
-        mozilla/security/manager \
-        mozilla/tools/trace-malloc \
-        mozilla/modules/lcms \
-        mozilla/modules/libpr0n \
-        mozilla/modules/libmar \
-        mozilla/modules/libbz2 \
-        mozilla/toolkit \
-        mozilla/storage \
-        mozilla/db/morkreader \
-        mozilla/db/sqlite3
+	mozilla/security/psm \
+	mozilla/accessible \
+	mozilla/ipc/ipcd \
+	mozilla/security/manager \
+	mozilla/tools/trace-malloc \
+	mozilla/modules/lcms \
+	mozilla/modules/libpr0n \
+	mozilla/modules/libmar \
+	mozilla/modules/libbz2 \
+	mozilla/toolkit \
+	mozilla/storage \
+	mozilla/db/morkreader \
+	mozilla/db/sqlite3 \
+	TestHarness 
 
 # should this be called SuiteTinderboxAll ?
 MozillaTinderboxAll -a \
 	CoreTinderboxAll \
-        mozilla/suite \
-        mozilla/xulrunner \
-  TestHarness 
+	mozilla/suite \
+	mozilla/xulrunner
 
 # mozilla uses mozilla/security/manager from 
 # the tip, not the nss branch
@@ -857,6 +857,6 @@ AviarySuiteBranchTinderbox -a \
 
 # Test Harness code
 TestHarness -a \
-  mozilla/tools/test-harness/xpcshell-simple \
-  mozilla/testing/mochitest
+	mozilla/tools/test-harness/xpcshell-simple \
+	mozilla/testing/mochitest
 
