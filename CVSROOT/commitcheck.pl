@@ -8,9 +8,11 @@ $fullname{'180'} = 'accessibility';
 $mode{'188'} = 'Open';
 $branch{'188'} = 'HEAD';
 $fullname{'188'} = 'Application Suite';
-$mode{'190'} = 'Open';
+$mode{'190'} = 'Closed';
 $branch{'190'} = 'HEAD';
 $fullname{'190'} = 'Bugzilla';
+$blessed{'190'} = ['vladd%bugzilla.org','olav%bkor.dhs.org','ghendricks%novell.com',];
+$super{'190'} = ['myk%mozilla.org','mkanat%bugzilla.org','lpsolit%gmail.com','justdave%bugzilla.org',];
 $mode{'204'} = 'Closed';
 $branch{'204'} = 'BUGZILLA-2_18-BRANCH';
 $fullname{'204'} = 'Bugzilla2.18';
@@ -313,18 +315,6 @@ if ($b eq 'BUGZILLA-3_0-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '212';}
 }
 if ($b eq 'HEAD') {
-if (m:^mozilla/parser/htmlparser$:) {return '102';}
-if (m:^mozilla/content/base/.*$:) {return '103';}
-if (m:^mozilla/content/events/.*$:) {return '103';}
-if (m:^mozilla/content/html/content/.*$:) {return '103';}
-if (m:^mozilla/content/html/document/.*$:) {return '103';}
-if (m:^mozilla/dom/.*$:) {return '103';}
-if (m:^mozilla/js/rhino/.*$:) {return '138';}
-if (m:^mozilla/xpfe/.*$:) {return '137';}
-if (m:^mozilla/js/tests/.*$:) {return '114';}
-if (m:^mozilla/content/xslt/.*$:) {return '140';}
-if (m:^mozilla/extensions/transformiix/.*$:) {return '140';}
-if (m:^mozilla/calendar/.*$:) {return '183';}
 if (m:^mozilla/gfx/src/photon/.*$:) {return '113';}
 if (m:^mozilla/widget/src/photon/.*$:) {return '113';}
 if (m:^mozilla/content/xul/.*$:) {return '106';}
@@ -493,6 +483,18 @@ if (m:^mozilla/layout/style/.*$:) {return '100';}
 if (m:^mozilla/docshell/.*$:) {return '101';}
 if (m:^mozilla/uriloader/.*$:) {return '101';}
 if (m:^mozilla/webshell/.*$:) {return '101';}
+if (m:^mozilla/parser/htmlparser$:) {return '102';}
+if (m:^mozilla/content/base/.*$:) {return '103';}
+if (m:^mozilla/content/events/.*$:) {return '103';}
+if (m:^mozilla/content/html/content/.*$:) {return '103';}
+if (m:^mozilla/content/html/document/.*$:) {return '103';}
+if (m:^mozilla/dom/.*$:) {return '103';}
+if (m:^mozilla/js/rhino/.*$:) {return '138';}
+if (m:^mozilla/xpfe/.*$:) {return '137';}
+if (m:^mozilla/js/tests/.*$:) {return '114';}
+if (m:^mozilla/content/xslt/.*$:) {return '140';}
+if (m:^mozilla/extensions/transformiix/.*$:) {return '140';}
+if (m:^mozilla/calendar/.*$:) {return '183';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
