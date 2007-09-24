@@ -845,7 +845,8 @@ ThunderbirdTinderbox -a \
 PhoenixTinderbox -a \
 	CoreTinderboxAll \
 	mozilla/browser \
-	mozilla/chrome
+	mozilla/chrome \
+    !mozilla/extensions/irc
 
 # For special trees like Mozilla 1.8 --chase
 AviarySuiteBranchTinderbox -a \
