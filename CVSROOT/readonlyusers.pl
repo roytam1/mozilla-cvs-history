@@ -30,6 +30,7 @@ my %read_only_users = (
                        'seabld'    => 1,
                        'tbirdbld'  => 1,
                        'unittest'  => 1,
+                       'trybld'    => 1,
                        'xrbld'     => 1
                       );
 
