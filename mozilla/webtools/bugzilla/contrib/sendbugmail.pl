@@ -14,7 +14,7 @@
 # 
 # Usage: perl -T contrib/sendbugmail.pl bug_id user_email
 
-use lib qw(.);
+use lib qw(. lib);
 
 use Bugzilla;
 use Bugzilla::Util;
