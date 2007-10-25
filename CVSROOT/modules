@@ -769,6 +769,7 @@ JSS -a \
 	mozilla/security/jss
 
 SecurityServices -a \
+    mozilla/security/tinderbox \
 	NSPR \
 	NSS \
 	JSS
