@@ -75,11 +75,12 @@
 		 }
 	}
 	if (!include(CORE_PATH . 'cake' . DS . 'bootstrap.php')) {
-		trigger_error(__("Can't find CakePHP core.  Check the value of CAKE_CORE_INCLUDE_PATH in app/webroot/index.php.  It should point to the directory containing your " . DS . "cake core directory and your " . DS . "vendors root directory.", true), E_USER_ERROR);
+		trigger_error("Can't find CakePHP core.  Check the value of CAKE_CORE_INCLUDE_PATH in app/webroot/index.php.  It should point to the directory containing your " . DS . "cake core directory and your " . DS . "vendors root directory.", E_USER_ERROR);
 	}
 	if (isset($_GET['url']) && $_GET['url'] === 'favicon.ico') {
+		return;
 	} else {
-		 $Dispatcher=new Dispatcher();
+		 $Dispatcher = new Dispatcher();
 		 $Dispatcher->dispatch($url);
 	}
 	if (Configure::read() > 0) {
