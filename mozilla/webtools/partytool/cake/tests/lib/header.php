@@ -32,7 +32,7 @@
 	<head>
 		<meta http-equiv='content-Type' content='text/html; <?php echo $characterSet; ?>' />
 		<title>CakePHP Test Suite v 1.2.0.0</title>
-		<link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>/css/cake.generic.css" />
+		<link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>css/cake.generic.css" />
 		<style>
 			h3 {font-size: 150%}
 			a {font-size: 120%}
@@ -43,7 +43,7 @@
 	<body>
 		<div id="container">
 			<div id="header">
-				<h1>CakePHP: the PHP Rapid Development Framework</h1>
+				<h1>CakePHP: the rapid development php framework</h1>
 			</div>
 			<div id="content">
 			<h2>CakePHP Test Suite v 1.2.0.0</h2>

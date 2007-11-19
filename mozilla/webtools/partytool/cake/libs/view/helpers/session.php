@@ -35,6 +35,9 @@
  * @subpackage	cake.cake.libs.view.helpers
  *
  */
+if(!class_exists('cakesession')) {
+	uses('session');
+}
 class SessionHelper extends CakeSession {
 /**
  * List of helpers used by this helper
@@ -54,14 +57,14 @@ class SessionHelper extends CakeSession {
  * @param string $base
  */
 	function __construct($base = null) {
-		if (!defined('AUTO_SESSION') || AUTO_SESSION === true) {
+		if (Configure::read('Session.start') === true) {
 			parent::__construct($base, false);
 		} else {
 			$this->__active = false;
 		}
 	}
 /**
- * Turn sessions on if AUTO_SESSION is set to false in core.php
+ * Turn sessions on if 'Session.start' is set to false in core.php
  *
  * @param string $base
  */
@@ -91,7 +94,7 @@ class SessionHelper extends CakeSession {
  * In your view: $session->check('Controller.sessKey');
  *
  * @param string $name
- * @return boolean
+ * @return bool
  * @access public
  */
 	function check($name) {
@@ -150,13 +153,23 @@ class SessionHelper extends CakeSession {
 /**
  * Used to check is a session is valid in a view
  *
- * @return boolean
+ * @return bool
  * @access public
  */
 	function valid() {
 		if ($this->__active === true) {
 			return parent::valid();
 		}
+	}
+/**
+ * Override CakeSession::write().
+ * This method should not be used in a view
+ *
+ * @return bool
+ * @access public
+ */
+	function write() {
+		trigger_error(__('You can not write to a Session from the view', true), E_USER_WARNING);
 	}
 }
 ?>

@@ -46,8 +46,6 @@ class JsHelper extends Overloadable2 {
 	var $data = null;
 	var $themeWeb = null;
 	var $plugin = null;
-	var $namedArgs = null;
-	var $argSeparator = null;
 
 	var $helpers = array();
 
@@ -72,7 +70,7 @@ class JsHelper extends Overloadable2 {
 
 	function call__($method, $params) {
 		if (is_object($this->hook) && method_exists($this->hook, $method)) {
-			
+
 		}
 		if (method_exists($this, $method . '_')) {
 			return call_user_func_array(array(&$this, $method . '_'), $params);
@@ -89,10 +87,10 @@ class JsHelper extends Overloadable2 {
 			$if{$len} = null;
 		}
 
-		$out = 'if(' . $if . ') { ' . $then . ' }';
+		$out = 'if (' . $if . ') { ' . $then . ' }';
 
 		foreach ($elseif as $cond => $exec) {
-			//$out .= 
+			//$out .=
 		}
 
 		if (!empty($else)) {
@@ -237,7 +235,7 @@ class JsHelper extends Overloadable2 {
 		$numeric = true;
 
 		if (!empty($keys)) {
-			foreach($keys as $key) {
+			foreach ($keys as $key) {
 				if (!is_numeric($key)) {
 					$numeric = false;
 					break;
@@ -245,7 +243,7 @@ class JsHelper extends Overloadable2 {
 			}
 		}
 
-		foreach($data as $key => $val) {
+		foreach ($data as $key => $val) {
 			if (is_array($val) || is_object($val)) {
 				$val = $this->object($val, false, '', '', $stringKeys, $quoteKeys, $q);
 			} else {
@@ -347,7 +345,7 @@ class JsHelperObject {
 				if (strpos($args[0], '_') || $args[0]{0} != strtoupper($args[0]{0})) {
 					$args[0] = Inflector::camelize($args[0]);
 				}
-			
+
 				if (strtolower($args[0]) == 'highlight') {
 					$data .= 'new ';
 				}

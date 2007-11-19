@@ -26,9 +26,6 @@
  * @lastmodified	$Date$
  * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
  */
-if (!defined('ACL_DATABASE')) {
-	define('ACL_DATABASE', 'default');
-}
 /**
  * Short description for file
  *
@@ -50,7 +47,6 @@ class AclBehavior extends ModelBehavior {
  * Sets up the configuation for the model, and loads ACL models if they haven't been already
  *
  * @param mixed $config
- * @return void
  */
 	function setup(&$model, $config = array()) {
 		if (is_string($config)) {
@@ -87,7 +83,6 @@ class AclBehavior extends ModelBehavior {
  * Creates a new ARO/ACO node bound to this record
  *
  * @param boolean $created True if this is a new record
- * @return void
  */
 	function afterSave(&$model, $created) {
 		if ($created) {
@@ -110,7 +105,6 @@ class AclBehavior extends ModelBehavior {
 /**
  * Destroys the ARO/ACO node bound to the deleted record
  *
- * @return void
  */
 	function afterDelete(&$model) {
 		$type = $this->__typeMaps[low($this->settings[$model->name]['type'])];

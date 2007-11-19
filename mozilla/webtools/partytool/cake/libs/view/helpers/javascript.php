@@ -105,8 +105,8 @@ class JavascriptHelper extends AppHelper {
 
 		if (!empty($script)) {
 			$this->_cachedEvents[] = $script;
+			return null;
 		}
-
 		return $this->tags['javascriptend'];
 	}
 /**
@@ -182,7 +182,6 @@ class JavascriptHelper extends AppHelper {
  * @return boolean true on success
  */
 	function event($object, $event, $observer = null, $useCapture = false) {
-
 		if ($useCapture == true) {
 			$useCapture = 'true';
 		} else {
@@ -190,9 +189,9 @@ class JavascriptHelper extends AppHelper {
 		}
 
 		if (strpos($object, 'window') !== false || strpos($object, 'document') !== false || strpos($object, '$(') !== false || strpos($object, '"') !== false || strpos($object, '\'') !== false) {
-			$b = "Event.observe({$object}, '{$event}', function(event){ {$observer} }, {$useCapture});";
+			$b = "Event.observe({$object}, '{$event}', function(event) { {$observer} }, {$useCapture});";
 		} elseif (strpos($object, '\'') === 0) {
-			$b = "Event.observe(" . substr($object, 1) . ", '{$event}', function(event){ {$observer} }, {$useCapture});";
+			$b = "Event.observe(" . substr($object, 1) . ", '{$event}', function(event) { {$observer} }, {$useCapture});";
 		} else {
 			$chars = array('#', ' ', ', ', '.', ':');
 			$found = false;
@@ -205,7 +204,7 @@ class JavascriptHelper extends AppHelper {
 			if ($found) {
 				$this->_rules[$object] = $event;
 			} else {
-				$b = "Event.observe(\$('{$object}'), '{$event}', function(event){ {$observer} }, {$useCapture});";
+				$b = "Event.observe(\$('{$object}'), '{$event}', function(event) { {$observer} }, {$useCapture});";
 			}
 		}
 
@@ -305,7 +304,7 @@ class JavascriptHelper extends AppHelper {
 			$files = scandir(JS);
 			$javascript = '';
 
-			foreach($files as $file) {
+			foreach ($files as $file) {
 				if (substr($file, -3) == '.js') {
 					$javascript .= file_get_contents(JS . "{$file}") . "\n\n";
 				}
@@ -345,7 +344,7 @@ class JavascriptHelper extends AppHelper {
 			$numeric = (array_values($keys) === array_keys(array_values($keys)));
 		}
 
-		foreach($data as $key => $val) {
+		foreach ($data as $key => $val) {
 			if (is_array($val) || is_object($val)) {
 				$val = $this->object($val, false, '', '', $stringKeys, $quoteKeys, $q);
 			} else {
@@ -355,7 +354,7 @@ class JavascriptHelper extends AppHelper {
 				if ($val === null) {
 					$val = 'null';
 				}
-				if (is_bool($val)){
+				if (is_bool($val)) {
 					$val = ife($val, 'true', 'false');
 				}
 			}

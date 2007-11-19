@@ -27,11 +27,11 @@
 clear
 
 LIB=${0/%cake/}
-APP=`pwd`/
+APP=`pwd`
 
 echo "Hello $USER,"
 
-exec php -q ${LIB}cake.php "$@" -working "${APP}"
+exec php -q ${LIB}cake.php -working "${APP}" "$@"
 
 echo " ";
 

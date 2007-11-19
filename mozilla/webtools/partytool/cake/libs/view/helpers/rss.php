@@ -131,12 +131,20 @@ class RssHelper extends XmlHelper {
 		}
 		if (!isset($elements['link'])) {
 			$elements['link'] = '/';
-		} 
+		}
+		if (!isset($elements['description'])) {
+			$elements['description'] = '';
+		}
 		$elements['link'] = $this->url($elements['link'], true);
 
 		$elems = '';
 		foreach ($elements as $elem => $data) {
-			$elems .= $this->elem($elem, array(), $data);
+			$attributes = array();
+			if (is_array($data) && isset($data['attrib']) && is_array($data['attrib'])) {
+				$attributes = $data['attrib'];
+				unset($data['attrib']);
+			}
+			$elems .= $this->elem($elem, $attributes, $data);
 		}
 		return $this->elem('channel', $attrib, $elems . $this->__composeContent($content), !($content === null));
 	}
@@ -169,10 +177,14 @@ class RssHelper extends XmlHelper {
  * @param  array  $elements    The list of elements contained in this <item />
  * @return string An RSS <item /> element
  */
-	function item($attrib = array(), $elements = array()) {
+	function item($att = array(), $elements = array()) {
 		$content = null;
-		foreach ($elements as $key => $val) {
 
+		if (isset($elements['link']) && !isset($elements['guid'])) {
+			$elements['guid'] = $elements['link'];
+		}
+
+		foreach ($elements as $key => $val) {
 			$attrib = array();
 			switch ($key) {
 				case 'pubDate' :
@@ -210,22 +222,17 @@ class RssHelper extends XmlHelper {
 					$attrib = $val;
 					$val = null;
 				break;
-			}			
+			}
 			if ($val != null) {
 				$val = h($val);
 			}
 			$elements[$key] = $this->elem($key, $attrib, $val);
 		}
 
-		if (isset($elements['link']) && !isset($elements['guid'])) {
-			$elements['guid'] = $elements['link'];
-		}
-
 		if (!empty($elements)) {
 			$content = join('', $elements);
 		}
-		
-		return $this->output($this->elem('item', $attrib, $content, !($content === null)));
+		return $this->output($this->elem('item', $att, $content, !($content === null)));
 	}
 /**
  * Converts a time in any format to an RSS time
@@ -238,5 +245,4 @@ class RssHelper extends XmlHelper {
 		return $this->Time->toRSS($time);
  	}
 }
-
 ?>

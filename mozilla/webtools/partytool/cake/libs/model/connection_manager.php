@@ -114,6 +114,15 @@ class ConnectionManager extends Object {
 		return $_this->_dataSources[$name];
 	}
 /**
+ * Gets the list of available DataSource connections
+ *
+ * @return array
+ */
+	function sourceList() {
+		$_this =& ConnectionManager::getInstance();
+		return array_keys($_this->_dataSources);
+	}
+/**
  * Gets a DataSource name from an object reference
  *
  * @param object $source
@@ -155,9 +164,9 @@ class ConnectionManager extends Object {
 			return false;
 		}
 
-		if(file_exists(MODELS . 'datasources' . DS . $conn['filename'] . '.php')) {
+		if (file_exists(MODELS . 'datasources' . DS . $conn['filename'] . '.php')) {
 			require (MODELS . 'datasources' . DS . $conn['filename'] . '.php');
-		} else if (fileExistsInPath(LIBS . 'model' . DS . 'datasources' . DS . $conn['filename'] . '.php')) {
+		} elseif (fileExistsInPath(LIBS . 'model' . DS . 'datasources' . DS . $conn['filename'] . '.php')) {
 			require (LIBS . 'model' . DS . 'datasources' . DS . $conn['filename'] . '.php');
 		} else {
 			trigger_error(sprintf(__('Unable to load DataSource file %s.php', true), $conn['filename']), E_USER_ERROR);
@@ -179,7 +188,7 @@ class ConnectionManager extends Object {
 		$connections = get_object_vars($_this->config);
 
 		if ($connections != null) {
-			foreach($connections as $name => $config) {
+			foreach ($connections as $name => $config) {
 				$_this->_connectionsEnum[$name] = $_this->__getDriver($config);
 			}
 			return $_this->_connectionsEnum;
@@ -234,7 +243,7 @@ class ConnectionManager extends Object {
  *
  */
 	function __destruct() {
-		if (CAKE_SESSION_SAVE == 'database' && function_exists('session_write_close')) {
+		if (Configure::read('Session.save') == 'database' && function_exists('session_write_close')) {
 			session_write_close();
 		}
 	}

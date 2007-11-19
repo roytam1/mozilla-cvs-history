@@ -118,7 +118,6 @@ class XmlHelper extends AppHelper {
  * Removes a namespace added in addNs()
  *
  * @param  string  $name The namespace name or URI
- * @return void
  */
 	function removeNs($name) {
 		if (in_array($name, array_keys($this->__namespaces))) {
@@ -219,9 +218,9 @@ class XmlHelper extends AppHelper {
 				} elseif (is_array($content[$keys[$i]])) {
 					$attr = $child = array();
 					if (Set::countDim($content[$keys[$i]]) >= 2) {
-						
+
 					} else {
-						
+
 					}
 					//$out .= $this->elem($keys[$i]
 				}
@@ -236,7 +235,6 @@ class XmlHelper extends AppHelper {
 		} else {
 			return $content;
 		}
-		return false;
 	}
 /**
  * Serializes a model resultset into XML

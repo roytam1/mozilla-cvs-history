@@ -26,18 +26,24 @@
  * @lastmodified	$Date$
  * @license			http://www.opensource.org/licenses/opengroup.php The Open Group Test Suite License
  */
-	require_once LIBS.'view'.DS.'view.php';
-	require_once LIBS.'controller'.DS.'controller.php';
+uses('controller' . DS . 'controller', 'view'.DS.'view');
 
-	class PostsController extends Controller {
-		var $name = 'Posts';
-		function index() {
-			$this->set('testData', 'Some test data');
-			$test2 = 'more data';
-			$test3 = 'even more data';
-			$this->set(compact('test2', 'test3'));
-		}
+class PostsController extends Controller {
+	var $name = 'Posts';
+	function index() {
+		$this->set('testData', 'Some test data');
+		$test2 = 'more data';
+		$test3 = 'even more data';
+		$this->set(compact('test2', 'test3'));
 	}
+}
+
+class TestView extends View {
+
+	function renderElement($name, $params = array()) {
+		return $name;
+	}
+}
 
 /**
  * Short description for class.
@@ -48,6 +54,7 @@
 class ViewTest extends UnitTestCase {
 
 	function setUp() {
+		Router::reload();
 		$this->PostsController = new PostsController();
 		$this->PostsController->index();
 		$this->view = new View($this->PostsController);
@@ -59,11 +66,11 @@ class ViewTest extends UnitTestCase {
 
 	function testUUIDGeneration() {
 		$result = $this->view->uuid('form', array('controller' => 'posts', 'action' => 'index'));
-		$this->assertEqual($result, 'form5988016017');
+		$this->assertEqual($result, 'form0425fe3bad');
 		$result = $this->view->uuid('form', array('controller' => 'posts', 'action' => 'index'));
-		$this->assertEqual($result, 'formc3dc6be854');
+		$this->assertEqual($result, 'forma9918342a7');
 		$result = $this->view->uuid('form', array('controller' => 'posts', 'action' => 'index'));
-		$this->assertEqual($result, 'form28f92cc87f');
+		$this->assertEqual($result, 'form3ecf2e3e96');
 	}
 
 	function testAddInlineScripts() {
@@ -75,10 +82,50 @@ class ViewTest extends UnitTestCase {
 		$this->assertEqual($this->view->__scripts, array('prototype.js', 'mainEvent' => 'Event.observe(window, "load", function() { doSomething(); }, true);'));
 	}
 
+	function testElementCache() {
+		$View = new TestView($this->PostsController);
+		$element = 'element_name';
+		$result = $View->element($element);
+		$this->assertEqual($result, $element);
+
+		$cached = false;
+		$result = $View->element($element, array('cache'=>'+1 second'));
+		if(file_exists(CACHE . 'views' . DS . 'element_cache_'.$element)) {
+			$cached = true;
+			unlink(CACHE . 'views' . DS . 'element_cache_'.$element);
+		}
+		$this->assertTrue($cached);
+
+		$cached = false;
+		$result = $View->element($element, array('cache'=>'+1 second', 'other_param'=> true, 'anotherParam'=> true));
+		if(file_exists(CACHE . 'views' . DS . 'element_cache_other_param_anotherParam_'.$element)) {
+			$cached = true;
+			unlink(CACHE . 'views' . DS . 'element_cache_other_param_anotherParam_'.$element);
+		}
+		$this->assertTrue($cached);
+
+		$cached = false;
+		$result = $View->element($element, array('cache'=>array('time'=>'+1 second', 'key'=>'/whatever/here')));
+		if(file_exists(CACHE . 'views' . DS . 'element_'.convertSlash('/whatever/here').'_'.$element)) {
+			$cached = true;
+			unlink(CACHE . 'views' . DS . 'element_'.convertSlash('/whatever/here').'_'.$element);
+		}
+		$this->assertTrue($cached);
+
+		$cached = false;
+		$result = $View->element($element, array('cache'=>array('time'=>'+1 second', 'key'=>'whatever_here')));
+		if(file_exists(CACHE . 'views' . DS . 'element_whatever_here_'.$element)) {
+			$cached = true;
+			unlink(CACHE . 'views' . DS . 'element_whatever_here_'.$element);
+		}
+		$this->assertTrue($cached);
+		$this->assertEqual($result, $element);
+
+	}
+
 	function tearDown() {
 		unset($this->view);
 		unset($this->PostsController);
 	}
 }
-
 ?>

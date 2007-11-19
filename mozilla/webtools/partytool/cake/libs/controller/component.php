@@ -24,35 +24,39 @@
  * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
  */
 /**
+ * Base class for all CakePHP Components.
  *
  * @package		cake
  * @subpackage	cake.cake.libs.controller
  */
 class Component extends Object {
 /**
- * Enter description here...
+ * Components used by this component.
  *
- * @var unknown_type
+ * @var array
+ * @access public
  */
 	var $components = array();
 /**
- * Enter description here...
+ * Controller to which this component is linked.
  *
- * @var unknown_type
+ * @var object
+ * @access public
  */
 	var $controller = null;
 
 /**
  * Constructor
  *
- * @return Component
+ * @return object
  */
 	function __construct() {
 	}
 /**
  * Used to initialize the components for current controller
  *
- * @param object $controller
+ * @param object $controller Controller using this component.
+ * @access public
  */
 	function init(&$controller) {
 		$this->controller =& $controller;
@@ -61,10 +65,10 @@ class Component extends Object {
 			$this->controller->components = array_merge($this->controller->components, array('Session'));
 			$loaded = $this->_loadComponents($loaded, $this->controller->components);
 
-			foreach(array_keys($loaded) as $component) {
+			foreach (array_keys($loaded) as $component) {
 				$tempComponent =& $loaded[$component];
 				if (isset($tempComponent->components) && is_array($tempComponent->components)) {
-					foreach($tempComponent->components as $subComponent) {
+					foreach ($tempComponent->components as $subComponent) {
 						$this->controller->{$component}->{$subComponent} =& $loaded[$subComponent];
 					}
 				}
@@ -75,19 +79,20 @@ class Component extends Object {
 		}
 	}
 /**
- * Enter description here...
+ * Load components used by this component.
  *
- * @param unknown_type $loaded
- * @param unknown_type $components
- * @return unknown
+ * @param array $loaded Components already loaded (indexed by component name)
+ * @param array $components Components to load
+ * @return array Components loaded
+ * @access protected
  */
 	function &_loadComponents(&$loaded, $components) {
 		$components[] = 'Session';
 
-		foreach($components as $component) {
+		foreach ($components as $component) {
 			$parts = preg_split('/\/|\./', $component);
 
-			if(count($parts) === 1) {
+			if (count($parts) === 1) {
 				$plugin = $this->controller->plugin;
 			} else {
 				$plugin = Inflector::underscore($parts['0']);
