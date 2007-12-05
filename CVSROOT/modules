@@ -860,5 +860,6 @@ AviarySuiteBranchTinderbox -a \
 # Test Harness code
 TestHarness -a \
 	mozilla/tools/test-harness/xpcshell-simple \
+	mozilla/testing/crashtest \
 	mozilla/testing/mochitest
 
