@@ -121,7 +121,7 @@ $fullname{'129'} = 'Java-Implemented Plugins';
 $mode{'70'} = 'Restricted';
 $branch{'70'} = 'HEAD';
 $fullname{'70'} = 'JavaScript';
-$blessed{'70'} = ['reed%reedloden.com','vladimir%pobox.com','timeless%mozdev.org','sayrer%gmail.com','peterv%propagandism.org','jst%mozilla.org','jruderman%hmc.edu','graydon%mozilla.com','gerv%gerv.net','gavin%gavinsharp.com','dbaron%dbaron.org','daumling%adobe.com','cls%seawood.org','bzbarsky%mit.edu','bryner%brianryner.com','benjamin%smedbergs.us','bclary%bclary.com',];
+$blessed{'70'} = ['vladimir%pobox.com','timeless%mozdev.org','sayrer%gmail.com','reed%reedloden.com','peterv%propagandism.org','jst%mozilla.org','jruderman%hmc.edu','graydon%mozilla.com','gerv%gerv.net','pavlov%pavlov.net','gavin%gavinsharp.com','dbaron%dbaron.org','daumling%adobe.com','cls%seawood.org','bzbarsky%mit.edu','bryner%brianryner.com','benjamin%smedbergs.us','bclary%bclary.com',];
 $super{'70'} = ['shaver%mozilla.org','mrbkap%gmail.com','jwalden%mit.edu','igor%mir2.org','crowder%fiverocks.com','brendan%mozilla.org',];
 $mode{'207'} = 'Open';
 $branch{'207'} = 'HEAD';
@@ -311,6 +311,9 @@ if ($b eq 'BUGZILLA-3_0-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '212';}
 }
 if ($b eq 'HEAD') {
+if (m:^mozilla/js/rhino/.*$:) {return '138';}
+if (m:^mozilla/xpfe/.*$:) {return '137';}
+if (m:^mozilla/js/tests/.*$:) {return '114';}
 if (m:^mozilla/content/xslt/.*$:) {return '140';}
 if (m:^mozilla/extensions/transformiix/.*$:) {return '140';}
 if (m:^mozilla/calendar/.*$:) {return '183';}
@@ -356,8 +359,8 @@ if (m:^mozilla/security/dbm/.*$:) {return '145';}
 if (m:^mozilla/security/jss/.*$:) {return '145';}
 if (m:^mozilla/security/nss/.*$:) {return '145';}
 if (m:^mozilla/composer/.*$:) {return '173';}
-if (m:^mozilla/[^/]*$:) {return '19';}
 if (m:^mozilla/extensions/p3p/.*$:) {return '162';}
+if (m:^mozilla/[^/]*$:) {return '19';}
 if (m:^mozilla/gfx/src/xlib/.*$:) {return '121';}
 if (m:^mozilla/widget/src/xlib/.*$:) {return '121';}
 if (m:^mozilla/widget/src/xlibxtbin/.*$:) {return '121';}
@@ -488,9 +491,6 @@ if (m:^mozilla/content/events/.*$:) {return '103';}
 if (m:^mozilla/content/html/content/.*$:) {return '103';}
 if (m:^mozilla/content/html/document/.*$:) {return '103';}
 if (m:^mozilla/dom/.*$:) {return '103';}
-if (m:^mozilla/js/rhino/.*$:) {return '138';}
-if (m:^mozilla/xpfe/.*$:) {return '137';}
-if (m:^mozilla/js/tests/.*$:) {return '114';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
