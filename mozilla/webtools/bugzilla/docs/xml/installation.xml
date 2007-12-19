@@ -473,12 +473,6 @@
           </para>
         </listitem>
 
-        <listitem>
-          <para>
-            Apache::DBI
-            (&min-apache-dbi-ver;) for mod_perl2
-          </para>
-        </listitem>
       </orderedlist>
       </para>
 
@@ -655,9 +649,6 @@
       <para>Bugzilla also requires a more up-to-date version of the CGI
       perl module to be installed, version &min-mp-cgi-ver; as opposed to &min-cgi-ver;
       </para>
-      
-      <para>Finally, Bugzilla also requires <literal>Apache::DBI</literal>
-      (&min-apache-dbi-ver;) to be installed as well.</para>
     </section>
   </section>
   
