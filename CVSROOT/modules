@@ -794,6 +794,7 @@ CoreTinderboxAll -a \
 	mozilla/storage \
 	mozilla/db/morkreader \
 	mozilla/db/sqlite3 \
+	mozilla/memory/jemalloc \
 	TestHarness 
 
 # should this be called SuiteTinderboxAll ?
