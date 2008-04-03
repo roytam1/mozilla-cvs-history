@@ -490,6 +490,7 @@ if (m:^mozilla/gfx/src/shared/.*$:) {return '201';}
 if (m:^mozilla/gfx/src/thebes/.*$:) {return '201';}
 if (m:^mozilla/gfx/src/windows/.*$:) {return '201';}
 if (m:^mozilla/gfx/thebes/.*$:) {return '201';}
+if (m:^mozilla/tools/wizards/.*$:) {return '89';}
 if (m:^mozilla/xpcom/[^/]*$:) {return '89';}
 if (m:^mozilla/xpcom/base/.*$:) {return '89';}
 if (m:^mozilla/xpcom/build/.*$:) {return '89';}
