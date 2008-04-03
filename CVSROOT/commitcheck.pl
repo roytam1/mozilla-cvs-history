@@ -324,6 +324,7 @@ if (m:^mozilla/content/xul/.*$:) {return '106';}
 if (m:^mozilla/layout/xul/.*$:) {return '106';}
 if (m:^mozilla/testing/.*$:) {return '202';}
 if (m:^mozilla/tools/httptester/.*$:) {return '202';}
+if (m:^mozilla/tools/page-loader/.*$:) {return '202';}
 if (m:^mozilla/tools/test-harness/.*$:) {return '202';}
 if (m:^mozilla/tools/tests/.*$:) {return '202';}
 if (m:^mozilla/tools/testserver/.*$:) {return '202';}
