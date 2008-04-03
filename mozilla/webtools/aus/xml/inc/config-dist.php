@@ -86,7 +86,8 @@ $productBranchVersions = array(
         '1.6a1'   =>  'trunk',
         '1.*'     =>  '1.5',
         '2.0*'    =>  '2.0',
-        '3.0a*'   =>  'trunk'
+        '3.0*'   =>  'trunk',
+        '4.0*'    => 'mozilla2'
     ),
     'Thunderbird' =>  array(
         '1.5.0.*' =>  '1.5.0.x',
@@ -97,7 +98,28 @@ $productBranchVersions = array(
         '0.4a1'   =>  'branch',
         '0.5*'    =>  'branch',
         '0.7*'    =>  'branch',
+        '0.8*'    =>  'branch',
+        '0.9*'    =>  'branch',
         '0.6a1'   =>  'trunk'
+    )
+);
+
+// Config for memcache.
+define('MEMCACHE_NAMESPACE', 'aus'); // set memcache namespace.  Keep this string as short and simple as possible.
+define('MEMCACHE_EXPIRE', 1800); // how long items are stored in memcache
+define('MEMCACHE_ON', true); // whether or not to cache ever
+
+/**
+ * Memcache configuration.
+ * See http://php.oregonstate.edu/memcache for info.
+ */
+$memcache_config = array(
+    'localhost' => array(
+       'port' => '11211',
+       'persistent' => true,
+       'weight' => '1',
+       'timeout' => '1',
+       'retry_interval' => 15
     )
 );
 
