@@ -381,6 +381,7 @@ if (m:^mozilla/gfx/src/qt/.*$:) {return '161';}
 if (m:^mozilla/widget/src/qt/.*$:) {return '161';}
 if (m:^mozilla/composer/.*$:) {return '173';}
 if (m:^mozilla/[^/]*$:) {return '19';}
+if (m:^mozilla/tools/README$:) {return '19';}
 if (m:^mozilla/extensions/p3p/.*$:) {return '162';}
 if (m:^mozilla/gfx/src/xlib/.*$:) {return '121';}
 if (m:^mozilla/widget/src/xlib/.*$:) {return '121';}
