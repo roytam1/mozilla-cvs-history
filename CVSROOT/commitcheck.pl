@@ -397,6 +397,12 @@ if (m:^mozilla/mail/.*$:) {return '170';}
 if (m:^mozilla/other-licenses/branding/thunderbird/.*$:) {return '170';}
 if (m:^mozilla/build/.*$:) {return '55';}
 if (m:^mozilla/config/.*$:) {return '55';}
+if (m:^mozilla/tools/cross-commit$:) {return '55';}
+if (m:^mozilla/tools/cvs2hg-import\.py$:) {return '55';}
+if (m:^mozilla/tools/cvsmgmt/.*$:) {return '55';}
+if (m:^mozilla/tools/elf-dynstr-gc/.*$:) {return '55';}
+if (m:^mozilla/tools/relic/.*$:) {return '55';}
+if (m:^mozilla/tools/trees\.pl$:) {return '55';}
 if (m:^mozilla/extensions/cookie/.*$:) {return '171';}
 if (m:^mozilla/netwerk/cookie/.*$:) {return '171';}
 if (m:^mozilla/editor/.*$:) {return '56';}
