@@ -756,8 +756,8 @@
           line.</para>
           
           <para><filename>checksetup.pl</filename> can set tighter permissions
-          on Bugzilla's files and directories if it knows what user the
-          webserver runs as. Look for the <computeroutput>User</computeroutput>
+          on Bugzilla's files and directories if it knows what group the
+          webserver runs as. Look for the <computeroutput>Group</computeroutput>
           line in <filename>httpd.conf</filename>, and place that value in
           the <replaceable>$webservergroup</replaceable> variable in
           <filename>localconfig</filename>. Then rerun
