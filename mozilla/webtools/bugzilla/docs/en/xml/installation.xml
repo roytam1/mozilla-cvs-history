@@ -729,10 +729,25 @@
     
     <section id="database-engine">
       <title>Database Server</title>
-      <para>This section deals with configuring your database server for use
-        with Bugzilla. Currently <xref linkend="mysql"/> and
-      <xref linkend="postgresql"/> are available.</para>
-      
+      <para>
+        This section deals with configuring your database server for use
+        with Bugzilla. Currently, MySQL (<xref linkend="mysql"/>) and
+        PostgreSQL (<xref linkend="postgresql"/>) are available.
+      </para>
+
+      <section id="database-schema">
+        <title>Bugzilla Database Schema</title>
+
+        <para>
+          The Bugzilla database schema is available at
+          <ulink url="http://www.ravenbrook.com/project/p4dti/tool/cgi/bugzilla-schema/">Ravenbrook</ulink>.
+          This very valuable tool can generate a written description of
+          the Bugzilla database schema for any version of Bugzilla. It
+          can also generate a diff between two versions to help someone
+          see what has changed.
+        </para>
+      </section>
+
       <section id="mysql">
         <title>MySQL</title>
 
