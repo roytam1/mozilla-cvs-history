@@ -655,6 +655,10 @@
         <para>Rebuilding the indexes can be done based on documentation found at
         <ulink url="http://www.mysql.com/doc/en/Fulltext_Fine-tuning.html"/>.
         </para>
+
+        <note>
+          The ft_min_word_len parameter is only suported in MySQL v4 or higher.
+        </note>
       </section>
 
       <section>
