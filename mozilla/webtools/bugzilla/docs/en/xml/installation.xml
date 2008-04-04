@@ -1734,7 +1734,7 @@ AddType application/rdf+xml .rdf</screen>
     </section>    
   </section>
 
-  <section>
+  <section id="multiple-bz-dbs">
     <title>Multiple Bugzilla databases with a single installation</title>
 
     <para>The previous instructions referred to a standard installation, with
