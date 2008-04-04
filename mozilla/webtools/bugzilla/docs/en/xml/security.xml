@@ -90,7 +90,7 @@
     <title>The MySQL System Account</title>
     
       <para>As mentioned in <xref linkend="security-os-accounts"/>, the MySQL
-      daemon should run as a non-privleged, unique user. Be sure to consult
+      daemon should run as a non-privileged, unique user. Be sure to consult
       the MySQL documentation or the documentation that came with your system
       for instructions.
       </para>
