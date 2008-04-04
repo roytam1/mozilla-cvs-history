@@ -68,12 +68,13 @@
     <section id="security-os-chroot">
     <title>The <filename>chroot</filename> Jail</title>
     
-      <para>If your system supports it, you may wish to consider running
-      Bugzilla inside of a <filename>chroot</filename> jail. This option
-      provides unpresidented security by restricting anything running
-      inside the jail from accessing any information outside of it. If you
-      wish to use this option, please consult the documentation that came
-      with your system.
+      <para>
+        If your system supports it, you may wish to consider running
+        Bugzilla inside of a <filename>chroot</filename> jail. This option
+        provides unprecedented security by restricting anything running
+        inside the jail from accessing any information outside of it. If you
+        wish to use this option, please consult the documentation that came
+        with your system.
       </para>
       
     </section>
