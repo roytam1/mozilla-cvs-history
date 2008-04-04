@@ -659,7 +659,7 @@
         <note>
           <para>
             The ft_min_word_len parameter is only suported in MySQL v4 or higher.
-          <para>
+          </para>
         </note>
       </section>
 
