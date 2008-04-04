@@ -293,6 +293,21 @@ at /usr/lib/perl5/site_perl/5.6.0/File/Temp.pm line 233.</programlisting>
 
    </section>
 
+  <section id="trbl-index">
+  <title><filename>index.cgi</filename> doesn't show up unless specified in the URL</title>
+    <para>
+      You probably need to set up your web server in such a way that it
+      will serve the index.cgi page as an index page.
+    </para>
+    <para>
+      If you are using Apache, you can do this by adding 
+      <filename>index.cgi</filename> to the end of the 
+      <computeroutput>DirectoryIndex</computeroutput> line
+      as mentioned in <xref linkend="http-apache"/>.
+    </para>
+
+  </section>
+
 </appendix> 
 
 <!-- Keep this comment at the end of the file 
