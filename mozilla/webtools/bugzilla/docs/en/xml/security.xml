@@ -147,9 +147,9 @@
       <example id="security-mysql-network-ex">
       <title>Disabling Networking in MySQL</title>
       
-        <para>Simply enter the following in <filename>/etc/my.conf</filename>:
+        <para>Simply enter the following in <filename>/etc/my.cnf</filename>:
         <screen>
-[myslqd]
+[mysqld]
 # Prevent network access to MySQL.
 skip-networking
         </screen>
