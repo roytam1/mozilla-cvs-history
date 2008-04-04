@@ -54,8 +54,7 @@
     <procedure>
       <step>
         <para><link linkend="install-perl">Install Perl</link>
-        (&min-perl-ver; or above for non-Windows platforms; &min-perl-ver-win;
-        for Windows)
+        (&min-perl-ver; or above)
         </para>
       </step>
       <step>
