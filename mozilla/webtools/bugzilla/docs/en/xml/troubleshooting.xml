@@ -274,7 +274,7 @@ at /usr/lib/perl5/site_perl/5.6.0/File/Temp.pm line 233.</programlisting>
     </para>
   </section>
 
-  <section>
+  <section id="trbl-relogin-some">
   <title>Some users are constantly being forced to relogin</title>
 
     <para>First, make sure cookies are enabled in the user's browser.
