@@ -221,7 +221,7 @@
       
       <para>
         The preferred way of installing Perl modules is via CPAN on Unix, 
-        or PPM on Windows (see <xref linkend="win32-perlmodules"/>). These
+        or PPM on Windows (see <xref linkend="win32-perl-modules"/>). These
         instructions assume you are using CPAN; if for some reason you need 
         to install the Perl modules manually, see 
         <xref linkend="install-perlmodules-manual"/>.
