@@ -287,12 +287,6 @@
 
         <listitem>
           <para>
-            AppConfig (&min-appconfig-ver;)
-          </para>
-        </listitem>
-
-        <listitem>
-          <para>
             CGI (&min-cgi-ver;)
           </para>
         </listitem>
