@@ -2186,8 +2186,8 @@ pid-file=/home/foo/mymysql/the.pid
       Installing the Perl modules as a non-root user is accomplished by
       running the <filename>install-module.pl</filename>
       script. For more details on this script, see 
-      <link linkend="api/install-module.html"/>.  
-      
+      <ulink url="api/install-module.html"><filename>install-module.pl</filename>
+      documentation</ulink>
       </para>
     </section>
 
