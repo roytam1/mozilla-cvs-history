@@ -957,7 +957,10 @@
       <para>
         Configure your web server according to the instructions in the
         appropriate section. (If it makes a difference in your choice,
-        the Bugzilla Team recommends Apache.) Regardless of which webserver
+        the Bugzilla Team recommends Apache.) To check whether your web server
+	is correctly configured, try to access <filename>testagent.cgi</filename>
+	from your web server. If "OK" is displayed, then your configuration
+	is successful. Regardless of which web server
         you are using, however, ensure that sensitive information is
         not remotely available by properly applying the access controls in
         <xref linkend="security-webserver-access"/>. You can run
