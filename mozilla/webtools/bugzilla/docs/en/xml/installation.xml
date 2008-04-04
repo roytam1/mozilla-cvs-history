@@ -1334,6 +1334,30 @@
       compromised. For this reason it is recommended that you create a user
       account for each daemon.
       </para>
+    </section>
+    <section id="apache-addtype">
+      <title>Serving Alternate Formats with the right MIME type</title>
+
+      <para>
+        Some Bugzilla pages have alternate formats, other than just plain
+        <acronym>HTML</acronym>. In particular, a few Bugzilla pages can 
+        output their contents as either <acronym>XUL</acronym> (a special 
+        Mozilla format, that looks like a program <acronym>GUI</acronym>) 
+        or <acronym>RDF</acronym> (a type of structured <acronym>XML</acronym> 
+        that can be read by various programs).
+      </para>
+      <para>
+        In order for your users to see these pages correctly, Apache must 
+        send them with the right <acronym>MIME</acronym> type. To do this, 
+        add the following lines to your Apache configuration, either in the 
+        <computeroutput>&lt;VirtualHost&gt;</computeroutput> section for your
+        Bugzilla, or in the <computeroutput>&lt;Directory&gt;</computeroutput>
+        section for your Bugzilla:
+      </para>
+      <para>
+        <screen>AddType application/vnd.mozilla.xul+xml .xul
+AddType text/xml .rdf</screen>
+      </para>
     </section>    
   </section>
 
