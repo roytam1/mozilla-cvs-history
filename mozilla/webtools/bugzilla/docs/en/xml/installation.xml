@@ -1666,7 +1666,7 @@ AddType application/rdf+xml .rdf</screen>
   <section>
     <title>Multiple Bugzilla databases with a single installation</title>
 
-    <para>The previous instructions refered to a standard installation, with
+    <para>The previous instructions referred to a standard installation, with
       one unique Bugzilla database. However, you may want to host several
       distinct installations, without having several copies of the code. This is
       possible by using the PROJECT environment variable. When accessed,
