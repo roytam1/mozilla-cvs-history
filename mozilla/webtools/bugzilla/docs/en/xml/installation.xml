@@ -96,7 +96,7 @@
       visit <ulink url="http://www.perl.com"/>.
       Although Bugzilla runs with Perl &min-perl-ver;,
       it's a good idea to be using the latest stable version. 
-      As of this writing, that is Perl &newest-perl-ver;.</para>
+      </para>
     </section>
 
     <section id="install-database">
