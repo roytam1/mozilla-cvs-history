@@ -420,6 +420,7 @@ if (m:^mozilla/tools/build-environment/.*$:) {return '214';}
 if (m:^mozilla/tools/build/.*$:) {return '214';}
 if (m:^mozilla/tools/buildbot-configs/.*$:) {return '214';}
 if (m:^mozilla/tools/buildbot/.*$:) {return '214';}
+if (m:^mozilla/tools/buildbotcustom/.*$:) {return '214';}
 if (m:^mozilla/tools/l10n/.*$:) {return '214';}
 if (m:^mozilla/tools/MozBuild/.*$:) {return '214';}
 if (m:^mozilla/tools/patcher-configs/.*$:) {return '214';}
