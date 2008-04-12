@@ -285,7 +285,7 @@
 
         <listitem>
           <para>
-            CGI &min-cgi-ver; or CGI &min-mp-cgi-ver; if using mod_perl
+            CGI &min-cgi-ver;
           </para>
         </listitem>
 
@@ -469,7 +469,7 @@
         <listitem>
           <para>
             CGI
-            (&min-cgi-ver;) for mod_perl
+            (&min-mp-cgi-ver;) for mod_perl
           </para>
         </listitem>
 
