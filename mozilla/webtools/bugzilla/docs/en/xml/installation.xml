@@ -178,7 +178,8 @@
       <title>Bugzilla</title>
 
       <para>
-        Download a Bugzilla tarball (or check it out from CVS) and place
+        <ulink url="http://www.bugzilla.org/download/">Download a Bugzilla tarball</ulink>
+        (or check it out from CVS) and place
         it in a suitable directory, accessible by the default web server user 
         (probably <quote>apache</quote> or <quote>www</quote>). 
         Good locations are either directly in the web server's document directories or
