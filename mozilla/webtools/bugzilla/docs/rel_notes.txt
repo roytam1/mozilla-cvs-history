@@ -7,7 +7,7 @@ Table of Contents
 
 - Introduction
 - Important Updates in this Point Release
-    * Version 2.20.1 - 2.20.5
+    * Version 2.20.1 - 2.20.6
 - Minimum Requirements
     * Perl
     * For MySQL Users
@@ -182,6 +182,15 @@ Version 2.20.5
   that several series may not have been collecting data. On PostgreSQL,
   all series were failing, thus meaning that New Charts were not working
   at all on PostgreSQL. (bug 257351)
+
+Also see the Security Fixes section for the security updates in this
+release.
+
+Version 2.20.6
+--------------
+
++ On Windows, CGI.pm would create temporary files for uploaded attachments,
+  and these files were never being deleted. (bug 414002)
 
 Also see the Security Fixes section for the security updates in this
 release.
@@ -755,6 +764,14 @@ This release fixes a Cross-Site Scripting vulnerability. You can read the
 details of the security fix at:
 
 http://www.bugzilla.org/security/2.20.4/
+
+2.20.6
+------
+
+This release fixes a Cross-Site Scripting vulnerability. You can read the
+details of the security fix at:
+
+http://www.bugzilla.org/security/2.20.5/
 
 
 Release Notes for Previous Versions
