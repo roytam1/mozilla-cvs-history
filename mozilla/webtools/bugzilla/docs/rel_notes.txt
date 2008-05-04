@@ -69,6 +69,12 @@ This section describes bugs fixed in releases after the original 2.22
 release. This section only describes significant fixes. To see all
 fixes, look at the Change Logs at http://www.bugzilla.org/status/changes.html
 
+Version 2.22.4
+--------------
+
++ On Windows, CGI.pm would create temporary files for uploaded attachments,
+  and these files were never being deleted. (bug 414002)
+
 Version 2.22.3
 --------------
 
@@ -597,6 +603,14 @@ TRUNCATE TABLE logincookies;
 This is actually safe to do at any time--it just forces a logout of
 every single user, even those with saved sessions. (It invalidates
 every login cookie Bugzilla has ever given out.)
+
+Version 2.22.4
+--------------
+
+This release fixes a Cross-Site Scripting vulnerability. You can read
+the details of the security fix at:
+
+http://www.bugzilla.org/security/2.20.5/
 
 Version 2.22.3
 --------------
