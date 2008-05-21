@@ -215,13 +215,6 @@ skip-networking
             <listitem>
               <para>Block everything</para>
             </listitem>
-            <listitem>
-              <para>But allow:
-              <simplelist type="inline">
-                <member><filename>duplicates.rdf</filename></member>
-              </simplelist>
-              </para>
-            </listitem>
           </itemizedlist>
         </listitem>
 
