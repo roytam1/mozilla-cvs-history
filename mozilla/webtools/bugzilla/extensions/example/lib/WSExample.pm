@@ -21,10 +21,12 @@
 package extensions::example::lib::WSExample;
 use strict;
 use warnings;
-
 use base qw(Bugzilla::WebService);
+use Bugzilla::Error;
 
 # This can be called as Example.hello() from XML-RPC.
 sub hello { return 'Hello!'; }
+
+sub throw_an_error { ThrowUserError('example_my_error') }
 
 1;
