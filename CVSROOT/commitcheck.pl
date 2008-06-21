@@ -47,8 +47,8 @@ $fullname{'211'} = 'ChatZilla';
 $mode{'146'} = 'Restricted';
 $branch{'146'} = 'NSPRPUB_PRE_4_2_CLIENT_BRANCH';
 $fullname{'146'} = 'Client NSPR';
-$blessed{'146'} = ['kaie%kuix.de','sspitzer%mozilla.org','mozilla%weilbacher.org','mkaply%us.ibm.com','julien.pierre.boogz%sun.com','gerv%gerv.net','dbaron%dbaron.org','alexei.volkov.bugs%sun.com',];
-$super{'146'} = ['cls%seawood.org','wtc%google.com','nelson%bolyard.com','darin%meer.net',];
+$blessed{'146'} = ['sspitzer%mozilla.org','mozilla%weilbacher.org','mkaply%us.ibm.com','kaie%kuix.de','julien.pierre.boogz%sun.com','gerv%gerv.net','dbaron%dbaron.org','alexei.volkov.bugs%sun.com',];
+$super{'146'} = ['darin%meer.net','cls%seawood.org','wtc%google.com','nelson%bolyard.com',];
 $mode{'213'} = 'Open';
 $branch{'213'} = 'HEAD';
 $fullname{'213'} = 'Code Analysis and Debugging Tools';
@@ -317,6 +317,73 @@ if ($b eq 'BUGZILLA-3_0-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '212';}
 }
 if ($b eq 'HEAD') {
+if (m:^mozilla/xpcom/reflect/xptcall/.*$:) {return '206';}
+if (m:^mozilla/gfx/src/xprint/.*$:) {return '179';}
+if (m:^mozilla/view/.*$:) {return '96';}
+if (m:^mozilla/layout/[^/]*$:) {return '98';}
+if (m:^mozilla/layout/base/.*$:) {return '98';}
+if (m:^mozilla/layout/build/.*$:) {return '98';}
+if (m:^mozilla/layout/doc/.*$:) {return '98';}
+if (m:^mozilla/layout/forms/.*$:) {return '98';}
+if (m:^mozilla/layout/generic/.*$:) {return '98';}
+if (m:^mozilla/layout/html/.*$:) {return '98';}
+if (m:^mozilla/layout/macbuild/.*$:) {return '98';}
+if (m:^mozilla/layout/printing/.*$:) {return '98';}
+if (m:^mozilla/layout/tables/.*$:) {return '98';}
+if (m:^mozilla/layout/tools/.*$:) {return '98';}
+if (m:^mozilla/layout/style/.*$:) {return '100';}
+if (m:^mozilla/docshell/.*$:) {return '101';}
+if (m:^mozilla/uriloader/.*$:) {return '101';}
+if (m:^mozilla/webshell/.*$:) {return '101';}
+if (m:^mozilla/parser/htmlparser$:) {return '102';}
+if (m:^mozilla/content/base/.*$:) {return '103';}
+if (m:^mozilla/content/events/.*$:) {return '103';}
+if (m:^mozilla/content/html/content/.*$:) {return '103';}
+if (m:^mozilla/content/html/document/.*$:) {return '103';}
+if (m:^mozilla/dom/.*$:) {return '103';}
+if (m:^mozilla/js/rhino/.*$:) {return '138';}
+if (m:^mozilla/xpfe/.*$:) {return '137';}
+if (m:^mozilla/js/tests/.*$:) {return '114';}
+if (m:^mozilla/content/xslt/.*$:) {return '140';}
+if (m:^mozilla/extensions/transformiix/.*$:) {return '140';}
+if (m:^mozilla/calendar/.*$:) {return '183';}
+if (m:^mozilla/gfx/src/photon/.*$:) {return '113';}
+if (m:^mozilla/widget/src/photon/.*$:) {return '113';}
+if (m:^mozilla/content/xul/.*$:) {return '106';}
+if (m:^mozilla/layout/xul/.*$:) {return '106';}
+if (m:^mozilla/testing/.*$:) {return '202';}
+if (m:^mozilla/tools/httptester/.*$:) {return '202';}
+if (m:^mozilla/tools/page-loader/.*$:) {return '202';}
+if (m:^mozilla/tools/test-harness/.*$:) {return '202';}
+if (m:^mozilla/tools/tests/.*$:) {return '202';}
+if (m:^mozilla/tools/testserver/.*$:) {return '202';}
+if (m:^mozilla/tools/testy/.*$:) {return '202';}
+if (m:^mozilla/extensions/irc/.*$:) {return '211';}
+if (m:^mozilla/profile/.*$:) {return '120';}
+if (m:^mozilla/tools/codesighs/.*$:) {return '213';}
+if (m:^mozilla/tools/debug/.*$:) {return '213';}
+if (m:^mozilla/tools/dreftool/.*$:) {return '213';}
+if (m:^mozilla/tools/dumpdeps/.*$:) {return '213';}
+if (m:^mozilla/tools/footprint/.*$:) {return '213';}
+if (m:^mozilla/tools/jprof/.*$:) {return '213';}
+if (m:^mozilla/tools/leaky/.*$:) {return '213';}
+if (m:^mozilla/tools/memory/.*$:) {return '213';}
+if (m:^mozilla/tools/module-deps/.*$:) {return '213';}
+if (m:^mozilla/tools/performance/.*$:) {return '213';}
+if (m:^mozilla/tools/post_compile/.*$:) {return '213';}
+if (m:^mozilla/tools/preloader/.*$:) {return '213';}
+if (m:^mozilla/tools/rb/.*$:) {return '213';}
+if (m:^mozilla/tools/reorder/.*$:) {return '213';}
+if (m:^mozilla/tools/trace-malloc/.*$:) {return '213';}
+if (m:^mozilla/tools/uuiddeps/.*$:) {return '213';}
+if (m:^mozilla/xpcom/typelib/.*$:) {return '117';}
+if (m:^mozilla/js/src/xpconnect/.*$:) {return '118';}
+if (m:^mozilla/js/jsd/.*$:) {return '207';}
+if (m:^mozilla/mailnews/[^/]*$:) {return '123';}
+if (m:^mozilla/mailnews/mime/[^/]*$:) {return '124';}
+if (m:^mozilla/extensions/java$:) {return '128';}
+if (m:^mozilla/java/plugins/.*$:) {return '129';}
+if (m:^mozilla/java/webclient/.*$:) {return '127';}
 if (m:^mozilla/java/dom/.*$:) {return '130';}
 if (m:^mozilla/java/util/.*$:) {return '133';}
 if (m:^mozilla/content/xbl/[^/]*$:) {return '199';}
@@ -472,73 +539,6 @@ if (m:^mozilla/gfx/src/shared/.*$:) {return '201';}
 if (m:^mozilla/gfx/src/thebes/.*$:) {return '201';}
 if (m:^mozilla/gfx/src/windows/.*$:) {return '201';}
 if (m:^mozilla/gfx/thebes/.*$:) {return '201';}
-if (m:^mozilla/xpcom/reflect/xptcall/.*$:) {return '206';}
-if (m:^mozilla/gfx/src/xprint/.*$:) {return '179';}
-if (m:^mozilla/view/.*$:) {return '96';}
-if (m:^mozilla/layout/[^/]*$:) {return '98';}
-if (m:^mozilla/layout/base/.*$:) {return '98';}
-if (m:^mozilla/layout/build/.*$:) {return '98';}
-if (m:^mozilla/layout/doc/.*$:) {return '98';}
-if (m:^mozilla/layout/forms/.*$:) {return '98';}
-if (m:^mozilla/layout/generic/.*$:) {return '98';}
-if (m:^mozilla/layout/html/.*$:) {return '98';}
-if (m:^mozilla/layout/macbuild/.*$:) {return '98';}
-if (m:^mozilla/layout/printing/.*$:) {return '98';}
-if (m:^mozilla/layout/tables/.*$:) {return '98';}
-if (m:^mozilla/layout/tools/.*$:) {return '98';}
-if (m:^mozilla/layout/style/.*$:) {return '100';}
-if (m:^mozilla/docshell/.*$:) {return '101';}
-if (m:^mozilla/uriloader/.*$:) {return '101';}
-if (m:^mozilla/webshell/.*$:) {return '101';}
-if (m:^mozilla/parser/htmlparser$:) {return '102';}
-if (m:^mozilla/content/base/.*$:) {return '103';}
-if (m:^mozilla/content/events/.*$:) {return '103';}
-if (m:^mozilla/content/html/content/.*$:) {return '103';}
-if (m:^mozilla/content/html/document/.*$:) {return '103';}
-if (m:^mozilla/dom/.*$:) {return '103';}
-if (m:^mozilla/js/rhino/.*$:) {return '138';}
-if (m:^mozilla/xpfe/.*$:) {return '137';}
-if (m:^mozilla/js/tests/.*$:) {return '114';}
-if (m:^mozilla/content/xslt/.*$:) {return '140';}
-if (m:^mozilla/extensions/transformiix/.*$:) {return '140';}
-if (m:^mozilla/calendar/.*$:) {return '183';}
-if (m:^mozilla/gfx/src/photon/.*$:) {return '113';}
-if (m:^mozilla/widget/src/photon/.*$:) {return '113';}
-if (m:^mozilla/content/xul/.*$:) {return '106';}
-if (m:^mozilla/layout/xul/.*$:) {return '106';}
-if (m:^mozilla/testing/.*$:) {return '202';}
-if (m:^mozilla/tools/httptester/.*$:) {return '202';}
-if (m:^mozilla/tools/page-loader/.*$:) {return '202';}
-if (m:^mozilla/tools/test-harness/.*$:) {return '202';}
-if (m:^mozilla/tools/tests/.*$:) {return '202';}
-if (m:^mozilla/tools/testserver/.*$:) {return '202';}
-if (m:^mozilla/tools/testy/.*$:) {return '202';}
-if (m:^mozilla/extensions/irc/.*$:) {return '211';}
-if (m:^mozilla/profile/.*$:) {return '120';}
-if (m:^mozilla/tools/codesighs/.*$:) {return '213';}
-if (m:^mozilla/tools/debug/.*$:) {return '213';}
-if (m:^mozilla/tools/dreftool/.*$:) {return '213';}
-if (m:^mozilla/tools/dumpdeps/.*$:) {return '213';}
-if (m:^mozilla/tools/footprint/.*$:) {return '213';}
-if (m:^mozilla/tools/jprof/.*$:) {return '213';}
-if (m:^mozilla/tools/leaky/.*$:) {return '213';}
-if (m:^mozilla/tools/memory/.*$:) {return '213';}
-if (m:^mozilla/tools/module-deps/.*$:) {return '213';}
-if (m:^mozilla/tools/performance/.*$:) {return '213';}
-if (m:^mozilla/tools/post_compile/.*$:) {return '213';}
-if (m:^mozilla/tools/preloader/.*$:) {return '213';}
-if (m:^mozilla/tools/rb/.*$:) {return '213';}
-if (m:^mozilla/tools/reorder/.*$:) {return '213';}
-if (m:^mozilla/tools/trace-malloc/.*$:) {return '213';}
-if (m:^mozilla/tools/uuiddeps/.*$:) {return '213';}
-if (m:^mozilla/xpcom/typelib/.*$:) {return '117';}
-if (m:^mozilla/js/src/xpconnect/.*$:) {return '118';}
-if (m:^mozilla/js/jsd/.*$:) {return '207';}
-if (m:^mozilla/mailnews/[^/]*$:) {return '123';}
-if (m:^mozilla/mailnews/mime/[^/]*$:) {return '124';}
-if (m:^mozilla/extensions/java$:) {return '128';}
-if (m:^mozilla/java/plugins/.*$:) {return '129';}
-if (m:^mozilla/java/webclient/.*$:) {return '127';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
