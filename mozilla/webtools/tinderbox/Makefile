@@ -122,13 +122,13 @@ install:
               -e s#@TINDERBOX_DIR@#$(TINDERBOX_DIR)#g \
               -e s#@SETUID_PATH@#$(SETUID_PATH)#g \
               $$I > $(TINDERBOX_DIR)/$$I && \
-	   chmod 644 $(TINDERBOX_DIR)/$$I; \
+	   chmod 644 $(TINDERBOX_DIR)/$$I || exit 1; \
 	done
 	set -e ; \
 	for I in $(PICS); do \
 	  echo Installing $$I && \
 	  cp $$I $(TINDERBOX_DIR) && \
-	  chmod 644 $(TINDERBOX_DIR)/$$I; \
+	  chmod 644 $(TINDERBOX_DIR)/$$I || exit 1; \
 	done
 	chown -R $(TINDERBOX_USER) $(TINDERBOX_DIR)
 	chgrp -R $(TINDERBOX_GROUP) $(TINDERBOX_DIR)
