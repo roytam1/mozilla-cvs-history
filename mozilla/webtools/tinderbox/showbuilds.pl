@@ -120,6 +120,54 @@ sub do_tinderbox($) {
     &print_table_footer($form_ref, $tinderbox_data);
 }
 
+#
+# Return summary of all tree information
+#
+sub do_tree_summary($) {
+    my @trees = make_tree_list();
+    my $url = "http://$ENV{SERVER_NAME}$ENV{SCRIPT_NAME}";
+    my $admin_url = $url;
+    $admin_url =~ s@showbuilds.cgi@admintree.cgi@;
+    print "Content-type: text/html\n\n";
+    print "<HTML>\n";
+    print "<HEAD>\n";
+    print "<TITLE>Tinderbox Tree Summary</TITLE>\n";
+    print "<META HTTP-EQUIV=\"refresh\" CONTENT=\"300; URL=$url\"/>\n";
+    print "<LINK REL=\"stylesheet\" TYPE=\"text/css\" HREF=\"defaultStyle.css\" />\n";
+    print "</HEAD>\n";
+    print "<BODY>\n<CENTER><H1>Tinderbox Tree Summary</H1>\n";
+    
+    for my $tree (sort @trees) {
+        print "<A HREF=\"#$tree\">$tree</A> - \n";
+    }
+    
+    print "<TABLE>\n<TR><TH>Tree</TH><TH>Status</TH><TH>Builds</TH></TR>\n";
+    for my $tree (sort @trees) {
+        my %td;
+        tb_loadquickparseinfo($tree, undef, \%td, 1);   
+        print "<TR>\n";
+        print "<TD>\n";
+        print "<A NAME=\"$tree\" HREF=\"${url}?tree=$tree\">$tree</A>\n";
+        print "<P>\n";
+        print "<A HREF=\"${admin_url}?tree=$tree\">admin page</A>\n";
+        print "</TD>\n";
+        print "<TD>" .
+            (is_tree_state_available($tree) ? 
+            (is_tree_open($tree) ? "Open" : "Closed") : "Not Available") . 
+            "</TD>\n";
+        print "<TD class=\"outerCell\">\n";
+        print "<TABLE>\n";
+        for my $buildname (sort(keys %td)) {
+            print "<TR STYLE=\"background-color:" .
+            $colormap{$td{$buildname}->{buildstatus}} .
+            "\"><TD>$buildname</TD></TR>\n";
+        }
+        print "</TABLE>\n</TD>\n";
+        print "</TR>\n";            
+    }
+    print "</TABLE>\n</CENTER></BODY>\n</HTML>\n";
+}
+
 ##
 # Return all data that the waterfall normally would, but as JSON not HTML.
 ##
@@ -541,7 +589,9 @@ sub print_table_footer($$) {
     print open_showbuilds_href(%footer_form) . "52</a> weeks.<br>";
 
     print "<p><a href='${rel_path}admintree.cgi?tree=$tree'>" . 
-        "Administrate Tinderbox Trees</a><br>\n";
+        "Administrate Tinderbox Tree: $tree</a><br>\n";
+    print "<a href='${rel_path}showbuilds.cgi'>" . 
+        "Tinderbox Tree Summary</a><br>\n";
 }
 
 sub open_showbuilds_url {

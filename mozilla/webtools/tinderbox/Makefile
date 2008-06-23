@@ -88,6 +88,7 @@ FILES = \
 	Empty.html \
 	faq.html \
 	index.html \
+	defaultStyle.css \
 	examples/buildit.config \
 	examples/mozilla-unix.pl \
 	examples/mozilla-windows.pl \

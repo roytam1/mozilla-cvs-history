@@ -201,7 +201,11 @@ Tinderbox is configured to show up to $::global_treedata->{$tree}->{who_days} da
 </FORM>
 <hr>
 ";
-    print "<B><A HREF=\"showbuilds.cgi?tree=$tree\">Return to tree</A></B>\n";
+    print "<B>\n";
+    print "<A HREF=\"showbuilds.cgi?tree=$tree\">Return to tree: $tree</A><BR>\n";
+    print "<A HREF=\"admintree.cgi\">Create new tree</A><BR>\n";
+    print "<A HREF=\"showbuilds.cgi\">Tinderbox Tree Overview</A><BR>\n";
+    print "</B>\n";
 
 } else {
 #

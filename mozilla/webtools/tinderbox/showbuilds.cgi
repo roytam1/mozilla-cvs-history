@@ -31,7 +31,7 @@ umask 002;
 # Process the form arguments
 my %form = &split_cgi_args();
 
-&show_tree_selector(\%form),  exit if $form{tree} eq '';
+do_tree_summary(), exit if $form{tree} eq '';
 
 my $mode_count=0;
 foreach my $mode ('quickparse', 'express', 'rdf', 'flash',
