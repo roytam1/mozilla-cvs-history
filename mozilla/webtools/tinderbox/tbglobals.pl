@@ -790,6 +790,12 @@ sub tb_trim_logs($$$$) {
     return if (!defined($days) || !defined($tree) || !defined($verbose) ||
                !defined($do_html));
     
+    # warn if the directory cannot be found and return
+    if (! -d "$::tree_dir/$tree") {
+        warn("Cannot find directory: " . shell_escape("$::tree_dir/$tree"));
+        return;
+    }
+
     my $min_date = time - (60*60*24 * $days);
 
     #
@@ -802,7 +808,7 @@ sub tb_trim_logs($$$$) {
         if( $fn =~ /\.(?:gz|brief\.html)$/ ||
             $fn =~ m/^warn.*?\.html$/){
             my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$mtime,
-                $ctime,$blksize,$blocks) = stat("$tree/$fn");
+                $ctime,$blksize,$blocks) = stat("$::tree_dir/$tree/$fn");
             if( $mtime && ($mtime < $min_date) ){
                 print "$fn\n" if ($verbose > 1);
                 $tblocks += $blocks;
