@@ -507,6 +507,8 @@ if (m:^mozilla/modules/libpref/.*$:) {return '82';}
 if (m:^mozilla/extensions/help/.*$:) {return '188';}
 if (m:^mozilla/suite/.*$:) {return '188';}
 if (m:^mozilla/modules/libreg/.*$:) {return '84';}
+if (m:^db/sqlite3/.*$:) {return '216';}
+if (m:^storage/.*$:) {return '216';}
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '190';}
 if (m:^mozilla/content/xml/.*$:) {return '88';}
 if (m:^mozilla/extensions/xmlextras/.*$:) {return '88';}
