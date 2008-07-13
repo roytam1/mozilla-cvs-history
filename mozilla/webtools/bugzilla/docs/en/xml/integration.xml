@@ -1,4 +1,8 @@
-<!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook V4.1//EN" > -->
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+                      "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+    <!ENTITY % myents SYSTEM "bugzilla.ent">
+    %myents;
+]>
 <!-- Keep these tools listings in alphabetical order please. -MPB -->
 <section id="integration">
   <title>Integrating Bugzilla with Third-Party Tools</title>

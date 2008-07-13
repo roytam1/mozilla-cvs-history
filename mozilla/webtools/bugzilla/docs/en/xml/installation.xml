@@ -1,4 +1,8 @@
-<!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+                       "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+     <!ENTITY % myents SYSTEM "bugzilla.ent">
+     %myents;
+ ]>
 <!-- $Id$ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>

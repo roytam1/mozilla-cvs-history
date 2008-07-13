@@ -4,48 +4,6 @@
     <!ENTITY % myents SYSTEM "bugzilla.ent">
     %myents;
 
-<!-- Include macros -->
-<!ENTITY about SYSTEM "about.xml">
-<!ENTITY conventions SYSTEM "conventions.xml">
-<!ENTITY doc-index SYSTEM "index.xml">
-<!ENTITY gfdl SYSTEM "gfdl.xml">
-<!ENTITY glossary SYSTEM "glossary.xml">
-<!ENTITY installation SYSTEM "installation.xml">
-<!ENTITY administration SYSTEM "administration.xml">
-<!ENTITY security SYSTEM "security.xml">
-<!ENTITY using SYSTEM "using.xml">
-<!ENTITY integration SYSTEM "integration.xml">
-<!ENTITY index SYSTEM "index.xml">
-<!ENTITY customization SYSTEM "customization.xml">
-<!ENTITY troubleshooting SYSTEM "troubleshooting.xml">
-<!ENTITY patches SYSTEM "patches.xml">
-<!ENTITY introduction SYSTEM "introduction.xml">
-<!ENTITY modules SYSTEM "modules.xml">
-
-<!-- Things to change for a stable release:
-     * bz-ver to current stable
-     * bz-nexver to next stable
-     * bz-date to the release date
-     * landfillbase to the branch install
-     * Remove the BZ-DEVEL comments
-     - COMPILE DOCS AND CHECKIN -
-       Also, tag and tarball before completing
-     * bz-ver to devel version
- 
-     For a devel release, simple bump bz-ver and bz-date
--->
-
-<!ENTITY bz-ver "3.3">
-<!ENTITY bz-nextver "4.0">
-<!ENTITY bz-date "2008-05-20">
-<!ENTITY current-year "2008">
-
-<!ENTITY landfillbase "http://landfill.bugzilla.org/bugzilla-tip/">
-<!ENTITY bz "http://www.bugzilla.org/">
-<!ENTITY bzg-bugs "<ulink url='https://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla&amp;component=Documentation'>Bugzilla Documentation</ulink>">
-<!ENTITY mysql "http://www.mysql.com/">
-
-<!ENTITY min-perl-ver "5.8.1">
 ]>
 
 
@@ -116,42 +74,41 @@
     </keywordset>
   </bookinfo>
 
-<!-- About This Guide -->
-&about;
+  <!-- About This Guide -->
+  <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="about.xml" /> 
+  
+  <!-- Installing Bugzilla -->
+  <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="installation.xml" />
 
-<!-- Installing Bugzilla -->
-&installation;
+  <!-- Administering Bugzilla -->
+  <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="administration.xml" />
 
-<!-- Administering Bugzilla -->
-&administration;
+  <!-- Securing Bugzilla -->
+  <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="security.xml" />
+  
+  <!-- Customizing Bugzilla -->
+  <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="customization.xml" />
 
-<!-- Securing Bugzilla -->
-&security;
+  <!-- Using Bugzilla -->
+  <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="using.xml" />
 
-<!-- Using Bugzilla -->
-&using;
+  <!-- Appendix: Troubleshooting -->
+  <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="troubleshooting.xml" />
 
-<!-- Customizing Bugzilla -->
-&customization;
+  <!-- Appendix: Custom Patches -->
+  <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="patches.xml" />
 
-<!-- Appendix: Troubleshooting -->
-&troubleshooting;
+  <!-- Appendix: Manually Installing Perl Modules -->
+  <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="modules.xml" />
+  
+  <!-- Appendix: GNU Free Documentation License -->
+  <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="gfdl.xml" />
+ 
+  <!-- Glossary -->
+  <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="glossary.xml" />
 
-<!-- Appendix: Custom Patches -->
-&patches;
-
-<!-- Appendix: Manually Installing Perl Modules -->
-&modules;
-
-<!-- Appendix: GNU Free Documentation License -->
-&gfdl;
-
-<!-- Glossary -->
-&glossary;
-
-<!-- Index -->
-&index;
-
+  <!-- Index -->
+  <!--xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="index.xml" /-->
 
 </book>
 

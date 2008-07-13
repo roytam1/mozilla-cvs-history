@@ -26,6 +26,11 @@ body {
   font-size: small;
 }
 
+td, th {
+  font-family: Verdana, Arial, sans-serif;
+  font-size: small;
+}
+
 a:link, a:active { color: #36415c; }
 a:visited { color: #666; }
 a:hover   { color: #888; }
