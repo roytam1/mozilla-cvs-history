@@ -69,6 +69,11 @@ This section describes bugs fixed in releases after the original 2.22
 release. This section only describes significant fixes. To see all
 fixes, look at the Change Logs at http://www.bugzilla.org/status/changes.html
 
+Version 2.22.5
+--------------
+
+This release only contains a security fix. See the Security Fixes section.
+
 Version 2.22.4
 --------------
 
@@ -603,6 +608,13 @@ TRUNCATE TABLE logincookies;
 This is actually safe to do at any time--it just forces a logout of
 every single user, even those with saved sessions. (It invalidates
 every login cookie Bugzilla has ever given out.)
+
+Version 2.22.5
+--------------
+
+This release fixes a vulnerability in importxml.pl. For details, see:
+
+http://www.bugzilla.org/security/2.22.4/
 
 Version 2.22.4
 --------------
