@@ -1281,6 +1281,18 @@ c:\perl\bin\perl.exe -xc:\bugzilla -wT "%s" %s
         <xref linkend="troubleshooting"/>.
       </para>
 
+      <para>
+        When upgrading Bugzilla, this format may change.
+        To create new status data, (re)move old data and run following commands:
+      </para>
+
+      <screen>
+        <prompt>bash$</prompt>
+        <command>cd &lt;your-bugzilla-directory&gt;</command>
+        <prompt>bash$</prompt>
+        <command>./collectstats.pl --regenerate</command>
+      </screen>
+
       <note>
         <para>
           The URL above may be incorrect if you installed Bugzilla into a 
