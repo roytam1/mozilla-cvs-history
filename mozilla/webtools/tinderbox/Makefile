@@ -53,17 +53,14 @@ SETUID_PATH = '/usr/bin:/bin'
 ALL_UTILS = PERL
 
 EXE_FILES = \
-	addimage.cgi \
 	addnote.cgi \
 	admintree.cgi \
 	buildwho.pl \
 	clean.pl \
 	checksetup.pl \
 	doadmin.cgi \
-	fixupimages.pl \
 	scrape.pl \
 	showbuilds.cgi \
-	showimages.cgi \
 	showlog.cgi \
 	warnings.pl \
 	$(NULL)
@@ -82,7 +79,6 @@ FILES = \
 	ep_windows.pl \
 	get_line.pl \
 	header.pl \
-	imagelog.pl \
 	showbuilds.pl \
 	tbglobals.pl \
 	Empty.html \
@@ -97,6 +93,13 @@ FILES = \
 PICS = \
 	1afi003r.gif \
 	star.gif \
+	$(NULL)
+
+REMOVE_FILES = \
+	addimage.cgi \
+	fixupimages.pl \
+	imagelog.pl \
+	showimages.cgi \
 	$(NULL)
 
 # Sanity check
@@ -129,6 +132,11 @@ install:
 	  echo Installing $$I && \
 	  cp $$I $(TINDERBOX_DIR) && \
 	  chmod 644 $(TINDERBOX_DIR)/$$I || exit 1; \
+	done
+	set -e ; \
+	for R in $(REMOVE_FILES); do \
+	  echo "Removing: $$R" && \
+	  rm -f $$R ; \
 	done
 	chown -R $(TINDERBOX_USER) $(TINDERBOX_DIR)
 	chgrp -R $(TINDERBOX_GROUP) $(TINDERBOX_DIR)
