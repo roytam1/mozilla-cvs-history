@@ -164,6 +164,8 @@ sub require_only_one_tree {
 }
 
 sub show_tree_selector {
+    my $admin_url = "admintree.cgi";
+    $admin_url = $::tinderbox_ssl_url . "admintree.cgi" if ($::force_admin_ssl);
 
     print "Content-type: text/html\n\n";
 
@@ -182,13 +184,13 @@ sub show_tree_selector {
     print "</UL></TD></TR></TABLE></TD></TR></TABLE>";
 
     print "<P><TABLE WIDTH=\"100%\">";
-    print "<TR><TD ALIGN=CENTER><a href=admintree.cgi>";
+    print "<TR><TD ALIGN=CENTER><a href=\"$admin_url\">";
     print "Create a new tree</a> or administer one of the following trees:</TD></TR>";
     print "<TR><TD ALIGN=CENTER>\n";
     print " <TABLE><TR><TD><UL>\n";
 
     foreach (@list) {
-        print "<LI><a href=admintree.cgi?tree=$_>$_</a>\n";
+        print "<LI><a href=\"${admin_url}?tree=$_\">$_</a>\n";
     }
     print "</UL></TD></TR></TABLE></TD></TR></TABLE>";
 }
