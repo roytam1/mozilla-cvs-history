@@ -48,6 +48,13 @@ endif
 
 SETUID_PATH = '/usr/bin:/bin'
 
+# Specify absolute urls to be used for absolute links in tinderbox
+TINDERBOX_URL = "http://tinderbox/tinderbox/"
+TINDERBOX_SSL_URL = "https://tinderbox/tinderbox/"
+# Force the use of SSL for admin pages but disable SSL when returning
+# to non-admin pages
+FORCE_ADMIN_SSL = 1
+
 # End SERVER_CONFIGURATION
 
 ALL_UTILS = PERL
@@ -112,6 +119,12 @@ endif
 ifeq (,$(strip $(TINDERBOX_GROUP)))
 $(error TINDERBOX_GROUP must be set to the group that the tinderbox processes run as)
 endif
+ifeq (,$(strip $(TINDERBOX_URL)))
+$(error TINDERBOX_URL must be set to the absolute URL of the non-ssl tinderbox installation)
+endif
+ifeq (,$(strip $(TINDERBOX_SSL_URL)))
+$(error TINDERBOX_URL must be set to the absolute URL of the ssl tinderbox installation)
+endif
 
 install:
 	$(foreach u,$(ALL_UTILS),$(if $($u),,$(error $u must be set to the full path of the utility)))
@@ -124,6 +137,9 @@ install:
               -e s#@DATA_DIR@#$(DATA_DIR)#g \
               -e s#@TINDERBOX_DIR@#$(TINDERBOX_DIR)#g \
               -e s#@SETUID_PATH@#$(SETUID_PATH)#g \
+	      -e s#@FORCE_ADMIN_SSL@#$(FORCE_ADMIN_SSL)#g \
+	      -e s#@TINDERBOX_URL@#$(TINDERBOX_URL)#g \
+	      -e s#@TINDERBOX_SSL_URL@#$(TINDERBOX_SSL_URL)#g \
               $$I > $(TINDERBOX_DIR)/$$I && \
 	   chmod 644 $(TINDERBOX_DIR)/$$I || exit 1; \
 	done

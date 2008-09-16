@@ -125,9 +125,14 @@ sub do_tinderbox($) {
 #
 sub do_tree_summary($) {
     my @trees = make_tree_list();
-    my $url = "http://$ENV{SERVER_NAME}$ENV{SCRIPT_NAME}";
-    my $admin_url = $url;
-    $admin_url =~ s@showbuilds.cgi@admintree.cgi@;
+    my $url = "$ENV{SCRIPT_NAME}";
+    my $admin_url;
+
+    if ($::force_admin_ssl) {
+        $admin_url = $::tinderbox_ssl_url . "admintree.cgi";
+    } else {
+        ($admin_url = $url) =~ s@showbuilds.cgi@admintree.cgi@;
+    }
     print "Content-type: text/html\n\n";
     print "<HTML>\n";
     print "<HEAD>\n";
@@ -576,7 +581,7 @@ sub print_table_footer($$) {
     $footer_form{maxdate} = $td->{maxdate} - 24*60*60*7*52;
     print open_showbuilds_href(%footer_form) . "52</a> weeks.<br>";
 
-    print "<p><a href='${rel_path}admintree.cgi?tree=$tree'>" . 
+    print "\n<p>\n<a href='${admin_url}?tree=$tree'>" . 
         "Administrate Tinderbox Tree: $tree</a><br>\n";
     print "<a href='${rel_path}showbuilds.cgi'>" . 
         "Tinderbox Tree Summary</a><br>\n";

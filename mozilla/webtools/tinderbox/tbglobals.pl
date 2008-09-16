@@ -25,6 +25,7 @@ use Backwards;
 use Digest::MD5 qw(md5_hex);
 use Tie::IxHash;
 use FileHandle;
+use File::Basename;
 use Fcntl qw(:DEFAULT :flock);
 
 require 'header.pl';
@@ -56,6 +57,16 @@ $::CI_LOG=11;
 # Variables set from Makefile
 $::default_cvsroot = "@CVSROOT@";
 $::data_dir='@DATA_DIR@';
+# Force ssl for admin connections
+$::force_admin_ssl = @FORCE_ADMIN_SSL@;
+# absolute urls used when forcing ssl
+$::tinderbox_url = "@TINDERBOX_URL@";
+$::tinderbox_ssl_url = "@TINDERBOX_SSL_URL@";
+$::tinderbox_url .= "/" if ($::tinderbox_url !~ m@/$@);
+$::tinderbox_ssl_url .= "/" if ($::tinderbox_ssl_url !~ m@/$@);
+
+
+# Paths used to access individual trees
 $::tree_dir = 'trees';
 $::static_rel_path = '../../';
 if ( ! -d "$::tree_dir/." ) {
@@ -679,24 +690,35 @@ sub tb_check_password($$) {
     my ($form_ref, $cj_ref) = (@_);
     my %form = %{$form_ref};
     my %cookie_jar = %{$cj_ref};
+    my $cookie_expiration = gmtime($::nowdate + (24 * 60 * 60));
+    my $encoded_password = 0;
+    my ($junk, $path, $junk) = fileparse($ENV{SCRIPT_NAME});
 
     if ($form{password} eq '' and defined $cookie_jar{tinderbox_password}) {
         $form{password} = $cookie_jar{tinderbox_password};
+        $encoded_password = 1;
     }
     my $correct = '';
     if (open(REAL, "<", "$::data_dir/passwd")) {
         $correct = <REAL>;
         close REAL;
         $correct =~ s/\s+$//;   # Strip trailing whitespace.
+    } else {
+        print STDERR "$ENV{SCRIPT_NAME}: Failed to open $::data_dir/passwd: $!\n";
     }
     $form{password} =~ s/\s+$//;      # Strip trailing whitespace.
     if ($form{password} ne '') {
-        my $encoded = md5_hex($form{password});
-        $encoded =~ s/\s+$//;   # Strip trailing whitespace.
+        my $encoded;
+        if (!$encoded_password) {
+            $encoded = md5_hex($form{password});
+            $encoded =~ s/\s+$//;   # Strip trailing whitespace.
+        } else {
+            $encoded = $form{password};
+        }
         if ($encoded eq $correct) {
             if ($form{rememberpassword} ne '') {
-                print "Set-Cookie: tinderbox_password=$form{'password'} ;"
-                    ." path=/ ; expires = Sun, 1-Mar-2020 00:00:00 GMT\n";
+                print "Set-Cookie: tinderbox_password=$encoded ;"
+                    . "path=$path ; secure=1 ; expires = $cookie_expiration\n";
             }
             return;
         }
@@ -708,8 +730,8 @@ sub tb_check_password($$) {
     require 'header.pl';
 
     print "Content-type: text/html\n";
-    print "Set-Cookie: tinderbox_password= ; path=/ ; "
-        ." Expires = Sun, 1-Mar-2020 00:00:00 GMT\n";
+    print "Set-Cookie: tinderbox_password= ; path=$path ; "
+        . "secure=1 ; Expires = $cookie_expiration\n";
     print "\n";
 
     EmitHtmlHeader("What's the magic word?",
@@ -734,6 +756,7 @@ sub tb_check_password($$) {
         print "<INPUT TYPE=HIDDEN NAME=\"$enc_key\" VALUE=\"$enc_value\">\n";
     }
     print "<INPUT TYPE=SUBMIT value=Submit></FORM>\n";
+    print "</BODY>\n</HTML>\n";
     exit;
 }
 

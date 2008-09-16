@@ -24,6 +24,8 @@ This is a quick guide for installing the tinderbox server.
      TINDERBOX_DIR=/var/www/html/tinderbox
      TINDERBOX_USER=tinderbox
      TINDERBOX_GROUP=tinderbox
+     TINDERBOX_URL=http://tinderbox.yourdomain.com/tinderbox/
+     TINDERBOX_SSL_URL=https://tinderbox.yourdomain.com/tinderbox/
 	vi mozilla/webtools/tinderbox/Makefile
 
 5) 
@@ -69,6 +71,28 @@ This is a quick guide for installing the tinderbox server.
 	</DirectoryMatch>
 </VirtualHost>	
 # End tinderbox apache configuration
+
+# If you want basic SSL support so that the tinderbox admin password is not
+# passed in the clear, then you'll need to add a tinderbox section
+# to your ssl.conf.  
+# Note: This actually makes the entire tinderbox available via SSL, but if
+# FORCE_ADMIN_SSL is set, then the admin pages will use the non-SSL URL for
+# non-admin links
+<VirtualHost *:443>
+	SuexecUserGroup tinderbox tinderbox
+	Alias /tinderbox /var/www/html/tinderbox/
+        <Directory /var/www/html/tinderbox>
+                Options Indexes FollowSymLinks ExecCGI
+                AllowOverride None
+                AddHandler cgi-script .cgi
+                <FilesMatch "\.(pl|pm)$">
+                        Deny from all
+                </FilesMatch>
+        </Directory>
+        # Deny access to private tree data
+        <DirectoryMatch /var/www/html/tinderbox/(data|examples)>
+                Deny from all
+        </DirectoryMatch>
 
 7) 
    Add an email alias for 'tinderbox-daemon' on the local server and pipe

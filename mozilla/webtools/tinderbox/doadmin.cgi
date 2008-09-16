@@ -40,6 +40,8 @@ $|=1;
 
 my $command = $form{'command'};
 my $tree= $form{'tree'};
+my $non_ssl_url = "";
+$non_ssl_url = $::tinderbox_url if ($::force_admin_ssl);
 
 if ($command eq 'create_tree') {
     ($tree = $form{'treename'}) =~ s/^.*?([\w-\.]+).*$/\1/;
@@ -83,7 +85,7 @@ sub trim_logs {
     print "<h2>Trimming Log files for $form{'tree'}...</h2><p>\n";
     my $builds_removed = tb_trim_logs($form{'tree'},  $form{'days'}, 1, 1);
     print "<h2>$builds_removed builds removed from build.dat</h2>\n";
-    print "<h2><a href=\"showbuilds.cgi?tree=$tree\">Back to tree</a></h2>\n";
+    print "<h2><a href=\"${non_ssl_url}showbuilds.cgi?tree=$tree\">Back to tree</a></h2>\n";
 }
 
 sub create_tree {
@@ -175,7 +177,7 @@ sub create_tree {
     
     chmod (oct($perm), "$::tree_dir/$treename/index.html");
 
-    print "<h2><a href=\"showbuilds.cgi?tree=$treename\">Tree created or modified</a></h2>\n";
+    print "<h2><a href=\"${non_ssl_url}showbuilds.cgi?tree=$treename\">Tree created or modified</a></h2>\n";
 }
 
 
@@ -238,7 +240,7 @@ sub admin_builds {
     chmod( oct($perm), "$::tree_dir/$tree/ignorebuilds.pl", 
            "$::tree_dir/$tree/scrapebuilds.pl",
            "$::tree_dir/$tree/warningbuilds.pl");
-    print "<h2><a href=showbuilds.cgi?tree=$tree>Build state Changed</a></h2>\n";
+    print "<h2><a href=\"${non_ssl_url}showbuilds.cgi?tree=$tree\">Build state Changed</a></h2>\n";
 }
 sub set_sheriff {
     my $m = $form{'sheriff'};
@@ -247,7 +249,7 @@ sub set_sheriff {
     print SHERIFF "\$current_sheriff = '$m';\n1;";
     close(SHERIFF);
     chmod( oct($perm), "$::tree_dir/$tree/sheriff.pl");
-    print "<h2><a href=showbuilds.cgi?tree=$tree>
+    print "<h2><a href=\"${non_ssl_url}showbuilds.cgi?tree=$tree\">
             Sheriff Changed.</a><br></h2>\n";
 }
 
@@ -258,7 +260,7 @@ sub set_status_message {
     print TREESTATUS "\$status_message = \'$m\'\;\n1;";
     close(TREESTATUS);
     chmod( oct($perm), "$::tree_dir/$tree/status.pl");
-    print "<h2><a href=showbuilds.cgi?tree=$tree>
+    print "<h2><a href=\"${non_ssl_url}showbuilds.cgi?tree=$tree\">
             Status message changed.</a><br></h2>\n";
 }
 
@@ -269,7 +271,6 @@ sub set_rules_message {
     print RULES "\$rules_message = \'$m\';\n1;";
     close(RULES);
     chmod( oct($perm), "$::tree_dir/$tree/rules.pl");
-    print "<h2><a href=showbuilds.cgi?tree=$tree>
+    print "<h2><a href=\"${non_ssl_url}showbuilds.cgi?tree=$tree\">
             Rule message changed.</a><br></h2>\n";
 }
-
