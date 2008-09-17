@@ -114,8 +114,24 @@ tinderbox-daemon:  "|/var/www/html/tinderbox/handlemail.pl"
       to mail the root user if any errors occur.
 
 9)
+   Set up admin authentication.  This can be done one of two ways:
+
+ a)
    Generate an admin password to be used to setup new trees
 	sudo make -C mozilla/webtools/tinderbox genpasswd
+
+ b)
+   Configure apache to require server authentication when accessing the
+	admin cgis.  If the user is authenticated, then they will not need
+	to enter a password for the admin cgis.
+
+	# Example. Add to <Directory> section above
+	<FilesMatch "(admintree|doadmin).cgi$">
+		AuthType Basic
+		AuthName "Tinderbox Admin"
+		AuthUserFile /usr/local/apache/passwd/passwords
+		Require valid-user
+	</FilesMatch>
 
 10) 
    Restart apache and go to http://tinderbox.company.com/tinderbox/ .

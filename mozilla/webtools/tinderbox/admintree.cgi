@@ -29,6 +29,11 @@ my %form = &split_cgi_args();
 
 $|=1;
 
+my $pass_prompt = "<B>Password:</B> <INPUT NAME=password TYPE=password>\n";
+if (defined($ENV{REMOTE_USER}) && $ENV{REMOTE_USER} ne "") {
+    $pass_prompt = "";
+}
+
 print "Content-type: text/html\n\n";
 
 $form{noignore} = 1;            # Force us to load all build info, not
@@ -68,7 +73,7 @@ if (defined($treedata)) {
 <TEXTAREA NAME=sheriff ROWS=8 COLS=75 WRAP=SOFT>$current_sheriff
 </TEXTAREA>
 <br>
-<B>Password:</B> <INPUT NAME=password TYPE=password>
+$pass_prompt
 <b><INPUT TYPE=SUBMIT VALUE='Change Sheriff'></b>
 </FORM>
 <hr>
@@ -86,8 +91,7 @@ if (defined($treedata)) {
 <TEXTAREA NAME=status ROWS=8 COLS=75 WRAP=SOFT>$status_message
 </TEXTAREA>
 <br>
-<b>
-<B>Password:</B> <INPUT NAME=password TYPE=password>
+$pass_prompt
 <INPUT TYPE=SUBMIT VALUE='Change status message'>
 </b>
 </FORM>
@@ -106,7 +110,7 @@ if (defined($treedata)) {
 <br><TEXTAREA NAME=rules ROWS=18 COLS=75 WRAP=SOFT>$rules_message
 </TEXTAREA>
 <br>
-<B>Password:</B> <INPUT NAME=password TYPE=password>
+$pass_prompt
 <b><INPUT TYPE=SUBMIT VALUE='Change rules message'></b>
 </FORM>
 <hr>
@@ -150,7 +154,7 @@ if (defined($treedata)) {
 <b>Trim Logs</b><br>
 Trim Logs to <INPUT NAME=days size=5 VALUE='$trim_days'> days<br>
 Tinderbox is configured to show up to $::global_treedata->{$tree}->{who_days} days of log history. Currently, there are $trim_days days of logging taking up $trim_size of space.<br>
-<B>Password:</B> <INPUT NAME=password TYPE=password>
+$pass_prompt
 <INPUT TYPE=SUBMIT VALUE='Trim Logs'>
 </FORM>
 <hr>
@@ -196,7 +200,7 @@ Tinderbox is configured to show up to $::global_treedata->{$tree}->{who_days} da
     print "</TABLE>\n";
  
     print "
-<B>Password:</B> <INPUT NAME=password TYPE=password>
+$pass_prompt
 <INPUT TYPE=SUBMIT VALUE='Change build configuration'>
 </FORM>
 <hr>
@@ -349,7 +353,7 @@ print "
 </TR>
 
 </TABLE>
-<B>Password:</B> <INPUT NAME=password TYPE=password>
+$pass_prompt
 <INPUT TYPE=SUBMIT VALUE='Create a new Tinderbox page'>
 </FORM>
 <hr>

@@ -36,7 +36,10 @@ my %cookie_jar = &split_cookie_args();
 
 $|=1;
 
-&tb_check_password(\%form, \%cookie_jar);
+# Do not check for tinderbox password if user has already authenticated with the server
+if (!defined($ENV{REMOTE_USER}) || $ENV{REMOTE_USER} eq "") {
+    tb_check_password(\%form, \%cookie_jar);
+}
 
 my $command = $form{'command'};
 my $tree= $form{'tree'};
