@@ -545,6 +545,14 @@ sub print_table_header($) {
 sub print_table_footer($$) {
     my ($form_ref, $td) = (@_);
     my $tree = $form_ref->{tree};
+    my $admin_url;
+
+    if ($::force_admin_ssl) {
+        $admin_url = $::tinderbox_ssl_url . "admintree.cgi";
+    } else {
+        $admin_url = "${rel_path}admintree.cgi";
+    }
+ 
     print "</table>\n";
 
     # Copy form data into separate hash so that we can modify it
