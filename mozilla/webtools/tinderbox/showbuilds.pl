@@ -140,17 +140,18 @@ sub do_tree_summary($) {
     print "<META HTTP-EQUIV=\"refresh\" CONTENT=\"300; URL=$url\"/>\n";
     print "<LINK REL=\"stylesheet\" TYPE=\"text/css\" HREF=\"defaultStyle.css\" />\n";
     print "</HEAD>\n";
-    print "<BODY>\n<CENTER><H1>Tinderbox Tree Summary</H1>\n";
+    print "<BODY ALIGN=CENTER>\n<CENTER><H1>Tinderbox Tree Summary</H1>\n";
     
     for my $tree (sort @trees) {
         print "<A HREF=\"#$tree\">$tree</A> - \n";
     }
     
-    print "<TABLE>\n<TR><TH>Tree</TH><TH>Status</TH><TH>Builds</TH></TR>\n";
+    print "<TABLE ALIGN=CENTER BORDER=0>\n";
+    print "<TR STYLE=\"background-color: #AAA\"><TH>Tree</TH><TH>Status</TH><TH>Builds</TH></TR>\n";
     for my $tree (sort @trees) {
         my %td;
         tb_loadquickparseinfo($tree, undef, \%td, 1);   
-        print "<TR>\n";
+        print "<TR STYLE=\"background-color: #EEE; vertical-align: top;\">\n";
         print "<TD>\n";
         print "<A NAME=\"$tree\" HREF=\"${url}?tree=$tree\">$tree</A>\n";
         print "<P>\n";
@@ -161,7 +162,7 @@ sub do_tree_summary($) {
             (is_tree_open($tree) ? "Open" : "Closed") : "Not Available") . 
             "</TD>\n";
         print "<TD class=\"outerCell\">\n";
-        print "<TABLE>\n";
+        print "<TABLE WIDTH=\"100%\">\n";
         for my $buildname (sort(keys %td)) {
             print "<TR STYLE=\"background-color:" .
             $colormap{$td{$buildname}->{buildstatus}} .
