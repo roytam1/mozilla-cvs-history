@@ -41,6 +41,8 @@ $form{noignore} = 1;            # Force us to load all build info, not
 $form{hours} = 24;              # Force us to check the past 24 hrs of builds
 $form{tree} = &validate_tree($form{tree});
 my $treedata = &tb_load_data(\%form);
+my $showbuilds_url = "showbuilds.cgi";
+$showbuilds_url = $::tinderbox_url . "showbuilds.cgi" if ($::force_admin_ssl);
 
 my (@names, $i, $checked);
 
@@ -65,16 +67,17 @@ if (defined($treedata)) {
 #
 # Change sheriff
 #
-    print "
+    print "<HR>
 <FORM method=post action=doadmin.cgi>
-<INPUT TYPE=HIDDEN NAME=tree VALUE='$safe_tree'>
-<INPUT TYPE=HIDDEN NAME=command VALUE=set_sheriff>
-<br><b>Change sheriff info.</b>  (mailto: url, phone number, etc.)<br>
-<TEXTAREA NAME=sheriff ROWS=8 COLS=75 WRAP=SOFT>$current_sheriff
-</TEXTAREA>
-<br>
-$pass_prompt
-<b><INPUT TYPE=SUBMIT VALUE='Change Sheriff'></b>
+    <INPUT TYPE=HIDDEN NAME=tree VALUE='$safe_tree'>
+    <INPUT TYPE=HIDDEN NAME=command VALUE=set_sheriff>
+    <br><b>Change sheriff info.</b>  (mailto: url, phone number, etc.)<br>
+    <TEXTAREA NAME=sheriff ROWS=8 COLS=75>
+" . value_encode($current_sheriff) . "
+    </TEXTAREA>
+    <br>
+    $pass_prompt
+    <INPUT TYPE=SUBMIT VALUE='Change Sheriff'>
 </FORM>
 <hr>
 ";
@@ -85,15 +88,15 @@ $pass_prompt
 
     print "
 <FORM method=post action=doadmin.cgi>
-<INPUT TYPE=HIDDEN NAME=tree VALUE='$safe_tree'>
-<INPUT TYPE=HIDDEN NAME=command VALUE=set_status_message>
-<br><b>Status message.</b>  (Use this for stay-out-of-the-tree warnings, etc.)<br>
-<TEXTAREA NAME=status ROWS=8 COLS=75 WRAP=SOFT>$status_message
-</TEXTAREA>
-<br>
-$pass_prompt
-<INPUT TYPE=SUBMIT VALUE='Change status message'>
-</b>
+    <INPUT TYPE=HIDDEN NAME=tree VALUE='$safe_tree'>
+    <INPUT TYPE=HIDDEN NAME=command VALUE=set_status_message>
+    <br><b>Status message.</b>  (Use this for stay-out-of-the-tree warnings, etc.)<br>
+    <TEXTAREA NAME=status ROWS=8 COLS=75>
+" . value_encode($status_message) . "
+    </TEXTAREA>
+    <br>
+    $pass_prompt
+    <INPUT TYPE=SUBMIT VALUE='Change status message'>
 </FORM>
 <hr>
 ";
@@ -104,14 +107,15 @@ $pass_prompt
 
     print "
 <FORM method=post action=doadmin.cgi>
-<INPUT TYPE=HIDDEN NAME=tree VALUE='$safe_tree'>
-<INPUT TYPE=HIDDEN NAME=command VALUE=set_rules_message>
-<br><b>The tree rules.</b>
-<br><TEXTAREA NAME=rules ROWS=18 COLS=75 WRAP=SOFT>$rules_message
-</TEXTAREA>
-<br>
-$pass_prompt
-<b><INPUT TYPE=SUBMIT VALUE='Change rules message'></b>
+    <INPUT TYPE=HIDDEN NAME=tree VALUE='$safe_tree'>
+    <INPUT TYPE=HIDDEN NAME=command VALUE=set_rules_message>
+    <br><b>The tree rules.</b><br>
+    <TEXTAREA NAME=rules ROWS=18 COLS=75>
+" . value_encode($rules_message) . "
+    </TEXTAREA>
+    <br>
+    $pass_prompt
+    <INPUT TYPE=SUBMIT VALUE='Change rules message'>
 </FORM>
 <hr>
 ";
@@ -149,13 +153,13 @@ $pass_prompt
 
     print "
 <FORM method=post action=doadmin.cgi>
-<INPUT TYPE=HIDDEN NAME=tree VALUE='$safe_tree'>
-<INPUT TYPE=HIDDEN NAME=command VALUE=trim_logs>
-<b>Trim Logs</b><br>
-Trim Logs to <INPUT NAME=days size=5 VALUE='$trim_days'> days<br>
-Tinderbox is configured to show up to $::global_treedata->{$tree}->{who_days} days of log history. Currently, there are $trim_days days of logging taking up $trim_size of space.<br>
-$pass_prompt
-<INPUT TYPE=SUBMIT VALUE='Trim Logs'>
+    <INPUT TYPE=HIDDEN NAME=tree VALUE='$safe_tree'>
+    <INPUT TYPE=HIDDEN NAME=command VALUE=trim_logs>
+    <b>Trim Logs</b><br>
+    Trim Logs to <INPUT NAME=days size=5 VALUE='$trim_days'> days<br>
+    Tinderbox is configured to show up to $::global_treedata->{$tree}->{who_days} days of log history. Currently, there are $trim_days days of logging taking up $trim_size of space.<br>
+    $pass_prompt
+    <INPUT TYPE=SUBMIT VALUE='Trim Logs'>
 </FORM>
 <hr>
 "   ;
@@ -163,22 +167,22 @@ $pass_prompt
 #
 # Individual tree administration
 #
-    print "<B><font size=+1>Individual tree administration</font></b><br>";
+    print "<B><font size=\"+1\">Individual tree administration</font></b><br>";
     print "
 <table border=1>
-<tr><td><b>Active</b></td><td>Only checked builds are shown. Add <b><tt>&noignore=1</tt></b> to the tinderbox URL to override.</td></tr>
-<tr><td><b>Scrape</b></td><td>Checked builds will have the logs scanned for a token of the form <b>TinderboxPrint:aaa,bbb,ccc</b>.<br>These values will show up as-is in the showbuilds.cgi output.</td></tr>
-<tr><td><b>Warnings</b></td><td>Checked builds will have the logs scanned for compiler warning messages.</td></tr>
+    <tr><td><b>Active</b></td><td>Only checked builds are shown. Add <b><tt>&amp;noignore=1</tt></b> to the tinderbox URL to override.</td></tr>
+    <tr><td><b>Scrape</b></td><td>Checked builds will have the logs scanned for a token of the form <b>TinderboxPrint:aaa,bbb,ccc</b>.<br>These values will show up as-is in the showbuilds.cgi output.</td></tr>
+    <tr><td><b>Warnings</b></td><td>Checked builds will have the logs scanned for compiler warning messages.</td></tr>
 </table>
 ";
 
     print "
 <br>
 <FORM method=post action=doadmin.cgi>
-<INPUT TYPE=HIDDEN NAME=tree VALUE='$safe_tree'>
-<INPUT TYPE=HIDDEN NAME=command VALUE=admin_builds>
-<TABLE BORDER=1>
-<TR><TD><B>Build</B></TD><TD><B>Active</B></TD><TD><B>Scrape</B></TD><TD><B>Warnings</B></TD></TR>
+    <INPUT TYPE=HIDDEN NAME=tree VALUE='$safe_tree'>
+    <INPUT TYPE=HIDDEN NAME=command VALUE=admin_builds>
+    <TABLE BORDER=1>
+    <TR><TH>Build</TH><TH>Active</TH><TH>Scrape</TH><TH>Warnings</TH></TR>
 ";
 
     @names = sort (@{$treedata->{build_names}}) ;
@@ -186,178 +190,107 @@ $pass_prompt
     for $i (@names){
         if ($i ne "") {
             my $buildname = &value_encode($i);
-            my $active_check = ($treedata->{ignore_builds}->{$i} != 0 ? "": "CHECKED=1" );
-            my $scrape_check = ($treedata->{scrape_builds}->{$i} != 0 ? "CHECKED=1" : "" );
-            my $warning_check = ($treedata->{warning_builds}->{$i} != 0 ? "CHECKED=1": "" );
-            print "<TR>\n";
-            print "<TD>$buildname</TD>\n";
-            print "<TD><INPUT TYPE=checkbox NAME='active_$buildname' $active_check ></TD>\n";
-            print "<TD><INPUT TYPE=checkbox NAME='scrape_$buildname' $scrape_check ></TD>\n";
-            print "<TD><INPUT TYPE=checkbox NAME='warning_$buildname' $warning_check ></TD>\n";
-            print "</TR>\n";
+            my $active_check = ($treedata->{ignore_builds}->{$i} != 0 ? "": "CHECKED" );
+            my $scrape_check = ($treedata->{scrape_builds}->{$i} != 0 ? "CHECKED" : "" );
+            my $warning_check = ($treedata->{warning_builds}->{$i} != 0 ? "CHECKED": "" );
+            print "    <TR>\n";
+            print "\t<TD>$buildname</TD>\n";
+            print "\t<TD><INPUT TYPE=checkbox NAME='active_$buildname' $active_check ></TD>\n";
+            print "\t<TD><INPUT TYPE=checkbox NAME='scrape_$buildname' $scrape_check ></TD>\n";
+            print "\t<TD><INPUT TYPE=checkbox NAME='warning_$buildname' $warning_check ></TD>\n";
+            print "    </TR>\n";
         }
     }
-    print "</TABLE>\n";
+    print "    </TABLE>\n";
  
     print "
-$pass_prompt
-<INPUT TYPE=SUBMIT VALUE='Change build configuration'>
+    $pass_prompt
+    <INPUT TYPE=SUBMIT VALUE='Change build configuration'>
 </FORM>
 <hr>
 ";
     print "<B>\n";
-    my $non_ssl_url = "";
-    $non_ssl_url = $::tinderbox_url if ($::force_admin_ssl);
-    print "<A HREF=\"${non_ssl_url}showbuilds.cgi?tree=$tree\">Return to tree: $tree</A><BR>\n";
+    print "<A HREF=\"${showbuilds_url}?tree=$tree\">Return to tree: $tree</A><BR>\n";
     print "<A HREF=\"admintree.cgi\">Create new tree</A><BR>\n";
-    print "<A HREF=\"${non_ssl_url}showbuilds.cgi\">Tinderbox Tree Overview</A><BR>\n";
+    print "<A HREF=\"${showbuilds_url}\">Tinderbox Tree Overview</A><BR>\n";
     print "</B>\n";
 
 } else {
 #
 # Create a new tinderbox page.
 #
+    # Array used to generate admin page
+    # * Form name
+    # * Description
+    # * Extra input attributes
+    # * SeaMonkey example value
+    my @admin_form = 
+        (
+         [ undef, "Generic options:", undef, undef ],
+         [ "treename", "Tinderbox tree name:", undef, "SeaMonkey" ],
+         [ "who_days", "Days of commit history to display:", "VALUE=\"14\"", "14" ],
+         [ undef, "Bonsai query options:", undef, undef ],
+         [ "repository", "CVS Repository", undef, "/cvsroot" ],
+         [ "modulename", "CVS Module:", undef, "MozillaTinderboxAll" ],
+         [ "branchname", "CVS Branch:", undef, "HEAD" ],
+         [ "bonsaitreename", "Bonsai tree:", undef, "SeaMonkey" ],
+         [ "bonsaidir", "Bonsai dir:", undef, "/var/www/html/bonsai" ],
+         [ "bonsaiurl", "Bonsai url:", undef, "http://bonsai.mozilla.org" ],
+         [ "bonsai_dbdriver", "Bonsai database driver:", undef, "mysql" ],
+         [ "bonsai_dbhost", "Bonsai database host:", undef, "localhost" ],
+         [ "bonsai_dbport", "Bonsai database port:", undef, "3306" ],
+         [ "bonsai_dbname", "Bonsai database name:", undef, "bonsai" ],
+         [ "bonsai_dbuser", "Bonsai database username:", undef, "bonsai" ],
+         [ "bonsai_dbpasswd", "Bonsai database password:", "TYPE=\"password\"", "bonsai" ],
+         [ "registryurl", "Registry URL:", undef, "http://bonsai.mozilla.org/registry/" ],
+         [ undef, "ViewVC query options:", undef, undef ],
+         [ "viewvc_url", "ViewVC URL:", undef, "http://viewvc/cgi-bin/viewvc.cgi/svn" ],
+         [ "viewvc_repository", "ViewVC Repository:", undef, "/svnroot" ],
+         [ "viewvc_dbdriver", "ViewVC database driver:", undef, "mysql" ],
+         [ "viewvc_dbhost", "ViewVC database host:", undef, "localhost" ],
+         [ "viewvc_dbport", "ViewVC database port:", undef, "3306" ],
+         [ "viewvc_dbname", "ViewVC database name:", undef, "viewvc" ],
+         [ "viewvc_dbuser", "ViewVC database user:", undef, "viewvc" ],
+         [ "viewvc_dbpasswd", "ViewVC database password:", "TYPE=\"password\"", "viewvc" ],
+         );
 
-EmitHtmlHeader("administer tinderbox", "create a tinderbox page");
+    EmitHtmlHeader("administer tinderbox", "create a tinderbox page");
+
+    print "
+<HR>
+<FORM method=post action=doadmin.cgi>
+    <INPUT TYPE=HIDDEN NAME=tree VALUE=''>
+    <INPUT TYPE=HIDDEN NAME=command VALUE=create_tree>
+    <H3>Create a new tinderbox page, examples for SeaMonkey shown in parens.</H3>
+    <HR>
+    <TABLE>
+";
+
+    for my $row_ref (@admin_form) {
+        if (!defined(@$row_ref[0])) {
+            print "\t<TR><TD><B>" . @$row_ref[1] . "</B></TD></TR>\n";
+        } else {
+            print "\t<TR>\n";
+            print "\t    <TD>" . @$row_ref[1] . "</TD>\n";
+            print "\t    <TD><INPUT NAME=\"" . 
+                @$row_ref[0] . "\"" .
+                (defined(@$row_ref[2]) ? " " . @$row_ref[2] : "")  . 
+                "></TD>\n";
+            print "\t    <TD>(" . @$row_ref[3] . ")</TD>\n";
+            print "\t</TR>\n";
+        }
+    }
+                
 
 print "
-<FORM method=post action=doadmin.cgi>
-<INPUT TYPE=HIDDEN NAME=tree VALUE=''>
-<INPUT TYPE=HIDDEN NAME=command VALUE=create_tree>
-<b>Create a new tinderbox page, examples for SeaMonkey shown in parens.</b>
-<TABLE>
-<TR>
-<TD>tinderbox tree name:</TD>
-<TD><INPUT NAME=treename VALUE=''></TD>
-<TD>(SeaMonkey)</TD>
-</TR>
-<TR>
-<TD>days of commit history to display:</TD>
-<TD><INPUT NAME=who_days VALUE=14></TD>
-<TD>(14)</TD>
-</TR>
-<TR>
-<TD>
-<b>Bonsai query options:</b><br>
-</TD>
-</TR>
-<TR>
-<TD>cvs repository:</TD>
-<TD><INPUT NAME=repository VALUE=''></TD>
-<TD>(/cvsroot)</TD>
-</TR>
-<TR>
-<TD>cvs module name:</TD>
-<TD><INPUT NAME=modulename VALUE=''></TD>
-<TD>(MozillaTinderboxAll)</TD>
-</TR>
-<TR>
-<TD>cvs branch:</TD>
-<TD><INPUT NAME=branchname VALUE=''></TD>
-<TD>(HEAD)</TD>
-</TR>
-<TR>
-<TD>bonsai tree:</TD>
-<TD><INPUT NAME=bonsaitreename></TD>
-<TD>(SeaMonkey)</TD>
-</TR>
-<TR>
-<TD>bonsai dir:</TD>
-<TD><INPUT NAME=bonsaidir></TD>
-<TD>(/var/www/html/bonsai)</TD>
-</TR>
-<TR>
-<TD>bonsai url:</TD>
-<TD><INPUT NAME=bonsaiurl></TD>
-<TD>(http://bonsai.mozilla.org/)</TD>
-</TR>
-<TR>
-<TR>
-<TD>Bonsai database driver:</TD>
-<TD><INPUT NAME=bonsai_dbdriver></TD>
-<TD>(mysql)</TD>
-</TR>
-<TR>
-<TD>Bonsai database host:</TD>
-<TD><INPUT NAME=bonsai_dbhost></TD>
-<TD>(localhost)</TD>
-</TR>
-<TR>
-<TD>Bonsai database port:</TD>
-<TD><INPUT NAME=bonsai_dbport></TD>
-<TD>(3306)</TD>
-</TR>
-<TR>
-<TD>Bonsai database name:</TD>
-<TD><INPUT NAME=bonsai_dbname></TD>
-<TD>(bonsai)</TD>
-</TR>
-<TR>
-<TD>Bonsai database username:</TD>
-<TD><INPUT NAME=bonsai_dbuser></TD>
-<TD>(bonsai)</TD>
-</TR>
-<TR>
-<TD>Bonsai database password:</TD>
-<TD><INPUT NAME=bonsai_dbpasswd TYPE=password></TD>
-<TD>(bonsai)</TD>
-</TR>
-<TD>registry url:</TD>
-<TD><INPUT NAME=registryurl></TD>
-<TD>(http://bonsai.mozilla.org/registry/)</TD>
-</TR>
-<TR>
-<TD>
-<b>ViewVC query options:</b><br>
-</TD>
-</TR>
-<TR>
-<TD>ViewVC URL:</TD>
-<TD><INPUT NAME=viewvc_url></TD>
-<TD>(http://viewvc/cgi-bin/viewvc.cgi/svn)</TD>
-</TR>
-<TR>
-<TD>ViewVC Repository:</TD>
-<TD><INPUT NAME=viewvc_repository></TD>
-<TD>(/svnroot)</TD>
-</TR>
-<TR>
-<TD>ViewVC database driver:</TD>
-<TD><INPUT NAME=viewvc_dbdriver></TD>
-<TD>(mysql)</TD>
-</TR>
-<TR>
-<TD>ViewVC database host:</TD>
-<TD><INPUT NAME=viewvc_dbhost></TD>
-<TD>(localhost)</TD>
-</TR>
-<TR>
-<TD>ViewVC database port:</TD>
-<TD><INPUT NAME=viewvc_dbport></TD>
-<TD>(3306)</TD>
-</TR>
-<TR>
-<TD>ViewVC database name:</TD>
-<TD><INPUT NAME=viewvc_dbname></TD>
-<TD>(viewvc)</TD>
-</TR>
-<TR>
-<TD>ViewVC database username:</TD>
-<TD><INPUT NAME=viewvc_dbuser></TD>
-<TD>(viewvc)</TD>
-</TR>
-<TR>
-<TD>ViewVC database password:</TD>
-<TD><INPUT NAME=viewvc_dbpasswd TYPE=password></TD>
-<TD>(viewvc)</TD>
-</TR>
-
-</TABLE>
-$pass_prompt
-<INPUT TYPE=SUBMIT VALUE='Create a new Tinderbox page'>
+    </TABLE>
+    $pass_prompt
+    <INPUT TYPE=SUBMIT VALUE='Create a new Tinderbox page'>
 </FORM>
-<hr>
+<HR>
+<B><A HREF=\"${showbuilds_url}\">Tinderbox Tree Overview</A></B>
 ";
+
 }
 
-print "</BODY></HTML>\n";
+print "</BODY>\n</HTML>\n";

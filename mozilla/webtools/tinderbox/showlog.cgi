@@ -49,6 +49,14 @@ my ($errorparser, $buildname, $buildtime, $numlines, $fulltext);
 my ($enc_buildname, $enc_logfile, $enc_errorparser, $enc_buildtime);
 my ($safe_buildname, $safe_buildtime, $brief_filename);
 
+my $style_sheet = qq(
+                     <style type="text/css">
+                     span.error { color: \#000080 }
+                     span.warning { color: \#000080 }
+                     span.emphasis { font-size: 172% }
+                     </style>
+                     );
+
 #############################################################
 # CGI inputs
 
@@ -147,7 +155,7 @@ sub print_fragment {
   my $subheading = "$safe_buildname on $time_str";
   my $title = "$heading - $subheading";
 
-  EmitHtmlTitleAndHeader($title, $heading, $subheading);
+  EmitHtmlTitleAndHeader($title, $heading, $subheading, $style_sheet);
 
   print "<a href='showlog.cgi?tree=$tree&amp;errorparser=$enc_errorparser&amp;logfile=$enc_logfile&amp;buildtime=$enc_buildtime&amp;buildname=$enc_buildname&amp;fulltext=1'>Show Full Build Log</a>";
 
@@ -194,13 +202,13 @@ sub print_header {
   my $subheading = "$safe_buildname on $time_str";
   my $title = "$heading - $subheading";
 
-  EmitHtmlTitleAndHeader($title, $heading, $subheading);
+  EmitHtmlTitleAndHeader($title, $heading, $subheading, $style_sheet);
 
   print "
-<font size=+1>
-<dt><a href=\"showlog.cgi?tree=$tree&amp;errorparser=$enc_errorparser&amp;logfile=$enc_logfile&amp;buildtime=$enc_buildtime&amp;buildname=$enc_buildname&amp;fulltext=$s1\">$s</a>
-<dt><a href=\"showbuilds.cgi?tree=$tree\">Return to the Build Page</a>
-<dt><a href=\"addnote.cgi?tree=$tree&amp;buildname=$enc_buildname&amp;buildtime=$enc_buildtime&amp;logfile=$enc_logfile&amp;errorparser=$enc_errorparser\">Add a Comment to the Log</a>
+<font size=\"+1\">
+<a href=\"showlog.cgi?tree=$tree&amp;errorparser=$enc_errorparser&amp;logfile=$enc_logfile&amp;buildtime=$enc_buildtime&amp;buildname=$enc_buildname&amp;fulltext=$s1\">$s</a><BR>
+<a href=\"showbuilds.cgi?tree=$tree\">Return to the Build Page</a><BR>
+<a href=\"addnote.cgi?tree=$tree&amp;buildname=$enc_buildname&amp;buildtime=$enc_buildtime&amp;logfile=$enc_logfile&amp;errorparser=$enc_errorparser\">Add a Comment to the Log</a><BR>
 </font>
 ";
 }
@@ -224,7 +232,7 @@ sub print_notes {
       }
       my $now_str = print_time($nnow);
       my $note = url_decode($nenc_note);
-      print "<pre>\n[<b><a href=mailto:$nwho>$nwho</a> - $now_str</b>]\n$note\n</pre>";
+      print "<pre>\n[<b><a href=\"mailto:$nwho\">$nwho</a> - $now_str</b>]\n$note\n</pre>";
     }
   }
   close(NOTES);
@@ -234,7 +242,7 @@ sub print_summary {
   #
   # Print the summary first
   #
-  logprint('<H2>Build Error Summary</H2><PRE>');
+  logprint("\n<H2>Build Error Summary</H2>\n\n<PRE>\n");
 
   my @log_errors = ();
 
@@ -295,7 +303,7 @@ sub print_log_section {
 sub print_log {
   my ($errors) = $_[0];
 
-  logprint('<H2>Build Error Log</H2><pre>');
+  logprint("\n\n<H2>Build Error Log</H2>\n<PRE>\n");
 
   my $line_num = 0;
   my $gz = gzopen("$::tree_dir/$tree/$logfile", "rb") or
@@ -306,9 +314,9 @@ sub print_log {
     $line_num++;
   }
   $gz->gzclose() if defined($gz);
-  logprint('</PRE><p>'
-     ."<font size=+1>No More Errors</a></font>"
-     .'<br><br><br>');
+  logprint("</PRE>\n<p>\n" .
+           "<font size=\"+1\">No More Errors</font>\n<P>\n");
+  print "</BODY>\n</HTML>\n";
 }
 
 BEGIN {
@@ -326,7 +334,7 @@ BEGIN {
       $line =~ s/</&lt;/g;
       
       if (not $last_was_error) {
-        logprint("<a href=\"#err$error_id\">$line</a>");
+        logprint("<a href=\"#err$error_id\">$line</a>\n");
       } else {
         logprint("$line");
       }
@@ -339,10 +347,11 @@ BEGIN {
 
   sub output_log_line {
     my ($line, $line_num, $errors) = @_;
-    
+
     my $has_error   = $line_num == $errors->[$next_error];
     my $has_warning = has_warning($line);
-    
+
+    chomp($line);
     $line =~ s/&/&amp;/g;
     $line =~ s/</&lt;/g unless $line =~ /^<a name=[^>]*>(?:<\/a>)?$/i or
                                $line =~ /^<\/a>$/i;
@@ -355,14 +364,17 @@ BEGIN {
       my $q = quotemeta($out{error_file});
       my $goto_line = $out{error_line} > 10 ? $out{error_line} - 10 : 1;
       my $cvsblame = $out{error_guess} ? "cvsguess.cgi" : "cvsblame.cgi";
-      $line =~ s@$q@<a href=$::global_treedata->{$tree}->{bonsai_url}/$cvsblame?file=$out{error_file_ref}&amp;rev=$::global_treedata->{$tree}->{cvs_branch}&amp;mark=$out{error_line}\#$goto_line>$out{error_file}</a>@;
+      if (defined($::global_treedata->{$tree}->{bonsai_url}) && 
+          $::global_treedata->{$tree}->{bonsai_url} ne "") {
+          $line =~ s@$q@<a href=$::global_treedata->{$tree}->{bonsai_url}/$cvsblame?file=$out{error_file_ref}&amp;rev=$::global_treedata->{$tree}->{cvs_branch}&amp;mark=$out{error_line}\#$goto_line>$out{error_file}</a>@;
+      }
     }
 
     if ($has_error) {
       $next_error++;
 
       unless ($last_was_error) {
-        $logline .= "<a name='err".($next_error - 1)."'></a>";
+        $logline .= "<a name='err".($next_error - 1)."'></a>\n";
 
         # Only print "NEXT ERROR" link if there is another error to jump to
         my $have_more_errors = 0;
@@ -375,18 +387,18 @@ BEGIN {
           $ii++;
         }
         if ($have_more_errors) {
-          $logline .= "<a href='#err$next_error'>NEXT ERROR</a> ";
+          $logline .= "<a href='#err$next_error'>NEXT ERROR</a> \n";
         }
       }
-      $logline .= "<font color='000080'>$line</font>";
+      $logline .= "<span class=\"error\">$line</span>\n";
       
       $last_was_error = 1;
     }
     elsif ($has_warning) {
-      $logline = "<font color='000080'>$line</font>";
+      $logline = "<span class=\"warning\">$line</span>\n";
     }
     else {
-      $logline = $line;
+      $logline = "$line\n";
       $last_was_error = 0;
     }
     
@@ -407,7 +419,7 @@ BEGIN {
     
     if ($log_line >= $log_errors->[$cur_error] - $LINES_BEFORE_ERROR) {
         if ($log_skip != 0) {
-            logprint("\n<i><font size=+1> Skipping $log_skip Lines...</i></font>\n\n");
+            logprint("<span class=\"emphasis\"><i> Skipping $log_skip Lines...</i></span>\n\n");
             $log_skip = 0;
         }
         logprint($line);

@@ -74,6 +74,9 @@ if ( ! -d "$::tree_dir/." ) {
     $::static_rel_path = "../";
 }
 
+# Allow admin to override site icon
+$::site_icon_link = "<LINK REL=\"icon\" HREF=\"http://mozilla.org/images/mozilla-16.png\" TYPE=\"image/png\">";
+
 @::global_tree_list = ();
 undef @::global_tree_list;
 
@@ -83,6 +86,19 @@ undef @::global_tree_list;
 $::nowdate = time();
 # Show 12 hours by default
 $::default_hours = 12;
+
+# Use global variables for the moment to do html formatting
+# Should replace this with a standard framework someday
+$::doctype_html_401_transitional = 
+    q(<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+      "http://www.w3.org/TR/html4/loose.dtd">
+      );
+
+$::doctype_xhtml1_transitional = 
+    q(<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+       "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+       );
 
 # Globals used by bonsai & viewvc
 # $::query_module
@@ -164,35 +180,38 @@ sub require_only_one_tree {
 }
 
 sub show_tree_selector {
+    my @list = sort(make_tree_list());
     my $admin_url = "admintree.cgi";
-    $admin_url = $::tinderbox_ssl_url . "admintree.cgi" if ($::force_admin_ssl);
+    my $showbuilds_url = "showbuilds.cgi";
+    if ($::force_admin_ssl) {
+        $admin_url = $::tinderbox_ssl_url . "admintree.cgi";
+        $showbuilds_url = $::tinderbox_url . "showbuilds.cgi";
+    }
+    
+    use POSIX qw(strftime);
+    # Print time in format "YYYY-MM-DD HH:MM timezone"
+    my $now = strftime("%Y-%m-%d %H:%M %Z", localtime);
 
     print "Content-type: text/html\n\n";
 
-    &EmitHtmlHeader("tinderbox");
+    EmitHtmlHeader("Tinderbox Selector", "tinderbox ($now)");
 
-    print "<P><TABLE WIDTH=\"100%\">";
-    print "<TR><TD ALIGN=CENTER>Select one of the following trees:</TD></TR>";
-    print "<TR><TD ALIGN=CENTER>\n";
-    print " <TABLE><TR><TD><UL>\n";
-
-    my @list = &make_tree_list();
-
+    print "<HR>\n<H3>Select one of the following trees:</H3>\n";
+    print "<UL>\n";
     foreach (@list) {
-        print "<LI><a href=showbuilds.cgi?tree=$_>$_</a>\n";
+        print "    <LI><A href=\"${showbuilds_url}?tree=$_\">$_</A></LI>\n";
     }
-    print "</UL></TD></TR></TABLE></TD></TR></TABLE>";
+    print "</UL>\n";
 
-    print "<P><TABLE WIDTH=\"100%\">";
-    print "<TR><TD ALIGN=CENTER><a href=\"$admin_url\">";
-    print "Create a new tree</a> or administer one of the following trees:</TD></TR>";
-    print "<TR><TD ALIGN=CENTER>\n";
-    print " <TABLE><TR><TD><UL>\n";
-
+    print "<H3><a href=\"$admin_url\">Create a new tree</a> or administer one of the following trees:</H3>\n";
+    print "<UL>\n";
     foreach (@list) {
-        print "<LI><a href=\"${admin_url}?tree=$_\">$_</a>\n";
+        print "    <LI><A href=\"${admin_url}?tree=$_\">$_</A></LI>\n";
     }
-    print "</UL></TD></TR></TABLE></TD></TR></TABLE>";
+    print "</UL>\n";
+    print "<HR>\n";
+    print "<B><A HREF=\"${showbuilds_url}\">Tinderbox Tree Summary</A></B>\n";
+    print "</BODY>\n</HTML>\n";
 }
 
 sub lock_datafile {

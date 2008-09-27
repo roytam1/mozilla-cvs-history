@@ -134,44 +134,57 @@ sub do_tree_summary($) {
         ($admin_url = $url) =~ s@showbuilds.cgi@admintree.cgi@;
     }
     print "Content-type: text/html\n\n";
-    print "<HTML>\n";
-    print "<HEAD>\n";
-    print "<TITLE>Tinderbox Tree Summary</TITLE>\n";
-    print "<META HTTP-EQUIV=\"refresh\" CONTENT=\"300; URL=$url\"/>\n";
-    print "<LINK REL=\"stylesheet\" TYPE=\"text/css\" HREF=\"defaultStyle.css\" />\n";
-    print "</HEAD>\n";
-    print "<BODY ALIGN=CENTER>\n<CENTER><H1>Tinderbox Tree Summary</H1>\n";
-    
+print qq(
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+    <TITLE>Tinderbox Tree Summary</TITLE>
+    <META HTTP-EQUIV="refresh" CONTENT="300; URL=$url">
+    <LINK REL="stylesheet" TYPE="text/css" HREF="defaultStyle.css">
+    <STYLE TYPE="text/css">
+	tr.default {background-color: #EEE; vertical-align: top;}
+	tr.header {background-color: #AAA}
+	tr.building {background-color: #$colormap{building}}
+	tr.busted {background-color: #$colormap{busted}}
+	tr.success {background-color: #$colormap{success}}
+    </STYLE>
+</HEAD>
+<BODY>
+<CENTER>
+<H1>Tinderbox Tree Summary</H1>
+);
+
     for my $tree (sort @trees) {
         print "<A HREF=\"#$tree\">$tree</A> - \n";
     }
     
-    print "<TABLE ALIGN=CENTER BORDER=0>\n";
-    print "<TR STYLE=\"background-color: #AAA\"><TH>Tree</TH><TH>Status</TH><TH>Builds</TH></TR>\n";
+    print "<TABLE ALIGN=\"CENTER\" BORDER=\"0\">\n";
+    print "    <TR CLASS=\"header\"><TH>Tree</TH><TH>Status</TH><TH>Builds</TH></TR>\n";
     for my $tree (sort @trees) {
         my %td;
-        tb_loadquickparseinfo($tree, undef, \%td, 1);   
-        print "<TR STYLE=\"background-color: #EEE; vertical-align: top;\">\n";
-        print "<TD>\n";
-        print "<A NAME=\"$tree\" HREF=\"${url}?tree=$tree\">$tree</A>\n";
-        print "<P>\n";
-        print "<A HREF=\"${admin_url}?tree=$tree\">admin page</A>\n";
-        print "</TD>\n";
-        print "<TD>" .
+        tb_loadquickparseinfo($tree, undef, \%td, 1);
+        print qq(
+    <TR CLASS="default">
+	<TD>
+	    <A NAME="$tree" HREF="${url}?tree=$tree">$tree</A>
+	    <P>
+	    <A HREF="${admin_url}?tree=$tree">admin page</A>
+	</TD>
+);
+        print "\t<TD>" .
             (is_tree_state_available($tree) ? 
             (is_tree_open($tree) ? "Open" : "Closed") : "Not Available") . 
             "</TD>\n";
-        print "<TD class=\"outerCell\">\n";
-        print "<TABLE WIDTH=\"100%\">\n";
+        print "\t<TD CLASS=\"outerCell\">\n\t    <TABLE WIDTH=\"100%\">\n";
         for my $buildname (sort(keys %td)) {
-            print "<TR STYLE=\"background-color:" .
-            $colormap{$td{$buildname}->{buildstatus}} .
-            "\"><TD>$buildname</TD></TR>\n";
+            print "\t\t<TR CLASS=\"$td{$buildname}->{buildstatus}\">" .
+                "<TD>$buildname</TD></TR>\n";
         }
-        print "</TABLE>\n</TD>\n";
-        print "</TR>\n";            
+        print "\t    </TABLE>\n";
+        print "\t</TD>\n";
+        print "    </TR>\n";            
     }
-    print "</TABLE>\n</CENTER></BODY>\n</HTML>\n";
+    print "</TABLE>\n</CENTER>\n</BODY>\n</HTML>\n";
 }
 
 ##
@@ -199,14 +212,41 @@ sub do_json($) {
 sub print_page_head($$) {
     my ($form_ref, $td) = (@_);
     my $tree = $form_ref->{tree};
-    print "Content-type: text/html\n\n<HTML>\n" unless $form_ref->{static};
+    print "Content-type: text/html\n\n" unless $form_ref->{static};
 
     use POSIX qw(strftime);
     # Print time in format "YYYY-MM-DD HH:MM timezone"
     my $now = strftime("%Y-%m-%d %H:%M %Z", localtime);
 
-    &EmitHtmlTitleAndHeader("tinderbox: $tree", "tinderbox",
-                            "tree: $tree ($now)");
+    my $header_extras = 
+        qq(
+           <style type="text/css">
+           \#popup {
+             position: absolute;
+             margin: -5em 0 0 -5em;
+             opacity: 0.9;
+           }
+           .who\#popup{
+             border: 0px;
+             height: 8em;
+             width: 16em;
+           }
+           .note\#popup {
+             width: 25em;
+           }
+           .log\#popup {
+           }
+           .note\#popup, .log\#popup {
+             border: 2px solid black;
+             background: white;
+             color: black;
+             padding: 0.5em;
+           }
+           </style>
+           );
+
+    EmitHtmlTitleAndHeader("tinderbox: $tree", "tinderbox",
+                            "tree: $tree ($now)", $header_extras);
 
     &print_javascript($td);
 
@@ -288,12 +328,14 @@ sub print_page_head($$) {
         }
         print "</font>\n";
     }
+    print "\n";
 }
 
 sub print_table_body($) {
     my ($td) = (@_);
     # Reset globals
     undef @who_check_list;
+    print "<!--- Start printing waterfall table -->\n";
     for (my $tt=0; $tt < $td->{time_count}; $tt++) {
         last if $td->{build_time_times}->[$tt] < $td->{mindate};
         &print_table_row($td, $tt);
@@ -329,14 +371,14 @@ BEGIN {
         }
         
         my $hour_color = '';
-        $hour_color = ' bgcolor=#e7e7e7'
+        $hour_color = ' bgcolor="#e7e7e7"'
             if ($td->{build_time_times}->[$tt] + 1) % 7200 <= 3600;
-        print "<tr align=center><td align=right$hour_color>",
-        "$query_link\n$pretty_time$end_query</td>\n";
+        print "<tr align=center>\n\t<td align=right$hour_color>" .
+            "${query_link}$pretty_time$end_query</td>\n";
         
         # Guilty
         #
-        print '<td>';
+        print "\t<td>\n";
         for my $who (sort keys %{$td->{who_list}->[$tt]} ){
             my $qr;
             if ($tt eq 0) {
@@ -347,9 +389,9 @@ BEGIN {
                                 $td->{build_time_times}->[$tt-1],$who);
             }
             $who =~ s/%.*$//;
-            print "  $qr$who</a>\n";
+            print "\t\t$qr$who</a>\n";
         }
-        print '</td>';
+        print "\t</td>\n";
         
         # Build Status
         #
@@ -357,7 +399,7 @@ BEGIN {
             my $br = $td->{build_table}->[$tt][$build_index];
             if (not defined($br)) {
                 # No build data for this time (e.g. no build after this time).
-                print "<td></td>\n";
+                print "\t<td></td>\n";
                 next;
             }
             next if $br == -1; # Covered by rowspan
@@ -373,7 +415,7 @@ BEGIN {
                 $rowspan = $td->{mindate_time_count} - $tt + 1
                 }
 
-            print "<td rowspan=\"$rowspan\" bgcolor=\"$colormap{$br->{buildstatus}}\">\n";
+            print "\t<td rowspan=\"$rowspan\" bgcolor=\"$colormap{$br->{buildstatus}}\">";
 
             if ( $br->{buildstatus} eq "null" ) {
                 print "</td>\n";
@@ -385,18 +427,17 @@ BEGIN {
 
             my $logfileexists = ( -f "$::tree_dir/$buildtree/$logfile" ? 1 : 0 );
             
-            print "<tt>\n";
+            print "\n\t<tt>\n";
             
             # Build Note
             # 
             my $logurl = "${rel_path}showlog.cgi?log=$buildtree/$logfile";
             
             if ($br->{hasnote}) {
-                print qq|
-                    <a href="$logurl"
+                print qq|\t\t<a href="$logurl"
                     onclick="return note(event,$br->{noteid},'$logfile');">
-                    <img src="$images{star}" title="$titlemap{star}" alt="$textmap{star}" border=0></a>
-                    |;
+                    <img src="$images{star}" title="$titlemap{star}"
+                    alt="$textmap{star}" border=0></a>\n|;
             }
             
             # Build Log
@@ -404,55 +445,38 @@ BEGIN {
             # Uncomment this line to print logfile names in build rectangle.
             # print "$logfile<br>";
             
-            if ( 1 ) {
-                # Add build start, end, and elapsed time where possible.
-                my($start, $end, $elapsed);
+            # Add build start, end, and elapsed time where possible.
+            my($start, $end, $elapsed);
 
-                my $start_timet = $br->{buildtime};
-                my $end_timet = $br->{endtime};
+            my $start_timet = $br->{buildtime};
+            my $end_timet = $br->{endtime};
 
-                # If either of the times aren't today, we need to qualify both with
-                # the month and day-of-month.
-                my $need_to_qualify;
-                if ( both_are_today($start_timet, $end_timet) ) {
-                    $need_to_qualify = 0;
-                } else {
-                    $need_to_qualify = 1;
-                }
-
-                # Grab the human-readable start time.
-                $start = get_local_hms($start_timet, $need_to_qualify);
-
-                # If we're still building, the endtime only reflects the opening
-                # mail that the build has started, not the time at which the build
-                # ended.  In that case, don't use it.  Use the current time, instead.
-                my $time_info = "";
-                if ($br->{buildstatus} eq 'building') {
-                    $elapsed = get_time_difference(time(), $start_timet);
-
-                    $time_info = "Started $start, still building..";
-                } else {
-                    $end = get_local_hms($end_timet, $need_to_qualify);
-                    $elapsed = get_time_difference($end_timet, $start_timet);
-
-                    $time_info = "Started $start, finished $end";
-                }
-
-                print qq|
-                    <A HREF="$logurl"
-                    onclick="return log(event,$build_index,$logfileexists,'$logfile','$time_info','$elapsed');"
-                    title="$titlemap{$br->{buildstatus}}">
-                    $textmap{$br->{buildstatus}}</a>
-                    |;
+            # If either of the times aren't today, we need to qualify both with
+            # the month and day-of-month.
+            my $need_to_qualify;
+            if ( both_are_today($start_timet, $end_timet) ) {
+                $need_to_qualify = 0;
             } else {
-                print qq|
-                    <A HREF="$logurl"
-                    onclick="return log(event,$build_index,$logfileexists,'$logfile');"
-                    title="$titlemap{$br->{buildstatus}}">
-                    $textmap{$br->{buildstatus}}</a>
-                    |;
+                $need_to_qualify = 1;
             }
-            
+
+            # Grab the human-readable start time.
+            $start = get_local_hms($start_timet, $need_to_qualify);
+
+            # If we're still building, the endtime only reflects the opening
+            # mail that the build has started, not the time at which the build
+            # ended.  In that case, don't use it.  Use the current time, instead.
+            my $time_info = "";
+            if ($br->{buildstatus} eq 'building') {
+                $elapsed = get_time_difference(time(), $start_timet);
+                $time_info = "Started $start, still building..";
+            } else {
+                $end = get_local_hms($end_timet, $need_to_qualify);
+                $elapsed = get_time_difference($end_timet, $start_timet);
+                $time_info = "Started $start, finished $end";
+            }
+            print qq|\t\t<A HREF="$logurl" onclick="return log(event,$build_index,$logfileexists,'$logfile','$time_info','$elapsed');" title="$titlemap{$br->{buildstatus}}">$textmap{$br->{buildstatus}}</a>\n|;
+
             # What Changed
             #
             # Only add the "C" link if there have been changes since the last build.
@@ -463,10 +487,10 @@ BEGIN {
                 if (&has_who_list($td,
                                   $this_buildtime_index,
                                   $previous_buildtime_index)) {
-                    print "\n", &query_ref($br->{td}, 
+                    print "\t\t", &query_ref($br->{td}, 
                                            $br->{previousbuildtime},
                                            $br->{buildtime} - 1);
-                    print "C</a>";
+                    print "C</a>\n";
                 }
             }
 
@@ -475,10 +499,9 @@ BEGIN {
             # Only add the "D" link if there is a url to a downloadable binary
             if( $br->{binaryurl} ){
                 my $binaryurl = $br->{binaryurl};
-                print" <A HREF=$binaryurl>D</A>";
+                print"\t\t<A HREF=\"$binaryurl\">D</A>\n";
             }
             
-
             # Scrape data
             if (defined $td->{scrape}{$logfile}) {
                 my (@scrape_data)
@@ -486,7 +509,7 @@ BEGIN {
                 # ex: Tp:5.45s
                 my $i;
                 foreach $i (@scrape_data) {
-                    print "<br>$i";
+                    print "\t\t<br>$i\n";
                 }
             }
 
@@ -495,10 +518,10 @@ BEGIN {
                 my ($warning_count) = $td->{warnings}{$logfile};
                 my $warn_file = "$tree/warn$logfile";
                 $warn_file =~ s/\.gz$/.html/;
-                print "<br><br><a href='${rel_path}$warn_file'>Warn:$warning_count</a>";
+                print "\t\t<br><a href='${rel_path}$warn_file'>Warn:$warning_count</a>\n";
             }
 
-            print "</tt>\n</td>";
+            print "\t</tt>\n\t</td>\n";
         }
         print "</tr>\n";
     }
@@ -507,11 +530,9 @@ BEGIN {
 sub print_table_header($) {
     my ($form_ref, $td) = (@_);
     print "<table border=1 bgcolor='#FFFFFF' cellspacing=1 cellpadding=1>\n";
-
     print "<tr align=center>\n";
-
-    print "<TH>Build Time</TH>\n";
-    print "<TH>Guilty</th>\n";
+    print "\t<TH>Build Time</TH>\n";
+    print "\t<TH>Guilty</TH>\n";
 
     for (my $ii=0; $ii < $td->{name_count}; $ii++) {
 
@@ -523,22 +544,20 @@ sub print_table_header($) {
         my $last_status = &tb_last_status($td, $ii);
         if ($last_status eq 'busted') {
             if ($form_ref->{noflames}) {
-                print "<td rowspan=2 bgcolor=$colormap{busted}><a title='$titlemap{flames}'>$bn $textmap{flames}</a></td>";
+                print "\t<td rowspan=2 bgcolor=$colormap{busted}><a title='$titlemap{flames}'>$bn $textmap{flames}</a></td>\n";
             } else {
-                print "<td rowspan=2 bgcolor=000000 background='$images{flames}' style='background-position: bottom; background-repeat: repeat-x;'>";
-                print "<font color=white><a title='$titlemap{flames}'>$bn $textmap{flames}</a></font></td>";
+                print "\t<td rowspan=2 bgcolor=000000 style='background-image: url(\"$images{flames}\"); background-position: bottom; background-repeat: repeat-x;'>";
+                print "<font color=white><a title='$titlemap{flames}'>$bn $textmap{flames}</a></font></td>\n";
             }
         }
         else {
-            print "<td rowspan=2 bgcolor=$colormap{$last_status}>$bn</td>";
+            print "\t<td rowspan=2 bgcolor=$colormap{$last_status}>$bn</td>\n";
         }
     }
-    print "</tr><tr>\n";
+    print "</tr>\n<tr>\n";
 
-    print "<td rowspan=1><font size=-1>Click time to <br>see changes <br>",
-    "since then</font></td>";
-    print "<td><font size=-1>",
-    "Click name to see what they did</font></td>";
+    print "\t<td rowspan=1><font size=\"-1\">Click time to see changes since then</font></td>\n";
+    print "\t<td><font size=\"-1\">Click name to see what they did</font></td>\n";
 
     print "</tr>\n";
 }
@@ -567,13 +586,13 @@ sub print_table_footer($$) {
 
     $footer_form{maxdate} = $td->{maxdate} - $hours*60*60;
     print open_showbuilds_href(%footer_form) .
-        "Show previous $hours hours</a><br>";
+        "Show previous $hours hours</a><br>\n";
 
     if ($hours != 24) {
         my $save_hours = $footer_form{hours};
         $footer_form{hours} = 24;
         print open_showbuilds_href(%footer_form) .
-            "Show previous 24 hours</a><br>";
+            "Show previous 24 hours</a><br>\n";
         $footer_form{hours} = $save_hours;
     }
 
@@ -588,19 +607,20 @@ sub print_table_footer($$) {
     print open_showbuilds_href(%footer_form) . "12</a>, or ";
 
     $footer_form{maxdate} = $td->{maxdate} - 24*60*60*7*52;
-    print open_showbuilds_href(%footer_form) . "52</a> weeks.<br>";
+    print open_showbuilds_href(%footer_form) . "52</a> weeks.<br>\n";
 
-    print "\n<p>\n<a href='${admin_url}?tree=$tree'>" . 
+    print "<hr>\n<a href='${admin_url}?tree=$tree'>" . 
         "Administrate Tinderbox Tree: $tree</a><br>\n";
     print "<a href='${rel_path}showbuilds.cgi'>" . 
         "Tinderbox Tree Summary</a><br>\n";
+    print "</body>\n</html>\n";
 }
 
 sub open_showbuilds_url {
     my %args = (@_);
     my $url = "${rel_path}showbuilds.cgi?tree=$args{tree}";
     while (my ($key, $value) = each %args) {
-        $url .= "&$key=$value" if ($value ne '' && $key ne 'tree');
+        $url .= "&amp;$key=$value" if ($value ne '' && $key ne 'tree');
     }
     return $url;
 }
@@ -622,26 +642,26 @@ sub open_showbuilds_href_target {
         if ($::global_treedata->{$td->{name}}->{use_viewvc}) {
             $output = "<a href=\"" .
                 $::global_treedata->{$td->{name}}->{viewvc_url} .
-                "?view=query&who_match=exact";
-            $output .= "&date=explicit&mindate=" .
+                "?view=query&amp;who_match=exact";
+            $output .= "&amp;date=explicit&amp;mindate=" .
                 strftime("%Y-%m-%d %T", gmtime($mindate));
-            $output .= "&maxdate=" . 
+            $output .= "&amp;maxdate=" . 
                 strftime("%Y-%m-%d %T", gmtime($maxdate))
                 if (defined($maxdate) && $maxdate ne '');
-            $output .= "&who=" . &url_encode($who) if (defined($who) && $who ne '');
+            $output .= "&amp;who=" . &url_encode($who) if (defined($who) && $who ne '');
             $output .= "\">";
         } elsif ($::global_treedata->{$td->{name}}->{use_bonsai}) {
             $output = "<a href=" .
                 $::global_treedata->{$td->{name}}->{bonsai_url} .
                 "cvsquery.cgi"; 
             $output .= "?module=$td->{cvs_module}";
-            $output .= "&branch=$td->{cvs_branch}"   if $td->{cvs_branch} ne 'HEAD';
-            $output .= "&branchtype=regexp"
+            $output .= "&amp;branch=$td->{cvs_branch}"   if $td->{cvs_branch} ne 'HEAD';
+            $output .= "&amp;branchtype=regexp"
                 if $td->{cvs_branch} =~ /\+|\?|\*/;
-            $output .= "&cvsroot=$td->{cvs_root}"    if $td->{cvs_root} ne $::default_cvsroot;
-            $output .= "&date=explicit&mindate=$mindate";
-            $output .= "&maxdate=$maxdate"           if $maxdate and $maxdate ne '';
-            $output .= "&who=$who"                   if $who and $who ne '';
+            $output .= "&amp;cvsroot=$td->{cvs_root}"    if $td->{cvs_root} ne $::default_cvsroot;
+            $output .= "&amp;date=explicit&amp;mindate=$mindate";
+            $output .= "&amp;maxdate=$maxdate"           if $maxdate and $maxdate ne '';
+            $output .= "&amp;who=$who"                   if $who and $who ne '';
             $output .= ">";
         }
         return $output;
@@ -661,16 +681,16 @@ sub open_showbuilds_href_target {
         my $ret = '<a><!-- no query system configured -->';
         if ($::global_treedata->{$td->{name}}->{use_viewvc}) {
             $qr = $::global_treedata->{$td->{name}}->{viewvc_url} .
-                "?view=query&who_match=exact&who=" . 
-                &url_encode($who) . "&querysort=date&date=explicit" .
-                "&mindate=" . strftime("%Y-%m-%d %T", gmtime($mindate));
-            $qr .= "&maxdate=" . strftime("%Y-%m-%d %T", gmtime($maxdate)) if
+                "?view=query&amp;who_match=exact&amp;who=" . 
+                &url_encode($who) . "&amp;querysort=date&amp;date=explicit" .
+                "&amp;mindate=" . strftime("%Y-%m-%d %T", gmtime($mindate));
+            $qr .= "&amp;maxdate=" . strftime("%Y-%m-%d %T", gmtime($maxdate)) if
                 (defined($maxdate));
             $ret = "<a href='$qr'>";
         } elsif ($::global_treedata->{$td->{name}}->{use_bonsai}) {
             $qr = $::global_treedata->{$td->{name}}->{registry_url} .
                 "/who.cgi?email=". &url_encode($who)
-                . "&d=$td->{cvs_module}|$treeflag|$td->{cvs_root}|$mindate";
+                . "&amp;d=$td->{cvs_module}|$treeflag|$td->{cvs_root}|$mindate";
             $qr = $qr . "|$maxdate" if defined($maxdate);
             $ret = "<a href=\"$qr\" onclick=\"return who(event);\">";
         }
@@ -758,34 +778,11 @@ sub open_showbuilds_href_target {
 
         my $script;
         ($script = <<"__ENDJS") =~ s/^    //gm;
-        <style type="text/css">
-            #popup {
-          position: absolute;
-      margin: -5em 0 0 -5em;
-      opacity: 0.9;
-    }
-    .who#popup{
-  border: 0px;
-  height: 8em;
-  width: 16em;
-}
-.note#popup {
-  width: 25em;
-}
-.log#popup {
-}
-.note#popup, .log#popup {
-  border: 2px solid black;
- background: white;
- color: black;
- padding: 0.5em;
-}
-</style>
-    <script>
+<script type="text/javascript">
     var noDHTML = false;
 if (parseInt(navigator.appVersion) < 4) {
     window.event = 0;
-noDHTML = true;
+    noDHTML = true;
 } else if (navigator.userAgent.indexOf("MSIE") > 0 ) {
     noDHTML = true;
 }
@@ -794,77 +791,77 @@ if (document.body && document.body.addEventListener) {
 }
 function closepopup() {
     var p = document.getElementById("popup");
-if (p && p.parentNode) {
-    p.parentNode.removeChild(p);
-}
+    if (p && p.parentNode) {
+        p.parentNode.removeChild(p);
+    }
 }
 function maybeclosepopup(e) {
     var n = e.target;
-var close = true;
-while(close && n && (n != document)) {
-    close = (n.id != "popup") && !(n.tagName && (n.tagName.toLowerCase() == "a"));
-    n = n.parentNode;
-}
-if (close) closepopup();
+    var close = true;
+    while(close && n && (n != document)) {
+        close = (n.id != "popup") && !(n.tagName && (n.tagName.toLowerCase() == "a"));
+        n = n.parentNode;
+    }
+    if (close) closepopup();
 }
 function who(d) {
     if (noDHTML) {
         return true;
     }
-if (typeof document.layers != 'undefined') {
-    var l  = document.layers['popup'];
-    l.src  = d.target.href;
-    l.top  = d.target.y - 6;
-    l.left = d.target.x - 6;
-    if (l.left + l.clipWidth > window.width) {
-        l.left = window.width - l.clipWidth;
-    }
-    l.visibility="show";
-} else {
-    var t = d.target;
-    while (t.nodeType != 1) {
-        t = t.parentNode;
-    }
-    closepopup()
+    if (typeof document.layers != 'undefined') {
+        var l  = document.layers['popup'];
+        l.src  = d.target.href;
+        l.top  = d.target.y - 6;
+        l.left = d.target.x - 6;
+        if (l.left + l.clipWidth > window.width) {
+            l.left = window.width - l.clipWidth;
+        }
+        l.visibility="show";
+    } else {
+        var t = d.target;
+        while (t.nodeType != 1) {
+            t = t.parentNode;
+        }
+        closepopup();
         l = document.createElement("iframe");
-    l.setAttribute("src", t.href);
-    l.setAttribute("id", "popup");
-    l.className = "who";
-    t.appendChild(l);
-}
-return false;
+        l.setAttribute("src", t.href);
+        l.setAttribute("id", "popup");
+        l.className = "who";
+        t.appendChild(l);
+    }
+    return false;
 }
 
 function convert_timet_to_gmtdate(timet) {
     var timeconv = new Date();
-timeconv.setTime( (timet * 1000) + \
-                  (timeconv.getTimezoneOffset() * 60 * 1000) );
-return timeconv.toLocaleString();
+    timeconv.setTime( (timet * 1000) + \
+                      (timeconv.getTimezoneOffset() * 60 * 1000) );
+    return timeconv.toLocaleString();
 }
 
 function convert_timet_to_localdate(timet) {
     var timeconv = new Date();
-timeconv.setTime(timet * 1000);
-return timeconv.toLocaleString();
+    timeconv.setTime(timet * 1000);
+    return timeconv.toLocaleString();
 }
 
 function convert_timet_to_localhms(timet) {
     var timeconv = new Date();
-timeconv.setTime(timet * 1000);
+    timeconv.setTime(timet * 1000);
 
-hours = timeconv.getHours();
-if (hours < 10)
-    hours = "0" + hours;
+    hours = timeconv.getHours();
+    if (hours < 10)
+        hours = "0" + hours;
 
-mins = timeconv.getMinutes();
-if (mins < 10)
-    mins = "0" + mins;
+    mins = timeconv.getMinutes();
+    if (mins < 10)
+        mins = "0" + mins;
 
-secs = timeconv.getSeconds();
-if (secs < 10)
-    secs = "0" + secs;
+    secs = timeconv.getSeconds();
+    if (secs < 10)
+        secs = "0" + secs;
 
-return hours + ":" + mins;
+    return hours + ":" + mins;
 }
 
 function log_url(logfile) {
@@ -875,90 +872,91 @@ function note(d,noteid,logfile) {
         document.location = log_url(logfile);
         return false;
     }
-if (typeof document.layers != 'undefined') {
-    var l = document.layers['popup'];
-    l.document.write("<table border=1 cellspacing=1><tr><td>"
-                     + notes[noteid] + "</tr></table>");
-    l.document.close();
-    l.top = d.y-10;
-    var zz = d.x;
-    if (zz + l.clip.right > window.innerWidth) {
-        zz = (window.innerWidth-30) - l.clip.right;
-        if (zz < 0) { zz = 0; }
-    }
-    l.left = zz;
-    l.visibility="show";
-} else {
-    var t = d.target;
-    while (t.nodeType != 1) {
-        t = t.parentNode;
-    }
-    closepopup()
+    if (typeof document.layers != 'undefined') {
+        var l = document.layers['popup'];
+        l.document.write("<table border=1 cellspacing=1><tr><td>"
+                         + notes[noteid] + "<\\/tr><\\/table>");
+        l.document.close();
+        l.top = d.y-10;
+        var zz = d.x;
+        if (zz + l.clip.right > window.innerWidth) {
+            zz = (window.innerWidth-30) - l.clip.right;
+            if (zz < 0) { zz = 0; }
+        }
+        l.left = zz;
+        l.visibility="show";
+    } else {
+        var t = d.target;
+        while (t.nodeType != 1) {
+            t = t.parentNode;
+        }
+        closepopup();
         l = document.createElement("div");
-    l.innerHTML = notes[noteid];
-    l.setAttribute("id", "popup");
-    l.style.position = "absolute";
-    l.className = "note";
-    t.parentNode.parentNode.appendChild(l);
-}
-return false;
+        l.innerHTML = notes[noteid];
+        l.setAttribute("id", "popup");
+        l.style.position = "absolute";
+        l.className = "note";
+        t.parentNode.parentNode.appendChild(l);
+    }
+    return false;
 }
 function log(e,buildindex,logfileexists,logfile,time_info,elapsed) {
     var logurl = log_url(logfile);
-var commenturl = "${rel_path}addnote.cgi?log=" + buildtree + "/" + logfile;
-if (noDHTML) {
-    document.location = logurl;
-    return false;
-}
+    var commenturl = "${rel_path}addnote.cgi?log=" + buildtree + "/" + logfile;
+    if (noDHTML) {
+        document.location = logurl;
+        return false;
+    }
 
-var blurb = "<B>" + builds[buildindex] + "</B><BR>";
+    var blurb = "<B>" + builds[buildindex] + "<\\/B><BR>";
 
-// If time_info is set, it will contain either the start time of the
+    // If time_info is set, it will contain either the start time of the
     // build or both the start and end time.
     if (time_info) {
         blurb = blurb + time_info + "<BR>"
         }
 
-// elapsed tracks the time the build started to either its end time or
+    // elapsed tracks the time the build started to either its end time or
     // now.
     if (elapsed) {
         blurb = blurb + elapsed + " elapsed<BR>"
         }
 
-if (logfileexists) {
-    blurb = blurb + "<A HREF=" + logurl + ">View Brief Log</A><BR>"
-        + "<A HREF=" + logurl + "&fulltext=1"+">View Full Log</A><BR>";
-}
-
-blurb = blurb + "<A HREF=" + commenturl + ">Add a Comment</A>";
-
-if (typeof document.layers != 'undefined') {
-    var q = document.layers["logpopup"];
-    q.top = e.target.y - 6;
-
-    var yy = e.target.x;
-    if ( yy + q.clip.right > window.innerWidth) {
-        yy = (window.innerWidth-30) - q.clip.right;
-        if (yy < 0) { yy = 0; }
+    if (logfileexists) {
+        blurb = blurb + '<A HREF="' + logurl + '">View Brief Log<\\/A><BR>'
+            + '<A HREF="' + logurl + '&fulltext=1' + 
+            '">View Full Log<\\/A><BR>';
     }
-    q.left = yy;
-    q.visibility="show"; 
-    q.document.write("<TABLE BORDER=1><TR><TD>" + blurb
-                     + "</TD></TR></TABLE>");
-    q.document.close();
-} else {
-    var t = e.target;
-    while (t.nodeType != 1) {
-        t = t.parentNode;
+
+    blurb = blurb + "<A HREF=\\"" + commenturl + "\\">Add a Comment<\\/A>";
+
+    if (typeof document.layers != 'undefined') {
+        var q = document.layers["logpopup"];
+        q.top = e.target.y - 6;
+
+        var yy = e.target.x;
+        if ( yy + q.clip.right > window.innerWidth) {
+            yy = (window.innerWidth-30) - q.clip.right;
+            if (yy < 0) { yy = 0; }
+        }
+        q.left = yy;
+        q.visibility="show"; 
+        q.document.write("<TABLE BORDER=1><TR><TD>" + blurb
+                         + "<\\/TD><\\/TR><\\/TABLE>");
+        q.document.close();
+    } else {
+        var t = e.target;
+        while (t.nodeType != 1) {
+            t = t.parentNode;
+        }
+        closepopup();
+        var l = document.createElement("div");
+        l.innerHTML = blurb + "<BR>";
+        l.setAttribute("id", "popup");
+        l.className = "log";
+        t.parentNode.appendChild(l);
     }
-    closepopup();
-    var l = document.createElement("div");
-    l.innerHTML = blurb + "<BR>";
-    l.setAttribute("id", "popup");
-    l.className = "log";
-    t.parentNode.appendChild(l);
-}
-return false;
+    return false;
 }
 
 var notes = new Array();
@@ -1009,7 +1007,10 @@ sub do_express($) {
     my %express_form = %{$form_ref};
     undef $express_form{express};
 
-    print "Content-type: text/html\nRefresh: 900\n\n<HTML>\n";
+    print "Content-type: text/html\nRefresh: 900\n\n";
+    print "$::doctype_xhtml1_transitional\n";
+    print "<html>\n";
+    print "<head>\n    <title>Panel - $tree</title>\n</head>\n";
 
     my (%quickdata);
     tb_loadquickparseinfo($tree, $form_ref->{maxdate}, \%quickdata);
@@ -1017,17 +1018,18 @@ sub do_express($) {
     my @keys = sort keys %quickdata;
     my $keycount = @keys;
     my $tm = &print_time(time);
-    print "<table border=1 cellpadding=1 cellspacing=1><tr>";
-    print "<th align=left colspan=$keycount>";
+    print "<body>\n";
+    print "<table border=1 cellpadding=1 cellspacing=1>\n";
+    print "    <tr><th align=\"left\" colspan=$keycount>";
     print open_showbuilds_href_target(%express_form)."$tree";
     if (&is_tree_state_available($tree)) {
         print (&is_tree_open($tree) ? ' is open' : ' is closed');
     }
-    print ", $tm</a></tr><tr>\n";
+    print ", $tm</a></tr>\n    <tr>\n";
     foreach my $buildname (@keys) {
-        print "<td bgcolor='$colormap{$quickdata{$buildname}->{buildstatus}}'>$buildname</td>";
+        print "\t<td bgcolor='$colormap{$quickdata{$buildname}->{buildstatus}}'>$buildname</td>\n";
     }
-    print "</tr></table>\n";
+    print "    </tr>\n</table>\n</body>\n</html>\n";
 }
 
 # This is essentially do_express but it outputs a different format

@@ -22,43 +22,45 @@
 use strict;
 
 sub EmitHtmlTitleAndHeader {
-    my($doctitle,$heading,$subheading) = @_;
+    my($doctitle,$heading,$subheading, $header_extras) = @_;
     
-    print "<HTML><HEAD><TITLE>$doctitle</TITLE>";
-    print "<link rel=\"icon\" href=\"http://mozilla.org/images/mozilla-16.png\" type=\"image/png\">";
-    print "</HEAD>";
-    print "<BODY   BGCOLOR=\"#FFFFFF\" TEXT=\"#000000\"";
-    print "LINK=\"#0000EE\" VLINK=\"#551A8B\" ALINK=\"#FF0000\">";
+    print "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\n";
+    print "<HTML>\n<HEAD>\n  <TITLE>$doctitle</TITLE>\n";
+    print "  $::site_icon_link\n";
+    print "  $header_extras\n" if (defined($header_extras));
+    print "</HEAD>\n";
+
+    print "<BODY BGCOLOR=\"#FFFFFF\" TEXT=\"#000000\"";
+    print "LINK=\"#0000EE\" VLINK=\"#551A8B\" ALINK=\"#FF0000\">\n";
 
     if (open(BANNER, "<", "$::data_dir/banner.html")) {
         while (<BANNER>) { print; }
         close BANNER;
     }
 
-    print "<TABLE BORDER=0 CELLPADDING=12 CELLSPACING=0 WIDTH=\"100%\">";
+    print "<TABLE BORDER=0 CELLPADDING=12 CELLSPACING=0 WIDTH=\"100%\">\n";
     print " <TR>\n";
     print "  <TD>\n";
     print "   <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=2>\n";
-    print "    <TR><TD VALIGN=TOP ALIGN=CENTER NOWRAP>\n";
-    print "     <FONT SIZE=\"+3\"><B><NOBR>$heading</NOBR></B></FONT>\n";
-    print "    </TD></TR><TR><TD VALIGN=TOP ALIGN=CENTER>\n";
-    print "     <B>$subheading</B>\n";
-    print "    </TD></TR>\n";
+    print "    <TR><TD VALIGN=TOP ALIGN=CENTER NOWRAP>";
+    print "<FONT SIZE=\"+3\"><B>$heading</B></FONT></TD></TR>\n";
+    print "    <TR><TD VALIGN=TOP ALIGN=CENTER><B>$subheading</B></TD></TR>\n";
     print "   </TABLE>\n";
     print "  </TD>\n";
     print "  <TD>\n";
 
+    print "  <!-- Insert blurb here -->\n";
     if (open(BLURB, "<", "$::data_dir/blurb")) {
         while (<BLURB>) { print; }
         close BLURB;
     }
 
-    print "</TD></TR></TABLE>\n";
+    print "  </TD>\n </TR>\n</TABLE>\n";
 }
 
 sub EmitHtmlHeader {
-    my($heading,$subheading) = @_;
-    EmitHtmlTitleAndHeader($heading,$heading,$subheading);
+    my($heading,$subheading,$heading_extras) = @_;
+    EmitHtmlTitleAndHeader($heading,$heading,$subheading,$heading_extras);
 }
 
 1;
