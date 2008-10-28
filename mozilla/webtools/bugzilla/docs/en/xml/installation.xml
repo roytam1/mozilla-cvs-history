@@ -787,36 +787,6 @@
           </para>
         </caution>
         
-        <section id="install-setupdatabase">
-          <title>Allow large attachments</title>
-        
-          <para>
-            By default, MySQL will only accept packets up to 64Kb in size.
-            If you want to have attachments larger than this, you will need
-            to modify your <filename>/etc/my.cnf</filename> as below.
-          </para>
-
-          <screen>  [mysqld]
-  # Allow packets up to 1M
-  max_allowed_packet=1M</screen>
-
-          <para>
-            There is also a parameter in Bugzilla called 'maxattachmentsize'
-            (default = 1000 Kb) that controls the maximum allowable attachment
-            size. Attachments larger than <emphasis>either</emphasis> the 
-            'max_allowed_packet' or 'maxattachmentsize' value will not be
-            accepted by Bugzilla.
-          </para>
-
-          <note>
-            <para>
-              This does not affect Big Files, attachments that are stored directly
-              on disk instead of in the database.  Their maximum size is
-              controlled using the 'maxlocalattachment' parameter.
-            </para>
-          </note>
-        </section>
-        
         <section>
           <title>Allow small words in full-text indexes</title>
 
