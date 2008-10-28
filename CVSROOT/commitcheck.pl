@@ -516,7 +516,7 @@ if (m:^CVSROOT/passwd$:) {return '3';}
 if (m:^mozilla/docshell/.*$:) {return '101';}
 if (m:^mozilla/uriloader/.*$:) {return '101';}
 if (m:^mozilla/webshell/.*$:) {return '101';}
-if (m:^mozilla/mailnews/movemail/.*$:) {return '157';}
+if (m:^mozilla/mailnews/local/src/nsMovemail.*$:) {return '157';}
 if (m:^mozilla/parser/htmlparser$:) {return '102';}
 if (m:^mozilla/embedding/.*$:) {return '208';}
 if (m:^mozilla/dbm/.*$:) {return '145';}
