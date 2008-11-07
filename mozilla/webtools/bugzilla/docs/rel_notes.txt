@@ -195,6 +195,11 @@ Version 2.20.6
 Also see the Security Fixes section for the security updates in this
 release.
 
+Version 2.20.7
+--------------
+
+This is a security-only release--see the Security Fixes section.
+
 Minimum Requirements
 ********************
 
@@ -772,6 +777,13 @@ This release fixes a Cross-Site Scripting vulnerability. You can read the
 details of the security fix at:
 
 http://www.bugzilla.org/security/2.20.5/
+
+2.20.7
+------
+
+This release fixes one minor security issue. See the Security Advisory at:
+
+http://www.bugzilla.org/security/2.20.6/
 
 
 Release Notes for Previous Versions
