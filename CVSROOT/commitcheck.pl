@@ -503,6 +503,7 @@ if (m:^mozilla/security/coreconf/.*$:) {return '145';}
 if (m:^mozilla/security/dbm/.*$:) {return '145';}
 if (m:^mozilla/security/jss/.*$:) {return '145';}
 if (m:^mozilla/security/nss/.*$:) {return '145';}
+if (m:^mozilla/security/tinderbox/.*$:) {return '145';}
 if (m:^mozilla/security/tinderlight/.*$:) {return '145';}
 if (m:^mozilla/js/rhino/.*$:) {return '138';}
 if (m:^mozilla/gfx/src/qt/.*$:) {return '161';}
