@@ -212,7 +212,7 @@ $mode{'145'} = 'Restricted';
 $branch{'145'} = 'HEAD';
 $fullname{'145'} = 'security';
 $blessed{'145'} = ['gerv%gerv.net','douglas%stebila.ca',];
-$super{'145'} = ['emaldona%redhat.com','slavomir.katuscak%sun.com','kaie%kuix.de','glen.beasley%sun.com','christophe.ravel.bugs%sun.com','alexei.volkov.bugs%sun.com','wtc%google.com','rrelyea%redhat.com','nelson%bolyard.com','julien.pierre.boogz%sun.com',];
+$super{'145'} = ['slavomir.katuscak%sun.com','kaie%kuix.de','glen.beasley%sun.com','emaldona%redhat.com','christophe.ravel.bugs%sun.com','alexei.volkov.bugs%sun.com','wtc%google.com','rrelyea%redhat.com','nelson%bolyard.com','julien.pierre.boogz%sun.com',];
 $mode{'151'} = 'Open';
 $branch{'151'} = 'HEAD';
 $fullname{'151'} = 'Security - Mozilla PSM Glue';
@@ -503,6 +503,7 @@ if (m:^mozilla/security/coreconf/.*$:) {return '145';}
 if (m:^mozilla/security/dbm/.*$:) {return '145';}
 if (m:^mozilla/security/jss/.*$:) {return '145';}
 if (m:^mozilla/security/nss/.*$:) {return '145';}
+if (m:^mozilla/security/tinderlight/.*$:) {return '145';}
 if (m:^mozilla/js/rhino/.*$:) {return '138';}
 if (m:^mozilla/gfx/src/qt/.*$:) {return '161';}
 if (m:^mozilla/widget/src/qt/.*$:) {return '161';}
