@@ -401,6 +401,7 @@ if (m:^mozilla/gfx/src/shared/.*$:) {return '201';}
 if (m:^mozilla/gfx/src/thebes/.*$:) {return '201';}
 if (m:^mozilla/gfx/src/windows/.*$:) {return '201';}
 if (m:^mozilla/gfx/thebes/.*$:) {return '201';}
+if (m:^mozilla/modules/lcms/.*$:) {return '201';}
 if (m:^mozilla/xpcom/reflect/xptcall/.*$:) {return '206';}
 if (m:^mozilla/gfx/src/xprint/.*$:) {return '179';}
 if (m:^mozilla/view/.*$:) {return '96';}
