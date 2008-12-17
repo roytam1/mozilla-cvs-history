@@ -21,14 +21,6 @@
     instructions.
     </para>
 
-    <para>
-      As an alternative to following these instructions, you may wish to
-      try Arne Schirmacher's unofficial and unsupported 
-      <ulink url="http://www.softwaretesting.de/article/view/33/1/8/">Bugzilla
-      Installer</ulink>, which installs Bugzilla and all its prerequisites
-      on Linux or Solaris systems.
-    </para>
-
     <para>This guide assumes that you have administrative access to the
     Bugzilla machine. It not possible to
     install and run Bugzilla itself without administrative access except
