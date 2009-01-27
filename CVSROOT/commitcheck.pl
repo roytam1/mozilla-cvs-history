@@ -326,12 +326,6 @@ if ($b eq 'BUGZILLA-3_2-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '217';}
 }
 if ($b eq 'HEAD') {
-if (m:^mozilla/modules/libreg/.*$:) {return '84';}
-if (m:^mozilla/java/dom/.*$:) {return '130';}
-if (m:^db/sqlite3/.*$:) {return '216';}
-if (m:^storage/.*$:) {return '216';}
-if (m:^mozilla/java/util/.*$:) {return '133';}
-if (m:^mozilla/webtools/bugzilla/.*$:) {return '190';}
 if (m:^mozilla/content/xml/.*$:) {return '88';}
 if (m:^mozilla/extensions/xmlextras/.*$:) {return '88';}
 if (m:^mozilla/parser/expat/.*$:) {return '88';}
@@ -551,6 +545,12 @@ if (m:^mozilla/modules/libpref/.*$:) {return '82';}
 if (m:^mozilla/java/webclient/.*$:) {return '127';}
 if (m:^mozilla/extensions/help/.*$:) {return '188';}
 if (m:^mozilla/suite/.*$:) {return '188';}
+if (m:^mozilla/modules/libreg/.*$:) {return '84';}
+if (m:^mozilla/java/dom/.*$:) {return '130';}
+if (m:^db/sqlite3/.*$:) {return '216';}
+if (m:^storage/.*$:) {return '216';}
+if (m:^mozilla/java/util/.*$:) {return '133';}
+if (m:^mozilla/webtools/bugzilla/.*$:) {return '190';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
