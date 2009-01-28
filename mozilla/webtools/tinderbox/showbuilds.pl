@@ -529,7 +529,7 @@ BEGIN {
 
 sub print_table_header($) {
     my ($form_ref, $td) = (@_);
-    print "<table border=1 bgcolor='#FFFFFF' cellspacing=1 cellpadding=1>\n";
+    print "<table id='build_waterfall' border=1 bgcolor='#FFFFFF' cellspacing=1 cellpadding=1>\n";
     print "<tr align=center>\n";
     print "\t<TH>Build Time</TH>\n";
     print "\t<TH>Guilty</TH>\n";
