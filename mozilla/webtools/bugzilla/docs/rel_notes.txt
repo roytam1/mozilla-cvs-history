@@ -69,10 +69,18 @@ This section describes bugs fixed in releases after the original 2.22
 release. This section only describes significant fixes. To see all
 fixes, look at the Change Logs at http://www.bugzilla.org/status/changes.html
 
+Version 2.22.7
+--------------
+
++ Saving changes to parameters would sometimes fail silently. Bugzilla
+  will now throw an error instead of failing silently. (bug 347707)
+
+This release also contains a security fix. See the Security Fixes section.
+
 Version 2.22.6
 --------------
 
-* Bugzilla 2.22.6 is compatible with Perl 5.10.
++ Bugzilla 2.22.6 is compatible with Perl 5.10.
 
 This release also contains a security fix. See the Security Fixes section.
 
@@ -615,6 +623,15 @@ TRUNCATE TABLE logincookies;
 This is actually safe to do at any time--it just forces a logout of
 every single user, even those with saved sessions. (It invalidates
 every login cookie Bugzilla has ever given out.)
+
+Version 2.22.7
+--------------
+
+This release fixes some security issues. For details, see:
+
+http://www.bugzilla.org/security/2.22.7/
+
+We recommend that you read the entire security advisory for this release.
 
 Version 2.22.6
 --------------
