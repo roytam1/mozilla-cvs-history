@@ -629,7 +629,7 @@ Version 2.22.7
 
 This release fixes some security issues. For details, see:
 
-http://www.bugzilla.org/security/2.22.7/
+http://www.bugzilla.org/security/2.22.6/
 
 We recommend that you read the entire security advisory for this release.
 
