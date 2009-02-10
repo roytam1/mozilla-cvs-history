@@ -166,7 +166,7 @@ $mode{'78'} = 'Restricted';
 $branch{'78'} = 'HEAD';
 $fullname{'78'} = 'NSPR';
 $blessed{'78'} = ['sspitzer%mozilla.org','mozilla%weilbacher.org','mkaply%us.ibm.com','kaie%kuix.de','julien.pierre.boogz%sun.com','glen.beasley%sun.com','gerv%gerv.net','christophe.ravel.bugs%sun.com','alexei.volkov.bugs%sun.com',];
-$super{'78'} = ['darin%meer.net','cls%seawood.org','wtc%google.com','nelson%bolyard.com',];
+$super{'78'} = ['ted.mielczarek%gmail.com','wtc%google.com','nelson%bolyard.com',];
 $mode{'163'} = 'Restricted';
 $branch{'163'} = 'NSS_3_11_BRANCH';
 $fullname{'163'} = 'NSS Stable Release Branch';
@@ -326,15 +326,6 @@ if ($b eq 'BUGZILLA-3_2-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '217';}
 }
 if ($b eq 'HEAD') {
-if (m:^mozilla/[^/]*$:) {return '19';}
-if (m:^mozilla/tools/README$:) {return '19';}
-if (m:^mozilla/js/rhino/.*$:) {return '138';}
-if (m:^mozilla/gfx/src/qt/.*$:) {return '161';}
-if (m:^mozilla/widget/src/qt/.*$:) {return '161';}
-if (m:^mozilla/gfx/src/xlib/.*$:) {return '121';}
-if (m:^mozilla/widget/src/xlib/.*$:) {return '121';}
-if (m:^mozilla/widget/src/xlibxtbin/.*$:) {return '121';}
-if (m:^mozilla/xpfe/.*$:) {return '137';}
 if (m:^mozilla/webtools/partytool/.*$:) {return '209';}
 if (m:^mozilla/js/tests/.*$:) {return '114';}
 if (m:^mozilla/extensions/p3p/.*$:) {return '162';}
@@ -551,6 +542,15 @@ if (m:^mozilla/content/html/document/.*$:) {return '103';}
 if (m:^mozilla/dom/.*$:) {return '103';}
 if (m:^mozilla/string/.*$:) {return '160';}
 if (m:^mozilla/xpcom/string/.*$:) {return '160';}
+if (m:^mozilla/[^/]*$:) {return '19';}
+if (m:^mozilla/tools/README$:) {return '19';}
+if (m:^mozilla/js/rhino/.*$:) {return '138';}
+if (m:^mozilla/gfx/src/qt/.*$:) {return '161';}
+if (m:^mozilla/widget/src/qt/.*$:) {return '161';}
+if (m:^mozilla/gfx/src/xlib/.*$:) {return '121';}
+if (m:^mozilla/widget/src/xlib/.*$:) {return '121';}
+if (m:^mozilla/widget/src/xlibxtbin/.*$:) {return '121';}
+if (m:^mozilla/xpfe/.*$:) {return '137';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
