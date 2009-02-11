@@ -192,7 +192,7 @@ sub show_tree_selector {
     # Print time in format "YYYY-MM-DD HH:MM timezone"
     my $now = strftime("%Y-%m-%d %H:%M %Z", localtime);
 
-    print "Content-type: text/html\n\n";
+    print "Content-Type: text/html; charset=utf-8\n\n";
 
     EmitHtmlHeader("Tinderbox Selector", "tinderbox ($now)");
 
@@ -767,7 +767,7 @@ sub tb_check_password($$) {
 
     require 'header.pl';
 
-    print "Content-type: text/html\n";
+    print "Content-Type: text/html; charset=utf-8\n";
     print "Set-Cookie: tinderbox_password= ; path=$path ; "
         . "secure=1 ; Expires = $cookie_expiration\n";
     print "\n";

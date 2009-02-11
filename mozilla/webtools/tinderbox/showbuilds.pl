@@ -133,7 +133,7 @@ sub do_tree_summary($) {
     } else {
         ($admin_url = $url) =~ s@showbuilds.cgi@admintree.cgi@;
     }
-    print "Content-type: text/html\n\n";
+    print "Content-Type: text/html; charset=utf-8\n\n";
 print qq(
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML>
@@ -194,7 +194,7 @@ sub do_json($) {
     my ($form_ref) = (@_);
     my $tinderbox_data = tb_load_data($form_ref);
     if (!$form_ref->{static}) {
-        print "Content-type: text/javascript\n";
+        print "Content-Type: text/javascript; charset=utf-8\n";
         print "Content-Access-Control: allow <*>\n\n";
     }
     print "tinderbox_data";
@@ -212,7 +212,7 @@ sub do_json($) {
 sub print_page_head($$) {
     my ($form_ref, $td) = (@_);
     my $tree = $form_ref->{tree};
-    print "Content-type: text/html\n\n" unless $form_ref->{static};
+    print "Content-Type: text/html; charset=utf-8\n\n" unless $form_ref->{static};
 
     use POSIX qw(strftime);
     # Print time in format "YYYY-MM-DD HH:MM timezone"
@@ -1007,7 +1007,7 @@ sub do_express($) {
     my %express_form = %{$form_ref};
     undef $express_form{express};
 
-    print "Content-type: text/html\nRefresh: 900\n\n";
+    print "Content-Type: text/html; charset=utf-8\nRefresh: 900\n\n";
     print "$::doctype_xhtml1_transitional\n";
     print "<html>\n";
     print "<head>\n    <title>Panel - $tree</title>\n</head>\n";
@@ -1039,7 +1039,7 @@ sub do_panel($) {
     my %panel_form = %{$form_ref};
     undef $panel_form{panel};
 
-    print "Content-type: text/html\n\n<HTML>\n" unless $form_ref->{static};
+    print "Content-Type: text/html; charset=utf-8\n\n<HTML>\n" unless $form_ref->{static};
 
     my (%quickdata);
     tb_loadquickparseinfo($tree, $form_ref->{maxdate}, \%quickdata);
@@ -1086,7 +1086,7 @@ sub do_flash($) {
     my ($form_ref) = (@_);
     my $tree = &require_only_one_tree($form_ref->{tree});
 
-    print "Content-type: text/rdf\n\n" unless $form_ref->{static};
+    print "Content-Type: text/rdf; charset=utf-8\n\n" unless $form_ref->{static};
 
     my (%quickdata);
     tb_loadquickparseinfo($tree, $form_ref->{maxdate}, \%quickdata);
@@ -1152,7 +1152,7 @@ sub do_flash($) {
 sub do_quickparse($) {
     my ($form_ref) = (@_);
 
-    print "Content-type: text/plain\n\n" unless $form_ref->{static};
+    print "Content-Type: text/plain; charset=utf-8\n\n" unless $form_ref->{static};
     my $tree = $form_ref->{tree};
     my @treelist = &make_tree_list();
     my @requestedtreelist = split /,/, $tree;
@@ -1183,7 +1183,7 @@ sub do_rdf($) {
     my ($form_ref) = (@_);
     my $tree = &require_only_one_tree($form_ref->{tree});
 
-    print "Content-type: text/plain\n\n";
+    print "Content-Type: text/plain; charset=utf-8\n\n";
 
     my $mainurl = "http://$ENV{SERVER_NAME}$ENV{SCRIPT_NAME}?tree=$tree";
     my $dirurl = $mainurl;
@@ -1238,7 +1238,7 @@ sub do_hdml($) {
     my ($form_ref) = (@_);
     my $tree = &require_only_one_tree($form_ref->{tree});
 
-    print "Content-type: text/hdml\n\n" unless $form_ref->{static};
+    print "Content-Type: text/hdml; charset=utf-8\n\n" unless $form_ref->{static};
 
     print q{<hdml public=true version=2.0 ttl=0>
                 <display title=Tinderbox>
@@ -1273,7 +1273,7 @@ sub do_vxml($) {
     my ($form_ref) = (@_);
     my $tree = &require_only_one_tree($form_ref->{tree});
 
-    print "Content-type: text/vxml\n\n";
+    print "Content-Type: text/vxml; charset=utf-8\n\n";
     print '<?xml version="1.0"?><!DOCTYPE vxml PUBLIC "-//Tellme Networks//Voice Markup Language 1.0//EN" "http://resources.tellme.com/toolbox/vxml-tellme.dtd">';
 
     print '<vxml><form id="tinderbox"><block>';
@@ -1340,7 +1340,7 @@ sub do_wml($) {
     my ($form_ref) = (@_);
     my $tree = &require_only_one_tree($form_ref->{tree});
 
-    print "Content-type: text/vnd.wap.wml\n";
+    print "Content-Type: text/vnd.wap.wml; charset=utf-8\n";
     print "Pragma: No-Cache\n\n";
 
     print '<!DOCTYPE wml PUBLIC "-//WAPFORUM//DTD WML 1.1//EN" "http://www.wapforum.org/DTD/wml_1.1.xml">';

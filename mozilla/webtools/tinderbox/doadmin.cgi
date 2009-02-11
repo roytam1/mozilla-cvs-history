@@ -58,7 +58,7 @@ if ($command eq 'create_tree') {
     $tree = &require_only_one_tree($tree);
 }
 
-print "Content-type: text/html\n\n";
+print "Content-Type: text/html; charset=utf-8\n\n";
 
 EmitHtmlHeader("Tinderbox doadmin");
 
