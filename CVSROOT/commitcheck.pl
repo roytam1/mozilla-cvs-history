@@ -327,6 +327,7 @@ if (m:^mozilla/rdf/.*$:) {return '52';}
 if (m:^mozilla/content/xslt/.*$:) {return '140';}
 if (m:^mozilla/extensions/transformiix/.*$:) {return '140';}
 if (m:^mozilla/chrome/.*$:) {return '169';}
+if (m:^mozilla/profile/.*$:) {return '169';}
 if (m:^mozilla/toolkit/.*$:) {return '169';}
 if (m:^mozilla/xulrunner/.*$:) {return '169';}
 if (m:^mozilla/build/.*$:) {return '55';}
