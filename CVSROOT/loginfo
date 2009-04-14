@@ -36,4 +36,5 @@ mozilla/dbm	$CVSROOT/CVSROOT/cvsmailfilter.pl -c -u http://bonsai.mozilla.org -r
 
 # misc modules 
 mozilla/webtools/bugzilla   $CVSROOT/CVSROOT/cvsmailfilter.pl -c -u http://bonsai.mozilla.org -r /cvsroot -s %s cvs-checkins@bugzilla.org
+mozilla/testing/performance/talos   $CVSROOT/CVSROOT/cvsmailfilter.pl -c -u http://bonsai.mozilla.org -r /cvsroot -s %s dev-tree-management@lists.mozilla.org
 CVSROOT		$CVSROOT/CVSROOT/cvsmailfilter.pl -c -u http://bonsai.mozilla.org -r /cvsroot -s %s -f modules sysalerts@mozilla.org 
