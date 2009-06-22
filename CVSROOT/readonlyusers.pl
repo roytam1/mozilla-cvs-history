@@ -28,7 +28,6 @@ my %read_only_users = (
                        'ffxbld'    => 1,
                        'l10nbld'   => 1,
                        'nobody'    => 1,
-                       'seabld'    => 1,
                        'stgbld'    => 1,
                        'tbirdbld'  => 1,
                        'qabld'     => 1,
