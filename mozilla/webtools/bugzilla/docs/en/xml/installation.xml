@@ -485,14 +485,6 @@
             (&min-mod_perl2-ver;) for mod_perl
           </para>
         </listitem>
-
-        <listitem>
-          <para>
-            CGI
-            (&min-mp-cgi-ver;) for mod_perl
-          </para>
-        </listitem>
-
       </orderedlist>
       </para>
 
@@ -665,10 +657,6 @@
       <para>Bugzilla requires <literal>mod_perl</literal> to be installed, which can be
       obtained from <ulink url="http://perl.apache.org"/> - Bugzilla requires
       version &min-mod_perl2-ver; (AKA 2.0.0-RC5) to be installed.</para>
-      
-      <para>Bugzilla also requires a more up-to-date version of the CGI
-      perl module to be installed, version &min-mp-cgi-ver; as opposed to &min-cgi-ver;
-      </para>
     </section>
   </section>
   
