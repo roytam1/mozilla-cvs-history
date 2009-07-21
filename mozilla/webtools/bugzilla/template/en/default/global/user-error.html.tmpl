@@ -1615,6 +1615,11 @@
     <tt>[% name FILTER html %]</tt> does not exist or you are not allowed 
     to see that user.
 
+  [% ELSIF error == "user_not_insider" %]
+    [% title = "User Not In Insidergroup" %]
+    Sorry, but you are not allowed to (un)mark comments or attachments
+    as private.
+
   [% ELSIF error == "votes_must_be_nonnegative" %]
     [% title = "Votes Must Be Non-negative" %]
     [% admindocslinks = {'voting.html' => 'Setting up the voting feature'} %]
