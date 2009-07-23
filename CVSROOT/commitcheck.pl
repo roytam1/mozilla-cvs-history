@@ -323,6 +323,33 @@ if ($b eq 'BUGZILLA-3_2-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '217';}
 }
 if ($b eq 'HEAD') {
+if (m:^mozilla/extensions/venkman/.*$:) {return '71';}
+if (m:^mozilla/mailnews/[^/]*$:) {return '123';}
+if (m:^mozilla/extensions/typeaheadfind/.*$:) {return '181';}
+if (m:^mozilla/js/src/liveconnect/.*$:) {return '72';}
+if (m:^mozilla/mailnews/mime/[^/]*$:) {return '124';}
+if (m:^mozilla/content/xbl/builtin/.*$:) {return '182';}
+if (m:^mozilla/netwerk/[^/]*$:) {return '77';}
+if (m:^mozilla/netwerk/base/.*$:) {return '77';}
+if (m:^mozilla/netwerk/build/.*$:) {return '77';}
+if (m:^mozilla/netwerk/cache/.*$:) {return '77';}
+if (m:^mozilla/netwerk/dns/.*$:) {return '77';}
+if (m:^mozilla/netwerk/locales/.*$:) {return '77';}
+if (m:^mozilla/netwerk/mime/.*$:) {return '77';}
+if (m:^mozilla/netwerk/protocol/.*$:) {return '77';}
+if (m:^mozilla/netwerk/resources/.*$:) {return '77';}
+if (m:^mozilla/netwerk/socket/.*$:) {return '77';}
+if (m:^mozilla/netwerk/streamconv/.*$:) {return '77';}
+if (m:^mozilla/netwerk/system/.*$:) {return '77';}
+if (m:^mozilla/netwerk/test/.*$:) {return '77';}
+if (m:^mozilla/netwerk/testserver/.*$:) {return '77';}
+if (m:^mozilla/extensions/java$:) {return '128';}
+if (m:^mozilla/extensions/inspector/.*$:) {return '184';}
+if (m:^mozilla/layout/inspector/.*$:) {return '184';}
+if (m:^mozilla/nsprpub/.*$:) {return '78';}
+if (m:^mozilla/java/plugins/.*$:) {return '129';}
+if (m:^mozilla/content/svg/.*$:) {return '187';}
+if (m:^mozilla/layout/svg/.*$:) {return '187';}
 if (m:^mozilla/modules/plugin/.*$:) {return '81';}
 if (m:^mozilla/java/webclient/.*$:) {return '127';}
 if (m:^mozilla/extensions/help/.*$:) {return '188';}
@@ -521,33 +548,6 @@ if (m:^mozilla/js/src/editline/.*$:) {return '70';}
 if (m:^mozilla/js/src/fdlibm/.*$:) {return '70';}
 if (m:^mozilla/js/jsd/.*$:) {return '207';}
 if (m:^mozilla/accessibility/.*$:) {return '180';}
-if (m:^mozilla/extensions/venkman/.*$:) {return '71';}
-if (m:^mozilla/mailnews/[^/]*$:) {return '123';}
-if (m:^mozilla/extensions/typeaheadfind/.*$:) {return '181';}
-if (m:^mozilla/js/src/liveconnect/.*$:) {return '72';}
-if (m:^mozilla/mailnews/mime/[^/]*$:) {return '124';}
-if (m:^mozilla/content/xbl/builtin/.*$:) {return '182';}
-if (m:^mozilla/netwerk/[^/]*$:) {return '77';}
-if (m:^mozilla/netwerk/base/.*$:) {return '77';}
-if (m:^mozilla/netwerk/build/.*$:) {return '77';}
-if (m:^mozilla/netwerk/cache/.*$:) {return '77';}
-if (m:^mozilla/netwerk/dns/.*$:) {return '77';}
-if (m:^mozilla/netwerk/locales/.*$:) {return '77';}
-if (m:^mozilla/netwerk/mime/.*$:) {return '77';}
-if (m:^mozilla/netwerk/protocol/.*$:) {return '77';}
-if (m:^mozilla/netwerk/resources/.*$:) {return '77';}
-if (m:^mozilla/netwerk/socket/.*$:) {return '77';}
-if (m:^mozilla/netwerk/streamconv/.*$:) {return '77';}
-if (m:^mozilla/netwerk/system/.*$:) {return '77';}
-if (m:^mozilla/netwerk/test/.*$:) {return '77';}
-if (m:^mozilla/netwerk/testserver/.*$:) {return '77';}
-if (m:^mozilla/extensions/java$:) {return '128';}
-if (m:^mozilla/extensions/inspector/.*$:) {return '184';}
-if (m:^mozilla/layout/inspector/.*$:) {return '184';}
-if (m:^mozilla/nsprpub/.*$:) {return '78';}
-if (m:^mozilla/java/plugins/.*$:) {return '129';}
-if (m:^mozilla/content/svg/.*$:) {return '187';}
-if (m:^mozilla/layout/svg/.*$:) {return '187';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
