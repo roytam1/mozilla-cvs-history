@@ -21,10 +21,10 @@ $branch{'191'} = 'BUGZILLA-2_20-BRANCH';
 $fullname{'191'} = 'Bugzilla2.20';
 $blessed{'191'} = ['myk%mozilla.org','wurblzap%gmail.com','vladd%bugzilla.org','olav%bkor.dhs.org','ghendricks%novell.com',];
 $super{'191'} = ['mkanat%bugzilla.org','lpsolit%gmail.com','justdave%bugzilla.org',];
-$mode{'203'} = 'Restricted';
+$mode{'203'} = 'Closed';
 $branch{'203'} = 'BUGZILLA-2_22-BRANCH';
 $fullname{'203'} = 'Bugzilla2.22';
-$blessed{'203'} = ['myk%mozilla.org','wurblzap%gmail.com','vladd%bugzilla.org','reed%reedloden.com','olav%bkor.dhs.org','ghendricks%novell.com',];
+$blessed{'203'} = ['wurblzap%gmail.com','vladd%bugzilla.org','reed%reedloden.com','olav%bkor.dhs.org','myk%mozilla.org','ghendricks%novell.com',];
 $super{'203'} = ['mkanat%bugzilla.org','lpsolit%gmail.com','justdave%bugzilla.org',];
 $mode{'212'} = 'Open';
 $branch{'212'} = 'BUGZILLA-3_0-BRANCH';
@@ -397,28 +397,17 @@ if (m:^mozilla/extensions/help/.*$:) {return '188';}
 if (m:^mozilla/suite/.*$:) {return '188';}
 if (m:^mozilla/modules/libreg/.*$:) {return '84';}
 if (m:^mozilla/java/util/.*$:) {return '133';}
-if (m:^mozilla/webtools/bugzilla/.*$:) {return '190';}
 if (m:^db/sqlite3/.*$:) {return '216';}
 if (m:^storage/.*$:) {return '216';}
 if (m:^mozilla/content/xbl/[^/]*$:) {return '199';}
 if (m:^mozilla/content/xbl/public/.*$:) {return '199';}
 if (m:^mozilla/content/xbl/src/.*$:) {return '199';}
+if (m:^mozilla/webtools/bugzilla/.*$:) {return '190';}
 if (m:^mozilla/content/xml/.*$:) {return '88';}
 if (m:^mozilla/extensions/xmlextras/.*$:) {return '88';}
 if (m:^mozilla/parser/expat/.*$:) {return '88';}
 if (m:^mozilla/content/xtf/.*$:) {return '200';}
 if (m:^mozilla/layout/xtf/.*$:) {return '200';}
-if (m:^mozilla/gfx/[^/]*$:) {return '201';}
-if (m:^mozilla/gfx/cairo/.*$:) {return '201';}
-if (m:^mozilla/gfx/public/.*$:) {return '201';}
-if (m:^mozilla/gfx/src/[^/]*$:) {return '201';}
-if (m:^mozilla/gfx/src/gtk/.*$:) {return '201';}
-if (m:^mozilla/gfx/src/mac/.*$:) {return '201';}
-if (m:^mozilla/gfx/src/shared/.*$:) {return '201';}
-if (m:^mozilla/gfx/src/thebes/.*$:) {return '201';}
-if (m:^mozilla/gfx/src/windows/.*$:) {return '201';}
-if (m:^mozilla/gfx/thebes/.*$:) {return '201';}
-if (m:^mozilla/modules/lcms/.*$:) {return '201';}
 if (m:^mozilla/tools/wizards/.*$:) {return '89';}
 if (m:^mozilla/xpcom/[^/]*$:) {return '89';}
 if (m:^mozilla/xpcom/base/.*$:) {return '89';}
@@ -436,6 +425,17 @@ if (m:^mozilla/xpcom/tests/.*$:) {return '89';}
 if (m:^mozilla/xpcom/threads/.*$:) {return '89';}
 if (m:^mozilla/xpcom/tools/.*$:) {return '89';}
 if (m:^mozilla/xpcom/windbgdlg/.*$:) {return '89';}
+if (m:^mozilla/gfx/[^/]*$:) {return '201';}
+if (m:^mozilla/gfx/cairo/.*$:) {return '201';}
+if (m:^mozilla/gfx/public/.*$:) {return '201';}
+if (m:^mozilla/gfx/src/[^/]*$:) {return '201';}
+if (m:^mozilla/gfx/src/gtk/.*$:) {return '201';}
+if (m:^mozilla/gfx/src/mac/.*$:) {return '201';}
+if (m:^mozilla/gfx/src/shared/.*$:) {return '201';}
+if (m:^mozilla/gfx/src/thebes/.*$:) {return '201';}
+if (m:^mozilla/gfx/src/windows/.*$:) {return '201';}
+if (m:^mozilla/gfx/thebes/.*$:) {return '201';}
+if (m:^mozilla/modules/lcms/.*$:) {return '201';}
 if (m:^mozilla/xpcom/reflect/xptcall/.*$:) {return '206';}
 if (m:^mozilla/gfx/src/xprint/.*$:) {return '179';}
 if (m:^mozilla/xpinstall/.*$:) {return '150';}
