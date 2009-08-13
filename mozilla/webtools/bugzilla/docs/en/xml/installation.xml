@@ -412,12 +412,6 @@
 
         <listitem>
           <para>
-            Image::Magick (&min-image-magick-ver;) for converting BMP image attachments to PNG
-          </para>
-        </listitem>
-
-        <listitem>
-          <para>
             Net::LDAP
             (&min-net-ldap-ver;) for LDAP Authentication
           </para>
