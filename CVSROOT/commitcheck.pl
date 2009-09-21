@@ -135,7 +135,7 @@ $fullname{'129'} = 'Java-Implemented Plugins';
 $mode{'70'} = 'Restricted';
 $branch{'70'} = 'HEAD';
 $fullname{'70'} = 'JavaScript';
-$blessed{'70'} = ['vladimir%pobox.com','timeless%mozdev.org','sayrer%gmail.com','reed%reedloden.com','peterv%propagandism.org','pavlov%pavlov.net','jst%mozilla.org','jruderman%hmc.edu','jag%tty.nl','gerv%gerv.net','gavin%gavinsharp.com','dbaron%dbaron.org','daumling%adobe.com','cls%seawood.org','bzbarsky%mit.edu','bryner%brianryner.com','benjamin%smedbergs.us','bclary%bclary.com',];
+$blessed{'70'} = ['timeless%mozdev.org','sayrer%gmail.com','reed%reedloden.com','peterv%propagandism.org','pavlov%pavlov.net','jst%mozilla.org','jruderman%hmc.edu','jag%tty.nl','vladimir%pobox.com','gerv%gerv.net','gavin%gavinsharp.com','dveditz%cruzio.com','dbaron%dbaron.org','daumling%adobe.com','cls%seawood.org','bzbarsky%mit.edu','bryner%brianryner.com','benjamin%smedbergs.us','bclary%bclary.com',];
 $super{'70'} = ['shaver%mozilla.org','mrbkap%gmail.com','jwalden%mit.edu','jorendorff%mozilla.com','igor%mir2.org','graydon%mozilla.com','crowder%fiverocks.com','brendan%mozilla.org',];
 $mode{'207'} = 'Open';
 $branch{'207'} = 'HEAD';
@@ -337,15 +337,6 @@ if ($b eq 'BUGZILLA-3_4-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '220';}
 }
 if ($b eq 'HEAD') {
-if (m:^mozilla/modules/libreg/.*$:) {return '84';}
-if (m:^mozilla/java/webclient/.*$:) {return '127';}
-if (m:^mozilla/content/svg/.*$:) {return '187';}
-if (m:^mozilla/layout/svg/.*$:) {return '187';}
-if (m:^db/sqlite3/.*$:) {return '216';}
-if (m:^storage/.*$:) {return '216';}
-if (m:^mozilla/java/dom/.*$:) {return '130';}
-if (m:^mozilla/extensions/help/.*$:) {return '188';}
-if (m:^mozilla/suite/.*$:) {return '188';}
 if (m:^mozilla/content/xml/.*$:) {return '88';}
 if (m:^mozilla/extensions/xmlextras/.*$:) {return '88';}
 if (m:^mozilla/parser/expat/.*$:) {return '88';}
@@ -564,6 +555,15 @@ if (m:^mozilla/modules/libpref/.*$:) {return '82';}
 if (m:^mozilla/java/plugins/.*$:) {return '129';}
 if (m:^mozilla/extensions/inspector/.*$:) {return '184';}
 if (m:^mozilla/layout/inspector/.*$:) {return '184';}
+if (m:^mozilla/modules/libreg/.*$:) {return '84';}
+if (m:^mozilla/java/webclient/.*$:) {return '127';}
+if (m:^mozilla/content/svg/.*$:) {return '187';}
+if (m:^mozilla/layout/svg/.*$:) {return '187';}
+if (m:^db/sqlite3/.*$:) {return '216';}
+if (m:^storage/.*$:) {return '216';}
+if (m:^mozilla/java/dom/.*$:) {return '130';}
+if (m:^mozilla/extensions/help/.*$:) {return '188';}
+if (m:^mozilla/suite/.*$:) {return '188';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
