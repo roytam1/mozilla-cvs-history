@@ -66,6 +66,9 @@ $fullname{'56'} = 'Composer';
 $mode{'171'} = 'Open';
 $branch{'171'} = 'HEAD';
 $fullname{'171'} = 'Cookies and Permissions';
+$mode{'222'} = 'Open';
+$branch{'222'} = 'HEAD';
+$fullname{'222'} = 'ctypes';
 $mode{'4'} = 'Open';
 $branch{'4'} = 'HEAD';
 $fullname{'4'} = 'default';
@@ -140,6 +143,9 @@ $super{'70'} = ['shaver%mozilla.org','mrbkap%gmail.com','jwalden%mit.edu','joren
 $mode{'207'} = 'Open';
 $branch{'207'} = 'HEAD';
 $fullname{'207'} = 'JavaScript Debugger Backend';
+$mode{'223'} = 'Open';
+$branch{'223'} = 'HEAD';
+$fullname{'223'} = 'js-ctypes';
 $mode{'114'} = 'Open';
 $branch{'114'} = 'HEAD';
 $fullname{'114'} = 'js-tests';
@@ -409,6 +415,7 @@ if (m:^mozilla/docshell/.*$:) {return '101';}
 if (m:^mozilla/uriloader/.*$:) {return '101';}
 if (m:^mozilla/webshell/.*$:) {return '101';}
 if (m:^mozilla/mailnews/local/src/nsMovemail.*$:) {return '157';}
+if (m:^js/ctypes$:) {return '223';}
 if (m:^mozilla/composer/.*$:) {return '173';}
 if (m:^mozilla/parser/htmlparser$:) {return '102';}
 if (m:^mozilla/embedding/.*$:) {return '208';}
