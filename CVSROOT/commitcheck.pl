@@ -417,6 +417,7 @@ if (m:^mozilla/extensions/typeaheadfind/.*$:) {return '181';}
 if (m:^mozilla/nsprpub/.*$:) {return '78';}
 if (m:^mozilla/extensions/java$:) {return '128';}
 if (m:^mozilla/content/xbl/builtin/.*$:) {return '182';}
+if (m:^mozilla/dom/plugins/.*$:) {return '81';}
 if (m:^mozilla/modules/plugin/.*$:) {return '81';}
 if (m:^mozilla/java/plugins/.*$:) {return '129';}
 if (m:^mozilla/extensions/inspector/.*$:) {return '184';}
