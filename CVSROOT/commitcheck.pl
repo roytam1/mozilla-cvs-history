@@ -192,6 +192,9 @@ $fullname{'162'} = 'P3P';
 $mode{'209'} = 'Open';
 $branch{'209'} = 'HEAD';
 $fullname{'209'} = 'Party Tool';
+$mode{'225'} = 'Open';
+$branch{'225'} = 'HEAD';
+$fullname{'225'} = 'Penelope';
 $mode{'81'} = 'Open';
 $branch{'81'} = 'HEAD';
 $fullname{'81'} = 'Plugins';
@@ -343,6 +346,48 @@ if ($b eq 'BUGZILLA-3_4-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '220';}
 }
 if ($b eq 'HEAD') {
+if (m:^mozilla/[^/]*$:) {return '19';}
+if (m:^mozilla/tools/README$:) {return '19';}
+if (m:^mozilla/content/base/.*$:) {return '103';}
+if (m:^mozilla/content/events/.*$:) {return '103';}
+if (m:^mozilla/content/html/content/.*$:) {return '103';}
+if (m:^mozilla/content/html/document/.*$:) {return '103';}
+if (m:^mozilla/dom/[^/]*$:) {return '103';}
+if (m:^mozilla/dom/base/.*$:) {return '103';}
+if (m:^mozilla/dom/interfaces/.*$:) {return '103';}
+if (m:^mozilla/dom/locales/.*$:) {return '103';}
+if (m:^mozilla/dom/public/.*$:) {return '103';}
+if (m:^mozilla/dom/src/.*$:) {return '103';}
+if (m:^mozilla/dom/tests/.*$:) {return '103';}
+if (m:^extension/python$:) {return '219';}
+if (m:^mozilla/gfx/src/xlib/.*$:) {return '121';}
+if (m:^mozilla/widget/src/xlib/.*$:) {return '121';}
+if (m:^mozilla/widget/src/xlibxtbin/.*$:) {return '121';}
+if (m:^mozilla/js/rhino/.*$:) {return '138';}
+if (m:^mozilla/string/.*$:) {return '160';}
+if (m:^mozilla/xpcom/string/.*$:) {return '160';}
+if (m:^mozilla/webtools/partytool/.*$:) {return '209';}
+if (m:^mozilla/xpfe/.*$:) {return '137';}
+if (m:^mozilla/gfx/src/qt/.*$:) {return '161';}
+if (m:^mozilla/widget/src/qt/.*$:) {return '161';}
+if (m:^mozilla/widget/src/gtk/.*$:) {return '49';}
+if (m:^mozilla/widget/src/gtk2/.*$:) {return '49';}
+if (m:^mozilla/widget/src/gtksuperwin/.*$:) {return '49';}
+if (m:^mozilla/widget/src/gtkxtbin/.*$:) {return '49';}
+if (m:^mozilla/js/tests/.*$:) {return '114';}
+if (m:^mozilla/rdf/.*$:) {return '52';}
+if (m:^mozilla/extensions/p3p/.*$:) {return '162';}
+if (m:^mozilla/build/.*$:) {return '55';}
+if (m:^mozilla/config/.*$:) {return '55';}
+if (m:^mozilla/tools/cross-commit$:) {return '55';}
+if (m:^mozilla/tools/cvs2hg-import\.py$:) {return '55';}
+if (m:^mozilla/tools/cvsmgmt/.*$:) {return '55';}
+if (m:^mozilla/tools/elf-dynstr-gc/.*$:) {return '55';}
+if (m:^mozilla/tools/relic/.*$:) {return '55';}
+if (m:^mozilla/tools/trees\.pl$:) {return '55';}
+if (m:^mozilla/content/xslt/.*$:) {return '140';}
+if (m:^mozilla/extensions/transformiix/.*$:) {return '140';}
+if (m:^mozilla/layout/mathml/.*$:) {return '165';}
 if (m:^mozilla/editor/.*$:) {return '56';}
 if (m:^mozilla/calendar/.*$:) {return '183';}
 if (m:^mozilla/browser/.*$:) {return '166';}
@@ -536,48 +581,7 @@ if (m:^js/ctypes$:) {return '223';}
 if (m:^mozilla/composer/.*$:) {return '173';}
 if (m:^mozilla/parser/htmlparser$:) {return '102';}
 if (m:^mozilla/embedding/.*$:) {return '208';}
-if (m:^mozilla/[^/]*$:) {return '19';}
-if (m:^mozilla/tools/README$:) {return '19';}
-if (m:^mozilla/content/base/.*$:) {return '103';}
-if (m:^mozilla/content/events/.*$:) {return '103';}
-if (m:^mozilla/content/html/content/.*$:) {return '103';}
-if (m:^mozilla/content/html/document/.*$:) {return '103';}
-if (m:^mozilla/dom/[^/]*$:) {return '103';}
-if (m:^mozilla/dom/base/.*$:) {return '103';}
-if (m:^mozilla/dom/interfaces/.*$:) {return '103';}
-if (m:^mozilla/dom/locales/.*$:) {return '103';}
-if (m:^mozilla/dom/public/.*$:) {return '103';}
-if (m:^mozilla/dom/src/.*$:) {return '103';}
-if (m:^mozilla/dom/tests/.*$:) {return '103';}
-if (m:^extension/python$:) {return '219';}
-if (m:^mozilla/gfx/src/xlib/.*$:) {return '121';}
-if (m:^mozilla/widget/src/xlib/.*$:) {return '121';}
-if (m:^mozilla/widget/src/xlibxtbin/.*$:) {return '121';}
-if (m:^mozilla/js/rhino/.*$:) {return '138';}
-if (m:^mozilla/string/.*$:) {return '160';}
-if (m:^mozilla/xpcom/string/.*$:) {return '160';}
-if (m:^mozilla/webtools/partytool/.*$:) {return '209';}
-if (m:^mozilla/xpfe/.*$:) {return '137';}
-if (m:^mozilla/gfx/src/qt/.*$:) {return '161';}
-if (m:^mozilla/widget/src/qt/.*$:) {return '161';}
-if (m:^mozilla/widget/src/gtk/.*$:) {return '49';}
-if (m:^mozilla/widget/src/gtk2/.*$:) {return '49';}
-if (m:^mozilla/widget/src/gtksuperwin/.*$:) {return '49';}
-if (m:^mozilla/widget/src/gtkxtbin/.*$:) {return '49';}
-if (m:^mozilla/js/tests/.*$:) {return '114';}
-if (m:^mozilla/rdf/.*$:) {return '52';}
-if (m:^mozilla/extensions/p3p/.*$:) {return '162';}
-if (m:^mozilla/build/.*$:) {return '55';}
-if (m:^mozilla/config/.*$:) {return '55';}
-if (m:^mozilla/tools/cross-commit$:) {return '55';}
-if (m:^mozilla/tools/cvs2hg-import\.py$:) {return '55';}
-if (m:^mozilla/tools/cvsmgmt/.*$:) {return '55';}
-if (m:^mozilla/tools/elf-dynstr-gc/.*$:) {return '55';}
-if (m:^mozilla/tools/relic/.*$:) {return '55';}
-if (m:^mozilla/tools/trees\.pl$:) {return '55';}
-if (m:^mozilla/content/xslt/.*$:) {return '140';}
-if (m:^mozilla/extensions/transformiix/.*$:) {return '140';}
-if (m:^mozilla/layout/mathml/.*$:) {return '165';}
+if (m:^mozilla/penelope/$:) {return '225';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
