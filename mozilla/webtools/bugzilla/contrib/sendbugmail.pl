@@ -4,8 +4,6 @@
 #
 # Nick Barnes, Ravenbrook Limited, 2004-04-01.
 #
-# $Id$
-# 
 # Bugzilla email script for Bugzilla 2.17.4 and later.  Invoke this to send
 # bugmail for a bug which has been changed directly in the database.
 # This uses Bugzilla's own BugMail facility, and will email the
