@@ -4,8 +4,6 @@
 # and makes nice bugzilla user entries out of them. Also disables Bugzilla users
 # that are not found in LDAP.
 
-# $Id$
-
 require 'ldap'
 require 'dbi'
 require 'getoptlong'

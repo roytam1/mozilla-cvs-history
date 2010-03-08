@@ -1,7 +1,6 @@
 #!/bin/sh
 # -*- Mode: ksh -*-
 ##############################################################################
-# $Id$
 # yp_nomail
 #
 # Our mail admins got annoyed when bugzilla kept sending email
