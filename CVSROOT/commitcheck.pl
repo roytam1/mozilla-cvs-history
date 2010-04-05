@@ -569,7 +569,7 @@ if (m:^mozilla/layout/style/.*$:) {return '100';}
 if (m:^mozilla/webtools/addons/.*$:) {return '185';}
 if (m:^mozilla/webtools/aus/.*$:) {return '185';}
 if (m:^mozilla/webtools/update/.*$:) {return '185';}
-if (m:^js/src/ctypes$:) {return '223';}
+if (m:^mozilla/js/src/ctypes/.*$:) {return '223';}
 if (m:^mozilla/dbm/.*$:) {return '145';}
 if (m:^mozilla/security/coreconf/.*$:) {return '145';}
 if (m:^mozilla/security/dbm/.*$:) {return '145';}
