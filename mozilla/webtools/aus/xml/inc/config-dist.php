@@ -87,10 +87,12 @@ define('THROTTLE_LOGGING',false);
 // );
 $productThrottling = array(
      'Firefox' => array(
-         '3.0.16' => 0
+         '3.0.19' => 0,
+         '3.5.9' => 0,
+         '3.5.10' => 0
      ),
-    'Thunderbird' => array(
-         '2.0.0.23' => 0
+     'Thunderbird' => array(
+         '2.0.0.24' => 0
      ),
 );
 
@@ -107,7 +109,20 @@ $productThrottling = array(
 // In this example, 3.0.11 with channel names that match these channels will not
 // be throttled unless there is a global throttle enabled.
 $throttleExceptions = array(
-    '3.0.16' => array (
+    '3.0.19' => array (
+        'betatest',
+        'releasetest'
+    ),
+    '3.5.9' => array (
+        'betatest',
+        'releasetest',
+        'beta'
+    ),
+    '3.5.10' => array (
+        'betatest',
+        'releasetest'
+    ),
+    '2.0.0.24' => array (
         'betatest',
         'releasetest'
     )
@@ -128,6 +143,7 @@ $productBranchVersions = array(
         '3.0*'   =>  'trunk',
         '3.1*'    => 'mozilla-1.9.1',
         '3.5*'    => 'mozilla-1.9.1',
+        '3.6*plugin*' => 'firefox-lorentz',
         '3.6*'    => 'mozilla-1.9.2',
         '3.2*'    => 'mozilla-central',
         '3.7*'    => 'mozilla-central'
@@ -144,6 +160,10 @@ $productBranchVersions = array(
         '0.8*'    =>  'branch',
         '0.9*'    =>  'branch',
         '0.6a1'   =>  'trunk'
+    ),
+    '{a23983c0-fd0e-11dc-95ff-0800200c9a66}' =>  array(
+        '*_1.9.2*' => 'mozilla-1.9.2',
+        '*_1.9.3*' => 'mozilla-central'
     )  // Add this for tests: 'Synthetic'   => array('1.5.0.*' => '1.5.0.x')
 );
 
@@ -193,6 +213,25 @@ $memcache_config = array(
 $unsupportedPlatforms = array(
     'Firefox'     =>  array( // Change to Synthetic for tests
         '2.0*' => array( // Change to 1.0* for tests
+            'Darwin 6',
+            'Darwin 7',
+            'Windows_95',
+            'Windows_98',
+            'Windows_NT 4',
+            'GTK 2.0.',
+            'GTK 2.1.',
+            'GTK 2.2.',
+            'GTK 2.3.',
+            'GTK 2.4.',
+            'GTK 2.5.',
+            'GTK 2.6.',
+            'GTK 2.7.',
+            'GTK 2.8.',
+            'GTK 2.9.'
+        )
+    ),
+    'Thunderbird'     =>  array(
+        '2.0*' => array(
             'Darwin 6',
             'Darwin 7',
             'Windows_95',
