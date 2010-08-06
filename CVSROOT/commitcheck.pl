@@ -213,6 +213,9 @@ $fullname{'69'} = 'Privilege Manager';
 $mode{'219'} = 'Open';
 $branch{'219'} = 'HEAD';
 $fullname{'219'} = 'PyXPCOM';
+$mode{'161'} = 'Open';
+$branch{'161'} = 'HEAD';
+$fullname{'161'} = 'Qt-based gfx and widget';
 $mode{'52'} = 'Open';
 $branch{'52'} = 'HEAD';
 $fullname{'52'} = 'RDF';
@@ -222,9 +225,6 @@ $fullname{'84'} = 'Registry';
 $mode{'113'} = 'Open';
 $branch{'113'} = 'HEAD';
 $fullname{'113'} = 'REMOVEME - Photon';
-$mode{'161'} = 'Open';
-$branch{'161'} = 'HEAD';
-$fullname{'161'} = 'REMOVEME - Qt-based gfx and widget';
 $mode{'121'} = 'Open';
 $branch{'121'} = 'HEAD';
 $fullname{'121'} = 'REMOVEME - Xlib-based gfx and widget';
@@ -352,6 +352,78 @@ if ($b eq 'BUGZILLA-3_4-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '220';}
 }
 if ($b eq 'HEAD') {
+if (m:^mozilla/intl/.*$:) {return '67';}
+if (m:^mozilla/extensions/irc/.*$:) {return '211';}
+if (m:^mozilla/widget/src/beos/.*$:) {return '172';}
+if (m:^mozilla/modules/oji/.*$:) {return '68';}
+if (m:^mozilla/nav-java/.*$:) {return '68';}
+if (m:^mozilla/sun-java/.*$:) {return '68';}
+if (m:^mozilla/tools/botrunner\.py$:) {return '214';}
+if (m:^mozilla/tools/build-environment/.*$:) {return '214';}
+if (m:^mozilla/tools/build/.*$:) {return '214';}
+if (m:^mozilla/tools/buildbot-configs/.*$:) {return '214';}
+if (m:^mozilla/tools/buildbot/.*$:) {return '214';}
+if (m:^mozilla/tools/buildbotcustom/.*$:) {return '214';}
+if (m:^mozilla/tools/l10n/.*$:) {return '214';}
+if (m:^mozilla/tools/MozBuild/.*$:) {return '214';}
+if (m:^mozilla/tools/patcher-configs/.*$:) {return '214';}
+if (m:^mozilla/tools/patcher/.*$:) {return '214';}
+if (m:^mozilla/tools/release/.*$:) {return '214';}
+if (m:^mozilla/tools/tinderbox-configs/.*$:) {return '214';}
+if (m:^mozilla/tools/tinderbox/.*$:) {return '214';}
+if (m:^mozilla/tools/update-packaging/.*$:) {return '214';}
+if (m:^mozilla/caps/.*$:) {return '69';}
+if (m:^mozilla/tools/codesighs/.*$:) {return '213';}
+if (m:^mozilla/tools/debug/.*$:) {return '213';}
+if (m:^mozilla/tools/dreftool/.*$:) {return '213';}
+if (m:^mozilla/tools/dumpdeps/.*$:) {return '213';}
+if (m:^mozilla/tools/footprint/.*$:) {return '213';}
+if (m:^mozilla/tools/jprof/.*$:) {return '213';}
+if (m:^mozilla/tools/leaky/.*$:) {return '213';}
+if (m:^mozilla/tools/memory/.*$:) {return '213';}
+if (m:^mozilla/tools/module-deps/.*$:) {return '213';}
+if (m:^mozilla/tools/performance/.*$:) {return '213';}
+if (m:^mozilla/tools/post_compile/.*$:) {return '213';}
+if (m:^mozilla/tools/preloader/.*$:) {return '213';}
+if (m:^mozilla/tools/rb/.*$:) {return '213';}
+if (m:^mozilla/tools/reorder/.*$:) {return '213';}
+if (m:^mozilla/tools/trace-malloc/.*$:) {return '213';}
+if (m:^mozilla/tools/uuiddeps/.*$:) {return '213';}
+if (m:^mozilla/widget/src/windows/.*$:) {return '175';}
+if (m:^mozilla/js/src/[^/]*$:) {return '70';}
+if (m:^mozilla/js/src/config/.*$:) {return '70';}
+if (m:^mozilla/js/src/editline/.*$:) {return '70';}
+if (m:^mozilla/js/src/fdlibm/.*$:) {return '70';}
+if (m:^mozilla/xpcom/typelib/.*$:) {return '117';}
+if (m:^mozilla/camino/.*$:) {return '210';}
+if (m:^mozilla/extensions/venkman/.*$:) {return '71';}
+if (m:^mozilla/js/src/xpconnect/.*$:) {return '118';}
+if (m:^mozilla/widget/[^/]*$:) {return '177';}
+if (m:^mozilla/widget/public/.*$:) {return '177';}
+if (m:^mozilla/widget/src/[^/]*$:) {return '177';}
+if (m:^mozilla/widget/src/xpwidgets/.*$:) {return '177';}
+if (m:^mozilla/js/src/liveconnect/.*$:) {return '72';}
+if (m:^mozilla/js/jsd/.*$:) {return '207';}
+if (m:^mozilla/widget/src/cocoa/.*$:) {return '178';}
+if (m:^mozilla/netwerk/[^/]*$:) {return '77';}
+if (m:^mozilla/netwerk/base/.*$:) {return '77';}
+if (m:^mozilla/netwerk/build/.*$:) {return '77';}
+if (m:^mozilla/netwerk/cache/.*$:) {return '77';}
+if (m:^mozilla/netwerk/dns/.*$:) {return '77';}
+if (m:^mozilla/netwerk/locales/.*$:) {return '77';}
+if (m:^mozilla/netwerk/mime/.*$:) {return '77';}
+if (m:^mozilla/netwerk/protocol/.*$:) {return '77';}
+if (m:^mozilla/netwerk/resources/.*$:) {return '77';}
+if (m:^mozilla/netwerk/socket/.*$:) {return '77';}
+if (m:^mozilla/netwerk/streamconv/.*$:) {return '77';}
+if (m:^mozilla/netwerk/system/.*$:) {return '77';}
+if (m:^mozilla/netwerk/test/.*$:) {return '77';}
+if (m:^mozilla/netwerk/testserver/.*$:) {return '77';}
+if (m:^mozilla/mailnews/[^/]*$:) {return '123';}
+if (m:^mozilla/accessibility/.*$:) {return '180';}
+if (m:^mozilla/nsprpub/.*$:) {return '78';}
+if (m:^mozilla/mailnews/mime/[^/]*$:) {return '124';}
+if (m:^mozilla/extensions/typeaheadfind/.*$:) {return '181';}
 if (m:^mozilla/dom/plugins/.*$:) {return '81';}
 if (m:^mozilla/modules/plugin/.*$:) {return '81';}
 if (m:^mozilla/extensions/java$:) {return '128';}
@@ -465,7 +537,6 @@ if (m:^mozilla/string/.*$:) {return '160';}
 if (m:^mozilla/xpcom/string/.*$:) {return '160';}
 if (m:^mozilla/webtools/partytool/.*$:) {return '209';}
 if (m:^mozilla/xpfe/.*$:) {return '137';}
-if (m:^mozilla/gfx/src/qt/.*$:) {return '161';}
 if (m:^mozilla/widget/src/qt/.*$:) {return '161';}
 if (m:^mozilla/widget/src/gtk/.*$:) {return '49';}
 if (m:^mozilla/widget/src/gtk2/.*$:) {return '49';}
@@ -513,78 +584,6 @@ if (m:^mozilla/tools/testserver/.*$:) {return '202';}
 if (m:^mozilla/tools/testy/.*$:) {return '202';}
 if (m:^mozilla/extensions/cookie/.*$:) {return '171';}
 if (m:^mozilla/netwerk/cookie/.*$:) {return '171';}
-if (m:^mozilla/intl/.*$:) {return '67';}
-if (m:^mozilla/extensions/irc/.*$:) {return '211';}
-if (m:^mozilla/widget/src/beos/.*$:) {return '172';}
-if (m:^mozilla/modules/oji/.*$:) {return '68';}
-if (m:^mozilla/nav-java/.*$:) {return '68';}
-if (m:^mozilla/sun-java/.*$:) {return '68';}
-if (m:^mozilla/tools/botrunner\.py$:) {return '214';}
-if (m:^mozilla/tools/build-environment/.*$:) {return '214';}
-if (m:^mozilla/tools/build/.*$:) {return '214';}
-if (m:^mozilla/tools/buildbot-configs/.*$:) {return '214';}
-if (m:^mozilla/tools/buildbot/.*$:) {return '214';}
-if (m:^mozilla/tools/buildbotcustom/.*$:) {return '214';}
-if (m:^mozilla/tools/l10n/.*$:) {return '214';}
-if (m:^mozilla/tools/MozBuild/.*$:) {return '214';}
-if (m:^mozilla/tools/patcher-configs/.*$:) {return '214';}
-if (m:^mozilla/tools/patcher/.*$:) {return '214';}
-if (m:^mozilla/tools/release/.*$:) {return '214';}
-if (m:^mozilla/tools/tinderbox-configs/.*$:) {return '214';}
-if (m:^mozilla/tools/tinderbox/.*$:) {return '214';}
-if (m:^mozilla/tools/update-packaging/.*$:) {return '214';}
-if (m:^mozilla/caps/.*$:) {return '69';}
-if (m:^mozilla/tools/codesighs/.*$:) {return '213';}
-if (m:^mozilla/tools/debug/.*$:) {return '213';}
-if (m:^mozilla/tools/dreftool/.*$:) {return '213';}
-if (m:^mozilla/tools/dumpdeps/.*$:) {return '213';}
-if (m:^mozilla/tools/footprint/.*$:) {return '213';}
-if (m:^mozilla/tools/jprof/.*$:) {return '213';}
-if (m:^mozilla/tools/leaky/.*$:) {return '213';}
-if (m:^mozilla/tools/memory/.*$:) {return '213';}
-if (m:^mozilla/tools/module-deps/.*$:) {return '213';}
-if (m:^mozilla/tools/performance/.*$:) {return '213';}
-if (m:^mozilla/tools/post_compile/.*$:) {return '213';}
-if (m:^mozilla/tools/preloader/.*$:) {return '213';}
-if (m:^mozilla/tools/rb/.*$:) {return '213';}
-if (m:^mozilla/tools/reorder/.*$:) {return '213';}
-if (m:^mozilla/tools/trace-malloc/.*$:) {return '213';}
-if (m:^mozilla/tools/uuiddeps/.*$:) {return '213';}
-if (m:^mozilla/widget/src/windows/.*$:) {return '175';}
-if (m:^mozilla/js/src/[^/]*$:) {return '70';}
-if (m:^mozilla/js/src/config/.*$:) {return '70';}
-if (m:^mozilla/js/src/editline/.*$:) {return '70';}
-if (m:^mozilla/js/src/fdlibm/.*$:) {return '70';}
-if (m:^mozilla/xpcom/typelib/.*$:) {return '117';}
-if (m:^mozilla/camino/.*$:) {return '210';}
-if (m:^mozilla/extensions/venkman/.*$:) {return '71';}
-if (m:^mozilla/js/src/xpconnect/.*$:) {return '118';}
-if (m:^mozilla/widget/[^/]*$:) {return '177';}
-if (m:^mozilla/widget/public/.*$:) {return '177';}
-if (m:^mozilla/widget/src/[^/]*$:) {return '177';}
-if (m:^mozilla/widget/src/xpwidgets/.*$:) {return '177';}
-if (m:^mozilla/js/src/liveconnect/.*$:) {return '72';}
-if (m:^mozilla/js/jsd/.*$:) {return '207';}
-if (m:^mozilla/widget/src/cocoa/.*$:) {return '178';}
-if (m:^mozilla/netwerk/[^/]*$:) {return '77';}
-if (m:^mozilla/netwerk/base/.*$:) {return '77';}
-if (m:^mozilla/netwerk/build/.*$:) {return '77';}
-if (m:^mozilla/netwerk/cache/.*$:) {return '77';}
-if (m:^mozilla/netwerk/dns/.*$:) {return '77';}
-if (m:^mozilla/netwerk/locales/.*$:) {return '77';}
-if (m:^mozilla/netwerk/mime/.*$:) {return '77';}
-if (m:^mozilla/netwerk/protocol/.*$:) {return '77';}
-if (m:^mozilla/netwerk/resources/.*$:) {return '77';}
-if (m:^mozilla/netwerk/socket/.*$:) {return '77';}
-if (m:^mozilla/netwerk/streamconv/.*$:) {return '77';}
-if (m:^mozilla/netwerk/system/.*$:) {return '77';}
-if (m:^mozilla/netwerk/test/.*$:) {return '77';}
-if (m:^mozilla/netwerk/testserver/.*$:) {return '77';}
-if (m:^mozilla/mailnews/[^/]*$:) {return '123';}
-if (m:^mozilla/accessibility/.*$:) {return '180';}
-if (m:^mozilla/nsprpub/.*$:) {return '78';}
-if (m:^mozilla/mailnews/mime/[^/]*$:) {return '124';}
-if (m:^mozilla/extensions/typeaheadfind/.*$:) {return '181';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
