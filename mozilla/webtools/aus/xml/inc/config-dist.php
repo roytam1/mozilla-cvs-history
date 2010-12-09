@@ -87,12 +87,8 @@ define('THROTTLE_LOGGING',false);
 // );
 $productThrottling = array(
      'Firefox' => array(
-         '3.0.19' => 0,
-         '3.5.11' => 0
-     ),
-     'Thunderbird' => array(
-         '2.0.0.24' => 10
-     ),
+         '3.5.16' => 0
+     )
 );
 
 // List of exceptions for throttling.
@@ -108,15 +104,7 @@ $productThrottling = array(
 // In this example, 3.0.11 with channel names that match these channels will not
 // be throttled unless there is a global throttle enabled.
 $throttleExceptions = array(
-    '3.0.19' => array (
-        'betatest',
-        'releasetest'
-    ),
-    '3.5.11' => array (
-        'betatest',
-        'releasetest'
-    ),
-    '2.0.0.24' => array (
+    '3.5.16' => array (
         'betatest',
         'releasetest'
     )
@@ -128,6 +116,7 @@ $nightlyChannels = array(
     'nightly',
     'nightly-tracemonkey',
     'nightly-electrolysis',
+    'nightly-mozilla-2.0',
 );
 
 // This hash defines the product->version->patch relationships for nightlies
@@ -165,6 +154,16 @@ $productBranchVersions = array(
         '0.8*'    =>  'branch',
         '0.9*'    =>  'branch',
         '0.6a1'   =>  'trunk'
+    ),
+    'Fennec'      =>  array(
+        '2.0*'    =>  array(
+           'nightly'                 => 'mozilla-central',
+           'nightly-mozilla-2.0'     => 'mozilla-2.0'
+        ),
+        '4.0*'    =>  array(
+           'nightly'                 => 'mozilla-central',
+           'nightly-mozilla-2.0'     => 'mozilla-2.0'
+        )
     ),
 );
 
