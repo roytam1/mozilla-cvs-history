@@ -352,6 +352,23 @@ if ($b eq 'BUGZILLA-3_4-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '220';}
 }
 if ($b eq 'HEAD') {
+if (m:^mozilla/jpeg/.*$:) {return '63';}
+if (m:^mozilla/modules/libimg/png/.*$:) {return '63';}
+if (m:^mozilla/modules/libpr0n/.*$:) {return '63';}
+if (m:^mozilla/modules/zlib/.*$:) {return '63';}
+if (m:^mozilla/content/xul/.*$:) {return '106';}
+if (m:^mozilla/layout/xul/.*$:) {return '106';}
+if (m:^mozilla/mail/.*$:) {return '170';}
+if (m:^mozilla/other-licenses/branding/thunderbird/.*$:) {return '170';}
+if (m:^mozilla/testing/.*$:) {return '202';}
+if (m:^mozilla/tools/httptester/.*$:) {return '202';}
+if (m:^mozilla/tools/page-loader/.*$:) {return '202';}
+if (m:^mozilla/tools/test-harness/.*$:) {return '202';}
+if (m:^mozilla/tools/tests/.*$:) {return '202';}
+if (m:^mozilla/tools/testserver/.*$:) {return '202';}
+if (m:^mozilla/tools/testy/.*$:) {return '202';}
+if (m:^mozilla/extensions/cookie/.*$:) {return '171';}
+if (m:^mozilla/netwerk/cookie/.*$:) {return '171';}
 if (m:^mozilla/intl/.*$:) {return '67';}
 if (m:^mozilla/extensions/irc/.*$:) {return '211';}
 if (m:^mozilla/widget/src/beos/.*$:) {return '172';}
@@ -568,23 +585,6 @@ if (m:^mozilla/chrome/.*$:) {return '169';}
 if (m:^mozilla/profile/.*$:) {return '169';}
 if (m:^mozilla/toolkit/.*$:) {return '169';}
 if (m:^mozilla/xulrunner/.*$:) {return '169';}
-if (m:^mozilla/jpeg/.*$:) {return '63';}
-if (m:^mozilla/modules/libimg/png/.*$:) {return '63';}
-if (m:^mozilla/modules/libpr0n/.*$:) {return '63';}
-if (m:^mozilla/modules/zlib/.*$:) {return '63';}
-if (m:^mozilla/content/xul/.*$:) {return '106';}
-if (m:^mozilla/layout/xul/.*$:) {return '106';}
-if (m:^mozilla/mail/.*$:) {return '170';}
-if (m:^mozilla/other-licenses/branding/thunderbird/.*$:) {return '170';}
-if (m:^mozilla/testing/.*$:) {return '202';}
-if (m:^mozilla/tools/httptester/.*$:) {return '202';}
-if (m:^mozilla/tools/page-loader/.*$:) {return '202';}
-if (m:^mozilla/tools/test-harness/.*$:) {return '202';}
-if (m:^mozilla/tools/tests/.*$:) {return '202';}
-if (m:^mozilla/tools/testserver/.*$:) {return '202';}
-if (m:^mozilla/tools/testy/.*$:) {return '202';}
-if (m:^mozilla/extensions/cookie/.*$:) {return '171';}
-if (m:^mozilla/netwerk/cookie/.*$:) {return '171';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
