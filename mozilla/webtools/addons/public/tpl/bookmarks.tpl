@@ -32,7 +32,5 @@
 	</div>
 {/section}
 
-</div>
-
 {include file="inc/search-box.tpl"}
 
