@@ -40,7 +40,7 @@ $branch{'217'} = 'BUGZILLA-3_2-BRANCH';
 $fullname{'217'} = 'Bugzilla3.2';
 $blessed{'217'} = ['wurblzap%gmail.com','vladd%bugzilla.org','olav%bkor.dhs.org','myk%mozilla.org','ghendricks%novell.com',];
 $super{'217'} = ['mkanat%bugzilla.org','lpsolit%gmail.com','justdave%bugzilla.org',];
-$mode{'220'} = 'Restricted';
+$mode{'220'} = 'Closed';
 $branch{'220'} = 'BUGZILLA-3_4-BRANCH';
 $fullname{'220'} = 'Bugzilla3.4';
 $blessed{'220'} = ['wurblzap%gmail.com','olav%bkor.dhs.org','ghendricks%novell.com','dlawrence%mozilla.com',];
@@ -354,26 +354,6 @@ if ($b eq 'BUGZILLA-3_4-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '220';}
 }
 if ($b eq 'HEAD') {
-if (m:^mozilla/[^/]*$:) {return '19';}
-if (m:^mozilla/tools/README$:) {return '19';}
-if (m:^mozilla/content/base/.*$:) {return '103';}
-if (m:^mozilla/content/events/.*$:) {return '103';}
-if (m:^mozilla/content/html/content/.*$:) {return '103';}
-if (m:^mozilla/content/html/document/.*$:) {return '103';}
-if (m:^mozilla/dom/[^/]*$:) {return '103';}
-if (m:^mozilla/dom/base/.*$:) {return '103';}
-if (m:^mozilla/dom/interfaces/.*$:) {return '103';}
-if (m:^mozilla/dom/locales/.*$:) {return '103';}
-if (m:^mozilla/dom/public/.*$:) {return '103';}
-if (m:^mozilla/dom/src/.*$:) {return '103';}
-if (m:^mozilla/dom/tests/.*$:) {return '103';}
-if (m:^extension/python$:) {return '219';}
-if (m:^mozilla/gfx/src/xlib/.*$:) {return '121';}
-if (m:^mozilla/widget/src/xlib/.*$:) {return '121';}
-if (m:^mozilla/widget/src/xlibxtbin/.*$:) {return '121';}
-if (m:^mozilla/js/rhino/.*$:) {return '138';}
-if (m:^mozilla/string/.*$:) {return '160';}
-if (m:^mozilla/xpcom/string/.*$:) {return '160';}
 if (m:^mozilla/webtools/partytool/.*$:) {return '209';}
 if (m:^mozilla/xpfe/.*$:) {return '137';}
 if (m:^mozilla/widget/src/qt/.*$:) {return '161';}
@@ -587,6 +567,26 @@ if (m:^mozilla/penelope/$:) {return '225';}
 if (m:^mozilla/composer/.*$:) {return '173';}
 if (m:^mozilla/parser/htmlparser$:) {return '102';}
 if (m:^mozilla/embedding/.*$:) {return '208';}
+if (m:^mozilla/[^/]*$:) {return '19';}
+if (m:^mozilla/tools/README$:) {return '19';}
+if (m:^mozilla/content/base/.*$:) {return '103';}
+if (m:^mozilla/content/events/.*$:) {return '103';}
+if (m:^mozilla/content/html/content/.*$:) {return '103';}
+if (m:^mozilla/content/html/document/.*$:) {return '103';}
+if (m:^mozilla/dom/[^/]*$:) {return '103';}
+if (m:^mozilla/dom/base/.*$:) {return '103';}
+if (m:^mozilla/dom/interfaces/.*$:) {return '103';}
+if (m:^mozilla/dom/locales/.*$:) {return '103';}
+if (m:^mozilla/dom/public/.*$:) {return '103';}
+if (m:^mozilla/dom/src/.*$:) {return '103';}
+if (m:^mozilla/dom/tests/.*$:) {return '103';}
+if (m:^extension/python$:) {return '219';}
+if (m:^mozilla/gfx/src/xlib/.*$:) {return '121';}
+if (m:^mozilla/widget/src/xlib/.*$:) {return '121';}
+if (m:^mozilla/widget/src/xlibxtbin/.*$:) {return '121';}
+if (m:^mozilla/js/rhino/.*$:) {return '138';}
+if (m:^mozilla/string/.*$:) {return '160';}
+if (m:^mozilla/xpcom/string/.*$:) {return '160';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
