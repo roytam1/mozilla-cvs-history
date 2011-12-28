@@ -40,10 +40,10 @@ $branch{'217'} = 'BUGZILLA-3_2-BRANCH';
 $fullname{'217'} = 'Bugzilla3.2';
 $blessed{'217'} = ['wurblzap%gmail.com','vladd%bugzilla.org','olav%bkor.dhs.org','myk%mozilla.org','ghendricks%novell.com',];
 $super{'217'} = ['mkanat%bugzilla.org','lpsolit%gmail.com','justdave%bugzilla.org',];
-$mode{'220'} = 'Closed';
+$mode{'220'} = 'Restricted';
 $branch{'220'} = 'BUGZILLA-3_4-BRANCH';
 $fullname{'220'} = 'Bugzilla3.4';
-$blessed{'220'} = ['wurblzap%gmail.com','olav%bkor.dhs.org','ghendricks%novell.com',];
+$blessed{'220'} = ['wurblzap%gmail.com','olav%bkor.dhs.org','ghendricks%novell.com','dlawrence%mozilla.com',];
 $super{'220'} = ['mkanat%bugzilla.org','lpsolit%gmail.com','justdave%bugzilla.org',];
 $mode{'214'} = 'Open';
 $branch{'214'} = 'HEAD';
@@ -354,21 +354,6 @@ if ($b eq 'BUGZILLA-3_4-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '220';}
 }
 if ($b eq 'HEAD') {
-if (m:^mozilla/dbm/.*$:) {return '145';}
-if (m:^mozilla/security/coreconf/.*$:) {return '145';}
-if (m:^mozilla/security/dbm/.*$:) {return '145';}
-if (m:^mozilla/security/jss/.*$:) {return '145';}
-if (m:^mozilla/security/nss/.*$:) {return '145';}
-if (m:^mozilla/security/tinderbox/.*$:) {return '145';}
-if (m:^mozilla/security/tinderlight/.*$:) {return '145';}
-if (m:^mozilla/docshell/.*$:) {return '101';}
-if (m:^mozilla/uriloader/.*$:) {return '101';}
-if (m:^mozilla/webshell/.*$:) {return '101';}
-if (m:^mozilla/mailnews/local/src/nsMovemail.*$:) {return '157';}
-if (m:^mozilla/penelope/$:) {return '225';}
-if (m:^mozilla/composer/.*$:) {return '173';}
-if (m:^mozilla/parser/htmlparser$:) {return '102';}
-if (m:^mozilla/embedding/.*$:) {return '208';}
 if (m:^mozilla/[^/]*$:) {return '19';}
 if (m:^mozilla/tools/README$:) {return '19';}
 if (m:^mozilla/content/base/.*$:) {return '103';}
@@ -587,6 +572,21 @@ if (m:^mozilla/webtools/addons/.*$:) {return '185';}
 if (m:^mozilla/webtools/aus/.*$:) {return '185';}
 if (m:^mozilla/webtools/update/.*$:) {return '185';}
 if (m:^mozilla/js/src/ctypes/.*$:) {return '223';}
+if (m:^mozilla/dbm/.*$:) {return '145';}
+if (m:^mozilla/security/coreconf/.*$:) {return '145';}
+if (m:^mozilla/security/dbm/.*$:) {return '145';}
+if (m:^mozilla/security/jss/.*$:) {return '145';}
+if (m:^mozilla/security/nss/.*$:) {return '145';}
+if (m:^mozilla/security/tinderbox/.*$:) {return '145';}
+if (m:^mozilla/security/tinderlight/.*$:) {return '145';}
+if (m:^mozilla/docshell/.*$:) {return '101';}
+if (m:^mozilla/uriloader/.*$:) {return '101';}
+if (m:^mozilla/webshell/.*$:) {return '101';}
+if (m:^mozilla/mailnews/local/src/nsMovemail.*$:) {return '157';}
+if (m:^mozilla/penelope/$:) {return '225';}
+if (m:^mozilla/composer/.*$:) {return '173';}
+if (m:^mozilla/parser/htmlparser$:) {return '102';}
+if (m:^mozilla/embedding/.*$:) {return '208';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
