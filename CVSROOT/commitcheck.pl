@@ -371,11 +371,12 @@ if (m:^CVSROOT/commitcheck\.pl$:) {return '3';}
 if (m:^CVSROOT/passwd$:) {return '3';}
 if (m:^modules/libjar$:) {return '221';}
 if (m:^mozilla/security/manager/.*$:) {return '151';}
+if (m:^mozilla/js/src/ctypes/.*$:) {return '223';}
 if (m:^mozilla/layout/style/.*$:) {return '100';}
 if (m:^mozilla/webtools/addons/.*$:) {return '185';}
 if (m:^mozilla/webtools/aus/.*$:) {return '185';}
 if (m:^mozilla/webtools/update/.*$:) {return '185';}
-if (m:^mozilla/js/src/ctypes/.*$:) {return '223';}
+if (m:^mozilla/penelope/$:) {return '225';}
 if (m:^mozilla/dbm/.*$:) {return '145';}
 if (m:^mozilla/security/coreconf/.*$:) {return '145';}
 if (m:^mozilla/security/dbm/.*$:) {return '145';}
@@ -387,7 +388,6 @@ if (m:^mozilla/docshell/.*$:) {return '101';}
 if (m:^mozilla/uriloader/.*$:) {return '101';}
 if (m:^mozilla/webshell/.*$:) {return '101';}
 if (m:^mozilla/mailnews/local/src/nsMovemail.*$:) {return '157';}
-if (m:^mozilla/penelope/$:) {return '225';}
 if (m:^mozilla/composer/.*$:) {return '173';}
 if (m:^mozilla/parser/htmlparser$:) {return '102';}
 if (m:^mozilla/embedding/.*$:) {return '208';}
