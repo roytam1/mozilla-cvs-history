@@ -85,9 +85,13 @@ define('THROTTLE_LOGGING',false);
 //         '3.1' => 10
 //     )
 // );
+// NOTE: "FULLY THROTTLED" == 0
+//       "UNTHROTTLED"     == 100 (or remove the entry)
 $productThrottling = array(
      'Firefox' => array(
          '3.6.29' => 0,
+     ),
+     'Thunderbird' => array(
      )
 );
 
@@ -169,6 +173,16 @@ $productBranchVersions = array(
            'nightly-maple'           => 'maple',
            'nightly-oak'             => 'oak'
         )
+    ),
+    'Thunderbird' =>  array(
+        '3.1*'    =>  'comm-1.9.2',
+        '*'       =>   array(
+           'nightly'        => 'comm-central',
+           'nightlytest'    => 'comm-central-test',
+           'nightly-esr10'  => 'comm-esr10',
+           'aurora'         => 'comm-aurora',
+           'auroratest'     => 'comm-aurora-test'
+        ),
     ),
 );
 
@@ -289,7 +303,29 @@ $unsupportedPlatforms = array(
             'GTK 2.7.',
             'GTK 2.8.',
             'GTK 2.9.'
-        )
+        ),
+        // Mac 10.4 - bug 640044
+        // See index.php for PPC
+        '4.0b1+' => array(
+            'Darwin 8'
+        ),
+        // RHEL5 has too old libstdc++ - bug 655917
+        '4.0*' => array(
+            '.el5'
+        ),
+        '5.0*' => array(
+            '.el5'
+        ),
+        // Too old freetype - bug 666735
+        '7.0a1+' => array(
+            'GTK 2.10.'
+        ),
+        // Block Win2000, XP RTM & SP1 after switching to MSVC2010
+        '13.0a1+' => array (
+            'Windows_NT 5.0',
+            'Windows_NT 5.1.0',
+            'Windows_NT 5.1.1',
+        ),
     )
 );
 ?>
