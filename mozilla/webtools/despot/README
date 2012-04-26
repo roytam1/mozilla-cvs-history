@@ -143,3 +143,4 @@ ci -u commitcheck.pl
 # XXX add lines for passwd and commitcheck.pl to checkout in both repositories
 
 # XXX edit CVSROOT/config and set stuff like SystemAuth=no
+
