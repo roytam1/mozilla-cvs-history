@@ -265,6 +265,10 @@ class Patch extends AUS_Object {
             // Store information found only in complete snippets.
             // This information is tied to the <update> element.
             if ($this->isComplete()) {
+                # so that isSupported keeps working
+                if (isset($this->appVersion)) {
+                    $this->setVar('updateExtensionVersion', $this->appVersion, true);
+                }
 
                 if (isset($this->detailsUrl)) {
                     $this->setVar('hasDetailsUrl', true, true);
