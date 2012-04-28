@@ -107,6 +107,7 @@ $productThrottling = array(
          '10.0.1' => 0,
          '10.0.2' => 0,
          '11.0' => 0,
+         '12.0' => 0,
      ),
      'Thunderbird' => array(
      )
@@ -132,72 +133,58 @@ $throttleExceptions = array(
     '4.0' => array (
         'betatest',
         'releasetest',
-        'beta'
     ),
     '4.0.1' => array (
         'betatest',
         'releasetest',
-        'beta'
     ),
     '5.0' => array (
         'betatest',
         'releasetest',
-        'beta'
     ),
     '5.0.1' => array (
         'betatest',
         'releasetest',
-        'beta'
     ),
     '6.0' => array (
         'betatest',
         'releasetest',
-        'beta'
     ),
     '6.0.1' => array (
         'betatest',
         'releasetest',
-        'beta'
     ),
     '6.0.2' => array (
         'betatest',
         'releasetest',
-        'beta'
     ),
     '7.0' => array (
         'betatest',
         'releasetest',
-        'beta'
     ),
     '7.0.1' => array (
         'betatest',
         'releasetest',
-        'beta'
     ),
     '8.0' => array (
         'betatest',
         'releasetest',
-        'beta'
     ),
     '8.0.1' => array (
         'betatest',
         'releasetest',
-        'beta'
     ),
     '9.0' => array (
         'betatest',
         'releasetest',
-        'beta'
     ),
     '9.0.1' => array (
         'betatest',
         'releasetest',
-        'beta'
     ),
     '10.0' => array (
         'betatest',
         'releasetest',
-        'beta',
         'esr',
         'esrtest',
         'esrreleasetest'
@@ -219,7 +206,10 @@ $throttleExceptions = array(
     '11.0' => array (
         'betatest',
         'releasetest',
-        'beta',
+    ),
+    '12.0' => array (
+        'betatest',
+        'releasetest',
     ),
 );
 
