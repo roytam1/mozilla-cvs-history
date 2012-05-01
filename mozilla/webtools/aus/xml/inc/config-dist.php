@@ -133,58 +133,72 @@ $throttleExceptions = array(
     '4.0' => array (
         'betatest',
         'releasetest',
+        'release',
     ),
     '4.0.1' => array (
         'betatest',
         'releasetest',
+        'release',
     ),
     '5.0' => array (
         'betatest',
         'releasetest',
+        'release',
     ),
     '5.0.1' => array (
         'betatest',
         'releasetest',
+        'release',
     ),
     '6.0' => array (
         'betatest',
         'releasetest',
+        'release',
     ),
     '6.0.1' => array (
         'betatest',
         'releasetest',
+        'release',
     ),
     '6.0.2' => array (
         'betatest',
         'releasetest',
+        'release',
     ),
     '7.0' => array (
         'betatest',
         'releasetest',
+        'release',
     ),
     '7.0.1' => array (
         'betatest',
         'releasetest',
+        'release',
     ),
     '8.0' => array (
         'betatest',
         'releasetest',
+        'release',
     ),
     '8.0.1' => array (
         'betatest',
         'releasetest',
+        'release',
     ),
     '9.0' => array (
         'betatest',
         'releasetest',
+        'release',
     ),
     '9.0.1' => array (
         'betatest',
         'releasetest',
+        'release',
     ),
     '10.0' => array (
         'betatest',
         'releasetest',
+        'release',
         'esr',
         'esrtest',
         'esrreleasetest'
@@ -192,6 +206,7 @@ $throttleExceptions = array(
     '10.0.1' => array (
         'betatest',
         'releasetest',
+        'release',
         'esr',
         'esrtest',
         'esrreleasetest'
@@ -199,6 +214,7 @@ $throttleExceptions = array(
     '10.0.2' => array (
         'betatest',
         'releasetest',
+        'release',
         'esr',
         'esrtest',
         'esrreleasetest'
@@ -206,10 +222,12 @@ $throttleExceptions = array(
     '11.0' => array (
         'betatest',
         'releasetest',
+        'release',
     ),
     '12.0' => array (
         'betatest',
         'releasetest',
+        'release',
     ),
 );
 
