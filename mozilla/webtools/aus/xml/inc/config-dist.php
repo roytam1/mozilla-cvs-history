@@ -89,24 +89,6 @@ define('THROTTLE_LOGGING',false);
 //       "UNTHROTTLED"     == 100 (or remove the entry)
 $productThrottling = array(
      'Firefox' => array(
-         '4.0' => 0,
-         '4.0.1' => 0,
-         '5.0' => 0,
-         '5.0.1' => 0,
-         '6.0' => 0,
-         '6.0.1' => 0,
-         '6.0.2' => 0,
-         '7.0' => 0,
-         '7.0.1' => 0,
-         '8.0' => 0,
-         '8.0.1' => 0,
-         '9.0' => 0,
-         '9.0.1' => 0,
-         '10.0' => 0,
-         '10.0.1' => 0,
-         '10.0.2' => 0,
-         '11.0' => 0,
-         '12.0' => 0,
      ),
      'Thunderbird' => array(
      )
@@ -125,105 +107,6 @@ $productThrottling = array(
 // In this example, 3.0.11 with channel names that match these channels will not
 // be throttled unless there is a global throttle enabled.
 $throttleExceptions = array(
-    '4.0' => array (
-        'betatest',
-        'releasetest',
-        'release',
-    ),
-    '4.0.1' => array (
-        'betatest',
-        'releasetest',
-        'release',
-    ),
-    '5.0' => array (
-        'betatest',
-        'releasetest',
-        'release',
-    ),
-    '5.0.1' => array (
-        'betatest',
-        'releasetest',
-        'release',
-    ),
-    '6.0' => array (
-        'betatest',
-        'releasetest',
-        'release',
-    ),
-    '6.0.1' => array (
-        'betatest',
-        'releasetest',
-        'release',
-    ),
-    '6.0.2' => array (
-        'betatest',
-        'releasetest',
-        'release',
-    ),
-    '7.0' => array (
-        'betatest',
-        'releasetest',
-        'release',
-    ),
-    '7.0.1' => array (
-        'betatest',
-        'releasetest',
-        'release',
-    ),
-    '8.0' => array (
-        'betatest',
-        'releasetest',
-        'release',
-    ),
-    '8.0.1' => array (
-        'betatest',
-        'releasetest',
-        'release',
-    ),
-    '9.0' => array (
-        'betatest',
-        'releasetest',
-        'release',
-    ),
-    '9.0.1' => array (
-        'betatest',
-        'releasetest',
-        'release',
-    ),
-    '10.0' => array (
-        'betatest',
-        'releasetest',
-        'release',
-        'esr',
-        'esrtest',
-        'esrreleasetest'
-    ),
-    '10.0.1' => array (
-        'betatest',
-        'releasetest',
-        'release',
-        'esr',
-        'esrtest',
-        'esrreleasetest'
-    ),
-    '10.0.2' => array (
-        'betatest',
-        'releasetest',
-        'release',
-        'esr',
-        'esrtest',
-        'esrreleasetest'
-    ),
-    '11.0' => array (
-        'betatest',
-        'releasetest',
-        'release',
-    ),
-    '12.0' => array (
-        'betatest',
-        'releasetest',
-        'release',
-    ),
 );
 
 // These are channels that have access to nightly updates.
