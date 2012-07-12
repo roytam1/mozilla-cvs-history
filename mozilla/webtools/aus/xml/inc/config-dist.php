@@ -278,6 +278,10 @@ $unsupportedPlatforms = array(
             'Windows_NT 5.1.0',
             'Windows_NT 5.1.1',
         ),
+        // Mac 10.5 - bug 772735
+        '17.0a1+' => array (
+            'Darwin 9'
+        ),
     ),
     'Thunderbird'     =>  array(
         // Mac 10.2/10.3, Win < 2k, GTK < 2.10 - bug 418129
@@ -319,6 +323,10 @@ $unsupportedPlatforms = array(
             'Windows_NT 5.0',
             'Windows_NT 5.1.0',
             'Windows_NT 5.1.1',
+        ),
+        // Mac 10.5 - bug 772735
+        '17.0a1+' => array (
+            'Darwin 9'
         ),
     )
 );
