@@ -283,7 +283,7 @@ $unsupportedPlatforms = array(
             'Darwin 9'
         ),
         // Move to newer build platform
-        // block glib < 2.24 by blocking gtk <= 2.18, bug 772563/772446
+        // block glib < 2.22 by blocking gtk < 2.18, bug 772563/772446/793634
         '18.0a1+' => array(
             'GTK 2.11.',
             'GTK 2.12.',
@@ -292,7 +292,6 @@ $unsupportedPlatforms = array(
             'GTK 2.15.',
             'GTK 2.16.',
             'GTK 2.17.',
-            'GTK 2.18.',
         ),
     ),
     'Thunderbird'     =>  array(
