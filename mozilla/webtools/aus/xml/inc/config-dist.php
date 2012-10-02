@@ -284,7 +284,7 @@ $unsupportedPlatforms = array(
         ),
         // Move to newer build platform
         // block glib < 2.22 by blocking gtk < 2.18, bug 772563/772446/793634
-        '18.0a1+' => array(
+        '17.0a2+' => array(
             'GTK 2.11.',
             'GTK 2.12.',
             'GTK 2.13.',
@@ -338,6 +338,17 @@ $unsupportedPlatforms = array(
         // Mac 10.5 - bug 772735
         '17.0a1+' => array (
             'Darwin 9'
+        ),
+        // Move to newer build platform
+        // block glib < 2.22 by blocking gtk < 2.18, bug 794378
+        '17.0a2+' => array(
+            'GTK 2.11.',
+            'GTK 2.12.',
+            'GTK 2.13.',
+            'GTK 2.14.',
+            'GTK 2.15.',
+            'GTK 2.16.',
+            'GTK 2.17.',
         ),
     )
 );
