@@ -88,34 +88,6 @@ define('THROTTLE_LOGGING',false);
 // NOTE: "FULLY THROTTLED" == 0
 //       "UNTHROTTLED"     == 100 (or remove the entry)
 $productThrottling = array(
-     'Firefox' => array(
-         '10.0' => 0,
-         '10.0.1' => 0,
-         '10.0.2' => 0,
-         '11.0' => 0,
-         '12.0' => 0,
-         '13.0' => 0,
-         '13.0.1' => 0,
-         '13.0.2' => 0,
-         '14.0' => 0,
-         '14.0.1' => 0,
-         '15.0' => 0,
-         '15.0.1' => 0,
-     ),
-     'Thunderbird' => array(
-         '10.0' => 0,
-         '10.0.1' => 0,
-         '10.0.2' => 0,
-         '11.0' => 0,
-         '11.0.1' => 0,
-         '12.0' => 0,
-         '12.0.1' => 0,
-         '13.0' => 0,
-         '13.0.1' => 0,
-         '14.0' => 0,
-         '15.0' => 0,
-         '15.0.1' => 0,
-     )
 );
 
 // List of exceptions for throttling.
@@ -131,86 +103,6 @@ $productThrottling = array(
 // In this example, 3.0.11 with channel names that match these channels will not
 // be throttled unless there is a global throttle enabled.
 $throttleExceptions = array(
- '10.0' => array(
-          'betatest',
-          'releasetest',
-          'beta',
- 	   'esr',
- 	   'esrtest',
- 	   'esrreleasetest',
-      ),
-      '10.0.1' => array(
-          'betatest',
-          'releasetest',
-          'beta',
- 	   'esr',
- 	   'esrtest',
- 	   'esrreleasetest',
-      ),
-      '10.0.2' => array(
-          'betatest',
-          'releasetest',
-          'beta',
- 	   'esr',
- 	   'esrtest',
- 	   'esrreleasetest',
-      ),
-      '11.0' => array(
-          'betatest',
-          'releasetest',
-          'beta',
-      ),
-      '12.0' => array(
-          'betatest',
-          'releasetest',
-          'beta',
-      ),
-      '13.0' => array(
-          'betatest',
-          'releasetest',
-          'beta',
-      ),
-      '13.0.1' => array(
-          'betatest',
-          'releasetest',
-          'beta',
-      ),
-      '13.0.2' => array(
-          'betatest',
-          'releasetest',
-          'beta',
-      ),
-      '14.0' => array(
-          'betatest',
-          'releasetest',
-          'beta',
-      ),
-      '14.0.1' => array(
-          'betatest',
-          'releasetest',
-          'beta',
-      ),
-      '15.0' => array(
-          'betatest',
-          'releasetest',
-          'beta',
-      ),
-      '15.0.1' => array(
-          'betatest',
-          'releasetest',
-          'beta',
-      ),
-      # Thunderbird only
-      '11.0.1' => array(
-          'betatest',
-          'releasetest',
-          'beta',
-      ),
-      '12.0.1' => array(
-          'betatest',
-          'releasetest',
-          'beta',
-      ),
 );
 
 // These are channels that have access to nightly updates.
