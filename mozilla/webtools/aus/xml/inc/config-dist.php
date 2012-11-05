@@ -123,6 +123,7 @@ $nightlyChannels = array(
     'nightly-oak',
     'nightly-profiling',
     'nightly-esr10',
+    'nightly-esr17',
     'aurora',
     'auroratest'
 );
@@ -148,6 +149,7 @@ $productBranchVersions = array(
            'nightly-oak'             => 'oak',
            'nightly-profiling'       => 'mozilla-central',
            'nightly-esr10'           => 'mozilla-esr10',
+           'nightly-esr17'           => 'mozilla-esr17',
            'aurora'                  => 'mozilla-aurora',
            'auroratest'              => 'mozilla-aurora-test'
         )
@@ -170,6 +172,7 @@ $productBranchVersions = array(
            'nightly'        => 'comm-central',
            'nightlytest'    => 'comm-central-test',
            'nightly-esr10'  => 'comm-esr10',
+           'nightly-esr17'  => 'comm-esr17',
            'aurora'         => 'comm-aurora',
            'auroratest'     => 'comm-aurora-test'
         ),
