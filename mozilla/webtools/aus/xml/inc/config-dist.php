@@ -80,10 +80,21 @@ define('THROTTLE_LOGGING',false);
 // is 10% throttling (only 10% of the time updates are offered):
 //
  $productThrottling = array(
-//     'Firefox' => array(
-//         '3.0' => 10,
-//         '3.1' => 10
-//     )
+     'Firefox' => array(
+         '10.0' => 0,
+         '10.0.1' => 0,
+         '10.0.2' => 0,
+         '11.0' => 0,
+         '12.0' => 0,
+         '13.0' => 0,
+         '13.0.1' => 0,
+         '14.0.1' => 0,
+         '15.0' => 0,
+         '15.0.1' => 0,
+         '16.0' => 0,
+         '16.0.1' => 0,
+         '16.0.2' => 0
+     ),
      'Thunderbird' => array(
          '10.0' => 0,
          '10.0.1' => 0,
@@ -170,11 +181,6 @@ $productThrottling = array(
           'releasetest',
           'beta',
       ),
-      '14.0' => array(
-          'betatest',
-          'releasetest',
-          'beta',
-      ),
       '14.0.1' => array(
           'betatest',
           'releasetest',
@@ -212,6 +218,11 @@ $productThrottling = array(
           'beta',
       ),
       '12.0.1' => array(
+          'betatest',
+          'releasetest',
+          'beta',
+      ),
+      '14.0' => array(
           'betatest',
           'releasetest',
           'beta',
