@@ -79,12 +79,30 @@ define('THROTTLE_LOGGING',false);
 // override global levels.  If it is off, this still works.  For example, this
 // is 10% throttling (only 10% of the time updates are offered):
 //
-// $productThrottling = array(
+ $productThrottling = array(
 //     'Firefox' => array(
 //         '3.0' => 10,
 //         '3.1' => 10
 //     )
-// );
+     'Thunderbird' => array(
+         '10.0' => 0,
+         '10.0.1' => 0,
+         '10.0.2' => 0,
+         '11.0' => 0,
+         '11.0.1' => 0,
+         '12.0' => 0,
+         '12.0.1' => 0,
+         '13.0' => 0,
+         '13.0.1' => 0,
+         '14.0' => 0,
+         '15.0' => 0,
+         '15.0.1' => 0,
+         '16.0' => 0,
+         '16.0.1' => 0,
+         '16.0.2' => 0
+      )
+);
+             
 // NOTE: "FULLY THROTTLED" == 0
 //       "UNTHROTTLED"     == 100 (or remove the entry)
 $productThrottling = array(
@@ -102,8 +120,104 @@ $productThrottling = array(
 //
 // In this example, 3.0.11 with channel names that match these channels will not
 // be throttled unless there is a global throttle enabled.
-$throttleExceptions = array(
-);
+ $throttleExceptions = array(
+ '10.0' => array(
+          'betatest',
+          'releasetest',
+          'beta',
+ 	   'esr',
+ 	   'esrtest',
+ 	   'esrreleasetest',
+      ),
+      '10.0.1' => array(
+          'betatest',
+          'releasetest',
+          'beta',
+ 	   'esr',
+ 	   'esrtest',
+ 	   'esrreleasetest',
+      ),
+      '10.0.2' => array(
+          'betatest',
+          'releasetest',
+          'beta',
+ 	   'esr',
+ 	   'esrtest',
+ 	   'esrreleasetest',
+      ),
+      '11.0' => array(
+          'betatest',
+          'releasetest',
+          'beta',
+      ),
+      '12.0' => array(
+          'betatest',
+          'releasetest',
+          'beta',
+      ),
+      '13.0' => array(
+          'betatest',
+          'releasetest',
+          'beta',
+      ),
+      '13.0.1' => array(
+          'betatest',
+          'releasetest',
+          'beta',
+      ),
+      '13.0.2' => array(
+          'betatest',
+          'releasetest',
+          'beta',
+      ),
+      '14.0' => array(
+          'betatest',
+          'releasetest',
+          'beta',
+      ),
+      '14.0.1' => array(
+          'betatest',
+          'releasetest',
+          'beta',
+      ),
+      '15.0' => array(
+          'betatest',
+          'releasetest',
+          'beta',
+      ),
+      '15.0.1' => array(
+          'betatest',
+          'releasetest',
+          'beta',
+      ),
+      '16.0' => array(
+          'betatest',
+          'releasetest',
+          'beta',
+      ),
+      '16.0.1' => array(
+          'betatest',
+          'releasetest',
+          'beta',
+      ),
+      '16.0.2' => array(
+          'betatest',
+          'releasetest',
+          'beta',
+      ),
+      # Thunderbird only
+      '11.0.1' => array(
+          'betatest',
+          'releasetest',
+          'beta',
+      ),
+      '12.0.1' => array(
+          'betatest',
+          'releasetest',
+          'beta',
+      ),
+ );
+ 
 
 // These are channels that have access to nightly updates.
 // All other channels only have access to the OVERRIDE_DIR for update info.
