@@ -79,7 +79,10 @@ define('THROTTLE_LOGGING',false);
 // override global levels.  If it is off, this still works.  For example, this
 // is 10% throttling (only 10% of the time updates are offered):
 //
- $productThrottling = array(
+// NOTE: "FULLY THROTTLED" == 0
+//       "UNTHROTTLED"     == 100 (or remove the entry)
+
+$productThrottling = array(
      'Firefox' => array(
          '10.0' => 0,
          '10.0.1' => 0,
@@ -111,14 +114,9 @@ define('THROTTLE_LOGGING',false);
          '16.0' => 0,
          '16.0.1' => 0,
          '16.0.2' => 0
-      )
+     )
 );
              
-// NOTE: "FULLY THROTTLED" == 0
-//       "UNTHROTTLED"     == 100 (or remove the entry)
-$productThrottling = array(
-);
-
 // List of exceptions for throttling.
 //
 // $throttleExceptions = array(
