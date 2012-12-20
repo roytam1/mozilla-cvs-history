@@ -50,7 +50,8 @@ class Verify(ColumnFixture):
                "hasActions": "Boolean",
                "hasOpenURL": "Boolean",
                "hasNotificationURL": "Boolean",
-               "hasAlertURL": "Boolean"}
+               "hasAlertURL": "Boolean",
+               "hasPromptWaitTime": "Boolean"}
 
     def __init__(self):
         super(Verify, self).__init__()
@@ -75,6 +76,7 @@ class Verify(ColumnFixture):
         self.openURL = ""
         self.notificationURL = ""
         self.alertURL = ""
+        self.promptWaitTime = ""
 
         # For storing the last retrieved AUS XML and its URI.
         self.lastURI = ""
@@ -131,6 +133,9 @@ class Verify(ColumnFixture):
 
     def hasAlertURL(self):
         return ('alertURL="http://alertURL' in self.getXml())
+
+    def hasPromptWaitTime(self):
+        return ('promptWaitTime="999' in self.getXml())
 
     # Check if the AUS XML document is well-formed.
     def isValidXml(self):

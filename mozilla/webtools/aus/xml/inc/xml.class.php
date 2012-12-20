@@ -86,6 +86,7 @@ class Xml extends AUS_Object {
         $open = isset($update->open) ? htmlentities($update->open) : '';
         $notification = isset($update->notification) ? htmlentities($update->notification) : '';
         $alert = isset($update->alert) ? htmlentities($update->alert) : '';
+        $promptWaitTime = isset($update->promptWaitTime) ? htmlentities($update->promptWaitTime) : '';
 
         $version_xml = '';
         if (!empty($version)) {
@@ -167,9 +168,14 @@ class Xml extends AUS_Object {
             $alert_xml = " alertURL=\"{$alert}\"";
         }
 
+        $promptWaitTime_xml = '';
+        if (!empty($promptWaitTime)) {
+            $promptWaitTime_xml = " promptWaitTime=\"{$promptWaitTime}\"";
+        }
+
         $this->xmlOutput .= <<<startUpdate
 
-    <update type="{$type}"{$version_xml}{$extensionVersion_xml}{$displayVersion_xml}{$appVersion_xml}{$platformVersion_xml}{$build_xml}{$details_xml}{$license_xml}{$billboard_xml}{$showPrompt_xml}{$showNeverForVersion_xml}{$showSurvey_xml}{$actions_xml}{$open_xml}{$notification_xml}{$alert_xml}>
+    <update type="{$type}"{$version_xml}{$extensionVersion_xml}{$displayVersion_xml}{$appVersion_xml}{$platformVersion_xml}{$build_xml}{$details_xml}{$license_xml}{$billboard_xml}{$showPrompt_xml}{$showNeverForVersion_xml}{$showSurvey_xml}{$actions_xml}{$open_xml}{$notification_xml}{$alert_xml}{$promptWaitTime_xml}>
 startUpdate;
 
         /**

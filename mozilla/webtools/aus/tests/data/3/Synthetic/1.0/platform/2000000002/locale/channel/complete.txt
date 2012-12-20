@@ -17,3 +17,4 @@ showPrompt=false
 showNeverForVersion=true
 showSurvey=true
 actions=showNotification showAlert
+promptWaitTime=999

@@ -57,6 +57,7 @@ class Update extends AUS_Object {
     var $open;
     var $notification;
     var $alert;
+    var $promptWaitTime;
     var $displayVersion;
     var $appVersion;
     var $platformVersion;
@@ -180,6 +181,14 @@ class Update extends AUS_Object {
       */
      function setAlert($alert) {
         return $this->alert = $alert;
+     }
+
+     /**
+      * Set the prompt wait time.
+      * @param string $promptWaitTime
+      */
+     function setPromptWaitTime($promptWaitTime) {
+        return $this->promptWaitTime = $promptWaitTime;
      }
 
      /**

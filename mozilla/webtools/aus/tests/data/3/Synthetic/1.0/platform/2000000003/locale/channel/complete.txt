@@ -16,3 +16,4 @@ alertURL=http://alertURL
 showPrompt=true
 showSurvey=true
 actions=showNotification showAlert
+promptWaitTime=999

@@ -277,6 +277,11 @@ if ($_cached_xml) {
                     $update->setAlert($completePatch->alertURL);
                 }
 
+                // If we have prompt wait time, pass it along.
+                if ($completePatch->hasPromptWaitTime()) {
+                    $update->setPromptWaitTime($completePatch->promptWaitTime);
+                }
+
                 // If we have a display version, pass it along.
                 if ($completePatch->hasDisplayVersion()) {
                     $update->setDisplayVersion($completePatch->displayVersion);

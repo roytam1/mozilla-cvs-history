@@ -88,6 +88,7 @@ class Patch extends AUS_Object {
     var $open;
     var $notification;
     var $alert;
+    var $promptWaitTime;
     var $displayVersion;
     var $appVersion;
     var $platformVersion;
@@ -105,6 +106,7 @@ class Patch extends AUS_Object {
     var $hasOpenUrl;
     var $hasNotificationUrl;
     var $hasAlertUrl;
+    var $hasPromptWaitTime;
     var $hasDisplayVersion;
     var $hasAppVersion;
     var $hasPlatformVersion;
@@ -304,6 +306,10 @@ class Patch extends AUS_Object {
 
                 if (isset($this->alertURL)) {
                     $this->setVar('hasAlertUrl', true, true);
+                }
+
+                if (isset($this->promptWaitTime)) {
+                    $this->setVar('hasPromptWaitTime', true, true);
                 }
 
                 if (isset($this->displayVersion)) {
@@ -646,6 +652,13 @@ class Patch extends AUS_Object {
      */
     function hasSnippetSchemaVersion() {
        return $this->hasSnippetSchemaVersion;
+    }
+
+    /**
+     * Determine whether or not this patch has promptWaitTime set.
+     */
+    function hasPromptWaitTime() {
+       return $this->hasPromptWaitTime;
     }
 
     /**
