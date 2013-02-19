@@ -297,11 +297,17 @@ $throttleExceptions = array(
     '17.0' => array(
         'betatest',
         'releasetest',
+        'esrtest',
+        'esrreleasetest',
+        'esr',
         'beta'
     ),
     '17.0.1' => array(
         'betatest',
         'releasetest',
+        'esrtest',
+        'esrreleasetest',
+        'esr',
         'beta'
     ),
     '18.0' => array(
