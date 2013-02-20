@@ -515,6 +515,9 @@ $unsupportedPlatforms = array(
             'GTK 2.16.',
             'GTK 2.17.',
         ),
+        '18.0b6+' => array (
+            'Windows_NT 6.2',
+        ),
     ),
     'Thunderbird'     =>  array(
         // Mac 10.2/10.3, Win < 2k, GTK < 2.10 - bug 418129
