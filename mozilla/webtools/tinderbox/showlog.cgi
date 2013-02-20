@@ -72,6 +72,10 @@ if (defined($args = $form{log}) or defined($args = $form{exerpt})) {
   $logfile     = shell_escape($form{logfile});
   $buildname   = $form{buildname};
   $buildtime   = $form{buildtime};
+  # bug 842742
+  if ($logfile =~ /\.\./) {
+    die "Illegal logfile parameter $logfile";
+  }
 }
 $fulltext    = $form{fulltext};
 
