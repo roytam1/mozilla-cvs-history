@@ -87,16 +87,6 @@ $productThrottling = array(
         '10.0' => 0,
         '10.0.1' => 0,
         '10.0.2' => 0,
-        '10.0.3' => 0,
-        '10.0.4' => 0,
-        '10.0.5' => 0,
-        '10.0.6' => 0,
-        '10.0.7' => 0,
-        '10.0.8' => 0,
-        '10.0.9' => 0,
-        '10.0.10' => 0,
-        '10.0.11' => 0,
-        '10.0.12' => 0,
         '11.0' => 0,
         '12.0' => 0,
         '13.0' => 0,
@@ -114,19 +104,6 @@ $productThrottling = array(
         '18.0.2' => 0
     ),
     'Thunderbird' => array(
-        '10.0' => 0,
-        '10.0.1' => 0,
-        '10.0.2' => 0,
-        '10.0.3' => 0,
-        '10.0.4' => 0,
-        '10.0.5' => 0,
-        '10.0.6' => 0,
-        '10.0.7' => 0,
-        '10.0.8' => 0,
-        '10.0.9' => 0,
-        '10.0.10' => 0,
-        '10.0.11' => 0,
-        '10.0.12' => 0
     )
 );
              
@@ -148,101 +125,24 @@ $throttleExceptions = array(
         'releasetest',
         'esrtest',
         'esrreleasetest',
-        'beta'
+        'beta',
+	'esr'
     ),
     '10.0.1' => array(
         'betatest',
         'releasetest',
         'esrtest',
         'esrreleasetest',
-        'beta'
+        'beta',
+	'esr'
     ),
     '10.0.2' => array(
         'betatest',
         'releasetest',
         'esrtest',
         'esrreleasetest',
-        'beta'
-    ),
-    '10.0.3' => array(
-        'betatest',
-        'releasetest',
-        'esrtest',
-        'esrreleasetest',
         'beta',
-        'release'
-    ),
-    '10.0.4' => array(
-        'betatest',
-        'releasetest',
-        'esrtest',
-        'esrreleasetest',
-        'beta',
-        'release'
-    ),
-    '10.0.5' => array(
-        'betatest',
-        'releasetest',
-        'esrtest',
-        'esrreleasetest',
-        'beta',
-        'release'
-    ),
-    '10.0.6' => array(
-        'betatest',
-        'releasetest',
-        'esrtest',
-        'esrreleasetest',
-        'beta',
-        'release'
-    ),
-    '10.0.7' => array(
-        'betatest',
-        'releasetest',
-        'esrtest',
-        'esrreleasetest',
-        'beta',
-        'release'
-    ),
-    '10.0.8' => array(
-        'betatest',
-        'releasetest',
-        'esrtest',
-        'esrreleasetest',
-        'beta',
-        'release'
-    ),
-    '10.0.9' => array(
-        'betatest',
-        'releasetest',
-        'esrtest',
-        'esrreleasetest',
-        'beta',
-        'release'
-    ),
-    '10.0.10' => array(
-        'betatest',
-        'releasetest',
-        'esrtest',
-        'esrreleasetest',
-        'beta',
-        'release'
-    ),
-    '10.0.11' => array(
-        'betatest',
-        'releasetest',
-        'esrtest',
-        'esrreleasetest',
-        'beta',
-        'release'
-    ),
-    '10.0.12' => array(
-        'betatest',
-        'releasetest',
-        'esrtest',
-        'esrreleasetest',
-        'beta',
-        'release'
+	'esr'
     ),
     '11.0' => array(
         'betatest',
