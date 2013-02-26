@@ -100,7 +100,18 @@ if ( $clean['product'] == 'Firefox'
         exit;
 }
 
- 
+// For 19.0.1 we want only win8 users to get updated to 19.0.1. Other windows 
+// users should get 19.0
+// To accomplish this, we change the platform of win8 users, so we can look in 
+// a distinct snippet directory for them.
+if ($clean['product'] == 'Firefox' &&
+    $clean['platform'] == 'WINNT_x86-msvc' &&
+    in_array($clean['channel'], array('release', 'releasetest')) &&
+    (strpos($clean['platformVersion'], 'Windows_NT 6.2') !== false)
+   ) {
+        $clean['platform'] = 'WINNT_x86-msvc-win8';
+}
+
 // Check to see if the user is explicitly requesting an update.  If they are,
 // skip throttling.  If they aren't, and throttling is enabled, first check
 // explicit throttling.  If no specific rules exist, fallback to global rules.
