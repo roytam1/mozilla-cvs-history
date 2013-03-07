@@ -106,7 +106,7 @@ if ( $clean['product'] == 'Firefox'
 // a distinct snippet directory for them.
 if ($clean['product'] == 'Firefox' &&
     $clean['platform'] == 'WINNT_x86-msvc' &&
-    in_array($clean['channel'], array('release', 'releasetest')) &&
+    in_array($clean['channel'], array('release')) &&
     (strpos($clean['platformVersion'], 'Windows_NT 6.2') !== false)
    ) {
         $clean['platform'] = 'WINNT_x86-msvc-win8';
