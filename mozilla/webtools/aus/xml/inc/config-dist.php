@@ -84,6 +84,27 @@ define('THROTTLE_LOGGING',false);
 
 $productThrottling = array(
     'Firefox' => array(
+        '10.0' => 10,
+        '10.0.1' => 10,
+        '10.0.2' => 10,
+        '11.0' => 10,
+        '12.0' => 10,
+        '13.0' => 10,
+        '13.0.1' => 10,
+        '14.0.1' => 10,
+        '15.0' => 10,
+        '15.0.1' => 10,
+        '16.0' => 10,
+        '16.0.1' => 10,
+        '16.0.2' => 10,
+        '17.0' => 10,
+        '17.0.1' => 10,
+        '18.0' => 10,
+        '18.0.1' => 10,
+        '18.0.2' => 10,
+        '19.0' => 10,
+        '19.0.1' => 10,
+        '19.0.2' => 10,
     ),
     'Thunderbird' => array(
     )
@@ -206,7 +227,22 @@ $throttleExceptions = array(
         'betatest',
         'releasetest',
         'beta'
-    )
+    ),
+    '19.0' => array(
+        'betatest',
+        'releasetest',
+        'beta'
+    ),
+    '19.0.1' => array(
+        'betatest',
+        'releasetest',
+        'beta'
+    ),
+    '19.0.2' => array(
+        'betatest',
+        'releasetest',
+        'beta'
+    ),
 );
 
  
