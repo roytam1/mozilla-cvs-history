@@ -129,6 +129,11 @@ $nightlyChannels = array(
 // @todo replace this with a better datasource that can be easily managed via a GUI.
 // The ordering is !important!, given the wildcard block at the bottom.
 $productBranchVersions = array(
+    'MetroFirefox'     =>  array(
+        '*'       => array(
+           'nightly-oak'             => 'oak',
+        )
+    ),
     'Firefox'     =>  array(
         '*'       => array(
            'nightly'                 => 'mozilla-central',
