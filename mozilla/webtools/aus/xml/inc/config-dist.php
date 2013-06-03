@@ -133,6 +133,8 @@ $nightlyChannels = array(
 $productBranchVersions = array(
     'MetroFirefox'     =>  array(
         '*'       => array(
+           'nightly'                 => 'mozilla-central',
+           'nightlytest'             => 'mozilla-central-test',
            'nightly-oak'             => 'oak',
         )
     ),
