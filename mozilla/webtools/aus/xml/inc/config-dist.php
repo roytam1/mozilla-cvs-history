@@ -84,6 +84,30 @@ define('THROTTLE_LOGGING',false);
 
 $productThrottling = array(
     'Firefox' => array(
+        '10.0' => 10,
+        '10.0.1' => 10,
+        '10.0.2' => 10,
+        '11.0' => 10,
+        '12.0' => 10,
+        '13.0' => 10,
+        '13.0.1' => 10,
+        '14.0.1' => 10,
+        '15.0' => 10,
+        '15.0.1' => 10,
+        '16.0' => 10,
+        '16.0.1' => 10,
+        '16.0.2' => 10,
+        '17.0' => 10,
+        '17.0.1' => 10,
+        '18.0' => 10,
+        '18.0.1' => 10,
+        '18.0.2' => 10,
+        '19.0' => 10,
+        '19.0.1' => 10,
+        '19.0.2' => 10,
+        '20.0' => 10,
+        '20.0.1' => 10,
+        '21.0' => 10,
     )
 );
              
@@ -100,6 +124,141 @@ $productThrottling = array(
 // In this example, 3.0.11 with channel names that match these channels will not
 // be throttled unless there is a global throttle enabled.
 $throttleExceptions = array(
+    '10.0' => array(
+            'betatest',
+            'releasetest',
+            'esrtest',
+            'esrreleasetest',
+            'beta',
+            'esr'
+        ),
+    '10.0.1' => array(
+            'betatest',
+            'releasetest',
+            'esrtest',
+            'esrreleasetest',
+            'beta',
+            'esr'
+        ),
+    '10.0.2' => array(
+            'betatest',
+            'releasetest',
+            'esrtest',
+            'esrreleasetest',
+            'beta',
+            'esr'
+        ),
+    '11.0' => array(
+            'betatest',
+            'releasetest',
+            'beta'
+        ),
+    '12.0' => array(
+            'betatest',
+            'releasetest',
+            'beta'
+        ),
+    '13.0' => array(
+            'betatest',
+            'releasetest',
+            'beta'
+        ),
+    '13.0.1' => array(
+            'betatest',
+            'releasetest',
+            'beta'
+        ),
+    '14.0.1' => array(
+            'betatest',
+            'releasetest',
+            'beta'
+        ),
+    '15.0' => array(
+            'betatest',
+            'releasetest',
+            'beta'
+        ),
+    '15.0.1' => array(
+            'betatest',
+            'releasetest',
+            'beta'
+        ),
+    '16.0' => array(
+            'betatest',
+            'releasetest',
+            'beta'
+        ),
+    '16.0.1' => array(
+            'betatest',
+            'releasetest',
+            'beta'
+        ),
+    '16.0.2' => array(
+            'betatest',
+            'releasetest',
+            'beta'
+        ),
+    '17.0' => array(
+            'betatest',
+            'releasetest',
+            'esrtest',
+            'esrreleasetest',
+            'esr',
+            'beta'
+        ),
+    '17.0.1' => array(
+            'betatest',
+            'releasetest',
+            'esrtest',
+            'esrreleasetest',
+            'esr',
+            'beta'
+        ),
+    '18.0' => array(
+            'betatest',
+            'releasetest',
+            'beta'
+        ),
+    '18.0.1' => array(
+            'betatest',
+            'releasetest',
+            'beta'
+        ),
+    '18.0.2' => array(
+            'betatest',
+            'releasetest',
+            'beta'
+        ),
+    '19.0' => array(
+            'betatest',
+            'releasetest',
+            'beta'
+        ),
+    '19.0.1' => array(
+            'betatest',
+            'releasetest',
+            'beta'
+        ),
+    '19.0.2' => array(
+            'betatest',
+            'releasetest',
+            'beta'
+        ),
+    '20.0' => array(
+            'betatest',
+            'releasetest',
+            'beta'
+        ),
+    '20.0.1' => array(
+            'betatest',
+            'releasetest',
+            'beta'
+        ),
+    '21.0' => array(
+            'betatest',
+            'releasetest',
+            'beta'
+        ),
 );
 
  
