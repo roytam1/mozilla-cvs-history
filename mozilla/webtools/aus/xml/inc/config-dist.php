@@ -276,6 +276,7 @@ $nightlyChannels = array(
     'nightly-birch',
     'nightly-ash',
     'nightly-elm',
+    'nightly-fig',
     'nightly-ionmonkey',
     'nightly-oak',
     'nightly-profiling',
@@ -329,6 +330,7 @@ $productBranchVersions = array(
            'nightly-ash'             => 'ash',
            'nightly-maple'           => 'maple',
            'nightly-oak'             => 'oak'
+           'nightly-fig'             => 'fig',
         )
     ),
     'Thunderbird' =>  array(
