@@ -329,8 +329,8 @@ $productBranchVersions = array(
            'nightly-birch'           => 'mozilla-central',
            'nightly-ash'             => 'ash',
            'nightly-maple'           => 'maple',
-           'nightly-oak'             => 'oak'
-           'nightly-fig'             => 'fig',
+           'nightly-oak'             => 'oak',
+           'nightly-fig'             => 'fig'
         )
     ),
     'Thunderbird' =>  array(
