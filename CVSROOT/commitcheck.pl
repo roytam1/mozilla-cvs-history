@@ -18,7 +18,7 @@ $super{'190'} = ['justdave%bugzilla.org',];
 $mode{'204'} = 'Closed';
 $branch{'204'} = 'BUGZILLA-2_18-BRANCH';
 $fullname{'204'} = 'Bugzilla2.18';
-$blessed{'204'} = ['lpsolit%gmail.com','olav%bkor.dhs.org','myk%mozilla.org','ghendricks%novell.com',];
+$blessed{'204'} = [];
 $super{'204'} = ['justdave%bugzilla.org',];
 $mode{'191'} = 'Closed';
 $branch{'191'} = 'BUGZILLA-2_20-BRANCH';
@@ -354,6 +354,38 @@ if ($b eq 'BUGZILLA-3_4-BRANCH') {
 if (m:^mozilla/webtools/bugzilla/.*$:) {return '220';}
 }
 if ($b eq 'HEAD') {
+if (m:^mozilla/webtools/partytool/.*$:) {return '209';}
+if (m:^mozilla/xpfe/.*$:) {return '137';}
+if (m:^mozilla/widget/src/qt/.*$:) {return '161';}
+if (m:^mozilla/widget/src/gtk/.*$:) {return '49';}
+if (m:^mozilla/widget/src/gtk2/.*$:) {return '49';}
+if (m:^mozilla/widget/src/gtksuperwin/.*$:) {return '49';}
+if (m:^mozilla/widget/src/gtkxtbin/.*$:) {return '49';}
+if (m:^mozilla/js/tests/.*$:) {return '114';}
+if (m:^mozilla/rdf/.*$:) {return '52';}
+if (m:^mozilla/extensions/p3p/.*$:) {return '162';}
+if (m:^mozilla/build/.*$:) {return '55';}
+if (m:^mozilla/config/.*$:) {return '55';}
+if (m:^mozilla/tools/cross-commit$:) {return '55';}
+if (m:^mozilla/tools/cvs2hg-import\.py$:) {return '55';}
+if (m:^mozilla/tools/cvsmgmt/.*$:) {return '55';}
+if (m:^mozilla/tools/elf-dynstr-gc/.*$:) {return '55';}
+if (m:^mozilla/tools/relic/.*$:) {return '55';}
+if (m:^mozilla/tools/trees\.pl$:) {return '55';}
+if (m:^mozilla/content/xslt/.*$:) {return '140';}
+if (m:^mozilla/extensions/transformiix/.*$:) {return '140';}
+if (m:^mozilla/layout/mathml/.*$:) {return '165';}
+if (m:^mozilla/editor/.*$:) {return '56';}
+if (m:^mozilla/calendar/.*$:) {return '183';}
+if (m:^mozilla/browser/.*$:) {return '166';}
+if (m:^mozilla/other-licenses/branding/firefox/.*$:) {return '166';}
+if (m:^mozilla/directory/.*$:) {return '59';}
+if (m:^mozilla/gfx/src/photon/.*$:) {return '113';}
+if (m:^mozilla/widget/src/photon/.*$:) {return '113';}
+if (m:^mozilla/chrome/.*$:) {return '169';}
+if (m:^mozilla/profile/.*$:) {return '169';}
+if (m:^mozilla/toolkit/.*$:) {return '169';}
+if (m:^mozilla/xulrunner/.*$:) {return '169';}
 if (m:^mozilla/jpeg/.*$:) {return '63';}
 if (m:^mozilla/modules/libimg/png/.*$:) {return '63';}
 if (m:^mozilla/modules/libpr0n/.*$:) {return '63';}
@@ -555,38 +587,6 @@ if (m:^mozilla/widget/src/xlibxtbin/.*$:) {return '121';}
 if (m:^mozilla/js/rhino/.*$:) {return '138';}
 if (m:^mozilla/string/.*$:) {return '160';}
 if (m:^mozilla/xpcom/string/.*$:) {return '160';}
-if (m:^mozilla/webtools/partytool/.*$:) {return '209';}
-if (m:^mozilla/xpfe/.*$:) {return '137';}
-if (m:^mozilla/widget/src/qt/.*$:) {return '161';}
-if (m:^mozilla/widget/src/gtk/.*$:) {return '49';}
-if (m:^mozilla/widget/src/gtk2/.*$:) {return '49';}
-if (m:^mozilla/widget/src/gtksuperwin/.*$:) {return '49';}
-if (m:^mozilla/widget/src/gtkxtbin/.*$:) {return '49';}
-if (m:^mozilla/js/tests/.*$:) {return '114';}
-if (m:^mozilla/rdf/.*$:) {return '52';}
-if (m:^mozilla/extensions/p3p/.*$:) {return '162';}
-if (m:^mozilla/build/.*$:) {return '55';}
-if (m:^mozilla/config/.*$:) {return '55';}
-if (m:^mozilla/tools/cross-commit$:) {return '55';}
-if (m:^mozilla/tools/cvs2hg-import\.py$:) {return '55';}
-if (m:^mozilla/tools/cvsmgmt/.*$:) {return '55';}
-if (m:^mozilla/tools/elf-dynstr-gc/.*$:) {return '55';}
-if (m:^mozilla/tools/relic/.*$:) {return '55';}
-if (m:^mozilla/tools/trees\.pl$:) {return '55';}
-if (m:^mozilla/content/xslt/.*$:) {return '140';}
-if (m:^mozilla/extensions/transformiix/.*$:) {return '140';}
-if (m:^mozilla/layout/mathml/.*$:) {return '165';}
-if (m:^mozilla/editor/.*$:) {return '56';}
-if (m:^mozilla/calendar/.*$:) {return '183';}
-if (m:^mozilla/browser/.*$:) {return '166';}
-if (m:^mozilla/other-licenses/branding/firefox/.*$:) {return '166';}
-if (m:^mozilla/directory/.*$:) {return '59';}
-if (m:^mozilla/gfx/src/photon/.*$:) {return '113';}
-if (m:^mozilla/widget/src/photon/.*$:) {return '113';}
-if (m:^mozilla/chrome/.*$:) {return '169';}
-if (m:^mozilla/profile/.*$:) {return '169';}
-if (m:^mozilla/toolkit/.*$:) {return '169';}
-if (m:^mozilla/xulrunner/.*$:) {return '169';}
 }
 if ($b eq 'NSPRPUB_PRE_4_2_CLIENT_BRANCH') {
 if (m:^mozilla/nsprpub/.*$:) {return '146';}
