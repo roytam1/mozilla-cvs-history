@@ -125,10 +125,6 @@ sub response {
     # Access Control
     $response->header("Access-Control-Allow-Origin", "*");
 
-    # ETag support
-    my $etag = $self->bz_etag;
-    $self->bz_etag($result) if !$etag;
-
     # If accessing through web browser, then display in readable format
     if ($self->content_type eq 'text/html') {
         $result = $self->json->pretty->canonical->encode($result);

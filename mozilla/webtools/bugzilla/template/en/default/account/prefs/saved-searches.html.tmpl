@@ -55,7 +55,6 @@
           Share With a Group
         </th>
       [% END %]
-      [% Hook.process('saved-header') %]
     </tr>
     <tr>
       <td>My [% terms.Bugs %]</td>
@@ -80,7 +79,6 @@
           &mdash;
         </td>
       [% END %]
-      [% Hook.process('saved-row') %]
     </tr>
     [% FOREACH q = user.queries %]
       <tr>
@@ -135,7 +133,6 @@
             [% END %]
           </td>
         [% END %]
-        [% Hook.process('saved-row') %]
       </tr>
     [% END %]
   </table>

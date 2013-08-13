@@ -71,10 +71,7 @@ sub html_quote {
     $var =~ s/"/&quot;/g;
     # Obscure '@'.
     $var =~ s/\@/\&#64;/g;
-
-    state $use_utf8 = Bugzilla->params->{'utf8'};
-
-    if ($use_utf8) {
+    if (Bugzilla->params->{'utf8'}) {
         # Remove the following characters because they're
         # influencing BiDi:
         # --------------------------------------------------------
@@ -96,7 +93,7 @@ sub html_quote {
         # |U+200e|Left-To-Right Mark        |0xe2 0x80 0x8e      |
         # |U+200f|Right-To-Left Mark        |0xe2 0x80 0x8f      |
         # --------------------------------------------------------
-        $var =~ tr/\x{202a}-\x{202e}//d;
+        $var =~ s/[\x{202a}-\x{202e}]//g;
     }
     return $var;
 }
