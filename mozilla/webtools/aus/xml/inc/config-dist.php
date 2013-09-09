@@ -309,6 +309,8 @@ $productBranchVersions = array(
            'nightly'                 => 'mozilla-central',
            'nightlytest'             => 'mozilla-central-test',
            'nightly-oak'             => 'oak',
+           'aurora'                  => 'mozilla-aurora',
+           'auroratest'              => 'mozilla-aurora-test'
         )
     ),
     'Firefox'     =>  array(
