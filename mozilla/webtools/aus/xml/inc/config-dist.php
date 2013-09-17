@@ -111,9 +111,34 @@ $productThrottling = array(
         '22.0' => 10,
         '23.0' => 10,
         '23.0.1' => 10,
-    )
+    ),
+    'Thunderbird' => array(
+        '10.0'   => 0,
+        '10.0.1' => 0,
+        '10.0.2' => 0,
+        '11.0'   => 0,
+        '11.0.1' => 0,
+        '12.0'   => 0,
+        '12.0.1' => 0,
+        '13.0'   => 0,
+        '13.0.1' => 0,
+        '14.0'   => 0,
+        '15.0'   => 0,
+        '15.0.1' => 0,
+        '16.0'   => 0,
+        '16.0.1' => 0,
+        '16.0.2' => 0,
+        '17.0'   => 0,
+        '17.0.2' => 0,
+        '17.0.3' => 0,
+        '17.0.4' => 0,
+        '17.0.5' => 0,
+        '17.0.6' => 0,
+        '17.0.7' => 0,
+        '17.0.8' => 0,
+    ),
 );
-             
+
 // List of exceptions for throttling.
 //
 // $throttleExceptions = array(
@@ -216,6 +241,41 @@ $throttleExceptions = array(
             'esrreleasetest',
             'esr',
             'beta'
+        ),
+    '17.0.2' => array(
+         'esrtest',
+         'esrreleasetest',
+         'esr'
+        ),
+    '17.0.3' => array(
+         'esrtest',
+         'esrreleasetest',
+         'esr'
+        ),
+    '17.0.4' => array(
+         'esrtest',
+         'esrreleasetest',
+         'esr'
+        ),
+    '17.0.5' => array(
+         'esrtest',
+         'esrreleasetest',
+         'esr'
+        ),
+    '17.0.6' => array(
+         'esrtest',
+         'esrreleasetest',
+         'esr'
+        ),
+    '17.0.7' => array(
+         'esrtest',
+         'esrreleasetest',
+         'esr'
+        ),
+    '17.0.8' => array(
+         'esrtest',
+         'esrreleasetest',
+         'esr'
         ),
     '18.0' => array(
             'betatest',
