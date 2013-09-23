@@ -421,6 +421,7 @@ $productBranchVersions = array(
            'nightlytest'    => 'comm-central-test',
            'nightly-esr10'  => 'comm-esr10',
            'nightly-esr17'  => 'comm-esr17',
+           'nightly-esr24'  => 'comm-esr24',
            'aurora'         => 'comm-aurora',
            'auroratest'     => 'comm-aurora-test'
         ),
