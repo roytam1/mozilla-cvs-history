@@ -293,7 +293,7 @@ sub ValidateUsername {
     # addresses in which the at sign has been converted to a percentage sign,
     # and since at signs aren't legal characters in CVS usernames, it's a good
     # bet that any occurrences are supposed to be percentage signs.
-    $username =~ s/@/%/;
+    $username =~ s/@/%/g;
   
     return $username;
 }
