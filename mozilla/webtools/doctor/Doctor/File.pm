@@ -10,6 +10,8 @@ use Doctor qw(:DEFAULT %CONFIG);
 use Doctor::Error;
 
 use File::Temp qw(tempfile);
+use IPC::Open3;
+use Symbol;
 
 # doesn't import "diff" to prevent conflicts with our own
 use Text::Diff ();
@@ -353,12 +355,22 @@ sub commit {
     # of the file instead of its full spec.
     my $spec = $self->version eq "new" ? $self->name : $self->spec;
 
-    my $cvsroot = ":pserver:$username";
-    # Only include the password if one is given.
-    if ($password) {
-        $cvsroot .= ":$password";
+    my $cvsroot = ":pserver:$username\@$CONFIG{WRITE_CVS_SERVER}";
+    # Log out the current user, just in case this hasn't been done before.
+    Doctor::system_capture("cvs", "-d", $cvsroot, "logout");
+
+    my ($err, $out, $in) = (gensym);
+    my $pid = open3($in, $out, $err, "cvs", "-d", $cvsroot, "login")
+      or die "couldn't log in: $!";
+    $password ||= "";
+    print $in "$password\n";
+    waitpid($pid, 0);
+
+    my $e = <$err>;
+    if ($e =~ /failed/) {
+        ThrowUserError("Couldn't authenticate user '$username'", "Authentication failed",
+                       "cvs login", undef, $e);
     }
-    $cvsroot .= "\@$CONFIG{WRITE_CVS_SERVER}";
 
     my @args = ("-d", $cvsroot, "commit", "-m", $comment, $spec);
 
@@ -367,6 +379,8 @@ sub commit {
     chdir $self->tempdir;
     -e $spec or die "couldn't find $spec: $!";
     my ($rv, $output, $errors) = Doctor::system_capture("cvs", @args);
+    # Log out the current user, so that his credentials aren't reused.
+    Doctor::system_capture("cvs", "-d", $cvsroot, "logout");
     chdir $olddir;
   
     return ($rv, $output, $errors);
