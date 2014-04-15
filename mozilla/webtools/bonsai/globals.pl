@@ -36,6 +36,8 @@ use Mail::Mailer;
 use Mail::Internet;
 use Mail::Header;
 
+use Data::Dumper;
+
 $ENV{'MAILADDRESS'} = Param('maintainer');
 
 # use Carp;                       # for confess
@@ -258,63 +260,6 @@ sub SplitEnumType {
 	}
     }
     return @result;
-}
-
-
-##
-##  Routines to generate perl code that will reinitialize variables
-##  correctly when eval'ed
-##
-
-
-# Generate a string which, when later interpreted by the Perl compiler, will
-# be the same as the given string.
-sub PerlQuote {
-    my ($str) = (@_);
-
-    $str =~ s/([\\\'])/\\$1/g;
-    $str =~ s/\0/\\0/g;
-    return "'$str'";
-}
-
-sub GenerateArrayCode {
-    my ($ref) = (@_);
-    my @list;
-    foreach my $i (@$ref) {
-        push @list, PerlQuote($i);
-    }
-    return join(',', @list);
-}
-
-
-# Given the name of a global variable, generate Perl code that, if later
-# executed, would restore the variable to its current value.
-
-sub GenerateCode {
-    my ($name) = (@_);
-    my $result = $name . " = ";
-    if ($name =~ /^\$/) {
-        my $value = eval($name);
-        if (ref($value) eq "ARRAY") {
-            $result .= "[" . GenerateArrayCode($value) . "]";
-        } else {
-            $result .= PerlQuote(eval($name));
-        }
-    } elsif ($name =~ /^@/) {
-        my @value = eval($name);
-        $result .= "(" . GenerateArrayCode(\@value) . ")";
-    } elsif ($name =~ '%') {
-        $result = "";
-        foreach my $k (sort { uc($a) cmp uc($b)} eval("keys $name")) {
-            $result .= GenerateCode("\$" . substr($name, 1) .
-                                    "{'" . $k . "'}");
-        }
-        return $result;
-    } else {
-        die "Can't do $name -- unacceptable variable type.";
-    }
-    $result .= ";\n";
-    return $result;
 }
 
 
@@ -650,7 +595,7 @@ sub PickNewBatchID {
      $batchfile = DataDir() . "/batchid.pl";
 
      LockOpen(\*BATCH, "> $batchfile", "Couldn't write $batchfile");
-     print BATCH GenerateCode('$::BatchID');
+     print BATCH Data::Dumper->Dump([\$::BatchID],['*::BatchID']);
      close(BATCH);
      Unlock();
 }
@@ -709,14 +654,14 @@ sub WriteCheckins {
 
      undef(%person);
 
-     foreach $i ('TreeOpen', 'LastGoodTimeStamp', 'CloseTimeStamp') {
-          print TEMP GenerateCode("\$::$i");
-     }
-     print TEMP GenerateCode('@::CheckInList');
+     print TEMP Data::Dumper->Dump([\$::TreeOpen, \$::LastGoodTimeStamp,
+                                    \$::CloseTimeStamp, \@::CheckInList],
+                                   ['*::TreeOpen','*::LastGoodTimeStamp',
+                                    '*::CloseTimeStamp','*::CheckInList']);
      foreach $checkin (@::CheckInList) {
           my $info = eval("\\\%$checkin");
 
-          print TEMP GenerateCode("\%$checkin");
+          print TEMP Data::Dumper->Dump([\%$checkin],['*'.$checkin]);
           $person{$$info{'person'}} = 1;
      }
      print TEMP "1;\n";
@@ -791,7 +736,7 @@ sub WriteMOTD {
 
      LockOpen(\*MOTD, "> $motd_file", "Couldn't create $motd_file");
      chmod(0666, $motd_file);
-     print MOTD GenerateCode('$::MOTD');
+     print MOTD Data::Dumper->Dump([\$::MOTD],['*::MOTD']);
      close(MOTD);
      Unlock();
 }
