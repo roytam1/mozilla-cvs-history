@@ -419,6 +419,7 @@ $nightlyChannels = array(
     'nightly-esr10',
     'nightly-esr17',
     'nightly-esr24',
+    'nightly-esr31',
     'aurora',
     'auroratest'
 );
@@ -455,6 +456,7 @@ $productBranchVersions = array(
            'nightly-esr10'           => 'mozilla-esr24',
            'nightly-esr17'           => 'mozilla-esr24',
            'nightly-esr24'           => 'mozilla-esr24',
+           'nightly-esr31'           => 'mozilla-esr31',
            'aurora'                  => 'mozilla-aurora',
            'auroratest'              => 'mozilla-aurora-test'
         )
@@ -480,6 +482,7 @@ $productBranchVersions = array(
            'nightly-esr10'  => 'comm-esr10',
            'nightly-esr17'  => 'comm-esr17',
            'nightly-esr24'  => 'comm-esr24',
+           'nightly-esr31'  => 'comm-esr31',
            'aurora'         => 'comm-aurora',
            'auroratest'     => 'comm-aurora-test'
         ),
