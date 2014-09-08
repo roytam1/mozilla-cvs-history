@@ -362,7 +362,7 @@ class Patch extends AUS_Object {
         //
         // If the file does exist, we don't ever fall back, which is the hacky way to stop the fallback behavior,
         // but the only way we have so far.
-        if (!$this->isChangingChannel() && !empty($channel) && $this->setPath($product,$platform,$locale,$version,$build,3,$channel) && !file_exists($this->path) && preg_match('/^[\w\-]+\-cck\-.[\w\-]+$/',$channel)) {
+        if (!$this->isChangingChannel() && !empty($channel) && $this->setPath($product,$platform,$locale,$version,$build,3,$channel) && !file_exists($this->path) && preg_match('/^[\w\-]+\-cck\-.[\w\-\.]+$/',$channel)) {
 
             // Partner fallback channel to be used if the partner-specific update doesn't exist or work.
             $buf = array();
