@@ -487,6 +487,7 @@ $throttleExceptions = array(
 $nightlyChannels = array(
     'nightly',
     'nightlytest',
+    'nightly-alder',
     'nightly-tracemonkey',
     'nightly-electrolysis',
     'nightly-mozilla-2.1',
@@ -517,6 +518,7 @@ $productBranchVersions = array(
         '*'       => array(
            'nightly'                 => 'mozilla-central',
            'nightlytest'             => 'mozilla-central-test',
+           'nightly-alder'           => 'alder',
            'nightly-oak'             => 'oak',
            'aurora'                  => 'mozilla-aurora',
            'auroratest'              => 'mozilla-aurora-test'
@@ -526,6 +528,7 @@ $productBranchVersions = array(
         '*'       => array(
            'nightly'                 => 'mozilla-central',
            'nightlytest'             => 'mozilla-central-test',
+           'nightly-alder'           => 'alder',
            'nightly-tracemonkey'     => 'tracemonkey',
            'nightly-electrolysis'    => 'electrolysis',
            'nightly-jaegermonkey'    => 'jaegermonkey',
