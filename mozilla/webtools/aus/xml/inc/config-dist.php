@@ -126,9 +126,10 @@ $productThrottling = array(
         '32.0.1' => 100,
         '32.0.2' => 100,
         '32.0.3' => 100,
-        '33.0' => 100,
-        '33.0.1' => 100,
-        '33.0.2' => 100,
+        '33.0' => 0,
+        '33.0.1' => 0,
+        '33.0.2' => 0,
+        '33.1' => 0,
     ),
     'Thunderbird' => array(
         '10.0'   => 0,
@@ -498,6 +499,16 @@ $throttleExceptions = array(
             'beta'
         ),
     '33.0.3' => array(
+            'betatest',
+            'releasetest',
+            'beta'
+        ),
+    '33.1' => array(
+            'betatest',
+            'releasetest',
+            'beta'
+        ),
+    '33.1.1' => array(
             'betatest',
             'releasetest',
             'beta'
