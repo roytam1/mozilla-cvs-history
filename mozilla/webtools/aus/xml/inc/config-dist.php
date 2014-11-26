@@ -75,6 +75,61 @@ define('THROTTLE_LEVEL',100);
 // Turns logging throttled hits on and off.
 define('THROTTLE_LOGGING',false);
 
+// This defines explicit throttling levels per locale. It overrides global and 
+// product throttling only for the specified locales.
+
+$localeThrottling = array(
+#    'Firefox' => array(
+#        '10.0' => array('en-US' => 3),
+#        '10.0.1' => array('en-US' => 3),
+#        '10.0.2' => array('en-US' => 3),
+#        '11.0' => array('en-US' => 3),
+#        '12.0' => array('en-US' => 3),
+#        '13.0' => array('en-US' => 3),
+#        '13.0.1' => array('en-US' => 3),
+#        '14.0.1' => array('en-US' => 3),
+#        '15.0' => array('en-US' => 3),
+#        '15.0.1' => array('en-US' => 3),
+#        '16.0' => array('en-US' => 3),
+#        '16.0.1' => array('en-US' => 3),
+#        '16.0.2' => array('en-US' => 3),
+#        '17.0' => array('en-US' => 3),
+#        '17.0.1' => array('en-US' => 3),
+#        '18.0' => array('en-US' => 3),
+#        '18.0.1' => array('en-US' => 3),
+#        '18.0.2' => array('en-US' => 3),
+#        '19.0' => array('en-US' => 3),
+#        '19.0.1' => array('en-US' => 3),
+#        '19.0.2' => array('en-US' => 3),
+#        '25.0' => array('en-US' => 3),
+#        '25.0.1' => array('en-US' => 3),
+#        '21.0' => array('en-US' => 3),
+#        '22.0' => array('en-US' => 3),
+#        '23.0' => array('en-US' => 3),
+#        '23.0.1' => array('en-US' => 3),
+#        '24.0' => array('en-US' => 3),
+#        '25.0' => array('en-US' => 3),
+#        '25.0.1' => array('en-US' => 3),
+#        '26.0' => array('en-US' => 3),
+#        '27.0' => array('en-US' => 3),
+#        '27.0.1' => array('en-US' => 3),
+#        '28.0' => array('en-US' => 3),
+#        '29.0' => array('en-US' => 3),
+#        '29.0.1' => array('en-US' => 3),
+#        '30.0' => array('en-US' => 3),
+#        '31.0' => array('en-US' => 3),
+#        '32.0' => array('en-US' => 3),
+#        '32.0.1' => array('en-US' => 3),
+#        '32.0.2' => array('en-US' => 3),
+#        '32.0.3' => array('en-US' => 3),
+#        '33.0' => array('en-US' => 3),
+#        '33.0.1' => array('en-US' => 3),
+#        '33.0.2' => array('en-US' => 3),
+#        '33.0.3' => array('en-US' => 3),
+#        '33.1' => array('en-US' => 3),
+#        '33.1.1' => array('en-US' => 3),
+#    ),
+);
 // This defines explicit throttling levels.  If global throttling is on, these
 // override global levels.  If it is off, this still works.  For example, this
 // is 10% throttling (only 10% of the time updates are offered):

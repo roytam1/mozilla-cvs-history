@@ -112,12 +112,16 @@ if ( (empty($_GET['force']) || $_GET['force']!=1) ) {
     $aus = new AUS_Object();
 
     // Check explicit throttling.
-    if ( !$aus->isThrottleException($clean['version'], $clean['channel'])
-         && isset($productThrottling[$clean['product']][$clean['version']]) 
-         && mt_rand(0,99) >= $productThrottling[$clean['product']][$clean['version']]
-         ) {
-        $throttleMe = true;
-
+    if ( !$aus->isThrottleException($clean['version'], $clean['channel']) ) {
+        // check if locale based throttling is set. Do not use product based throttling if set
+        if ( isset($localeThrottling[$clean['product']][$clean['version']][$clean['locale']]) ) {
+            if ( mt_rand(0,99) >= $localeThrottling[$clean['product']][$clean['version']][$clean['locale']] ){
+                $throttleMe = true;
+            }
+        } elseif ( isset($productThrottling[$clean['product']][$clean['version']])
+                 && mt_rand(0,99) >= $productThrottling[$clean['product']][$clean['version']] ) {
+            $throttleMe = true;
+        }
     // Check global throttling.
     } elseif ( defined('THROTTLE_GLOBAL') && THROTTLE_GLOBAL && 
       defined('THROTTLE_LEVEL') &&
