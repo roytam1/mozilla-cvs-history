@@ -9,7 +9,6 @@ package Bugzilla::BugUrl::Google;
 
 use 5.10.1;
 use strict;
-use warnings;
 
 use parent qw(Bugzilla::BugUrl);
 

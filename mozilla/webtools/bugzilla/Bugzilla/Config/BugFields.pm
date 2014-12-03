@@ -9,7 +9,6 @@ package Bugzilla::Config::BugFields;
 
 use 5.10.1;
 use strict;
-use warnings;
 
 use Bugzilla::Config::Common;
 use Bugzilla::Field;

@@ -9,7 +9,6 @@ package Bugzilla::Group;
 
 use 5.10.1;
 use strict;
-use warnings;
 
 use parent qw(Bugzilla::Object);
 
@@ -56,10 +55,8 @@ use constant UPDATE_COLUMNS => qw(
 );
 
 # Parameters that are lists of groups.
-use constant GROUP_PARAMS => qw(
-    chartgroup comment_taggers_group debug_group insidergroup
-    querysharegroup timetrackinggroup
-);
+use constant GROUP_PARAMS => qw(chartgroup insidergroup timetrackinggroup
+                                querysharegroup);
 
 ###############################
 ####      Accessors      ######

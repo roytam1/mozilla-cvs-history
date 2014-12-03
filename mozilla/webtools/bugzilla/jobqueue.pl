@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -8,7 +8,6 @@
 
 use 5.10.1;
 use strict;
-use warnings;
 
 use Cwd qw(abs_path);
 use File::Basename;
@@ -33,14 +32,13 @@ jobqueue.pl - Runs jobs in the background for Bugzilla.
  ./jobqueue.pl [OPTIONS] COMMAND
 
    OPTIONS:
-   -f            Run in the foreground (don't detach)
-   -d            Output a lot of debugging information
-   -p file       Specify the file where jobqueue.pl should store its current
-                 process id. Defaults to F<data/jobqueue.pl.pid>.
-   -n name       What should this process call itself in the system log?
-                 Defaults to the full path you used to invoke the script.
-   -j job-name   The name of jobs to process. Can be specified multiple times.
-                 If not specified, all job types will be processed.
+   -f        Run in the foreground (don't detach)
+   -d        Output a lot of debugging information
+   -p file   Specify the file where jobqueue.pl should store its current
+             process id. Defaults to F<data/jobqueue.pl.pid>.
+   -n name   What should this process call itself in the system log?
+             Defaults to the full path you used to invoke the script.
+
    COMMANDS:
    start     Starts a new jobqueue daemon if there isn't one running already
    stop      Stops a running jobqueue daemon

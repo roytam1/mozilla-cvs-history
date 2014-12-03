@@ -10,9 +10,7 @@
 #Bugzilla Test 11#
 ##POD validation##
 
-use 5.10.1;
 use strict;
-use warnings;
 
 use lib 't';
 
@@ -34,7 +32,6 @@ use constant SUB_WHITELIST => (
     'Bugzilla::FlagType' => qr/^sqlify_criteria$/,
     'Bugzilla::JobQueue' => qr/(?:^work_once|work_until_done|subprocess_worker)$/,
     'Bugzilla::Search'   => qr/^SPECIAL_PARSING$/,
-    'Bugzilla::Template' => qr/^field_name$/,
 );
 
 # These modules do not need to be documented, generally because they
@@ -48,14 +45,13 @@ use constant MODULE_WHITELIST => qw(
     Bugzilla::Config::
     Bugzilla::Extension::
     Bugzilla::Job::
-    Bugzilla::Migrate::
 );
 
 # Capture the TESTOUT from Test::More or Test::Builder for printing errors.
 # This will handle verbosity for us automatically.
 my $fh;
 {
-    no warnings qw(unopened);  # Don't complain about non-existent filehandles
+    local $^W = 0;  # Don't complain about non-existent filehandles
     if (-e \*Test::More::TESTOUT) {
         $fh = \*Test::More::TESTOUT;
     } elsif (-e \*Test::Builder::TESTOUT) {

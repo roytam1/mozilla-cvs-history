@@ -7,15 +7,15 @@
 
 package Support::Templates;
 
-use 5.10.1;
 use strict;
-use warnings;
 
 use lib 't';
 use parent qw(Exporter);
-@Support::Templates::EXPORT =
-    qw(@languages @include_paths @english_default_include_paths
-       @referenced_files %actual_files $num_actual_files);
+@Support::Templates::EXPORT = 
+         qw(@languages @include_paths @english_default_include_paths
+         %include_path @referenced_files %actual_files $num_actual_files);
+use vars qw(@languages @include_paths @english_default_include_paths
+            %include_path @referenced_files %actual_files $num_actual_files);
 
 use Bugzilla;
 use Bugzilla::Constants;
@@ -25,9 +25,18 @@ use Support::Files;
 use File::Find;
 use File::Spec;
 
+# The available template languages
+@languages = ();
+
+# The colon separated includepath per language
+%include_path = ();
+
+# All include paths
+@include_paths = ();
+
 # English default include paths
-our @english_default_include_paths =
-    (File::Spec->catdir(bz_locations()->{'templatedir'}, 'en', 'default'));
+push @english_default_include_paths,
+    File::Spec->catdir(bz_locations()->{'templatedir'}, 'en', 'default');
 
 # And the extensions too
 foreach my $extension (@Support::Files::extensions) {
@@ -38,19 +47,19 @@ foreach my $extension (@Support::Files::extensions) {
 }
 
 # Files which are referenced in the cgi files
-our @referenced_files = ();
+@referenced_files = ();
 
 # All files sorted by include_path
-our %actual_files = ();
+%actual_files = ();
 
 # total number of actual_files
-our $num_actual_files = 0;
+$num_actual_files = 0;
 
 # Set the template available languages and include paths
-our @languages = @{ Bugzilla->languages };
-our @include_paths = @{ template_include_path({ language => Bugzilla->languages }) };
+@languages = @{ Bugzilla->languages };
+@include_paths = @{ template_include_path({ language => Bugzilla->languages }) };
 
-our @files;
+my @files;
 
 # Local subroutine used with File::Find
 sub find_templates {

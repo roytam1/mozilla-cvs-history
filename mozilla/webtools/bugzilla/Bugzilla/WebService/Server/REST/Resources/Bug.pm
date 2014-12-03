@@ -9,7 +9,6 @@ package Bugzilla::WebService::Server::REST::Resources::Bug;
 
 use 5.10.1;
 use strict;
-use warnings;
 
 use Bugzilla::WebService::Constants;
 use Bugzilla::WebService::Bug;
@@ -27,11 +26,6 @@ sub _rest_resources {
             POST => {
                 method => 'create',
                 status_code => STATUS_CREATED
-            }
-        },
-        qr{^/bug/$}, {
-            GET => {
-                method => 'get'
             }
         },
         qr{^/bug/([^/]+)$}, {

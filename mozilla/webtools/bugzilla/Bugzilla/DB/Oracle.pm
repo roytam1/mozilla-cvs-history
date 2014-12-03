@@ -23,7 +23,6 @@ package Bugzilla::DB::Oracle;
 
 use 5.10.1;
 use strict;
-use warnings;
 
 use parent qw(Bugzilla::DB);
 
@@ -722,7 +721,6 @@ package Bugzilla::DB::Oracle::st;
 
 use 5.10.1;
 use strict;
-use warnings;
 
 use parent -norequire, qw(DBI::st);
  

@@ -9,7 +9,6 @@ package Bugzilla::WebService::Constants;
 
 use 5.10.1;
 use strict;
-use warnings;
 
 use parent qw(Exporter);
 
@@ -101,7 +100,6 @@ use constant WS_ERROR_CODE => {
     comment_id_invalid => 111,
     comment_too_long => 114,
     comment_invalid_isprivate => 117,
-    markdown_disabled => 140,
     # Comment tagging
     comment_tag_disabled => 125,
     comment_tag_invalid => 126,
@@ -143,11 +141,7 @@ use constant WS_ERROR_CODE => {
     auth_invalid_email           => 302,
     extern_id_conflict           => -303,
     auth_failure                 => 304,
-    password_too_short           => 305,
-    password_not_complex         => 305,
-    api_key_not_valid            => 306,
-    api_key_revoked              => 306,
-    auth_invalid_token           => 307,
+    password_current_too_short   => 305,
 
     # Except, historically, AUTH_NODATA, which is 410.
     login_required               => 410,
@@ -206,11 +200,6 @@ use constant WS_ERROR_CODE => {
     flag_type_sortkey_invalid     => 1104,
     flag_type_not_editable        => 1105,
 
-    # Component errors are 1200-1300
-    component_already_exists => 1200,
-    component_is_last        => 1201,
-    component_has_bugs       => 1202,
-
     # Errors thrown by the WebService itself. The ones that are negative 
     # conform to http://xmlrpc-epi.sourceforge.net/specs/rfc.fault_codes.php
     xmlrpc_invalid_value => -32600,
@@ -239,33 +228,26 @@ use constant STATUS_GONE             => 410;
 # the related webvservice call. We choose the appropriate
 # http status code based on the error code or use the
 # default STATUS_BAD_REQUEST.
-sub REST_STATUS_CODE_MAP {
-    my $status_code_map = {
-        51       => STATUS_NOT_FOUND,
-        101      => STATUS_NOT_FOUND,
-        102      => STATUS_NOT_AUTHORIZED,
-        106      => STATUS_NOT_AUTHORIZED,
-        109      => STATUS_NOT_AUTHORIZED,
-        110      => STATUS_NOT_AUTHORIZED,
-        113      => STATUS_NOT_AUTHORIZED,
-        115      => STATUS_NOT_AUTHORIZED,
-        120      => STATUS_NOT_AUTHORIZED,
-        300      => STATUS_NOT_AUTHORIZED,
-        301      => STATUS_NOT_AUTHORIZED,
-        302      => STATUS_NOT_AUTHORIZED,
-        303      => STATUS_NOT_AUTHORIZED,
-        304      => STATUS_NOT_AUTHORIZED,
-        410      => STATUS_NOT_AUTHORIZED,
-        504      => STATUS_NOT_AUTHORIZED,
-        505      => STATUS_NOT_AUTHORIZED,
-        32614    => STATUS_NOT_FOUND,
-        _default => STATUS_BAD_REQUEST
-    };
-
-    Bugzilla::Hook::process('webservice_status_code_map',
-        { status_code_map => $status_code_map });
-
-    return $status_code_map;
+use constant REST_STATUS_CODE_MAP => {
+    51       => STATUS_NOT_FOUND,
+    101      => STATUS_NOT_FOUND,
+    102      => STATUS_NOT_AUTHORIZED,
+    106      => STATUS_NOT_AUTHORIZED,
+    109      => STATUS_NOT_AUTHORIZED,
+    110      => STATUS_NOT_AUTHORIZED,
+    113      => STATUS_NOT_AUTHORIZED,
+    115      => STATUS_NOT_AUTHORIZED,
+    120      => STATUS_NOT_AUTHORIZED,
+    300      => STATUS_NOT_AUTHORIZED,
+    301      => STATUS_NOT_AUTHORIZED,
+    302      => STATUS_NOT_AUTHORIZED,
+    303      => STATUS_NOT_AUTHORIZED,
+    304      => STATUS_NOT_AUTHORIZED,
+    410      => STATUS_NOT_AUTHORIZED,
+    504      => STATUS_NOT_AUTHORIZED,
+    505      => STATUS_NOT_AUTHORIZED,
+    32614    => STATUS_NOT_FOUND,
+    _default => STATUS_BAD_REQUEST
 };
 
 # These are the fallback defaults for errors not in ERROR_CODE.
@@ -297,7 +279,6 @@ sub WS_DISPATCH {
         'Bugzilla'         => 'Bugzilla::WebService::Bugzilla',
         'Bug'              => 'Bugzilla::WebService::Bug',
         'Classification'   => 'Bugzilla::WebService::Classification',
-        'Component'        => 'Bugzilla::WebService::Component',
         'FlagType'         => 'Bugzilla::WebService::FlagType',
         'Group'            => 'Bugzilla::WebService::Group',
         'Product'          => 'Bugzilla::WebService::Product',
@@ -313,8 +294,6 @@ sub WS_DISPATCH {
 =head1 B<Methods in need of POD>
 
 =over
-
-=item REST_STATUS_CODE_MAP
 
 =item WS_DISPATCH
 

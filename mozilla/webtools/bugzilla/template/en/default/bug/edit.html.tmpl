@@ -29,13 +29,6 @@
       YAHOO.bugzilla.commentTagging.init([% user.can_tag_comments ? 'true' : 'false' %]);
       YAHOO.bugzilla.commentTagging.min_len = [% constants.MIN_COMMENT_TAG_LENGTH FILTER js %];
       YAHOO.bugzilla.commentTagging.max_len = [% constants.MAX_COMMENT_TAG_LENGTH FILTER js %];
-      YAHOO.bugzilla.commentTagging.label = 'Comment Tags:';
-      YAHOO.bugzilla.commentTagging.min_len_error =
-        'Comment tags must be at least
-        [%~ " " _ constants.MIN_COMMENT_TAG_LENGTH FILTER js %] characters.';
-      YAHOO.bugzilla.commentTagging.max_len_error =
-        'Comment tags cannot be longer than
-        [%~ " " _ constants.MAX_COMMENT_TAG_LENGTH FILTER js %] characters.';
     </script>
   [% END %]
 [% END %]
@@ -73,13 +66,9 @@
         <table>
           [%# *** ID, product, component, status, resolution, Hardware, and  OS *** %]
           [% PROCESS section_status %]
-
+          
           [% PROCESS section_spacer %]
-
-          [% PROCESS section_aliases %]
-
-          [% PROCESS section_spacer %]
-
+          
           [% PROCESS section_details1 %]
           
           [% PROCESS section_spacer %]
@@ -184,37 +173,61 @@
 
 [% BLOCK section_title %]
   [%# That's the main table, which contains all editable fields. %]
-  <div class="bz_short_desc_container edit_form">
+  <div class="bz_alias_short_desc_container edit_form">
       [% PROCESS commit_button id="_top"%]
      <a href="show_bug.cgi?id=[% bug.bug_id %]">
         [%-# %]<b>[% terms.Bug %]&nbsp;[% bug.bug_id FILTER html %]</b>
-     [%-# %]</a> <span id="summary_container" class="bz_default_hidden">
-      [% IF bug.alias.size > 0 %]
-        (<span id="alias_nonedit_display">[% bug.alias.join(', ') FILTER html %]</span>)
+     [%-# %]</a> <span id="summary_alias_container" class="bz_default_hidden"> 
+      [% IF bug.alias != "" %]
+        (<span id="alias_nonedit_display">[% bug.alias FILTER html %]</span>) 
       [% END %]
       - <span id="short_desc_nonedit_display">[% bug.short_desc FILTER quoteUrls(bug) %]</span>
-      [% IF bug.check_can_change_field('short_desc', 0, 1) %]
-        <small>(<a href="#" id="summary_edit_action">edit</a>)</small>
+      [% IF bug.check_can_change_field('short_desc', 0, 1) || 
+            bug.check_can_change_field('alias', 0, 1)  %]
+        <small class="editme">(<a href="#" id="editme_action">edit</a>)</small>
       [% END %]
      </span>
-
-    <div id="summary_input">
-      [% INCLUDE "bug/field-label.html.tmpl"
-        field = bug_fields.short_desc
-        editable = 1
-        accesskey = "s"
-        tag_name = 'span'
-      %]
-      [% INCLUDE input inputname => "short_desc" size => "80"
-                       maxlength => 255 spellcheck => "true" no_td => 1 %]
+  
+       
+    <div id="summary_alias_input">
+      <table id="summary"> 
+        <tr>
+          [% IF bug.check_can_change_field('alias', 0, 1) %]      
+            [% INCLUDE "bug/field-label.html.tmpl"
+               field = bug_fields.alias
+               editable = 1
+            %]
+            <td>
+          [% ELSIF bug.alias %]
+            <td colspan="2">(
+          [% ELSE %]
+            <td colspan="2">
+          [% END %]
+          [% PROCESS input inputname => "alias" 
+                     size => "20" 
+                     maxlength => "20"  
+                     no_td => 1 
+                     %][% ")" IF NOT bug.check_can_change_field('alias', 0, 1) 
+                                  && bug.alias %]
+          </td>
+        </tr>
+        [%# *** Summary *** %]
+        <tr>
+          [% INCLUDE "bug/field-label.html.tmpl"
+            field = bug_fields.short_desc
+            editable = 1
+            accesskey = "s"
+          %]
+          <td>
+            [% PROCESS input inputname => "short_desc" size => "80" colspan => 2
+                             maxlength => 255 spellcheck => "true" no_td => 1 %]
+          </td>
+        </tr>
+      </table>
     </div>
   </div>
   <script type="text/javascript">
-    hideEditableField('summary_container',
-                      'summary_input',
-                      'summary_edit_action',
-                      'short_desc',
-                      '[% bug.short_desc FILTER js %]' );
+    hideAliasAndSummary('[% bug.short_desc FILTER js %]', '[% bug.alias FILTER js %]');
   </script>
 [% END %]
 
@@ -500,7 +513,7 @@
         (<a href="#" id="bz_url_edit_action">edit</a>)</span>
       [% END %]
       <span id="bz_url_input_area">
-        [% url_output =  INCLUDE input no_td=1 inputname => "bug_file_loc" size => "40" colspan => 2 %]
+        [% url_output =  PROCESS input no_td=1 inputname => "bug_file_loc" size => "40" colspan => 2 %]
         [% IF NOT bug.check_can_change_field("bug_file_loc", 0, 1)
               AND is_safe_url(bug.bug_file_loc) %]
           <a href="[% bug.bug_file_loc FILTER html %]">[% url_output FILTER none %]</a>
@@ -527,7 +540,7 @@
         editable = 1
         accesskey = "w"
       %]
-      [% INCLUDE input inputname => "status_whiteboard" size => "40" colspan => 2 %]
+      [% PROCESS input inputname => "status_whiteboard" size => "40" colspan => 2 %]
     </tr>
   [% END %]
   
@@ -559,7 +572,7 @@
   [% RETURN UNLESS bug.duplicates.size %]
   <tr>
     <th class="field_label">
-      <label for="duplicates">Duplicates ([% bug.duplicates.size %])</label>:
+      <label for="duplicates">Duplicates</label>:
     </th>
     <td class="field_value" colspan="2">
       <span id="duplicates">
@@ -854,56 +867,6 @@
   [% END %]
 [% END %]
 
-[% BLOCK section_aliases %]
-  <tr>
-    [% INCLUDE "bug/field-label.html.tmpl"
-       field = bug_fields.alias, editable = 1
-    %]
-    <td>
-      [% IF bug.alias.size %]
-        [% bug.alias.join(', ') FILTER html %]
-      [% ELSE %]
-        None
-      [% END %]
-      [% IF bug.check_can_change_field('alias', 0, 1) %]
-        <span id="alias_edit_area_showhide_container" class="bz_default_hidden">
-          (<a href="#" id="alias_edit_area_showhide">edit</a>)
-        </span>
-        <br>
-        <div id="alias_edit_area">
-          <div>
-            <div>
-              <label for="aliases">
-                <b>Add</b>
-              </label>
-            </div>
-              <input name="newalias" id="newalias" size="20">
-          </div>
-          [% IF bug.alias.size %]
-            <select id="alias" name="alias" multiple="multiple" size="5">
-              [% FOREACH a = bug.alias %]
-                <option value="[% a FILTER html %]">[% a FILTER html %]</option>
-              [% END %]
-            </select>
-            <br>
-
-            <input type="checkbox" id="removealias" name="removealias">
-            <label for="removealias">Remove selected aliases</label>
-
-          [% END %]
-        </div>
-        <script type="text/javascript">
-          hideEditableField( 'alias_edit_area_showhide_container',
-                             'alias_edit_area',
-                             'alias_edit_area_showhide',
-                             '',
-                             '');
-        </script>
-      [% END %]
-    </td>
-  </tr>
-[% END %]
-
 [%############################################################################%]
 [%# Block for FLAGS                                                          #%]
 [%############################################################################%]
@@ -1194,6 +1157,7 @@
       <input type="hidden" id="[% selname %]_dirty">
       <select id="[% selname %]" name="[% selname %]">
         [% FOREACH x = bug.choices.${selname} %]
+          [% NEXT IF NOT x.is_active AND x.name != bug.${selname} %]
           <option value="[% x.name FILTER html %]"
             [% " selected" IF x.name == bug.${selname} %]>
             [%- x.name FILTER html %]
@@ -1214,7 +1178,7 @@
   [% IF no_td != 1 %]
   <td[% " colspan=\"$colspan\"" IF colspan %]>
   [% END %]
-    [% val = bug.$inputname %]
+    [% val = value ? value : bug.$inputname %]
     [% IF bug.check_can_change_field(inputname, 0, 1) %]
        <input id="[% inputname %]" name="[% inputname %]" class="text_input"
               value="[% val FILTER html %]"[% " size=\"$size\"" IF size %]
@@ -1232,8 +1196,13 @@
   [% IF no_td != 1 %]  
   </td>
   [% END %]
+  [% no_td = 0 %]
+  [% maxlength = 0 %]
+  [% colspan = 0 %]
+  [% size = 0 %]
+  [% value = undef %]
+  [% spellcheck = undef %]
 [% END %]
-
 [% BLOCK commit_button %]
   [% IF user.id %]
     <div class="knob-buttons">

@@ -1,4 +1,4 @@
-#!/usr/bin/perl -T
+#!/usr/bin/perl -wT
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -112,7 +112,6 @@ package Bugzilla::ModPerl::ResponseHandler;
 
 use 5.10.1;
 use strict;
-use warnings;
 
 use parent qw(ModPerl::Registry);
 use Bugzilla;
@@ -149,7 +148,6 @@ package Bugzilla::ModPerl::CleanupHandler;
 
 use 5.10.1;
 use strict;
-use warnings;
 
 use Apache2::Const -compile => qw(OK);
 

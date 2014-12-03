@@ -254,12 +254,9 @@ sub _get {
     elsif (ref($value) eq 'ARRAY') {
         foreach my $value (@$value) {
             next unless defined $value;
-            # arrays of hashes and arrays are common
+            # arrays of hashes are common
             if (ref($value) eq 'HASH') {
                 _detaint_hashref($value);
-            }
-            elsif (ref($value) eq 'ARRAY') {
-                _detaint_arrayref($value);
             }
             elsif (!ref($value)) {
                 trick_taint($value);
@@ -275,15 +272,6 @@ sub _get {
 sub _detaint_hashref {
     my ($hashref) = @_;
     foreach my $value (values %$hashref) {
-        if (defined($value) && !ref($value)) {
-            trick_taint($value);
-        }
-    }
-}
-
-sub _detaint_arrayref {
-    my ($arrayref) = @_;
-    foreach my $value (@$arrayref) {
         if (defined($value) && !ref($value)) {
             trick_taint($value);
         }

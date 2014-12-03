@@ -9,7 +9,6 @@ package Bugzilla::WebService::Server::JSONRPC;
 
 use 5.10.1;
 use strict;
-use warnings;
 
 use Bugzilla::WebService::Server;
 BEGIN {
@@ -81,9 +80,7 @@ sub response {
     # Implement JSONP.
     if (my $callback = $self->_bz_callback) {
         my $content = $response->content;
-        # Prepend the JSONP response with /**/ in order to protect
-        # against possible encoding attacks (e.g., affecting Flash).
-        $response->content("/**/$callback($content)");
+        $response->content("$callback($content)");
     }
 
     # Use $cgi->header properly instead of just printing text directly.

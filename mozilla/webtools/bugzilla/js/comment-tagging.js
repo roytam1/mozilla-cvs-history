@@ -20,10 +20,6 @@ YAHOO.bugzilla.commentTagging = {
     can_edit  : false,
     pending   : {},
 
-    label        : '',
-    min_len_error: '',
-    max_len_error: '',
-
     init : function(can_edit) {
         this.can_edit = can_edit;
         this.ctag_div = Dom.get('bz_ctag_div');
@@ -52,14 +48,9 @@ YAHOO.bugzilla.commentTagging = {
             YAHOO.bugzilla.commentTagging.counter = YAHOO.bugzilla.commentTagging.counter + 1;
             YAHOO.util.Connect.setDefaultPostHeader('application/json', true);
             return YAHOO.lang.JSON.stringify({
-                version: "1.1",
                 method : "Bug.search_comment_tags",
                 id : YAHOO.bugzilla.commentTagging.counter,
-                params : {
-                    Bugzilla_api_token: BUGZILLA.api_token,
-                    query : query,
-                    limit : 10
-                }
+                params : [ { query : query, limit : 10 } ]
             });
         };
         ac.minQueryLength = this.min_len;
@@ -190,7 +181,7 @@ YAHOO.bugzilla.commentTagging = {
         tags.sort();
         if (tags.length) {
             var div = document.createElement('div');
-            div.appendChild(document.createTextNode(this.label));
+            div.appendChild(document.createTextNode('Comment Tags:'));
             var ul = document.createElement('ul');
             ul.id = 'comment_tags_collapse_expand';
             div.appendChild(ul);
@@ -265,9 +256,9 @@ YAHOO.bugzilla.commentTagging = {
             if (tag == '')
                 continue;
             if (tag.length < YAHOO.bugzilla.commentTagging.min_len)
-                throw new Error(this.min_len_error)
+                throw new Error("Comment tags must be at least " + this.min_len + " characters.");
             if (tag.length > YAHOO.bugzilla.commentTagging.max_len)
-                throw new Error(this.max_len_error)
+                throw new Error("Comment tags cannot be longer than " + this.min_len + " characters.");
             // append new tag
             if (bz_isValueInArrayIgnoreCase(tags, tag))
                 continue;
@@ -336,7 +327,6 @@ YAHOO.bugzilla.commentTagging = {
             version: "1.1",
             method: 'Bug.comments',
             params: {
-                Bugzilla_api_token: BUGZILLA.api_token,
                 comment_ids: [ comment_id ],
                 include_fields: [ 'tags' ]
             }
@@ -369,7 +359,6 @@ YAHOO.bugzilla.commentTagging = {
             version: "1.1",
             method: 'Bug.update_comment_tags',
             params: {
-                Bugzilla_api_token: BUGZILLA.api_token,
                 comment_id: comment_id,
                 add: add,
                 remove: remove

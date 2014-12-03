@@ -46,14 +46,10 @@ function validateEnterBug(theform) {
         _errorFor(attach_desc, 'attach_desc');
         focus_me = attach_desc;
     }
-    // bug_status can be undefined if the bug_status field is not editable by
-    // the currently logged in user.
-    if (bug_status) {
-        var check_description = status_comment_required[bug_status.value];
-        if (check_description && YAHOO.lang.trim(description.value) == '') {
-            _errorFor(description, 'description');
-            focus_me = description;
-        }
+    var check_description = status_comment_required[bug_status.value];
+    if (check_description && YAHOO.lang.trim(description.value) == '') {
+        _errorFor(description, 'description');
+        focus_me = description;
     }
     if (YAHOO.lang.trim(short_desc.value) == '') {
         _errorFor(short_desc);
@@ -299,7 +295,7 @@ function checkForChangedFieldValues(e, ContainerInputArray ) {
     if ( el ) {
         if ( !ContainerInputArray[4]
              && (el.value != ContainerInputArray[3]
-                 || (el.value == "" && el.id != "qa_contact")) )
+                 || (el.value == "" && el.id != "alias" && el.id != "qa_contact")) )
         {
             unhide = true;
         }
@@ -318,6 +314,17 @@ function checkForChangedFieldValues(e, ContainerInputArray ) {
         YAHOO.util.Dom.removeClass(ContainerInputArray[1], 'bz_default_hidden');
     }
 
+}
+
+function hideAliasAndSummary(short_desc_value, alias_value) {
+    // check the short desc field
+    hideEditableField( 'summary_alias_container','summary_alias_input',
+                       'editme_action','short_desc', short_desc_value);  
+    // check that the alias hasn't changed
+    var bz_alias_check_array = new Array('summary_alias_container',
+                                     'summary_alias_input', 'alias', alias_value);
+    YAHOO.util.Event.addListener( window, 'load', checkForChangedFieldValues,
+                                 bz_alias_check_array);
 }
 
 function showPeopleOnChange( field_id_list ) {
@@ -818,7 +825,6 @@ YAHOO.bugzilla.userAutocomplete = {
           method : "User.get",
           id : YAHOO.bugzilla.userAutocomplete.counter,
           params : [ { 
-            Bugzilla_api_token: BUGZILLA.api_token,
             match : [ decodeURIComponent(enteredText) ],
             include_fields : [ "name", "real_name" ]
           } ]
@@ -983,33 +989,17 @@ function initDirtyFieldTracking() {
  */
 
 var last_comment_text = '';
-var last_markdown_cb_value = null;
-var comment_textarea_width = null;
-var comment_textarea_height = null;
 
-function refresh_markdown_preview (bug_id) {
-    if (!YAHOO.util.Dom.hasClass('comment_preview_tab', 'active_comment_tab'))
-        return;
-    show_comment_preview(bug_id, 1);
-}
-
-function show_comment_preview(bug_id, refresh) {
+function show_comment_preview(bug_id) {
     var Dom = YAHOO.util.Dom;
     var comment = document.getElementById('comment');
     var preview = document.getElementById('comment_preview');
-    var markdown_cb = document.getElementById('use_markdown');
 
     if (!comment || !preview) return;
-    if (Dom.hasClass('comment_preview_tab', 'active_comment_tab') && !refresh)
-        return;
+    if (Dom.hasClass('comment_preview_tab', 'active_comment_tab')) return;
 
-    if (!comment_textarea_width) {
-        comment_textarea_width = (comment.clientWidth - 4) + 'px';
-        comment_textarea_height = comment.offsetHeight + 'px';
-    }
-
-    preview.style.width = comment_textarea_width;
-    preview.style.height = comment_textarea_height;
+    preview.style.width = (comment.clientWidth - 4) + 'px';
+    preview.style.height = comment.offsetHeight + 'px';
 
     var comment_tab = document.getElementById('comment_tab');
     Dom.addClass(comment, 'bz_default_hidden');
@@ -1023,7 +1013,7 @@ function show_comment_preview(bug_id, refresh) {
 
     Dom.addClass('comment_preview_error', 'bz_default_hidden');
 
-    if (last_comment_text == comment.value && last_markdown_cb_value == markdown_cb.checked)
+    if (last_comment_text == comment.value)
         return;
 
     Dom.addClass('comment_preview_text', 'bz_default_hidden');
@@ -1043,14 +1033,7 @@ function show_comment_preview(bug_id, refresh) {
                 document.getElementById('comment_preview_text').innerHTML = data.result.html;
                 Dom.addClass('comment_preview_loading', 'bz_default_hidden');
                 Dom.removeClass('comment_preview_text', 'bz_default_hidden');
-                if (markdown_cb.checked) {
-                    Dom.removeClass('comment_preview_text', 'comment_preview_pre');
-                }
-                else {
-                    Dom.addClass('comment_preview_text', 'comment_preview_pre');
-                }
                 last_comment_text = comment.value;
-                last_markdown_cb_value = markdown_cb.checked;
             }
         },
         failure: function(res) {
@@ -1064,10 +1047,8 @@ function show_comment_preview(bug_id, refresh) {
         version: "1.1",
         method: 'Bug.render_comment',
         params: {
-            Bugzilla_api_token: BUGZILLA.api_token,
             id: bug_id,
-            text: comment.value,
-            markdown: (markdown_cb != null) && markdown_cb.checked ? 1 : 0
+            text: comment.value
         }
     })
     );

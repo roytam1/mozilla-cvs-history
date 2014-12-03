@@ -9,8 +9,6 @@ package Bugzilla::Auth;
 
 use 5.10.1;
 use strict;
-use warnings;
-
 use fields qw(
     _info_getter
     _verifier
@@ -32,7 +30,7 @@ sub new {
     my $self = fields::new($class);
 
     $params            ||= {};
-    $params->{Login}   ||= Bugzilla->params->{'user_info_class'} . ',Cookie,APIKey';
+    $params->{Login}   ||= Bugzilla->params->{'user_info_class'} . ',Cookie';
     $params->{Verify}  ||= Bugzilla->params->{'user_verify_class'};
 
     $self->{_info_getter} = new Bugzilla::Auth::Login::Stack($params->{Login});
@@ -46,6 +44,7 @@ sub new {
 
 sub login {
     my ($self, $type) = @_;
+    my $dbh = Bugzilla->dbh;
 
     # Get login info from the cookie, form, environment variables, etc.
     my $login_info = $self->{_info_getter}->get_login_info();

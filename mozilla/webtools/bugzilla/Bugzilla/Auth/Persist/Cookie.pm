@@ -9,8 +9,6 @@ package Bugzilla::Auth::Persist::Cookie;
 
 use 5.10.1;
 use strict;
-use warnings;
-
 use fields qw();
 
 use Bugzilla::Constants;

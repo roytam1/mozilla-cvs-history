@@ -9,7 +9,6 @@ package Bugzilla::Mailer;
 
 use 5.10.1;
 use strict;
-use warnings;
 
 use parent qw(Exporter);
 @Bugzilla::Mailer::EXPORT = qw(MessageToMTA build_thread_marker);
@@ -23,25 +22,25 @@ use Date::Format qw(time2str);
 
 use Encode qw(encode);
 use Encode::MIME::Header;
+use Email::Address;
 use Email::MIME;
-use Email::Sender::Simple qw(sendmail);
-use Email::Sender::Transport::SMTP::Persistent;
-use Bugzilla::Sender::Transport::Sendmail;
+# Return::Value 1.666002 pollutes the error log with warnings about this
+# deprecated module. We have to set NO_CLUCK = 1 before loading Email::Send
+# to disable these warnings.
+BEGIN {
+    $Return::Value::NO_CLUCK = 1;
+}
+use Email::Send;
 
 sub MessageToMTA {
     my ($msg, $send_now) = (@_);
     my $method = Bugzilla->params->{'mail_delivery_method'};
     return if $method eq 'None';
 
-    if (Bugzilla->params->{'use_mailer_queue'}
-        && ! $send_now
-        && ! Bugzilla->dbh->bz_in_transaction()
-    ) {
+    if (Bugzilla->params->{'use_mailer_queue'} and !$send_now) {
         Bugzilla->job_queue->insert('send_mail', { msg => $msg });
         return;
     }
-
-    my $dbh = Bugzilla->dbh;
 
     my $email;
     if (ref $msg) {
@@ -52,56 +51,10 @@ sub MessageToMTA {
         # Email::MIME doesn't do this for us. We use \015 (CR) and \012 (LF)
         # directly because Perl translates "\n" depending on what platform
         # you're running on. See http://perldoc.perl.org/perlport.html#Newlines
+        # We check for multiple CRs because of this Template-Toolkit bug:
+        # https://rt.cpan.org/Ticket/Display.html?id=43345
         $msg =~ s/(?:\015+)?\012/\015\012/msg;
         $email = new Email::MIME($msg);
-    }
-
-    # If we're called from within a transaction, we don't want to send the
-    # email immediately, in case the transaction is rolled back. Instead we
-    # insert it into the mail_staging table, and bz_commit_transaction calls
-    # send_staged_mail() after the transaction is committed.
-    if (! $send_now && $dbh->bz_in_transaction()) {
-        # The e-mail string may contain tainted values.
-        my $string = $email->as_string;
-        trick_taint($string);
-        $dbh->do("INSERT INTO mail_staging (message) VALUES(?)", undef, $string);
-        return;
-    }
-
-    # Ensure that we are not sending emails too quickly to recipients.
-    if (Bugzilla->params->{use_mailer_queue}
-        && (EMAIL_LIMIT_PER_MINUTE || EMAIL_LIMIT_PER_HOUR))
-    {
-        $dbh->do(
-            "DELETE FROM email_rates WHERE message_ts < "
-            . $dbh->sql_date_math('LOCALTIMESTAMP(0)', '-', '1', 'HOUR'));
-
-        my $recipient = $email->header('To');
-
-        if (EMAIL_LIMIT_PER_MINUTE) {
-            my $minute_rate = $dbh->selectrow_array(
-                "SELECT COUNT(*)
-                   FROM email_rates
-                  WHERE recipient = ?  AND message_ts >= "
-                        . $dbh->sql_date_math('LOCALTIMESTAMP(0)', '-', '1', 'MINUTE'),
-                undef,
-                $recipient);
-            if ($minute_rate >= EMAIL_LIMIT_PER_MINUTE) {
-                die EMAIL_LIMIT_EXCEPTION;
-            }
-        }
-        if (EMAIL_LIMIT_PER_HOUR) {
-            my $hour_rate = $dbh->selectrow_array(
-                "SELECT COUNT(*)
-                   FROM email_rates
-                  WHERE recipient = ?  AND message_ts >= "
-                        . $dbh->sql_date_math('LOCALTIMESTAMP(0)', '-', '1', 'HOUR'),
-                undef,
-                $recipient);
-            if ($hour_rate >= EMAIL_LIMIT_PER_HOUR) {
-                die EMAIL_LIMIT_EXCEPTION;
-            }
-        }
     }
 
     # We add this header to uniquely identify all email that we
@@ -111,7 +64,7 @@ sub MessageToMTA {
     # *always* be the same for this Bugzilla, in every email,
     # even if the admin changes the "ssl_redirect" parameter some day.
     $email->header_set('X-Bugzilla-URL', Bugzilla->params->{'urlbase'});
-
+    
     # We add this header to mark the mail as "auto-generated" and
     # thus to hopefully avoid auto replies.
     $email->header_set('Auto-Submitted', 'auto-generated');
@@ -139,14 +92,21 @@ sub MessageToMTA {
 
     my $from = $email->header('From');
 
-    my $hostname;
-    my $transport;
+    my ($hostname, @args);
+    my $mailer_class = $method;
     if ($method eq "Sendmail") {
+        $mailer_class = 'Bugzilla::Send::Sendmail';
         if (ON_WINDOWS) {
-            $transport = Bugzilla::Sender::Transport::Sendmail->new({ sendmail => SENDMAIL_EXE });
+            $Email::Send::Sendmail::SENDMAIL = SENDMAIL_EXE;
         }
-        else {
-            $transport = Bugzilla::Sender::Transport::Sendmail->new();
+        push @args, "-i";
+        # We want to make sure that we pass *only* an email address.
+        if ($from) {
+            my ($email_obj) = Email::Address->parse($from);
+            if ($email_obj) {
+                my $from_email = $email_obj->address;
+                push(@args, "-f$from_email") if $from_email;
+            }
         }
     }
     else {
@@ -154,7 +114,7 @@ sub MessageToMTA {
         # address, but other mailers won't.
         my $urlbase = Bugzilla->params->{'urlbase'};
         $urlbase =~ m|//([^:/]+)[:/]?|;
-        $hostname = $1 || 'localhost';
+        $hostname = $1;
         $from .= "\@$hostname" if $from !~ /@/;
         $email->header_set('From', $from);
         
@@ -165,19 +125,16 @@ sub MessageToMTA {
     }
 
     if ($method eq "SMTP") {
-        my ($host, $port) = split(/:/, Bugzilla->params->{'smtpserver'}, 2);
-        $transport = Bugzilla->request_cache->{smtp} //=
-          Email::Sender::Transport::SMTP::Persistent->new({
-            host  => $host,
-            defined($port) ? (port => $port) : (),
-            sasl_username => Bugzilla->params->{'smtp_username'},
-            sasl_password => Bugzilla->params->{'smtp_password'},
-            helo => $hostname,
-            ssl => Bugzilla->params->{'smtp_ssl'},
-            debug => Bugzilla->params->{'smtp_debug'} });
+        push @args, Host  => Bugzilla->params->{"smtpserver"},
+                    username => Bugzilla->params->{"smtp_username"},
+                    password => Bugzilla->params->{"smtp_password"},
+                    Hello => $hostname, 
+                    ssl => Bugzilla->params->{'smtp_ssl'},
+                    Debug => Bugzilla->params->{'smtp_debug'};
     }
 
-    Bugzilla::Hook::process('mailer_before_send', { email => $email });
+    Bugzilla::Hook::process('mailer_before_send', 
+                            { email => $email, mailer_args => \@args });
 
     return if $email->header('to') eq '';
 
@@ -212,23 +169,13 @@ sub MessageToMTA {
         close TESTFILE;
     }
     else {
-        # This is useful for Sendmail, so we put it out here.
+        # This is useful for both Sendmail and Qmail, so we put it out here.
         local $ENV{PATH} = SENDMAIL_PATH;
-        eval { sendmail($email, { transport => $transport }) };
-        if ($@) {
-            ThrowCodeError('mail_send_error', { msg => $@->message, mail => $email });
-        }
-    }
-
-    # insert into email_rates
-    if (Bugzilla->params->{use_mailer_queue}
-        && (EMAIL_LIMIT_PER_MINUTE || EMAIL_LIMIT_PER_HOUR))
-    {
-        $dbh->do(
-            "INSERT INTO email_rates(recipient, message_ts) VALUES (?, LOCALTIMESTAMP(0))",
-            undef,
-            $email->header('To')
-        );
+        my $mailer = Email::Send->new({ mailer => $mailer_class, 
+                                        mailer_args => \@args });
+        my $retval = $mailer->send($email);
+        ThrowCodeError('mail_send_error', { msg => $retval, mail => $email })
+            if !$retval;
     }
 }
 
@@ -261,50 +208,14 @@ sub build_thread_marker {
     return $threadingmarker;
 }
 
-sub send_staged_mail {
-    my $dbh = Bugzilla->dbh;
-    my @ids;
-    my $emails
-        = $dbh->selectall_arrayref("SELECT id, message FROM mail_staging");
-
-    foreach my $row (@$emails) {
-        MessageToMTA($row->[1]);
-        push(@ids, $row->[0]);
-    }
-
-    if (@ids) {
-        $dbh->do("DELETE FROM mail_staging WHERE " . $dbh->sql_in('id', \@ids));
-    }
-}
-
 1;
 
-__END__
-
-=head1 NAME
-
-Bugzilla::Mailer - Provides methods for sending email
-
-=head1 METHODS
+=head1 B<Methods in need of POD>
 
 =over
 
-=item C<MessageToMTA>
+=item build_thread_marker
 
-Sends the passed message to the mail transfer agent.
-
-The actual behaviour depends on a number of factors: if called from within a
-database transaction, the message will be staged and sent when the transaction
-is committed.  If email queueing is enabled, the message will be sent to
-TheSchwartz job queue where it will be processed by the jobqueue daemon, else
-the message is sent immediately.
-
-=item C<build_thread_marker>
-
-Builds header suitable for use as a threading marker in email notifications.
-
-=item C<send_staged_mail>
-
-Sends all staged messages -- called after a database transaction is committed.
+=item MessageToMTA
 
 =back

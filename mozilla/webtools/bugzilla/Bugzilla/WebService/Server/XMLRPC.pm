@@ -9,7 +9,6 @@ package Bugzilla::WebService::Server::XMLRPC;
 
 use 5.10.1;
 use strict;
-use warnings;
 
 use XMLRPC::Transport::HTTP;
 use Bugzilla::WebService::Server;
@@ -108,7 +107,6 @@ package Bugzilla::XMLRPC::Deserializer;
 
 use 5.10.1;
 use strict;
-use warnings;
 
 # We can't use "use parent" because XMLRPC::Serializer doesn't return
 # a true value.
@@ -117,7 +115,6 @@ our @ISA = qw(XMLRPC::Deserializer);
 
 use Bugzilla::Error;
 use Bugzilla::WebService::Constants qw(XMLRPC_CONTENT_TYPE_WHITELIST);
-use Bugzilla::WebService::Util qw(fix_credentials);
 use Scalar::Util qw(tainted);
 
 sub deserialize {
@@ -141,13 +138,7 @@ sub deserialize {
     my $params = $som->paramsin;
     # This allows positional parameters for Testopia.
     $params = {} if ref $params ne 'HASH';
-
-    # Update the params to allow for several convenience key/values
-    # use for authentication
-    fix_credentials($params);
-
     Bugzilla->input_params($params);
-
     return $som;
 }
 
@@ -214,7 +205,6 @@ package Bugzilla::XMLRPC::SOM;
 
 use 5.10.1;
 use strict;
-use warnings;
 
 use XMLRPC::Lite;
 our @ISA = qw(XMLRPC::SOM);
@@ -241,7 +231,6 @@ package Bugzilla::XMLRPC::Serializer;
 
 use 5.10.1;
 use strict;
-use warnings;
 
 use Scalar::Util qw(blessed reftype);
 # We can't use "use parent" because XMLRPC::Serializer doesn't return

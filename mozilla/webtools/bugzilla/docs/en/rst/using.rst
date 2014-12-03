@@ -404,7 +404,7 @@ You can use it to find a bug by its number or its alias, too.
 
 You'll find the Quicksearch box in Bugzilla's footer area.
 On Bugzilla's front page, there is an additional
-`quicksearcgh help <../../../page.cgi?id=quicksearch.html>`_
+`Help <../../page.cgi?id=quicksearch.html>`_
 link which details how to use it.
 
 .. _casesensitivity:
@@ -623,10 +623,11 @@ file first.
 Patch Viewer
 ============
 
-Viewing and reviewing patches in Bugzilla is often difficult due to improper
-format and the inherent readability issues that raw patches present.  Patch
-Viewer is an enhancement to Bugzilla designed to fix that by offering linking
-to sections.
+Viewing and reviewing patches in Bugzilla is often difficult due to
+lack of context, improper format and the inherent readability issues that
+raw patches present.  Patch Viewer is an enhancement to Bugzilla designed
+to fix that by offering increased context, linking to sections, and
+integrating with Bonsai, LXR and CVS.
 
 Patch viewer allows you to:
 
@@ -635,11 +636,16 @@ Patch viewer allows you to:
 
 + See the difference between two patches.
 
++ Get more context in a patch.
+
 + Collapse and expand sections of a patch for easy
   reading.
 
 + Link to a particular section of a patch for discussion or
   review
+
++ Go to Bonsai or LXR to see more context, blame, and
+  cross-references for the part of the patch you are looking at
 
 + Create a rawtext unified format diff out of any patch, no
   matter what format it came from
@@ -665,6 +671,18 @@ dropdown at the top of the page ("Differences between \[dropdown] and
 this patch") and click the "Diff" button. This will show you what
 is new or changed in the newer patch.
 
+.. _patchviewer_context:
+
+Getting More Context in a Patch
+-------------------------------
+
+To get more context in a patch, you put a number in the textbox at
+the top of Patch Viewer ("Patch / File / \[textbox]") and hit enter.
+This will give you that many lines of context before and after each
+change. Alternatively, you can click on the "File" link there and it
+will show each change in the full context of the file. This feature only
+works against files that were diffed using "cvs diff".
+
 .. _patchviewer_collapse:
 
 Collapsing and Expanding Sections of a Patch
@@ -686,6 +704,20 @@ To link to a section of a patch (for example, if you want to be
 able to give someone a URL to show them which part you are talking
 about) you simply click the "Link Here" link on the section header. The
 resulting URL can be copied and used in discussion.
+
+.. _patchviewer_bonsai_lxr:
+
+Going to Bonsai and LXR
+-----------------------
+
+To go to Bonsai to get blame for the lines you are interested in,
+you can click the "Lines XX-YY" link on the section header you are
+interested in. This works even if the patch is against an old
+version of the file, since Bonsai stores all versions of the file.
+
+To go to LXR, you click on the filename on the file header
+(unfortunately, since LXR only does the most recent version, line
+numbers are likely to rot).
 
 .. _patchviewer_unified_diff:
 
@@ -717,11 +749,7 @@ Other strings which get linkified in the obvious manner are:
 
 + bug 12345
 
-+ bugs 123, 456, 789
-
 + comment 7
-
-+ comments 1, 2, 3, 4
 
 + bug 23456, comment 53
 
@@ -756,23 +784,6 @@ gets a pointless piece of mail they would otherwise have avoided.
 Don't use sigs in comments. Signing your name ("Bill") is acceptable,
 if you do it out of habit, but full mail/news-style
 four line ASCII art creations are not.
-
-.. _markdown:
-
-Markdown
---------
-
-Markdown lets you write your comments in a structured plain-text format and
-have your comments generated as HTML. For example, you may use Markdown for
-making a part of your comment look italic or bold in the generated HTML. Bugzilla
-supports most of the structures defined by `standard Markdown <http://daringfireball.net/projects/markdown/basics>`_.
-but does NOT support inline images and inline HTML. For a complete reference on
-supported Markdown structures, please see the `syntax help <../../../page.cgi?id=markdown.html>`_
-link next to the markdown checkbox for new comments.
-
-To use the Markdown feature, make sure that ``Enable Markdown support for comments`` is set to ``on``
-in your :ref:`userpreferences` and that you also check the ``Use Markdown for this comment`` option below
-the comment box when you want to submit a new comment.
 
 .. _comment-wrapping:
 
@@ -851,6 +862,8 @@ This tab allows you to change several default settings of Bugzilla.
 - After changing a bug - This controls what page is displayed after
   changes to a bug are submitted. The options include to show the bug
   just modified, to show the next bug in your list, or to do nothing.
+
+- Enable tags for bugs - turn bug tagging on or off.
 
 - Zoom textareas large when in use (requires JavaScript) - enable or
   disable the automatic expanding of text areas when  text is being
@@ -991,22 +1004,6 @@ field at the top of the page.
 If you attempt to change your email address, a confirmation
 email is sent to both the old and new addresses, with a link to use to
 confirm the change. This helps to prevent account hijacking.
-
-.. _apikey:
-
-API Keys
-========
-
-API keys are used to authenticate WebService API calls. You can create more than
-one API key if required. Each API key has an optional description which can help
-you record what each key is used for.
-
-On this page, you can unrevoke, revoke and change the description of existing
-API keys for your login. A revoked key means that it cannot be used. The
-description for purely for your information, and is optional.
-
-You can also create a new API key by selecting the check box under the 'New
-API key' section of the page.
 
 .. _permissionsettings:
 

@@ -17,7 +17,6 @@ package Bugzilla::Install::Localconfig;
 
 use 5.10.1;
 use strict;
-use warnings;
 
 use Bugzilla::Constants;
 use Bugzilla::Install::Util qw(bin_loc install_string);
@@ -99,6 +98,10 @@ use constant LOCALCONFIG_VARS => (
     {
         name    => 'index_html',
         default => 0,
+    },
+    {
+        name    => 'cvsbin',
+        default => sub { bin_loc('cvs') },
     },
     {
         name    => 'interdiffbin',

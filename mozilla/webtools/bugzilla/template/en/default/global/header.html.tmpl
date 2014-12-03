@@ -32,60 +32,39 @@
   onload = ""
   style_urls = []
   yui = []
-  yui_css = {}
-  yui_deps = {}
-  no_yui = 0
-  jquery = []
-  jquery_css = []
 %]
 
-[% IF NOT no_yui %]
-  [% SET yui_css = {
-    autocomplete => 1,
-    calendar     => 1,
-    datatable    => 1,
-    button       => 1,
-  } %]
+[% SET yui_css = {
+  autocomplete => 1,
+  calendar     => 1,
+  datatable    => 1,
+  button       => 1,
+} %]
 
-  [%# Note: This is simple dependency resolution--you can't have dependencies
-    # that depend on each other. You have to specify all of a module's deps,
-    # if that module is going to be specified in "yui".
-    #%]
-  [% SET yui_deps = {
-    autocomplete => ['json', 'connection', 'datasource'],
-    datatable    => ['json', 'connection', 'datasource', 'element'],
-  } %]
+[%# Note: This is simple dependency resolution--you can't have dependencies
+  # that depend on each other. You have to specify all of a module's deps,
+  # if that module is going to be specified in "yui".
+  #%]
+[% SET yui_deps = {
+  autocomplete => ['json', 'connection', 'datasource'],
+  datatable    => ['json', 'connection', 'datasource', 'element'],
+} %]
 
-  [%# When using certain YUI modules, we need to process certain
-    # extra JS templates.
-    #%]
-  [% SET yui_templates = {
-    datatable => ['global/value-descs.js.tmpl'],
-  } %]
-[% END %]
+[%# When using certain YUI modules, we need to process certain
+  # extra JS templates.
+  #%]
+[% SET yui_templates = {
+  datatable => ['global/value-descs.js.tmpl'],
+} %]
 
 [%# These are JS URLs that are *always* on the page and come before
   # every other JS URL.
   #%]
 [% SET starting_js_urls = [
-  "js/jquery/jquery-min.js",
-  "js/jquery/ui/jquery-ui-min.js"
+    "js/yui/yahoo-dom-event/yahoo-dom-event.js",
+    "js/yui/cookie/cookie-min.js",
 ] %]
 
-[% IF NOT no_yui %]
-  [% starting_js_urls.push("js/yui/yahoo-dom-event/yahoo-dom-event.js",
-                           "js/yui/cookie/cookie-min.js") %]
-[% END %]
-
-[% SET jq_css_urls = [
-  "js/jquery/ui/jquery-ui-min.css",
-  "js/jquery/ui/jquery-ui-structure-min.css",
-  "js/jquery/ui/jquery-ui-theme-min.css",
-] %]
-[% style_urls.import(jquery_css, jq_css_urls) FILTER null %]
-
-[%# Add jQuery cookie support %]
-[% jquery.push("cookie") %]
 
 [%# We should be able to set the default value of the header variable
   # to the value of the title variable using the DEFAULT directive,
@@ -106,21 +85,15 @@
       <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     [% END %]
 
-    [% IF NOT no_yui %]
-      [% SET yui = yui_resolve_deps(yui, yui_deps) %]
-    [% END %]
+    [% PROCESS "global/site-navigation.html.tmpl" %]
+
+    [% PROCESS 'global/setting-descs.none.tmpl' %]
+
+    [% SET yui = yui_resolve_deps(yui, yui_deps) %]
 
     [% SET css_sets = css_files(style_urls, yui, yui_css) %]
-    [% IF constants.CONCATENATE_ASSETS %]
-      [% PROCESS format_css_link asset_url = css_sets.unified_standard_skin %]
-    [% ELSE %]
-      [% FOREACH asset_url = css_sets.standard %]
-        [% PROCESS format_css_link %]
-      [% END %]
-      [% FOREACH asset_url = css_sets.skin %]
-        [% PROCESS format_css_link %]
-      [% END %]
-    [% END %]
+    <link href="[% css_sets.unified_standard_skin FILTER html %]"
+          rel="stylesheet" type="text/css">
 
     [% IF style %]
       <style type="text/css">
@@ -129,56 +102,43 @@
     [% END %]
 
     [% IF css_sets.unified_custom %]
-      [% IF constants.CONCATENATE_ASSETS %]
-        [% PROCESS format_css_link asset_url = css_sets.unified_custom %]
-      [% ELSE %]
-        [% FOREACH asset_url = css_sets.custom %]
-          [% PROCESS format_css_link %]
-        [% END %]
-      [% END %]
+      <link href="[% css_sets.unified_custom FILTER html %]"
+            rel="stylesheet" type="text/css">
     [% END %]
 
-    [% IF NOT no_yui %]
-      [%# YUI Scripts %]
-      [% FOREACH yui_name = yui %]
-        [% starting_js_urls.push("js/yui/$yui_name/${yui_name}-min.js") %]
-      [% END %]
-    [% END %]
-
-    [%# jQuery Plugins %]
-    [% FOREACH jq_name = jquery %]
-      [% starting_js_urls.push("js/jquery/plugins/$jq_name/${jq_name}-min.js") %]
+    [%# YUI Scripts %]
+    [% FOREACH yui_name = yui %]
+      [% starting_js_urls.push("js/yui/$yui_name/${yui_name}-min.js") %]
     [% END %]
     [% starting_js_urls.push('js/global.js') %]
 
-    [% FOREACH asset_url = concatenate_js(starting_js_urls) %]
+    [% FOREACH javascript_url = starting_js_urls %]
       [% PROCESS format_js_link %]
     [% END %]
 
     <script type="text/javascript">
     <!--
-        [% IF NOT no_yui %]
-          YAHOO.namespace('bugzilla');
-          YAHOO.util.Event.addListener = function (el, sType, fn, obj, overrideContext) {
-              if ( ("onpagehide" in window || YAHOO.env.ua.gecko) && sType === "unload") { sType = "pagehide"; };
-              var capture = ((sType == "focusin" || sType == "focusout") && !YAHOO.env.ua.ie) ? true : false;
-              return this._addListener(el, this._getType(sType), fn, obj, overrideContext, capture);
-          };
-          if ( "onpagehide" in window || YAHOO.env.ua.gecko) {
-              YAHOO.util.Event._simpleRemove(window, "unload",
-                                             YAHOO.util.Event._unload);
-          }
-        [% END %]
-
+        YAHOO.namespace('bugzilla');
+        YAHOO.util.Event.addListener = function (el, sType, fn, obj, overrideContext) {
+               if ( ("onpagehide" in window || YAHOO.env.ua.gecko) && sType === "unload") { sType = "pagehide"; };
+               var capture = ((sType == "focusin" || sType == "focusout") && !YAHOO.env.ua.ie) ? true : false;
+               return this._addListener(el, this._getType(sType), fn, obj, overrideContext, capture);
+         };
+        if ( "onpagehide" in window || YAHOO.env.ua.gecko) {
+            YAHOO.util.Event._simpleRemove(window, "unload", 
+                                           YAHOO.util.Event._unload);
+        }
         [%# The language selector needs javascript to set its cookie,
           # so it is hidden in HTML/CSS by the "bz_default_hidden" class.
           # If the browser can run javascript, it will then "unhide"
           # the language selector using the following code.
           #%]
-        function unhide_language_selector() {
-            $('#lang_links_container').removeClass('bz_default_hidden');
+        function unhide_language_selector() { 
+            YAHOO.util.Dom.removeClass(
+                'lang_links_container', 'bz_default_hidden'
+            ); 
         } 
-        $(document).ready(unhide_language_selector);
+        YAHOO.util.Event.onDOMReady(unhide_language_selector);
 
         [%# Make some Bugzilla information available to all scripts. 
           # We don't import every parameter and constant because we
@@ -196,36 +156,30 @@
                 [%# Please keep these in alphabetical order. %]
 
                 attach_desc_required:
-                    "You must enter a Description for this attachment.",
+                    'You must enter a Description for this attachment.',
                 component_required:
-                    "You must select a Component for this [% terms.bug %].",
+                    'You must select a Component for this [% terms.bug %].',
                 description_required:
-                    "You must enter a Description for this [% terms.bug %].",
+                    'You must enter a Description for this [% terms.bug %].',
                 short_desc_required:
-                    "You must enter a Summary for this [% terms.bug %].",
+                    'You must enter a Summary for this [% terms.bug %].',
                 version_required:
-                    "You must select a Version for this [% terms.bug %]."
+                    'You must select a Version for this [% terms.bug %].'
             }
-            [% IF javascript_urls.containsany(['js/bug.js', 'js/field.js', 'js/comment-tagging.js']) %]
-              , api_token: '[% get_api_token FILTER js FILTER html %]'
-            [% END %]
         };
 
-        [% IF NOT no_yui %]
-          [% FOREACH yui_name = yui %]
-            [% FOREACH yui_template = yui_templates.$yui_name %]
-              [% INCLUDE $yui_template %]
-            [% END %]
+        [% FOREACH yui_name = yui %]
+          [% FOREACH yui_template = yui_templates.$yui_name %]
+            [% INCLUDE $yui_template %]
           [% END %]
         [% END %]
-
         [% IF javascript %]
           [% javascript %]
         [% END %]
     // -->
     </script>
 
-    [% FOREACH asset_url = concatenate_js(javascript_urls) %]
+    [% FOREACH javascript_url = javascript_urls %]
       [% PROCESS format_js_link %]
     [% END %]
 
@@ -296,10 +250,6 @@
       <div id="message">[% message %]</div>
     [% END %]
 
-[% BLOCK format_css_link %]
-  <link href="[% asset_url FILTER html %]" rel="stylesheet" type="text/css">
-[% END %]
-
 [% BLOCK format_js_link %]
-  <script type="text/javascript" src="[% asset_url FILTER mtime FILTER html %]"></script>
+  <script type="text/javascript" src="[% javascript_url FILTER mtime FILTER html %]"></script>
 [% END %]

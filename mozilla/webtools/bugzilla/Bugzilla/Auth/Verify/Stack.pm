@@ -9,7 +9,6 @@ package Bugzilla::Auth::Verify::Stack;
 
 use 5.10.1;
 use strict;
-use warnings;
 
 use base qw(Bugzilla::Auth::Verify);
 use fields qw(

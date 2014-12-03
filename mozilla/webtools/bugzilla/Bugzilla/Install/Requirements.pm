@@ -15,13 +15,19 @@ package Bugzilla::Install::Requirements;
 
 use 5.10.1;
 use strict;
-use warnings;
 
 use Bugzilla::Constants;
 use Bugzilla::Install::Util qw(install_string bin_loc
                                extension_requirement_packages);
 use List::Util qw(max);
 use Term::ANSIColor;
+
+# Return::Value 1.666002 pollutes the error log with warnings about this
+# deprecated module. We have to set NO_CLUCK = 1 before loading Email::Send
+# in have_vers() to disable these warnings.
+BEGIN {
+    $Return::Value::NO_CLUCK = 1;
+}
 
 use parent qw(Exporter);
 our @EXPORT = qw(
@@ -124,11 +130,12 @@ sub REQUIRED_MODULES {
         module  => 'Template',
         version => '2.24'
     },
-    # 1.300011 has a debug mode for SMTP and automatically pass -i to sendmail.
+    # 2.04 implement the "Test" method (to write to data/mailer.testfile).
     {
-        package => 'Email-Sender',
-        module  => 'Email::Sender',
-        version => '1.300011',
+        package => 'Email-Send',
+        module  => 'Email::Send',
+        version => ON_WINDOWS ? '2.16' : '2.04',
+        blacklist => ['^2\.196$']
     },
     {
         package => 'Email-MIME',
@@ -157,12 +164,6 @@ sub REQUIRED_MODULES {
         package => 'File-Slurp',
         module  => 'File::Slurp',
         version => '9999.13',
-    },
-    {
-        package => 'JSON-XS',
-        module  => 'JSON::XS',
-        # 2.0 is the first version that will work with JSON::RPC.
-        version => '2.01',
     },
     );
 
@@ -297,6 +298,13 @@ sub OPTIONAL_MODULES {
         feature => ['jsonrpc', 'rest'],
     },
     {
+        package => 'JSON-XS',
+        module  => 'JSON::XS',
+        # 2.0 is the first version that will work with JSON::RPC.
+        version => '2.0',
+        feature => ['jsonrpc_faster'],
+    },
+    {
         package => 'Test-Taint',
         module  => 'Test::Taint',
         # 1.06 no longer throws warnings with Perl 5.10+.
@@ -349,8 +357,8 @@ sub OPTIONAL_MODULES {
     {
         package => 'TheSchwartz',
         module  => 'TheSchwartz',
-        # 1.10 supports declining of jobs.
-        version => 1.10,
+        # 1.07 supports the prioritization of jobs.
+        version => 1.07,
         feature => ['jobqueue'],
     },
     {
@@ -396,22 +404,6 @@ sub OPTIONAL_MODULES {
         version => '0',
         feature => ['memcached'],
     },
-
-    # Markdown
-    {
-        package => 'Text-Markdown',
-        module  => 'Text::Markdown',
-        version => '1.0.26',
-        feature => ['markdown'],
-    },
-
-    # Documentation
-    {
-        package => 'File-Copy-Recursive',
-        module  => 'File::Copy::Recursive',
-        version => 0,
-        feature => ['documentation'],
-    }
     );
 
     my $extra_modules = _get_extension_requirements('OPTIONAL_MODULES');
@@ -435,7 +427,6 @@ use constant FEATURE_FILES => (
                       'Bugzilla/JobQueue/*', 'jobqueue.pl'],
     patch_viewer  => ['Bugzilla/Attachment/PatchReader.pm'],
     updates       => ['Bugzilla/Update.pm'],
-    markdown      => ['Bugzilla/Markdown.pm'],
     memcached     => ['Bugzilla/Memcache.pm'],
 );
 

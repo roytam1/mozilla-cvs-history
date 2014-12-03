@@ -9,7 +9,6 @@ package Bugzilla::Config::DependencyGraph;
 
 use 5.10.1;
 use strict;
-use warnings;
 
 use Bugzilla::Config::Common;
 
@@ -21,7 +20,7 @@ sub get_param_list {
   {
    name => 'webdotbase',
    type => 't',
-   default => '',
+   default => 'http://www.research.att.com/~north/cgi-bin/webdot.cgi/%urlbase%',
    checker => \&check_webdotbase
   },
 

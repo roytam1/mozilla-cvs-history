@@ -10,10 +10,7 @@
 #Bugzilla Test 10#
 ## dependencies ##
 
-use 5.10.1;
 use strict;
-use warnings;
-
 use lib qw(. lib t);
 
 use Support::Files;

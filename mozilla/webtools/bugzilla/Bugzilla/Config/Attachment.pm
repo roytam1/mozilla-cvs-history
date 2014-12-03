@@ -9,7 +9,6 @@ package Bugzilla::Config::Attachment;
 
 use 5.10.1;
 use strict;
-use warnings;
 
 use Bugzilla::Config::Common;
 
@@ -35,14 +34,6 @@ sub get_param_list {
   name => 'allow_attachment_deletion',
   type => 'b',
   default => 0
-  },
-
-  {
-  name => 'xsendfile_header',
-  type => 's',
-  choices => ['off', 'X-Sendfile', 'X-Accel-Redirect', 'X-LIGHTTPD-send-file'],
-  default => 'off',
-  checker => \&check_multi
   },
 
   {

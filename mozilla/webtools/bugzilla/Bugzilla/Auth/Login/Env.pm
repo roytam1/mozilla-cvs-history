@@ -9,7 +9,6 @@ package Bugzilla::Auth::Login::Env;
 
 use 5.10.1;
 use strict;
-use warnings;
 
 use parent qw(Bugzilla::Auth::Login);
 
@@ -25,6 +24,7 @@ use constant extern_id_used => 1;
 
 sub get_login_info {
     my ($self) = @_;
+    my $dbh = Bugzilla->dbh;
 
     my $env_id       = $ENV{Bugzilla->params->{"auth_env_id"}} || '';
     my $env_email    = $ENV{Bugzilla->params->{"auth_env_email"}} || '';

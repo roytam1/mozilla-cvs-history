@@ -9,7 +9,6 @@ package Bugzilla::WebService::Group;
 
 use 5.10.1;
 use strict;
-use warnings;
 
 use parent qw(Bugzilla::WebService);
 use Bugzilla::Constants;
@@ -102,8 +101,8 @@ sub get {
 
     # Reject access if there is no sense in continuing.
     my $user = Bugzilla->user;
-    my $all_groups = $user->in_group('editusers') || $user->in_group('creategroups');
-    if (!$all_groups && !$user->can_bless) {
+    my $all_groups = $user->in_group('edituser') || $user->in_group('creategroups');
+    if (!$all_groups && ! scalar(@{$user->bless_groups})) {
         ThrowUserError('group_cannot_view');
     }
 

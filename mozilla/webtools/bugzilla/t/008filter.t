@@ -15,11 +15,10 @@
 
 # Sample exploit code: '>"><script>alert('Oh dear...')</script>
 
-use 5.10.1;
 use strict;
-use warnings;
-
 use lib qw(. lib t);
+
+use vars qw(%safe);
 
 use Bugzilla::Constants;
 use Support::Templates;
@@ -31,7 +30,6 @@ use Cwd;
 my $oldrecsep = $/;
 my $topdir = cwd;
 $/ = undef;
-our %safe;
 
 foreach my $path (@Support::Templates::include_paths) {
     $path =~ s|\\|/|g if ON_WINDOWS;  # convert \ to / in path if on windows
@@ -86,9 +84,9 @@ foreach my $path (@Support::Templates::include_paths) {
             ok(1, "($lang/$flavor) $file is filter-safe");
             next;
         }
-
+        
         # Read the entire file into a string
-        open (FILE, "<$file") || die "Can't open $file: $!\n";
+        open (FILE, "<$file") || die "Can't open $file: $!\n";    
         my $slurp = <FILE>;
         close (FILE);
 
@@ -212,7 +210,7 @@ sub directive_ok {
     return 1 if $directive =~ /FILTER\ (html|csv|js|base64|css_class_quote|ics|
                                         quoteUrls|time|uri|xml|lower|html_light|
                                         obsolete|inactive|closed|unitconvert|
-                                        txt|html_linebreak|markdown|none|null)\b/x;
+                                        txt|html_linebreak|none)\b/x;
 
     return 0;
 }

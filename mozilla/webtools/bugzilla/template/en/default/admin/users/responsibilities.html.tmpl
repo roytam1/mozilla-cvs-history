@@ -23,26 +23,26 @@
       <th>Default QA Contact</th>
       <th>Default CC</th>
     </tr>
-    [% FOREACH comp = item.components %]
+    [% FOREACH component = item.components %]
       <tr>
         <td>
-          [% IF user.in_group("editcomponents", comp.product_id) %]
+          [% IF user.in_group("editcomponents", component.product_id) %]
             <a href="editcomponents.cgi?action=edit&amp;product=
                      [% item.product.name FILTER uri %]&amp;component=
-                     [% comp.name FILTER uri %]">
+                     [% component.name FILTER uri %]">
           [% END %]
-          [% comp.name FILTER html %]
-          [% IF user.in_group("editcomponents", comp.product_id) %]
+          [% component.name FILTER html %]
+          [% IF user.in_group("editcomponents", component.product_id) %]
             </a>
           [% END %]
         </td>
         [% FOREACH responsibility = ['default_assignee', 'default_qa_contact'] %]
           <td class="center">
-            [% comp.$responsibility.id == otheruser.id ? "X" : "&nbsp;" %]
+            [% component.$responsibility.id == otheruser.id ? "X" : "&nbsp;" %]
           </td>
         [% END %]
         <td class="center">
-          [% comp.initial_cc.contains(otheruser) ? "X" : "&nbsp;" %]
+          [% component.initial_cc.contains(otheruser) ? "X" : "&nbsp;" %]
         </td>
       </tr>
     [% END %]

@@ -9,7 +9,6 @@ package Bugzilla::Extension::Voting;
 
 use 5.10.1;
 use strict;
-use warnings;
 
 use constant NAME => 'Voting';
 

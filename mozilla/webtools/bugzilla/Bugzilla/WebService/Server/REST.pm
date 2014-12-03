@@ -9,7 +9,6 @@ package Bugzilla::WebService::Server::REST;
 
 use 5.10.1;
 use strict;
-use warnings;
 
 use parent qw(Bugzilla::WebService::Server::JSONRPC);
 
@@ -24,14 +23,12 @@ use Bugzilla::WebService::Util qw(taint_data fix_credentials);
 use Bugzilla::WebService::Server::REST::Resources::Bug;
 use Bugzilla::WebService::Server::REST::Resources::Bugzilla;
 use Bugzilla::WebService::Server::REST::Resources::Classification;
-use Bugzilla::WebService::Server::REST::Resources::Component;
 use Bugzilla::WebService::Server::REST::Resources::FlagType;
 use Bugzilla::WebService::Server::REST::Resources::Group;
 use Bugzilla::WebService::Server::REST::Resources::Product;
 use Bugzilla::WebService::Server::REST::Resources::User;
 use Bugzilla::WebService::Server::REST::Resources::BugUserLastVisit;
 
-use List::MoreUtils qw(uniq);
 use Scalar::Util qw(blessed reftype);
 use MIME::Base64 qw(decode_base64);
 
@@ -338,34 +335,14 @@ sub _retrieve_json_params {
     my $params = {};
     %{$params} = %{ Bugzilla->input_params };
 
-    # First add any parameters we were able to pull out of the path
-    # based on the resource regexp and combine with the normal URL
-    # parameters.
-    if (my $rest_params = $self->bz_rest_params) {
-        foreach my $param (keys %$rest_params) {
-            # If the param does not already exist or if the
-            # rest param is a single value, add it to the
-            # global params.
-            if (!exists $params->{$param} || !ref $rest_params->{$param}) {
-                $params->{$param} = $rest_params->{$param};
-            }
-            # If rest_param is a list then add any extra values to the list
-            elsif (ref $rest_params->{$param}) {
-                my @extra_values = ref $params->{$param}
-                                   ? @{ $params->{$param} }
-                                   : ($params->{$param});
-                $params->{$param}
-                    = [ uniq (@{ $rest_params->{$param} }, @extra_values) ];
-            }
-        }
-    }
+    # First add any params we were able to pull out of the path
+    # based on the resource regexp
+    %{$params} = (%{$params}, %{$self->bz_rest_params}) if $self->bz_rest_params;
 
-    # Any parameters passed in in the body of a non-GET request will override
-    # any parameters pull from the url path. Otherwise non-unique keys are
-    # combined.
+    # Merge any additional query key/values with $obj->{params} if not a GET request
+    # We do this manually cause CGI.pm doesn't understand JSON strings.
     if ($self->request->method ne 'GET') {
         my $extra_params = {};
-        # We do this manually because CGI.pm doesn't understand JSON strings.
         my $json = delete $params->{'POSTDATA'} || delete $params->{'PUTDATA'};
         if ($json) {
             eval { $extra_params = $self->json->decode($json); };
@@ -374,9 +351,9 @@ sub _retrieve_json_params {
             }
         }
 
-        # Allow parameters in the query string if request was non-GET.
-        # Note: parameters in query string body override any matching
-        # parameters in the request body.
+        # Allow parameters in the query string if request was not GET.
+        # Note: query string parameters will override any matching params
+        # also specified in the request body.
         foreach my $param ($self->cgi->url_param()) {
             $extra_params->{$param} = $self->cgi->url_param($param);
         }

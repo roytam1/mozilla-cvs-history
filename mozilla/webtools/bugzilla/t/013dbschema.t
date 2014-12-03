@@ -12,10 +12,7 @@
 # Check the Bugzilla database schema to ensure no field names conflict
 # with SQL reserved words.
 
-use 5.10.1;
 use strict;
-use warnings;
-
 use lib qw(. t lib);
 use Bugzilla;
 use Bugzilla::DB::Schema;

@@ -75,8 +75,7 @@
    } 
 %]
 
-[% FOREACH group IN ["chartgroup", "comment_taggers_group", "debug_group",
-                     "insidergroup", "querysharegroup", "timetrackinggroup"] %]
+[% FOREACH group IN ["chartgroup", "insidergroup", "timetrackinggroup", "querysharegroup"] %]
   [% special_group = Param(group) %]
 
   [% IF special_group %]

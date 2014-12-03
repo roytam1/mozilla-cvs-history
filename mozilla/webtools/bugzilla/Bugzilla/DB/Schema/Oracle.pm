@@ -15,7 +15,6 @@ package Bugzilla::DB::Schema::Oracle;
 
 use 5.10.1;
 use strict;
-use warnings;
 
 use parent qw(Bugzilla::DB::Schema);
 use Carp qw(confess);

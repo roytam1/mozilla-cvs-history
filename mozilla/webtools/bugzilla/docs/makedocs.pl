@@ -26,8 +26,7 @@ use strict;
 
 use Cwd;
 use File::Find;
-use File::Basename;
-use File::Copy::Recursive qw(rcopy);
+use File::Copy;
 
 # We need to be in this directory to use our libraries.
 BEGIN {
@@ -49,8 +48,7 @@ if (eval { require Pod::Simple }) {
     $pod_simple = 1;
 };
 
-use Bugzilla;
-use Bugzilla::Constants qw(BUGZILLA_VERSION bz_locations);
+use Bugzilla::Constants qw(BUGZILLA_VERSION);
 
 use File::Path qw(rmtree);
 use File::Which qw(which);
@@ -128,43 +126,23 @@ foreach my $lang (@langs) {
 
     next if grep { $_ eq '--pod-only' } @ARGV;
 
-    chdir $docparent;
-
-    # Generate extension documentation, both normal and API
-    my $ext_dir = bz_locations()->{'extensionsdir'};
-    my @ext_paths = grep { $_ !~ /\/create\.pl$/ && ! -e "$_/disabled" }
-                    glob("$ext_dir/*");
-    my %extensions;
-    foreach my $item (@ext_paths) {
-        my $basename = basename($item);
-        if (-d "$item/docs/$lang/rst") {
-            $extensions{$basename} = "$item/docs/$lang/rst";
-        }
-    }
-
     # Collect up local extension documentation into the extensions/ dir.
+    sub wanted {
+        if ($File::Find::dir =~ /\/doc\/?$/ &&
+            $_ =~ /\.rst$/)
+        {
+            copy($File::Find::name, "rst/extensions");
+        }
+    };
+
     # Clear out old extensions docs
     rmtree('rst/extensions', 0, 1);
     mkdir('rst/extensions');
-    rmtree('rst/api/extensions', 0, 1);
-    mkdir('rst/api/extensions');
-
-    foreach my $ext_name (keys %extensions) {
-        foreach my $path (glob($extensions{$ext_name} . "/*")) {
-            my ($file, $dir) = fileparse($path);
-            if ($file eq 'api') {
-                my $dst = "$docparent/$lang/rst/api/extensions/$ext_name";
-                mkdir($dst) unless -d $dst;
-                rcopy("$path/*", $dst);
-                next;
-            }
-            my $dst = "$docparent/$lang/rst/extensions/$ext_name";
-            mkdir($dst) unless -d $dst;
-            rcopy($path, "$dst/$file");
-        }
-    }
-
-    chdir "$docparent/$lang";
+    
+    find({
+        'wanted' => \&wanted,
+        'no_chdir' => 1,
+    }, "$docparent/../extensions");
 
     MakeDocs('HTML', 'make html');
     MakeDocs('TXT', 'make text');

@@ -10,19 +10,15 @@
 #Bugzilla Test 2#
 ####GoodPerl#####
 
-use 5.10.1;
 use strict;
-use warnings;
 
 use lib 't';
 
 use Support::Files;
 
-use Test::More tests => (scalar(@Support::Files::testitems)
-                         + scalar(@Support::Files::test_files)) * 6;
+use Test::More tests => (scalar(@Support::Files::testitems) * 4);
 
-my @testitems = (@Support::Files::test_files, @Support::Files::testitems);
-my @require_taint = qw(email_in.pl importxml.pl mod_perl.pl whine.pl);
+my @testitems = @Support::Files::testitems; # get the files to test.
 
 foreach my $file (@testitems) {
     $file =~ s/\s.*$//; # nuke everything after the first space (#comment)
@@ -42,33 +38,23 @@ foreach my $file (@testitems) {
         my $flags;
         if (!defined $ext || $ext eq "pl") {
             # standalone programs aren't taint checked yet
-            if (grep { $file eq $_ } @require_taint) {
-                $flags = 'T';
-            }
-            else {
-                $flags = '';
-            }
+            $flags = "w";
         } elsif ($ext eq "pm") {
             ok(0, "$file is a module, but has a shebang");
             next;
         } elsif ($ext eq "cgi") {
             # cgi files must be taint checked
-            $flags = 'T';
+            $flags = "wT";
         } else {
             ok(0, "$file has shebang but unknown extension");
             next;
         }
 
-        if ($file_line1 =~ m#^\#\!/usr/bin/perl(?:\s-(\w+))?$#) {
-            my $file_flags = $1 || '';
-            if ($flags eq $file_flags) {
-                ok(1, "$file uses standard perl location" . ($flags ? " and -$flags flag" : ""));
-            }
-            elsif ($flags) {
-                ok(0, "$file is MISSING -$flags flag --WARNING");
-            }
-            else {
-                ok(0, "$file has unexpected -$file_flags flag --WARNING");
+        if ($file_line1 =~ m#^\#\!/usr/bin/perl\s#) {
+            if ($file_line1 =~ m#\s-$flags#) {
+                ok(1,"$file uses standard perl location and -$flags");
+            } else {
+                ok(0,"$file is MISSING -$flags --WARNING");
             }
         } else {
             ok(0,"$file uses non-standard perl location");
@@ -77,10 +63,7 @@ foreach my $file (@testitems) {
 }
 
 foreach my $file (@testitems) {
-    my $found_use_perl = 0;
     my $found_use_strict = 0;
-    my $found_use_warnings = 0;
-
     $file =~ s/\s.*$//; # nuke everything after the first space (#comment)
     next if (!$file); # skip null entries
     if (! open (FILE, $file)) {
@@ -88,28 +71,38 @@ foreach my $file (@testitems) {
         next;
     }
     while (my $file_line = <FILE>) {
-        $found_use_perl = 1 if $file_line =~ m/^\s*use 5.10.1/;
-        $found_use_strict = 1 if $file_line =~ m/^\s*use strict/;
-        $found_use_warnings = 1 if $file_line =~ m/^\s*use warnings/;
-        last if ($found_use_perl && $found_use_strict && $found_use_warnings);
+        if ($file_line =~ m/^\s*use strict/) {
+            $found_use_strict = 1;
+            last;
+        }
     }
     close (FILE);
-    if ($found_use_perl) {
-        ok(1,"$file requires Perl 5.10.1");
-    } else {
-        ok(0,"$file DOES NOT require Perl 5.10.1 --WARNING");
-    }
-
     if ($found_use_strict) {
         ok(1,"$file uses strict");
     } else {
         ok(0,"$file DOES NOT use strict --WARNING");
     }
+}
 
-    if ($found_use_warnings) {
-        ok(1,"$file uses warnings");
+foreach my $file (@testitems) {
+    my $found_use_feature = 0;
+    $file =~ s/\s.*$//; # nuke everything after the first space (#comment)
+    next if (!$file); # skip null entries
+    if (! open (FILE, $file)) {
+        ok(0,"could not open $file --WARNING");
+        next;
+    }
+    while (my $file_line = <FILE>) {
+        if ($file_line =~ m/^\s*use 5.10.1/) {
+            $found_use_feature = 1;
+            last;
+        }
+    }
+    close (FILE);
+    if ($found_use_feature) {
+        ok(1,"$file requires Perl 5.10.1");
     } else {
-        ok(0,"$file DOES NOT use warnings --WARNING");
+        ok(0,"$file DOES NOT require Perl 5.10.1 --WARNING");
     }
 }
 
@@ -139,35 +132,4 @@ foreach my $file (@testitems) {
     
     close(FILE);
 }
-
-# Forbird the { foo => $cgi->param() } syntax, for security reasons.
-foreach my $file (@testitems) {
-    $file =~ s/\s.*$//; # nuke everything after the first space (#comment)
-    next unless $file; # skip null entries
-    if (!open(FILE, $file)) {
-        ok(0, "could not open $file --WARNING");
-        next;
-    }
-    my $lineno = 0;
-    my @unsafe_args;
-
-    while (my $file_line = <FILE>) {
-        $lineno++;
-        $file_line =~ s/^\s*(.+)\s*$/$1/; # Remove leading and trailing whitespaces.
-        if ($file_line =~ /^[^#]+=> \$cgi\->param/) {
-            push(@unsafe_args, "$file_line on line $lineno");
-        }
-    }
-
-    if (@unsafe_args) {
-        ok(0, "$file incorrectly passes a CGI argument to a hash --ERROR\n" .
-              join("\n", @unsafe_args));
-    }
-    else {
-        ok(1, "$file has no vulnerable hash syntax");
-    }
-
-    close(FILE);
-}
-
 exit 0;

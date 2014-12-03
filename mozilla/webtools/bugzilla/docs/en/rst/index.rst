@@ -16,7 +16,6 @@ Bugzilla Documentation
    security
    using
    extensions
-   api
    customization
    patches
    troubleshooting

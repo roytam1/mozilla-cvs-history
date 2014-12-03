@@ -9,7 +9,6 @@ package Bugzilla;
 
 use 5.10.1;
 use strict;
-use warnings;
 
 # We want any compile errors to get to the browser, if possible.
 BEGIN {
@@ -122,8 +121,8 @@ sub init_page {
     #
     # This code must go here. It cannot go anywhere in Bugzilla::CGI, because
     # it uses Template, and that causes various dependency loops.
-    if (!grep { $_ eq $script } SHUTDOWNHTML_EXEMPT
-        and Bugzilla->params->{'shutdownhtml'})
+    if (Bugzilla->params->{"shutdownhtml"}
+        && !grep { $_ eq $script } SHUTDOWNHTML_EXEMPT)
     {
         # Allow non-cgi scripts to exit silently (without displaying any
         # message), if desired. At this point, no DBI call has been made
@@ -397,13 +396,6 @@ sub logout_request {
     # there. Don't rely on it: use Bugzilla->user->login instead!
 }
 
-sub markdown {
-    return if !Bugzilla->feature('markdown');
-
-    require Bugzilla::Markdown;
-    return $_[0]->request_cache->{markdown} ||= Bugzilla::Markdown->new();
-}
-
 sub job_queue {
     require Bugzilla::JobQueue;
     return $_[0]->request_cache->{job_queue} ||= Bugzilla::JobQueue->new();
@@ -659,16 +651,13 @@ sub memcached {
 # Per-process cleanup. Note that this is a plain subroutine, not a method,
 # so we don't have $class available.
 sub _cleanup {
-    my $cache = Bugzilla->request_cache;
-    my $main = $cache->{dbh_main};
-    my $shadow = $cache->{dbh_shadow};
+    my $main   = Bugzilla->request_cache->{dbh_main};
+    my $shadow = Bugzilla->request_cache->{dbh_shadow};
     foreach my $dbh ($main, $shadow) {
         next if !$dbh;
         $dbh->bz_rollback_transaction() if $dbh->bz_in_transaction;
         $dbh->disconnect;
     }
-    my $smtp = $cache->{smtp};
-    $smtp->disconnect if $smtp;
     clear_request_cache();
 
     # These are both set by CGI.pm but need to be undone so that
@@ -760,7 +749,7 @@ If you ever need a L<Bugzilla::Template> object while you're already
 processing a template, use this. Also use it if you want to specify
 the language to use. If no argument is passed, it uses the last
 language set. If the argument is "" (empty string), the language is
-reset to the current one (the one used by C<Bugzilla-E<gt>template>).
+reset to the current one (the one used by Bugzilla->template).
 
 =item C<cgi>
 
@@ -878,8 +867,8 @@ specify this argument, all fields will be returned.
 
 =item C<error_mode>
 
-Call either C<Bugzilla-E<gt>error_mode(Bugzilla::Constants::ERROR_MODE_DIE)>
-or C<Bugzilla-E<gt>error_mode(Bugzilla::Constants::ERROR_MODE_DIE_SOAP_FAULT)> to
+Call either C<Bugzilla->error_mode(Bugzilla::Constants::ERROR_MODE_DIE)>
+or C<Bugzilla->error_mode(Bugzilla::Constants::ERROR_MODE_DIE_SOAP_FAULT)> to
 change this flag's default of C<Bugzilla::Constants::ERROR_MODE_WEBPAGE> and to
 indicate that errors should be passed to error mode specific error handlers
 rather than being sent to a browser and finished with an exit().
@@ -888,24 +877,24 @@ This is useful, for example, to keep C<eval> blocks from producing wild HTML
 on errors, making it easier for you to catch them.
 (Remember to reset the error mode to its previous value afterwards, though.)
 
-C<Bugzilla-E<gt>error_mode> will return the current state of this flag.
+C<Bugzilla->error_mode> will return the current state of this flag.
 
-Note that C<Bugzilla-E<gt>error_mode> is being called by C<Bugzilla-E<gt>usage_mode> on
+Note that C<Bugzilla->error_mode> is being called by C<Bugzilla->usage_mode> on
 usage mode changes.
 
 =item C<usage_mode>
 
-Call either C<Bugzilla-E<gt>usage_mode(Bugzilla::Constants::USAGE_MODE_CMDLINE)>
-or C<Bugzilla-E<gt>usage_mode(Bugzilla::Constants::USAGE_MODE_XMLRPC)> near the
+Call either C<Bugzilla->usage_mode(Bugzilla::Constants::USAGE_MODE_CMDLINE)>
+or C<Bugzilla->usage_mode(Bugzilla::Constants::USAGE_MODE_XMLRPC)> near the
 beginning of your script to change this flag's default of
 C<Bugzilla::Constants::USAGE_MODE_BROWSER> and to indicate that Bugzilla is
 being called in a non-interactive manner.
 
 This influences error handling because on usage mode changes, C<usage_mode>
-calls C<Bugzilla-E<gt>error_mode> to set an error mode which makes sense for the
+calls C<Bugzilla->error_mode> to set an error mode which makes sense for the
 usage mode.
 
-C<Bugzilla-E<gt>usage_mode> will return the current state of this flag.
+C<Bugzilla->usage_mode> will return the current state of this flag.
 
 =item C<installation_mode>
 
@@ -944,19 +933,15 @@ Change the database object to refer to the main database.
 
 =item C<params>
 
-The current Parameters of Bugzilla, as a hashref. If C<data/params.json>
-does not exist, then we return an empty hashref. If C<data/params.json>
-is unreadable or is not valid, we C<die>.
+The current Parameters of Bugzilla, as a hashref. If C<data/params>
+does not exist, then we return an empty hashref. If C<data/params>
+is unreadable or is not valid perl, we C<die>.
 
 =item C<local_timezone>
 
 Returns the local timezone of the Bugzilla installation,
 as a DateTime::TimeZone object. This detection is very time
 consuming, so we cache this information for future references.
-
-=item C<markdown>
-
-The current L<Markdown|Bugzilla::Markdown> object, to be used for Markdown rendering.
 
 =item C<job_queue>
 

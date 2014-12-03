@@ -17,7 +17,6 @@ package Bugzilla::Install;
 
 use 5.10.1;
 use strict;
-use warnings;
 
 use Bugzilla::Component;
 use Bugzilla::Config qw(:admin);
@@ -90,8 +89,6 @@ sub SETTINGS {
     bugmail_new_prefix => { options => ['on', 'off'], default => 'on' },
     # 2013-07-26 joshi_sunil@in.com -- Bug 669535
     possible_duplicates => { options => ['on', 'off'], default => 'on' },
-    # 2014-05-24 koosha.khajeh@gmail.com -- Bug 1014164
-    use_markdown       => { options => ['on', 'off'], default => 'on' },
     }
 };
 
@@ -135,13 +132,11 @@ use constant SYSTEM_GROUPS => (
     },
     {
         name         => 'bz_canusewhineatothers',
-        description  => 'Can configure queries and schedules for periodic'
-            . ' reports to be run and sent via email to other users and groups',
+        description  => 'Can configure whine reports for other users',
     },
     {
         name         => 'bz_canusewhines',
-        description  => 'Can configure queries and schedules for periodic'
-            . ' reports to be run and sent via email to themselves',
+        description  => 'User can configure whine reports for self',
         # inherited_by means that users in the groups listed below are
         # automatically members of bz_canusewhines.
         inherited_by => ['editbugs', 'bz_canusewhineatothers'],
@@ -219,8 +214,8 @@ sub update_system_groups {
 
     # Create most of the system groups
     foreach my $definition (SYSTEM_GROUPS) {
-        my $group = new Bugzilla::Group({ name => $definition->{name} });
-        if (!$group) {
+        my $exists = new Bugzilla::Group({ name => $definition->{name} });
+        if (!$exists) {
             $definition->{isbuggroup} = 0;
             $definition->{silently} = !$editbugs_exists;
             my $inherited_by = delete $definition->{inherited_by};
@@ -235,10 +230,6 @@ sub update_system_groups {
                              undef, $created->id, $member->id);
                 }
             }
-        }
-        elsif ($group->description ne $definition->{description}) {
-            $group->set_description($definition->{description});
-            $group->update();
         }
     }
 
