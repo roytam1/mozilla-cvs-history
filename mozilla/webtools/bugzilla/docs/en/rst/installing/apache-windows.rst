@@ -79,10 +79,15 @@ Add the following stanza:
 
    <Directory "C:/Bugzilla">
        ScriptInterpreterSource Registry-Strict
-       Options +ExecCGI +FollowSymLinks
-       DirectoryIndex index.cgi index.html
-       AllowOverride Limit FileInfo Indexes Options
+       Options Indexes FollowSymLinks ExecCGI
+       DirectoryIndex index.cgi index.html 
+       AllowOverride All
+       Order allow,deny
+       Allow from all
    </Directory>
+
+.. todo:: This is still a bit different from the Linux instructions (apart
+   from ScriptInterpreterSource, obviously). Is that intended?
 
 In order for ``ScriptInterpreterSource Registry-Strict`` to work, you also
 need to add an entry to the Registry so Apache will use Perl to execute .cgi
