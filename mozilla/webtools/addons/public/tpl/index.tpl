@@ -7,18 +7,13 @@
 
 <p>We've got a list of some of our <a href="{$config.webpath}/{$app}/recommended/">favorite add-ons</a> to get you started, including the one featured below.</p>
 
-<div class="corner-box">
-<h3 style="font-weight: bold; color: #f7941d;">Hey, where's the new site?</h3>
-<p>The new add-ons site is a little behind, but it's coming soon.  <a href="http://blog.mozilla.com/webdev/category/amo/">See our blog</a> for updates.</p>
-</div>
-
 <div class="addon-feature clearfix">
 	<div class="corner-box">
 		<h3>Featured Add-on: <a href="{$config.webpath}/{$app}/{$feature.id}/">{$feature.name}</a></h3>
 		<img src="{$config.webpath}{$feature.previewuri}" alt="" class="addon-feature-image" />
 		<div class="addon-feature-text">
 			<p>{$feature.body} <a href="{$config.webpath}/{$app}/{$feature.id}/">Learn more&hellip;</a></p>
-			<p class="install-button"><a href="{$feature.uri}" onclick="return install(event,'{$feature.name|escape:"quotes"} {$feature.version}', '{$config.webpath}/images/default.png', '{$feature.hash}');" title="Install {$feature.name} {$feature.version} (Right-click to download)"><span class="install-green-button"><span class="install-button-text">Install now ({$feature.size}&nbsp;KB)</span></span></a></p>
+			<p class="install-button"><a href="{$feature.uri}" onclick="return install(event,'{$feature.name} {$feature.version}', '{$config.webpath}/images/default.png', '{$feature.hash}');" title="Install {$feature.name} {$feature.version} (Right-click to download)"><span class="install-green-button"><span class="install-button-text">Install now ({$feature.size}&nbsp;KB)</span></span></a></p>
       {if $feature.id eq SUPER_MAGIC_YAHOO_ID}
       <p class="eula">By clicking Install, you agree to the <a href="http://del.icio.us/help/firefox/bookmarks/license">Software License</a> for this add-on.</p>
       {/if}
@@ -34,7 +29,7 @@
         <div class="feature-download">
             <!-- Feature Image must be 200px wide... any height is fine, but around 170-200 is preferred -->
             <a href="{$config.webpath}/{$app}/{$feature.id}/"><img src="{$config.webpath}{$feature.previewuri}" alt="{$feature.name} Extension"></a>
-            <h3><a href="{$feature.uri}" onclick="return install(event,'{$feature.name|escape:"quotes"} {$feature.version}', '{$config.webpath}/images/default.png', '{$feature.hash}');" title="Install {$feature.name} {$feature.version} (Right-Click to Download)">Install Now ({$feature.size} KB)</a> </h3>
+            <h3><a href="{$feature.uri}" onclick="return install(event,'{$feature.name} {$feature.version}', '{$config.webpath}/images/default.png', '{$feature.hash}');" title="Install {$feature.name} {$feature.version} (Right-Click to Download)">Install Now ({$feature.size} KB)</a> </h3>
 
         </div>
         <h2>Featured Add-on</h2>
