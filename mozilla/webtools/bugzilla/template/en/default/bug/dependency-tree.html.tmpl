@@ -14,7 +14,7 @@
    javascript_urls = ["js/expanding-tree.js"]
    style_urls      = ['skins/standard/bug.css']
    subheader       = filtered_desc
-   doc_section     = "using.html#dependency-tree"
+   doc_section     = "using/understanding.html"
 %]
 
 [% PROCESS depthControlToolbar %]
@@ -136,7 +136,9 @@
 
 [% BLOCK buglink %]
   [% isclosed = !bug.isopened %]
-  [% FILTER closed(isclosed) -%]
+  [% IF isclosed %]
+    <span class="bz_closed">
+  [% END %]
     <a title="[% INCLUDE buginfo bug=bug %]"
        href="show_bug.cgi?id=[% bugid %]">
       <b>[%- bugid %]:</b>
@@ -148,6 +150,8 @@
       <img src="skins/standard/dependency-tree/tree.png"
            title="See dependency tree for [% terms.bug %] [%+ bugid FILTER html %]">
     </a>
+  [% IF isclosed %]
+    </span>
   [% END %]
 [% END %]
 

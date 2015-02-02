@@ -104,6 +104,10 @@
   [% ELSIF error == "comment_type_invalid" %]
     '[% type FILTER html %]' is not a valid comment type.
 
+  [% ELSIF error == "db_error" %]
+    An error occurred while performing a database operation:
+    <pre>[% err_message FILTER html %]</pre>
+
   [% ELSIF error == "db_rename_conflict" %]
     Name conflict: Cannot rename [% old FILTER html %] to
     [%+ new FILTER html %] because [% new FILTER html %] already exists.
@@ -219,7 +223,8 @@
     but rather <em>[% target_type FILTER html %]</em>.
   
   [% ELSIF error == "invalid_field_name" %]
-    Can't use [% field FILTER html %] as a field name.
+    [% title = "Invalid Field Name" %]
+    Can't use "[% field.truncate(30, "...") FILTER html %]" as a field name.
 
   [% ELSIF error == "jobqueue_insert_failed" %]
    [% title = "Job Queue Failure" %]
@@ -384,8 +389,9 @@
     Invalid setting for post_bug_submit_action
 
   [% ELSIF error == "search_field_operator_unsupported" %]
+    [% title = "Invalid Search Type" %]
     Bugzilla does not support the search type
-    "[% operator FILTER html %]".
+    "[% operator.truncate(30, "...") FILTER html %]".
 
   [% ELSE %]
     [%# Try to find hooked error messages %]

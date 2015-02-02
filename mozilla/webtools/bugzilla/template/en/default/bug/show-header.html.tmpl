@@ -25,7 +25,7 @@
 [% title = title _ filtered_desc %]
 [% yui = ['autocomplete', 'calendar'] %]
 [% yui.push('container') IF user.can_tag_comments %]
-[% javascript_urls = [ "js/util.js", "js/field.js" ] %]
+[% javascript_urls = [ "js/util.js", "js/field.js", "js/comments.js" ] %]
 [% javascript_urls.push("js/bug.js") IF user.id  %]
 [% javascript_urls.push('js/comment-tagging.js')
      IF user.id && Param('comment_taggers_group') %]
@@ -62,7 +62,7 @@
   [% END %]
 [% END %]
 [% style_urls = ['skins/standard/bug.css'] %]
-[% doc_section = "using.html#anatomy-of-a-bug" %]
+[% doc_section = "using/understanding.html" %]
 [% bodyclasses = ['bz_bug',
                   "bz_status_$bug.bug_status",
                   "bz_product_$bug.product",

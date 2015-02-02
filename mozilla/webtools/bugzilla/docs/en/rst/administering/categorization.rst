@@ -68,7 +68,10 @@ Version
     Specify the default version for this product.
 
 Create chart datasets for this product
-    Select to make chart datasets available for this product.
+    Bugzilla has a :ref:`charting system <charts>` which can plot defined
+    searches over time. Selecting this checkbox will create some useful
+    searches in the charts system relating to the new product - e.g. a search
+    for each status and resolution.
 
 It is compulsory to create at least one :ref:`component <components>` in a product, and
 so you will be asked for the details of that too.
@@ -399,8 +402,8 @@ example, if you have a bug that you plan to fix for your 3.0 release, it
 would be assigned the milestone of 3.0.
 
 .. note:: Milestone options will only appear for a Product if you turned
-   on the :param:`usetargetmilestone` parameter in the "Bug Fields" tab of the
-   :ref:`parameters` page.
+   on the :param:`usetargetmilestone` parameter in the "Bug Fields" tab of
+   the :ref:`parameters` page.
 
 To create new Milestones and set Default Milestones:
 

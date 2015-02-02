@@ -759,35 +759,6 @@ sub create {
         # built-in filter, please also add a stub filter to t/004template.t.
         FILTERS => {
 
-            # Render text in required style.
-
-            inactive => [
-                sub {
-                    my($context, $isinactive) = @_;
-                    return sub {
-                        return $isinactive ? '<span class="bz_inactive">'.$_[0].'</span>' : $_[0];
-                    }
-                }, 1
-            ],
-
-            closed => [
-                sub {
-                    my($context, $isclosed) = @_;
-                    return sub {
-                        return $isclosed ? '<span class="bz_closed">'.$_[0].'</span>' : $_[0];
-                    }
-                }, 1
-            ],
-
-            obsolete => [
-                sub {
-                    my($context, $isobsolete) = @_;
-                    return sub {
-                        return $isobsolete ? '<span class="bz_obsolete">'.$_[0].'</span>' : $_[0];
-                    }
-                }, 1
-            ],
-
             # Returns the text with backslashes, single/double quotes,
             # and newlines/carriage returns escaped for use in JS strings.
             js => sub {
@@ -1057,10 +1028,38 @@ sub create {
             'urlbase' => sub { return Bugzilla::Util::correct_urlbase(); },
 
             # Allow templates to access docs url with users' preferred language
-            'docs_urlbase' => sub { 
-                my $language = Bugzilla->current_language;
-                my $docs_urlbase = Bugzilla->params->{'docs_urlbase'};
-                $docs_urlbase =~ s/\%lang\%/$language/;
+            # We fall back to English if documentation in the preferred
+            # language is not available
+            'docs_urlbase' => sub {
+                my $docs_urlbase;
+                my $lang = Bugzilla->current_language;
+                # Translations currently available on readthedocs.org
+                my @rtd_translations = ('en', 'fr');
+
+                if ($lang ne 'en' && -f "docs/$lang/html/index.html") {
+                    $docs_urlbase = "docs/$lang/html/";
+                }
+                elsif (-f "docs/en/html/index.html") {
+                    $docs_urlbase = "docs/en/html/";
+                }
+                else {
+                    if (!grep { $_ eq $lang } @rtd_translations) {
+                        $lang = "en";
+                    }
+
+                    my $version = BUGZILLA_VERSION;
+                    $version =~ /^(\d+)\.(\d+)/;
+                    if ($2 % 2 == 1) {
+                        # second number is odd; development version
+                        $version = 'latest';
+                    }
+                    else {
+                        $version = "$1.$2";
+                    }
+
+                    $docs_urlbase = "https://bugzilla.readthedocs.org/$lang/$version/";
+                }
+
                 return $docs_urlbase;
             },
 

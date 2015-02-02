@@ -26,6 +26,15 @@ use constant READ_ONLY => qw(
     get_selectable_products
 );
 
+use constant PUBLIC_METHODS => qw(
+    create
+    get
+    get_accessible_products
+    get_enterable_products
+    get_selectable_products
+    update
+);
+
 use constant MAPPED_FIELDS => {
     has_unconfirmed => 'allows_unconfirmed',
     is_open => 'is_active',
@@ -857,7 +866,7 @@ C<array> of C<int>s. Numeric ids of the products that you wish to update.
 
 =item C<names>
 
-C<array> or C<string>s. Names of the products that you wish to update.
+C<array> of C<string>s. Names of the products that you wish to update.
 
 =back
 

@@ -13,7 +13,7 @@
 
 [% PROCESS global/header.html.tmpl title = title
                                    style_urls = ['skins/standard/admin.css']
-                                   doc_section = "administration.html"
+                                   doc_section = "administering/index.html"
 %]
 
 <div>
@@ -123,6 +123,10 @@
           <dt id="view_job_queue" class="[% class %]"><a href="view_job_queue.cgi">Job Queue</a></dt>
           <dd class="[% class %]">View the queue of undelivered/deferred jobs/emails.</dd>
         [% END %]
+
+        <dt id="release_notes">
+          <a href="page.cgi?id=release-notes.html">Release Notes</a></dt>
+        <dd>Detailed information related to this release of Bugzilla.</dd>
 
         [% Hook.process('end_links_right') %]
       </dl>

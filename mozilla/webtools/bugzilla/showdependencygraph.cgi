@@ -49,7 +49,7 @@ sub CreateImagemap {
     my $map = "<map name=\"imagemap\">\n";
     my $default = "";
 
-    open MAP, "<$mapfilename";
+    open MAP, "<", $mapfilename;
     while(my $line = <MAP>) {
         if($line =~ /^default ([^ ]*)(.*)$/) {
             $default = qq{<area alt="" shape="default" href="$1">\n};
@@ -194,6 +194,7 @@ foreach my $k (@bug_ids) {
         if (Bugzilla->params->{'utf8'}) {
             utf8::encode($summary) if utf8::is_utf8($summary);
         }
+        $summary = wrap_comment($summary);
         $summary =~ s/([\\\"])/\\$1/g;
         push(@params, qq{label="$k\\n$summary"});
     }
@@ -235,7 +236,7 @@ if ($bug_count > MAX_WEBDOT_BUGS) {
     ThrowUserError("webdot_too_large");
 }
 
-my $webdotbase = Bugzilla->params->{'webdotbase'};
+my $webdotbase = Bugzilla->localconfig->{'webdotbase'};
 
 if ($webdotbase =~ /^https?:/) {
      # Remote dot server. We don't hardcode 'urlbase' here in case
@@ -258,7 +259,7 @@ if ($webdotbase =~ /^https?:/) {
                                                  error => $! });
 
     binmode $pngfh;
-    open(DOT, "\"$webdotbase\" -Tpng $filename|");
+    open(DOT, '-|', "\"$webdotbase\" -Tpng $filename");
     binmode DOT;
     print $pngfh $_ while <DOT>;
     close DOT;
@@ -287,7 +288,7 @@ if ($webdotbase =~ /^https?:/) {
                                                  error => $! });
 
     binmode $mapfh;
-    open(DOT, "\"$webdotbase\" -Tismap $filename|");
+    open(DOT, '-|', "\"$webdotbase\" -Tismap $filename");
     binmode DOT;
     print $mapfh $_ while <DOT>;
     close DOT;

@@ -492,7 +492,7 @@
         <span id="bz_url_edit_container" class="bz_default_hidden"> 
         [% IF is_safe_url(bug.bug_file_loc) %]
            <a href="[% bug.bug_file_loc FILTER html %]" target="_blank"
-              title="[% bug.bug_file_loc FILTER html %]">
+              rel="noreferrer" title="[% bug.bug_file_loc FILTER html %]">
              [% bug.bug_file_loc FILTER truncate(40) FILTER html %]</a>
         [% ELSE %]
           [% bug.bug_file_loc FILTER html %]
@@ -503,7 +503,8 @@
         [% url_output =  INCLUDE input no_td=1 inputname => "bug_file_loc" size => "40" colspan => 2 %]
         [% IF NOT bug.check_can_change_field("bug_file_loc", 0, 1)
               AND is_safe_url(bug.bug_file_loc) %]
-          <a href="[% bug.bug_file_loc FILTER html %]">[% url_output FILTER none %]</a>
+          <a href="[% bug.bug_file_loc FILTER html %]"
+             rel="noreferrer">[% url_output FILTER none %]</a>
         [% ELSE %]
           [% url_output FILTER none %]
         [% END %]
@@ -595,7 +596,8 @@
       <td colspan="2" id="show_dependency_tree_or_graph">
         Show dependency <a href="showdependencytree.cgi?id=[% bug.bug_id %]&amp;hide_resolved=1">tree</a>
 
-        [% IF Param('webdotbase') %]
+        [% USE Bugzilla %]
+        [% IF Bugzilla.localconfig.webdotbase %]
           /&nbsp;<a href="showdependencygraph.cgi?id=[% bug.bug_id %]">graph</a>
         [% END %]
       </td>
@@ -968,7 +970,6 @@
 
 [% BLOCK section_customfields %]
 [%# *** Custom Fields *** %]
-  [% USE Bugzilla %]
   [% FOREACH field = Bugzilla.active_custom_fields %]
     <tr>
       [% PROCESS bug/field.html.tmpl value = bug.${field.name}

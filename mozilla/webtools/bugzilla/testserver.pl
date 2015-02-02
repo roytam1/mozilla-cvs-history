@@ -26,6 +26,8 @@ my $datadir = bz_locations()->{'datadir'};
 
 eval "require LWP; require LWP::UserAgent;";
 my $lwp = $@ ? 0 : 1;
+eval "require LWP::Protocol::https;";
+my $lwpssl = $@ ? 0 : 1;
 
 if ((@ARGV != 1) || ($ARGV[0] !~ /^https?:/i))
 {
@@ -40,7 +42,7 @@ my @pscmds = ('ps -eo comm,gid', 'ps -acxo command,gid', 'ps -acxo command,rgid'
 my $sgid = 0;
 if (!ON_WINDOWS) {
     foreach my $pscmd (@pscmds) {
-        open PH, "$pscmd 2>/dev/null |";
+        open PH, '-|', "$pscmd 2>/dev/null";
         while (my $line = <PH>) {
             if ($line =~ /^(?:\S*\/)?(?:httpd|apache?)2?\s+(\d+)$/) {
                 $sgid = $1 if $1 > $sgid;
@@ -212,12 +214,16 @@ sub fetch {
     my $url = shift;
     my $rtn;
     if ($lwp) {
-        my $req = HTTP::Request->new(GET => $url);
-        my $ua = LWP::UserAgent->new;
-        my $res = $ua->request($req);
-        $rtn = ($res->is_success ? $res->content : undef);
+        if ($url =~ /^https:/i && !$lwpssl) {
+            die("You need LWP::Protocol::https installed to use https with testserver.pl");
+        } else {
+            my $req = HTTP::Request->new(GET => $url);
+            my $ua = LWP::UserAgent->new;
+            my $res = $ua->request($req);
+            $rtn = ($res->is_success ? $res->content : undef);
+        }
     } elsif ($url =~ /^https:/i) {
-        die("You need LWP installed to use https with testserver.pl");
+        die("You need LWP (and LWP::Protocol::https, for LWP 6.02 or newer) installed to use https with testserver.pl");
     } else {
         my($host, $port, $file) = ('', 80, '');
         if ($url =~ m#^http://([^:]+):(\d+)(/.*)#i) {
@@ -267,7 +273,7 @@ sub check_image {
 
 sub create_file {
     my ($filename, $content) = @_;
-    open(FH, ">$filename")
+    open(FH, ">", $filename)
         or die "Failed to create $filename: $!\n";
     binmode FH;
     print FH $content;
@@ -276,7 +282,7 @@ sub create_file {
 
 sub read_file {
     my ($filename) = @_;
-    open(FH, $filename)
+    open(FH, '<', $filename)
         or die "Failed to open $filename: $!\n";
     binmode FH;
     my $content = <FH>;

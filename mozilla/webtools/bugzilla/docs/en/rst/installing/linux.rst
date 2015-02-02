@@ -83,7 +83,7 @@ libjson-rpc-perl libdaemon-generic-perl libtheschwartz-perl
 libtest-taint-perl libauthen-radius-perl libfile-slurp-perl
 libencode-detect-perl libmodule-build-perl libnet-ldap-perl
 libauthen-sasl-perl libtemplate-perl-doc libfile-mimeinfo-perl
-libhtml-formattext-withlinks-perl libgd-dev lynx-cur graphviz`
+libhtml-formattext-withlinks-perl libgd-dev lynx-cur graphviz python-sphinx`
 
 If you plan to use SQlite as your database, you will need to also install
 the appropriate packages for that.
@@ -172,15 +172,11 @@ Or, you can pass an individual module name:
 :command:`./install-module.pl <modulename>`
 
 .. note:: If you are using a package-based distribution, and attempting to
-   install the Perl modules from CPAN (e.g. by using
-   :file:`install-module.pl`), you may need to install the "development"
+   install the Perl modules from CPAN (e.g. by using :file:`install-module.pl`),
+   you may need to install the "development"
    packages for MySQL and GD before attempting to install the related Perl
    modules. The names of these packages will vary depending on the specific
-   distribution you are using, but are often called
-   :file:`<packagename>-devel`.
-
-   .. todo:: Give examples for Debian/Ubuntu and RedHat.
-             Convert this item to a bug after checkin.
+   distribution you are using, but are often called :file:`<packagename>-devel`.
 
 .. _linux-config-webserver:
 
